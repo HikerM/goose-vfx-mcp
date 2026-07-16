@@ -180,6 +180,37 @@ impl SqliteMcpPlatformRepository {
         decode_manifest_row(&row)
     }
 
+    pub async fn list_manifests(&self) -> McpPlatformResult<Vec<ManifestRecord>> {
+        let rows = sqlx::query(
+            r#"SELECT manifest_digest, mcp_id, version, canonical_bytes, proof_json,
+                trust_tier_json, created_at_ms FROM manifest_blobs
+                ORDER BY mcp_id, version, manifest_digest"#,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        rows.iter().map(decode_manifest_row).collect()
+    }
+
+    pub async fn get_manifest_by_identity(
+        &self,
+        mcp_id: &str,
+        version: &str,
+    ) -> McpPlatformResult<ManifestRecord> {
+        let row = sqlx::query(
+            r#"SELECT manifest_digest, mcp_id, version, canonical_bytes, proof_json,
+                trust_tier_json, created_at_ms FROM manifest_blobs
+                WHERE mcp_id = ? AND version = ?"#,
+        )
+        .bind(mcp_id)
+        .bind(version)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?
+        .ok_or_else(not_found)?;
+        decode_manifest_row(&row)
+    }
+
     pub async fn create_managed_mcp(
         &self,
         new: &NewManagedMcp,
@@ -508,6 +539,23 @@ impl SqliteMcpPlatformRepository {
             return Err(integrity_error());
         }
         Ok(record)
+    }
+
+    pub async fn get_plan_by_idempotency_key(
+        &self,
+        idempotency_key: &str,
+    ) -> McpPlatformResult<Option<PlanRecord>> {
+        let plan_id = sqlx::query_scalar::<_, String>(
+            "SELECT plan_id FROM install_plans WHERE idempotency_key = ?",
+        )
+        .bind(idempotency_key)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        match plan_id {
+            Some(plan_id) => self.get_plan(&plan_id).await.map(Some),
+            None => Ok(None),
+        }
     }
 
     async fn begin_immediate(&self) -> McpPlatformResult<Transaction<'_, Sqlite>> {

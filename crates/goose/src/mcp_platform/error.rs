@@ -2,6 +2,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum McpPlatformErrorCode {
+    InvalidRequest,
     InvalidJson,
     InvalidManifest,
     UnsupportedSchema,
@@ -21,6 +22,7 @@ pub enum McpPlatformErrorCode {
     SchemaTooNew,
     IntegrityError,
     PlanConflict,
+    PlanStale,
     PlanExpired,
     IdempotencyConflict,
     RevisionConflict,
@@ -33,6 +35,7 @@ pub enum McpPlatformErrorCode {
 impl McpPlatformErrorCode {
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::InvalidRequest => "invalid_request",
             Self::InvalidJson => "invalid_json",
             Self::InvalidManifest => "invalid_manifest",
             Self::UnsupportedSchema => "unsupported_schema",
@@ -52,6 +55,7 @@ impl McpPlatformErrorCode {
             Self::SchemaTooNew => "schema_too_new",
             Self::IntegrityError => "integrity_error",
             Self::PlanConflict => "plan_conflict",
+            Self::PlanStale => "plan_stale",
             Self::PlanExpired => "plan_expired",
             Self::IdempotencyConflict => "idempotency_conflict",
             Self::RevisionConflict => "revision_conflict",

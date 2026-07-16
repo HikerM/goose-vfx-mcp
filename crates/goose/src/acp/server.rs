@@ -25,6 +25,9 @@ use crate::conversation::message::{
     ToolRequest,
 };
 use crate::execution::manager::{AgentManager, AgentManagerGetResult, RuntimeContext};
+use crate::mcp_platform::{
+    McpPlatformError, McpPlatformService, RequestContext, SqliteMcpPlatformRepository,
+};
 use crate::mcp_utils::ToolResult;
 use crate::permission::permission_confirmation::PrincipalType;
 use crate::permission::{Permission, PermissionConfirmation};
@@ -96,6 +99,7 @@ mod list_sessions;
 mod load_session;
 mod local_inference;
 mod manage_sessions;
+mod mcp_platform;
 mod new_session;
 mod onboarding;
 mod prompts;
@@ -208,6 +212,7 @@ pub struct GooseAcpAgentOptions {
     pub goose_platform: GoosePlatform,
     pub additional_source_roots: Vec<SourceRoot>,
     pub scheduler: Arc<dyn SchedulerTrait>,
+    pub mcp_platform_service: Option<Arc<McpPlatformService>>,
 }
 
 pub struct GooseAcpAgent {
@@ -232,6 +237,8 @@ pub struct GooseAcpAgent {
     provider_inventory: ProviderInventoryService,
     additional_source_roots: Vec<SourceRoot>,
     recipe_path_cache: Arc<Mutex<HashMap<String, PathBuf>>>,
+    mcp_platform_service: OnceCell<Arc<McpPlatformService>>,
+    mcp_platform_database_path: PathBuf,
 }
 
 /// Shorten a session/thread id for perf log correlation.
@@ -928,6 +935,11 @@ impl GooseAcpAgent {
 
     // TODO: goose reads Paths::in_state_dir globally (e.g. RequestLog), ignoring this data_dir.
     pub async fn new(options: GooseAcpAgentOptions) -> Result<Self> {
+        let mcp_platform_database_path = options.data_dir.join("mcp-platform/platform.db");
+        let mcp_platform_service = OnceCell::new();
+        if let Some(service) = options.mcp_platform_service {
+            let _ = mcp_platform_service.set(service);
+        }
         let session_manager = Arc::new(SessionManager::new(options.data_dir));
 
         // Eagerly initialize the SQLite pool so it's ready when providers/sessions need it.
@@ -970,7 +982,39 @@ impl GooseAcpAgent {
             provider_inventory,
             additional_source_roots: options.additional_source_roots,
             recipe_path_cache: Arc::new(Mutex::new(HashMap::new())),
+            mcp_platform_service,
+            mcp_platform_database_path,
         })
+    }
+
+    async fn mcp_platform_context_and_service(
+        &self,
+    ) -> (
+        RequestContext,
+        std::result::Result<Arc<McpPlatformService>, McpPlatformError>,
+    ) {
+        let result = self
+            .mcp_platform_service
+            .get_or_try_init(|| async {
+                let repository =
+                    SqliteMcpPlatformRepository::open_path(&self.mcp_platform_database_path)
+                        .await?;
+                Ok::<_, McpPlatformError>(Arc::new(McpPlatformService::production(Arc::new(
+                    repository,
+                ))))
+            })
+            .await
+            .cloned();
+        let context = result.as_ref().map_or_else(
+            |_| {
+                RequestContext::local_authenticated_client(format!(
+                    "correlation_{}",
+                    Uuid::now_v7()
+                ))
+            },
+            |service| service.trusted_local_context(),
+        );
+        (context, result)
     }
 
     fn config(&self) -> Result<&'static Config, agent_client_protocol::Error> {

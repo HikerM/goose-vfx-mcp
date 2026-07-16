@@ -6,6 +6,7 @@ pub mod manifest;
 pub mod plan;
 pub mod policy;
 pub mod repository;
+pub mod service;
 pub mod task;
 
 pub use catalog::{
@@ -20,4 +21,5 @@ pub use manifest::{
 pub use plan::*;
 pub use policy::*;
 pub use repository::*;
+pub use service::*;
 pub use task::*;

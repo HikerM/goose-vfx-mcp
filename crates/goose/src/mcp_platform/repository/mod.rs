@@ -76,6 +76,8 @@ pub struct PlanTarget {
     pub managed_mcp_id: Option<String>,
     pub mcp_id: String,
     pub version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub installation_scope: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -257,6 +259,12 @@ pub struct AuditEventRecord {
     pub occurred_at_ms: i64,
     pub payload: AuditPayload,
     pub redacted_error: Option<RedactedError>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GlobalAuditPage {
+    pub events: Vec<AuditEventRecord>,
+    pub scanned_through_event_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -60,6 +60,7 @@ async fn save_manifest_and_plan(
         managed_mcp_id: None,
         mcp_id: plan.manifest_id().to_string(),
         version: plan.manifest_version().to_string(),
+        installation_scope: None,
     };
     repository
         .save_plan(SavePlan {
@@ -466,6 +467,7 @@ async fn remote_and_manual_plans_are_immutable_idempotent_and_tamper_evident() {
                 managed_mcp_id: None,
                 mcp_id: remote.manifest_id().to_string(),
                 version: remote.manifest_version().to_string(),
+                installation_scope: None,
             },
             policy_evidence: remote.policy(),
             confirmation_evidence: &ConfirmationEvidence::Pending,
@@ -487,6 +489,7 @@ async fn remote_and_manual_plans_are_immutable_idempotent_and_tamper_evident() {
                     managed_mcp_id: Some("different-managed-target".to_string()),
                     mcp_id: remote.manifest_id().to_string(),
                     version: remote.manifest_version().to_string(),
+                    installation_scope: None,
                 },
                 policy_evidence: remote.policy(),
                 confirmation_evidence: &ConfirmationEvidence::Pending,
@@ -521,6 +524,7 @@ async fn remote_and_manual_plans_are_immutable_idempotent_and_tamper_evident() {
                     managed_mcp_id: None,
                     mcp_id: manual.manifest_id().to_string(),
                     version: manual.manifest_version().to_string(),
+                    installation_scope: None,
                 },
                 policy_evidence: manual.policy(),
                 confirmation_evidence: &ConfirmationEvidence::Pending,
@@ -589,6 +593,7 @@ async fn remote_and_manual_plans_are_immutable_idempotent_and_tamper_evident() {
         managed_mcp_id: Some("attacker-controlled-managed-id".to_string()),
         mcp_id: remote.manifest_id().to_string(),
         version: remote.manifest_version().to_string(),
+        installation_scope: None,
     };
     sqlx::query("UPDATE install_plans SET target_json = ? WHERE plan_id = 'plan-tamper-target'")
         .bind(serde_json::to_string(&tampered_target).unwrap())
@@ -697,6 +702,7 @@ async fn task_creation_validates_the_plan_in_the_write_transaction() {
                 managed_mcp_id: None,
                 mcp_id: valid_plan.manifest_id().to_string(),
                 version: valid_plan.manifest_version().to_string(),
+                installation_scope: None,
             },
             policy_evidence: valid_plan.policy(),
             confirmation_evidence: &ConfirmationEvidence::Pending,

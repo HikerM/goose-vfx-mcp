@@ -371,6 +371,7 @@ pub async fn spawn_acp_server_in_process(
         goose_platform: GoosePlatform::GooseCli,
         additional_source_roots: Vec::new(),
         scheduler: Arc::new(FixtureScheduler::new()),
+        mcp_platform_service: None,
     })
     .await
     .unwrap();

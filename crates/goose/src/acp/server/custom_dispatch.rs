@@ -37,6 +37,70 @@ impl GooseAcpAgent {
         self.on_add_session_extension(req).await
     }
 
+    #[custom_method(McpCatalogListRequest)]
+    async fn dispatch_mcp_catalog_list(
+        &self,
+        req: McpCatalogListRequest,
+    ) -> Result<McpCatalogListResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_catalog_list(req).await)
+    }
+
+    #[custom_method(McpCatalogDetailRequest)]
+    async fn dispatch_mcp_catalog_detail(
+        &self,
+        req: McpCatalogDetailRequest,
+    ) -> Result<McpCatalogDetailResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_catalog_detail(req).await)
+    }
+
+    #[custom_method(McpPlanCreateRequest)]
+    async fn dispatch_mcp_plan_create(
+        &self,
+        req: McpPlanCreateRequest,
+    ) -> Result<McpPlanCreateResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_plan_create(req).await)
+    }
+
+    #[custom_method(McpInstallConfirmRequest)]
+    async fn dispatch_mcp_install_confirm(
+        &self,
+        req: McpInstallConfirmRequest,
+    ) -> Result<McpInstallConfirmResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_install_confirm(req).await)
+    }
+
+    #[custom_method(McpTaskGetRequest)]
+    async fn dispatch_mcp_task_get(
+        &self,
+        req: McpTaskGetRequest,
+    ) -> Result<McpTaskGetResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_task_get(req).await)
+    }
+
+    #[custom_method(McpTaskCancelRequest)]
+    async fn dispatch_mcp_task_cancel(
+        &self,
+        req: McpTaskCancelRequest,
+    ) -> Result<McpTaskCancelResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_task_cancel(req).await)
+    }
+
+    #[custom_method(McpTaskRetryRequest)]
+    async fn dispatch_mcp_task_retry(
+        &self,
+        req: McpTaskRetryRequest,
+    ) -> Result<McpTaskRetryResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_task_retry(req).await)
+    }
+
+    #[custom_method(McpEventsResumeRequest)]
+    async fn dispatch_mcp_events_resume(
+        &self,
+        req: McpEventsResumeRequest,
+    ) -> Result<McpEventsResumeResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_events_resume(req).await)
+    }
+
     #[custom_method(RemoveSessionExtensionRequest)]
     async fn dispatch_remove_session_extension(
         &self,

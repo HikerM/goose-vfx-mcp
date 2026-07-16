@@ -76,6 +76,7 @@ impl AcpServer {
             goose_platform: self.config.goose_platform.clone(),
             additional_source_roots: self.config.additional_source_roots.clone(),
             scheduler,
+            mcp_platform_service: None,
         })
         .await?;
         info!("Created new ACP agent");

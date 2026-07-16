@@ -1,9 +1,11 @@
 use crate::mcp_platform::error::{McpPlatformErrorCode, McpPlatformResult};
+use crate::mcp_platform::repository::GlobalAuditPage;
 use crate::mcp_platform::repository::{
     AuditEventRecord, AuditEventType, AuditPayload, CreateTask, RecoveryRecord, StepTransition,
     TaskRecord, TaskStepRecord, TaskTransition,
 };
 use crate::mcp_platform::task::{CompensationDescriptor, TaskStatus, TaskStepStatus};
+use sqlx::{QueryBuilder, Sqlite};
 
 use super::records::{
     append_audit, decode_audit_row, decode_task_row, decode_task_step_row, encode, encode_optional,
@@ -112,6 +114,25 @@ impl SqliteMcpPlatformRepository {
             .map_err(map_sqlx)?
             .ok_or_else(not_found)?;
         decode_task_row(&row)
+    }
+
+    pub async fn get_task_by_idempotency_key(
+        &self,
+        operation: crate::mcp_platform::task::TaskOperation,
+        idempotency_key: &str,
+    ) -> McpPlatformResult<Option<TaskRecord>> {
+        let task_id = sqlx::query_scalar::<_, String>(
+            "SELECT task_id FROM tasks WHERE operation = ? AND idempotency_key = ?",
+        )
+        .bind(operation.as_str())
+        .bind(idempotency_key)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        match task_id {
+            Some(task_id) => self.get_task(&task_id).await.map(Some),
+            None => Ok(None),
+        }
     }
 
     pub async fn transition_task(
@@ -637,5 +658,68 @@ impl SqliteMcpPlatformRepository {
             .await
             .map_err(map_sqlx)?;
         rows.iter().map(decode_audit_row).collect()
+    }
+
+    pub async fn list_global_audit_events(
+        &self,
+        after_event_id: i64,
+        limit: usize,
+        task_ids: &[String],
+    ) -> McpPlatformResult<GlobalAuditPage> {
+        let high_water_event_id =
+            sqlx::query_scalar::<_, i64>("SELECT COALESCE(MAX(event_id), ?) FROM audit_events")
+                .bind(after_event_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(map_sqlx)?;
+
+        if high_water_event_id <= after_event_id {
+            return Ok(GlobalAuditPage {
+                events: Vec::new(),
+                scanned_through_event_id: after_event_id,
+            });
+        }
+
+        let mut query = QueryBuilder::<Sqlite>::new("SELECT * FROM audit_events WHERE event_id > ");
+        query
+            .push_bind(after_event_id)
+            .push(" AND event_id <= ")
+            .push_bind(high_water_event_id);
+        if !task_ids.is_empty() {
+            query.push(" AND task_id IN (");
+            let mut task_id_bindings = query.separated(", ");
+            for task_id in task_ids {
+                task_id_bindings.push_bind(task_id);
+            }
+            task_id_bindings.push_unseparated(")");
+        }
+        query
+            .push(" ORDER BY event_id LIMIT ")
+            .push_bind(i64::try_from(limit).map_err(|_| {
+                error(
+                    McpPlatformErrorCode::InvalidRequest,
+                    "event page limit exceeds the supported range",
+                )
+            })?);
+
+        let rows = query
+            .build()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(map_sqlx)?;
+        let events = rows
+            .iter()
+            .map(decode_audit_row)
+            .collect::<McpPlatformResult<Vec<_>>>()?;
+        let scanned_through_event_id = if events.len() == limit {
+            events.last().map_or(after_event_id, |event| event.event_id)
+        } else {
+            high_water_event_id
+        };
+
+        Ok(GlobalAuditPage {
+            events,
+            scanned_through_event_id,
+        })
     }
 }
