@@ -1,0 +1,464 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goose.ai/schemas/mcp-package-manifest-v1.schema.json",
+  "title": "goose MCP Package Manifest v1",
+  "description": "Declarative, non-executable metadata for registering or installing an MCP package.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "name",
+    "description",
+    "publisher",
+    "license",
+    "capabilities",
+    "permissions",
+    "distribution",
+    "transport",
+    "auth",
+    "health_check",
+    "owned_files",
+    "uninstall"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": { "$ref": "#/$defs/stable_id" },
+    "version": { "$ref": "#/$defs/exact_version" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "homepage": { "$ref": "#/$defs/https_uri" },
+    "documentation": { "$ref": "#/$defs/https_uri" },
+    "publisher": { "$ref": "#/$defs/publisher" },
+    "license": { "$ref": "#/$defs/license" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["tools", "resources", "prompts", "sampling", "elicitation", "logging"]
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/permission" }
+    },
+    "distribution": { "$ref": "#/$defs/distribution" },
+    "transport": { "$ref": "#/$defs/transport" },
+    "auth": { "$ref": "#/$defs/auth" },
+    "health_check": { "$ref": "#/$defs/health_check" },
+    "host_integrations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/host_integration" }
+    },
+    "owned_files": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/owned_file" }
+    },
+    "uninstall": { "$ref": "#/$defs/uninstall" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "distribution": { "properties": { "type": { "const": "remote_http" } }, "required": ["type"] } } },
+      "then": { "properties": { "transport": { "properties": { "type": { "const": "streamable_http" } }, "required": ["type"] } } }
+    },
+    {
+      "if": { "properties": { "distribution": { "properties": { "type": { "const": "manual_stdio" } }, "required": ["type"] } } },
+      "then": { "properties": { "transport": { "properties": { "type": { "const": "stdio" } }, "required": ["type"] } } }
+    },
+    {
+      "if": { "properties": { "auth": { "properties": { "type": { "const": "none" } }, "required": ["type"] } } },
+      "then": { "properties": { "permissions": { "not": { "contains": { "properties": { "kind": { "const": "credentials" } }, "required": ["kind"] } } } } }
+    }
+  ],
+  "$defs": {
+    "stable_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9._-]{1,126}[a-z0-9])?$",
+      "maxLength": 128
+    },
+    "exact_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "https_uri": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?![A-Za-z]:)(?![/\\\\])(?!.*(?:^|[/\\\\])\\.\\.(?:[/\\\\]|$))[^\\u0000]+$"
+    },
+    "template_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?!.*(?:^|[/\\\\])\\.\\.(?:[/\\\\]|$))[^\\u0000]+$"
+    },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stable_id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "website": { "$ref": "#/$defs/https_uri" },
+        "signing_identities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+        }
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spdx"],
+      "properties": {
+        "spdx": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "url": { "$ref": "#/$defs/https_uri" },
+        "notice_required": { "type": "boolean", "default": false }
+      }
+    },
+    "platform": { "enum": ["windows", "macos", "linux", "any"] },
+    "arch": { "enum": ["x86_64", "aarch64", "universal", "any"] },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "value": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "arch", "url", "digest"],
+      "properties": {
+        "platform": { "$ref": "#/$defs/platform" },
+        "arch": { "$ref": "#/$defs/arch" },
+        "url": { "$ref": "#/$defs/https_uri" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "size_bytes": { "type": "integer", "minimum": 1 },
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 100 }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executable"],
+      "properties": {
+        "executable": { "$ref": "#/$defs/template_path" },
+        "args": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "type": "string", "maxLength": 512 }
+        },
+        "cwd": { "$ref": "#/$defs/template_path" },
+        "environment_keys": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$" }
+        }
+      }
+    },
+    "distribution": {
+      "oneOf": [
+        { "$ref": "#/$defs/distribution_remote_http" },
+        { "$ref": "#/$defs/distribution_manual_stdio" },
+        { "$ref": "#/$defs/distribution_npm" },
+        { "$ref": "#/$defs/distribution_python_wheel" },
+        { "$ref": "#/$defs/distribution_binary_archive" },
+        { "$ref": "#/$defs/distribution_docker" },
+        { "$ref": "#/$defs/distribution_git_dev" }
+      ]
+    },
+    "distribution_remote_http": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": { "type": { "const": "remote_http" } }
+    },
+    "distribution_manual_stdio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "entrypoint"],
+      "properties": {
+        "type": { "const": "manual_stdio" },
+        "entrypoint": { "$ref": "#/$defs/entrypoint" },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/platform" }
+        }
+      }
+    },
+    "distribution_npm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "package", "package_version", "artifacts", "entrypoint"],
+      "properties": {
+        "type": { "const": "npm" },
+        "package": { "type": "string", "pattern": "^(?:@[a-z0-9._-]+/)?[a-z0-9._-]+$" },
+        "package_version": { "$ref": "#/$defs/exact_version" },
+        "registry": { "$ref": "#/$defs/https_uri" },
+        "artifacts": { "$ref": "#/$defs/artifacts" },
+        "entrypoint": { "$ref": "#/$defs/entrypoint" }
+      }
+    },
+    "distribution_python_wheel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "package", "package_version", "python", "artifacts", "entrypoint"],
+      "properties": {
+        "type": { "const": "python_wheel" },
+        "package": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+        "package_version": { "$ref": "#/$defs/exact_version" },
+        "python": { "type": "string", "pattern": "^>=3\\.(9|1[0-9])$" },
+        "index": { "$ref": "#/$defs/https_uri" },
+        "artifacts": { "$ref": "#/$defs/artifacts" },
+        "entrypoint": { "$ref": "#/$defs/entrypoint" }
+      }
+    },
+    "distribution_binary_archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "archive_format", "artifacts", "entrypoint"],
+      "properties": {
+        "type": { "const": "binary_archive" },
+        "archive_format": { "enum": ["zip", "tar.gz", "tar.xz"] },
+        "strip_components": { "type": "integer", "minimum": 0, "maximum": 8, "default": 0 },
+        "artifacts": { "$ref": "#/$defs/artifacts" },
+        "entrypoint": { "$ref": "#/$defs/entrypoint" }
+      }
+    },
+    "distribution_docker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "image", "digest", "entrypoint"],
+      "properties": {
+        "type": { "const": "docker" },
+        "image": { "type": "string", "pattern": "^[a-z0-9][a-z0-9./_-]+$" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "entrypoint": { "$ref": "#/$defs/entrypoint" },
+        "mounts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source_permission", "target", "read_only"],
+            "properties": {
+              "source_permission": { "$ref": "#/$defs/stable_id" },
+              "target": { "type": "string", "pattern": "^/[^\\u0000]+$" },
+              "read_only": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "distribution_git_dev": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "repository", "commit", "adapter", "entrypoint"],
+      "properties": {
+        "type": { "const": "git_dev" },
+        "repository": { "$ref": "#/$defs/https_uri" },
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "subdirectory": { "$ref": "#/$defs/relative_path" },
+        "adapter": { "enum": ["npm", "python_wheel", "binary_archive", "docker"] },
+        "entrypoint": { "$ref": "#/$defs/entrypoint" }
+      }
+    },
+    "transport": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "stdio" },
+            "startup_timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 600 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "url"],
+          "properties": {
+            "type": { "const": "streamable_http" },
+            "url": { "$ref": "#/$defs/https_uri" },
+            "connect_timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 120 },
+            "allowed_redirect_origins": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/https_uri" }
+            }
+          }
+        }
+      ]
+    },
+    "auth": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["type"], "properties": { "type": { "const": "none" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "header_name", "credential_name"],
+          "properties": {
+            "type": { "const": "api_key_header" },
+            "header_name": { "type": "string", "pattern": "^[A-Za-z0-9-]+$" },
+            "prefix": { "type": "string", "maxLength": 32 },
+            "credential_name": { "$ref": "#/$defs/stable_id" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "environment_key", "credential_name"],
+          "properties": {
+            "type": { "const": "environment" },
+            "environment_key": { "type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$" },
+            "credential_name": { "$ref": "#/$defs/stable_id" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "authorization_url", "token_url", "client_registration", "scopes"],
+          "properties": {
+            "type": { "const": "oauth2" },
+            "authorization_url": { "$ref": "#/$defs/https_uri" },
+            "token_url": { "$ref": "#/$defs/https_uri" },
+            "client_registration": { "enum": ["dynamic", "user_provided"] },
+            "scopes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } }
+          }
+        }
+      ]
+    },
+    "health_check": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "timeout_seconds"],
+          "properties": { "type": { "const": "mcp_initialize" }, "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 120 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "timeout_seconds"],
+          "properties": { "type": { "const": "mcp_list_tools" }, "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 120 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path", "expected_status", "timeout_seconds"],
+          "properties": {
+            "type": { "const": "http" },
+            "path": { "type": "string", "pattern": "^/" },
+            "expected_status": { "type": "integer", "minimum": 100, "maximum": 599 },
+            "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 120 }
+          }
+        }
+      ]
+    },
+    "permission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "reason", "required"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stable_id" },
+        "kind": { "enum": ["filesystem_read", "filesystem_write", "network", "credentials", "process_spawn", "docker", "host_application"] },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "required": { "type": "boolean" },
+        "scope": { "type": "string", "minLength": 1, "maxLength": 512 }
+      }
+    },
+    "host_integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "host", "supported_versions", "platforms", "actions"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stable_id" },
+        "host": { "enum": ["unreal_engine", "houdini", "nuke", "other"] },
+        "host_name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "supported_versions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 64 } },
+        "platforms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/platform" } },
+        "detection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["strategy"],
+          "properties": {
+            "strategy": { "enum": ["known_locations", "registry", "bundle_identifier", "user_selected"] },
+            "identifiers": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 256 } }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "source", "target"],
+                "properties": { "type": { "const": "copy_file" }, "source": { "$ref": "#/$defs/relative_path" }, "target": { "$ref": "#/$defs/template_path" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "target", "format", "fragment"],
+                "properties": {
+                  "type": { "const": "write_config_fragment" },
+                  "target": { "$ref": "#/$defs/template_path" },
+                  "format": { "enum": ["json", "toml", "yaml", "ini"] },
+                  "fragment": { "type": "object" }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "registration_id", "target"],
+                "properties": { "type": { "const": "register_plugin" }, "registration_id": { "$ref": "#/$defs/stable_id" }, "target": { "$ref": "#/$defs/template_path" } }
+              }
+            ]
+          }
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "host": { "const": "other" } } }, "then": { "required": ["host_name"] } }
+      ]
+    },
+    "owned_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "path", "kind", "remove_on_uninstall"],
+      "properties": {
+        "root": { "enum": ["installation", "data", "config", "host"] },
+        "path": { "$ref": "#/$defs/relative_path" },
+        "kind": { "enum": ["file", "directory"] },
+        "remove_on_uninstall": { "type": "boolean" }
+      }
+    },
+    "uninstall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "preserve_user_data"],
+      "properties": {
+        "mode": { "const": "remove_owned_files_only" },
+        "preserve_user_data": { "type": "boolean" },
+        "remove_host_integrations": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stable_id" } }
+      }
+    }
+  }
+}

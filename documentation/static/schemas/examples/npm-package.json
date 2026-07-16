@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "id": "org.example.issue-tracker",
+  "version": "2.3.1",
+  "name": "Issue Tracker MCP",
+  "description": "Installs a pinned npm MCP package into a goose-managed runtime.",
+  "homepage": "https://example.org/issue-tracker-mcp",
+  "publisher": {
+    "id": "org.example",
+    "name": "Example Foundation",
+    "website": "https://example.org",
+    "signing_identities": ["npm:example-foundation"]
+  },
+  "license": {
+    "spdx": "MIT",
+    "url": "https://example.org/licenses/mit",
+    "notice_required": false
+  },
+  "capabilities": ["tools"],
+  "permissions": [
+    {
+      "id": "tracker-network",
+      "kind": "network",
+      "reason": "Call the configured issue tracker service.",
+      "required": true,
+      "scope": "user-configured-origin"
+    },
+    {
+      "id": "tracker-credentials",
+      "kind": "credentials",
+      "reason": "Read a credential from goose's credential store.",
+      "required": true,
+      "scope": "issue-tracker-access"
+    },
+    {
+      "id": "spawn-server",
+      "kind": "process_spawn",
+      "reason": "Run the installed MCP process.",
+      "required": true,
+      "scope": "managed-node-runtime"
+    }
+  ],
+  "distribution": {
+    "type": "npm",
+    "package": "@example/issue-tracker-mcp",
+    "package_version": "2.3.1",
+    "registry": "https://registry.npmjs.org",
+    "artifacts": [
+      {
+        "platform": "any",
+        "arch": "any",
+        "url": "https://registry.npmjs.org/@example/issue-tracker-mcp/-/issue-tracker-mcp-2.3.1.tgz",
+        "digest": {
+          "algorithm": "sha256",
+          "value": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "size_bytes": 183420,
+        "media_type": "application/gzip"
+      }
+    ],
+    "entrypoint": {
+      "executable": "${installation.bin}/issue-tracker-mcp",
+      "args": [],
+      "environment_keys": ["ISSUE_TRACKER_ACCESS"]
+    }
+  },
+  "transport": {
+    "type": "stdio",
+    "startup_timeout_seconds": 45
+  },
+  "auth": {
+    "type": "environment",
+    "environment_key": "ISSUE_TRACKER_ACCESS",
+    "credential_name": "issue-tracker-access"
+  },
+  "health_check": {
+    "type": "mcp_list_tools",
+    "timeout_seconds": 30
+  },
+  "owned_files": [
+    {
+      "root": "installation",
+      "path": "node_modules/@example/issue-tracker-mcp",
+      "kind": "directory",
+      "remove_on_uninstall": true
+    },
+    {
+      "root": "installation",
+      "path": "bin/issue-tracker-mcp",
+      "kind": "file",
+      "remove_on_uninstall": true
+    }
+  ],
+  "uninstall": {
+    "mode": "remove_owned_files_only",
+    "preserve_user_data": true
+  }
+}

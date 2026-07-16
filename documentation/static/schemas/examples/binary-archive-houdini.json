@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "id": "studio.example.houdini-bridge",
+  "version": "0.8.0",
+  "name": "Houdini Bridge MCP",
+  "description": "Installs a verified MCP binary and declaratively registers its Houdini package file.",
+  "homepage": "https://example.studio/houdini-bridge",
+  "publisher": {
+    "id": "studio.example",
+    "name": "Example Studio",
+    "website": "https://example.studio",
+    "signing_identities": ["sigstore:studio.example"]
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "url": "https://example.studio/licenses/houdini-bridge",
+    "notice_required": true
+  },
+  "capabilities": ["tools", "resources"],
+  "permissions": [
+    {
+      "id": "spawn-server",
+      "kind": "process_spawn",
+      "reason": "Run the verified bridge executable.",
+      "required": true,
+      "scope": "managed-installation"
+    },
+    {
+      "id": "houdini-config",
+      "kind": "filesystem_write",
+      "reason": "Write a package registration file into the selected Houdini profile.",
+      "required": true,
+      "scope": "selected-houdini-user-packages"
+    },
+    {
+      "id": "houdini-host",
+      "kind": "host_application",
+      "reason": "Register the bridge with an installed Houdini version.",
+      "required": true,
+      "scope": "houdini-20.5-or-21.0"
+    }
+  ],
+  "distribution": {
+    "type": "binary_archive",
+    "archive_format": "zip",
+    "strip_components": 1,
+    "artifacts": [
+      {
+        "platform": "windows",
+        "arch": "x86_64",
+        "url": "https://downloads.example.studio/houdini-bridge/0.8.0/windows-x86_64.zip",
+        "digest": {
+          "algorithm": "sha256",
+          "value": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "size_bytes": 8452190,
+        "media_type": "application/zip"
+      },
+      {
+        "platform": "macos",
+        "arch": "aarch64",
+        "url": "https://downloads.example.studio/houdini-bridge/0.8.0/macos-aarch64.tar.gz",
+        "digest": {
+          "algorithm": "sha256",
+          "value": "3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "size_bytes": 7921140,
+        "media_type": "application/gzip"
+      },
+      {
+        "platform": "linux",
+        "arch": "x86_64",
+        "url": "https://downloads.example.studio/houdini-bridge/0.8.0/linux-x86_64.tar.gz",
+        "digest": {
+          "algorithm": "sha256",
+          "value": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "size_bytes": 8012340,
+        "media_type": "application/gzip"
+      }
+    ],
+    "entrypoint": {
+      "executable": "${installation.root}/bin/houdini-bridge",
+      "args": ["--stdio"],
+      "environment_keys": []
+    }
+  },
+  "transport": {
+    "type": "stdio",
+    "startup_timeout_seconds": 60
+  },
+  "auth": {
+    "type": "none"
+  },
+  "health_check": {
+    "type": "mcp_initialize",
+    "timeout_seconds": 45
+  },
+  "host_integrations": [
+    {
+      "id": "houdini-user-package",
+      "host": "houdini",
+      "supported_versions": ["20.5", "21.0"],
+      "platforms": ["windows", "macos", "linux"],
+      "detection": {
+        "strategy": "known_locations",
+        "identifiers": ["houdini20.5", "houdini21.0"]
+      },
+      "actions": [
+        {
+          "type": "write_config_fragment",
+          "target": "${host.user_config}/packages/goose-houdini-bridge.json",
+          "format": "json",
+          "fragment": {
+            "enable": true,
+            "path": "${installation.root}/houdini"
+          }
+        },
+        {
+          "type": "register_plugin",
+          "registration_id": "goose-houdini-bridge",
+          "target": "${host.user_config}/packages/goose-houdini-bridge.json"
+        }
+      ]
+    }
+  ],
+  "owned_files": [
+    {
+      "root": "installation",
+      "path": "bin/houdini-bridge",
+      "kind": "file",
+      "remove_on_uninstall": true
+    },
+    {
+      "root": "installation",
+      "path": "houdini",
+      "kind": "directory",
+      "remove_on_uninstall": true
+    },
+    {
+      "root": "host",
+      "path": "packages/goose-houdini-bridge.json",
+      "kind": "file",
+      "remove_on_uninstall": true
+    }
+  ],
+  "uninstall": {
+    "mode": "remove_owned_files_only",
+    "preserve_user_data": true,
+    "remove_host_integrations": ["houdini-user-package"]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "id": "local.example.filesystem",
+  "version": "1.0.0",
+  "name": "Local Filesystem MCP",
+  "description": "Registers a user-provided MCP executable without installing software.",
+  "publisher": {
+    "id": "local.user",
+    "name": "Local user"
+  },
+  "license": {
+    "spdx": "LicenseRef-UserProvided",
+    "notice_required": false
+  },
+  "capabilities": ["tools", "resources"],
+  "permissions": [
+    {
+      "id": "workspace-read",
+      "kind": "filesystem_read",
+      "reason": "Read files selected by the user.",
+      "required": true,
+      "scope": "user-selected-directory"
+    },
+    {
+      "id": "spawn-server",
+      "kind": "process_spawn",
+      "reason": "Start the selected MCP executable as a child process.",
+      "required": true,
+      "scope": "mcp-filesystem"
+    }
+  ],
+  "distribution": {
+    "type": "manual_stdio",
+    "entrypoint": {
+      "executable": "mcp-filesystem",
+      "args": ["--root", "${user.workspace}"],
+      "environment_keys": []
+    },
+    "platforms": ["windows", "macos", "linux"]
+  },
+  "transport": {
+    "type": "stdio",
+    "startup_timeout_seconds": 30
+  },
+  "auth": {
+    "type": "none"
+  },
+  "health_check": {
+    "type": "mcp_initialize",
+    "timeout_seconds": 30
+  },
+  "owned_files": [],
+  "uninstall": {
+    "mode": "remove_owned_files_only",
+    "preserve_user_data": true
+  }
+}

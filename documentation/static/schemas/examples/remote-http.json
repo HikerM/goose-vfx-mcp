@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "com.example.knowledge-search",
+  "version": "1.4.2",
+  "name": "Knowledge Search",
+  "description": "Connects goose to a hosted knowledge-search MCP endpoint.",
+  "homepage": "https://example.com/knowledge-search",
+  "publisher": {
+    "id": "com.example",
+    "name": "Example Labs",
+    "website": "https://example.com"
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "url": "https://example.com/licenses/apache-2.0",
+    "notice_required": false
+  },
+  "capabilities": ["tools", "resources"],
+  "permissions": [
+    {
+      "id": "service-network",
+      "kind": "network",
+      "reason": "Connect to the publisher-operated MCP service.",
+      "required": true,
+      "scope": "https://mcp.example.com"
+    },
+    {
+      "id": "service-credentials",
+      "kind": "credentials",
+      "reason": "Authorize access with an OAuth grant stored by goose.",
+      "required": true,
+      "scope": "knowledge.read"
+    }
+  ],
+  "distribution": {
+    "type": "remote_http"
+  },
+  "transport": {
+    "type": "streamable_http",
+    "url": "https://mcp.example.com/v1",
+    "connect_timeout_seconds": 20,
+    "allowed_redirect_origins": ["https://login.example.com"]
+  },
+  "auth": {
+    "type": "oauth2",
+    "authorization_url": "https://login.example.com/oauth/authorize",
+    "token_url": "https://login.example.com/oauth/token",
+    "client_registration": "dynamic",
+    "scopes": ["knowledge.read"]
+  },
+  "health_check": {
+    "type": "mcp_list_tools",
+    "timeout_seconds": 20
+  },
+  "owned_files": [],
+  "uninstall": {
+    "mode": "remove_owned_files_only",
+    "preserve_user_data": true
+  }
+}
