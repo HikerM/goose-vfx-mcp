@@ -16,6 +16,19 @@ pub enum PlanOperation {
     Health,
 }
 
+impl PlanOperation {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Register => "register",
+            Self::Install => "install",
+            Self::Update => "update",
+            Self::Repair => "repair",
+            Self::Uninstall => "uninstall",
+            Self::Health => "health",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PolicyOutcome {

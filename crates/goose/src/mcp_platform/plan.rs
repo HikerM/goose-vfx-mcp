@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use serde::Serialize;
+use serde::de::Error as _;
+use serde::{Deserialize, Serialize};
 
 use crate::agents::extension::Envs;
 use crate::agents::ExtensionConfig;
@@ -10,14 +11,14 @@ use super::error::McpPlatformResult;
 use super::manifest::{digest_serializable, Auth, HealthCheck, Manifest};
 use super::policy::{PlanOperation, PolicyDecision, PolicyReasonCode};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AdapterIdentity {
     pub id: String,
     pub version: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum PlanStep {
     RegisterRemote {
@@ -37,7 +38,7 @@ pub enum PlanStep {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EffectSummary {
     pub registers_connection: bool,
@@ -49,21 +50,21 @@ pub struct EffectSummary {
     pub permission_ids: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum RequiredConfirmation {
     Policy { reason_code: PolicyReasonCode },
     Permission { permission_id: String },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum PlanWarning {
     DefaultDisabled,
     RegistrationOnly,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ConnectionProjection {
     RemoteHttp {
@@ -135,6 +136,8 @@ impl ConnectionProjection {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct InstallationPlan {
+    manifest_id: String,
+    manifest_version: String,
     manifest_digest: String,
     plan_digest: String,
     adapter: AdapterIdentity,
@@ -147,6 +150,53 @@ pub struct InstallationPlan {
     default_enabled: bool,
     connection_projection: ConnectionProjection,
     policy: PolicyDecision,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct InstallationPlanWire {
+    manifest_id: String,
+    manifest_version: String,
+    manifest_digest: String,
+    plan_digest: String,
+    adapter: AdapterIdentity,
+    trust_tier: TrustTier,
+    operation: PlanOperation,
+    steps: Vec<PlanStep>,
+    effects: EffectSummary,
+    warnings: Vec<PlanWarning>,
+    required_confirmations: Vec<RequiredConfirmation>,
+    default_enabled: bool,
+    connection_projection: ConnectionProjection,
+    policy: PolicyDecision,
+}
+
+impl<'de> Deserialize<'de> for InstallationPlan {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let wire = InstallationPlanWire::deserialize(deserializer)?;
+        let plan = Self {
+            manifest_id: wire.manifest_id,
+            manifest_version: wire.manifest_version,
+            manifest_digest: wire.manifest_digest,
+            plan_digest: wire.plan_digest,
+            adapter: wire.adapter,
+            trust_tier: wire.trust_tier,
+            operation: wire.operation,
+            steps: wire.steps,
+            effects: wire.effects,
+            warnings: wire.warnings,
+            required_confirmations: wire.required_confirmations,
+            default_enabled: wire.default_enabled,
+            connection_projection: wire.connection_projection,
+            policy: wire.policy,
+        };
+        plan.verify_integrity()
+            .map_err(|_| D::Error::custom("installation plan integrity validation failed"))?;
+        Ok(plan)
+    }
 }
 
 impl InstallationPlan {
@@ -182,6 +232,8 @@ impl InstallationPlan {
         let plan_digest = digest_serializable(&content)?;
 
         Ok(Self {
+            manifest_id: manifest.id.clone(),
+            manifest_version: manifest.version.as_str().to_string(),
             manifest_digest,
             plan_digest,
             adapter,
@@ -199,6 +251,14 @@ impl InstallationPlan {
 
     pub fn manifest_digest(&self) -> &str {
         &self.manifest_digest
+    }
+
+    pub fn manifest_id(&self) -> &str {
+        &self.manifest_id
+    }
+
+    pub fn manifest_version(&self) -> &str {
+        &self.manifest_version
     }
 
     pub fn plan_digest(&self) -> &str {
@@ -243,6 +303,39 @@ impl InstallationPlan {
 
     pub fn policy(&self) -> &PolicyDecision {
         &self.policy
+    }
+
+    pub(crate) fn verify_integrity(&self) -> McpPlatformResult<()> {
+        use super::error::{McpPlatformError, McpPlatformErrorCode};
+
+        if self.default_enabled {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::IntegrityError,
+                "stored installation plan violates the disabled-by-default invariant",
+            ));
+        }
+        let content = PlanDigestContent {
+            manifest_id: &self.manifest_id,
+            manifest_version: &self.manifest_version,
+            manifest_digest: &self.manifest_digest,
+            adapter: &self.adapter,
+            trust_tier: self.trust_tier,
+            operation: self.operation,
+            steps: &self.steps,
+            effects: &self.effects,
+            warnings: &self.warnings,
+            required_confirmations: &self.required_confirmations,
+            default_enabled: self.default_enabled,
+            connection_projection: &self.connection_projection,
+            policy: &self.policy,
+        };
+        if digest_serializable(&content)? != self.plan_digest {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::IntegrityError,
+                "stored installation plan digest does not match its content",
+            ));
+        }
+        Ok(())
     }
 }
 

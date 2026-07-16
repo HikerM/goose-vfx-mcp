@@ -5,6 +5,8 @@ pub mod error;
 pub mod manifest;
 pub mod plan;
 pub mod policy;
+pub mod repository;
+pub mod task;
 
 pub use catalog::{
     CatalogCompatibility, CatalogEntry, CatalogFilter, CatalogInsertOutcome, CompatibilityTarget,
@@ -17,3 +19,5 @@ pub use manifest::{
 };
 pub use plan::*;
 pub use policy::*;
+pub use repository::*;
+pub use task::*;
