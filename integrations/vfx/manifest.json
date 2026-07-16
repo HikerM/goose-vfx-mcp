@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "integrations": [
+    {"name":"unreal-engine","repository":"https://github.com/ChiR24/Unreal_mcp.git","commit":"2cb46f9011465f9098897f05efccb143a25ca251","license":"MIT","transport":"streamable_http","default_port":3000,"plugin_source":"plugins/McpAutomationBridge","server":"Unreal native MCP at http://127.0.0.1:3000/mcp","bundle_allowed":true},
+    {"name":"fxhoudini","repository":"https://github.com/healkeiser/fxhoudinimcp.git","commit":"d46163c4810f18942c7747da51c7aea8f9ec2334","license":"MIT","transport":"stdio -> Houdini HTTP","default_port":8100,"plugin_source":"houdini","server":"<venv>/Scripts/python.exe -m fxhoudinimcp","bundle_allowed":true},
+    {"name":"nuke-mcp","repository":"https://github.com/kleer001/nuke-mcp.git","commit":"6cbed80a2f35b997263fc51c988c5bb1405657fd","license":"MIT","transport":"stdio -> Nuke socket","default_port":54321,"plugin_source":"nuke_addon/nuke_mcp_addon.py","server":"<venv>/Scripts/nuke-mcp.exe","bundle_allowed":true}
+  ]
+}

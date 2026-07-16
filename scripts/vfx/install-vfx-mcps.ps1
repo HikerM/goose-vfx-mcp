@@ -1,0 +1,14 @@
+[CmdletBinding(SupportsShouldProcess)]
+param([string]$UnrealProject,[string]$HoudiniHome,[switch]$InstallNukeAddon)
+$ErrorActionPreference='Stop'; $root=(Resolve-Path "$PSScriptRoot\..\..").Path; $runtime=Join-Path $root '.vfx-runtime'; $sources=Join-Path $runtime 'sources'; $venvs=Join-Path $runtime 'venvs'
+New-Item -ItemType Directory -Force $sources,$venvs,(Join-Path $runtime 'logs') | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $root 'integrations\vfx\licenses') | Out-Null
+$manifest=Get-Content (Join-Path $root 'integrations\vfx\manifest.json') -Raw | ConvertFrom-Json
+function Sync-Source($item) { $path=Join-Path $sources (($item.repository -split '/')[-1] -replace '\.git$',''); if (!(Test-Path $path)) { git clone $item.repository $path }; git -C $path fetch --depth 1 origin $item.commit; git -C $path checkout --detach $item.commit; Copy-Item (Join-Path $path LICENSE) (Join-Path $root "integrations\vfx\licenses\$($item.name)-LICENSE") -Force; return $path }
+$unreal=Sync-Source $manifest.integrations[0]; $houdini=Sync-Source $manifest.integrations[1]; $nuke=Sync-Source $manifest.integrations[2]
+$fxVenv=Join-Path $venvs 'fxhoudinimcp'; if (!(Test-Path $fxVenv)) { python -m venv $fxVenv }; & "$fxVenv\Scripts\python.exe" -m pip install --upgrade pip; & "$fxVenv\Scripts\python.exe" -m pip install -e $houdini
+if (Get-Command uv -ErrorAction SilentlyContinue) { Push-Location $nuke; uv venv (Join-Path $venvs 'nuke-mcp'); uv pip install --python (Join-Path $venvs 'nuke-mcp\Scripts\python.exe') -e .; Pop-Location } else { python -m venv (Join-Path $venvs 'nuke-mcp'); & (Join-Path $venvs 'nuke-mcp\Scripts\python.exe') -m pip install -e $nuke }
+if ($UnrealProject) { $target=Join-Path (Split-Path $UnrealProject) 'Plugins\McpAutomationBridge'; if (Test-Path $target) { throw "Refusing to overwrite existing $target. Back it up or remove it explicitly." }; Copy-Item (Join-Path $unreal 'plugins\McpAutomationBridge') $target -Recurse }
+if ($HoudiniHome) { $packages=Join-Path $HoudiniHome packages; New-Item -ItemType Directory -Force $packages | Out-Null; $dest=Join-Path $packages fxhoudinimcp.json; if (Test-Path $dest) { Copy-Item $dest "$dest.goose-backup" -Force }; (Get-Content (Join-Path $houdini 'houdini\fxhoudinimcp.json') -Raw).Replace('FXHOUDINIMCP_PATH',(Join-Path $houdini 'houdini').Replace('\','/')) | Set-Content $dest }
+if ($InstallNukeAddon) { $dir=Join-Path $env:USERPROFILE '.nuke'; New-Item -ItemType Directory -Force $dir | Out-Null; $dest=Join-Path $dir nuke_mcp_addon.py; if (Test-Path $dest) { Copy-Item $dest "$dest.goose-backup" -Force }; Copy-Item (Join-Path $nuke 'nuke_addon\nuke_mcp_addon.py') $dest }
+Write-Host "Installed VFX sources and isolated environments. Use Goose Settings > Extensions to enable Unreal after Unreal is configured."
