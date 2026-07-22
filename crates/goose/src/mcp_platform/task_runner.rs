@@ -11,7 +11,9 @@ use super::lifecycle::{
     AuthRequirement, DirectSpawnDescriptor, HealthExecution, LifecyclePorts, ProjectionSnapshot,
     RegistrationEffect,
 };
-use super::managed_distribution::{DistributionEffectAdapter, ManagedInstallEffect};
+use super::managed_distribution::{
+    DistributionEffectAdapter, ExternalManagedAcquisition, ManagedInstallEffect,
+};
 use super::manifest::digest_serializable;
 use super::plan::PlanStep;
 use super::repository::{
@@ -138,12 +140,22 @@ impl TaskRunner {
         expected_revision: i64,
         enabled: bool,
     ) -> McpPlatformResult<ManagedMcpInventoryRecord> {
+        let resumes_pending_mutation = self
+            .repository
+            .list_pending_projection_mutations()
+            .await?
+            .iter()
+            .any(|mutation| {
+                mutation.managed_mcp_id == managed_mcp_id
+                    && mutation.expected_revision == expected_revision
+                    && mutation.desired_enabled == enabled
+            });
         self.recover_projection_mutations().await?;
         let inventory = self
             .repository
             .get_managed_inventory(managed_mcp_id)
             .await?;
-        if inventory.managed.revision != expected_revision {
+        if inventory.managed.revision != expected_revision && !resumes_pending_mutation {
             return Err(McpPlatformError::new(
                 McpPlatformErrorCode::RevisionConflict,
                 "managed MCP revision changed",
@@ -370,7 +382,7 @@ impl TaskRunner {
                         .await
                         .map(|_| ()),
                     RecoveryDecision::RollbackFromStep { .. } => {
-                        self.rollback(&record.task.task_id, false).await
+                        self.rollback(&record.task.task_id, false, None).await
                     }
                     RecoveryDecision::RequiresManualRecovery => self
                         .transition(
@@ -556,6 +568,22 @@ impl TaskRunner {
                     *expected_size_bytes,
                     format!("{:?}/{:?}", platform, arch).to_ascii_lowercase(),
                 )),
+                PlanStep::AcquireDockerDistribution { image, digest, .. } => Some((
+                    format!("https://{}", image.split('/').next().unwrap_or_default()),
+                    digest.value.clone(),
+                    None,
+                    "docker/immutable".to_string(),
+                )),
+                PlanStep::AcquireGitDevDistribution {
+                    repository,
+                    acquisition_digest,
+                    ..
+                } => Some((
+                    repository.clone(),
+                    acquisition_digest.clone(),
+                    None,
+                    "git_dev/exact_commit".to_string(),
+                )),
                 _ => None,
             })
             .ok_or_else(integrity_error)?;
@@ -582,6 +610,34 @@ impl TaskRunner {
             operation: task.operation,
             expected_tree_digest: None,
             rebuild_uncommitted_version: false,
+            external_acquisition: plan.steps().iter().find_map(|step| match step {
+                PlanStep::AcquireDockerDistribution {
+                    image,
+                    digest,
+                    mount_plan_digest,
+                    ..
+                } => Some(ExternalManagedAcquisition::Docker {
+                    image: image.clone(),
+                    digest: digest.value.clone(),
+                    mount_plan_digest: mount_plan_digest.clone(),
+                }),
+                PlanStep::AcquireGitDevDistribution {
+                    repository_origin,
+                    repository,
+                    commit,
+                    subdirectory,
+                    underlying_adapter,
+                    acquisition_digest,
+                } => Some(ExternalManagedAcquisition::GitDev {
+                    repository_origin: repository_origin.clone(),
+                    repository: repository.clone(),
+                    commit: commit.clone(),
+                    subdirectory: subdirectory.clone(),
+                    underlying_adapter: *underlying_adapter,
+                    acquisition_digest: acquisition_digest.clone(),
+                }),
+                _ => None,
+            }),
         };
         let durable_steps = self.repository.list_task_steps(&task.task_id).await?;
         let snapshot_compensation =
@@ -760,7 +816,7 @@ impl TaskRunner {
             )
             .await?;
         let outcome = if materialize == TaskStepStatus::Committed {
-            match distribution.inspect_installed(&effect).await {
+            match distribution.inspect_installed(&effect, &cancellation).await {
                 Ok(outcome) => outcome,
                 Err(error) => {
                     let _ = self
@@ -855,6 +911,7 @@ impl TaskRunner {
                     adapter_evidence: adapter,
                     verification_evidence: &outcome.evidence,
                     materialized_tree_digest: &outcome.materialized_tree_digest,
+                    supply_chain_evidence: outcome.supply_chain_evidence.as_ref(),
                     owned_relative_paths: &outcome.owned_relative_paths,
                     now_ms: self.clock.now_ms(),
                 })
@@ -2062,6 +2119,15 @@ impl TaskRunner {
         adapter_id: &str,
         adapter_version: &str,
     ) -> McpPlatformResult<TaskStepStatus> {
+        if let Some(step) = self
+            .repository
+            .list_task_steps(&task.task_id)
+            .await?
+            .into_iter()
+            .find(|step| step.ordinal == ordinal)
+        {
+            return existing_step_status(&step, &compensation, adapter_id, adapter_version);
+        }
         let token = format!("{}:{}:{}", task.task_id, task.attempt_count, ordinal);
         let step = self
             .repository
@@ -2134,7 +2200,7 @@ impl TaskRunner {
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<()> {
         if self.cancel_requested(task_id, cancellation).await? {
-            self.rollback(task_id, true).await?;
+            self.rollback(task_id, true, None).await?;
             return Err(McpPlatformError::new(
                 McpPlatformErrorCode::TaskNotCancellable,
                 "task cancellation was settled at a safe boundary",
@@ -2176,7 +2242,7 @@ impl TaskRunner {
     async fn settle_execution_error(
         &self,
         task_id: &str,
-        _error: McpPlatformError,
+        error: McpPlatformError,
     ) -> McpPlatformResult<()> {
         let task = self.repository.get_task(task_id).await?;
         if matches!(
@@ -2251,8 +2317,25 @@ impl TaskRunner {
             .iter()
             .any(|step| step.status != TaskStepStatus::NotStarted && step.ordinal > 0);
         if effect_may_have_occurred || task.status == TaskStatus::Cancelling {
-            self.rollback(task_id, task.status == TaskStatus::Cancelling)
-                .await
+            let redacted = RedactedError::new(
+                if error.code() == McpPlatformErrorCode::IntegrityError {
+                    RedactedErrorCode::VerificationFailed
+                } else {
+                    RedactedErrorCode::AdapterFailed
+                },
+                if error.code() == McpPlatformErrorCode::IntegrityError {
+                    "MCP lifecycle authority failed integrity verification"
+                } else {
+                    "MCP lifecycle task failed at a typed execution boundary"
+                },
+                std::iter::empty::<&str>(),
+            );
+            self.rollback(
+                task_id,
+                task.status == TaskStatus::Cancelling,
+                Some(&redacted),
+            )
+            .await
         } else {
             let redacted = RedactedError::new(
                 RedactedErrorCode::AdapterFailed,
@@ -2264,7 +2347,12 @@ impl TaskRunner {
         }
     }
 
-    async fn rollback(&self, task_id: &str, cancelled: bool) -> McpPlatformResult<()> {
+    async fn rollback(
+        &self,
+        task_id: &str,
+        cancelled: bool,
+        execution_error: Option<&RedactedError>,
+    ) -> McpPlatformResult<()> {
         let task = self.repository.get_task(task_id).await?;
         if task.status != TaskStatus::RollingBack {
             self.transition(task_id, TaskStatus::RollingBack, task.progress)
@@ -2554,7 +2642,7 @@ impl TaskRunner {
             }
         }
         if incomplete {
-            let error = RedactedError::new(
+            let rollback_error = RedactedError::new(
                 RedactedErrorCode::RollbackFailed,
                 "MCP lifecycle compensation requires recovery",
                 std::iter::empty::<&str>(),
@@ -2562,7 +2650,7 @@ impl TaskRunner {
             self.transition_with_rollback(
                 task_id,
                 TaskStatus::RecoveryRequired,
-                &error,
+                execution_error.unwrap_or(&rollback_error),
                 RollbackStatus::Incomplete,
             )
             .await
@@ -2572,7 +2660,7 @@ impl TaskRunner {
             } else {
                 TaskStatus::Failed
             };
-            let error = RedactedError::new(
+            let fallback_error = RedactedError::new(
                 if cancelled {
                     RedactedErrorCode::Cancelled
                 } else {
@@ -2585,8 +2673,13 @@ impl TaskRunner {
                 },
                 std::iter::empty::<&str>(),
             );
-            self.transition_with_rollback(task_id, target, &error, RollbackStatus::Complete)
-                .await
+            self.transition_with_rollback(
+                task_id,
+                target,
+                execution_error.unwrap_or(&fallback_error),
+                RollbackStatus::Complete,
+            )
+            .await
         }
     }
 
@@ -2677,6 +2770,21 @@ impl TaskRunner {
     }
 }
 
+fn existing_step_status(
+    step: &super::repository::TaskStepRecord,
+    compensation: &CompensationDescriptor,
+    adapter_id: &str,
+    adapter_version: &str,
+) -> McpPlatformResult<TaskStepStatus> {
+    if &step.compensation != compensation
+        || step.adapter_id != adapter_id
+        || step.adapter_version != adapter_version
+    {
+        return Err(integrity_error());
+    }
+    Ok(step.status)
+}
+
 async fn registration_health(
     sink: &dyn super::lifecycle::ProjectionSink,
     key: &str,
@@ -2719,6 +2827,21 @@ fn registration_effect_from_projection(
                 executable: executable.clone(),
                 argv: args.clone(),
                 environment_keys: environment_keys.clone(),
+                working_directory: cwd.clone(),
+                timeout_seconds: *timeout_seconds,
+            },
+        }),
+        super::plan::ConnectionProjection::ManagedDockerStdio {
+            executable,
+            args,
+            cwd,
+            timeout_seconds,
+            ..
+        } => Ok(RegistrationEffect::ManualStdio {
+            spawn: DirectSpawnDescriptor {
+                executable: executable.clone(),
+                argv: args.clone(),
+                environment_keys: Vec::new(),
                 working_directory: cwd.clone(),
                 timeout_seconds: *timeout_seconds,
             },
@@ -2768,4 +2891,62 @@ const fn adapter_incompatible() -> McpPlatformError {
         McpPlatformErrorCode::AdapterIncompatible,
         "recorded MCP adapter is not compatible with this runner",
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::mcp_platform::repository::TaskStepRecord;
+    use crate::mcp_platform::task::CompensationStatus;
+
+    fn durable_step() -> TaskStepRecord {
+        TaskStepRecord {
+            task_id: "task".to_string(),
+            ordinal: 5,
+            status: TaskStepStatus::Started,
+            idempotency_token: "task:0:5".to_string(),
+            compensation: CompensationDescriptor::FinalizedManagedUninstall {
+                managed_mcp_id: "managed".to_string(),
+                version: "1.0.0".to_string(),
+            },
+            evidence: None,
+            started_at_ms: Some(1),
+            committed_at_ms: None,
+            adapter_id: "npm".to_string(),
+            adapter_version: "1".to_string(),
+            compensation_status: CompensationStatus::Pending,
+            compensation_started_at_ms: None,
+            compensation_committed_at_ms: None,
+        }
+    }
+
+    #[test]
+    fn preserved_step_requires_exact_compensation_and_adapter_authority() {
+        let step = durable_step();
+        assert_eq!(
+            existing_step_status(
+                &step,
+                &step.compensation,
+                &step.adapter_id,
+                &step.adapter_version,
+            )
+            .unwrap(),
+            TaskStepStatus::Started
+        );
+        for result in [
+            existing_step_status(
+                &step,
+                &CompensationDescriptor::NoCompensation,
+                &step.adapter_id,
+                &step.adapter_version,
+            ),
+            existing_step_status(&step, &step.compensation, "git_dev", &step.adapter_version),
+            existing_step_status(&step, &step.compensation, &step.adapter_id, "2"),
+        ] {
+            assert_eq!(
+                result.unwrap_err().code(),
+                McpPlatformErrorCode::IntegrityError
+            );
+        }
+    }
 }

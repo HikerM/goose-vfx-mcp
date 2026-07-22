@@ -398,12 +398,86 @@ fn error_to_wire(context: &RequestContext, error: McpPlatformError) -> McpPlatfo
         ),
         Code::OperationNotSupported => (
             McpPlatformErrorCodeDto::OperationNotSupported,
-            "This lifecycle operation is not supported in phase 2C.",
+            "This operation is not supported by the current closed adapter contract.",
             false,
             Some(McpPlatformErrorDetails::PhaseUnavailable {
-                phase: "2C".to_string(),
+                phase: "3C".to_string(),
                 operation: "lifecycle".to_string(),
             }),
+        ),
+        Code::DockerUnavailable => (
+            McpPlatformErrorCodeDto::DockerUnavailable,
+            "The server-owned Docker capability is unavailable.",
+            true,
+            Some(McpPlatformErrorDetails::ExternalCapabilityUnavailable {
+                capability: "docker".to_string(),
+            }),
+        ),
+        Code::DaemonPolicyDenied => (
+            McpPlatformErrorCodeDto::DaemonPolicyDenied,
+            "The discovered Docker daemon does not satisfy platform policy.",
+            false,
+            Some(McpPlatformErrorDetails::ExternalPolicyDenied {
+                capability: "docker_daemon".to_string(),
+            }),
+        ),
+        Code::ImageDigestMismatch => (
+            McpPlatformErrorCodeDto::ImageDigestMismatch,
+            "The Docker image did not match the confirmed immutable digest.",
+            false,
+            Some(McpPlatformErrorDetails::SupplyChainMismatch {
+                authority: "image_digest".to_string(),
+            }),
+        ),
+        Code::RegistryAuthRequired => (
+            McpPlatformErrorCodeDto::RegistryAuthRequired,
+            "Registry authentication is required but no opaque credential provider is available.",
+            false,
+            Some(McpPlatformErrorDetails::AuthenticationRequired {
+                provider: "container_registry".to_string(),
+            }),
+        ),
+        Code::MountPermissionDenied => (
+            McpPlatformErrorCodeDto::MountPermissionDenied,
+            "The confirmed filesystem permission cannot be used for this container mount.",
+            false,
+            Some(McpPlatformErrorDetails::PermissionGrantRequired {
+                permission: "filesystem".to_string(),
+            }),
+        ),
+        Code::GitUnavailable => (
+            McpPlatformErrorCodeDto::GitUnavailable,
+            "The server-owned Git capability is unavailable.",
+            true,
+            Some(McpPlatformErrorDetails::ExternalCapabilityUnavailable {
+                capability: "git".to_string(),
+            }),
+        ),
+        Code::GitOriginDenied => (
+            McpPlatformErrorCodeDto::GitOriginDenied,
+            "The Git origin is not an allowed canonical public HTTPS repository.",
+            false,
+            Some(McpPlatformErrorDetails::OriginRejected {
+                origin_type: "git_https".to_string(),
+            }),
+        ),
+        Code::CommitUnavailable => (
+            McpPlatformErrorCodeDto::CommitUnavailable,
+            "The exact immutable Git commit is unavailable.",
+            false,
+            Some(McpPlatformErrorDetails::ImmutableCommitUnavailable {}),
+        ),
+        Code::UnsafeRepositoryTree => (
+            McpPlatformErrorCodeDto::UnsafeRepositoryTree,
+            "The repository tree violates the safe materialization policy.",
+            false,
+            Some(McpPlatformErrorDetails::RepositoryTreeRejected {}),
+        ),
+        Code::DevelopmentModeRequired => (
+            McpPlatformErrorCodeDto::DevelopmentModeRequired,
+            "This local development source requires explicit development mode.",
+            false,
+            Some(McpPlatformErrorDetails::DevelopmentModeRequired {}),
         ),
         Code::PlanStale | Code::PlanConflict => (
             McpPlatformErrorCodeDto::PlanStale,
@@ -646,6 +720,15 @@ fn plan_review_to_wire(review: crate::mcp_platform::service::PlanReview) -> McpP
                 }
                 crate::mcp_platform::PlanWarning::RemovesOwnedFilesOnly => {
                     McpPlanWarning::RemovesOwnedFilesOnly
+                }
+                crate::mcp_platform::PlanWarning::ImmutableContainerImage => {
+                    McpPlanWarning::ImmutableContainerImage
+                }
+                crate::mcp_platform::PlanWarning::WritableContainerMount => {
+                    McpPlanWarning::WritableContainerMount
+                }
+                crate::mcp_platform::PlanWarning::DevelopmentSourcePinnedCommitNoBuild => {
+                    McpPlanWarning::DevelopmentSourcePinnedCommitNoBuild
                 }
             })
             .collect(),
@@ -1120,6 +1203,26 @@ fn managed_summary_to_wire(
         available_manifest_digest: value.available_manifest_digest,
         current_task: value.current_task.map(task_to_wire),
         recovery_required: value.recovery_required,
+        external_capability: value.external_capability.map(|status| match status {
+            crate::mcp_platform::service::ManagedExternalCapabilityStatus::DockerCliMissing => {
+                McpExternalCapabilityStatus::DockerCliMissing
+            }
+            crate::mcp_platform::service::ManagedExternalCapabilityStatus::DockerDaemonUnverified => {
+                McpExternalCapabilityStatus::DockerDaemonUnverified
+            }
+            crate::mcp_platform::service::ManagedExternalCapabilityStatus::DockerDaemonVerified => {
+                McpExternalCapabilityStatus::DockerDaemonVerified
+            }
+            crate::mcp_platform::service::ManagedExternalCapabilityStatus::DockerDaemonPolicyDenied => {
+                McpExternalCapabilityStatus::DockerDaemonPolicyDenied
+            }
+            crate::mcp_platform::service::ManagedExternalCapabilityStatus::GitMissing => {
+                McpExternalCapabilityStatus::GitMissing
+            }
+            crate::mcp_platform::service::ManagedExternalCapabilityStatus::GitAvailable => {
+                McpExternalCapabilityStatus::GitAvailable
+            }
+        }),
         eligibility: McpManagedEligibility {
             update: value.eligibility.update,
             repair: value.eligibility.repair,
@@ -1199,6 +1302,40 @@ fn managed_detail_to_wire(
         projection_digest: value.projection_digest,
         latest_health: value.latest_health.map(health_observation_to_wire),
         registration_task: value.registration_task.map(task_to_wire),
+        supply_chain: value.supply_chain.map(|evidence| match evidence {
+            crate::mcp_platform::service::ManagedSupplyChainSummary::Docker {
+                image,
+                image_digest,
+                adapter_version,
+                daemon_version,
+                rootless,
+                mount_plan_digest,
+                created_at_ms,
+            } => McpSupplyChainSummary::Docker {
+                image,
+                image_digest,
+                adapter_version,
+                daemon_version,
+                rootless,
+                mount_plan_digest,
+                created_at_ms,
+            },
+            crate::mcp_platform::service::ManagedSupplyChainSummary::GitDev {
+                repository_origin,
+                commit,
+                git_tree_id,
+                materialized_tree_digest,
+                adapter_version,
+                created_at_ms,
+            } => McpSupplyChainSummary::GitDev {
+                repository_origin,
+                commit,
+                git_tree_id,
+                materialized_tree_digest,
+                adapter_version,
+                created_at_ms,
+            },
+        }),
     }
 }
 

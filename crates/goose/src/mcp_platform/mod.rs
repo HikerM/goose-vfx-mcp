@@ -2,6 +2,7 @@ pub mod adapters;
 pub mod catalog;
 pub mod domain;
 pub mod error;
+pub(crate) mod external_distribution;
 pub mod health;
 pub mod lifecycle;
 pub mod managed_distribution;
@@ -19,6 +20,7 @@ pub use catalog::{
 };
 pub use domain::*;
 pub use error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
+pub use external_distribution::SupplyChainEvidence;
 pub use health::{run_bounded_health_session, ProductionHealthCheckAdapter};
 pub use lifecycle::*;
 pub use managed_distribution::*;

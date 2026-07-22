@@ -54,6 +54,16 @@ pub enum McpPlatformErrorCodeDto {
     TaskNotCancellable,
     RollbackIncomplete,
     AdapterIncompatible,
+    DockerUnavailable,
+    DaemonPolicyDenied,
+    ImageDigestMismatch,
+    RegistryAuthRequired,
+    MountPermissionDenied,
+    GitUnavailable,
+    GitOriginDenied,
+    CommitUnavailable,
+    UnsafeRepositoryTree,
+    DevelopmentModeRequired,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -87,6 +97,15 @@ pub enum McpPlatformErrorDetails {
     CancellationDeferred {},
     RecoveryRequired {},
     AdapterVersionIncompatible {},
+    ExternalCapabilityUnavailable { capability: String },
+    ExternalPolicyDenied { capability: String },
+    SupplyChainMismatch { authority: String },
+    AuthenticationRequired { provider: String },
+    PermissionGrantRequired { permission: String },
+    OriginRejected { origin_type: String },
+    ImmutableCommitUnavailable {},
+    RepositoryTreeRejected {},
+    DevelopmentModeRequired {},
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
@@ -317,8 +336,21 @@ pub struct McpManagedSummary {
     pub available_manifest_digest: Option<String>,
     pub current_task: Option<McpTaskRef>,
     pub recovery_required: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub external_capability: Option<McpExternalCapabilityStatus>,
     pub eligibility: McpManagedEligibility,
     pub next_action: McpManagedNextAction,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpExternalCapabilityStatus {
+    DockerCliMissing,
+    DockerDaemonUnverified,
+    DockerDaemonVerified,
+    DockerDaemonPolicyDenied,
+    GitMissing,
+    GitAvailable,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
@@ -372,6 +404,30 @@ pub struct McpManagedDetail {
     pub projection_digest: String,
     pub latest_health: Option<McpHealthObservation>,
     pub registration_task: Option<McpTaskRef>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub supply_chain: Option<McpSupplyChainSummary>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum McpSupplyChainSummary {
+    Docker {
+        image: String,
+        image_digest: String,
+        adapter_version: String,
+        daemon_version: String,
+        rootless: bool,
+        mount_plan_digest: String,
+        created_at_ms: i64,
+    },
+    GitDev {
+        repository_origin: String,
+        commit: String,
+        git_tree_id: String,
+        materialized_tree_digest: String,
+        adapter_version: String,
+        created_at_ms: i64,
+    },
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
@@ -872,6 +928,9 @@ pub enum McpPlanWarning {
     ManagedArtifactDownload,
     ExistingVersionRetainedUntilCommit,
     RemovesOwnedFilesOnly,
+    ImmutableContainerImage,
+    WritableContainerMount,
+    DevelopmentSourcePinnedCommitNoBuild,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

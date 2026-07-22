@@ -686,8 +686,9 @@ impl DistributionEffectAdapter for BlockingProductionDistribution {
     async fn inspect_installed(
         &self,
         effect: &ManagedInstallEffect,
+        cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome> {
-        self.inner.inspect_installed(effect).await
+        self.inner.inspect_installed(effect, cancellation).await
     }
 
     async fn version_exists(&self, managed_mcp_id: &str, version: &str) -> McpPlatformResult<bool> {
@@ -838,6 +839,7 @@ fn effect_for_manifest(
         operation: TaskOperation::Install,
         expected_tree_digest: None,
         rebuild_uncommitted_version: true,
+        external_acquisition: None,
     }
 }
 
@@ -994,7 +996,7 @@ async fn production_npm_and_wheel_validate_metadata_dependencies_and_runtime_des
     .unwrap();
     assert_eq!(
         npm_adapter
-            .inspect_installed(&npm_effect)
+            .inspect_installed(&npm_effect, &CancellationToken::new())
             .await
             .unwrap_err()
             .code(),
@@ -1081,7 +1083,7 @@ async fn production_npm_and_wheel_validate_metadata_dependencies_and_runtime_des
     .unwrap();
     assert_eq!(
         wheel_adapter
-            .inspect_installed(&wheel_effect)
+            .inspect_installed(&wheel_effect, &CancellationToken::new())
             .await
             .unwrap_err()
             .code(),
@@ -1269,7 +1271,11 @@ async fn materialized_tree_authority_rejects_binary_replacement_extra_and_missin
     let entrypoint = installed.installation_root.join("bin/server.exe");
     std::fs::write(&entrypoint, b"replacement").unwrap();
     assert_eq!(
-        adapter.inspect_installed(&effect).await.unwrap_err().code(),
+        adapter
+            .inspect_installed(&effect, &CancellationToken::new())
+            .await
+            .unwrap_err()
+            .code(),
         McpPlatformErrorCode::IntegrityError
     );
 
@@ -1281,13 +1287,21 @@ async fn materialized_tree_authority_rejects_binary_replacement_extra_and_missin
     effect.expected_tree_digest = Some(rebuilt.materialized_tree_digest.clone());
     std::fs::write(rebuilt.installation_root.join("extra.txt"), b"extra").unwrap();
     assert_eq!(
-        adapter.inspect_installed(&effect).await.unwrap_err().code(),
+        adapter
+            .inspect_installed(&effect, &CancellationToken::new())
+            .await
+            .unwrap_err()
+            .code(),
         McpPlatformErrorCode::IntegrityError
     );
     std::fs::remove_file(rebuilt.installation_root.join("extra.txt")).unwrap();
     std::fs::remove_file(rebuilt.installation_root.join("bin/server.exe")).unwrap();
     assert_eq!(
-        adapter.inspect_installed(&effect).await.unwrap_err().code(),
+        adapter
+            .inspect_installed(&effect, &CancellationToken::new())
+            .await
+            .unwrap_err()
+            .code(),
         McpPlatformErrorCode::IntegrityError
     );
     std::fs::remove_dir_all(&rebuilt.installation_root).unwrap();
@@ -1376,6 +1390,8 @@ async fn production_distribution_runner_rebuilds_rename_before_commit_and_persis
                 arch: Architecture::X86_64,
             },
             plan_ttl_ms: 1_000_000,
+            development_mode: false,
+            docker_daemon_policy_allowed: true,
         },
         ports.clone(),
         production.clone(),
@@ -1800,6 +1816,7 @@ impl FakeDistribution {
                         effect.task_id
                     )
                 }),
+            supply_chain_evidence: None,
         }
     }
 }
@@ -1838,6 +1855,7 @@ impl DistributionEffectAdapter for FakeDistribution {
     async fn inspect_installed(
         &self,
         effect: &ManagedInstallEffect,
+        _cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome> {
         if !self.versions.lock().unwrap().contains(&(
             effect.managed_mcp_id.clone(),
@@ -1994,6 +2012,8 @@ impl ManagedHarness {
                     arch: Architecture::X86_64,
                 },
                 plan_ttl_ms: 1_000_000,
+                development_mode: false,
+                docker_daemon_policy_allowed: true,
             },
             ports.clone(),
             distribution.clone(),
@@ -2192,6 +2212,8 @@ async fn service_runner_install_update_repair_uninstall_is_atomic_and_preserves_
                 arch: Architecture::X86_64,
             },
             plan_ttl_ms: 1_000_000,
+            development_mode: false,
+            docker_daemon_policy_allowed: true,
         },
         harness.ports.clone(),
         harness.distribution.clone(),
@@ -2866,7 +2888,7 @@ async fn lifecycle_and_projection_mutations_are_mutually_exclusive_and_recovery_
 async fn persistent_finalization_failure_stops_hot_loop_and_explicit_retry_preserves_steps() {
     let harness = ManagedHarness::new().await;
     let digest = harness.save_version("2.3.1", 'b').await;
-    let (managed, _) = harness
+    let (managed, install_task) = harness
         .confirm(
             PlanIntent::Install {
                 manifest_digest: digest,
@@ -2949,6 +2971,27 @@ async fn persistent_finalization_failure_stops_hot_loop_and_explicit_retry_prese
             .await
             .unwrap(),
         preserved
+    );
+    let pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect_with(SqliteConnectOptions::new().filename(&harness.database_path))
+        .await
+        .unwrap();
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM task_step_history WHERE task_id = ?")
+            .bind(&uninstall_task)
+            .fetch_one(&pool)
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM health_observations WHERE task_id = ?")
+            .bind(&install_task)
+            .fetch_one(&pool)
+            .await
+            .unwrap(),
+        1
     );
     harness
         .distribution
@@ -3059,6 +3102,14 @@ async fn ordinary_retry_reclaims_lifecycle_lease_atomically_and_archives_old_ste
             .await
             .unwrap()
             > 0
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM health_observations WHERE task_id = ?")
+            .bind(&failed_task)
+            .fetch_one(&pool)
+            .await
+            .unwrap(),
+        0
     );
     harness.health.healthy.store(true, Ordering::SeqCst);
     harness.service.runner_tick().await.unwrap();

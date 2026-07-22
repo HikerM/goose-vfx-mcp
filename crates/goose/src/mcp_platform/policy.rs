@@ -45,6 +45,8 @@ pub enum PolicyReasonCode {
     CommunitySourceConfirmation,
     LocalSourceConfirmation,
     GitDevReleaseDenied,
+    DevelopmentModeRequired,
+    LocalRegistryDevelopmentOnly,
     UnknownDistributionAdapter,
 }
 
@@ -56,6 +58,8 @@ impl PolicyReasonCode {
             Self::CommunitySourceConfirmation => "community_source_confirmation",
             Self::LocalSourceConfirmation => "local_source_confirmation",
             Self::GitDevReleaseDenied => "git_dev_release_denied",
+            Self::DevelopmentModeRequired => "development_mode_required",
+            Self::LocalRegistryDevelopmentOnly => "local_registry_development_only",
             Self::UnknownDistributionAdapter => "unknown_distribution_adapter",
         }
     }
@@ -89,6 +93,10 @@ pub struct PolicyContext {
     pub arch: crate::mcp_platform::manifest::Architecture,
     pub python_major_minor: Option<(u8, u8)>,
     pub node_available: bool,
+    pub docker_available: bool,
+    pub docker_policy_allowed: bool,
+    pub git_available: bool,
+    pub development_mode: bool,
     known_adapters: BTreeSet<String>,
 }
 
@@ -101,6 +109,10 @@ impl PolicyContext {
             arch: current_architecture(),
             python_major_minor: None,
             node_available: false,
+            docker_available: false,
+            docker_policy_allowed: true,
+            git_available: false,
+            development_mode: false,
             known_adapters: [
                 "remote_http",
                 "manual_stdio",
@@ -138,6 +150,23 @@ impl PolicyContext {
     ) -> Self {
         self.node_available = node_available;
         self.python_major_minor = python_major_minor;
+        self
+    }
+
+    pub fn with_external_capabilities(
+        mut self,
+        docker_available: bool,
+        git_available: bool,
+        development_mode: bool,
+    ) -> Self {
+        self.docker_available = docker_available;
+        self.git_available = git_available;
+        self.development_mode = development_mode;
+        self
+    }
+
+    pub fn with_docker_policy(mut self, allowed: bool) -> Self {
+        self.docker_policy_allowed = allowed;
         self
     }
 
@@ -196,6 +225,29 @@ pub fn evaluate_manifest_policy(manifest: &Manifest, context: &PolicyContext) ->
             PolicyReasonCode::GitDevReleaseDenied,
             "release catalogs cannot contain git development distributions",
         );
+    }
+
+    if context.operation != PlanOperation::Uninstall
+        && matches!(manifest.distribution, Distribution::GitDev { .. })
+        && (context.trust_tier != TrustTier::Local || !context.development_mode)
+    {
+        return deny(
+            PolicyReasonCode::DevelopmentModeRequired,
+            "git development distributions require explicit local development mode",
+        );
+    }
+
+    if let Distribution::Docker { image, .. } = &manifest.distribution {
+        let registry = image.split('/').next().unwrap_or_default();
+        let host = registry.split(':').next().unwrap_or_default();
+        if host == "localhost"
+            && (context.trust_tier != TrustTier::Local || !context.development_mode)
+        {
+            return deny(
+                PolicyReasonCode::LocalRegistryDevelopmentOnly,
+                "localhost Docker registries require explicit local development mode",
+            );
+        }
     }
 
     let mut reasons = Vec::new();

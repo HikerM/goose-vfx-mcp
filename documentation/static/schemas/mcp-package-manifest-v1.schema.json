@@ -248,7 +248,7 @@
       "required": ["type", "image", "digest", "entrypoint"],
       "properties": {
         "type": { "const": "docker" },
-        "image": { "type": "string", "pattern": "^[a-z0-9][a-z0-9./_-]+$" },
+        "image": { "type": "string", "pattern": "^(?:localhost|[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)(?::[1-9][0-9]{0,4})?/[a-z0-9][a-z0-9._-]*(?:/[a-z0-9][a-z0-9._-]*)*$" },
         "digest": { "$ref": "#/$defs/digest" },
         "entrypoint": { "$ref": "#/$defs/entrypoint" },
         "mounts": {

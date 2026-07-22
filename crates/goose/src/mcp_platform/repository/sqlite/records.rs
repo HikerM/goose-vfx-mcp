@@ -100,6 +100,10 @@ pub(super) fn decode_managed_version_row(
                 .map_err(map_sqlx)?,
         )?,
         materialized_tree_digest: row.try_get("materialized_tree_digest").map_err(map_sqlx)?,
+        supply_chain_evidence: decode_optional(
+            row.try_get::<Option<String>, _>("supply_chain_evidence_json")
+                .map_err(map_sqlx)?,
+        )?,
         created_at_ms: row.try_get("created_at_ms").map_err(map_sqlx)?,
     })
 }

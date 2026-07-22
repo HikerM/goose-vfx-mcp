@@ -788,6 +788,11 @@ impl SqliteMcpPlatformRepository {
                 .execute(&mut *tx)
                 .await
                 .map_err(map_sqlx)?;
+            sqlx::query("DELETE FROM health_observations WHERE task_id = ?")
+                .bind(task_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(map_sqlx)?;
             sqlx::query(
                 "DELETE FROM activation_journal WHERE task_id = ? AND status = 'rolled_back'",
             )

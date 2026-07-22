@@ -213,8 +213,19 @@ pub struct ManagedMcpSummary {
     pub available_manifest_digest: Option<String>,
     pub current_task: Option<TaskRef>,
     pub recovery_required: bool,
+    pub external_capability: Option<ManagedExternalCapabilityStatus>,
     pub eligibility: ManagedEligibility,
     pub next_action: ManagedNextAction,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ManagedExternalCapabilityStatus {
+    DockerCliMissing,
+    DockerDaemonUnverified,
+    DockerDaemonVerified,
+    DockerDaemonPolicyDenied,
+    GitMissing,
+    GitAvailable,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -273,6 +284,28 @@ pub struct ManagedMcpDetail {
     pub projection_digest: String,
     pub latest_health: Option<HealthObservationRecord>,
     pub registration_task: Option<TaskRef>,
+    pub supply_chain: Option<ManagedSupplyChainSummary>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ManagedSupplyChainSummary {
+    Docker {
+        image: String,
+        image_digest: String,
+        adapter_version: String,
+        daemon_version: String,
+        rootless: bool,
+        mount_plan_digest: String,
+        created_at_ms: i64,
+    },
+    GitDev {
+        repository_origin: String,
+        commit: String,
+        git_tree_id: String,
+        materialized_tree_digest: String,
+        adapter_version: String,
+        created_at_ms: i64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

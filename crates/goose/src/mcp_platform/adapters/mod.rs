@@ -1,7 +1,9 @@
+mod external;
 mod managed;
 mod manual_stdio;
 mod remote_http;
 
+pub use external::{DockerAdapter, GitDevDistributionAdapter};
 pub use managed::{BinaryArchiveAdapter, NpmAdapter, PythonWheelAdapter};
 pub use manual_stdio::ManualStdioAdapter;
 pub use remote_http::RemoteHttpAdapter;
@@ -27,8 +29,16 @@ pub fn plan_for_manifest(
 ) -> McpPlatformResult<InstallationPlan> {
     let decision = evaluate_manifest_policy(manifest.manifest(), context);
     if decision.is_denied() {
+        let code =
+            if decision.reasons.iter().any(|reason| {
+                reason.code == super::policy::PolicyReasonCode::DevelopmentModeRequired
+            }) {
+                McpPlatformErrorCode::DevelopmentModeRequired
+            } else {
+                McpPlatformErrorCode::PolicyDenied
+            };
         return Err(McpPlatformError::new(
-            McpPlatformErrorCode::PolicyDenied,
+            code,
             "manifest planning was denied by policy",
         ));
     }
@@ -55,9 +65,7 @@ pub fn plan_for_manifest(
             McpPlatformErrorCode::NotImplementedForPhase,
             "managed distribution registration is unavailable; create an install plan",
         )),
-        Distribution::Docker { .. } | Distribution::GitDev { .. } => Err(McpPlatformError::new(
-            McpPlatformErrorCode::NotImplementedForPhase,
-            "distribution planning is not implemented in this phase",
-        )),
+        Distribution::Docker { .. } => DockerAdapter.plan(manifest, context),
+        Distribution::GitDev { .. } => GitDevDistributionAdapter.plan(manifest, context),
     }
 }

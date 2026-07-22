@@ -14,8 +14,15 @@ use tokio_util::sync::CancellationToken;
 use url::Url;
 
 use super::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
+use super::external_distribution::{
+    DirectProcessOutput, DirectProcessRequest, ExternalDistributionPorts, SupplyChainEvidence,
+    EXTERNAL_DISTRIBUTION_ADAPTER_VERSION,
+};
 use super::manifest::ArchiveFormat;
-use super::manifest::{Distribution, Entrypoint, Manifest};
+use super::manifest::{
+    digest_serializable, normalize_container_path, Distribution, Entrypoint, GitDevAdapter,
+    Manifest, PermissionKind,
+};
 use super::plan::ConnectionProjection;
 use super::task::TaskOperation;
 
@@ -336,6 +343,24 @@ pub struct ManagedInstallEffect {
     pub operation: TaskOperation,
     pub expected_tree_digest: Option<String>,
     pub rebuild_uncommitted_version: bool,
+    pub external_acquisition: Option<ExternalManagedAcquisition>,
+}
+
+#[derive(Debug, Clone)]
+pub enum ExternalManagedAcquisition {
+    Docker {
+        image: String,
+        digest: String,
+        mount_plan_digest: String,
+    },
+    GitDev {
+        repository_origin: String,
+        repository: String,
+        commit: String,
+        subdirectory: Option<String>,
+        underlying_adapter: GitDevAdapter,
+        acquisition_digest: String,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -346,6 +371,7 @@ pub struct ManagedInstallOutcome {
     pub materialized_tree_digest: String,
     pub owned_relative_paths: Vec<String>,
     pub replaced_quarantine_token: Option<String>,
+    pub supply_chain_evidence: Option<SupplyChainEvidence>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -373,6 +399,7 @@ pub trait DistributionEffectAdapter: Send + Sync {
     async fn inspect_installed(
         &self,
         effect: &ManagedInstallEffect,
+        cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome>;
     async fn version_exists(&self, managed_mcp_id: &str, version: &str) -> McpPlatformResult<bool>;
     async fn activate_version(
@@ -420,6 +447,7 @@ pub struct ProductionDistributionEffectAdapter {
     fetcher: Arc<dyn ArtifactFetcher>,
     verifier: Arc<dyn Verifier>,
     runtime: RuntimeCapabilities,
+    external: ExternalDistributionPorts,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -478,12 +506,21 @@ impl ProductionDistributionEffectAdapter {
         root: PathBuf,
         runtime: RuntimeCapabilities,
     ) -> McpPlatformResult<Self> {
+        Self::new_with_runtime_and_external(root, runtime, ExternalDistributionPorts::production())
+    }
+
+    pub(crate) fn new_with_runtime_and_external(
+        root: PathBuf,
+        runtime: RuntimeCapabilities,
+        external: ExternalDistributionPorts,
+    ) -> McpPlatformResult<Self> {
         let (root, cache_root) = prepare_distribution_root(root)?;
         Ok(Self {
             fetcher: Arc::new(ProductionArtifactFetcher::new(cache_root)?),
             verifier: Arc::new(Sha256Verifier),
             root,
             runtime,
+            external,
         })
     }
 
@@ -499,6 +536,7 @@ impl ProductionDistributionEffectAdapter {
             verifier,
             root,
             runtime,
+            external: ExternalDistributionPorts::production(),
         })
     }
 
@@ -600,8 +638,1266 @@ impl ProductionDistributionEffectAdapter {
             materialized_tree_digest,
             owned_relative_paths: vec![".".to_string()],
             replaced_quarantine_token,
+            supply_chain_evidence: None,
         })
     }
+
+    async fn install_external(
+        &self,
+        effect: &ManagedInstallEffect,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<ManagedInstallOutcome> {
+        let version = effect.manifest.version.as_str();
+        let version_root = self.version_root(&effect.managed_mcp_id, version)?;
+        prepare_owned_directory(&self.root, &version_root, false)?;
+        if effect.expected_tree_digest.is_some()
+            && effect.operation != TaskOperation::Repair
+            && owned_directory_exists(&self.root, &version_root).await?
+        {
+            return self.inspect_external(effect, cancellation).await;
+        }
+        let repair_token = repair_token(effect);
+        if effect.operation == TaskOperation::Repair
+            && owned_directory_exists(&self.root, &version_root).await?
+        {
+            self.quarantine_version(
+                &effect.managed_mcp_id,
+                version,
+                &format!("{}-repair", effect.task_id),
+                cancellation,
+            )
+            .await?;
+        } else if owned_directory_exists(&self.root, &version_root).await? {
+            if !effect.rebuild_uncommitted_version {
+                return Err(verification_error());
+            }
+            remove_owned_tree(&self.root, &version_root).await?;
+        }
+        let staging_root = self
+            .root
+            .join("staging")
+            .join(format!("{}-{}", effect.managed_mcp_id, effect.task_id));
+        prepare_owned_directory(&self.root, &staging_root, false)?;
+        if owned_directory_exists(&self.root, &staging_root).await? {
+            remove_owned_tree(&self.root, &staging_root).await?;
+        }
+        tokio::fs::create_dir_all(&staging_root)
+            .await
+            .map_err(|_| repository_error())?;
+        let (projection, evidence, external_evidence) = match effect
+            .external_acquisition
+            .as_ref()
+            .ok_or_else(integrity_error)?
+        {
+            ExternalManagedAcquisition::Docker {
+                image,
+                digest,
+                mount_plan_digest,
+            } => {
+                self.acquire_docker(effect, image, digest, mount_plan_digest, cancellation)
+                    .await?
+            }
+            ExternalManagedAcquisition::GitDev {
+                repository_origin,
+                repository,
+                commit,
+                subdirectory,
+                underlying_adapter,
+                acquisition_digest,
+            } => {
+                self.acquire_git(
+                    effect,
+                    &staging_root,
+                    &version_root,
+                    repository_origin,
+                    repository,
+                    commit,
+                    subdirectory.as_deref(),
+                    *underlying_adapter,
+                    acquisition_digest,
+                    cancellation,
+                )
+                .await?
+            }
+        };
+        let descriptor = ActiveRuntimeDescriptor {
+            version: version.to_string(),
+            projection: projection.clone(),
+        };
+        tokio::fs::write(
+            staging_root.join(".goose-runtime-descriptor.json"),
+            serde_json::to_vec(&descriptor).map_err(|_| repository_error())?,
+        )
+        .await
+        .map_err(|_| repository_error())?;
+        tokio::fs::write(
+            staging_root.join(".goose-artifact-evidence.json"),
+            serde_json::to_vec(&evidence).map_err(|_| repository_error())?,
+        )
+        .await
+        .map_err(|_| repository_error())?;
+        tokio::fs::write(
+            staging_root.join(".goose-external-evidence.json"),
+            serde_json::to_vec(&external_evidence).map_err(|_| repository_error())?,
+        )
+        .await
+        .map_err(|_| repository_error())?;
+        tokio::fs::write(
+            staging_root.join(".goose-installation-owner.json"),
+            serde_json::to_vec(&InstallationMarker {
+                task_id: effect.task_id.clone(),
+                artifact_digest: effect.expected_sha256.clone(),
+            })
+            .map_err(|_| repository_error())?,
+        )
+        .await
+        .map_err(|_| repository_error())?;
+        let materialized_tree_digest = compute_materialized_tree_digest(&staging_root).await?;
+        if let Some(parent) = version_root.parent() {
+            tokio::fs::create_dir_all(parent)
+                .await
+                .map_err(|_| repository_error())?;
+        }
+        tokio::fs::rename(&staging_root, &version_root)
+            .await
+            .map_err(|_| repository_error())?;
+        let supply_chain_evidence = Some(
+            external_evidence.into_supply_chain(materialized_tree_digest.clone(), effect.now_ms),
+        );
+        Ok(ManagedInstallOutcome {
+            installation_root: version_root,
+            projection,
+            evidence,
+            materialized_tree_digest,
+            owned_relative_paths: vec![".".to_string()],
+            replaced_quarantine_token: repair_token,
+            supply_chain_evidence,
+        })
+    }
+
+    async fn inspect_external(
+        &self,
+        effect: &ManagedInstallEffect,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<ManagedInstallOutcome> {
+        let root = self.version_root(&effect.managed_mcp_id, effect.manifest.version.as_str())?;
+        prepare_owned_directory(&self.root, &root, false)?;
+        let evidence: ArtifactVerificationEvidence = serde_json::from_slice(
+            &read_limited(
+                &root.join(".goose-artifact-evidence.json"),
+                MAX_METADATA_BYTES,
+            )
+            .await?,
+        )
+        .map_err(|_| verification_error())?;
+        let external_evidence: ExternalEvidenceFile = serde_json::from_slice(
+            &read_limited(
+                &root.join(".goose-external-evidence.json"),
+                MAX_METADATA_BYTES,
+            )
+            .await?,
+        )
+        .map_err(|_| verification_error())?;
+        external_evidence.verify_authority(effect)?;
+        verify_installation_marker(&root, &effect.task_id, &effect.expected_sha256).await?;
+        let materialized_tree_digest = compute_materialized_tree_digest(&root).await?;
+        if effect
+            .expected_tree_digest
+            .as_ref()
+            .is_some_and(|expected| expected != &materialized_tree_digest)
+        {
+            return Err(verification_error());
+        }
+        let expected_projection = match (&external_evidence, &effect.manifest.distribution) {
+            (
+                ExternalEvidenceFile::Docker {
+                    daemon_version,
+                    rootless,
+                    ..
+                },
+                Distribution::Docker { .. },
+            ) => {
+                if evidence.source_origin != source_origin(&effect.source_url)?
+                    || evidence.artifact_digest != effect.expected_sha256
+                    || evidence.size_bytes != 0
+                    || evidence.adapter_id != "docker"
+                    || evidence.adapter_version != EXTERNAL_DISTRIBUTION_ADAPTER_VERSION
+                    || evidence.platform_selector != effect.platform_selector
+                    || evidence.verification_result != VerificationResult::Verified
+                    || evidence.installed_at_ms != effect.now_ms
+                    || evidence.artifact_signature
+                        != ArtifactSignatureStatus::NotDeclaredByManifestV1
+                {
+                    return Err(verification_error());
+                }
+                let observed_daemon = self.verify_docker_daemon(cancellation).await?;
+                if observed_daemon.0 != *daemon_version || observed_daemon.1 != *rootless {
+                    return Err(verification_error());
+                }
+                self.verify_docker_image(effect, cancellation).await?;
+                self.docker_runtime_projection(effect)?
+            }
+            (
+                ExternalEvidenceFile::GitDev {
+                    materialized_tree_digest: expected_payload,
+                    ..
+                },
+                Distribution::GitDev {
+                    repository,
+                    adapter,
+                    entrypoint,
+                    ..
+                },
+            ) => {
+                if evidence.source_origin != source_origin(repository)?
+                    || evidence.artifact_digest != effect.expected_sha256
+                    || evidence.size_bytes == 0
+                    || evidence.size_bytes > DEFAULT_MAX_DOWNLOAD_BYTES
+                    || evidence.adapter_id != "git_dev"
+                    || evidence.adapter_version != EXTERNAL_DISTRIBUTION_ADAPTER_VERSION
+                    || evidence.platform_selector != effect.platform_selector
+                    || evidence.verification_result != VerificationResult::Verified
+                    || evidence.installed_at_ms != effect.now_ms
+                    || evidence.artifact_signature
+                        != ArtifactSignatureStatus::NotDeclaredByManifestV1
+                    || expected_payload != &materialized_tree_digest
+                {
+                    return Err(verification_error());
+                }
+                let entrypoint_path = match adapter {
+                    GitDevAdapter::Npm => resolve_git_npm_entrypoint(&root, entrypoint).await?,
+                    GitDevAdapter::BinaryArchive => resolve_entrypoint(&root, entrypoint)?,
+                    GitDevAdapter::PythonWheel | GitDevAdapter::Docker => {
+                        return Err(verification_error())
+                    }
+                };
+                verify_regular_contained(&root, &entrypoint_path).await?;
+                git_runtime_projection(
+                    &self.runtime,
+                    &effect.manifest,
+                    &root,
+                    &entrypoint_path,
+                    *adapter,
+                )?
+            }
+            _ => return Err(verification_error()),
+        };
+        let descriptor = read_runtime_descriptor(&root).await?;
+        if descriptor.version != effect.manifest.version.as_str()
+            || descriptor.projection != expected_projection
+        {
+            return Err(verification_error());
+        }
+        let installed_at_ms = evidence.installed_at_ms;
+        Ok(ManagedInstallOutcome {
+            installation_root: root,
+            projection: expected_projection,
+            evidence,
+            materialized_tree_digest: materialized_tree_digest.clone(),
+            owned_relative_paths: vec![".".to_string()],
+            replaced_quarantine_token: repair_token(effect),
+            supply_chain_evidence: Some(
+                external_evidence.into_supply_chain(materialized_tree_digest, installed_at_ms),
+            ),
+        })
+    }
+
+    async fn acquire_docker(
+        &self,
+        effect: &ManagedInstallEffect,
+        image: &str,
+        digest: &str,
+        mount_plan_digest: &str,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<(
+        ConnectionProjection,
+        ArtifactVerificationEvidence,
+        ExternalEvidenceFile,
+    )> {
+        let capability = self.external.capabilities.docker()?;
+        if !capability.policy_allowed {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::DaemonPolicyDenied,
+                "Docker daemon policy denied the operation",
+            ));
+        }
+        let (daemon_version, rootless) = self.verify_docker_daemon(cancellation).await?;
+        let reference = format!("{image}@sha256:{digest}");
+        let pull = self
+            .run_docker(vec!["pull".to_string(), reference.clone()], cancellation)
+            .await?;
+        if !pull.success {
+            return Err(classify_docker_failure(&pull.stderr));
+        }
+        self.verify_docker_image(effect, cancellation).await?;
+        let Distribution::Docker { mounts, .. } = &effect.manifest.distribution else {
+            return Err(integrity_error());
+        };
+        if digest_serializable(mounts)? != mount_plan_digest {
+            return Err(integrity_error());
+        }
+        let projection = self.docker_runtime_projection(effect)?;
+        let origin = source_origin(&effect.source_url)?;
+        Ok((
+            projection,
+            ArtifactVerificationEvidence {
+                source_origin: origin,
+                artifact_digest: digest.to_string(),
+                size_bytes: 0,
+                adapter_id: "docker".to_string(),
+                adapter_version: EXTERNAL_DISTRIBUTION_ADAPTER_VERSION.to_string(),
+                platform_selector: effect.platform_selector.clone(),
+                verification_result: VerificationResult::Verified,
+                installed_at_ms: effect.now_ms,
+                artifact_signature: ArtifactSignatureStatus::NotDeclaredByManifestV1,
+            },
+            ExternalEvidenceFile::Docker {
+                image: image.to_string(),
+                image_digest: digest.to_string(),
+                daemon_version,
+                rootless,
+                mount_plan_digest: mount_plan_digest.to_string(),
+            },
+        ))
+    }
+
+    fn docker_runtime_projection(
+        &self,
+        effect: &ManagedInstallEffect,
+    ) -> McpPlatformResult<ConnectionProjection> {
+        let capability = self.external.capabilities.docker()?;
+        let Some(ExternalManagedAcquisition::Docker { image, digest, .. }) =
+            effect.external_acquisition.as_ref()
+        else {
+            return Err(integrity_error());
+        };
+        let Distribution::Docker {
+            entrypoint, mounts, ..
+        } = &effect.manifest.distribution
+        else {
+            return Err(integrity_error());
+        };
+        let reference = format!("{image}@sha256:{digest}");
+        let mut argv = vec![
+            "run".to_string(),
+            "--rm".to_string(),
+            "--interactive".to_string(),
+            "--read-only".to_string(),
+            "--cap-drop".to_string(),
+            "ALL".to_string(),
+            "--security-opt".to_string(),
+            "no-new-privileges".to_string(),
+            "--pids-limit".to_string(),
+            "256".to_string(),
+            "--label".to_string(),
+            format!("dev.block.goose.managed={}", effect.managed_mcp_id),
+        ];
+        if !effect
+            .manifest
+            .permissions
+            .iter()
+            .any(|permission| permission.kind == PermissionKind::Network)
+        {
+            argv.extend(["--network".to_string(), "none".to_string()]);
+        }
+        for mount in mounts {
+            let grant = self
+                .external
+                .mount_permissions
+                .resolve(&mount.source_permission)?;
+            let target = normalize_container_path(&mount.target)?;
+            let metadata = std::fs::symlink_metadata(&grant.server_path).map_err(|_| {
+                McpPlatformError::new(
+                    McpPlatformErrorCode::MountPermissionDenied,
+                    "filesystem permission grant target is unavailable",
+                )
+            })?;
+            if metadata.file_type().is_symlink()
+                || is_reparse(&metadata)
+                || !(metadata.is_file() || metadata.is_dir())
+                || (!mount.read_only && grant.kind != PermissionKind::FilesystemWrite)
+                || (mount.read_only
+                    && !matches!(
+                        grant.kind,
+                        PermissionKind::FilesystemRead | PermissionKind::FilesystemWrite
+                    ))
+            {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::MountPermissionDenied,
+                    "filesystem permission grant violates Docker mount policy",
+                ));
+            }
+            let source = grant.server_path.to_str().ok_or_else(|| {
+                McpPlatformError::new(
+                    McpPlatformErrorCode::MountPermissionDenied,
+                    "filesystem permission grant path is not valid UTF-8",
+                )
+            })?;
+            if source.contains(',') || source.chars().any(char::is_control) {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::MountPermissionDenied,
+                    "filesystem permission grant path cannot be encoded safely",
+                ));
+            }
+            let mut specification = format!("type=bind,src={source},dst={target}");
+            if mount.read_only {
+                specification.push_str(",readonly");
+            }
+            argv.extend(["--mount".to_string(), specification]);
+        }
+        for key in &entrypoint.environment_keys {
+            argv.extend(["--env".to_string(), key.clone()]);
+        }
+        argv.extend([
+            "--entrypoint".to_string(),
+            entrypoint.executable.clone(),
+            reference,
+        ]);
+        argv.extend(entrypoint.args.clone());
+        let timeout_seconds = match effect.manifest.transport {
+            super::manifest::Transport::Stdio {
+                startup_timeout_seconds,
+            } => startup_timeout_seconds,
+            _ => return Err(integrity_error()),
+        };
+        Ok(ConnectionProjection::ManagedDockerStdio {
+            name: effect.manifest.name.clone(),
+            description: effect.manifest.description.clone(),
+            executable: capability.executable().to_string_lossy().into_owned(),
+            args: argv,
+            cwd: None,
+            timeout_seconds,
+        })
+    }
+
+    async fn verify_docker_daemon(
+        &self,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<(String, bool)> {
+        let version = self
+            .run_docker(
+                vec![
+                    "version".to_string(),
+                    "--format".to_string(),
+                    "{{.Server.Version}}".to_string(),
+                ],
+                cancellation,
+            )
+            .await?;
+        let value = std::str::from_utf8(&version.stdout)
+            .unwrap_or_default()
+            .trim();
+        if !version.success
+            || value.is_empty()
+            || value.len() > 64
+            || !value
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || b"._+-".contains(&byte))
+        {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::DockerUnavailable,
+                "Docker daemon is unavailable or incompatible",
+            ));
+        }
+        let info = self
+            .run_docker(
+                vec![
+                    "info".to_string(),
+                    "--format".to_string(),
+                    "{{json .SecurityOptions}}".to_string(),
+                ],
+                cancellation,
+            )
+            .await?;
+        let security = std::str::from_utf8(&info.stdout).unwrap_or_default();
+        if !info.success || security.len() > 4096 || !security.trim_start().starts_with('[') {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::DockerUnavailable,
+                "Docker daemon security capability is unavailable",
+            ));
+        }
+        Ok((value.to_string(), security.contains("name=rootless")))
+    }
+
+    async fn verify_docker_image(
+        &self,
+        effect: &ManagedInstallEffect,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<()> {
+        let Some(ExternalManagedAcquisition::Docker { image, digest, .. }) =
+            effect.external_acquisition.as_ref()
+        else {
+            return Err(integrity_error());
+        };
+        let reference = format!("{image}@sha256:{digest}");
+        let output = self
+            .run_docker(
+                vec![
+                    "image".to_string(),
+                    "inspect".to_string(),
+                    "--format".to_string(),
+                    "{{json .RepoDigests}}\n{{.Id}}".to_string(),
+                    reference.clone(),
+                ],
+                cancellation,
+            )
+            .await?;
+        let mut lines = output.stdout.split(|byte| *byte == b'\n');
+        let repo_digests = lines
+            .next()
+            .and_then(|line| serde_json::from_slice::<Vec<String>>(line).ok())
+            .unwrap_or_default();
+        let image_id = lines
+            .next()
+            .and_then(|line| std::str::from_utf8(line).ok())
+            .unwrap_or_default();
+        let valid_image_id = image_id.strip_prefix("sha256:").is_some_and(|value| {
+            value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+        });
+        if !output.success
+            || !repo_digests.iter().any(|candidate| candidate == &reference)
+            || !valid_image_id
+        {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::ImageDigestMismatch,
+                "Docker image digest verification failed",
+            ));
+        }
+        Ok(())
+    }
+
+    async fn run_docker(
+        &self,
+        argv: Vec<String>,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<DirectProcessOutput> {
+        let executable = self
+            .external
+            .capabilities
+            .docker()?
+            .executable()
+            .to_path_buf();
+        self.external
+            .process
+            .run(
+                DirectProcessRequest {
+                    executable,
+                    argv,
+                    environment: self.docker_environment()?,
+                    cwd: None,
+                    stdin: None,
+                },
+                cancellation,
+            )
+            .await
+    }
+
+    fn docker_environment(&self) -> McpPlatformResult<std::collections::BTreeMap<String, String>> {
+        let home = self.root.join("docker-runtime").join("home");
+        let config = self.root.join("docker-runtime").join("config");
+        std::fs::create_dir_all(&home).map_err(|_| repository_error())?;
+        std::fs::create_dir_all(&config).map_err(|_| repository_error())?;
+        let home = home.to_str().ok_or_else(repository_error)?.to_string();
+        let config = config.to_str().ok_or_else(repository_error)?.to_string();
+        Ok(std::collections::BTreeMap::from([
+            ("HOME".to_string(), home),
+            ("DOCKER_CONFIG".to_string(), config),
+        ]))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn acquire_git(
+        &self,
+        effect: &ManagedInstallEffect,
+        staging_root: &Path,
+        version_root: &Path,
+        repository_origin: &str,
+        repository: &str,
+        commit: &str,
+        subdirectory: Option<&str>,
+        underlying_adapter: GitDevAdapter,
+        acquisition_digest: &str,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<(
+        ConnectionProjection,
+        ArtifactVerificationEvidence,
+        ExternalEvidenceFile,
+    )> {
+        if acquisition_digest != effect.expected_sha256
+            || commit.len() != 40
+            || !commit
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        {
+            return Err(integrity_error());
+        }
+        let parsed = Url::parse(repository).map_err(|_| git_origin_denied())?;
+        let host = parsed.host_str().ok_or_else(git_origin_denied)?;
+        let port = parsed
+            .port_or_known_default()
+            .ok_or_else(git_origin_denied)?;
+        let addresses = self
+            .external
+            .network
+            .resolve(host, port)
+            .await
+            .map_err(|_| git_origin_denied())?;
+        let network_pin = GitNetworkPin::new(host, port, &addresses)?;
+        let git_root = self.root.join("git").join(&effect.task_id);
+        prepare_owned_directory(&self.root, &git_root, false)?;
+        if owned_directory_exists(&self.root, &git_root).await? {
+            remove_owned_tree(&self.root, &git_root).await?;
+        }
+        tokio::fs::create_dir_all(&git_root)
+            .await
+            .map_err(|_| repository_error())?;
+        let result = self
+            .acquire_git_inner(
+                effect,
+                staging_root,
+                version_root,
+                &git_root,
+                repository,
+                commit,
+                subdirectory,
+                underlying_adapter,
+                acquisition_digest,
+                &network_pin,
+                cancellation,
+            )
+            .await;
+        let cleanup = remove_owned_tree(&self.root, &git_root).await;
+        match (result, cleanup) {
+            (Ok(value), Ok(())) => Ok(value),
+            (Err(error), _) => Err(error),
+            (Ok(_), Err(error)) => Err(error),
+        }
+        .map(
+            |(projection, evidence, tree_id, materialized_tree_digest)| {
+                (
+                    projection,
+                    evidence,
+                    ExternalEvidenceFile::GitDev {
+                        repository_origin: repository_origin.to_string(),
+                        commit: commit.to_string(),
+                        git_tree_id: tree_id,
+                        materialized_tree_digest,
+                    },
+                )
+            },
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    async fn acquire_git_inner(
+        &self,
+        effect: &ManagedInstallEffect,
+        staging_root: &Path,
+        version_root: &Path,
+        git_root: &Path,
+        repository: &str,
+        commit: &str,
+        subdirectory: Option<&str>,
+        underlying_adapter: GitDevAdapter,
+        acquisition_digest: &str,
+        network_pin: &GitNetworkPin,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<(
+        ConnectionProjection,
+        ArtifactVerificationEvidence,
+        String,
+        String,
+    )> {
+        let bare = git_root.join("objects.git");
+        let environment = git_environment(git_root)?;
+        let hooks = git_root.join("hooks-disabled");
+        let mut init_args = git_security_args(&hooks);
+        init_args.extend([
+            "init".to_string(),
+            "--bare".to_string(),
+            bare.to_string_lossy().into_owned(),
+        ]);
+        let init = self
+            .run_git(init_args, environment.clone(), cancellation)
+            .await?;
+        if !init.success {
+            return Err(git_unavailable());
+        }
+        let mut fetch_args = git_global_args(&bare, &hooks);
+        for value in network_pin.config_values() {
+            fetch_args.extend(["-c".to_string(), format!("http.curloptResolve={value}")]);
+        }
+        fetch_args.extend([
+            "fetch".to_string(),
+            "--no-tags".to_string(),
+            "--no-recurse-submodules".to_string(),
+            "--depth=1".to_string(),
+            repository.to_string(),
+            commit.to_string(),
+        ]);
+        let fetched = self
+            .run_git(fetch_args, environment.clone(), cancellation)
+            .await?;
+        if !fetched.success {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::CommitUnavailable,
+                "exact Git commit is unavailable",
+            ));
+        }
+        let object_type = self
+            .run_git(
+                git_query_args(&bare, &hooks, ["cat-file", "-t", commit]),
+                environment.clone(),
+                cancellation,
+            )
+            .await?;
+        if !object_type.success || object_type.stdout != b"commit\n" {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::CommitUnavailable,
+                "Git object is not the exact requested commit",
+            ));
+        }
+        let tree_selector = subdirectory
+            .map(|path| format!("{commit}:{path}"))
+            .unwrap_or_else(|| format!("{commit}^{{tree}}"));
+        let tree = self
+            .run_git(
+                git_query_args(&bare, &hooks, ["rev-parse", &tree_selector]),
+                environment.clone(),
+                cancellation,
+            )
+            .await?;
+        let tree_id = std::str::from_utf8(&tree.stdout)
+            .unwrap_or_default()
+            .trim()
+            .to_string();
+        if !tree.success
+            || tree_id.len() != 40
+            || !tree_id.bytes().all(|byte| byte.is_ascii_hexdigit())
+        {
+            return Err(unsafe_repository_tree());
+        }
+        let listing = self
+            .run_git(
+                git_query_args(&bare, &hooks, ["ls-tree", "-r", "-l", "-z", &tree_id]),
+                environment.clone(),
+                cancellation,
+            )
+            .await?;
+        if !listing.success {
+            return Err(unsafe_repository_tree());
+        }
+        validate_git_tree_listing(&listing.stdout, ArchiveLimits::default())?;
+        let archive_path = git_root.join("tree.tar.gz");
+        let mut archive_args = git_global_args(&bare, &hooks);
+        archive_args.extend([
+            "archive".to_string(),
+            "--format=tar.gz".to_string(),
+            format!("--output={}", archive_path.to_string_lossy()),
+            "--prefix=payload/".to_string(),
+            tree_id.clone(),
+        ]);
+        let archived = self
+            .run_git(archive_args, environment, cancellation)
+            .await?;
+        if !archived.success {
+            return Err(unsafe_repository_tree());
+        }
+        let metadata = tokio::fs::symlink_metadata(&archive_path)
+            .await
+            .map_err(|_| unsafe_repository_tree())?;
+        let archive = hash_file(
+            archive_path,
+            metadata.len(),
+            DEFAULT_MAX_DOWNLOAD_BYTES,
+            cancellation,
+        )
+        .await?;
+        if owned_directory_exists(&self.root, staging_root).await? {
+            remove_owned_tree(&self.root, staging_root).await?;
+        }
+        ArchiveInstaller {
+            format: ArchiveFormat::TarGz,
+            strip_components: 1,
+            limits: ArchiveLimits::default(),
+        }
+        .materialize(&archive, staging_root, cancellation)
+        .await?;
+        let Distribution::GitDev { entrypoint, .. } = &effect.manifest.distribution else {
+            return Err(integrity_error());
+        };
+        let entrypoint_path = match underlying_adapter {
+            GitDevAdapter::Npm => resolve_git_npm_entrypoint(staging_root, entrypoint).await?,
+            GitDevAdapter::BinaryArchive => resolve_entrypoint(staging_root, entrypoint)?,
+            GitDevAdapter::PythonWheel => {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::OperationNotSupported,
+                    "git development Python wheel lacks a closed wheel identity in manifest v1",
+                ))
+            }
+            GitDevAdapter::Docker => {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::OperationNotSupported,
+                    "git development Docker builds are forbidden",
+                ))
+            }
+        };
+        verify_regular_contained(staging_root, &entrypoint_path).await?;
+        set_minimum_entrypoint_permissions(
+            if underlying_adapter == GitDevAdapter::BinaryArchive {
+                "binary_archive"
+            } else {
+                "npm"
+            },
+            &entrypoint_path,
+        )
+        .await?;
+        let materialized_tree_digest = compute_materialized_tree_digest(staging_root).await?;
+        let projection = git_runtime_projection(
+            &self.runtime,
+            &effect.manifest,
+            version_root,
+            &version_root.join(
+                entrypoint_path
+                    .strip_prefix(staging_root)
+                    .map_err(|_| unsafe_repository_tree())?,
+            ),
+            underlying_adapter,
+        )?;
+        Ok((
+            projection,
+            ArtifactVerificationEvidence {
+                source_origin: source_origin(repository)?,
+                artifact_digest: acquisition_digest.to_string(),
+                size_bytes: archive.size_bytes,
+                adapter_id: "git_dev".to_string(),
+                adapter_version: EXTERNAL_DISTRIBUTION_ADAPTER_VERSION.to_string(),
+                platform_selector: effect.platform_selector.clone(),
+                verification_result: VerificationResult::Verified,
+                installed_at_ms: effect.now_ms,
+                artifact_signature: ArtifactSignatureStatus::NotDeclaredByManifestV1,
+            },
+            tree_id,
+            materialized_tree_digest,
+        ))
+    }
+
+    async fn run_git(
+        &self,
+        argv: Vec<String>,
+        environment: std::collections::BTreeMap<String, String>,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<DirectProcessOutput> {
+        self.external
+            .process
+            .run(
+                DirectProcessRequest {
+                    executable: self.external.capabilities.git()?.executable().to_path_buf(),
+                    argv,
+                    environment,
+                    cwd: None,
+                    stdin: None,
+                },
+                cancellation,
+            )
+            .await
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+enum ExternalEvidenceFile {
+    Docker {
+        image: String,
+        image_digest: String,
+        daemon_version: String,
+        rootless: bool,
+        mount_plan_digest: String,
+    },
+    GitDev {
+        repository_origin: String,
+        commit: String,
+        git_tree_id: String,
+        materialized_tree_digest: String,
+    },
+}
+
+#[derive(Debug, Clone)]
+struct GitNetworkPin {
+    host: String,
+    port: u16,
+    addresses: Vec<std::net::IpAddr>,
+}
+
+impl GitNetworkPin {
+    fn new(host: &str, port: u16, addresses: &[std::net::SocketAddr]) -> McpPlatformResult<Self> {
+        if host.is_empty()
+            || host.parse::<std::net::IpAddr>().is_ok()
+            || !host.bytes().all(|byte| {
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'-')
+            })
+            || addresses.is_empty()
+            || addresses
+                .iter()
+                .any(|address| address.port() != port || !public_ip(address.ip()))
+        {
+            return Err(git_origin_denied());
+        }
+        let mut values = addresses
+            .iter()
+            .map(|address| address.ip())
+            .collect::<Vec<_>>();
+        values.sort();
+        values.dedup();
+        Ok(Self {
+            host: host.to_string(),
+            port,
+            addresses: values,
+        })
+    }
+
+    fn config_values(&self) -> Vec<String> {
+        self.addresses
+            .iter()
+            .map(|address| match address {
+                std::net::IpAddr::V4(address) => {
+                    format!("{}:{}:{address}", self.host, self.port)
+                }
+                std::net::IpAddr::V6(address) => {
+                    format!("{}:{}:[{address}]", self.host, self.port)
+                }
+            })
+            .collect()
+    }
+}
+
+impl ExternalEvidenceFile {
+    fn verify_authority(&self, effect: &ManagedInstallEffect) -> McpPlatformResult<()> {
+        let valid = match (self, effect.external_acquisition.as_ref()) {
+            (
+                Self::Docker {
+                    image,
+                    image_digest,
+                    mount_plan_digest,
+                    daemon_version,
+                    ..
+                },
+                Some(ExternalManagedAcquisition::Docker {
+                    image: expected_image,
+                    digest,
+                    mount_plan_digest: expected_mounts,
+                }),
+            ) => {
+                image == expected_image
+                    && image_digest == digest
+                    && mount_plan_digest == expected_mounts
+                    && !daemon_version.is_empty()
+                    && daemon_version.len() <= 64
+                    && daemon_version
+                        .bytes()
+                        .all(|byte| byte.is_ascii_alphanumeric() || b"._+-".contains(&byte))
+            }
+            (
+                Self::GitDev {
+                    repository_origin,
+                    commit,
+                    git_tree_id,
+                    materialized_tree_digest,
+                },
+                Some(ExternalManagedAcquisition::GitDev {
+                    repository_origin: expected_origin,
+                    commit: expected_commit,
+                    ..
+                }),
+            ) => {
+                repository_origin == expected_origin
+                    && commit == expected_commit
+                    && git_tree_id.len() == 40
+                    && git_tree_id
+                        .bytes()
+                        .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                    && materialized_tree_digest.len() == 64
+                    && materialized_tree_digest
+                        .bytes()
+                        .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+            }
+            _ => false,
+        };
+        if valid {
+            Ok(())
+        } else {
+            Err(verification_error())
+        }
+    }
+
+    fn into_supply_chain(self, _tree_digest: String, created_at_ms: i64) -> SupplyChainEvidence {
+        match self {
+            Self::Docker {
+                image,
+                image_digest,
+                daemon_version,
+                rootless,
+                mount_plan_digest,
+            } => SupplyChainEvidence::Docker {
+                image,
+                image_digest,
+                adapter_version: EXTERNAL_DISTRIBUTION_ADAPTER_VERSION.to_string(),
+                daemon_version,
+                rootless,
+                mount_plan_digest,
+                created_at_ms,
+            },
+            Self::GitDev {
+                repository_origin,
+                commit,
+                git_tree_id,
+                materialized_tree_digest,
+            } => SupplyChainEvidence::GitDev {
+                repository_origin,
+                commit,
+                git_tree_id,
+                materialized_tree_digest,
+                adapter_version: EXTERNAL_DISTRIBUTION_ADAPTER_VERSION.to_string(),
+                created_at_ms,
+            },
+        }
+    }
+}
+
+fn classify_docker_failure(stderr: &[u8]) -> McpPlatformError {
+    let message = String::from_utf8_lossy(stderr).to_ascii_lowercase();
+    if message.contains("unauthorized")
+        || message.contains("authentication required")
+        || message.contains("denied")
+    {
+        McpPlatformError::new(
+            McpPlatformErrorCode::RegistryAuthRequired,
+            "Docker registry authentication is required",
+        )
+    } else {
+        McpPlatformError::new(
+            McpPlatformErrorCode::RepositoryUnavailable,
+            "Docker registry operation failed",
+        )
+    }
+}
+
+fn git_environment(root: &Path) -> McpPlatformResult<std::collections::BTreeMap<String, String>> {
+    let home = root.join("home");
+    let hooks = root.join("hooks-disabled");
+    std::fs::create_dir_all(&home).map_err(|_| repository_error())?;
+    std::fs::create_dir_all(&hooks).map_err(|_| repository_error())?;
+    let global_config = root.join("global.gitconfig");
+    std::fs::write(&global_config, b"").map_err(|_| repository_error())?;
+    Ok(std::collections::BTreeMap::from([
+        ("GIT_CONFIG_NOSYSTEM".to_string(), "1".to_string()),
+        (
+            "GIT_CONFIG_GLOBAL".to_string(),
+            global_config.to_string_lossy().into_owned(),
+        ),
+        ("GIT_TERMINAL_PROMPT".to_string(), "0".to_string()),
+        ("GCM_INTERACTIVE".to_string(), "Never".to_string()),
+        ("GIT_LFS_SKIP_SMUDGE".to_string(), "1".to_string()),
+        ("HOME".to_string(), home.to_string_lossy().into_owned()),
+    ]))
+}
+
+fn git_global_args(git_dir: &Path, hooks_dir: &Path) -> Vec<String> {
+    let mut args = git_security_args(hooks_dir);
+    args.extend([
+        "--git-dir".to_string(),
+        git_dir.to_string_lossy().into_owned(),
+    ]);
+    args
+}
+
+fn git_security_args(hooks_dir: &Path) -> Vec<String> {
+    vec![
+        "--no-pager".to_string(),
+        "--no-optional-locks".to_string(),
+        "-c".to_string(),
+        "credential.helper=".to_string(),
+        "-c".to_string(),
+        format!("core.hooksPath={}", hooks_dir.to_string_lossy()),
+        "-c".to_string(),
+        "protocol.file.allow=never".to_string(),
+        "-c".to_string(),
+        "http.followRedirects=false".to_string(),
+        "-c".to_string(),
+        "filter.lfs.required=false".to_string(),
+        "-c".to_string(),
+        "filter.lfs.smudge=".to_string(),
+    ]
+}
+
+fn git_query_args<const N: usize>(
+    git_dir: &Path,
+    hooks_dir: &Path,
+    values: [&str; N],
+) -> Vec<String> {
+    let mut result = git_global_args(git_dir, hooks_dir);
+    result.extend(values.into_iter().map(str::to_string));
+    result
+}
+
+fn validate_git_tree_listing(bytes: &[u8], limits: ArchiveLimits) -> McpPlatformResult<()> {
+    let mut count = 0_usize;
+    let mut total = 0_u64;
+    let mut paths = HashSet::new();
+    for raw in bytes
+        .split(|byte| *byte == 0)
+        .filter(|entry| !entry.is_empty())
+    {
+        count += 1;
+        if count > limits.maximum_files {
+            return Err(unsafe_repository_tree());
+        }
+        let text = std::str::from_utf8(raw).map_err(|_| unsafe_repository_tree())?;
+        let (metadata, path) = text.split_once('\t').ok_or_else(unsafe_repository_tree)?;
+        let fields = metadata.split_whitespace().collect::<Vec<_>>();
+        if fields.len() != 4 || fields[1] != "blob" || !matches!(fields[0], "100644" | "100755") {
+            return Err(unsafe_repository_tree());
+        }
+        let size = fields[3]
+            .parse::<u64>()
+            .map_err(|_| unsafe_repository_tree())?;
+        if size > limits.maximum_single_file_bytes {
+            return Err(unsafe_repository_tree());
+        }
+        total = total.checked_add(size).ok_or_else(unsafe_repository_tree)?;
+        if total > limits.maximum_total_bytes {
+            return Err(unsafe_repository_tree());
+        }
+        validate_archive_path(path).map_err(|_| unsafe_repository_tree())?;
+        if path
+            .split('/')
+            .any(|component| component.eq_ignore_ascii_case(".git"))
+            || !paths.insert(path.replace('\\', "/").to_ascii_lowercase())
+        {
+            return Err(unsafe_repository_tree());
+        }
+    }
+    if count == 0 {
+        return Err(unsafe_repository_tree());
+    }
+    Ok(())
+}
+
+async fn resolve_git_npm_entrypoint(
+    root: &Path,
+    entrypoint: &Entrypoint,
+) -> McpPlatformResult<PathBuf> {
+    let bytes = read_limited(&root.join("package.json"), MAX_METADATA_BYTES)
+        .await
+        .map_err(|_| unsafe_repository_tree())?;
+    let value: serde_json::Value =
+        serde_json::from_slice(&bytes).map_err(|_| unsafe_repository_tree())?;
+    for key in [
+        "scripts",
+        "dependencies",
+        "optionalDependencies",
+        "peerDependencies",
+        "bundleDependencies",
+        "bundledDependencies",
+    ] {
+        match value.get(key) {
+            None => {}
+            Some(serde_json::Value::Object(items)) if items.is_empty() => {}
+            Some(serde_json::Value::Array(items)) if items.is_empty() => {}
+            Some(_) => {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::PolicyDenied,
+                    "git development npm input contains scripts or dependencies",
+                ))
+            }
+        }
+    }
+    let bin_name = logical_bin_name(&entrypoint.executable)?;
+    let bin_path = match value.get("bin") {
+        Some(serde_json::Value::String(path)) => path.as_str(),
+        Some(serde_json::Value::Object(entries)) => entries
+            .get(bin_name)
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(unsafe_repository_tree)?,
+        _ => return Err(unsafe_repository_tree()),
+    };
+    resolve_managed_path(root, bin_path.trim_start_matches("./"))
+}
+
+fn git_runtime_projection(
+    runtime: &RuntimeCapabilities,
+    manifest: &Manifest,
+    root: &Path,
+    entrypoint_path: &Path,
+    adapter: GitDevAdapter,
+) -> McpPlatformResult<ConnectionProjection> {
+    let Distribution::GitDev { entrypoint, .. } = &manifest.distribution else {
+        return Err(integrity_error());
+    };
+    let (executable, mut args) = match adapter {
+        GitDevAdapter::Npm => (
+            runtime
+                .node
+                .as_ref()
+                .ok_or_else(runtime_incompatible)?
+                .to_string_lossy()
+                .into_owned(),
+            vec![entrypoint_path.to_string_lossy().into_owned()],
+        ),
+        GitDevAdapter::BinaryArchive => {
+            (entrypoint_path.to_string_lossy().into_owned(), Vec::new())
+        }
+        GitDevAdapter::PythonWheel | GitDevAdapter::Docker => {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::OperationNotSupported,
+                "git development underlying adapter is not safely expressible",
+            ))
+        }
+    };
+    args.extend(entrypoint.args.clone());
+    let timeout_seconds = match manifest.transport {
+        super::manifest::Transport::Stdio {
+            startup_timeout_seconds,
+        } => startup_timeout_seconds,
+        _ => return Err(integrity_error()),
+    };
+    Ok(ConnectionProjection::ManagedStdio {
+        name: manifest.name.clone(),
+        description: manifest.description.clone(),
+        executable,
+        args,
+        environment_keys: entrypoint.environment_keys.clone(),
+        cwd: match &entrypoint.cwd {
+            Some(value) => Some(
+                resolve_managed_path(root, value)?
+                    .to_string_lossy()
+                    .into_owned(),
+            ),
+            None => Some(root.to_string_lossy().into_owned()),
+        },
+        timeout_seconds,
+    })
+}
+
+const fn git_origin_denied() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::GitOriginDenied,
+        "Git origin violates the HTTPS and public-network policy",
+    )
+}
+
+const fn git_unavailable() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::GitUnavailable,
+        "Git capability is unavailable",
+    )
+}
+
+const fn unsafe_repository_tree() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::UnsafeRepositoryTree,
+        "Git repository tree violates materialization policy",
+    )
 }
 
 fn prepare_distribution_root(root: PathBuf) -> McpPlatformResult<(PathBuf, PathBuf)> {
@@ -624,6 +1920,9 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         effect: &ManagedInstallEffect,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome> {
+        if effect.external_acquisition.is_some() {
+            return self.install_external(effect, cancellation).await;
+        }
         let (adapter_id, format, strip, entrypoint, timeout) =
             distribution_materialization(&effect.manifest)?;
         let fetch = ArtifactFetchEffect {
@@ -778,7 +2077,11 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
     async fn inspect_installed(
         &self,
         effect: &ManagedInstallEffect,
+        cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome> {
+        if effect.external_acquisition.is_some() {
+            return self.inspect_external(effect, cancellation).await;
+        }
         let expected = effect
             .expected_tree_digest
             .as_deref()
@@ -1646,6 +2949,12 @@ async fn compute_materialized_tree_digest(root: &Path) -> McpPlatformResult<Stri
                 })
                 .collect::<McpPlatformResult<Vec<_>>>()?
                 .join("/");
+            if is_task_local_installation_metadata(&relative) {
+                if !metadata.is_file() {
+                    return Err(verification_error());
+                }
+                continue;
+            }
             if metadata.is_dir() {
                 entries.push((relative, b'd', 0_u64, None));
                 pending.push(path);
@@ -1698,6 +3007,16 @@ async fn compute_materialized_tree_digest(root: &Path) -> McpPlatformResult<Stri
         }
     }
     Ok(hex_digest(tree_hasher.finalize().as_slice()))
+}
+
+fn is_task_local_installation_metadata(relative: &str) -> bool {
+    matches!(
+        relative,
+        ".goose-runtime-descriptor.json"
+            | ".goose-artifact-evidence.json"
+            | ".goose-external-evidence.json"
+            | ".goose-installation-owner.json"
+    )
 }
 
 async fn remove_owned_tree(owner_root: &Path, target: &Path) -> McpPlatformResult<()> {
@@ -2319,7 +3638,7 @@ fn validate_fetch_effect(effect: &ArtifactFetchEffect) -> McpPlatformResult<()> 
     Ok(())
 }
 
-async fn resolve_public_addresses(
+pub(crate) async fn resolve_public_addresses(
     host: &str,
     port: u16,
 ) -> McpPlatformResult<Vec<std::net::SocketAddr>> {
@@ -2329,7 +3648,11 @@ async fn resolve_public_addresses(
     ) {
         return Err(unsafe_fetch());
     }
-    let addresses = if let Ok(ip) = host.parse::<std::net::IpAddr>() {
+    let literal_host = host
+        .strip_prefix('[')
+        .and_then(|host| host.strip_suffix(']'))
+        .unwrap_or(host);
+    let addresses = if let Ok(ip) = literal_host.parse::<std::net::IpAddr>() {
         vec![std::net::SocketAddr::new(ip, port)]
     } else {
         tokio::net::lookup_host((host, port))
@@ -2464,4 +3787,862 @@ const fn integrity_error() -> McpPlatformError {
         McpPlatformErrorCode::IntegrityError,
         "managed distribution state failed integrity validation",
     )
+}
+
+#[cfg(test)]
+mod external_adapter_tests {
+    use super::*;
+    use std::sync::atomic::{AtomicI64, AtomicU64};
+
+    use crate::agents::ExtensionConfig;
+    use crate::mcp_platform::external_distribution::{
+        DirectProcessRunner, DockerToolCapability, ExternalToolCapabilities, GitToolCapability,
+        MountPermissionResolver, PublicNetworkResolver, ResolvedMountGrant,
+    };
+    use crate::mcp_platform::repository::{ManifestRecord, SqliteMcpPlatformRepository};
+    use crate::mcp_platform::service::{
+        Clock, IdGenerator, InstallConfirmInput, ManagedGetInput, ManagedSupplyChainSummary,
+        McpPlatformService, McpPlatformServiceOptions, PlanCreateInput, PlanIntent, UserDecision,
+    };
+    use crate::mcp_platform::{
+        ConfigAuthRequirementResolver, ConfigProjectionSink, CoreTransportProjectionAdapter,
+        EmptyHostIntegrationAdapter, HealthAdapterResult, HealthCheckAdapter, HealthDetailCode,
+        HealthExecution, HealthResultCode, LifecyclePorts, ManifestProof,
+        RuntimeCapabilitySnapshot, SafeRegistrationEffectAdapter, TaskStatus, TrustTier,
+    };
+
+    #[derive(Default)]
+    struct RecordingProcess {
+        requests: Mutex<Vec<DirectProcessRequest>>,
+        image_mismatch: AtomicBool,
+        unsafe_git_tree: AtomicBool,
+    }
+
+    #[async_trait]
+    impl DirectProcessRunner for RecordingProcess {
+        async fn run(
+            &self,
+            request: DirectProcessRequest,
+            cancellation: &CancellationToken,
+        ) -> McpPlatformResult<DirectProcessOutput> {
+            if cancellation.is_cancelled() {
+                return Err(cancelled());
+            }
+            let output = match request.argv.as_slice() {
+                [command, format, _] if command == "version" && format == "--format" => {
+                    b"25.0.3\n".to_vec()
+                }
+                [command, format, _] if command == "info" && format == "--format" => {
+                    br#"["name=rootless"]"#.to_vec()
+                }
+                [command, reference] if command == "pull" => {
+                    assert!(reference.contains("@sha256:"));
+                    Vec::new()
+                }
+                [image, inspect, format, _, reference]
+                    if image == "image" && inspect == "inspect" && format == "--format" =>
+                {
+                    let reference = if self.image_mismatch.load(Ordering::SeqCst) {
+                        "registry.example/other@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+                    } else {
+                        reference
+                    };
+                    format!("[\"{reference}\"]\nsha256:{}\n", "b".repeat(64)).into_bytes()
+                }
+                args if args.iter().any(|argument| argument == "init") => Vec::new(),
+                args if args.iter().any(|argument| argument == "fetch") => Vec::new(),
+                args if args.iter().any(|argument| argument == "cat-file") => b"commit\n".to_vec(),
+                args if args.iter().any(|argument| argument == "rev-parse") => {
+                    format!("{}\n", "d".repeat(40)).into_bytes()
+                }
+                args if args.iter().any(|argument| argument == "ls-tree") => {
+                    if self.unsafe_git_tree.load(Ordering::SeqCst) {
+                        format!("120000 blob {} 4\tdir/link\0", "e".repeat(40)).into_bytes()
+                    } else {
+                        format!(
+                            "100644 blob {} 40\tpackage.json\0100755 blob {} 4\tdir/server.js\0",
+                            "e".repeat(40),
+                            "f".repeat(40)
+                        )
+                        .into_bytes()
+                    }
+                }
+                args if args.iter().any(|argument| argument == "archive") => {
+                    let output = args
+                        .iter()
+                        .find_map(|argument| argument.strip_prefix("--output="))
+                        .unwrap();
+                    let file = std::fs::File::create(output).unwrap();
+                    let encoder = flate2::write::GzEncoder::new(file, flate2::Compression::fast());
+                    let mut archive = tar::Builder::new(encoder);
+                    let package = br#"{"bin":{"server":"dir/server.js"}}"#;
+                    let mut header = tar::Header::new_gnu();
+                    header.set_size(package.len() as u64);
+                    header.set_mode(0o644);
+                    header.set_cksum();
+                    archive
+                        .append_data(&mut header, "payload/package.json", &package[..])
+                        .unwrap();
+                    let server = b"mcp\n";
+                    let mut header = tar::Header::new_gnu();
+                    header.set_size(server.len() as u64);
+                    header.set_mode(0o755);
+                    header.set_cksum();
+                    archive
+                        .append_data(&mut header, "payload/dir/server.js", &server[..])
+                        .unwrap();
+                    archive.into_inner().unwrap().finish().unwrap();
+                    Vec::new()
+                }
+                args => panic!("unexpected Docker request: {args:?}"),
+            };
+            self.requests.lock().unwrap().push(request);
+            Ok(DirectProcessOutput {
+                success: true,
+                stdout: output,
+                stderr: Vec::new(),
+            })
+        }
+    }
+
+    struct NoMounts;
+    impl MountPermissionResolver for NoMounts {
+        fn resolve(&self, _permission_id: &str) -> McpPlatformResult<ResolvedMountGrant> {
+            Err(verification_error())
+        }
+    }
+
+    struct PublicDns;
+    #[async_trait]
+    impl PublicNetworkResolver for PublicDns {
+        async fn resolve(
+            &self,
+            _host: &str,
+            port: u16,
+        ) -> McpPlatformResult<Vec<std::net::SocketAddr>> {
+            Ok(vec![std::net::SocketAddr::new(
+                "93.184.216.34".parse().unwrap(),
+                port,
+            )])
+        }
+    }
+
+    fn docker_effect() -> ManagedInstallEffect {
+        let mut value: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../documentation/static/schemas/examples/manual-stdio.json"
+        ))
+        .unwrap();
+        let digest = "a".repeat(64);
+        value["id"] = serde_json::json!("local.example.docker-test");
+        value["host_integrations"] = serde_json::json!([]);
+        value["permissions"] = serde_json::json!([
+            {"id":"spawn","kind":"process_spawn","reason":"Spawn Docker.","required":true},
+            {"id":"docker","kind":"docker","reason":"Use Docker.","required":true},
+            {"id":"network","kind":"network","reason":"Pull image.","required":true}
+        ]);
+        value["distribution"] = serde_json::json!({
+            "type":"docker",
+            "image":"registry.example/team/server",
+            "digest":{"algorithm":"sha256","value":digest},
+            "entrypoint":{"executable":"/server","args":["--stdio"],"environment_keys":[]},
+            "mounts":[]
+        });
+        let manifest = crate::mcp_platform::parse_manifest(&serde_json::to_vec(&value).unwrap())
+            .unwrap()
+            .manifest()
+            .clone();
+        ManagedInstallEffect {
+            task_id: "task_000001".to_string(),
+            managed_mcp_id: "managed_000001".to_string(),
+            manifest,
+            source_url: "https://registry.example".to_string(),
+            expected_sha256: digest.clone(),
+            expected_size_bytes: None,
+            platform_selector: "docker/immutable".to_string(),
+            now_ms: 100,
+            operation: TaskOperation::Install,
+            expected_tree_digest: None,
+            rebuild_uncommitted_version: false,
+            external_acquisition: Some(ExternalManagedAcquisition::Docker {
+                image: "registry.example/team/server".to_string(),
+                digest,
+                mount_plan_digest: digest_serializable(&Vec::<
+                    crate::mcp_platform::manifest::DockerMount,
+                >::new())
+                .unwrap(),
+            }),
+        }
+    }
+
+    fn docker_adapter(
+        root: PathBuf,
+        process: Arc<RecordingProcess>,
+    ) -> ProductionDistributionEffectAdapter {
+        docker_adapter_with_policy(root, process, true)
+    }
+
+    fn docker_adapter_with_policy(
+        root: PathBuf,
+        process: Arc<RecordingProcess>,
+        policy_allowed: bool,
+    ) -> ProductionDistributionEffectAdapter {
+        let capabilities = ExternalToolCapabilities::for_test(
+            Some(DockerToolCapability::for_test(
+                PathBuf::from("server-owned-docker"),
+                "ignored",
+                false,
+                policy_allowed,
+            )),
+            Some(GitToolCapability::for_test(PathBuf::from(
+                "server-owned-git",
+            ))),
+        );
+        ProductionDistributionEffectAdapter::new_with_runtime_and_external(
+            root,
+            RuntimeCapabilities::for_test(None, None, None),
+            ExternalDistributionPorts {
+                process,
+                mount_permissions: Arc::new(NoMounts),
+                capabilities,
+                network: Arc::new(PublicDns),
+            },
+        )
+        .unwrap()
+    }
+
+    fn git_effect() -> ManagedInstallEffect {
+        let mut value: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../documentation/static/schemas/examples/manual-stdio.json"
+        ))
+        .unwrap();
+        let commit = "0123456789abcdef0123456789abcdef01234567";
+        let acquisition = "c".repeat(64);
+        value["id"] = serde_json::json!("local.example.git-test");
+        value["host_integrations"] = serde_json::json!([]);
+        value["permissions"] = serde_json::json!([
+            {"id":"spawn","kind":"process_spawn","reason":"Spawn Git.","required":true},
+            {"id":"network","kind":"network","reason":"Fetch commit.","required":true}
+        ]);
+        value["distribution"] = serde_json::json!({
+            "type":"git_dev",
+            "repository":"https://git.example/team/server.git",
+            "commit":commit,
+            "adapter":"npm",
+            "entrypoint":{"executable":"${installation.bin}/server","args":["--stdio"],"environment_keys":[]}
+        });
+        let manifest = crate::mcp_platform::parse_manifest(&serde_json::to_vec(&value).unwrap())
+            .unwrap()
+            .manifest()
+            .clone();
+        ManagedInstallEffect {
+            task_id: "task_git_000001".to_string(),
+            managed_mcp_id: "managed_git_000001".to_string(),
+            manifest,
+            source_url: "https://git.example/team/server.git".to_string(),
+            expected_sha256: acquisition.clone(),
+            expected_size_bytes: None,
+            platform_selector: "git_dev/exact_commit".to_string(),
+            now_ms: 200,
+            operation: TaskOperation::Install,
+            expected_tree_digest: None,
+            rebuild_uncommitted_version: false,
+            external_acquisition: Some(ExternalManagedAcquisition::GitDev {
+                repository_origin: "https://git.example".to_string(),
+                repository: "https://git.example/team/server.git".to_string(),
+                commit: commit.to_string(),
+                subdirectory: None,
+                underlying_adapter: GitDevAdapter::Npm,
+                acquisition_digest: acquisition,
+            }),
+        }
+    }
+
+    fn git_adapter(
+        root: PathBuf,
+        process: Arc<RecordingProcess>,
+    ) -> ProductionDistributionEffectAdapter {
+        let capabilities = ExternalToolCapabilities::for_test(
+            None,
+            Some(GitToolCapability::for_test(PathBuf::from(
+                "server-owned-git",
+            ))),
+        );
+        ProductionDistributionEffectAdapter::new_with_runtime_and_external(
+            root,
+            RuntimeCapabilities::for_test(Some(PathBuf::from("server-owned-node")), None, None),
+            ExternalDistributionPorts {
+                process,
+                mount_permissions: Arc::new(NoMounts),
+                capabilities,
+                network: Arc::new(PublicDns),
+            },
+        )
+        .unwrap()
+    }
+
+    struct FixedClock(AtomicI64);
+
+    impl Clock for FixedClock {
+        fn now_ms(&self) -> i64 {
+            self.0.load(Ordering::SeqCst)
+        }
+    }
+
+    #[derive(Default)]
+    struct SequenceIds(AtomicU64);
+
+    impl IdGenerator for SequenceIds {
+        fn next_id(&self, prefix: &str) -> String {
+            format!("{prefix}_{:06}", self.0.fetch_add(1, Ordering::SeqCst))
+        }
+    }
+
+    struct HealthyExternalProjection;
+
+    #[async_trait]
+    impl HealthCheckAdapter for HealthyExternalProjection {
+        fn adapter_id(&self) -> &'static str {
+            "mcp_health"
+        }
+
+        fn adapter_version(&self) -> &'static str {
+            "1"
+        }
+
+        async fn run(
+            &self,
+            _execution: HealthExecution,
+            _cancellation: CancellationToken,
+        ) -> McpPlatformResult<HealthAdapterResult> {
+            Ok(HealthAdapterResult {
+                result_code: HealthResultCode::Healthy,
+                latency_ms: 1,
+                capabilities_digest: None,
+                tools_digest: None,
+                detail_code: HealthDetailCode::McpInitializeSucceeded,
+            })
+        }
+    }
+
+    async fn install_through_service(
+        service: &McpPlatformService,
+        repository: &SqliteMcpPlatformRepository,
+        manifest: &Manifest,
+        trust_tier: TrustTier,
+        key: &str,
+    ) -> crate::mcp_platform::service::ManagedMcpDetail {
+        let verified =
+            crate::mcp_platform::parse_manifest(&serde_json::to_vec(manifest).unwrap()).unwrap();
+        let manifest_digest = verified.digest().to_string();
+        repository
+            .save_manifest(&ManifestRecord {
+                verified,
+                proof: ManifestProof::LocalBytes,
+                trust_tier,
+                created_at_ms: 1_000,
+            })
+            .await
+            .unwrap();
+        let context = service.trusted_local_context();
+        let plan = service
+            .plan_create(
+                &context,
+                PlanCreateInput {
+                    intent: PlanIntent::Install { manifest_digest },
+                    idempotency_key: format!("plan_{key}"),
+                },
+            )
+            .await
+            .unwrap();
+        let managed_mcp_id = plan.target.managed_mcp_id.clone().unwrap();
+        let task = service
+            .install_confirm(
+                &context,
+                InstallConfirmInput {
+                    plan_id: plan.plan_id,
+                    plan_digest: plan.plan_digest,
+                    decision: UserDecision::Confirm,
+                    idempotency_key: format!("task_{key}"),
+                },
+            )
+            .await
+            .unwrap();
+        assert!(service.runner_tick().await.unwrap());
+        assert_eq!(
+            repository.get_task(&task.task_id).await.unwrap().status,
+            TaskStatus::Succeeded
+        );
+        service
+            .managed_get(&context, ManagedGetInput { managed_mcp_id })
+            .await
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn service_runner_sqlite_uses_production_adapter_for_docker_and_git_dev() {
+        let directory = tempfile::tempdir().unwrap();
+        let repository = Arc::new(
+            SqliteMcpPlatformRepository::open_path(directory.path().join("platform.db"))
+                .await
+                .unwrap(),
+        );
+        let process = Arc::new(RecordingProcess::default());
+        let capabilities = ExternalToolCapabilities::for_test(
+            Some(DockerToolCapability::for_test(
+                PathBuf::from("server-owned-docker"),
+                "ignored",
+                false,
+                true,
+            )),
+            Some(GitToolCapability::for_test(PathBuf::from(
+                "server-owned-git",
+            ))),
+        );
+        let distribution = Arc::new(
+            ProductionDistributionEffectAdapter::new_with_runtime_and_external(
+                directory.path().join("managed"),
+                RuntimeCapabilities::for_test(Some(PathBuf::from("server-owned-node")), None, None),
+                ExternalDistributionPorts {
+                    process: process.clone(),
+                    mount_permissions: Arc::new(NoMounts),
+                    capabilities,
+                    network: Arc::new(PublicDns),
+                },
+            )
+            .unwrap(),
+        );
+        let config = Arc::new(
+            crate::config::Config::new_with_file_secrets(
+                directory.path().join("config.yaml"),
+                directory.path().join("secrets.yaml"),
+            )
+            .unwrap(),
+        );
+        let ports = LifecyclePorts {
+            registration: Arc::new(SafeRegistrationEffectAdapter),
+            host_integration: Arc::new(EmptyHostIntegrationAdapter),
+            transport: Arc::new(CoreTransportProjectionAdapter),
+            auth: Arc::new(ConfigAuthRequirementResolver),
+            health: Arc::new(HealthyExternalProjection),
+            projection_sink: Arc::new(ConfigProjectionSink::with_config(config.clone())),
+        };
+        let service = McpPlatformService::new_with_external_capabilities(
+            repository.clone(),
+            Arc::new(FixedClock(AtomicI64::new(1_000))),
+            Arc::new(SequenceIds::default()),
+            McpPlatformServiceOptions {
+                compatibility_target: crate::mcp_platform::CompatibilityTarget {
+                    platform: crate::mcp_platform::manifest::Platform::Linux,
+                    arch: crate::mcp_platform::manifest::Architecture::X86_64,
+                },
+                plan_ttl_ms: 60_000,
+                development_mode: true,
+                docker_daemon_policy_allowed: true,
+            },
+            ports,
+            distribution,
+            RuntimeCapabilitySnapshot {
+                node_available: true,
+                python_major_minor: None,
+            },
+            true,
+            true,
+        );
+
+        let docker = install_through_service(
+            &service,
+            &repository,
+            &docker_effect().manifest,
+            TrustTier::Official,
+            "production_docker",
+        )
+        .await;
+        assert!(matches!(
+            docker.supply_chain,
+            Some(ManagedSupplyChainSummary::Docker {
+                image_digest,
+                daemon_version,
+                rootless: true,
+                ..
+            }) if image_digest == "a".repeat(64) && daemon_version == "25.0.3"
+        ));
+        let docker_projection = crate::config::extensions::get_extension_entry_by_key_with_config(
+            &config,
+            &docker.extension_config_key,
+        )
+        .unwrap();
+        match docker_projection.config {
+            ExtensionConfig::Stdio {
+                cmd, args, envs, ..
+            } => {
+                assert_eq!(cmd, "server-owned-docker");
+                assert!(envs.has_managed_docker_isolation());
+                assert!(args.iter().any(|argument| {
+                    argument == &format!("registry.example/team/server@sha256:{}", "a".repeat(64))
+                }));
+            }
+            projection => panic!("unexpected Docker projection: {projection:?}"),
+        }
+
+        let git = install_through_service(
+            &service,
+            &repository,
+            &git_effect().manifest,
+            TrustTier::Local,
+            "production_git",
+        )
+        .await;
+        assert!(matches!(
+            git.supply_chain,
+            Some(ManagedSupplyChainSummary::GitDev {
+                commit,
+                git_tree_id,
+                ..
+            }) if commit == "0123456789abcdef0123456789abcdef01234567"
+                && git_tree_id == "d".repeat(40)
+        ));
+        let git_projection = crate::config::extensions::get_extension_entry_by_key_with_config(
+            &config,
+            &git.extension_config_key,
+        )
+        .unwrap();
+        match git_projection.config {
+            ExtensionConfig::Stdio { cmd, args, .. } => {
+                assert_eq!(cmd, "server-owned-node");
+                assert!(args
+                    .iter()
+                    .any(|argument| argument.ends_with("dir/server.js")));
+            }
+            projection => panic!("unexpected GitDev projection: {projection:?}"),
+        }
+
+        let requests = process.requests.lock().unwrap();
+        assert!(requests
+            .iter()
+            .any(|request| request.argv.iter().any(|argument| argument == "pull")));
+        assert!(requests
+            .iter()
+            .any(|request| request.argv.iter().any(|argument| argument == "fetch")));
+        assert!(requests
+            .iter()
+            .any(|request| request.argv.iter().any(|argument| argument == "archive")));
+    }
+
+    #[tokio::test]
+    async fn docker_inspect_rebuilds_projection_and_rejects_tampered_metadata() {
+        let directory = tempfile::tempdir().unwrap();
+        let process = Arc::new(RecordingProcess::default());
+        let adapter = docker_adapter(directory.path().join("managed"), process.clone());
+        let mut effect = docker_effect();
+        let installed = adapter
+            .install(&effect, &CancellationToken::new())
+            .await
+            .unwrap();
+        effect.expected_tree_digest = Some(installed.materialized_tree_digest.clone());
+        assert_eq!(
+            adapter
+                .inspect_installed(&effect, &CancellationToken::new())
+                .await
+                .unwrap()
+                .projection,
+            installed.projection
+        );
+        let root = installed.installation_root;
+        for (name, mutation) in [
+            (
+                ".goose-runtime-descriptor.json",
+                ("projection.executable", serde_json::json!("host-command")),
+            ),
+            (
+                ".goose-artifact-evidence.json",
+                ("installed_at_ms", serde_json::json!(999)),
+            ),
+            (
+                ".goose-external-evidence.json",
+                ("image_digest", serde_json::json!("f".repeat(64))),
+            ),
+            (
+                ".goose-installation-owner.json",
+                ("task_id", serde_json::json!("other-task")),
+            ),
+        ] {
+            let path = root.join(name);
+            let original = tokio::fs::read(&path).await.unwrap();
+            let mut value: serde_json::Value = serde_json::from_slice(&original).unwrap();
+            let (field, replacement) = mutation;
+            if let Some((parent, child)) = field.split_once('.') {
+                value[parent][child] = replacement;
+            } else {
+                value[field] = replacement;
+            }
+            tokio::fs::write(&path, serde_json::to_vec(&value).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(
+                adapter
+                    .inspect_installed(&effect, &CancellationToken::new())
+                    .await
+                    .unwrap_err()
+                    .code(),
+                McpPlatformErrorCode::IntegrityError,
+                "{name}"
+            );
+            tokio::fs::write(path, original).await.unwrap();
+        }
+        let requests = process.requests.lock().unwrap();
+        assert!(requests.iter().all(|request| {
+            request.environment.keys().collect::<Vec<_>>() == vec!["DOCKER_CONFIG", "HOME"]
+                && request.cwd.is_none()
+                && request.stdin.is_none()
+        }));
+        let run = match &installed.projection {
+            ConnectionProjection::ManagedDockerStdio { args, .. } => args,
+            projection => panic!("unexpected projection: {projection:?}"),
+        };
+        for required in ["--rm", "--read-only", "--cap-drop", "--security-opt"] {
+            assert!(run.iter().any(|argument| argument == required));
+        }
+        for forbidden in [
+            "--privileged",
+            "--network=host",
+            "--pid=host",
+            "--ipc=host",
+            "--device",
+            "/var/run/docker.sock",
+        ] {
+            assert!(!run.iter().any(|argument| argument.contains(forbidden)));
+        }
+    }
+
+    #[tokio::test]
+    async fn docker_inspect_rejects_exact_repo_digest_mismatch() {
+        let directory = tempfile::tempdir().unwrap();
+        let process = Arc::new(RecordingProcess::default());
+        process.image_mismatch.store(true, Ordering::SeqCst);
+        let adapter = docker_adapter(directory.path().join("managed"), process);
+        assert_eq!(
+            adapter
+                .install(&docker_effect(), &CancellationToken::new())
+                .await
+                .unwrap_err()
+                .code(),
+            McpPlatformErrorCode::ImageDigestMismatch
+        );
+    }
+
+    #[tokio::test]
+    async fn docker_execution_honors_injected_server_policy() {
+        let directory = tempfile::tempdir().unwrap();
+        let process = Arc::new(RecordingProcess::default());
+        let adapter =
+            docker_adapter_with_policy(directory.path().join("managed"), process.clone(), false);
+        assert_eq!(
+            adapter
+                .install(&docker_effect(), &CancellationToken::new())
+                .await
+                .unwrap_err()
+                .code(),
+            McpPlatformErrorCode::DaemonPolicyDenied
+        );
+        assert!(process.requests.lock().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn git_fetch_is_dns_pinned_isolated_and_recursively_audited() {
+        let directory = tempfile::tempdir().unwrap();
+        let process = Arc::new(RecordingProcess::default());
+        let adapter = git_adapter(directory.path().join("managed"), process.clone());
+        let mut effect = git_effect();
+        let installed = adapter
+            .install(&effect, &CancellationToken::new())
+            .await
+            .unwrap_or_else(|error| {
+                panic!(
+                    "git install failed: {error:?}; requests={:?}",
+                    process.requests.lock().unwrap()
+                )
+            });
+        assert!(matches!(
+            installed.supply_chain_evidence,
+            Some(SupplyChainEvidence::GitDev { .. })
+        ));
+        let requests = process.requests.lock().unwrap();
+        assert!(requests.iter().all(|request| {
+            request.argv.windows(2).any(|pair| {
+                pair[0] == "-c"
+                    && pair[1].starts_with("core.hooksPath=")
+                    && pair[1].ends_with("hooks-disabled")
+            }) && request
+                .argv
+                .windows(2)
+                .any(|pair| pair == ["-c", "credential.helper="])
+                && request
+                    .argv
+                    .windows(2)
+                    .any(|pair| pair == ["-c", "protocol.file.allow=never"])
+        }));
+        let fetch = requests
+            .iter()
+            .find(|request| request.argv.iter().any(|argument| argument == "fetch"))
+            .unwrap();
+        assert!(fetch
+            .argv
+            .iter()
+            .any(|argument| argument == "http.curloptResolve=git.example:443:93.184.216.34"));
+        assert!(fetch
+            .argv
+            .windows(2)
+            .any(|pair| pair == ["--no-recurse-submodules", "--depth=1"]));
+        assert!(fetch.environment.keys().all(|key| {
+            matches!(
+                key.as_str(),
+                "GIT_CONFIG_NOSYSTEM"
+                    | "GIT_CONFIG_GLOBAL"
+                    | "GIT_TERMINAL_PROMPT"
+                    | "GCM_INTERACTIVE"
+                    | "HOME"
+                    | "GIT_LFS_SKIP_SMUDGE"
+            )
+        }));
+        let listing = requests
+            .iter()
+            .find(|request| request.argv.iter().any(|argument| argument == "ls-tree"))
+            .unwrap();
+        assert!(listing
+            .argv
+            .windows(4)
+            .any(|arguments| { arguments == ["ls-tree", "-r", "-l", "-z"] }));
+        drop(requests);
+        effect.expected_tree_digest = Some(installed.materialized_tree_digest.clone());
+        let evidence_path = installed
+            .installation_root
+            .join(".goose-external-evidence.json");
+        let original = tokio::fs::read(&evidence_path).await.unwrap();
+        for (field, value) in [
+            ("commit", serde_json::json!("f".repeat(40))),
+            (
+                "materialized_tree_digest",
+                serde_json::json!("0".repeat(64)),
+            ),
+        ] {
+            let mut evidence: serde_json::Value = serde_json::from_slice(&original).unwrap();
+            evidence[field] = value;
+            tokio::fs::write(&evidence_path, serde_json::to_vec(&evidence).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(
+                adapter
+                    .inspect_installed(&effect, &CancellationToken::new())
+                    .await
+                    .unwrap_err()
+                    .code(),
+                McpPlatformErrorCode::IntegrityError,
+                "{field}"
+            );
+        }
+        tokio::fs::write(evidence_path, original).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn git_fetch_rejects_unsafe_nested_tree_before_archive() {
+        let directory = tempfile::tempdir().unwrap();
+        let process = Arc::new(RecordingProcess::default());
+        process.unsafe_git_tree.store(true, Ordering::SeqCst);
+        let adapter = git_adapter(directory.path().join("managed"), process.clone());
+        assert_eq!(
+            adapter
+                .install(&git_effect(), &CancellationToken::new())
+                .await
+                .unwrap_err()
+                .code(),
+            McpPlatformErrorCode::UnsafeRepositoryTree
+        );
+        assert!(!process
+            .requests
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|request| request.argv.iter().any(|argument| argument == "archive")));
+    }
+
+    #[tokio::test]
+    async fn materialized_tree_authority_ignores_only_verified_task_metadata() {
+        let root = tempfile::tempdir().unwrap();
+        tokio::fs::create_dir(root.path().join("payload"))
+            .await
+            .unwrap();
+        tokio::fs::write(root.path().join("payload/server"), b"content")
+            .await
+            .unwrap();
+        for name in [
+            ".goose-runtime-descriptor.json",
+            ".goose-artifact-evidence.json",
+            ".goose-external-evidence.json",
+            ".goose-installation-owner.json",
+        ] {
+            tokio::fs::write(root.path().join(name), b"task-one")
+                .await
+                .unwrap();
+        }
+        let initial = compute_materialized_tree_digest(root.path()).await.unwrap();
+        for name in [
+            ".goose-runtime-descriptor.json",
+            ".goose-artifact-evidence.json",
+            ".goose-external-evidence.json",
+            ".goose-installation-owner.json",
+        ] {
+            tokio::fs::write(root.path().join(name), b"task-two")
+                .await
+                .unwrap();
+        }
+        assert_eq!(
+            compute_materialized_tree_digest(root.path()).await.unwrap(),
+            initial
+        );
+        tokio::fs::write(root.path().join("payload/server"), b"tampered")
+            .await
+            .unwrap();
+        assert_ne!(
+            compute_materialized_tree_digest(root.path()).await.unwrap(),
+            initial
+        );
+    }
+
+    #[test]
+    fn git_network_pin_rejects_rebinding_to_private_addresses_and_emits_curl_pins() {
+        let public = "93.184.216.34:443".parse().unwrap();
+        let pin = GitNetworkPin::new("git.example", 443, &[public]).unwrap();
+        assert_eq!(pin.config_values(), vec!["git.example:443:93.184.216.34"]);
+        for rebound in ["127.0.0.1:443", "10.0.0.1:443", "169.254.1.1:443"] {
+            assert_eq!(
+                GitNetworkPin::new("git.example", 443, &[rebound.parse().unwrap()])
+                    .unwrap_err()
+                    .code(),
+                McpPlatformErrorCode::GitOriginDenied
+            );
+        }
+    }
+
+    #[test]
+    fn recursive_git_tree_listing_accepts_nested_blobs_and_rejects_links_and_escape() {
+        let limits = ArchiveLimits::default();
+        let nested = concat!(
+            "100644 blob 0123456789012345678901234567890123456789 4\troot.txt\0",
+            "100755 blob 1123456789012345678901234567890123456789 8\tdir/server\0"
+        );
+        validate_git_tree_listing(nested.as_bytes(), limits).unwrap();
+        for unsafe_listing in [
+            "120000 blob 0123456789012345678901234567890123456789 4\tdir/link\0",
+            "160000 commit 0123456789012345678901234567890123456789 -\tdir/submodule\0",
+            "100644 blob 0123456789012345678901234567890123456789 4\tdir/../escape\0",
+            "100644 blob 0123456789012345678901234567890123456789 4\tA\0100644 blob 1123456789012345678901234567890123456789 4\ta\0",
+        ] {
+            assert_eq!(
+                validate_git_tree_listing(unsafe_listing.as_bytes(), limits)
+                    .unwrap_err()
+                    .code(),
+                McpPlatformErrorCode::UnsafeRepositoryTree
+            );
+        }
+    }
 }

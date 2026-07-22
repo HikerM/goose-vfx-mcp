@@ -5,7 +5,7 @@ use crate::mcp_platform::repository::PlanTarget;
 
 use super::{decode, map_sqlx};
 
-pub const CURRENT_SCHEMA_VERSION: i64 = 4;
+pub const CURRENT_SCHEMA_VERSION: i64 = 5;
 
 pub async fn apply_v1(tx: &mut Transaction<'_, Sqlite>) -> McpPlatformResult<()> {
     for statement in V1_STATEMENTS {
@@ -404,3 +404,11 @@ const V4_STATEMENTS: &[&str] = &[
         acquired_at_ms INTEGER NOT NULL
     )"#,
 ];
+
+pub async fn apply_v5(tx: &mut Transaction<'_, Sqlite>) -> McpPlatformResult<()> {
+    sqlx::query("ALTER TABLE managed_versions ADD COLUMN supply_chain_evidence_json TEXT")
+        .execute(&mut **tx)
+        .await
+        .map_err(map_sqlx)?;
+    Ok(())
+}

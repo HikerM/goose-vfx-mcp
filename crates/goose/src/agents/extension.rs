@@ -66,13 +66,26 @@ pub struct Envs {
     map: HashMap<String, String>,
 }
 
+const MANAGED_DOCKER_ISOLATION_KEY: &str = "__gooseManagedDockerIsolation";
+const MANAGED_DOCKER_ISOLATION_VALUE: &str = "core-v1";
+
 impl<'de> Deserialize<'de> for Envs {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let map = HashMap::<String, String>::deserialize(deserializer)?;
-        Ok(Self::new(map))
+        let mut map = HashMap::<String, String>::deserialize(deserializer)?;
+        let managed = map
+            .remove(MANAGED_DOCKER_ISOLATION_KEY)
+            .is_some_and(|value| value == MANAGED_DOCKER_ISOLATION_VALUE);
+        let mut envs = Self::new(map);
+        if managed {
+            envs.map.insert(
+                MANAGED_DOCKER_ISOLATION_KEY.to_string(),
+                MANAGED_DOCKER_ISOLATION_VALUE.to_string(),
+            );
+        }
+        Ok(envs)
     }
 }
 
@@ -122,7 +135,7 @@ impl Envs {
         let mut validated = HashMap::new();
 
         for (key, value) in map {
-            if Self::is_disallowed(&key) {
+            if key == MANAGED_DOCKER_ISOLATION_KEY || Self::is_disallowed(&key) {
                 warn!("Skipping disallowed env var: {}", key);
                 continue;
             }
@@ -130,6 +143,21 @@ impl Envs {
         }
 
         Self { map: validated }
+    }
+
+    pub(crate) fn managed_docker() -> Self {
+        Self {
+            map: HashMap::from([(
+                MANAGED_DOCKER_ISOLATION_KEY.to_string(),
+                MANAGED_DOCKER_ISOLATION_VALUE.to_string(),
+            )]),
+        }
+    }
+
+    pub(crate) fn has_managed_docker_isolation(&self) -> bool {
+        self.map
+            .get(MANAGED_DOCKER_ISOLATION_KEY)
+            .is_some_and(|value| value == MANAGED_DOCKER_ISOLATION_VALUE)
     }
 
     /// Returns a copy of the validated env vars
@@ -616,9 +644,29 @@ impl ToolInfo {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use super::{Envs, MANAGED_DOCKER_ISOLATION_KEY};
     use crate::agents::*;
     use crate::config;
     use test_case::test_case;
+
+    #[test]
+    fn managed_docker_isolation_survives_config_round_trip_but_is_not_inferred() {
+        let managed = Envs::managed_docker();
+        let serialized = serde_json::to_string(&managed).unwrap();
+        let reopened: Envs = serde_json::from_str(&serialized).unwrap();
+        assert!(reopened.has_managed_docker_isolation());
+        assert!(reopened
+            .get_env()
+            .contains_key(MANAGED_DOCKER_ISOLATION_KEY));
+
+        let user = Envs::new(HashMap::from([(
+            "__gooseManagedDockerIsolation".to_string(),
+            "true".to_string(),
+        )]));
+        assert!(!user.has_managed_docker_isolation());
+    }
 
     #[test]
     fn test_deserialize_missing_description() {

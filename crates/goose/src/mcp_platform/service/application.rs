@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize};
 use crate::mcp_platform::adapters::plan_for_manifest;
 use crate::mcp_platform::catalog::{CatalogCompatibility, CompatibilityTarget};
 use crate::mcp_platform::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
+use crate::mcp_platform::external_distribution::{
+    ExternalCapabilitySnapshot, ExternalDistributionPorts,
+};
 use crate::mcp_platform::lifecycle::{
     ConfigAuthRequirementResolver, ConfigProjectionSink, CoreTransportProjectionAdapter,
     EmptyHostIntegrationAdapter, LifecyclePorts, SafeRegistrationEffectAdapter,
@@ -38,9 +41,9 @@ use super::dto::{
     unique_task_ids, CatalogDetail, CatalogListInput, CatalogLocator, CatalogPage, CatalogSummary,
     EventsResumeInput, EventsResumePage, HealthGetInput, HealthRunInput, HealthStatus,
     InstallConfirmInput, ManagedGetInput, ManagedListInput, ManagedMcpDetail, ManagedMcpPage,
-    ManagedMcpSummary, PlanCreateInput, PlanIntent, PlanReview, RequestContext,
-    SetDefaultEnabledInput, TaskCancelInput, TaskGetInput, TaskRef, TaskRetryInput, UserDecision,
-    LOCAL_PERSISTED_SOURCE_ID,
+    ManagedMcpSummary, ManagedSupplyChainSummary, PlanCreateInput, PlanIntent, PlanReview,
+    RequestContext, SetDefaultEnabledInput, TaskCancelInput, TaskGetInput, TaskRef, TaskRetryInput,
+    UserDecision, LOCAL_PERSISTED_SOURCE_ID,
 };
 use super::port::McpPlatformRepositoryPort;
 
@@ -57,6 +60,8 @@ const MAX_CURSOR_LENGTH: usize = 1024;
 pub struct McpPlatformServiceOptions {
     pub compatibility_target: CompatibilityTarget,
     pub plan_ttl_ms: i64,
+    pub development_mode: bool,
+    pub docker_daemon_policy_allowed: bool,
 }
 
 impl Default for McpPlatformServiceOptions {
@@ -67,6 +72,8 @@ impl Default for McpPlatformServiceOptions {
                 arch: current_architecture(),
             },
             plan_ttl_ms: 15 * 60 * 1000,
+            development_mode: false,
+            docker_daemon_policy_allowed: true,
         }
     }
 }
@@ -80,6 +87,8 @@ pub struct McpPlatformService {
     auto_worker: bool,
     worker: Mutex<WorkerState>,
     runtime_capabilities: RuntimeCapabilitySnapshot,
+    external_capabilities: ExternalCapabilitySnapshot,
+    development_mode: bool,
 }
 
 enum WorkerState {
@@ -135,6 +144,7 @@ impl McpPlatformService {
         distribution: Arc<dyn DistributionEffectAdapter>,
         runtime_capabilities: RuntimeCapabilitySnapshot,
     ) -> Self {
+        let development_mode = options.development_mode;
         let runner = Arc::new(
             TaskRunner::new(
                 repository.clone(),
@@ -153,6 +163,50 @@ impl McpPlatformService {
             auto_worker: false,
             worker: Mutex::new(WorkerState::NotStarted),
             runtime_capabilities,
+            external_capabilities: ExternalCapabilitySnapshot::default(),
+            development_mode,
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_external_capabilities(
+        repository: Arc<dyn McpPlatformRepositoryPort>,
+        clock: Arc<dyn Clock>,
+        ids: Arc<dyn IdGenerator>,
+        options: McpPlatformServiceOptions,
+        ports: LifecyclePorts,
+        distribution: Arc<dyn DistributionEffectAdapter>,
+        runtime_capabilities: RuntimeCapabilitySnapshot,
+        docker_available: bool,
+        git_available: bool,
+    ) -> Self {
+        let docker_policy_allowed = options.docker_daemon_policy_allowed;
+        let development_mode = options.development_mode;
+        let runner = Arc::new(
+            TaskRunner::new(
+                repository.clone(),
+                clock.clone(),
+                ports,
+                ids.next_id("worker"),
+            )
+            .with_distribution_adapter(distribution),
+        );
+        Self {
+            repository,
+            clock,
+            ids,
+            options,
+            runner,
+            auto_worker: false,
+            worker: Mutex::new(WorkerState::NotStarted),
+            runtime_capabilities,
+            external_capabilities: ExternalCapabilitySnapshot {
+                docker_available,
+                docker_daemon_verified: false,
+                docker_policy_allowed,
+                git_available,
+            },
+            development_mode,
         }
     }
 
@@ -164,17 +218,23 @@ impl McpPlatformService {
         ports: LifecyclePorts,
         auto_worker: bool,
     ) -> Self {
+        let development_mode = options.development_mode;
         let runtime = RuntimeCapabilities::discover();
         let runtime_capabilities = runtime.snapshot();
+        let external = ExternalDistributionPorts::production_with_docker_policy(
+            options.docker_daemon_policy_allowed,
+        );
+        let external_capabilities = external.snapshot();
         let mut runner = TaskRunner::new(
             repository.clone(),
             clock.clone(),
             ports,
             ids.next_id("worker"),
         );
-        if let Ok(adapter) = ProductionDistributionEffectAdapter::new_with_runtime(
+        if let Ok(adapter) = ProductionDistributionEffectAdapter::new_with_runtime_and_external(
             crate::config::paths::Paths::in_data_dir("mcp-platform"),
             runtime,
+            external,
         ) {
             runner = runner.with_distribution_adapter(Arc::new(adapter));
         }
@@ -188,6 +248,8 @@ impl McpPlatformService {
             auto_worker,
             worker: Mutex::new(WorkerState::NotStarted),
             runtime_capabilities,
+            external_capabilities,
+            development_mode,
         }
     }
 
@@ -442,7 +504,13 @@ impl McpPlatformService {
             .with_runtime_capabilities(
                 self.runtime_capabilities.node_available,
                 self.runtime_capabilities.python_major_minor,
-            );
+            )
+            .with_external_capabilities(
+                self.external_capabilities.docker_available,
+                self.external_capabilities.git_available,
+                self.development_mode,
+            )
+            .with_docker_policy(self.external_capabilities.docker_policy_allowed);
         let plan = if operation == PlanOperation::Uninstall {
             let managed_mcp_id = managed_mcp_id.as_deref().ok_or_else(integrity_error)?;
             let projection = self
@@ -660,6 +728,8 @@ impl McpPlatformService {
             self.repository.list_manifests().await?,
             self.options.compatibility_target,
             self.runtime_capabilities,
+            self.external_capabilities,
+            self.development_mode,
         );
         let has_more = records.len() > page_size;
         let scanned_cursor =
@@ -685,6 +755,7 @@ impl McpPlatformService {
                 task,
                 projection_recovery,
                 available_manifest,
+                self.external_capabilities,
             ));
         }
         Ok(ManagedMcpPage {
@@ -727,17 +798,27 @@ impl McpPlatformService {
             self.repository.list_manifests().await?,
             self.options.compatibility_target,
             self.runtime_capabilities,
+            self.external_capabilities,
+            self.development_mode,
         )
         .remove(&(
             inventory.managed.mcp_id.clone(),
             inventory.lifecycle.distribution_adapter.clone(),
         ));
+        let supply_chain = inventory
+            .managed
+            .versions
+            .iter()
+            .find(|version| version.active)
+            .and_then(|version| version.supply_chain_evidence.as_ref())
+            .map(supply_chain_summary);
         Ok(ManagedMcpDetail {
             summary: managed_summary(
                 inventory.clone(),
                 latest_lifecycle_task,
                 projection_recovery,
                 available_manifest,
+                self.external_capabilities,
             ),
             distribution_adapter: inventory.lifecycle.distribution_adapter,
             active_manifest_digest: inventory
@@ -752,6 +833,7 @@ impl McpPlatformService {
             projection_digest: projection.projection_digest,
             latest_health,
             registration_task,
+            supply_chain,
         })
     }
 
@@ -834,6 +916,8 @@ impl McpPlatformService {
             self.repository.list_manifests().await?,
             self.options.compatibility_target,
             self.runtime_capabilities,
+            self.external_capabilities,
+            self.development_mode,
         )
         .remove(&(
             record.managed.mcp_id.clone(),
@@ -844,6 +928,7 @@ impl McpPlatformService {
             latest_task,
             projection_recovery,
             available_manifest,
+            self.external_capabilities,
         ))
     }
 
@@ -982,6 +1067,45 @@ impl McpPlatformService {
     }
 }
 
+fn supply_chain_summary(
+    evidence: &crate::mcp_platform::SupplyChainEvidence,
+) -> ManagedSupplyChainSummary {
+    match evidence {
+        crate::mcp_platform::SupplyChainEvidence::Docker {
+            image,
+            image_digest,
+            adapter_version,
+            daemon_version,
+            rootless,
+            mount_plan_digest,
+            created_at_ms,
+        } => ManagedSupplyChainSummary::Docker {
+            image: image.clone(),
+            image_digest: image_digest.clone(),
+            adapter_version: adapter_version.clone(),
+            daemon_version: daemon_version.clone(),
+            rootless: *rootless,
+            mount_plan_digest: mount_plan_digest.clone(),
+            created_at_ms: *created_at_ms,
+        },
+        crate::mcp_platform::SupplyChainEvidence::GitDev {
+            repository_origin,
+            commit,
+            git_tree_id,
+            materialized_tree_digest,
+            adapter_version,
+            created_at_ms,
+        } => ManagedSupplyChainSummary::GitDev {
+            repository_origin: repository_origin.clone(),
+            commit: commit.clone(),
+            git_tree_id: git_tree_id.clone(),
+            materialized_tree_digest: materialized_tree_digest.clone(),
+            adapter_version: adapter_version.clone(),
+            created_at_ms: *created_at_ms,
+        },
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CatalogCursor {
@@ -1047,10 +1171,28 @@ fn managed_summary(
     latest_task: Option<TaskRecord>,
     projection_recovery: bool,
     available_manifests: Option<AvailableManagedManifests>,
+    external: ExternalCapabilitySnapshot,
 ) -> ManagedMcpSummary {
+    let external_capability = match record.lifecycle.distribution_adapter.as_str() {
+        "docker" => Some(if !external.docker_available {
+            super::dto::ManagedExternalCapabilityStatus::DockerCliMissing
+        } else if !external.docker_policy_allowed {
+            super::dto::ManagedExternalCapabilityStatus::DockerDaemonPolicyDenied
+        } else if external.docker_daemon_verified {
+            super::dto::ManagedExternalCapabilityStatus::DockerDaemonVerified
+        } else {
+            super::dto::ManagedExternalCapabilityStatus::DockerDaemonUnverified
+        }),
+        "git_dev" => Some(if external.git_available {
+            super::dto::ManagedExternalCapabilityStatus::GitAvailable
+        } else {
+            super::dto::ManagedExternalCapabilityStatus::GitMissing
+        }),
+        _ => None,
+    };
     let managed_distribution = matches!(
         record.lifecycle.distribution_adapter.as_str(),
-        "npm" | "python_wheel" | "binary_archive"
+        "npm" | "python_wheel" | "binary_archive" | "docker" | "git_dev"
     );
     let installed = matches!(
         record.managed.state.installation,
@@ -1168,6 +1310,7 @@ fn managed_summary(
         available_manifest_digest,
         current_task,
         recovery_required,
+        external_capability,
         eligibility: super::dto::ManagedEligibility {
             update: !lifecycle_busy && managed_distribution && installed && update_available,
             repair: !lifecycle_busy && managed_distribution && installed,
@@ -1198,12 +1341,17 @@ fn available_managed_manifests(
     records: Vec<crate::mcp_platform::repository::ManifestRecord>,
     target: CompatibilityTarget,
     runtime: RuntimeCapabilitySnapshot,
+    external: ExternalCapabilitySnapshot,
+    development_mode: bool,
 ) -> HashMap<(String, String), AvailableManagedManifests> {
     let mut candidates = HashMap::new();
     for record in records {
         let manifest = record.verified.manifest();
         let adapter = manifest.distribution.adapter_id().to_string();
-        if !matches!(adapter.as_str(), "npm" | "python_wheel" | "binary_archive") {
+        if !matches!(
+            adapter.as_str(),
+            "npm" | "python_wheel" | "binary_archive" | "docker" | "git_dev"
+        ) {
             continue;
         }
         let Ok(version) = semver::Version::parse(manifest.version.as_str()) else {
@@ -1212,7 +1360,13 @@ fn available_managed_manifests(
         let key = (manifest.id.clone(), adapter);
         let context = PolicyContext::new(record.trust_tier, PlanOperation::Update)
             .with_target(target.platform, target.arch)
-            .with_runtime_capabilities(runtime.node_available, runtime.python_major_minor);
+            .with_runtime_capabilities(runtime.node_available, runtime.python_major_minor)
+            .with_external_capabilities(
+                external.docker_available,
+                external.git_available,
+                development_mode,
+            )
+            .with_docker_policy(external.docker_policy_allowed);
         let candidate_result = if !manifest.host_integrations.is_empty()
             || compatibility(&record.verified, target) != CatalogCompatibility::Compatible
         {
@@ -1222,7 +1376,16 @@ fn available_managed_manifests(
                 McpPlatformErrorCode::PolicyDenied => {
                     super::dto::ManagedEligibilityReason::PolicyDenied
                 }
+                McpPlatformErrorCode::DevelopmentModeRequired
+                | McpPlatformErrorCode::GitOriginDenied
+                | McpPlatformErrorCode::DaemonPolicyDenied
+                | McpPlatformErrorCode::MountPermissionDenied => {
+                    super::dto::ManagedEligibilityReason::PolicyDenied
+                }
                 McpPlatformErrorCode::AdapterIncompatible => {
+                    super::dto::ManagedEligibilityReason::RuntimeUnavailable
+                }
+                McpPlatformErrorCode::DockerUnavailable | McpPlatformErrorCode::GitUnavailable => {
                     super::dto::ManagedEligibilityReason::RuntimeUnavailable
                 }
                 _ => super::dto::ManagedEligibilityReason::Incompatible,
@@ -1267,6 +1430,8 @@ fn uninstall_plan(
         Distribution::Npm { .. }
             | Distribution::PythonWheel { .. }
             | Distribution::BinaryArchive { .. }
+            | Distribution::Docker { .. }
+            | Distribution::GitDev { .. }
     ) {
         return Err(operation_not_supported());
     }

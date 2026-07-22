@@ -12,6 +12,8 @@ activities:
   - Test extension discovery and management
   - Validate managed MCP projections remain disabled until explicitly enabled
   - Validate managed npm, Python wheel, and binary archive plans expose exact versions and verified sources
+  - Validate Docker digest and Git exact-commit plans expose only immutable, redacted product semantics
+  - Validate Docker daemon and Git development capability failures remain typed and actionable
   - Validate managed MCP update, repair, and uninstall retain atomic activation and ownership boundaries
   - Test load tool for knowledge injection and discovery
   - Test delegate tool for task delegation (sync and async)
@@ -88,6 +90,9 @@ instructions: |
   - Verify update eligibility is reported only for a higher compatible exact manifest version
   - Verify repair preserves enabled intent only after runtime health succeeds
   - Verify uninstall removes only platform-owned versions and keeps shared cache references consistent
+  - Verify Docker plans never expose daemon sockets, host paths, argv, environment values, or mutable tags
+  - Verify Git development plans require local trust, explicit development mode, and a full lowercase commit
+  - Verify Docker and Git supply-chain detail survives restart without exposing internal execution data
 
   ### Phase 3: Delegate & Load Testing
   Test the unified delegation and knowledge-loading tools:

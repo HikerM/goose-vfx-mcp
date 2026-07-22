@@ -601,6 +601,268 @@ fn validate_semantics(manifest: &Manifest) -> McpPlatformResult<()> {
         }
     }
 
+    match &manifest.distribution {
+        Distribution::Docker {
+            image,
+            entrypoint,
+            mounts,
+            ..
+        } => {
+            require_distribution_permissions(
+                manifest,
+                &[
+                    PermissionKind::Docker,
+                    PermissionKind::ProcessSpawn,
+                    PermissionKind::Network,
+                ],
+            )?;
+            validate_docker_distribution(manifest, image, entrypoint, mounts)?;
+        }
+        Distribution::GitDev {
+            repository,
+            commit,
+            subdirectory,
+            ..
+        } => {
+            require_distribution_permissions(
+                manifest,
+                &[PermissionKind::ProcessSpawn, PermissionKind::Network],
+            )?;
+            validate_git_repository(repository)?;
+            if commit.len() != 40
+                || !commit
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+            {
+                return Err(error(
+                    McpPlatformErrorCode::CommitUnavailable,
+                    "git development commit must be exactly 40 lowercase hexadecimal characters",
+                ));
+            }
+            if let Some(value) = subdirectory {
+                validate_git_subdirectory(value)?;
+            }
+        }
+        _ => {}
+    }
+
+    Ok(())
+}
+
+fn require_distribution_permissions(
+    manifest: &Manifest,
+    required: &[PermissionKind],
+) -> McpPlatformResult<()> {
+    if required.iter().all(|kind| {
+        manifest
+            .permissions
+            .iter()
+            .any(|permission| permission.kind == *kind && permission.required)
+    }) {
+        Ok(())
+    } else {
+        Err(error(
+            McpPlatformErrorCode::InvalidManifest,
+            "external distribution is missing a required closed permission declaration",
+        ))
+    }
+}
+
+fn validate_docker_distribution(
+    manifest: &Manifest,
+    image: &str,
+    entrypoint: &Entrypoint,
+    mounts: &[DockerMount],
+) -> McpPlatformResult<()> {
+    let components = image.split('/').collect::<Vec<_>>();
+    let registry = components.first().copied().unwrap_or_default();
+    let (registry_host, registry_port) = match registry.split_once(':') {
+        Some((host, port)) if !host.contains(':') => (host, Some(port)),
+        Some(_) => ("", None),
+        None => (registry, None),
+    };
+    let valid_registry_host = registry_host == "localhost"
+        || (registry_host.contains('.')
+            && registry_host.split('.').all(|label| {
+                !label.is_empty()
+                    && !label.starts_with('-')
+                    && !label.ends_with('-')
+                    && label.bytes().all(|byte| {
+                        byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'
+                    })
+            }));
+    let valid_registry_port = registry_port.is_none_or(|port| {
+        !port.starts_with('0') && port.parse::<u16>().is_ok_and(|value| value != 0)
+    });
+    let valid_repository_component = |component: &&str| {
+        !component.is_empty()
+            && *component != "."
+            && *component != ".."
+            && component.bytes().all(|byte| {
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._-".contains(&byte)
+            })
+    };
+    if components.len() < 2
+        || !valid_registry_host
+        || !valid_registry_port
+        || !components.iter().skip(1).all(valid_repository_component)
+        || image.contains(['@', '?', '#', '\\', '\0'])
+        || components
+            .last()
+            .is_some_and(|name| name.contains(':') || *name == "latest")
+    {
+        return Err(error(
+            McpPlatformErrorCode::InvalidManifest,
+            "docker image must be a canonical registry and repository without a tag",
+        ));
+    }
+    let normalized_entrypoint = normalize_container_path(&entrypoint.executable).map_err(|_| {
+        error(
+            McpPlatformErrorCode::InvalidManifest,
+            "docker entrypoint must be a normalized absolute container path",
+        )
+    })?;
+    if entrypoint.executable.is_empty()
+        || entrypoint.args.iter().any(|value| value.contains('\0'))
+        || entrypoint
+            .environment_keys
+            .iter()
+            .any(|value| value.contains('\0'))
+    {
+        return Err(error(
+            McpPlatformErrorCode::InvalidManifest,
+            "docker entrypoint contains an invalid value",
+        ));
+    }
+    if !entrypoint.environment_keys.is_empty() {
+        return Err(error(
+            McpPlatformErrorCode::OperationNotSupported,
+            "docker environment keys require an opaque value provider unavailable in manifest v1",
+        ));
+    }
+    let permissions = manifest
+        .permissions
+        .iter()
+        .map(|permission| (permission.id.as_str(), permission.kind))
+        .collect::<std::collections::HashMap<_, _>>();
+    let mut targets = BTreeSet::new();
+    for mount in mounts {
+        let target = normalize_container_path(&mount.target)?;
+        let folded = target.to_ascii_lowercase();
+        if !targets.insert(folded)
+            || sensitive_container_target(&target)
+            || target == normalized_entrypoint
+        {
+            return Err(error(
+                McpPlatformErrorCode::MountPermissionDenied,
+                "docker mount target violates container path policy",
+            ));
+        }
+        let Some(kind) = permissions.get(mount.source_permission.as_str()) else {
+            return Err(error(
+                McpPlatformErrorCode::MountPermissionDenied,
+                "docker mount references an undeclared permission",
+            ));
+        };
+        let allowed = matches!(
+            kind,
+            PermissionKind::FilesystemRead | PermissionKind::FilesystemWrite
+        ) && (mount.read_only || *kind == PermissionKind::FilesystemWrite);
+        if !allowed {
+            return Err(error(
+                McpPlatformErrorCode::MountPermissionDenied,
+                "writable docker mounts require filesystem_write permission",
+            ));
+        }
+    }
+    Ok(())
+}
+
+pub fn normalize_container_path(value: &str) -> McpPlatformResult<String> {
+    if !value.starts_with('/')
+        || value.contains(['\\', ',', '\0'])
+        || value.contains("//")
+        || value.chars().any(char::is_control)
+    {
+        return Err(error(
+            McpPlatformErrorCode::MountPermissionDenied,
+            "docker mount target must be a normalized absolute container path",
+        ));
+    }
+    let components = value.split('/').skip(1).collect::<Vec<_>>();
+    if components.is_empty()
+        || components
+            .iter()
+            .any(|component| component.is_empty() || *component == "." || *component == "..")
+    {
+        return Err(error(
+            McpPlatformErrorCode::MountPermissionDenied,
+            "docker mount target must be a normalized absolute container path",
+        ));
+    }
+    Ok(format!("/{}", components.join("/")))
+}
+
+fn sensitive_container_target(value: &str) -> bool {
+    ["/", "/proc", "/sys", "/dev", "/etc", "/run", "/var/run"]
+        .iter()
+        .any(|root| value == *root || value.starts_with(&format!("{root}/")))
+        || value.eq_ignore_ascii_case("/var/run/docker.sock")
+}
+
+pub fn validate_git_subdirectory(value: &str) -> McpPlatformResult<()> {
+    if value.is_empty()
+        || value.starts_with(['/', '\\'])
+        || value.contains([':', '\0'])
+        || value.contains("//")
+        || value
+            .split(['/', '\\'])
+            .any(|component| component.is_empty() || component == "." || component == "..")
+    {
+        return Err(error(
+            McpPlatformErrorCode::PathTraversal,
+            "git development subdirectory must be a normalized relative path",
+        ));
+    }
+    Ok(())
+}
+
+pub fn validate_git_repository(value: &str) -> McpPlatformResult<()> {
+    let url = Url::parse(value).map_err(|_| {
+        error(
+            McpPlatformErrorCode::GitOriginDenied,
+            "git development origin must be a canonical public HTTPS repository",
+        )
+    })?;
+    let host = url.host_str().unwrap_or_default();
+    let path = url.path();
+    let valid_path = !path.is_empty()
+        && path != "/"
+        && !path.contains("//")
+        && !path.contains('%')
+        && path.trim_start_matches('/').split('/').all(|component| {
+            !component.is_empty()
+                && component != "."
+                && component != ".."
+                && component
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+        });
+    if url.scheme() != "https"
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+        || host.eq_ignore_ascii_case("localhost")
+        || host.parse::<std::net::IpAddr>().is_ok()
+        || !host.contains('.')
+        || !valid_path
+    {
+        return Err(error(
+            McpPlatformErrorCode::GitOriginDenied,
+            "git development origin must be a canonical public HTTPS repository",
+        ));
+    }
     Ok(())
 }
 
@@ -645,7 +907,7 @@ fn preflight(raw: &Value) -> McpPlatformResult<()> {
                 .is_some_and(is_lower_hex_40);
             if !immutable {
                 return Err(error(
-                    McpPlatformErrorCode::ImmutableReferenceRequired,
+                    McpPlatformErrorCode::CommitUnavailable,
                     "git development distributions require a full commit identifier",
                 ));
             }
@@ -674,12 +936,20 @@ fn inspect_value(value: &Value, key: Option<&str>) -> McpPlatformResult<()> {
             validate_template_variables(text)?;
             if has_parent_component(text) {
                 return Err(error(
-                    McpPlatformErrorCode::PathTraversal,
-                    "manifest paths must not traverse parent directories",
+                    if key == Some("repository") {
+                        McpPlatformErrorCode::GitOriginDenied
+                    } else {
+                        McpPlatformErrorCode::PathTraversal
+                    },
+                    "manifest location must not traverse parent directories",
                 ));
             }
             if key.is_some_and(is_url_field) {
-                validate_https_url(text)?;
+                if key == Some("repository") {
+                    validate_git_repository(text)?;
+                } else {
+                    validate_https_url(text)?;
+                }
             }
         }
         _ => {}

@@ -9,8 +9,8 @@ use crate::agents::ExtensionConfig;
 use super::domain::TrustTier;
 use super::error::McpPlatformResult;
 use super::manifest::{
-    digest_serializable, Architecture, ArchiveFormat, Auth, HealthCheck, Manifest, Platform,
-    Sha256Digest,
+    digest_serializable, Architecture, ArchiveFormat, Auth, DockerMount, GitDevAdapter,
+    HealthCheck, Manifest, Platform, Sha256Digest,
 };
 use super::policy::{PlanOperation, PolicyDecision, PolicyReasonCode};
 
@@ -52,6 +52,20 @@ pub enum PlanStep {
         package_version: String,
         dependency_policy: ManagedDependencyPolicy,
     },
+    AcquireDockerDistribution {
+        image: String,
+        digest: Sha256Digest,
+        mounts: Vec<DockerMount>,
+        mount_plan_digest: String,
+    },
+    AcquireGitDevDistribution {
+        repository_origin: String,
+        repository: String,
+        commit: String,
+        subdirectory: Option<String>,
+        underlying_adapter: GitDevAdapter,
+        acquisition_digest: String,
+    },
     RemoveManagedInstallation {
         managed_mcp_id: String,
         version: String,
@@ -66,6 +80,8 @@ pub enum ManagedDistributionKind {
     Npm,
     PythonWheel,
     BinaryArchive,
+    Docker,
+    GitDev,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -101,6 +117,9 @@ pub enum PlanWarning {
     ManagedArtifactDownload,
     ExistingVersionRetainedUntilCommit,
     RemovesOwnedFilesOnly,
+    ImmutableContainerImage,
+    WritableContainerMount,
+    DevelopmentSourcePinnedCommitNoBuild,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -128,6 +147,14 @@ pub enum ConnectionProjection {
         executable: String,
         args: Vec<String>,
         environment_keys: Vec<String>,
+        cwd: Option<String>,
+        timeout_seconds: Option<u64>,
+    },
+    ManagedDockerStdio {
+        name: String,
+        description: String,
+        executable: String,
+        args: Vec<String>,
         cwd: Option<String>,
         timeout_seconds: Option<u64>,
     },
@@ -192,6 +219,25 @@ impl ConnectionProjection {
                 args: args.clone(),
                 envs: Envs::default(),
                 env_keys: environment_keys.clone(),
+                timeout: *timeout_seconds,
+                cwd: cwd.clone(),
+                bundled: None,
+                available_tools: Vec::new(),
+            },
+            Self::ManagedDockerStdio {
+                name,
+                description,
+                executable,
+                args,
+                cwd,
+                timeout_seconds,
+            } => ExtensionConfig::Stdio {
+                name: name.clone(),
+                description: description.clone(),
+                cmd: executable.clone(),
+                args: args.clone(),
+                envs: Envs::managed_docker(),
+                env_keys: Vec::new(),
                 timeout: *timeout_seconds,
                 cwd: cwd.clone(),
                 bundled: None,

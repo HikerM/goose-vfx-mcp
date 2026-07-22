@@ -306,7 +306,8 @@ impl SqliteMcpPlatformRepository {
         let mut tx = self.begin_immediate().await?;
         if let Some(row) = sqlx::query(
             r#"SELECT version, manifest_digest, installation_root, verified, active,
-                adapter_evidence_json, materialized_tree_digest, created_at_ms FROM managed_versions
+                adapter_evidence_json, materialized_tree_digest, supply_chain_evidence_json,
+                created_at_ms FROM managed_versions
                 WHERE managed_mcp_id = ? AND version = ?"#,
         )
         .bind(managed_mcp_id)
@@ -329,8 +330,9 @@ impl SqliteMcpPlatformRepository {
         sqlx::query(
             r#"INSERT INTO managed_versions (
                 managed_mcp_id, version, manifest_digest, installation_root, verified, active,
-                adapter_evidence_json, materialized_tree_digest, created_at_ms
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+                adapter_evidence_json, materialized_tree_digest, supply_chain_evidence_json,
+                created_at_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
         )
         .bind(managed_mcp_id)
         .bind(&version.version)
@@ -340,6 +342,7 @@ impl SqliteMcpPlatformRepository {
         .bind(version.active)
         .bind(encode_optional(version.adapter_evidence.as_ref())?)
         .bind(&version.materialized_tree_digest)
+        .bind(encode_optional(version.supply_chain_evidence.as_ref())?)
         .bind(version.created_at_ms)
         .execute(&mut *tx)
         .await
@@ -354,7 +357,8 @@ impl SqliteMcpPlatformRepository {
     ) -> McpPlatformResult<Vec<ManagedVersionRecord>> {
         let rows = sqlx::query(
             r#"SELECT version, manifest_digest, installation_root, verified, active,
-                adapter_evidence_json, materialized_tree_digest, created_at_ms FROM managed_versions
+                adapter_evidence_json, materialized_tree_digest, supply_chain_evidence_json,
+                created_at_ms FROM managed_versions
                 WHERE managed_mcp_id = ? ORDER BY version"#,
         )
         .bind(managed_mcp_id)
@@ -659,6 +663,13 @@ async fn migrate(pool: &Pool<Sqlite>) -> McpPlatformResult<()> {
             .await
             .map_err(map_sqlx)?;
     }
+    if current < 5 {
+        migrations::apply_v5(&mut tx).await?;
+        sqlx::query("INSERT INTO schema_version(version, applied_at_ms) VALUES (5, 0)")
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+    }
     tx.commit().await.map_err(map_sqlx)?;
     Ok(())
 }
@@ -671,7 +682,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn v1_projection_migrates_through_v3_with_explicit_legacy_read_compatibility() {
+    async fn v1_projection_migrates_through_v5_with_supply_chain_evidence() {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("legacy-platform.db");
         let pool = SqlitePoolOptions::new()
@@ -735,7 +746,17 @@ mod tests {
                 .fetch_all(&repository.pool)
                 .await
                 .unwrap();
-        assert_eq!(versions, [1, 2, 3]);
+        assert_eq!(versions, [1, 2, 3, 4, 5]);
+        let managed_version_columns = sqlx::query("PRAGMA table_info(managed_versions)")
+            .fetch_all(&repository.pool)
+            .await
+            .unwrap()
+            .into_iter()
+            .filter_map(|row| row.try_get::<String, _>("name").ok())
+            .collect::<Vec<_>>();
+        assert!(managed_version_columns
+            .iter()
+            .any(|name| name == "supply_chain_evidence_json"));
         let compensation_columns = sqlx::query("PRAGMA table_info(task_steps)")
             .fetch_all(&repository.pool)
             .await

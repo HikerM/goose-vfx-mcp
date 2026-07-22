@@ -15,7 +15,7 @@ use rmcp::transport::{
     ConfigureCommandExt, DynamicTransportError, StreamableHttpClientTransport, TokioChildProcess,
 };
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -236,6 +236,44 @@ fn resolve_command(cmd: &str) -> PathBuf {
             // let the OS raise the error
             PathBuf::from(cmd)
         })
+}
+
+fn is_core_managed_docker_projection(name: &str, args: &[String]) -> bool {
+    let Some(suffix) = name.strip_prefix("managed_mcp_") else {
+        return false;
+    };
+    let baseline = [
+        "run",
+        "--rm",
+        "--interactive",
+        "--read-only",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--pids-limit",
+        "256",
+        "--label",
+    ];
+    args.get(..baseline.len())
+        .is_some_and(|values| values.iter().map(String::as_str).eq(baseline))
+        && args
+            .get(baseline.len())
+            .is_some_and(|label| label == &format!("dev.block.goose.managed=managed_{suffix}"))
+}
+
+fn managed_docker_runtime_environment(root: &Path) -> std::io::Result<HashMap<String, String>> {
+    let home = root.join("home");
+    let docker_config = root.join("docker-config");
+    std::fs::create_dir_all(&home)?;
+    std::fs::create_dir_all(&docker_config)?;
+    Ok(HashMap::from([
+        ("HOME".to_string(), home.to_string_lossy().into_owned()),
+        (
+            "DOCKER_CONFIG".to_string(),
+            docker_config.to_string_lossy().into_owned(),
+        ),
+    ]))
 }
 
 fn require_str_parameter<'a>(v: &'a serde_json::Value, name: &str) -> Result<&'a str, ErrorData> {
@@ -1084,8 +1122,16 @@ impl ExtensionManager {
                 ..
             } => {
                 let config = Config::global();
-                let mut all_envs =
-                    merge_environments(envs, env_keys, &sanitized_name, config).await?;
+                let isolate_docker_environment = envs.has_managed_docker_isolation()
+                    && is_core_managed_docker_projection(&sanitized_name, args);
+                let mut all_envs = if isolate_docker_environment {
+                    let directory = tempdir()?;
+                    let environment = managed_docker_runtime_environment(directory.path())?;
+                    temp_dir = Some(directory);
+                    environment
+                } else {
+                    merge_environments(envs, env_keys, &sanitized_name, config).await?
+                };
                 let process_working_dir = cwd
                     .as_deref()
                     .map(PathBuf::from)
@@ -1117,6 +1163,9 @@ impl ExtensionManager {
                 } else {
                     let cmd = resolve_command(cmd);
                     Command::new(cmd).configure(|command| {
+                        if isolate_docker_environment {
+                            command.env_clear();
+                        }
                         command.args(args).envs(all_envs);
                     })
                 };
@@ -2127,6 +2176,51 @@ mod tests {
     use rmcp::model::ServerNotification;
 
     use tokio::sync::mpsc;
+
+    #[test]
+    fn only_core_managed_docker_projection_receives_runtime_isolation() {
+        let args = vec![
+            "run",
+            "--rm",
+            "--interactive",
+            "--read-only",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--pids-limit",
+            "256",
+            "--label",
+            "dev.block.goose.managed=managed_example",
+        ]
+        .into_iter()
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+        assert!(is_core_managed_docker_projection(
+            "managed_mcp_example",
+            &args
+        ));
+        assert!(!is_core_managed_docker_projection("docker", &args));
+        let mut renderer_args = args;
+        renderer_args[11] = "dev.block.goose.managed=managed_other".to_string();
+        assert!(!is_core_managed_docker_projection(
+            "managed_mcp_example",
+            &renderer_args
+        ));
+        let directory = tempfile::tempdir().unwrap();
+        let environment = managed_docker_runtime_environment(directory.path()).unwrap();
+        assert_eq!(
+            environment
+                .keys()
+                .cloned()
+                .collect::<std::collections::BTreeSet<_>>(),
+            ["DOCKER_CONFIG".to_string(), "HOME".to_string()]
+                .into_iter()
+                .collect()
+        );
+        assert!(!environment.contains_key("DOCKER_HOST"));
+        assert!(!environment.contains_key("DOCKER_CONTEXT"));
+    }
 
     impl ExtensionManager {
         async fn add_mock_extension(&self, name: String, client: McpClientBox) {

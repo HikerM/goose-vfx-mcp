@@ -36,6 +36,16 @@ pub enum McpPlatformErrorCode {
     TaskNotCancellable,
     RollbackIncomplete,
     AdapterIncompatible,
+    DockerUnavailable,
+    DaemonPolicyDenied,
+    ImageDigestMismatch,
+    RegistryAuthRequired,
+    MountPermissionDenied,
+    GitUnavailable,
+    GitOriginDenied,
+    CommitUnavailable,
+    UnsafeRepositoryTree,
+    DevelopmentModeRequired,
 }
 
 impl McpPlatformErrorCode {
@@ -75,6 +85,16 @@ impl McpPlatformErrorCode {
             Self::TaskNotCancellable => "task_not_cancellable",
             Self::RollbackIncomplete => "rollback_incomplete",
             Self::AdapterIncompatible => "adapter_incompatible",
+            Self::DockerUnavailable => "docker_unavailable",
+            Self::DaemonPolicyDenied => "daemon_policy_denied",
+            Self::ImageDigestMismatch => "image_digest_mismatch",
+            Self::RegistryAuthRequired => "registry_auth_required",
+            Self::MountPermissionDenied => "mount_permission_denied",
+            Self::GitUnavailable => "git_unavailable",
+            Self::GitOriginDenied => "git_origin_denied",
+            Self::CommitUnavailable => "commit_unavailable",
+            Self::UnsafeRepositoryTree => "unsafe_repository_tree",
+            Self::DevelopmentModeRequired => "development_mode_required",
         }
     }
 }

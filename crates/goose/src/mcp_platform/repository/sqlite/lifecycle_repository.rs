@@ -11,6 +11,7 @@ use crate::mcp_platform::repository::{
     StageManagedInstallation, StageManagedInstallationOutcome, TaskRecord,
 };
 use crate::mcp_platform::task::{TaskOperation, TaskStatus};
+use crate::mcp_platform::SupplyChainEvidence;
 
 use super::records::{
     append_audit, decode, decode_database_enum, decode_task_row, encode, error, fetch_task,
@@ -287,8 +288,8 @@ impl SqliteMcpPlatformRepository {
         let version_exists = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM managed_versions WHERE managed_mcp_id = ? AND version = ?)")
             .bind(input.managed_mcp_id).bind(input.version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
         if !version_exists {
-            sqlx::query(r#"INSERT INTO managed_versions (managed_mcp_id,version,manifest_digest,installation_root,verified,active,adapter_evidence_json,created_at_ms,artifact_digest,verification_evidence_json,materialized_tree_digest,activation_state) VALUES (?,?,?,?,1,0,?,?,?,?,?, 'staged')"#)
-                .bind(input.managed_mcp_id).bind(input.version).bind(input.manifest_digest).bind(input.installation_root).bind(encode(input.adapter_evidence)?).bind(input.now_ms).bind(&input.verification_evidence.artifact_digest).bind(encode(input.verification_evidence)?).bind(input.materialized_tree_digest)
+            sqlx::query(r#"INSERT INTO managed_versions (managed_mcp_id,version,manifest_digest,installation_root,verified,active,adapter_evidence_json,created_at_ms,artifact_digest,verification_evidence_json,materialized_tree_digest,activation_state,supply_chain_evidence_json) VALUES (?,?,?,?,1,0,?,?,?,?,?, 'staged',?)"#)
+                .bind(input.managed_mcp_id).bind(input.version).bind(input.manifest_digest).bind(input.installation_root).bind(encode(input.adapter_evidence)?).bind(input.now_ms).bind(&input.verification_evidence.artifact_digest).bind(encode(input.verification_evidence)?).bind(input.materialized_tree_digest).bind(input.supply_chain_evidence.map(encode).transpose()?)
                 .execute(&mut *tx).await.map_err(map_sqlx)?;
             for path in input.owned_relative_paths {
                 let expected_digest = (path == ".").then_some(input.materialized_tree_digest);
@@ -304,12 +305,20 @@ impl SqliteMcpPlatformRepository {
             if existing_digest.as_deref() != Some(&input.verification_evidence.artifact_digest) {
                 return Err(integrity_error());
             }
+            let persisted_evidence = sqlx::query_scalar::<_, Option<String>>("SELECT supply_chain_evidence_json FROM managed_versions WHERE managed_mcp_id = ? AND version = ? AND active = 1")
+                .bind(input.managed_mcp_id).bind(input.version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+            if !same_supply_chain_authority(
+                persisted_evidence.as_deref(),
+                input.supply_chain_evidence,
+            )? {
+                return Err(integrity_error());
+            }
             sqlx::query("UPDATE managed_versions SET installation_root = ?,verified = 1,adapter_evidence_json = ?,verification_evidence_json = ?,materialized_tree_digest = ?,activation_state = 'staged' WHERE managed_mcp_id = ? AND version = ? AND active = 1")
                 .bind(input.installation_root).bind(encode(input.adapter_evidence)?).bind(encode(input.verification_evidence)?).bind(input.materialized_tree_digest).bind(input.managed_mcp_id).bind(input.version).execute(&mut *tx).await.map_err(map_sqlx)?;
             sqlx::query("UPDATE installation_ownership SET expected_digest = ? WHERE managed_mcp_id = ? AND version = ? AND relative_path = '.'")
                 .bind(input.materialized_tree_digest).bind(input.managed_mcp_id).bind(input.version).execute(&mut *tx).await.map_err(map_sqlx)?;
         } else {
-            let existing = sqlx::query("SELECT manifest_digest,artifact_digest,materialized_tree_digest,verified FROM managed_versions WHERE managed_mcp_id = ? AND version = ?")
+            let existing = sqlx::query("SELECT manifest_digest,artifact_digest,materialized_tree_digest,supply_chain_evidence_json,verified FROM managed_versions WHERE managed_mcp_id = ? AND version = ?")
                 .bind(input.managed_mcp_id).bind(input.version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
             if existing
                 .try_get::<String, _>("manifest_digest")
@@ -326,6 +335,13 @@ impl SqliteMcpPlatformRepository {
                     .map_err(map_sqlx)?
                     .as_deref()
                     != Some(input.materialized_tree_digest)
+                || !same_supply_chain_authority(
+                    existing
+                        .try_get::<Option<String>, _>("supply_chain_evidence_json")
+                        .map_err(map_sqlx)?
+                        .as_deref(),
+                    input.supply_chain_evidence,
+                )?
             {
                 return Err(integrity_error());
             }
@@ -1430,6 +1446,20 @@ impl SqliteMcpPlatformRepository {
         sqlx::query("UPDATE projection_mutations SET status = 'recovery_required', updated_at_ms = ? WHERE mutation_id = ? AND status IN ('started','config_committed')")
             .bind(now_ms).bind(mutation_id).execute(&self.pool).await.map_err(map_sqlx)?;
         Ok(())
+    }
+}
+
+fn same_supply_chain_authority(
+    persisted: Option<&str>,
+    observed: Option<&SupplyChainEvidence>,
+) -> McpPlatformResult<bool> {
+    match (persisted, observed) {
+        (None, None) => Ok(true),
+        (Some(value), Some(observed)) => {
+            let persisted: SupplyChainEvidence = decode(value)?;
+            Ok(persisted.same_authority(observed))
+        }
+        _ => Ok(false),
     }
 }
 

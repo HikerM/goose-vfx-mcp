@@ -164,6 +164,8 @@ impl Harness {
                     arch: Architecture::Aarch64,
                 },
                 plan_ttl_ms: 1_000,
+                development_mode: false,
+                docker_daemon_policy_allowed: true,
             },
         ));
         Self {

@@ -22,6 +22,22 @@ fn bytes(value: &Value) -> Vec<u8> {
 
 fn manual_with_distribution(distribution: Value) -> Value {
     let mut manifest: Value = serde_json::from_str(MANUAL).unwrap();
+    match distribution.get("type").and_then(Value::as_str) {
+        Some("docker") => {
+            manifest["permissions"] = json!([
+                {"id":"spawn","kind":"process_spawn","reason":"Spawn Docker.","required":true},
+                {"id":"docker","kind":"docker","reason":"Use Docker.","required":true},
+                {"id":"network","kind":"network","reason":"Pull image.","required":true}
+            ]);
+        }
+        Some("git_dev") => {
+            manifest["permissions"] = json!([
+                {"id":"spawn","kind":"process_spawn","reason":"Spawn Git.","required":true},
+                {"id":"network","kind":"network","reason":"Fetch commit.","required":true}
+            ]);
+        }
+        _ => {}
+    }
     manifest["distribution"] = distribution;
     manifest
 }
@@ -56,7 +72,7 @@ fn all_distribution_variants_deserialize() {
         "type": "docker",
         "image": "registry.example.com/example/mcp",
         "digest": {"algorithm": "sha256", "value": "6666666666666666666666666666666666666666666666666666666666666666"},
-        "entrypoint": {"executable": "example-mcp", "args": ["--stdio"]}
+        "entrypoint": {"executable": "/example-mcp", "args": ["--stdio"]}
     }));
     let git = manual_with_distribution(json!({
         "type": "git_dev",
@@ -117,7 +133,7 @@ fn only_remote_and_manual_generate_phase_2a_plans() {
         "type": "docker",
         "image": "registry.example.com/example/mcp",
         "digest": {"algorithm": "sha256", "value": "9999999999999999999999999999999999999999999999999999999999999999"},
-        "entrypoint": {"executable": "example-mcp"}
+        "entrypoint": {"executable": "/example-mcp"}
     }));
     let git = manual_with_distribution(json!({
         "type": "git_dev",
@@ -127,16 +143,26 @@ fn only_remote_and_manual_generate_phase_2a_plans() {
         "entrypoint": {"executable": "${installation.bin}/example-mcp"}
     }));
     let unsupported = [
-        serde_json::from_str(NPM).unwrap(),
-        python,
-        serde_json::from_str(BINARY).unwrap(),
-        docker,
-        git,
+        (
+            serde_json::from_str(NPM).unwrap(),
+            McpPlatformErrorCode::NotImplementedForPhase,
+        ),
+        (python, McpPlatformErrorCode::NotImplementedForPhase),
+        (
+            serde_json::from_str(BINARY).unwrap(),
+            McpPlatformErrorCode::NotImplementedForPhase,
+        ),
+        (docker, McpPlatformErrorCode::OperationNotSupported),
+        (git, McpPlatformErrorCode::DevelopmentModeRequired),
     ];
-    for fixture in unsupported {
+    for (fixture, expected_code) in unsupported {
         let verified = parse_manifest(&bytes(&fixture)).unwrap();
-        let error = plan_for_manifest(&verified, &phase_2a_context(TrustTier::Local)).unwrap_err();
-        assert_eq!(error.code(), McpPlatformErrorCode::NotImplementedForPhase);
+        assert_eq!(
+            plan_for_manifest(&verified, &phase_2a_context(TrustTier::Local))
+                .unwrap_err()
+                .code(),
+            expected_code
+        );
     }
 }
 
@@ -202,7 +228,7 @@ fn invalid_versions_urls_digests_and_references_have_stable_codes() {
     }));
     assert_eq!(
         parse_manifest(&bytes(&git)).unwrap_err().code(),
-        McpPlatformErrorCode::ImmutableReferenceRequired
+        McpPlatformErrorCode::CommitUnavailable
     );
 }
 
@@ -248,7 +274,7 @@ fn official_git_dev_is_denied_by_release_policy() {
         "repository": "https://github.com/example/mcp.git",
         "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "adapter": "npm",
-        "entrypoint": {"executable": "example-mcp"}
+        "entrypoint": {"executable": "${installation.bin}/example-mcp"}
     }));
     let verified = parse_manifest(&bytes(&git)).unwrap();
     let context = phase_2a_context(TrustTier::Official);

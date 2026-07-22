@@ -367,6 +367,22 @@ impl TransportProjectionAdapter for CoreTransportProjectionAdapter {
                 timeout_seconds: *timeout_seconds,
             }
             .to_extension_config(),
+            ConnectionProjection::ManagedDockerStdio {
+                name: _,
+                description,
+                executable,
+                args,
+                cwd,
+                timeout_seconds,
+            } => ConnectionProjection::ManagedDockerStdio {
+                name: stable_key.to_string(),
+                description: description.clone(),
+                executable: executable.clone(),
+                args: args.clone(),
+                cwd: cwd.clone(),
+                timeout_seconds: *timeout_seconds,
+            }
+            .to_extension_config(),
         };
         Ok(config)
     }

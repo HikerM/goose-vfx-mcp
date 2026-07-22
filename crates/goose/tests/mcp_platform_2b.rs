@@ -404,6 +404,7 @@ async fn inventory_versions_and_projection_round_trip_with_revision_control() {
         active: true,
         adapter_evidence: None,
         materialized_tree_digest: None,
+        supply_chain_evidence: None,
         created_at_ms: 5,
     };
     repository

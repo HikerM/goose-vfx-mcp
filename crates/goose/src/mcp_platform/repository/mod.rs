@@ -13,6 +13,7 @@ use super::task::{
     AdapterEvidence, CompensationDescriptor, CompensationStatus, RecoveryDecision, RedactedError,
     RollbackEvidence, RollbackStatus, StepEvidence, TaskOperation, TaskStatus, TaskStepStatus,
 };
+use super::SupplyChainEvidence;
 
 pub use sqlite::{DatabaseDiagnostics, SqliteMcpPlatformRepository};
 
@@ -40,6 +41,7 @@ pub struct ManagedVersionRecord {
     pub active: bool,
     pub adapter_evidence: Option<AdapterEvidence>,
     pub materialized_tree_digest: Option<String>,
+    pub supply_chain_evidence: Option<SupplyChainEvidence>,
     pub created_at_ms: i64,
 }
 
@@ -139,6 +141,7 @@ pub struct StageManagedInstallation<'a> {
     pub adapter_evidence: &'a AdapterEvidence,
     pub verification_evidence: &'a ArtifactVerificationEvidence,
     pub materialized_tree_digest: &'a str,
+    pub supply_chain_evidence: Option<&'a SupplyChainEvidence>,
     pub owned_relative_paths: &'a [String],
     pub now_ms: i64,
 }

@@ -401,6 +401,8 @@ impl Harness {
             McpPlatformServiceOptions {
                 compatibility_target: goose::mcp_platform::CompatibilityTarget { platform, arch },
                 plan_ttl_ms: 1_000_000,
+                development_mode: false,
+                docker_daemon_policy_allowed: true,
             },
             ports.clone(),
         ));
@@ -1684,7 +1686,7 @@ async fn projection_mutation_sink_failure_is_reconciled_without_restart() {
         .set_default_enabled(
             &harness.context(),
             SetDefaultEnabledInput {
-                managed_mcp_id: managed.managed_mcp_id,
+                managed_mcp_id: managed.managed_mcp_id.clone(),
                 enabled: true,
                 expected_revision: healthy.managed.revision,
             },
@@ -1692,6 +1694,93 @@ async fn projection_mutation_sink_failure_is_reconciled_without_restart() {
         .await
         .unwrap();
     assert!(enabled.default_enabled);
+
+    assert_eq!(
+        harness
+            .service
+            .set_default_enabled(
+                &harness.context(),
+                SetDefaultEnabledInput {
+                    managed_mcp_id: managed.managed_mcp_id.clone(),
+                    enabled: true,
+                    expected_revision: healthy.managed.revision,
+                },
+            )
+            .await
+            .unwrap_err()
+            .code(),
+        McpPlatformErrorCode::RevisionConflict
+    );
+
+    harness
+        .repository
+        .begin_projection_mutation(
+            &managed.managed_mcp_id,
+            enabled.revision,
+            false,
+            harness.clock.now_ms(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        harness
+            .service
+            .set_default_enabled(
+                &harness.context(),
+                SetDefaultEnabledInput {
+                    managed_mcp_id: managed.managed_mcp_id.clone(),
+                    enabled: true,
+                    expected_revision: enabled.revision,
+                },
+            )
+            .await
+            .unwrap_err()
+            .code(),
+        McpPlatformErrorCode::RevisionConflict
+    );
+
+    let disabled = harness
+        .repository
+        .get_managed_inventory(&managed.managed_mcp_id)
+        .await
+        .unwrap();
+    assert!(!disabled.managed.state.default_enabled);
+    harness
+        .repository
+        .begin_projection_mutation(
+            &managed.managed_mcp_id,
+            disabled.managed.revision,
+            true,
+            harness.clock.now_ms(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        harness
+            .service
+            .set_default_enabled(
+                &harness.context(),
+                SetDefaultEnabledInput {
+                    managed_mcp_id: managed.managed_mcp_id.clone(),
+                    enabled: true,
+                    expected_revision: disabled.managed.revision - 1,
+                },
+            )
+            .await
+            .unwrap_err()
+            .code(),
+        McpPlatformErrorCode::RevisionConflict
+    );
+    assert!(
+        harness
+            .repository
+            .get_managed_inventory(&managed.managed_mcp_id)
+            .await
+            .unwrap()
+            .managed
+            .state
+            .default_enabled
+    );
 }
 
 #[tokio::test]
