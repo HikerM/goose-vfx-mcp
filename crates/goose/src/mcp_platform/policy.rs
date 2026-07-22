@@ -85,6 +85,10 @@ impl PolicyDecision {
 pub struct PolicyContext {
     pub trust_tier: TrustTier,
     pub operation: PlanOperation,
+    pub platform: crate::mcp_platform::manifest::Platform,
+    pub arch: crate::mcp_platform::manifest::Architecture,
+    pub python_major_minor: Option<(u8, u8)>,
+    pub node_available: bool,
     known_adapters: BTreeSet<String>,
 }
 
@@ -93,6 +97,10 @@ impl PolicyContext {
         Self {
             trust_tier,
             operation,
+            platform: current_platform(),
+            arch: current_architecture(),
+            python_major_minor: None,
+            node_available: false,
             known_adapters: [
                 "remote_http",
                 "manual_stdio",
@@ -108,12 +116,63 @@ impl PolicyContext {
         }
     }
 
+    pub fn with_target(
+        mut self,
+        platform: crate::mcp_platform::manifest::Platform,
+        arch: crate::mcp_platform::manifest::Architecture,
+    ) -> Self {
+        self.platform = platform;
+        self.arch = arch;
+        self
+    }
+
+    pub fn with_python_capability(mut self, major: u8, minor: u8) -> Self {
+        self.python_major_minor = Some((major, minor));
+        self
+    }
+
+    pub fn with_runtime_capabilities(
+        mut self,
+        node_available: bool,
+        python_major_minor: Option<(u8, u8)>,
+    ) -> Self {
+        self.node_available = node_available;
+        self.python_major_minor = python_major_minor;
+        self
+    }
+
     pub fn with_known_adapters(
         mut self,
         adapters: impl IntoIterator<Item = impl Into<String>>,
     ) -> Self {
         self.known_adapters = adapters.into_iter().map(Into::into).collect();
         self
+    }
+}
+
+const fn current_platform() -> crate::mcp_platform::manifest::Platform {
+    #[cfg(target_os = "windows")]
+    {
+        crate::mcp_platform::manifest::Platform::Windows
+    }
+    #[cfg(target_os = "macos")]
+    {
+        crate::mcp_platform::manifest::Platform::Macos
+    }
+    #[cfg(target_os = "linux")]
+    {
+        crate::mcp_platform::manifest::Platform::Linux
+    }
+}
+
+const fn current_architecture() -> crate::mcp_platform::manifest::Architecture {
+    #[cfg(target_arch = "x86_64")]
+    {
+        crate::mcp_platform::manifest::Architecture::X86_64
+    }
+    #[cfg(target_arch = "aarch64")]
+    {
+        crate::mcp_platform::manifest::Architecture::Aarch64
     }
 }
 

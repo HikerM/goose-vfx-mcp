@@ -17,6 +17,24 @@ use super::records::{
 use super::SqliteMcpPlatformRepository;
 
 impl SqliteMcpPlatformRepository {
+    pub async fn latest_managed_lifecycle_task(
+        &self,
+        managed_mcp_id: &str,
+    ) -> McpPlatformResult<Option<TaskRecord>> {
+        let row = sqlx::query(
+            r#"SELECT t.* FROM lifecycle_task_targets ltt
+               JOIN tasks t ON t.task_id = ltt.task_id
+               WHERE ltt.managed_mcp_id = ?
+               ORDER BY t.updated_at_ms DESC, t.created_at_ms DESC, t.task_id DESC
+               LIMIT 1"#,
+        )
+        .bind(managed_mcp_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        row.as_ref().map(decode_task_row).transpose()
+    }
+
     pub async fn create_task(&self, input: CreateTask<'_>) -> McpPlatformResult<TaskRecord> {
         let mut tx = self.begin_immediate().await?;
         let plan = fetch_valid_plan(&mut tx, input.plan_id).await?;
@@ -34,19 +52,36 @@ impl SqliteMcpPlatformRepository {
                 .map_err(map_sqlx)?
         {
             let existing = decode_task_row(&row)?;
-            tx.commit().await.map_err(map_sqlx)?;
-            return if existing.plan_id == input.plan_id
-                && existing.plan_digest == input.plan_digest
-                && existing.actor == input.actor
-                && existing.adapter_evidence.as_ref() == input.adapter_evidence
+            if existing.plan_id != input.plan_id
+                || existing.plan_digest != input.plan_digest
+                || existing.actor != input.actor
+                || existing.adapter_evidence.as_ref() != input.adapter_evidence
             {
-                Ok(existing)
-            } else {
-                Err(error(
+                return Err(error(
                     McpPlatformErrorCode::IdempotencyConflict,
                     "task idempotency key already refers to different content",
-                ))
-            };
+                ));
+            }
+            if managed_lifecycle_operation(existing.operation) {
+                if let Some(managed_mcp_id) = plan.target.managed_mcp_id.as_deref() {
+                    record_lifecycle_target(&mut tx, &existing.task_id, managed_mcp_id).await?;
+                    if !matches!(
+                        existing.status,
+                        TaskStatus::Succeeded | TaskStatus::Failed | TaskStatus::Cancelled
+                    ) {
+                        claim_lifecycle_lease(
+                            &mut tx,
+                            managed_mcp_id,
+                            &existing.task_id,
+                            existing.operation,
+                            existing.created_at_ms,
+                        )
+                        .await?;
+                    }
+                }
+            }
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(existing);
         }
         if input.now_ms >= plan.expires_at_ms {
             return Err(error(
@@ -87,6 +122,19 @@ impl SqliteMcpPlatformRepository {
         .execute(&mut *tx)
         .await
         .map_err(map_sqlx)?;
+        if managed_lifecycle_operation(input.operation) {
+            if let Some(managed_mcp_id) = plan.target.managed_mcp_id.as_deref() {
+                record_lifecycle_target(&mut tx, input.task_id, managed_mcp_id).await?;
+                claim_lifecycle_lease(
+                    &mut tx,
+                    managed_mcp_id,
+                    input.task_id,
+                    input.operation,
+                    input.now_ms,
+                )
+                .await?;
+            }
+        }
         append_audit(
             &mut tx,
             NewAuditEvent {
@@ -150,15 +198,22 @@ impl SqliteMcpPlatformRepository {
         }
         current.status.ensure_transition(transition.next_status)?;
         let sequence = current.event_sequence + 1;
+        let release_lease = transition.next_status == TaskStatus::Queued;
         sqlx::query(
-            r#"UPDATE tasks SET status = ?, updated_at_ms = ?, heartbeat_at_ms = ?,
+            r#"UPDATE tasks SET status = ?, updated_at_ms = ?,
+                heartbeat_at_ms = CASE WHEN ? THEN NULL ELSE ? END,
+                owner_id = CASE WHEN ? THEN NULL ELSE owner_id END,
+                lease_expires_at_ms = CASE WHEN ? THEN NULL ELSE lease_expires_at_ms END,
                 progress = ?, redacted_error_json = ?, rollback_status = ?,
                 rollback_evidence_json = ?, revision = revision + 1, event_sequence = ?
                 WHERE task_id = ? AND revision = ?"#,
         )
         .bind(transition.next_status.as_str())
         .bind(transition.now_ms)
+        .bind(release_lease)
         .bind(transition.heartbeat_at_ms)
+        .bind(release_lease)
+        .bind(release_lease)
         .bind(i64::from(transition.progress))
         .bind(encode_optional(transition.redacted_error)?)
         .bind(transition.rollback_status.as_str())
@@ -169,6 +224,19 @@ impl SqliteMcpPlatformRepository {
         .execute(&mut *tx)
         .await
         .map_err(map_sqlx)?;
+        if transition.next_status == TaskStatus::Succeeded
+            || (matches!(
+                transition.next_status,
+                TaskStatus::Failed | TaskStatus::Cancelled
+            ) && transition.rollback_status
+                != crate::mcp_platform::task::RollbackStatus::Incomplete)
+        {
+            sqlx::query("DELETE FROM managed_lifecycle_leases WHERE task_id = ?")
+                .bind(transition.task_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(map_sqlx)?;
+        }
         append_audit(
             &mut tx,
             NewAuditEvent {
@@ -556,7 +624,16 @@ impl SqliteMcpPlatformRepository {
             TaskStatus::Running | TaskStatus::Verifying | TaskStatus::Activating => {
                 TaskStatus::Cancelling
             }
-            TaskStatus::Cancelling | TaskStatus::Cancelled => {
+            TaskStatus::Cancelling => {
+                tx.commit().await.map_err(map_sqlx)?;
+                return Ok(current);
+            }
+            TaskStatus::Cancelled => {
+                sqlx::query("DELETE FROM managed_lifecycle_leases WHERE task_id = ?")
+                    .bind(task_id)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(map_sqlx)?;
                 tx.commit().await.map_err(map_sqlx)?;
                 return Ok(current);
             }
@@ -584,6 +661,13 @@ impl SqliteMcpPlatformRepository {
         .execute(&mut *tx)
         .await
         .map_err(map_sqlx)?;
+        if next_status == TaskStatus::Cancelled {
+            sqlx::query("DELETE FROM managed_lifecycle_leases WHERE task_id = ?")
+                .bind(task_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(map_sqlx)?;
+        }
         append_audit(
             &mut tx,
             NewAuditEvent {
@@ -633,8 +717,59 @@ impl SqliteMcpPlatformRepository {
         current.status.ensure_transition(TaskStatus::Queued)?;
         let sequence = current.event_sequence + 1;
         let attempt = current.attempt_count + 1;
-        sqlx::query(
-            r#"INSERT INTO task_step_history (
+        let preserve_finalization = current.status == TaskStatus::RecoveryRequired
+            && sqlx::query_scalar::<_, bool>(
+                r#"SELECT EXISTS(
+                    SELECT 1 FROM uninstall_journal WHERE task_id = ? AND status = 'committed'
+                    UNION ALL
+                    SELECT 1 FROM activation_journal a WHERE a.task_id = ? AND (
+                        a.status = 'cleanup_committed' OR (
+                            a.status = 'health_committed' AND EXISTS(
+                                SELECT 1 FROM task_steps s WHERE s.task_id = a.task_id
+                                AND s.ordinal >= 10 AND s.status = 'started'
+                            )
+                        )
+                    )
+                )"#,
+            )
+            .bind(task_id)
+            .bind(task_id)
+            .fetch_one(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+        let lifecycle_target = if managed_lifecycle_operation(current.operation) {
+            Some(
+                sqlx::query_scalar::<_, String>(
+                    "SELECT managed_mcp_id FROM lifecycle_task_targets WHERE task_id = ?",
+                )
+                .bind(task_id)
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(map_sqlx)?,
+            )
+        } else {
+            None
+        };
+        if let Some(managed_mcp_id) = lifecycle_target.as_deref() {
+            if preserve_finalization {
+                let owner = sqlx::query_scalar::<_, String>(
+                    "SELECT task_id FROM managed_lifecycle_leases WHERE managed_mcp_id = ?",
+                )
+                .bind(managed_mcp_id)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(map_sqlx)?;
+                if owner.as_deref() != Some(task_id) {
+                    return Err(integrity_error());
+                }
+            } else {
+                claim_lifecycle_lease(&mut tx, managed_mcp_id, task_id, current.operation, now_ms)
+                    .await?;
+            }
+        }
+        if !preserve_finalization {
+            sqlx::query(
+                r#"INSERT INTO task_step_history (
                 task_id, attempt, ordinal, status, idempotency_token, compensation_json,
                 evidence_json, started_at_ms, committed_at_ms, adapter_id, adapter_version,
                 compensation_status, compensation_started_at_ms, compensation_committed_at_ms
@@ -642,17 +777,30 @@ impl SqliteMcpPlatformRepository {
                 evidence_json, started_at_ms, committed_at_ms, adapter_id, adapter_version,
                 compensation_status, compensation_started_at_ms, compensation_committed_at_ms
                 FROM task_steps WHERE task_id = ?"#,
-        )
-        .bind(current.attempt_count)
-        .bind(task_id)
-        .execute(&mut *tx)
-        .await
-        .map_err(map_sqlx)?;
-        sqlx::query("DELETE FROM task_steps WHERE task_id = ?")
+            )
+            .bind(current.attempt_count)
             .bind(task_id)
             .execute(&mut *tx)
             .await
             .map_err(map_sqlx)?;
+            sqlx::query("DELETE FROM task_steps WHERE task_id = ?")
+                .bind(task_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(map_sqlx)?;
+            sqlx::query(
+                "DELETE FROM activation_journal WHERE task_id = ? AND status = 'rolled_back'",
+            )
+            .bind(task_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+            sqlx::query("DELETE FROM uninstall_journal WHERE task_id = ? AND status = 'cancelled'")
+                .bind(task_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(map_sqlx)?;
+        }
         sqlx::query(
             r#"INSERT INTO task_retry_attempts (
                 task_id, attempt, idempotency_key, requested_from_status, actor, created_at_ms
@@ -671,7 +819,8 @@ impl SqliteMcpPlatformRepository {
             r#"UPDATE tasks SET status = 'queued', retry_idempotency_key = ?, attempt_count = ?,
                 updated_at_ms = ?, heartbeat_at_ms = NULL, revision = revision + 1,
                 event_sequence = ?, owner_id = NULL, lease_expires_at_ms = NULL,
-                redacted_error_json = NULL WHERE task_id = ? AND revision = ?"#,
+                redacted_error_json = NULL, finalization_failures = 0
+                WHERE task_id = ? AND revision = ?"#,
         )
         .bind(retry_idempotency_key)
         .bind(attempt)
@@ -945,4 +1094,86 @@ impl SqliteMcpPlatformRepository {
             scanned_through_event_id,
         })
     }
+}
+
+async fn record_lifecycle_target(
+    tx: &mut sqlx::Transaction<'_, Sqlite>,
+    task_id: &str,
+    managed_mcp_id: &str,
+) -> McpPlatformResult<()> {
+    sqlx::query(
+        "INSERT INTO lifecycle_task_targets(task_id, managed_mcp_id) VALUES (?, ?) ON CONFLICT(task_id) DO NOTHING",
+    )
+    .bind(task_id)
+    .bind(managed_mcp_id)
+    .execute(&mut **tx)
+    .await
+    .map_err(map_sqlx)?;
+    let stored = sqlx::query_scalar::<_, String>(
+        "SELECT managed_mcp_id FROM lifecycle_task_targets WHERE task_id = ?",
+    )
+    .bind(task_id)
+    .fetch_one(&mut **tx)
+    .await
+    .map_err(map_sqlx)?;
+    if stored != managed_mcp_id {
+        return Err(integrity_error());
+    }
+    Ok(())
+}
+
+async fn claim_lifecycle_lease(
+    tx: &mut sqlx::Transaction<'_, Sqlite>,
+    managed_mcp_id: &str,
+    task_id: &str,
+    operation: crate::mcp_platform::task::TaskOperation,
+    now_ms: i64,
+) -> McpPlatformResult<()> {
+    let projection_busy = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM projection_mutations WHERE managed_mcp_id = ? AND status IN ('started','config_committed','recovery_required'))",
+    )
+    .bind(managed_mcp_id)
+    .fetch_one(&mut **tx)
+    .await
+    .map_err(map_sqlx)?;
+    if projection_busy {
+        return Err(error(
+            McpPlatformErrorCode::PlanConflict,
+            "managed MCP projection mutation must be resolved first",
+        ));
+    }
+    sqlx::query(
+        "INSERT INTO managed_lifecycle_leases(managed_mcp_id,task_id,operation,acquired_at_ms) VALUES (?,?,?,?) ON CONFLICT(managed_mcp_id) DO NOTHING",
+    )
+    .bind(managed_mcp_id)
+    .bind(task_id)
+    .bind(operation.as_str())
+    .bind(now_ms)
+    .execute(&mut **tx)
+    .await
+    .map_err(map_sqlx)?;
+    let owner = sqlx::query_scalar::<_, String>(
+        "SELECT task_id FROM managed_lifecycle_leases WHERE managed_mcp_id = ?",
+    )
+    .bind(managed_mcp_id)
+    .fetch_one(&mut **tx)
+    .await
+    .map_err(map_sqlx)?;
+    if owner != task_id {
+        return Err(error(
+            McpPlatformErrorCode::PlanConflict,
+            "managed MCP already has an active lifecycle mutation",
+        ));
+    }
+    Ok(())
+}
+
+fn managed_lifecycle_operation(operation: crate::mcp_platform::task::TaskOperation) -> bool {
+    matches!(
+        operation,
+        crate::mcp_platform::task::TaskOperation::Install
+            | crate::mcp_platform::task::TaskOperation::Update
+            | crate::mcp_platform::task::TaskOperation::Repair
+            | crate::mcp_platform::task::TaskOperation::Uninstall
+    )
 }

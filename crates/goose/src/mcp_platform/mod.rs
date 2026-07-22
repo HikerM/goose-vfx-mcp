@@ -4,6 +4,7 @@ pub mod domain;
 pub mod error;
 pub mod health;
 pub mod lifecycle;
+pub mod managed_distribution;
 pub mod manifest;
 pub mod plan;
 pub mod policy;
@@ -20,6 +21,7 @@ pub use domain::*;
 pub use error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
 pub use health::{run_bounded_health_session, ProductionHealthCheckAdapter};
 pub use lifecycle::*;
+pub use managed_distribution::*;
 pub use manifest::{
     parse_manifest, Distribution, Manifest, ManifestProof, SignatureEvidence, VerifiedManifest,
 };

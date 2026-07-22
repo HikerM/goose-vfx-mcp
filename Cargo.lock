@@ -4939,6 +4939,7 @@ dependencies = [
  "dtor 1.0.5",
  "env-lock",
  "etcetera 0.11.0",
+ "flate2",
  "fs-err",
  "fs2",
  "futures",
@@ -4990,6 +4991,7 @@ dependencies = [
  "rubato",
  "rustls",
  "schemars 1.2.1",
+ "semver",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -5005,6 +5007,7 @@ dependencies = [
  "subtle",
  "symphonia",
  "sys-info",
+ "tar",
  "tempfile",
  "test-case",
  "thiserror 2.0.18",
@@ -5040,7 +5043,10 @@ dependencies = [
  "webbrowser",
  "which 8.0.4",
  "winapi",
+ "windows-sys 0.61.2",
  "wiremock",
+ "xz2",
+ "zip 8.6.0",
 ]
 
 [[package]]
@@ -6658,6 +6664,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ef0d4ed8669f8f8826eb00dc878084aa8f253506c4fd5e8f58f5bce72ddb97e"
 dependencies = [
  "twox-hash",
+]
+
+[[package]]
+name = "lzma-sys"
+version = "0.1.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fda04ab3764e6cde78b9974eec4f779acaba7c4e84b36eca3cf77c581b85d27"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
 ]
 
 [[package]]
@@ -11398,6 +11415,7 @@ checksum = "3f6221d9a6003c78398e3b239969f352578258df48c8eb051caadae0015bc840"
 dependencies = [
  "filetime",
  "libc",
+ "xattr",
 ]
 
 [[package]]
@@ -13769,6 +13787,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "xattr"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32e45ad4206f6d2479085147f02bc2ef834ac85886624a23575ae137c8aa8156"
+dependencies = [
+ "libc",
+ "rustix 1.1.4",
+]
+
+[[package]]
 name = "xet-client"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13926,6 +13954,15 @@ name = "xterm-color"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7008a9d8ba97a7e47d9b2df63fcdb8dade303010c5a7cd5bf2469d4da6eba673"
+
+[[package]]
+name = "xz2"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "388c44dc09d76f1536602ead6d325eb532f5c122f17782bd57fb47baeeb767e2"
+dependencies = [
+ "lzma-sys",
+]
 
 [[package]]
 name = "yansi"

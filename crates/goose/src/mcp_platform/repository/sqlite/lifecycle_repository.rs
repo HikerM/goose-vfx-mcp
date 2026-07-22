@@ -3,13 +3,14 @@ use sqlx::Row;
 use crate::mcp_platform::domain::{InstallationState, ManagedMcpState, RegistrationState};
 use crate::mcp_platform::error::{McpPlatformErrorCode, McpPlatformResult};
 use crate::mcp_platform::repository::{
-    AuditEventType, AuditPayload, ConnectionProjectionRecord, CreateHealthTask,
-    HealthObservationRecord, HealthTaskRequestRecord, ManagedMcpInventoryRecord,
-    ManagedMcpLifecycleMetadata, NewHealthObservation, ProjectionMutationRecord,
-    ProjectionMutationStatus, PutOwnedProjection, RegisterManagedMcp, RegisterManagedMcpOutcome,
-    RetryAttemptRecord, TaskRecord,
+    ActivateManagedInstallation, AuditEventType, AuditPayload, ConnectionProjectionRecord,
+    CreateHealthTask, HealthObservationRecord, HealthTaskRequestRecord, ManagedMcpInventoryRecord,
+    ManagedMcpLifecycleMetadata, ManagedUninstallSnapshot, NewHealthObservation,
+    ProjectionMutationRecord, ProjectionMutationStatus, PutOwnedProjection, RegisterManagedMcp,
+    RegisterManagedMcpOutcome, RestoreOwnedProjection, RetryAttemptRecord,
+    StageManagedInstallation, StageManagedInstallationOutcome, TaskRecord,
 };
-use crate::mcp_platform::task::TaskStatus;
+use crate::mcp_platform::task::{TaskOperation, TaskStatus};
 
 use super::records::{
     append_audit, decode, decode_database_enum, decode_task_row, encode, error, fetch_task,
@@ -18,6 +19,685 @@ use super::records::{
 use super::SqliteMcpPlatformRepository;
 
 impl SqliteMcpPlatformRepository {
+    pub async fn claim_artifact(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+        stale_before_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let mut tx = self.begin_immediate().await?;
+        let row = sqlx::query("SELECT owner_task_id,status,updated_at_ms FROM artifact_claims WHERE artifact_digest = ?")
+            .bind(artifact_digest).fetch_optional(&mut *tx).await.map_err(map_sqlx)?;
+        match row {
+            None => {
+                sqlx::query("INSERT INTO artifact_claims(artifact_digest,owner_task_id,status,updated_at_ms) VALUES (?,?,'fetching',?)")
+                    .bind(artifact_digest).bind(task_id).bind(now_ms).execute(&mut *tx).await.map_err(map_sqlx)?;
+            }
+            Some(row) => {
+                let owner: String = row.try_get("owner_task_id").map_err(map_sqlx)?;
+                let status: String = row.try_get("status").map_err(map_sqlx)?;
+                let updated: i64 = row.try_get("updated_at_ms").map_err(map_sqlx)?;
+                if owner != task_id && status != "released" && updated >= stale_before_ms {
+                    return Err(crate::mcp_platform::error::McpPlatformError::new(
+                        McpPlatformErrorCode::PlanConflict,
+                        "managed artifact is claimed by another lifecycle task",
+                    ));
+                }
+                sqlx::query("UPDATE artifact_claims SET owner_task_id = ?,status = 'fetching',updated_at_ms = ? WHERE artifact_digest = ?")
+                    .bind(task_id).bind(now_ms).bind(artifact_digest).execute(&mut *tx).await.map_err(map_sqlx)?;
+            }
+        }
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(())
+    }
+
+    pub async fn mark_artifact_claim_verified(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let result = sqlx::query("UPDATE artifact_claims SET status = 'verified',updated_at_ms = ? WHERE artifact_digest = ? AND owner_task_id = ? AND status IN ('fetching','verified')")
+            .bind(now_ms).bind(artifact_digest).bind(task_id).execute(&self.pool).await.map_err(map_sqlx)?;
+        if result.rows_affected() != 1 {
+            return Err(integrity_error());
+        }
+        Ok(())
+    }
+
+    pub async fn release_artifact_claim(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let result = sqlx::query("UPDATE artifact_claims SET status = 'released',updated_at_ms = ? WHERE artifact_digest = ? AND owner_task_id = ? AND status IN ('fetching','verified','released')")
+            .bind(now_ms).bind(artifact_digest).bind(task_id).execute(&self.pool).await.map_err(map_sqlx)?;
+        if result.rows_affected() != 1 {
+            return Err(integrity_error());
+        }
+        Ok(())
+    }
+
+    pub async fn mark_managed_runtime_activated(
+        &self,
+        managed_mcp_id: &str,
+        target_version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let result = sqlx::query("UPDATE activation_journal SET status = 'pointer_committed',updated_at_ms = ? WHERE managed_mcp_id = ? AND task_id = ? AND target_version = ? AND status IN ('started','pointer_committed')")
+            .bind(now_ms).bind(managed_mcp_id).bind(task_id).bind(target_version).execute(&self.pool).await.map_err(map_sqlx)?;
+        if result.rows_affected() != 1 {
+            return Err(integrity_error());
+        }
+        Ok(())
+    }
+
+    pub async fn finalize_retained_version_cleanup(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let mut tx = self.begin_immediate().await?;
+        let status = sqlx::query_scalar::<_, String>(
+            "SELECT status FROM activation_journal WHERE managed_mcp_id = ? AND task_id = ?",
+        )
+        .bind(managed_mcp_id)
+        .bind(task_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        if status == "cleanup_committed" {
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(());
+        }
+        if status != "health_committed" {
+            return Err(integrity_error());
+        }
+        let row = sqlx::query("SELECT artifact_digest,active,activation_state FROM managed_versions WHERE managed_mcp_id = ? AND version = ?")
+            .bind(managed_mcp_id).bind(version).fetch_optional(&mut *tx).await.map_err(map_sqlx)?;
+        let Some(row) = row else {
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(());
+        };
+        if row.try_get::<bool, _>("active").map_err(map_sqlx)?
+            || row
+                .try_get::<String, _>("activation_state")
+                .map_err(map_sqlx)?
+                != "retained"
+        {
+            return Err(integrity_error());
+        }
+        let owned = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM installation_ownership WHERE managed_mcp_id = ? AND version = ? AND remove_on_uninstall = 1)")
+            .bind(managed_mcp_id).bind(version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+        if !owned {
+            return Err(integrity_error());
+        }
+        let digest: Option<String> = row.try_get("artifact_digest").map_err(map_sqlx)?;
+        sqlx::query("DELETE FROM installation_ownership WHERE managed_mcp_id = ? AND version = ?")
+            .bind(managed_mcp_id)
+            .bind(version)
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+        sqlx::query(
+            "DELETE FROM managed_versions WHERE managed_mcp_id = ? AND version = ? AND active = 0",
+        )
+        .bind(managed_mcp_id)
+        .bind(version)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        if let Some(digest) = digest {
+            sqlx::query("UPDATE artifact_cache SET reference_count = reference_count - 1 WHERE artifact_digest = ? AND reference_count > 0").bind(digest).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        sqlx::query("UPDATE activation_journal SET status = 'cleanup_committed',updated_at_ms = ? WHERE managed_mcp_id = ? AND task_id = ? AND status = 'health_committed'")
+            .bind(now_ms).bind(managed_mcp_id).bind(task_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(())
+    }
+
+    pub async fn is_managed_finalizing(
+        &self,
+        task_id: &str,
+        operation: TaskOperation,
+    ) -> McpPlatformResult<bool> {
+        match operation {
+            TaskOperation::Uninstall => Ok(sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM uninstall_journal WHERE task_id = ? AND status = 'committed')").bind(task_id).fetch_one(&self.pool).await.map_err(map_sqlx)?),
+            TaskOperation::Update => Ok(sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM activation_journal WHERE task_id = ? AND status = 'cleanup_committed')").bind(task_id).fetch_one(&self.pool).await.map_err(map_sqlx)?),
+            TaskOperation::Repair => Ok(sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM activation_journal a JOIN task_steps s ON s.task_id = a.task_id WHERE a.task_id = ? AND a.status = 'health_committed' AND s.ordinal >= 10 AND s.status = 'started')").bind(task_id).fetch_one(&self.pool).await.map_err(map_sqlx)?),
+            _ => Ok(false),
+        }
+    }
+
+    pub async fn record_managed_finalization_failure(
+        &self,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<i64> {
+        let mut tx = self.begin_immediate().await?;
+        sqlx::query(
+            "UPDATE tasks SET finalization_failures = finalization_failures + 1, updated_at_ms = ? WHERE task_id = ?",
+        )
+        .bind(now_ms)
+        .bind(task_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        let failures = sqlx::query_scalar::<_, i64>(
+            "SELECT finalization_failures FROM tasks WHERE task_id = ?",
+        )
+        .bind(task_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(failures)
+    }
+
+    pub async fn stage_managed_installation(
+        &self,
+        input: StageManagedInstallation<'_>,
+    ) -> McpPlatformResult<StageManagedInstallationOutcome> {
+        let mut tx = self.begin_immediate().await?;
+        let lease_owner = sqlx::query_scalar::<_, String>(
+            "SELECT task_id FROM managed_lifecycle_leases WHERE managed_mcp_id = ?",
+        )
+        .bind(input.managed_mcp_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        if lease_owner.as_deref() != Some(input.task_id) {
+            return Err(crate::mcp_platform::error::McpPlatformError::new(
+                McpPlatformErrorCode::PlanConflict,
+                "managed MCP lifecycle lease is not owned by this task",
+            ));
+        }
+        let manifest =
+            sqlx::query("SELECT mcp_id, version FROM manifest_blobs WHERE manifest_digest = ?")
+                .bind(input.manifest_digest)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(map_sqlx)?
+                .ok_or_else(not_found)?;
+        if manifest.try_get::<String, _>("mcp_id").map_err(map_sqlx)? != input.mcp_id
+            || manifest.try_get::<String, _>("version").map_err(map_sqlx)? != input.version
+        {
+            return Err(integrity_error());
+        }
+        if let Some(journal) = sqlx::query("SELECT previous_version,target_version FROM activation_journal WHERE managed_mcp_id = ? AND task_id = ?")
+            .bind(input.managed_mcp_id).bind(input.task_id).fetch_optional(&mut *tx).await.map_err(map_sqlx)?
+        {
+            let previous_version: Option<String> = journal.try_get("previous_version").map_err(map_sqlx)?;
+            if journal.try_get::<String, _>("target_version").map_err(map_sqlx)? != input.version { return Err(integrity_error()); }
+            let managed = sqlx::query("SELECT mcp_id,installation_scope,distribution_adapter,owner_task_id FROM managed_mcps WHERE managed_mcp_id = ?")
+                .bind(input.managed_mcp_id).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+            if managed.try_get::<String, _>("mcp_id").map_err(map_sqlx)? != input.mcp_id
+                || managed.try_get::<String, _>("installation_scope").map_err(map_sqlx)? != input.installation_scope
+                || managed.try_get::<String, _>("distribution_adapter").map_err(map_sqlx)? != input.distribution_adapter
+            { return Err(integrity_error()); }
+            let version = sqlx::query("SELECT manifest_digest,artifact_digest,materialized_tree_digest FROM managed_versions WHERE managed_mcp_id = ? AND version = ?")
+                .bind(input.managed_mcp_id).bind(input.version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+            if version.try_get::<String, _>("manifest_digest").map_err(map_sqlx)? != input.manifest_digest
+                || version.try_get::<Option<String>, _>("artifact_digest").map_err(map_sqlx)?.as_deref() != Some(&input.verification_evidence.artifact_digest)
+                || version.try_get::<Option<String>, _>("materialized_tree_digest").map_err(map_sqlx)?.as_deref() != Some(input.materialized_tree_digest)
+            { return Err(integrity_error()); }
+            let created_managed_mcp = previous_version.is_none() && managed.try_get::<Option<String>, _>("owner_task_id").map_err(map_sqlx)?.as_deref() == Some(input.task_id);
+            let created_version = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM installation_ownership WHERE managed_mcp_id = ? AND version = ? AND owner_task_id = ?)")
+                .bind(input.managed_mcp_id).bind(input.version).bind(input.task_id).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(StageManagedInstallationOutcome { record: self.get_managed_inventory(input.managed_mcp_id).await?, created_managed_mcp, created_version, previous_version });
+        }
+        let existing = sqlx::query("SELECT managed_mcp_id,state_json,active_version,distribution_adapter FROM managed_mcps WHERE mcp_id = ? AND installation_scope = ?")
+            .bind(input.mcp_id).bind(input.installation_scope).fetch_optional(&mut *tx).await.map_err(map_sqlx)?;
+        let created_managed_mcp = existing.is_none();
+        let (previous_version, mut state) = if let Some(row) = existing {
+            if row
+                .try_get::<String, _>("managed_mcp_id")
+                .map_err(map_sqlx)?
+                != input.managed_mcp_id
+                || row
+                    .try_get::<String, _>("distribution_adapter")
+                    .map_err(map_sqlx)?
+                    != input.distribution_adapter
+            {
+                return Err(integrity_error());
+            }
+            (
+                row.try_get::<Option<String>, _>("active_version")
+                    .map_err(map_sqlx)?,
+                decode::<ManagedMcpState>(
+                    &row.try_get::<String, _>("state_json").map_err(map_sqlx)?,
+                )?,
+            )
+        } else {
+            let state = ManagedMcpState {
+                registration: RegistrationState::Registered,
+                ..ManagedMcpState::default()
+            };
+            sqlx::query(r#"INSERT INTO managed_mcps (managed_mcp_id,mcp_id,installation_scope,state_json,revision,created_at_ms,updated_at_ms,distribution_adapter,active_manifest_digest,active_version,owner_task_id) VALUES (?,?,?,?,0,?,?,?,NULL,NULL,?)"#)
+                .bind(input.managed_mcp_id).bind(input.mcp_id).bind(input.installation_scope).bind(encode(&state)?).bind(input.now_ms).bind(input.now_ms).bind(input.distribution_adapter).bind(input.task_id)
+                .execute(&mut *tx).await.map_err(map_sqlx)?;
+            (None, state)
+        };
+        let version_exists = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM managed_versions WHERE managed_mcp_id = ? AND version = ?)")
+            .bind(input.managed_mcp_id).bind(input.version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+        if !version_exists {
+            sqlx::query(r#"INSERT INTO managed_versions (managed_mcp_id,version,manifest_digest,installation_root,verified,active,adapter_evidence_json,created_at_ms,artifact_digest,verification_evidence_json,materialized_tree_digest,activation_state) VALUES (?,?,?,?,1,0,?,?,?,?,?, 'staged')"#)
+                .bind(input.managed_mcp_id).bind(input.version).bind(input.manifest_digest).bind(input.installation_root).bind(encode(input.adapter_evidence)?).bind(input.now_ms).bind(&input.verification_evidence.artifact_digest).bind(encode(input.verification_evidence)?).bind(input.materialized_tree_digest)
+                .execute(&mut *tx).await.map_err(map_sqlx)?;
+            for path in input.owned_relative_paths {
+                let expected_digest = (path == ".").then_some(input.materialized_tree_digest);
+                sqlx::query(r#"INSERT INTO installation_ownership (managed_mcp_id,version,relative_path,path_kind,expected_digest,owner_task_id,remove_on_uninstall) VALUES (?,?,?,'directory',?,?,1)"#)
+                    .bind(input.managed_mcp_id).bind(input.version).bind(path).bind(expected_digest).bind(input.task_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+            }
+            sqlx::query(r#"INSERT INTO artifact_cache (artifact_digest,source_origin,size_bytes,adapter_id,adapter_version,platform_selector,verification_evidence_json,reference_count,verified_at_ms) VALUES (?,?,?,?,?,?,?,1,?) ON CONFLICT(artifact_digest) DO UPDATE SET reference_count = reference_count + 1, verification_evidence_json = excluded.verification_evidence_json, verified_at_ms = excluded.verified_at_ms"#)
+                .bind(&input.verification_evidence.artifact_digest).bind(&input.verification_evidence.source_origin).bind(i64::try_from(input.verification_evidence.size_bytes).map_err(|_| integrity_error())?).bind(&input.verification_evidence.adapter_id).bind(&input.verification_evidence.adapter_version).bind(&input.verification_evidence.platform_selector).bind(encode(input.verification_evidence)?).bind(input.now_ms)
+                .execute(&mut *tx).await.map_err(map_sqlx)?;
+        } else if previous_version.as_deref() == Some(input.version) {
+            let existing_digest = sqlx::query_scalar::<_, Option<String>>("SELECT artifact_digest FROM managed_versions WHERE managed_mcp_id = ? AND version = ? AND active = 1")
+                .bind(input.managed_mcp_id).bind(input.version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+            if existing_digest.as_deref() != Some(&input.verification_evidence.artifact_digest) {
+                return Err(integrity_error());
+            }
+            sqlx::query("UPDATE managed_versions SET installation_root = ?,verified = 1,adapter_evidence_json = ?,verification_evidence_json = ?,materialized_tree_digest = ?,activation_state = 'staged' WHERE managed_mcp_id = ? AND version = ? AND active = 1")
+                .bind(input.installation_root).bind(encode(input.adapter_evidence)?).bind(encode(input.verification_evidence)?).bind(input.materialized_tree_digest).bind(input.managed_mcp_id).bind(input.version).execute(&mut *tx).await.map_err(map_sqlx)?;
+            sqlx::query("UPDATE installation_ownership SET expected_digest = ? WHERE managed_mcp_id = ? AND version = ? AND relative_path = '.'")
+                .bind(input.materialized_tree_digest).bind(input.managed_mcp_id).bind(input.version).execute(&mut *tx).await.map_err(map_sqlx)?;
+        } else {
+            let existing = sqlx::query("SELECT manifest_digest,artifact_digest,materialized_tree_digest,verified FROM managed_versions WHERE managed_mcp_id = ? AND version = ?")
+                .bind(input.managed_mcp_id).bind(input.version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+            if existing
+                .try_get::<String, _>("manifest_digest")
+                .map_err(map_sqlx)?
+                != input.manifest_digest
+                || existing
+                    .try_get::<Option<String>, _>("artifact_digest")
+                    .map_err(map_sqlx)?
+                    .as_deref()
+                    != Some(&input.verification_evidence.artifact_digest)
+                || !existing.try_get::<bool, _>("verified").map_err(map_sqlx)?
+                || existing
+                    .try_get::<Option<String>, _>("materialized_tree_digest")
+                    .map_err(map_sqlx)?
+                    .as_deref()
+                    != Some(input.materialized_tree_digest)
+            {
+                return Err(integrity_error());
+            }
+            sqlx::query("UPDATE managed_versions SET activation_state = 'staged' WHERE managed_mcp_id = ? AND version = ?")
+                .bind(input.managed_mcp_id).bind(input.version).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        let previous_state_json = encode(&state)?;
+        state.installation = InstallationState::Staged;
+        state.default_enabled = false;
+        sqlx::query("UPDATE managed_mcps SET state_json = ?, updated_at_ms = ?, revision = revision + 1 WHERE managed_mcp_id = ?")
+            .bind(encode(&state)?).bind(input.now_ms).bind(input.managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        let existing_activation = sqlx::query("SELECT previous_version,target_version,previous_state_json FROM activation_journal WHERE managed_mcp_id = ? AND task_id = ?")
+            .bind(input.managed_mcp_id).bind(input.task_id).fetch_optional(&mut *tx).await.map_err(map_sqlx)?;
+        if let Some(row) = existing_activation {
+            if row
+                .try_get::<Option<String>, _>("previous_version")
+                .map_err(map_sqlx)?
+                != previous_version
+                || row
+                    .try_get::<String, _>("target_version")
+                    .map_err(map_sqlx)?
+                    != input.version
+                || row
+                    .try_get::<String, _>("previous_state_json")
+                    .map_err(map_sqlx)?
+                    != previous_state_json
+            {
+                return Err(integrity_error());
+            }
+        } else {
+            sqlx::query("INSERT INTO activation_journal(managed_mcp_id,task_id,previous_version,target_version,previous_state_json,status,created_at_ms,updated_at_ms) VALUES (?,?,?,?,?,'started',?,?)")
+                .bind(input.managed_mcp_id).bind(input.task_id).bind(&previous_version).bind(input.version).bind(previous_state_json).bind(input.now_ms).bind(input.now_ms).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(StageManagedInstallationOutcome {
+            record: self.get_managed_inventory(input.managed_mcp_id).await?,
+            created_managed_mcp,
+            created_version: !version_exists,
+            previous_version,
+        })
+    }
+
+    pub async fn activate_managed_installation(
+        &self,
+        input: ActivateManagedInstallation<'_>,
+    ) -> McpPlatformResult<ManagedMcpInventoryRecord> {
+        let mut tx = self.begin_immediate().await?;
+        let journal = sqlx::query("SELECT previous_version,target_version,status FROM activation_journal WHERE managed_mcp_id = ? AND task_id = ?")
+            .bind(input.managed_mcp_id).bind(input.task_id).fetch_optional(&mut *tx).await.map_err(map_sqlx)?.ok_or_else(not_found)?;
+        if journal
+            .try_get::<String, _>("target_version")
+            .map_err(map_sqlx)?
+            != input.target_version
+        {
+            return Err(integrity_error());
+        }
+        let status: String = journal.try_get("status").map_err(map_sqlx)?;
+        if status == "health_committed" {
+            tx.commit().await.map_err(map_sqlx)?;
+            return self.get_managed_inventory(input.managed_mcp_id).await;
+        }
+        if status != "pointer_committed" {
+            return Err(integrity_error());
+        }
+        let target = sqlx::query("SELECT manifest_digest,activation_state FROM managed_versions WHERE managed_mcp_id = ? AND version = ?")
+            .bind(input.managed_mcp_id).bind(input.target_version).fetch_optional(&mut *tx).await.map_err(map_sqlx)?.ok_or_else(not_found)?;
+        if target
+            .try_get::<String, _>("activation_state")
+            .map_err(map_sqlx)?
+            != "staged"
+        {
+            return Err(integrity_error());
+        }
+        let previous_version = journal
+            .try_get::<Option<String>, _>("previous_version")
+            .map_err(map_sqlx)?;
+        if let Some(previous) = previous_version
+            .as_deref()
+            .filter(|previous| *previous != input.target_version)
+        {
+            sqlx::query("UPDATE managed_versions SET active = 0, activation_state = 'retained' WHERE managed_mcp_id = ? AND version = ? AND active = 1")
+                .bind(input.managed_mcp_id).bind(previous).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        sqlx::query("UPDATE managed_versions SET active = 1, activation_state = 'active' WHERE managed_mcp_id = ? AND version = ?")
+            .bind(input.managed_mcp_id).bind(input.target_version).execute(&mut *tx).await.map_err(map_sqlx)?;
+        let state_json = sqlx::query_scalar::<_, String>(
+            "SELECT state_json FROM managed_mcps WHERE managed_mcp_id = ?",
+        )
+        .bind(input.managed_mcp_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        let mut state = decode::<ManagedMcpState>(&state_json)?;
+        state.installation = InstallationState::Installed;
+        state.default_enabled = input.default_enabled;
+        let manifest_digest: String = target.try_get("manifest_digest").map_err(map_sqlx)?;
+        sqlx::query("UPDATE managed_mcps SET state_json = ?, active_manifest_digest = ?, active_version = ?, updated_at_ms = ?, revision = revision + 1 WHERE managed_mcp_id = ?")
+            .bind(encode(&state)?).bind(manifest_digest).bind(input.target_version).bind(input.now_ms).bind(input.managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        sqlx::query("UPDATE activation_journal SET status = 'health_committed', updated_at_ms = ? WHERE managed_mcp_id = ? AND task_id = ? AND status = 'pointer_committed'")
+            .bind(input.now_ms).bind(input.managed_mcp_id).bind(input.task_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        tx.commit().await.map_err(map_sqlx)?;
+        self.get_managed_inventory(input.managed_mcp_id).await
+    }
+
+    pub async fn rollback_managed_installation(
+        &self,
+        managed_mcp_id: &str,
+        previous_version: Option<&str>,
+        target_version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let mut tx = self.begin_immediate().await?;
+        let journal = sqlx::query("SELECT previous_version,target_version,previous_state_json,status FROM activation_journal WHERE managed_mcp_id = ? AND task_id = ?")
+            .bind(managed_mcp_id).bind(task_id).fetch_optional(&mut *tx).await.map_err(map_sqlx)?.ok_or_else(not_found)?;
+        if journal
+            .try_get::<Option<String>, _>("previous_version")
+            .map_err(map_sqlx)?
+            .as_deref()
+            != previous_version
+            || journal
+                .try_get::<String, _>("target_version")
+                .map_err(map_sqlx)?
+                != target_version
+        {
+            return Err(integrity_error());
+        }
+        if journal.try_get::<String, _>("status").map_err(map_sqlx)? == "rolled_back" {
+            if previous_version.is_none() {
+                sqlx::query("DELETE FROM managed_mcps WHERE managed_mcp_id = ? AND owner_task_id = ? AND NOT EXISTS(SELECT 1 FROM managed_versions WHERE managed_mcp_id = ?) AND NOT EXISTS(SELECT 1 FROM connection_projections WHERE managed_mcp_id = ?)")
+                    .bind(managed_mcp_id).bind(task_id).bind(managed_mcp_id).bind(managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+            }
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(());
+        }
+        if previous_version == Some(target_version) {
+            let state_json: String = journal.try_get("previous_state_json").map_err(map_sqlx)?;
+            let state = decode::<ManagedMcpState>(&state_json)?;
+            sqlx::query("UPDATE managed_versions SET active = 1,activation_state = 'active' WHERE managed_mcp_id = ? AND version = ?").bind(managed_mcp_id).bind(target_version).execute(&mut *tx).await.map_err(map_sqlx)?;
+            sqlx::query("UPDATE managed_mcps SET state_json = ?,updated_at_ms = ?,revision = revision + 1 WHERE managed_mcp_id = ?").bind(encode(&state)?).bind(now_ms).bind(managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+            sqlx::query("UPDATE activation_journal SET status = 'rolled_back',updated_at_ms = ? WHERE managed_mcp_id = ? AND task_id = ?").bind(now_ms).bind(managed_mcp_id).bind(task_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(());
+        }
+        let owned = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM installation_ownership WHERE managed_mcp_id = ? AND version = ? AND owner_task_id = ?)")
+            .bind(managed_mcp_id).bind(target_version).bind(task_id).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+        if !owned {
+            return Err(integrity_error());
+        }
+        let artifact_digest = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT artifact_digest FROM managed_versions WHERE managed_mcp_id = ? AND version = ?",
+        )
+        .bind(managed_mcp_id)
+        .bind(target_version)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map_sqlx)?
+        .flatten();
+        sqlx::query("UPDATE managed_versions SET active = 0, activation_state = 'removal_pending' WHERE managed_mcp_id = ? AND version = ?")
+            .bind(managed_mcp_id).bind(target_version).execute(&mut *tx).await.map_err(map_sqlx)?;
+        if let Some(previous) = previous_version {
+            sqlx::query("UPDATE managed_versions SET active = 1, activation_state = 'active' WHERE managed_mcp_id = ? AND version = ?")
+                .bind(managed_mcp_id).bind(previous).execute(&mut *tx).await.map_err(map_sqlx)?;
+            let digest = sqlx::query_scalar::<_, String>("SELECT manifest_digest FROM managed_versions WHERE managed_mcp_id = ? AND version = ?").bind(managed_mcp_id).bind(previous).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+            let state_json: String = journal.try_get("previous_state_json").map_err(map_sqlx)?;
+            let state = decode::<ManagedMcpState>(&state_json)?;
+            sqlx::query("UPDATE managed_mcps SET state_json = ?,active_manifest_digest = ?,active_version = ?,updated_at_ms = ?,revision = revision + 1 WHERE managed_mcp_id = ?")
+                .bind(encode(&state)?).bind(digest).bind(previous).bind(now_ms).bind(managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        sqlx::query("DELETE FROM installation_ownership WHERE managed_mcp_id = ? AND version = ? AND owner_task_id = ?").bind(managed_mcp_id).bind(target_version).bind(task_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        sqlx::query(
+            "DELETE FROM managed_versions WHERE managed_mcp_id = ? AND version = ? AND active = 0",
+        )
+        .bind(managed_mcp_id)
+        .bind(target_version)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        if let Some(digest) = artifact_digest {
+            sqlx::query("UPDATE artifact_cache SET reference_count = reference_count - 1 WHERE artifact_digest = ? AND reference_count > 0").bind(digest).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        sqlx::query("UPDATE activation_journal SET status = 'rolled_back',updated_at_ms = ? WHERE managed_mcp_id = ? AND task_id = ?").bind(now_ms).bind(managed_mcp_id).bind(task_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        if previous_version.is_none() {
+            sqlx::query("DELETE FROM managed_mcps WHERE managed_mcp_id = ? AND owner_task_id = ? AND NOT EXISTS(SELECT 1 FROM managed_versions WHERE managed_mcp_id = ?)").bind(managed_mcp_id).bind(task_id).bind(managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(())
+    }
+
+    pub async fn begin_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<ManagedUninstallSnapshot> {
+        let mut tx = self.begin_immediate().await?;
+        if let Some(row) = sqlx::query("SELECT managed_mcp_id,version,artifact_digest FROM uninstall_journal WHERE task_id = ?").bind(task_id).fetch_optional(&mut *tx).await.map_err(map_sqlx)? {
+            let snapshot = ManagedUninstallSnapshot { managed_mcp_id: row.try_get("managed_mcp_id").map_err(map_sqlx)?, version: row.try_get("version").map_err(map_sqlx)?, artifact_digest: row.try_get("artifact_digest").map_err(map_sqlx)? };
+            if snapshot.managed_mcp_id != managed_mcp_id || snapshot.version != version { return Err(integrity_error()); }
+            tx.commit().await.map_err(map_sqlx)?; return Ok(snapshot);
+        }
+        let lease_owner = sqlx::query_scalar::<_, String>(
+            "SELECT task_id FROM managed_lifecycle_leases WHERE managed_mcp_id = ?",
+        )
+        .bind(managed_mcp_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        if lease_owner.as_deref() != Some(task_id) {
+            return Err(crate::mcp_platform::error::McpPlatformError::new(
+                McpPlatformErrorCode::PlanConflict,
+                "managed MCP lifecycle lease is not owned by this task",
+            ));
+        }
+        let uninstall_pending = sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM uninstall_journal WHERE managed_mcp_id = ? AND status IN ('started','quarantined'))")
+            .bind(managed_mcp_id).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+        if uninstall_pending {
+            return Err(crate::mcp_platform::error::McpPlatformError::new(
+                McpPlatformErrorCode::PlanConflict,
+                "managed MCP already has an active lifecycle mutation",
+            ));
+        }
+        let row = sqlx::query(
+            "SELECT state_json,active_version FROM managed_mcps WHERE managed_mcp_id = ?",
+        )
+        .bind(managed_mcp_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map_sqlx)?
+        .ok_or_else(not_found)?;
+        if row
+            .try_get::<Option<String>, _>("active_version")
+            .map_err(map_sqlx)?
+            .as_deref()
+            != Some(version)
+        {
+            return Err(integrity_error());
+        }
+        let previous_state_json: String = row.try_get("state_json").map_err(map_sqlx)?;
+        let mut state = decode::<ManagedMcpState>(&previous_state_json)?;
+        state.installation = InstallationState::UninstallPending;
+        let artifact_digest = sqlx::query_scalar::<_, Option<String>>("SELECT artifact_digest FROM managed_versions WHERE managed_mcp_id = ? AND version = ? AND active = 1").bind(managed_mcp_id).bind(version).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+        sqlx::query("INSERT INTO uninstall_journal(task_id,managed_mcp_id,version,previous_state_json,artifact_digest,status,created_at_ms,updated_at_ms) VALUES (?,?,?,?,?,'started',?,?)")
+            .bind(task_id).bind(managed_mcp_id).bind(version).bind(previous_state_json).bind(&artifact_digest).bind(now_ms).bind(now_ms).execute(&mut *tx).await.map_err(map_sqlx)?;
+        sqlx::query("UPDATE managed_mcps SET state_json = ?,updated_at_ms = ?,revision = revision + 1 WHERE managed_mcp_id = ?").bind(encode(&state)?).bind(now_ms).bind(managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(ManagedUninstallSnapshot {
+            managed_mcp_id: managed_mcp_id.to_string(),
+            version: version.to_string(),
+            artifact_digest,
+        })
+    }
+
+    pub async fn mark_managed_uninstall_quarantined(
+        &self,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        if sqlx::query_scalar::<_, String>("SELECT status FROM uninstall_journal WHERE task_id = ?")
+            .bind(task_id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(map_sqlx)?
+            .as_deref()
+            == Some("committed")
+        {
+            return Ok(());
+        }
+        let result = sqlx::query("UPDATE uninstall_journal SET status = 'quarantined',updated_at_ms = ? WHERE task_id = ? AND status IN ('started','quarantined')").bind(now_ms).bind(task_id).execute(&self.pool).await.map_err(map_sqlx)?;
+        if result.rows_affected() != 1 {
+            return Err(integrity_error());
+        }
+        Ok(())
+    }
+
+    pub async fn cancel_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let mut tx = self.begin_immediate().await?;
+        let row = sqlx::query("SELECT previous_state_json,status FROM uninstall_journal WHERE task_id = ? AND managed_mcp_id = ?").bind(task_id).bind(managed_mcp_id).fetch_optional(&mut *tx).await.map_err(map_sqlx)?.ok_or_else(not_found)?;
+        let status: String = row.try_get("status").map_err(map_sqlx)?;
+        if status == "cancelled" {
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(());
+        }
+        if !matches!(status.as_str(), "started" | "quarantined") {
+            return Err(integrity_error());
+        }
+        let previous: String = row.try_get("previous_state_json").map_err(map_sqlx)?;
+        sqlx::query("UPDATE managed_mcps SET state_json = ?,updated_at_ms = ?,revision = revision + 1 WHERE managed_mcp_id = ?").bind(previous).bind(now_ms).bind(managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        sqlx::query(
+            "UPDATE uninstall_journal SET status = 'cancelled',updated_at_ms = ? WHERE task_id = ?",
+        )
+        .bind(now_ms)
+        .bind(task_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(())
+    }
+
+    pub async fn finalize_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        let mut tx = self.begin_immediate().await?;
+        let row = sqlx::query("SELECT status,artifact_digest FROM uninstall_journal WHERE task_id = ? AND managed_mcp_id = ? AND version = ?").bind(task_id).bind(managed_mcp_id).bind(version).fetch_optional(&mut *tx).await.map_err(map_sqlx)?.ok_or_else(not_found)?;
+        let status: String = row.try_get("status").map_err(map_sqlx)?;
+        if status == "committed" {
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(());
+        }
+        if status != "quarantined" {
+            return Err(integrity_error());
+        }
+        let version_count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM managed_versions WHERE managed_mcp_id = ?",
+        )
+        .bind(managed_mcp_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        let owned_count = sqlx::query_scalar::<_, i64>("SELECT COUNT(DISTINCT version) FROM installation_ownership WHERE managed_mcp_id = ? AND remove_on_uninstall = 1").bind(managed_mcp_id).fetch_one(&mut *tx).await.map_err(map_sqlx)?;
+        if version_count == 0 || owned_count != version_count {
+            return Err(integrity_error());
+        }
+        let digests = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT artifact_digest FROM managed_versions WHERE managed_mcp_id = ?",
+        )
+        .bind(managed_mcp_id)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        sqlx::query("DELETE FROM connection_projections WHERE managed_mcp_id = ?")
+            .bind(managed_mcp_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+        sqlx::query("DELETE FROM installation_ownership WHERE managed_mcp_id = ?")
+            .bind(managed_mcp_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+        sqlx::query("DELETE FROM managed_versions WHERE managed_mcp_id = ?")
+            .bind(managed_mcp_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+        sqlx::query("DELETE FROM managed_mcps WHERE managed_mcp_id = ? AND NOT EXISTS(SELECT 1 FROM managed_versions WHERE managed_mcp_id = ?)").bind(managed_mcp_id).bind(managed_mcp_id).execute(&mut *tx).await.map_err(map_sqlx)?;
+        for digest in digests.into_iter().flatten() {
+            sqlx::query("UPDATE artifact_cache SET reference_count = reference_count - 1 WHERE artifact_digest = ? AND reference_count > 0").bind(digest).execute(&mut *tx).await.map_err(map_sqlx)?;
+        }
+        sqlx::query(
+            "UPDATE uninstall_journal SET status = 'committed',updated_at_ms = ? WHERE task_id = ?",
+        )
+        .bind(now_ms)
+        .bind(task_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(())
+    }
+
     pub async fn register_managed_mcp(
         &self,
         input: RegisterManagedMcp<'_>,
@@ -219,13 +899,20 @@ impl SqliteMcpPlatformRepository {
         .await
         .map_err(map_sqlx)?
         .ok_or_else(not_found)?;
-        if managed_digest.as_deref() != Some(input.manifest_digest) {
-            return Err(integrity_error());
-        }
         let plan = fetch_valid_plan(&mut tx, input.plan_id).await?;
         if plan.plan.manifest_digest() != input.manifest_digest
             || plan.target.mcp_id != plan.plan.manifest_id()
         {
+            return Err(integrity_error());
+        }
+        let digest_allowed = managed_digest.as_deref() == Some(input.manifest_digest)
+            || (plan.target.managed_mcp_id.as_deref() == Some(input.managed_mcp_id)
+                && matches!(
+                    plan.plan.operation(),
+                    crate::mcp_platform::policy::PlanOperation::Update
+                        | crate::mcp_platform::policy::PlanOperation::Repair
+                ));
+        if !digest_allowed {
             return Err(integrity_error());
         }
         if let Some(row) = sqlx::query(
@@ -250,13 +937,31 @@ impl SqliteMcpPlatformRepository {
                     &row.try_get::<String, _>("projection_json")
                         .map_err(map_sqlx)?,
                 )? == *input.projection;
-            tx.commit().await.map_err(map_sqlx)?;
-            if !same {
+            if same {
+                tx.commit().await.map_err(map_sqlx)?;
+                return self.get_connection_projection(input.managed_mcp_id).await;
+            }
+            let same_identity = row
+                .try_get::<String, _>("managed_mcp_id")
+                .map_err(map_sqlx)?
+                == input.managed_mcp_id
+                && row.try_get::<String, _>("link_key").map_err(map_sqlx)? == input.link_key
+                && plan.target.managed_mcp_id.as_deref() == Some(input.managed_mcp_id)
+                && matches!(
+                    plan.plan.operation(),
+                    crate::mcp_platform::policy::PlanOperation::Update
+                        | crate::mcp_platform::policy::PlanOperation::Repair
+                );
+            if !same_identity {
                 return Err(error(
                     McpPlatformErrorCode::ProjectionConflict,
                     "extension projection key is already owned by different content",
                 ));
             }
+            sqlx::query(r#"UPDATE connection_projections SET projection_json = ?, revision = revision + 1, updated_at_ms = ?, plan_id = ?, manifest_digest = ?, owner_task_id = ?, projection_digest = ? WHERE managed_mcp_id = ? AND link_key = ?"#)
+                .bind(encode(input.projection)?).bind(input.now_ms).bind(input.plan_id).bind(input.manifest_digest).bind(input.owner_task_id).bind(input.projection_digest).bind(input.managed_mcp_id).bind(input.link_key)
+                .execute(&mut *tx).await.map_err(map_sqlx)?;
+            tx.commit().await.map_err(map_sqlx)?;
             return self.get_connection_projection(input.managed_mcp_id).await;
         }
         sqlx::query(
@@ -294,6 +999,19 @@ impl SqliteMcpPlatformRepository {
         .await
         .map_err(map_sqlx)?;
         Ok(result.rows_affected() == 1)
+    }
+
+    pub async fn restore_owned_connection_projection(
+        &self,
+        input: RestoreOwnedProjection<'_>,
+    ) -> McpPlatformResult<ConnectionProjectionRecord> {
+        let result = sqlx::query(r#"UPDATE connection_projections SET projection_json = ?,revision = revision + 1,updated_at_ms = ?,plan_id = ?,manifest_digest = ?,owner_task_id = ?,projection_digest = ? WHERE managed_mcp_id = ? AND link_key = ? AND owner_task_id = ?"#)
+            .bind(encode(input.projection)?).bind(input.now_ms).bind(input.plan_id).bind(input.manifest_digest).bind(input.owner_task_id).bind(input.projection_digest).bind(input.managed_mcp_id).bind(input.link_key).bind(input.replacing_task_id)
+            .execute(&self.pool).await.map_err(map_sqlx)?;
+        if result.rows_affected() != 1 {
+            return Err(integrity_error());
+        }
+        self.get_connection_projection(input.managed_mcp_id).await
     }
 
     pub async fn remove_owned_managed_mcp(
@@ -575,9 +1293,28 @@ impl SqliteMcpPlatformRepository {
         now_ms: i64,
     ) -> McpPlatformResult<ProjectionMutationRecord> {
         let mut tx = self.begin_immediate().await?;
-        if let Some(row) = sqlx::query("SELECT * FROM projection_mutations WHERE managed_mcp_id = ? AND status IN ('started','config_committed')")
+        let lifecycle_busy = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM managed_lifecycle_leases WHERE managed_mcp_id = ?)",
+        )
+        .bind(managed_mcp_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        if lifecycle_busy {
+            return Err(error(
+                McpPlatformErrorCode::PlanConflict,
+                "managed MCP lifecycle mutation is active",
+            ));
+        }
+        if let Some(row) = sqlx::query("SELECT * FROM projection_mutations WHERE managed_mcp_id = ? AND status IN ('started','config_committed','recovery_required')")
             .bind(managed_mcp_id).fetch_optional(&mut *tx).await.map_err(map_sqlx)? {
             let record = decode_projection_mutation(&row)?;
+            if record.status == ProjectionMutationStatus::RecoveryRequired {
+                return Err(error(
+                    McpPlatformErrorCode::PlanConflict,
+                    "managed MCP projection recovery must be resolved first",
+                ));
+            }
             tx.commit().await.map_err(map_sqlx)?;
             return if record.expected_revision == expected_revision && record.desired_enabled == desired_enabled { Ok(record) } else { Err(error(McpPlatformErrorCode::RevisionConflict, "managed MCP has an active projection mutation")) };
         }
@@ -617,7 +1354,7 @@ impl SqliteMcpPlatformRepository {
         mutation_id: i64,
         now_ms: i64,
     ) -> McpPlatformResult<()> {
-        let result = sqlx::query("UPDATE projection_mutations SET status = 'config_committed', updated_at_ms = ? WHERE mutation_id = ? AND status = 'started'")
+        let result = sqlx::query("UPDATE projection_mutations SET status = 'config_committed', updated_at_ms = ? WHERE mutation_id = ? AND status IN ('started','recovery_required')")
             .bind(now_ms).bind(mutation_id).execute(&self.pool).await.map_err(map_sqlx)?;
         if result.rows_affected() == 1 {
             Ok(())
@@ -667,9 +1404,22 @@ impl SqliteMcpPlatformRepository {
     pub async fn list_pending_projection_mutations(
         &self,
     ) -> McpPlatformResult<Vec<ProjectionMutationRecord>> {
-        let rows = sqlx::query("SELECT * FROM projection_mutations WHERE status IN ('started','config_committed') ORDER BY mutation_id")
+        let rows = sqlx::query("SELECT * FROM projection_mutations WHERE status IN ('started','config_committed','recovery_required') ORDER BY mutation_id")
             .fetch_all(&self.pool).await.map_err(map_sqlx)?;
         rows.iter().map(decode_projection_mutation).collect()
+    }
+
+    pub async fn projection_recovery_required(
+        &self,
+        managed_mcp_id: &str,
+    ) -> McpPlatformResult<bool> {
+        sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM projection_mutations WHERE managed_mcp_id = ? AND status = 'recovery_required')",
+        )
+        .bind(managed_mcp_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(map_sqlx)
     }
 
     pub async fn mark_projection_mutation_recovery_required(

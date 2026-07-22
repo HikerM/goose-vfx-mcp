@@ -8,7 +8,10 @@ use crate::agents::ExtensionConfig;
 
 use super::domain::TrustTier;
 use super::error::McpPlatformResult;
-use super::manifest::{digest_serializable, Auth, HealthCheck, Manifest};
+use super::manifest::{
+    digest_serializable, Architecture, ArchiveFormat, Auth, HealthCheck, Manifest, Platform,
+    Sha256Digest,
+};
 use super::policy::{PlanOperation, PolicyDecision, PolicyReasonCode};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -18,7 +21,7 @@ pub struct AdapterIdentity {
     pub version: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum PlanStep {
     RegisterRemote {
@@ -36,6 +39,39 @@ pub enum PlanStep {
         health_check: HealthCheck,
         permission_ids: Vec<String>,
     },
+    AcquireManagedDistribution {
+        kind: ManagedDistributionKind,
+        source_origin: String,
+        artifact_url: String,
+        artifact_digest: Sha256Digest,
+        expected_size_bytes: Option<u64>,
+        platform: Platform,
+        arch: Architecture,
+        archive_format: Option<ArchiveFormat>,
+        package_name: Option<String>,
+        package_version: String,
+        dependency_policy: ManagedDependencyPolicy,
+    },
+    RemoveManagedInstallation {
+        managed_mcp_id: String,
+        version: String,
+        preserve_user_data: bool,
+        ownership_only: bool,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ManagedDistributionKind {
+    Npm,
+    PythonWheel,
+    BinaryArchive,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ManagedDependencyPolicy {
+    DenyImplicit,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -62,9 +98,12 @@ pub enum RequiredConfirmation {
 pub enum PlanWarning {
     DefaultDisabled,
     RegistrationOnly,
+    ManagedArtifactDownload,
+    ExistingVersionRetainedUntilCommit,
+    RemovesOwnedFilesOnly,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ConnectionProjection {
     RemoteHttp {
@@ -75,6 +114,15 @@ pub enum ConnectionProjection {
         auth: Auth,
     },
     ManualStdio {
+        name: String,
+        description: String,
+        executable: String,
+        args: Vec<String>,
+        environment_keys: Vec<String>,
+        cwd: Option<String>,
+        timeout_seconds: Option<u64>,
+    },
+    ManagedStdio {
         name: String,
         description: String,
         executable: String,
@@ -110,6 +158,26 @@ impl ConnectionProjection {
                 }
             }
             Self::ManualStdio {
+                name,
+                description,
+                executable,
+                args,
+                environment_keys,
+                cwd,
+                timeout_seconds,
+            } => ExtensionConfig::Stdio {
+                name: name.clone(),
+                description: description.clone(),
+                cmd: executable.clone(),
+                args: args.clone(),
+                envs: Envs::default(),
+                env_keys: environment_keys.clone(),
+                timeout: *timeout_seconds,
+                cwd: cwd.clone(),
+                bundled: None,
+                available_tools: Vec::new(),
+            },
+            Self::ManagedStdio {
                 name,
                 description,
                 executable,

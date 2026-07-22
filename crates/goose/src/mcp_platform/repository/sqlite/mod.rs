@@ -306,7 +306,7 @@ impl SqliteMcpPlatformRepository {
         let mut tx = self.begin_immediate().await?;
         if let Some(row) = sqlx::query(
             r#"SELECT version, manifest_digest, installation_root, verified, active,
-                adapter_evidence_json, created_at_ms FROM managed_versions
+                adapter_evidence_json, materialized_tree_digest, created_at_ms FROM managed_versions
                 WHERE managed_mcp_id = ? AND version = ?"#,
         )
         .bind(managed_mcp_id)
@@ -329,8 +329,8 @@ impl SqliteMcpPlatformRepository {
         sqlx::query(
             r#"INSERT INTO managed_versions (
                 managed_mcp_id, version, manifest_digest, installation_root, verified, active,
-                adapter_evidence_json, created_at_ms
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#,
+                adapter_evidence_json, materialized_tree_digest, created_at_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
         )
         .bind(managed_mcp_id)
         .bind(&version.version)
@@ -339,6 +339,7 @@ impl SqliteMcpPlatformRepository {
         .bind(version.verified)
         .bind(version.active)
         .bind(encode_optional(version.adapter_evidence.as_ref())?)
+        .bind(&version.materialized_tree_digest)
         .bind(version.created_at_ms)
         .execute(&mut *tx)
         .await
@@ -353,7 +354,7 @@ impl SqliteMcpPlatformRepository {
     ) -> McpPlatformResult<Vec<ManagedVersionRecord>> {
         let rows = sqlx::query(
             r#"SELECT version, manifest_digest, installation_root, verified, active,
-                adapter_evidence_json, created_at_ms FROM managed_versions
+                adapter_evidence_json, materialized_tree_digest, created_at_ms FROM managed_versions
                 WHERE managed_mcp_id = ? ORDER BY version"#,
         )
         .bind(managed_mcp_id)
@@ -647,6 +648,13 @@ async fn migrate(pool: &Pool<Sqlite>) -> McpPlatformResult<()> {
     if current < 3 {
         migrations::apply_v3(&mut tx).await?;
         sqlx::query("INSERT INTO schema_version(version, applied_at_ms) VALUES (3, 0)")
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+    }
+    if current < 4 {
+        migrations::apply_v4(&mut tx).await?;
+        sqlx::query("INSERT INTO schema_version(version, applied_at_ms) VALUES (4, 0)")
             .execute(&mut *tx)
             .await
             .map_err(map_sqlx)?;

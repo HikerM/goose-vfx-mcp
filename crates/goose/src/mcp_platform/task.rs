@@ -1,3 +1,4 @@
+use super::plan::ConnectionProjection;
 use serde::{Deserialize, Serialize};
 
 use super::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
@@ -92,6 +93,7 @@ impl TaskStatus {
                         | Self::Verifying
                         | Self::RollingBack
                         | Self::Failed
+                        | Self::RecoveryRequired
                         | Self::Interrupted
                 )
                 | (
@@ -104,6 +106,7 @@ impl TaskStatus {
                         | Self::Cancelling
                         | Self::RollingBack
                         | Self::Failed
+                        | Self::RecoveryRequired
                         | Self::Interrupted
                 )
                 | (
@@ -112,6 +115,7 @@ impl TaskStatus {
                         | Self::Cancelling
                         | Self::RollingBack
                         | Self::Failed
+                        | Self::RecoveryRequired
                         | Self::Interrupted
                 )
                 | (
@@ -229,6 +233,30 @@ pub struct RollbackEvidence {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum CompensationDescriptor {
+    NoCompensation,
+    ManagedLifecycleSnapshot {
+        managed_mcp_id: String,
+        previous_version: Option<String>,
+        previous_state: Option<super::ManagedMcpState>,
+        previous_projection: Option<ConnectionProjection>,
+        previous_projection_digest: Option<String>,
+        previous_manifest_digest: Option<String>,
+        previous_plan_id: Option<String>,
+        previous_owner_task_id: Option<String>,
+    },
+    ManagedUninstallSnapshot {
+        managed_mcp_id: String,
+        active_version: String,
+        versions: Vec<String>,
+        link_key: String,
+        projection: ConnectionProjection,
+        enabled: bool,
+        projection_digest: String,
+        manifest_digest: String,
+        plan_id: String,
+        owner_task_id: Option<String>,
+        task_id: String,
+    },
     RemoveConnectionProjection {
         link_key: String,
     },
@@ -238,6 +266,44 @@ pub enum CompensationDescriptor {
     RemoveOwnedPath {
         root: String,
         relative_path: String,
+    },
+    RemoveManagedVersion {
+        managed_mcp_id: String,
+        version: String,
+        created_by_task: bool,
+    },
+    RestoreManagedActivation {
+        managed_mcp_id: String,
+        previous_version: Option<String>,
+        target_version: String,
+    },
+    RestoreRuntimeActivation {
+        managed_mcp_id: String,
+        previous_version: Option<String>,
+        target_version: Option<String>,
+    },
+    RestoreManagedProjection {
+        managed_mcp_id: String,
+        link_key: String,
+        projection: ConnectionProjection,
+        enabled: bool,
+        projection_digest: String,
+        manifest_digest: String,
+        plan_id: String,
+        owner_task_id: Option<String>,
+    },
+    RestoreQuarantinedVersion {
+        managed_mcp_id: String,
+        version: String,
+        quarantine_token: String,
+    },
+    CancelManagedUninstall {
+        managed_mcp_id: String,
+        task_id: String,
+    },
+    FinalizedManagedUninstall {
+        managed_mcp_id: String,
+        version: String,
     },
     RestoreConfigFragment {
         registration_id: String,
@@ -265,6 +331,11 @@ pub enum StepEvidence {
     },
     ArtifactVerified {
         digest: String,
+    },
+    ManagedDistributionMaterialized {
+        digest: String,
+        version: String,
+        tree_digest: String,
     },
     ActivationRecorded {
         version: String,

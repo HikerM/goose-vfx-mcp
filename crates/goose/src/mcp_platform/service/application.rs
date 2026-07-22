@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -12,17 +13,25 @@ use crate::mcp_platform::lifecycle::{
     ConfigAuthRequirementResolver, ConfigProjectionSink, CoreTransportProjectionAdapter,
     EmptyHostIntegrationAdapter, LifecyclePorts, SafeRegistrationEffectAdapter,
 };
-use crate::mcp_platform::manifest::{Architecture, Distribution, Platform, VerifiedManifest};
-use crate::mcp_platform::policy::{PlanOperation, PolicyContext};
+use crate::mcp_platform::manifest::{
+    Architecture, Distribution, ExactVersion, Platform, VerifiedManifest,
+};
+use crate::mcp_platform::plan::{
+    AdapterIdentity, EffectSummary, InstallationPlan, PlanStep, PlanWarning,
+};
+use crate::mcp_platform::policy::{evaluate_manifest_policy, PlanOperation, PolicyContext};
 use crate::mcp_platform::repository::{
     ConfirmationEvidence, CreateHealthTask, CreateTask, ManagedInventoryFilter,
-    ManagedMcpInventoryRecord, PlanRecord, PlanTarget, SavePlan, TaskTransition,
+    ManagedMcpInventoryRecord, PlanRecord, PlanTarget, SavePlan, TaskRecord, TaskTransition,
 };
 use crate::mcp_platform::task::{
     AdapterEvidence, CompensationDescriptor, RollbackEvidence, RollbackStatus, TaskOperation,
     TaskStatus,
 };
-use crate::mcp_platform::{ProductionHealthCheckAdapter, TaskRunner};
+use crate::mcp_platform::{
+    DistributionEffectAdapter, ProductionDistributionEffectAdapter, ProductionHealthCheckAdapter,
+    RuntimeCapabilities, RuntimeCapabilitySnapshot, TaskRunner,
+};
 
 use super::dependencies::{Clock, IdGenerator, SystemClock, UuidGenerator};
 use super::dto::{
@@ -70,6 +79,7 @@ pub struct McpPlatformService {
     runner: Arc<TaskRunner>,
     auto_worker: bool,
     worker: Mutex<WorkerState>,
+    runtime_capabilities: RuntimeCapabilitySnapshot,
 }
 
 enum WorkerState {
@@ -116,6 +126,36 @@ impl McpPlatformService {
         Self::new_internal(repository, clock, ids, options, ports, false)
     }
 
+    pub fn new_with_distribution_ports(
+        repository: Arc<dyn McpPlatformRepositoryPort>,
+        clock: Arc<dyn Clock>,
+        ids: Arc<dyn IdGenerator>,
+        options: McpPlatformServiceOptions,
+        ports: LifecyclePorts,
+        distribution: Arc<dyn DistributionEffectAdapter>,
+        runtime_capabilities: RuntimeCapabilitySnapshot,
+    ) -> Self {
+        let runner = Arc::new(
+            TaskRunner::new(
+                repository.clone(),
+                clock.clone(),
+                ports,
+                ids.next_id("worker"),
+            )
+            .with_distribution_adapter(distribution),
+        );
+        Self {
+            repository,
+            clock,
+            ids,
+            options,
+            runner,
+            auto_worker: false,
+            worker: Mutex::new(WorkerState::NotStarted),
+            runtime_capabilities,
+        }
+    }
+
     fn new_internal(
         repository: Arc<dyn McpPlatformRepositoryPort>,
         clock: Arc<dyn Clock>,
@@ -124,12 +164,21 @@ impl McpPlatformService {
         ports: LifecyclePorts,
         auto_worker: bool,
     ) -> Self {
-        let runner = Arc::new(TaskRunner::new(
+        let runtime = RuntimeCapabilities::discover();
+        let runtime_capabilities = runtime.snapshot();
+        let mut runner = TaskRunner::new(
             repository.clone(),
             clock.clone(),
             ports,
             ids.next_id("worker"),
-        ));
+        );
+        if let Ok(adapter) = ProductionDistributionEffectAdapter::new_with_runtime(
+            crate::config::paths::Paths::in_data_dir("mcp-platform"),
+            runtime,
+        ) {
+            runner = runner.with_distribution_adapter(Arc::new(adapter));
+        }
+        let runner = Arc::new(runner);
         Self {
             repository,
             clock,
@@ -138,6 +187,7 @@ impl McpPlatformService {
             runner,
             auto_worker,
             worker: Mutex::new(WorkerState::NotStarted),
+            runtime_capabilities,
         }
     }
 
@@ -290,53 +340,144 @@ impl McpPlatformService {
         input: PlanCreateInput,
     ) -> McpPlatformResult<PlanReview> {
         validate_idempotency_key(&input.idempotency_key)?;
-        let (manifest_digest, installation_scope) = match &input.intent {
-            PlanIntent::Register {
-                manifest_digest,
-                installation_scope,
-            } => (manifest_digest.as_str(), installation_scope.as_str()),
-            PlanIntent::Install { manifest_digest } => {
-                validate_digest(manifest_digest)?;
-                return Err(operation_not_supported());
-            }
-            PlanIntent::Update {
+        let (manifest, installation_scope, managed_mcp_id, operation, preserve_user_data) =
+            match &input.intent {
+                PlanIntent::Register {
+                    manifest_digest,
+                    installation_scope,
+                } => {
+                    validate_digest(manifest_digest)?;
+                    (
+                        self.repository.get_manifest(manifest_digest).await?,
+                        installation_scope.as_str().to_string(),
+                        None,
+                        PlanOperation::Register,
+                        false,
+                    )
+                }
+                PlanIntent::Install { manifest_digest } => {
+                    validate_digest(manifest_digest)?;
+                    let manifest = self.repository.get_manifest(manifest_digest).await?;
+                    let managed_mcp_id = crate::mcp_platform::task_runner::stable_managed_mcp_id(
+                        &manifest.verified.manifest().id,
+                        "user",
+                    );
+                    (
+                        manifest,
+                        "user".to_string(),
+                        Some(managed_mcp_id),
+                        PlanOperation::Install,
+                        false,
+                    )
+                }
+                PlanIntent::Update {
+                    managed_mcp_id,
+                    target_version,
+                } => {
+                    validate_identifier(managed_mcp_id)?;
+                    ExactVersion::parse(target_version)?;
+                    let inventory = self
+                        .repository
+                        .get_managed_inventory(managed_mcp_id)
+                        .await?;
+                    let manifest = self
+                        .repository
+                        .get_manifest_by_identity(&inventory.managed.mcp_id, target_version)
+                        .await?;
+                    (
+                        manifest,
+                        inventory.managed.installation_scope,
+                        Some(managed_mcp_id.clone()),
+                        PlanOperation::Update,
+                        false,
+                    )
+                }
+                PlanIntent::Repair { managed_mcp_id } => {
+                    validate_identifier(managed_mcp_id)?;
+                    let inventory = self
+                        .repository
+                        .get_managed_inventory(managed_mcp_id)
+                        .await?;
+                    let digest = inventory
+                        .lifecycle
+                        .active_manifest_digest
+                        .as_deref()
+                        .ok_or_else(integrity_error)?;
+                    (
+                        self.repository.get_manifest(digest).await?,
+                        inventory.managed.installation_scope,
+                        Some(managed_mcp_id.clone()),
+                        PlanOperation::Repair,
+                        false,
+                    )
+                }
+                PlanIntent::Uninstall {
+                    managed_mcp_id,
+                    preserve_user_data,
+                } => {
+                    validate_identifier(managed_mcp_id)?;
+                    let inventory = self
+                        .repository
+                        .get_managed_inventory(managed_mcp_id)
+                        .await?;
+                    let digest = inventory
+                        .lifecycle
+                        .active_manifest_digest
+                        .as_deref()
+                        .ok_or_else(integrity_error)?;
+                    (
+                        self.repository.get_manifest(digest).await?,
+                        inventory.managed.installation_scope,
+                        Some(managed_mcp_id.clone()),
+                        PlanOperation::Uninstall,
+                        *preserve_user_data,
+                    )
+                }
+            };
+        let policy_context = PolicyContext::new(manifest.trust_tier, operation)
+            .with_target(
+                self.options.compatibility_target.platform,
+                self.options.compatibility_target.arch,
+            )
+            .with_runtime_capabilities(
+                self.runtime_capabilities.node_available,
+                self.runtime_capabilities.python_major_minor,
+            );
+        let plan = if operation == PlanOperation::Uninstall {
+            let managed_mcp_id = managed_mcp_id.as_deref().ok_or_else(integrity_error)?;
+            let projection = self
+                .repository
+                .get_connection_projection(managed_mcp_id)
+                .await?;
+            uninstall_plan(
+                &manifest.verified,
+                manifest.trust_tier,
                 managed_mcp_id,
-                target_version,
-            } => {
-                validate_identifier(managed_mcp_id)?;
-                validate_identifier(target_version)?;
-                return Err(operation_not_supported());
-            }
-            PlanIntent::Repair { managed_mcp_id }
-            | PlanIntent::Uninstall { managed_mcp_id, .. } => {
-                validate_identifier(managed_mcp_id)?;
-                return Err(operation_not_supported());
-            }
+                preserve_user_data,
+                projection.projection,
+                &policy_context,
+            )?
+        } else {
+            plan_for_manifest(&manifest.verified, &policy_context)?
         };
-        validate_digest(manifest_digest)?;
-
-        if let Some(existing) = self
-            .repository
-            .get_plan_by_idempotency_key(&input.idempotency_key)
-            .await?
-        {
-            ensure_plan_matches(&existing, manifest_digest, installation_scope)?;
-            return self.review_for_plan(existing).await;
-        }
-
-        let manifest = self.repository.get_manifest(manifest_digest).await?;
-        let policy_context = PolicyContext::new(manifest.trust_tier, PlanOperation::Register);
-        let plan = plan_for_manifest(&manifest.verified, &policy_context)?;
         let now_ms = self.clock.now_ms();
         let expires_at_ms = now_ms
             .checked_add(self.options.plan_ttl_ms)
             .ok_or_else(invalid_request)?;
         let target = PlanTarget {
-            managed_mcp_id: None,
+            managed_mcp_id,
             mcp_id: plan.manifest_id().to_string(),
             version: plan.manifest_version().to_string(),
-            installation_scope: Some(installation_scope.to_string()),
+            installation_scope: Some(installation_scope.clone()),
         };
+        if let Some(existing) = self
+            .repository
+            .get_plan_by_idempotency_key(&input.idempotency_key)
+            .await?
+        {
+            ensure_plan_envelope_matches(&existing, &plan, &target)?;
+            return self.review_for_plan(existing).await;
+        }
         let save = SavePlan {
             plan_id: &self.ids.next_id("plan"),
             idempotency_key: &input.idempotency_key,
@@ -356,7 +497,7 @@ impl McpPlatformService {
                     .get_plan_by_idempotency_key(&input.idempotency_key)
                     .await?
                     .ok_or(error)?;
-                ensure_plan_matches(&existing, manifest_digest, installation_scope)?;
+                ensure_plan_envelope_matches(&existing, &plan, &target)?;
                 existing
             }
             Err(error) => return Err(error),
@@ -515,14 +656,37 @@ impl McpPlatformService {
                 },
             )
             .await?;
+        let available = available_managed_manifests(
+            self.repository.list_manifests().await?,
+            self.options.compatibility_target,
+            self.runtime_capabilities,
+        );
         let has_more = records.len() > page_size;
         let scanned_cursor =
             has_more.then(|| records[page_size - 1].managed.managed_mcp_id.clone());
-        let items = records
-            .into_iter()
-            .take(page_size)
-            .map(managed_summary)
-            .collect();
+        let mut items = Vec::with_capacity(page_size.min(records.len()));
+        for record in records.into_iter().take(page_size) {
+            let task = self
+                .repository
+                .latest_managed_lifecycle_task(&record.managed.managed_mcp_id)
+                .await?;
+            let projection_recovery = self
+                .repository
+                .projection_recovery_required(&record.managed.managed_mcp_id)
+                .await?;
+            let available_manifest = available
+                .get(&(
+                    record.managed.mcp_id.clone(),
+                    record.lifecycle.distribution_adapter.clone(),
+                ))
+                .cloned();
+            items.push(managed_summary(
+                record,
+                task,
+                projection_recovery,
+                available_manifest,
+            ));
+        }
         Ok(ManagedMcpPage {
             items,
             next_cursor: scanned_cursor,
@@ -547,12 +711,34 @@ impl McpPlatformService {
             .repository
             .latest_health_observation(&input.managed_mcp_id)
             .await?;
+        let latest_lifecycle_task = self
+            .repository
+            .latest_managed_lifecycle_task(&input.managed_mcp_id)
+            .await?;
+        let projection_recovery = self
+            .repository
+            .projection_recovery_required(&input.managed_mcp_id)
+            .await?;
         let registration_task = match inventory.lifecycle.owner_task_id.as_deref() {
             Some(task_id) => Some(self.repository.get_task(task_id).await?.into()),
             None => None,
         };
+        let available_manifest = available_managed_manifests(
+            self.repository.list_manifests().await?,
+            self.options.compatibility_target,
+            self.runtime_capabilities,
+        )
+        .remove(&(
+            inventory.managed.mcp_id.clone(),
+            inventory.lifecycle.distribution_adapter.clone(),
+        ));
         Ok(ManagedMcpDetail {
-            summary: managed_summary(inventory.clone()),
+            summary: managed_summary(
+                inventory.clone(),
+                latest_lifecycle_task,
+                projection_recovery,
+                available_manifest,
+            ),
             distribution_adapter: inventory.lifecycle.distribution_adapter,
             active_manifest_digest: inventory
                 .lifecycle
@@ -627,14 +813,38 @@ impl McpPlatformService {
     ) -> McpPlatformResult<ManagedMcpSummary> {
         validate_identifier(&input.managed_mcp_id)?;
         validate_revision(input.expected_revision)?;
-        self.runner
+        let managed_mcp_id = input.managed_mcp_id.clone();
+        let record = self
+            .runner
             .set_default_enabled(
                 &input.managed_mcp_id,
                 input.expected_revision,
                 input.enabled,
             )
-            .await
-            .map(managed_summary)
+            .await?;
+        let latest_task = self
+            .repository
+            .latest_managed_lifecycle_task(&managed_mcp_id)
+            .await?;
+        let projection_recovery = self
+            .repository
+            .projection_recovery_required(&managed_mcp_id)
+            .await?;
+        let available_manifest = available_managed_manifests(
+            self.repository.list_manifests().await?,
+            self.options.compatibility_target,
+            self.runtime_capabilities,
+        )
+        .remove(&(
+            record.managed.mcp_id.clone(),
+            record.lifecycle.distribution_adapter.clone(),
+        ));
+        Ok(managed_summary(
+            record,
+            latest_task,
+            projection_recovery,
+            available_manifest,
+        ))
     }
 
     pub async fn events_resume(
@@ -832,7 +1042,115 @@ fn catalog_summary(
     }
 }
 
-fn managed_summary(record: ManagedMcpInventoryRecord) -> ManagedMcpSummary {
+fn managed_summary(
+    record: ManagedMcpInventoryRecord,
+    latest_task: Option<TaskRecord>,
+    projection_recovery: bool,
+    available_manifests: Option<AvailableManagedManifests>,
+) -> ManagedMcpSummary {
+    let managed_distribution = matches!(
+        record.lifecycle.distribution_adapter.as_str(),
+        "npm" | "python_wheel" | "binary_archive"
+    );
+    let installed = matches!(
+        record.managed.state.installation,
+        crate::mcp_platform::InstallationState::Installed
+            | crate::mcp_platform::InstallationState::UpdateAvailable
+            | crate::mcp_platform::InstallationState::RepairRequired
+    );
+    let recovery_required = projection_recovery
+        || latest_task.as_ref().is_some_and(|task| {
+            task.status == crate::mcp_platform::TaskStatus::RecoveryRequired
+                || task.rollback_status == crate::mcp_platform::RollbackStatus::Incomplete
+        });
+    let interrupted = latest_task
+        .as_ref()
+        .is_some_and(|task| task.status == crate::mcp_platform::TaskStatus::Interrupted);
+    let in_progress = latest_task.as_ref().is_some_and(|task| {
+        matches!(
+            task.status,
+            crate::mcp_platform::TaskStatus::Planned
+                | crate::mcp_platform::TaskStatus::AwaitingConfirmation
+                | crate::mcp_platform::TaskStatus::Queued
+                | crate::mcp_platform::TaskStatus::Running
+                | crate::mcp_platform::TaskStatus::Cancelling
+                | crate::mcp_platform::TaskStatus::Verifying
+                | crate::mcp_platform::TaskStatus::Activating
+                | crate::mcp_platform::TaskStatus::RollingBack
+        )
+    });
+    let current_task = latest_task
+        .filter(|_task| recovery_required || interrupted || in_progress)
+        .map(Into::into);
+    let reason = if recovery_required {
+        super::dto::ManagedEligibilityReason::TaskRecoveryRequired
+    } else if interrupted {
+        super::dto::ManagedEligibilityReason::TaskInterrupted
+    } else if in_progress {
+        super::dto::ManagedEligibilityReason::TaskInProgress
+    } else if !managed_distribution {
+        super::dto::ManagedEligibilityReason::RegistrationOnly
+    } else if !installed {
+        super::dto::ManagedEligibilityReason::NotInstalled
+    } else {
+        super::dto::ManagedEligibilityReason::Eligible
+    };
+    let next_action = if recovery_required {
+        super::dto::ManagedNextAction::ResolveRecovery
+    } else if interrupted {
+        super::dto::ManagedNextAction::ResumeTask
+    } else if in_progress {
+        super::dto::ManagedNextAction::WaitForTask
+    } else if record.managed.state.installation
+        == crate::mcp_platform::InstallationState::RepairRequired
+    {
+        super::dto::ManagedNextAction::Repair
+    } else if !record.managed.state.default_enabled {
+        super::dto::ManagedNextAction::EnableAfterHealth
+    } else {
+        super::dto::ManagedNextAction::None
+    };
+    let lifecycle_busy = recovery_required || interrupted || in_progress;
+    let active_version = record
+        .lifecycle
+        .active_version
+        .as_deref()
+        .and_then(|active| semver::Version::parse(active).ok());
+    let eligible_update = available_manifests
+        .as_ref()
+        .and_then(|candidates| candidates.eligible.as_ref())
+        .filter(|candidate| {
+            active_version.as_ref().is_some_and(|active| {
+                semver::Version::parse(&candidate.version)
+                    .is_ok_and(|available| available > *active)
+            })
+        });
+    let blocked_update = available_manifests
+        .as_ref()
+        .and_then(|candidates| candidates.blocked.as_ref())
+        .filter(|candidate| {
+            active_version.as_ref().is_some_and(|active| {
+                semver::Version::parse(&candidate.version)
+                    .is_ok_and(|available| available > *active)
+            })
+        });
+    let selected_manifest = eligible_update.or(blocked_update).or_else(|| {
+        available_manifests
+            .as_ref()
+            .and_then(|candidates| candidates.eligible.as_ref().or(candidates.blocked.as_ref()))
+    });
+    let update_available = eligible_update.is_some();
+    let update_reason = if reason != super::dto::ManagedEligibilityReason::Eligible {
+        reason
+    } else if update_available {
+        super::dto::ManagedEligibilityReason::Eligible
+    } else if let Some(candidate) = blocked_update {
+        candidate.reason
+    } else {
+        super::dto::ManagedEligibilityReason::NoUpdateAvailable
+    };
+    let available_version = selected_manifest.map(|candidate| candidate.version.clone());
+    let available_manifest_digest = selected_manifest.map(|candidate| candidate.digest.clone());
     ManagedMcpSummary {
         managed_mcp_id: record.managed.managed_mcp_id,
         mcp_id: record.managed.mcp_id,
@@ -844,7 +1162,154 @@ fn managed_summary(record: ManagedMcpInventoryRecord) -> ManagedMcpSummary {
         default_enabled: record.managed.state.default_enabled,
         revision: record.managed.revision,
         updated_at_ms: record.managed.updated_at_ms,
+        distribution_adapter: record.lifecycle.distribution_adapter,
+        active_version: record.lifecycle.active_version,
+        available_version,
+        available_manifest_digest,
+        current_task,
+        recovery_required,
+        eligibility: super::dto::ManagedEligibility {
+            update: !lifecycle_busy && managed_distribution && installed && update_available,
+            repair: !lifecycle_busy && managed_distribution && installed,
+            uninstall: !lifecycle_busy && managed_distribution && installed,
+            reason,
+            update_reason,
+            repair_reason: reason,
+            uninstall_reason: reason,
+        },
+        next_action,
     }
+}
+
+#[derive(Debug, Clone)]
+struct AvailableManagedManifest {
+    version: String,
+    digest: String,
+    reason: super::dto::ManagedEligibilityReason,
+}
+
+#[derive(Debug, Clone, Default)]
+struct AvailableManagedManifests {
+    eligible: Option<AvailableManagedManifest>,
+    blocked: Option<AvailableManagedManifest>,
+}
+
+fn available_managed_manifests(
+    records: Vec<crate::mcp_platform::repository::ManifestRecord>,
+    target: CompatibilityTarget,
+    runtime: RuntimeCapabilitySnapshot,
+) -> HashMap<(String, String), AvailableManagedManifests> {
+    let mut candidates = HashMap::new();
+    for record in records {
+        let manifest = record.verified.manifest();
+        let adapter = manifest.distribution.adapter_id().to_string();
+        if !matches!(adapter.as_str(), "npm" | "python_wheel" | "binary_archive") {
+            continue;
+        }
+        let Ok(version) = semver::Version::parse(manifest.version.as_str()) else {
+            continue;
+        };
+        let key = (manifest.id.clone(), adapter);
+        let context = PolicyContext::new(record.trust_tier, PlanOperation::Update)
+            .with_target(target.platform, target.arch)
+            .with_runtime_capabilities(runtime.node_available, runtime.python_major_minor);
+        let candidate_result = if !manifest.host_integrations.is_empty()
+            || compatibility(&record.verified, target) != CatalogCompatibility::Compatible
+        {
+            Err(super::dto::ManagedEligibilityReason::Incompatible)
+        } else {
+            plan_for_manifest(&record.verified, &context).map_err(|error| match error.code() {
+                McpPlatformErrorCode::PolicyDenied => {
+                    super::dto::ManagedEligibilityReason::PolicyDenied
+                }
+                McpPlatformErrorCode::AdapterIncompatible => {
+                    super::dto::ManagedEligibilityReason::RuntimeUnavailable
+                }
+                _ => super::dto::ManagedEligibilityReason::Incompatible,
+            })
+        };
+        let candidate_set = candidates
+            .entry(key)
+            .or_insert_with(AvailableManagedManifests::default);
+        let destination = if candidate_result.is_ok() {
+            &mut candidate_set.eligible
+        } else {
+            &mut candidate_set.blocked
+        };
+        let replace = destination
+            .as_ref()
+            .and_then(|existing| semver::Version::parse(&existing.version).ok())
+            .is_none_or(|existing| version > existing);
+        if replace {
+            *destination = Some(AvailableManagedManifest {
+                version: manifest.version.as_str().to_string(),
+                digest: record.verified.digest().to_string(),
+                reason: candidate_result
+                    .err()
+                    .unwrap_or(super::dto::ManagedEligibilityReason::NoUpdateAvailable),
+            });
+        }
+    }
+    candidates
+}
+
+fn uninstall_plan(
+    verified: &VerifiedManifest,
+    trust_tier: crate::mcp_platform::TrustTier,
+    managed_mcp_id: &str,
+    preserve_user_data: bool,
+    projection: crate::mcp_platform::ConnectionProjection,
+    context: &PolicyContext,
+) -> McpPlatformResult<InstallationPlan> {
+    let manifest = verified.manifest();
+    if !matches!(
+        manifest.distribution,
+        Distribution::Npm { .. }
+            | Distribution::PythonWheel { .. }
+            | Distribution::BinaryArchive { .. }
+    ) {
+        return Err(operation_not_supported());
+    }
+    let policy = evaluate_manifest_policy(manifest, context);
+    if policy.is_denied() {
+        return Err(McpPlatformError::new(
+            McpPlatformErrorCode::PolicyDenied,
+            "managed uninstall was denied by policy",
+        ));
+    }
+    InstallationPlan::new(
+        manifest,
+        verified.digest().to_string(),
+        AdapterIdentity {
+            id: manifest.distribution.adapter_id().to_string(),
+            version: "1".to_string(),
+        },
+        trust_tier,
+        PlanOperation::Uninstall,
+        vec![PlanStep::RemoveManagedInstallation {
+            managed_mcp_id: managed_mcp_id.to_string(),
+            version: manifest.version.as_str().to_string(),
+            preserve_user_data,
+            ownership_only: true,
+        }],
+        EffectSummary {
+            registers_connection: false,
+            downloads_artifacts: false,
+            writes_files: false,
+            removes_files: true,
+            requires_process_spawn: false,
+            network_origins: Vec::new(),
+            permission_ids: manifest
+                .permissions
+                .iter()
+                .map(|permission| permission.id.clone())
+                .collect(),
+        },
+        vec![PlanWarning::RemovesOwnedFilesOnly],
+        Vec::new(),
+        projection,
+        policy,
+    )
 }
 
 fn manifest_key(record: &crate::mcp_platform::repository::ManifestRecord) -> (&str, &str, &str) {
@@ -885,14 +1350,12 @@ fn compatibility(manifest: &VerifiedManifest, target: CompatibilityTarget) -> Ca
     }
 }
 
-fn ensure_plan_matches(
-    plan: &PlanRecord,
-    manifest_digest: &str,
-    installation_scope: &str,
+fn ensure_plan_envelope_matches(
+    stored: &PlanRecord,
+    expected_plan: &InstallationPlan,
+    expected_target: &PlanTarget,
 ) -> McpPlatformResult<()> {
-    if plan.plan.operation() == PlanOperation::Register
-        && plan.plan.manifest_digest() == manifest_digest
-        && plan.target.installation_scope.as_deref() == Some(installation_scope)
+    if stored.plan.plan_digest() == expected_plan.plan_digest() && stored.target == *expected_target
     {
         Ok(())
     } else {

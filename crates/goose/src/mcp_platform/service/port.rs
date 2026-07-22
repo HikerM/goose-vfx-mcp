@@ -2,11 +2,13 @@ use async_trait::async_trait;
 
 use crate::mcp_platform::error::McpPlatformResult;
 use crate::mcp_platform::repository::{
-    AuditEventRecord, CompensationTransition, ConnectionProjectionRecord, CreateHealthTask,
-    CreateTask, GlobalAuditPage, HealthObservationRecord, HealthTaskRequestRecord,
-    ManagedMcpInventoryRecord, ManifestRecord, NewHealthObservation, PlanRecord,
-    PutOwnedProjection, RegisterManagedMcp, RegisterManagedMcpOutcome, RetryAttemptRecord,
-    SavePlan, StepTransition, TaskRecord, TaskStepRecord, TaskTransition,
+    ActivateManagedInstallation, AuditEventRecord, CompensationTransition,
+    ConnectionProjectionRecord, CreateHealthTask, CreateTask, GlobalAuditPage,
+    HealthObservationRecord, HealthTaskRequestRecord, ManagedMcpInventoryRecord,
+    ManagedUninstallSnapshot, ManifestRecord, NewHealthObservation, PlanRecord, PutOwnedProjection,
+    RegisterManagedMcp, RegisterManagedMcpOutcome, RestoreOwnedProjection, RetryAttemptRecord,
+    SavePlan, StageManagedInstallation, StageManagedInstallationOutcome, StepTransition,
+    TaskRecord, TaskStepRecord, TaskTransition,
 };
 use crate::mcp_platform::task::CompensationDescriptor;
 use crate::mcp_platform::task::TaskOperation;
@@ -32,6 +34,10 @@ pub trait McpPlatformRepositoryPort: Send + Sync {
         &self,
         operation: TaskOperation,
         idempotency_key: &str,
+    ) -> McpPlatformResult<Option<TaskRecord>>;
+    async fn latest_managed_lifecycle_task(
+        &self,
+        managed_mcp_id: &str,
     ) -> McpPlatformResult<Option<TaskRecord>>;
     async fn transition_task(
         &self,
@@ -107,6 +113,90 @@ pub trait McpPlatformRepositoryPort: Send + Sync {
         &self,
         input: RegisterManagedMcp<'_>,
     ) -> McpPlatformResult<RegisterManagedMcpOutcome>;
+    async fn stage_managed_installation(
+        &self,
+        input: StageManagedInstallation<'_>,
+    ) -> McpPlatformResult<StageManagedInstallationOutcome>;
+    async fn claim_artifact(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+        stale_before_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn mark_artifact_claim_verified(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn release_artifact_claim(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn mark_managed_runtime_activated(
+        &self,
+        managed_mcp_id: &str,
+        target_version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn finalize_retained_version_cleanup(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn is_managed_finalizing(
+        &self,
+        task_id: &str,
+        operation: TaskOperation,
+    ) -> McpPlatformResult<bool>;
+    async fn record_managed_finalization_failure(
+        &self,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<i64>;
+    async fn activate_managed_installation(
+        &self,
+        input: ActivateManagedInstallation<'_>,
+    ) -> McpPlatformResult<ManagedMcpInventoryRecord>;
+    async fn rollback_managed_installation(
+        &self,
+        managed_mcp_id: &str,
+        previous_version: Option<&str>,
+        target_version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn begin_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<ManagedUninstallSnapshot>;
+    async fn mark_managed_uninstall_quarantined(
+        &self,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn cancel_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
+    async fn finalize_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()>;
     async fn get_managed_inventory(
         &self,
         managed_mcp_id: &str,
@@ -124,6 +214,10 @@ pub trait McpPlatformRepositoryPort: Send + Sync {
     async fn get_connection_projection(
         &self,
         managed_mcp_id: &str,
+    ) -> McpPlatformResult<ConnectionProjectionRecord>;
+    async fn restore_owned_connection_projection(
+        &self,
+        input: RestoreOwnedProjection<'_>,
     ) -> McpPlatformResult<ConnectionProjectionRecord>;
     async fn remove_owned_projection(
         &self,
@@ -182,6 +276,7 @@ pub trait McpPlatformRepositoryPort: Send + Sync {
     async fn list_pending_projection_mutations(
         &self,
     ) -> McpPlatformResult<Vec<crate::mcp_platform::repository::ProjectionMutationRecord>>;
+    async fn projection_recovery_required(&self, managed_mcp_id: &str) -> McpPlatformResult<bool>;
     async fn mark_projection_mutation_recovery_required(
         &self,
         mutation_id: i64,
@@ -237,6 +332,13 @@ impl McpPlatformRepositoryPort for crate::mcp_platform::repository::SqliteMcpPla
     ) -> McpPlatformResult<Option<TaskRecord>> {
         self.get_task_by_idempotency_key(operation, idempotency_key)
             .await
+    }
+
+    async fn latest_managed_lifecycle_task(
+        &self,
+        managed_mcp_id: &str,
+    ) -> McpPlatformResult<Option<TaskRecord>> {
+        self.latest_managed_lifecycle_task(managed_mcp_id).await
     }
 
     async fn transition_task(
@@ -376,6 +478,137 @@ impl McpPlatformRepositoryPort for crate::mcp_platform::repository::SqliteMcpPla
         self.register_managed_mcp(input).await
     }
 
+    async fn stage_managed_installation(
+        &self,
+        input: StageManagedInstallation<'_>,
+    ) -> McpPlatformResult<StageManagedInstallationOutcome> {
+        self.stage_managed_installation(input).await
+    }
+    async fn claim_artifact(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+        stale_before_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.claim_artifact(artifact_digest, task_id, now_ms, stale_before_ms)
+            .await
+    }
+    async fn mark_artifact_claim_verified(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.mark_artifact_claim_verified(artifact_digest, task_id, now_ms)
+            .await
+    }
+    async fn release_artifact_claim(
+        &self,
+        artifact_digest: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.release_artifact_claim(artifact_digest, task_id, now_ms)
+            .await
+    }
+    async fn mark_managed_runtime_activated(
+        &self,
+        managed_mcp_id: &str,
+        target_version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.mark_managed_runtime_activated(managed_mcp_id, target_version, task_id, now_ms)
+            .await
+    }
+    async fn finalize_retained_version_cleanup(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.finalize_retained_version_cleanup(managed_mcp_id, version, task_id, now_ms)
+            .await
+    }
+    async fn is_managed_finalizing(
+        &self,
+        task_id: &str,
+        operation: TaskOperation,
+    ) -> McpPlatformResult<bool> {
+        self.is_managed_finalizing(task_id, operation).await
+    }
+
+    async fn record_managed_finalization_failure(
+        &self,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<i64> {
+        self.record_managed_finalization_failure(task_id, now_ms)
+            .await
+    }
+    async fn activate_managed_installation(
+        &self,
+        input: ActivateManagedInstallation<'_>,
+    ) -> McpPlatformResult<ManagedMcpInventoryRecord> {
+        self.activate_managed_installation(input).await
+    }
+    async fn rollback_managed_installation(
+        &self,
+        managed_mcp_id: &str,
+        previous_version: Option<&str>,
+        target_version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.rollback_managed_installation(
+            managed_mcp_id,
+            previous_version,
+            target_version,
+            task_id,
+            now_ms,
+        )
+        .await
+    }
+    async fn begin_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<ManagedUninstallSnapshot> {
+        self.begin_managed_uninstall(managed_mcp_id, version, task_id, now_ms)
+            .await
+    }
+    async fn mark_managed_uninstall_quarantined(
+        &self,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.mark_managed_uninstall_quarantined(task_id, now_ms)
+            .await
+    }
+    async fn cancel_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.cancel_managed_uninstall(managed_mcp_id, task_id, now_ms)
+            .await
+    }
+    async fn finalize_managed_uninstall(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        task_id: &str,
+        now_ms: i64,
+    ) -> McpPlatformResult<()> {
+        self.finalize_managed_uninstall(managed_mcp_id, version, task_id, now_ms)
+            .await
+    }
+
     async fn get_managed_inventory(
         &self,
         managed_mcp_id: &str,
@@ -405,6 +638,12 @@ impl McpPlatformRepositoryPort for crate::mcp_platform::repository::SqliteMcpPla
         managed_mcp_id: &str,
     ) -> McpPlatformResult<ConnectionProjectionRecord> {
         self.get_connection_projection(managed_mcp_id).await
+    }
+    async fn restore_owned_connection_projection(
+        &self,
+        input: RestoreOwnedProjection<'_>,
+    ) -> McpPlatformResult<ConnectionProjectionRecord> {
+        self.restore_owned_connection_projection(input).await
     }
 
     async fn remove_owned_projection(
@@ -500,6 +739,10 @@ impl McpPlatformRepositoryPort for crate::mcp_platform::repository::SqliteMcpPla
         &self,
     ) -> McpPlatformResult<Vec<crate::mcp_platform::repository::ProjectionMutationRecord>> {
         self.list_pending_projection_mutations().await
+    }
+
+    async fn projection_recovery_required(&self, managed_mcp_id: &str) -> McpPlatformResult<bool> {
+        self.projection_recovery_required(managed_mcp_id).await
     }
     async fn mark_projection_mutation_recovery_required(
         &self,

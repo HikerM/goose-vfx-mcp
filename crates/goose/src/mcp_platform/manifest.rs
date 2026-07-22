@@ -711,6 +711,8 @@ fn validate_https_url(value: &str) -> McpPlatformResult<()> {
             && url.host_str().is_some()
             && url.username().is_empty()
             && url.password().is_none()
+            && url.query().is_none()
+            && url.fragment().is_none()
     });
     if valid {
         Ok(())

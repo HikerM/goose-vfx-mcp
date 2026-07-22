@@ -311,6 +311,54 @@ pub struct McpManagedSummary {
     pub default_enabled: bool,
     pub revision: i64,
     pub updated_at_ms: i64,
+    pub distribution_adapter: String,
+    pub active_version: Option<String>,
+    pub available_version: Option<String>,
+    pub available_manifest_digest: Option<String>,
+    pub current_task: Option<McpTaskRef>,
+    pub recovery_required: bool,
+    pub eligibility: McpManagedEligibility,
+    pub next_action: McpManagedNextAction,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManagedEligibility {
+    pub update: bool,
+    pub repair: bool,
+    pub uninstall: bool,
+    pub reason: McpManagedEligibilityReason,
+    pub update_reason: McpManagedEligibilityReason,
+    pub repair_reason: McpManagedEligibilityReason,
+    pub uninstall_reason: McpManagedEligibilityReason,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpManagedEligibilityReason {
+    #[default]
+    Eligible,
+    RegistrationOnly,
+    TaskRecoveryRequired,
+    TaskInProgress,
+    TaskInterrupted,
+    NotInstalled,
+    NoUpdateAvailable,
+    RuntimeUnavailable,
+    PolicyDenied,
+    Incompatible,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpManagedNextAction {
+    #[default]
+    None,
+    EnableAfterHealth,
+    Repair,
+    ResolveRecovery,
+    WaitForTask,
+    ResumeTask,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
@@ -821,6 +869,9 @@ pub struct McpPolicyReason {
 pub enum McpPlanWarning {
     DefaultDisabled,
     RegistrationOnly,
+    ManagedArtifactDownload,
+    ExistingVersionRetainedUntilCommit,
+    RemovesOwnedFilesOnly,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

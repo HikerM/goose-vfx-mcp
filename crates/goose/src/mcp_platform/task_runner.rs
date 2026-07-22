@@ -7,12 +7,17 @@ use tokio::sync::Notify;
 use tokio_util::sync::CancellationToken;
 
 use super::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
-use super::lifecycle::{AuthRequirement, HealthExecution, LifecyclePorts, ProjectionSnapshot};
+use super::lifecycle::{
+    AuthRequirement, DirectSpawnDescriptor, HealthExecution, LifecyclePorts, ProjectionSnapshot,
+    RegistrationEffect,
+};
+use super::managed_distribution::{DistributionEffectAdapter, ManagedInstallEffect};
 use super::manifest::digest_serializable;
+use super::plan::PlanStep;
 use super::repository::{
-    CompensationTransition, ManagedMcpInventoryRecord, NewHealthObservation,
-    ProjectionMutationStatus, PutOwnedProjection, RegisterManagedMcp, StepTransition, TaskRecord,
-    TaskTransition,
+    ActivateManagedInstallation, CompensationTransition, ManagedMcpInventoryRecord,
+    NewHealthObservation, ProjectionMutationStatus, PutOwnedProjection, RegisterManagedMcp,
+    RestoreOwnedProjection, StageManagedInstallation, StepTransition, TaskRecord, TaskTransition,
 };
 use super::service::{Clock, McpPlatformRepositoryPort};
 use super::task::{
@@ -23,6 +28,7 @@ use super::{HealthCheckMode, HealthDetailCode, HealthResultCode};
 
 const LEASE_DURATION_MS: i64 = 30_000;
 const STALE_HEARTBEAT_MS: i64 = 60_000;
+const STALE_ARTIFACT_CLAIM_MS: i64 = 30 * 60 * 1_000;
 
 pub struct TaskRunner {
     repository: Arc<dyn McpPlatformRepositoryPort>,
@@ -32,6 +38,7 @@ pub struct TaskRunner {
     active: Mutex<HashMap<String, CancellationToken>>,
     wake: Notify,
     shutdown: CancellationToken,
+    distribution: Option<Arc<dyn DistributionEffectAdapter>>,
 }
 
 impl TaskRunner {
@@ -49,7 +56,16 @@ impl TaskRunner {
             active: Mutex::new(HashMap::new()),
             wake: Notify::new(),
             shutdown: CancellationToken::new(),
+            distribution: None,
         }
+    }
+
+    pub fn with_distribution_adapter(
+        mut self,
+        adapter: Arc<dyn DistributionEffectAdapter>,
+    ) -> Self {
+        self.distribution = Some(adapter);
+        self
     }
 
     pub fn notify(&self) {
@@ -122,6 +138,7 @@ impl TaskRunner {
         expected_revision: i64,
         enabled: bool,
     ) -> McpPlatformResult<ManagedMcpInventoryRecord> {
+        self.recover_projection_mutations().await?;
         let inventory = self
             .repository
             .get_managed_inventory(managed_mcp_id)
@@ -390,16 +407,20 @@ impl TaskRunner {
             "connection_registration" => {
                 step.adapter_version == self.ports.registration.adapter_version()
             }
-            "managed_inventory_repository" | "connection_projection_repository" => {
-                step.adapter_version == "1"
-            }
+            "connection_projection_repository" => step.adapter_version == "1",
             "extension_config_sink" => {
                 step.adapter_version == self.ports.projection_sink.adapter_version()
             }
             "core_transport_projection" => {
                 step.adapter_version == self.ports.transport.adapter_version()
             }
+            "managed_projection_stage" | "managed_config_stage" => step.adapter_version == "1",
             "mcp_health" => step.adapter_version == self.ports.health.adapter_version(),
+            "npm" | "python_wheel" | "binary_archive" => self
+                .distribution
+                .as_ref()
+                .is_some_and(|adapter| step.adapter_version == adapter.adapter_version()),
+            "managed_inventory_repository" => matches!(step.adapter_version.as_str(), "1" | "2"),
             _ => false,
         }
     }
@@ -423,37 +444,34 @@ impl TaskRunner {
                 };
                 if let Some(projection) = projection {
                     let snapshot = self.ports.projection_sink.get(&projection.link_key).await?;
-                    if mutation.desired_enabled {
-                        let snapshot = snapshot.ok_or_else(integrity_error)?;
-                        let expected = self
-                            .ports
-                            .transport
-                            .extension_config(&projection.projection, &projection.link_key)?;
-                        if snapshot.entry.config != expected {
+                    let snapshot = snapshot.ok_or_else(integrity_error)?;
+                    let expected = self
+                        .ports
+                        .transport
+                        .extension_config(&projection.projection, &projection.link_key)?;
+                    if snapshot.entry.config != expected {
+                        return Err(McpPlatformError::new(
+                            McpPlatformErrorCode::ProjectionConflict,
+                            "projection mutation cannot be reconciled",
+                        ));
+                    }
+                    if snapshot.entry.enabled != mutation.desired_enabled {
+                        if snapshot.entry.enabled != mutation.previous_enabled {
                             return Err(McpPlatformError::new(
                                 McpPlatformErrorCode::ProjectionConflict,
-                                "projection mutation cannot be reconciled",
+                                "projection mutation state drifted",
                             ));
                         }
-                        if !snapshot.entry.enabled {
-                            if mutation.previous_enabled
-                                || mutation.status != ProjectionMutationStatus::Started
-                            {
-                                return Err(integrity_error());
-                            }
-                            self.ports
-                                .projection_sink
-                                .set_enabled(&projection.link_key, true)
-                                .await?;
-                        }
-                    } else if snapshot.is_some_and(|snapshot| snapshot.entry.enabled) {
                         self.ports
                             .projection_sink
-                            .set_enabled(&projection.link_key, false)
+                            .set_enabled(&projection.link_key, mutation.desired_enabled)
                             .await?;
                     }
                 }
-                if mutation.status == ProjectionMutationStatus::Started {
+                if matches!(
+                    mutation.status,
+                    ProjectionMutationStatus::Started | ProjectionMutationStatus::RecoveryRequired
+                ) {
                     self.repository
                         .mark_projection_config_committed(mutation.mutation_id, self.clock.now_ms())
                         .await?;
@@ -483,14 +501,1172 @@ impl TaskRunner {
         match task.operation {
             TaskOperation::Register => self.execute_register(task, cancellation).await,
             TaskOperation::Health => self.execute_health(task, cancellation).await,
-            TaskOperation::Install
-            | TaskOperation::Update
-            | TaskOperation::Repair
-            | TaskOperation::Uninstall => Err(McpPlatformError::new(
-                McpPlatformErrorCode::OperationNotSupported,
-                "task operation is unavailable in phase 3A",
-            )),
+            TaskOperation::Install | TaskOperation::Update | TaskOperation::Repair => {
+                self.execute_managed_install(task, cancellation).await
+            }
+            TaskOperation::Uninstall => self.execute_managed_uninstall(task, cancellation).await,
         }
+    }
+
+    async fn execute_managed_install(
+        &self,
+        task: TaskRecord,
+        cancellation: CancellationToken,
+    ) -> McpPlatformResult<()> {
+        let distribution = self
+            .distribution
+            .as_ref()
+            .ok_or_else(adapter_incompatible)?;
+        let plan_record = self.repository.get_plan(&task.plan_id).await?;
+        let manifest_record = self
+            .repository
+            .get_manifest(plan_record.plan.manifest_digest())
+            .await?;
+        let plan = &plan_record.plan;
+        plan.verify_integrity()?;
+        if manifest_record.verified.digest() != plan.manifest_digest()
+            || plan.adapter().version != distribution.adapter_version()
+        {
+            return Err(adapter_incompatible());
+        }
+        if !self
+            .ports
+            .host_integration
+            .is_empty(manifest_record.verified.manifest())
+        {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::OperationNotSupported,
+                "managed host integration is unavailable",
+            ));
+        }
+        let acquire = plan
+            .steps()
+            .iter()
+            .find_map(|step| match step {
+                PlanStep::AcquireManagedDistribution {
+                    artifact_url,
+                    artifact_digest,
+                    expected_size_bytes,
+                    platform,
+                    arch,
+                    ..
+                } => Some((
+                    artifact_url.clone(),
+                    artifact_digest.value.clone(),
+                    *expected_size_bytes,
+                    format!("{:?}/{:?}", platform, arch).to_ascii_lowercase(),
+                )),
+                _ => None,
+            })
+            .ok_or_else(integrity_error)?;
+        let scope = plan_record
+            .target
+            .installation_scope
+            .as_deref()
+            .ok_or_else(integrity_error)?;
+        let ids = stable_ids(plan.manifest_id(), scope);
+        if let Some(target) = plan_record.target.managed_mcp_id.as_deref() {
+            if target != ids.managed_mcp_id {
+                return Err(integrity_error());
+            }
+        }
+        let mut effect = ManagedInstallEffect {
+            task_id: task.task_id.clone(),
+            managed_mcp_id: ids.managed_mcp_id.clone(),
+            manifest: manifest_record.verified.manifest().clone(),
+            source_url: acquire.0.clone(),
+            expected_sha256: acquire.1.clone(),
+            expected_size_bytes: acquire.2,
+            platform_selector: acquire.3.clone(),
+            now_ms: task.created_at_ms,
+            operation: task.operation,
+            expected_tree_digest: None,
+            rebuild_uncommitted_version: false,
+        };
+        let durable_steps = self.repository.list_task_steps(&task.task_id).await?;
+        let snapshot_compensation =
+            if let Some(step) = durable_steps.iter().find(|step| step.ordinal == 0) {
+                step.compensation.clone()
+            } else {
+                let previous_inventory = match self
+                    .repository
+                    .get_managed_inventory(&ids.managed_mcp_id)
+                    .await
+                {
+                    Ok(value) => Some(value),
+                    Err(error) if error.code() == McpPlatformErrorCode::NotFound => None,
+                    Err(error) => return Err(error),
+                };
+                let previous_projection = match self
+                    .repository
+                    .get_connection_projection(&ids.managed_mcp_id)
+                    .await
+                {
+                    Ok(value) => Some(value),
+                    Err(error) if error.code() == McpPlatformErrorCode::NotFound => None,
+                    Err(error) => return Err(error),
+                };
+                CompensationDescriptor::ManagedLifecycleSnapshot {
+                    managed_mcp_id: ids.managed_mcp_id.clone(),
+                    previous_version: previous_inventory
+                        .as_ref()
+                        .and_then(|inventory| inventory.lifecycle.active_version.clone()),
+                    previous_state: previous_inventory
+                        .as_ref()
+                        .map(|inventory| inventory.managed.state.clone()),
+                    previous_projection: previous_projection
+                        .as_ref()
+                        .map(|projection| projection.projection.clone()),
+                    previous_projection_digest: previous_projection
+                        .as_ref()
+                        .map(|projection| projection.projection_digest.clone()),
+                    previous_manifest_digest: previous_projection
+                        .as_ref()
+                        .and_then(|projection| projection.manifest_digest.clone()),
+                    previous_plan_id: previous_projection
+                        .as_ref()
+                        .and_then(|projection| projection.plan_id.clone()),
+                    previous_owner_task_id: previous_projection
+                        .as_ref()
+                        .and_then(|projection| projection.owner_task_id.clone()),
+                }
+            };
+        let (
+            previous_version,
+            previous_state,
+            previous_projection,
+            previous_projection_digest,
+            previous_manifest_digest,
+            previous_plan_id,
+            previous_owner_task_id,
+        ) = match &snapshot_compensation {
+            CompensationDescriptor::ManagedLifecycleSnapshot {
+                managed_mcp_id,
+                previous_version,
+                previous_state,
+                previous_projection,
+                previous_projection_digest,
+                previous_manifest_digest,
+                previous_plan_id,
+                previous_owner_task_id,
+            } if managed_mcp_id == &ids.managed_mcp_id => (
+                previous_version.clone(),
+                previous_state.clone(),
+                previous_projection.clone(),
+                previous_projection_digest.clone(),
+                previous_manifest_digest.clone(),
+                previous_plan_id.clone(),
+                previous_owner_task_id.clone(),
+            ),
+            _ => return Err(integrity_error()),
+        };
+        let validate = self
+            .start_step(
+                &task,
+                0,
+                snapshot_compensation,
+                plan.adapter().id.as_str(),
+                plan.adapter().version.as_str(),
+            )
+            .await?;
+        if validate != TaskStepStatus::Committed {
+            self.commit_step(
+                &task.task_id,
+                0,
+                StepEvidence::PlanRevalidated {
+                    manifest_digest: plan.manifest_digest().to_string(),
+                },
+            )
+            .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        self.transition(&task.task_id, TaskStatus::Verifying, 20)
+            .await?;
+
+        let materialize_compensation =
+            if let Some(step) = durable_steps.iter().find(|step| step.ordinal == 1) {
+                step.compensation.clone()
+            } else if task.operation == TaskOperation::Repair {
+                if distribution
+                    .version_exists(&ids.managed_mcp_id, plan.manifest_version())
+                    .await?
+                {
+                    CompensationDescriptor::RestoreQuarantinedVersion {
+                        managed_mcp_id: ids.managed_mcp_id.clone(),
+                        version: plan.manifest_version().to_string(),
+                        quarantine_token: format!(
+                            "{}-{}-{}-repair",
+                            ids.managed_mcp_id,
+                            plan.manifest_version(),
+                            task.task_id
+                        ),
+                    }
+                } else {
+                    CompensationDescriptor::RemoveManagedVersion {
+                        managed_mcp_id: ids.managed_mcp_id.clone(),
+                        version: plan.manifest_version().to_string(),
+                        created_by_task: true,
+                    }
+                }
+            } else {
+                let version_preexisted = distribution
+                    .version_exists(&ids.managed_mcp_id, plan.manifest_version())
+                    .await?;
+                CompensationDescriptor::RemoveManagedVersion {
+                    managed_mcp_id: ids.managed_mcp_id.clone(),
+                    version: plan.manifest_version().to_string(),
+                    created_by_task: !version_preexisted,
+                }
+            };
+        effect.expected_tree_digest = durable_steps
+            .iter()
+            .find(|step| step.ordinal == 1)
+            .and_then(|step| match step.evidence.as_ref() {
+                Some(StepEvidence::ManagedDistributionMaterialized { tree_digest, .. }) => {
+                    Some(tree_digest.clone())
+                }
+                _ => None,
+            });
+        if effect.expected_tree_digest.is_none() && task.operation != TaskOperation::Repair {
+            effect.expected_tree_digest = match self
+                .repository
+                .get_managed_inventory(&ids.managed_mcp_id)
+                .await
+            {
+                Ok(inventory) => inventory
+                    .managed
+                    .versions
+                    .iter()
+                    .find(|version| version.version == plan.manifest_version())
+                    .and_then(|version| version.materialized_tree_digest.clone()),
+                Err(error) if error.code() == McpPlatformErrorCode::NotFound => None,
+                Err(error) => return Err(error),
+            };
+        }
+        effect.rebuild_uncommitted_version = matches!(
+            &materialize_compensation,
+            CompensationDescriptor::RemoveManagedVersion {
+                created_by_task: true,
+                ..
+            }
+        ) || task.operation == TaskOperation::Repair;
+        let materialize = self
+            .start_step(
+                &task,
+                1,
+                materialize_compensation,
+                plan.adapter().id.as_str(),
+                distribution.adapter_version(),
+            )
+            .await?;
+        let outcome = if materialize == TaskStepStatus::Committed {
+            match distribution.inspect_installed(&effect).await {
+                Ok(outcome) => outcome,
+                Err(error) => {
+                    let _ = self
+                        .repository
+                        .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                        .await;
+                    return Err(error);
+                }
+            }
+        } else {
+            let now_ms = self.clock.now_ms();
+            self.repository
+                .claim_artifact(
+                    &acquire.1,
+                    &task.task_id,
+                    now_ms,
+                    now_ms - STALE_ARTIFACT_CLAIM_MS,
+                )
+                .await?;
+            let outcome = match distribution.install(&effect, &cancellation).await {
+                Ok(outcome) => outcome,
+                Err(error) => {
+                    self.repository
+                        .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                        .await?;
+                    return Err(error);
+                }
+            };
+            if let Err(error) = self
+                .repository
+                .mark_artifact_claim_verified(&acquire.1, &task.task_id, self.clock.now_ms())
+                .await
+            {
+                let _ = self
+                    .repository
+                    .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                    .await;
+                return Err(error);
+            }
+            let commit = self
+                .commit_step(
+                    &task.task_id,
+                    1,
+                    StepEvidence::ManagedDistributionMaterialized {
+                        digest: outcome.evidence.artifact_digest.clone(),
+                        version: plan.manifest_version().to_string(),
+                        tree_digest: outcome.materialized_tree_digest.clone(),
+                    },
+                )
+                .await;
+            self.repository
+                .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                .await?;
+            commit?;
+            outcome
+        };
+        if materialize == TaskStepStatus::Committed {
+            self.repository
+                .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        self.transition(&task.task_id, TaskStatus::Activating, 55)
+            .await?;
+        let adapter = task.adapter_evidence.as_ref().ok_or_else(integrity_error)?;
+        let root = outcome.installation_root.to_string_lossy().into_owned();
+        let inventory = self
+            .start_step(
+                &task,
+                2,
+                CompensationDescriptor::RestoreManagedActivation {
+                    managed_mcp_id: ids.managed_mcp_id.clone(),
+                    previous_version: previous_version.clone(),
+                    target_version: plan.manifest_version().to_string(),
+                },
+                "managed_inventory_repository",
+                "2",
+            )
+            .await?;
+        if inventory != TaskStepStatus::Committed {
+            let staged = self
+                .repository
+                .stage_managed_installation(StageManagedInstallation {
+                    managed_mcp_id: &ids.managed_mcp_id,
+                    mcp_id: plan.manifest_id(),
+                    installation_scope: scope,
+                    distribution_adapter: &plan.adapter().id,
+                    manifest_digest: plan.manifest_digest(),
+                    version: plan.manifest_version(),
+                    installation_root: &root,
+                    task_id: &task.task_id,
+                    adapter_evidence: adapter,
+                    verification_evidence: &outcome.evidence,
+                    materialized_tree_digest: &outcome.materialized_tree_digest,
+                    owned_relative_paths: &outcome.owned_relative_paths,
+                    now_ms: self.clock.now_ms(),
+                })
+                .await?;
+            if staged.previous_version != previous_version {
+                return Err(integrity_error());
+            }
+            self.commit_step(
+                &task.task_id,
+                2,
+                StepEvidence::ManagedMcpUpserted {
+                    managed_mcp_id: ids.managed_mcp_id.clone(),
+                    created: staged.created_managed_mcp,
+                },
+            )
+            .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        let extension_config = self
+            .ports
+            .transport
+            .extension_config(&outcome.projection, &ids.link_key)?;
+        let projection_digest = digest_serializable(&extension_config)?;
+        let projection_compensation = previous_projection.as_ref().map_or_else(
+            || CompensationDescriptor::RemoveOwnedConnectionProjection {
+                managed_mcp_id: ids.managed_mcp_id.clone(),
+                link_key: ids.link_key.clone(),
+            },
+            |previous| CompensationDescriptor::RestoreManagedProjection {
+                managed_mcp_id: ids.managed_mcp_id.clone(),
+                link_key: ids.link_key.clone(),
+                projection: previous.clone(),
+                enabled: previous_state
+                    .as_ref()
+                    .is_some_and(|state| state.default_enabled),
+                projection_digest: previous_projection_digest.clone().unwrap_or_default(),
+                manifest_digest: previous_manifest_digest.clone().unwrap_or_default(),
+                plan_id: previous_plan_id.clone().unwrap_or_default(),
+                owner_task_id: previous_owner_task_id.clone(),
+            },
+        );
+        let projection_step = self
+            .start_step(
+                &task,
+                3,
+                CompensationDescriptor::NoCompensation,
+                "managed_projection_stage",
+                "1",
+            )
+            .await?;
+        if projection_step != TaskStepStatus::Committed {
+            self.commit_step(
+                &task.task_id,
+                3,
+                StepEvidence::ProjectionVerified {
+                    link_key: ids.link_key.clone(),
+                    enabled: false,
+                },
+            )
+            .await?;
+        }
+        let config_compensation = previous_projection.as_ref().map_or_else(
+            || CompensationDescriptor::RemoveOwnedExtensionConfig {
+                link_key: ids.link_key.clone(),
+                projection_digest: projection_digest.clone(),
+                created_by_task: true,
+            },
+            |_| projection_compensation.clone(),
+        );
+        let config_step = self
+            .start_step(
+                &task,
+                4,
+                CompensationDescriptor::NoCompensation,
+                "managed_config_stage",
+                "1",
+            )
+            .await?;
+        if config_step != TaskStepStatus::Committed {
+            self.commit_step(
+                &task.task_id,
+                4,
+                StepEvidence::ExtensionConfigProjected {
+                    link_key: ids.link_key.clone(),
+                    projection_digest: projection_digest.clone(),
+                    enabled: false,
+                    created: false,
+                },
+            )
+            .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        let health_step = self
+            .start_step(
+                &task,
+                5,
+                CompensationDescriptor::NoCompensation,
+                self.ports.health.adapter_id(),
+                self.ports.health.adapter_version(),
+            )
+            .await?;
+        if health_step != TaskStepStatus::Committed {
+            let effect = registration_effect_from_projection(&outcome.projection)?;
+            self.ports
+                .registration
+                .verify(&effect, &cancellation)
+                .await?;
+            let result = match self
+                .ports
+                .auth
+                .requirement(&manifest_record.verified.manifest().auth)?
+            {
+                AuthRequirement::MissingOpaqueHandle { .. } => {
+                    super::lifecycle::HealthAdapterResult {
+                        result_code: HealthResultCode::BlockedAuth,
+                        latency_ms: 0,
+                        capabilities_digest: None,
+                        tools_digest: None,
+                        detail_code: HealthDetailCode::CredentialHandleMissing,
+                    }
+                }
+                AuthRequirement::Ready => {
+                    self.ports
+                        .health
+                        .run(
+                            HealthExecution {
+                                effect,
+                                check: manifest_record.verified.manifest().health_check.clone(),
+                                projection_config: extension_config.clone(),
+                            },
+                            cancellation.clone(),
+                        )
+                        .await?
+                }
+            };
+            self.repository
+                .append_health_observation(NewHealthObservation {
+                    managed_mcp_id: &ids.managed_mcp_id,
+                    task_id: &task.task_id,
+                    check_type: HealthCheckMode::Runtime.as_str(),
+                    result_code: result.result_code,
+                    latency_ms: result.latency_ms,
+                    capabilities_digest: result.capabilities_digest.as_deref(),
+                    tools_digest: result.tools_digest.as_deref(),
+                    checked_at_ms: self.clock.now_ms(),
+                    detail_code: result.detail_code,
+                })
+                .await?;
+            self.commit_step(
+                &task.task_id,
+                5,
+                StepEvidence::HealthObserved {
+                    result_code: result.result_code.as_str().to_string(),
+                },
+            )
+            .await?;
+            if !matches!(
+                result.result_code,
+                HealthResultCode::Healthy | HealthResultCode::BlockedAuth
+            ) {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::HealthFailed,
+                    "managed MCP runtime health gate failed",
+                ));
+            }
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        let observation = self
+            .repository
+            .latest_health_observation(&ids.managed_mcp_id)
+            .await?
+            .filter(|observation| observation.task_id == task.task_id)
+            .ok_or_else(integrity_error)?;
+        if !matches!(
+            observation.result_code,
+            HealthResultCode::Healthy | HealthResultCode::BlockedAuth
+        ) {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::HealthFailed,
+                "managed MCP runtime health gate failed",
+            ));
+        }
+        let runtime_activate = self
+            .start_step(
+                &task,
+                6,
+                CompensationDescriptor::RestoreRuntimeActivation {
+                    managed_mcp_id: ids.managed_mcp_id.clone(),
+                    previous_version: previous_version.clone(),
+                    target_version: Some(plan.manifest_version().to_string()),
+                },
+                plan.adapter().id.as_str(),
+                distribution.adapter_version(),
+            )
+            .await?;
+        if runtime_activate != TaskStepStatus::Committed {
+            distribution
+                .activate_version(
+                    &ids.managed_mcp_id,
+                    plan.manifest_version(),
+                    &task.task_id,
+                    &cancellation,
+                )
+                .await?;
+            if distribution
+                .active_version(&ids.managed_mcp_id)
+                .await?
+                .as_deref()
+                != Some(plan.manifest_version())
+            {
+                return Err(integrity_error());
+            }
+            self.repository
+                .mark_managed_runtime_activated(
+                    &ids.managed_mcp_id,
+                    plan.manifest_version(),
+                    &task.task_id,
+                    self.clock.now_ms(),
+                )
+                .await?;
+            self.commit_step(
+                &task.task_id,
+                6,
+                StepEvidence::ActivationRecorded {
+                    version: plan.manifest_version().to_string(),
+                },
+            )
+            .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        let desired_enabled = previous_state
+            .as_ref()
+            .is_some_and(|state| state.default_enabled)
+            && observation.result_code == HealthResultCode::Healthy;
+        let activate = self
+            .start_step(
+                &task,
+                7,
+                CompensationDescriptor::RestoreManagedActivation {
+                    managed_mcp_id: ids.managed_mcp_id.clone(),
+                    previous_version: previous_version.clone(),
+                    target_version: plan.manifest_version().to_string(),
+                },
+                "managed_inventory_repository",
+                "2",
+            )
+            .await?;
+        if activate != TaskStepStatus::Committed {
+            self.repository
+                .activate_managed_installation(ActivateManagedInstallation {
+                    managed_mcp_id: &ids.managed_mcp_id,
+                    target_version: plan.manifest_version(),
+                    task_id: &task.task_id,
+                    default_enabled: desired_enabled,
+                    now_ms: self.clock.now_ms(),
+                })
+                .await?;
+            self.commit_step(
+                &task.task_id,
+                7,
+                StepEvidence::ActivationRecorded {
+                    version: plan.manifest_version().to_string(),
+                },
+            )
+            .await?;
+        }
+        let live_projection = self
+            .start_step(
+                &task,
+                8,
+                projection_compensation.clone(),
+                "connection_projection_repository",
+                "1",
+            )
+            .await?;
+        if live_projection != TaskStepStatus::Committed {
+            let projection = self
+                .repository
+                .put_owned_connection_projection(PutOwnedProjection {
+                    managed_mcp_id: &ids.managed_mcp_id,
+                    link_key: &ids.link_key,
+                    projection: &outcome.projection,
+                    plan_id: &task.plan_id,
+                    manifest_digest: plan.manifest_digest(),
+                    owner_task_id: &task.task_id,
+                    projection_digest: &projection_digest,
+                    now_ms: self.clock.now_ms(),
+                })
+                .await?;
+            self.commit_step(
+                &task.task_id,
+                8,
+                StepEvidence::ProjectionPersisted {
+                    managed_mcp_id: ids.managed_mcp_id.clone(),
+                    link_key: ids.link_key.clone(),
+                    revision: projection.revision,
+                    created: projection.owner_task_id.as_deref() == Some(&task.task_id),
+                },
+            )
+            .await?;
+        }
+        let live_config = self
+            .start_step(
+                &task,
+                9,
+                config_compensation,
+                self.ports.projection_sink.adapter_id(),
+                self.ports.projection_sink.adapter_version(),
+            )
+            .await?;
+        if live_config != TaskStepStatus::Committed {
+            let target_entry = crate::config::extensions::ExtensionEntry {
+                enabled: desired_enabled,
+                config: extension_config.clone(),
+            };
+            let snapshot = match self.ports.projection_sink.get(&ids.link_key).await? {
+                Some(existing) if existing.entry == target_entry => existing,
+                Some(existing)
+                    if previous_projection.as_ref().is_some_and(|projection| {
+                        self.ports
+                            .transport
+                            .extension_config(projection, &ids.link_key)
+                            .ok()
+                            .is_some_and(|config| {
+                                existing.entry
+                                    == crate::config::extensions::ExtensionEntry {
+                                        enabled: previous_state
+                                            .as_ref()
+                                            .is_some_and(|state| state.default_enabled),
+                                        config,
+                                    }
+                            })
+                    }) =>
+                {
+                    self.ports
+                        .projection_sink
+                        .replace_owned(
+                            &ids.link_key,
+                            &existing,
+                            extension_config.clone(),
+                            desired_enabled,
+                        )
+                        .await?
+                }
+                Some(_) => {
+                    return Err(McpPlatformError::new(
+                        McpPlatformErrorCode::ProjectionConflict,
+                        "managed live projection drifted during activation",
+                    ))
+                }
+                None if !desired_enabled => {
+                    self.ports
+                        .projection_sink
+                        .put_disabled(&ids.link_key, extension_config.clone())
+                        .await?
+                }
+                None => return Err(integrity_error()),
+            };
+            if snapshot.entry.enabled != desired_enabled {
+                return Err(integrity_error());
+            }
+            self.commit_step(
+                &task.task_id,
+                9,
+                StepEvidence::ExtensionConfigProjected {
+                    link_key: ids.link_key.clone(),
+                    projection_digest: projection_digest.clone(),
+                    enabled: desired_enabled,
+                    created: snapshot.created,
+                },
+            )
+            .await?;
+        }
+        if task.operation == TaskOperation::Update {
+            if let Some(previous) = previous_version
+                .as_deref()
+                .filter(|previous| *previous != plan.manifest_version())
+            {
+                let token = format!(
+                    "{}-{previous}-{}-retained",
+                    ids.managed_mcp_id, task.task_id
+                );
+                let quarantine = self
+                    .start_step(
+                        &task,
+                        10,
+                        CompensationDescriptor::RestoreQuarantinedVersion {
+                            managed_mcp_id: ids.managed_mcp_id.clone(),
+                            version: previous.to_string(),
+                            quarantine_token: token.clone(),
+                        },
+                        plan.adapter().id.as_str(),
+                        distribution.adapter_version(),
+                    )
+                    .await?;
+                if quarantine != TaskStepStatus::Committed {
+                    let actual = distribution
+                        .quarantine_version(
+                            &ids.managed_mcp_id,
+                            previous,
+                            &format!("{}-retained", task.task_id),
+                            &cancellation,
+                        )
+                        .await?;
+                    if actual != token {
+                        return Err(integrity_error());
+                    }
+                    self.commit_step(
+                        &task.task_id,
+                        10,
+                        StepEvidence::ActivationRecorded {
+                            version: previous.to_string(),
+                        },
+                    )
+                    .await?;
+                }
+                let finalize = self
+                    .start_step(
+                        &task,
+                        11,
+                        CompensationDescriptor::FinalizedManagedUninstall {
+                            managed_mcp_id: ids.managed_mcp_id.clone(),
+                            version: previous.to_string(),
+                        },
+                        "managed_inventory_repository",
+                        "2",
+                    )
+                    .await?;
+                if finalize != TaskStepStatus::Committed {
+                    self.repository
+                        .finalize_retained_version_cleanup(
+                            &ids.managed_mcp_id,
+                            previous,
+                            &task.task_id,
+                            self.clock.now_ms(),
+                        )
+                        .await?;
+                    self.commit_step(
+                        &task.task_id,
+                        11,
+                        StepEvidence::ActivationRecorded {
+                            version: previous.to_string(),
+                        },
+                    )
+                    .await?;
+                }
+                let purge = self
+                    .start_step(
+                        &task,
+                        12,
+                        CompensationDescriptor::FinalizedManagedUninstall {
+                            managed_mcp_id: ids.managed_mcp_id.clone(),
+                            version: previous.to_string(),
+                        },
+                        plan.adapter().id.as_str(),
+                        distribution.adapter_version(),
+                    )
+                    .await?;
+                if purge != TaskStepStatus::Committed {
+                    distribution
+                        .purge_quarantined(&token, &cancellation)
+                        .await?;
+                    self.commit_step(
+                        &task.task_id,
+                        12,
+                        StepEvidence::ActivationRecorded {
+                            version: previous.to_string(),
+                        },
+                    )
+                    .await?;
+                }
+            }
+        }
+        if let Some(token) = outcome.replaced_quarantine_token.as_deref() {
+            let purge = self
+                .start_step(
+                    &task,
+                    10,
+                    CompensationDescriptor::FinalizedManagedUninstall {
+                        managed_mcp_id: ids.managed_mcp_id.clone(),
+                        version: plan.manifest_version().to_string(),
+                    },
+                    plan.adapter().id.as_str(),
+                    distribution.adapter_version(),
+                )
+                .await?;
+            if purge != TaskStepStatus::Committed {
+                distribution.purge_quarantined(token, &cancellation).await?;
+                self.commit_step(
+                    &task.task_id,
+                    10,
+                    StepEvidence::ActivationRecorded {
+                        version: plan.manifest_version().to_string(),
+                    },
+                )
+                .await?;
+            }
+        }
+        self.transition(&task.task_id, TaskStatus::Succeeded, 100)
+            .await?;
+        Ok(())
+    }
+
+    async fn execute_managed_uninstall(
+        &self,
+        task: TaskRecord,
+        cancellation: CancellationToken,
+    ) -> McpPlatformResult<()> {
+        let distribution = self
+            .distribution
+            .as_ref()
+            .ok_or_else(adapter_incompatible)?;
+        let record = self.repository.get_plan(&task.plan_id).await?;
+        record.plan.verify_integrity()?;
+        let (managed_mcp_id, version) = record
+            .plan
+            .steps()
+            .iter()
+            .find_map(|step| match step {
+                PlanStep::RemoveManagedInstallation {
+                    managed_mcp_id,
+                    version,
+                    ownership_only: true,
+                    ..
+                } => Some((managed_mcp_id.as_str(), version.as_str())),
+                _ => None,
+            })
+            .ok_or_else(integrity_error)?;
+        let durable_steps = self.repository.list_task_steps(&task.task_id).await?;
+        let uninstall_snapshot =
+            if let Some(step) = durable_steps.iter().find(|step| step.ordinal == 0) {
+                step.compensation.clone()
+            } else {
+                let inventory = self
+                    .repository
+                    .get_managed_inventory(managed_mcp_id)
+                    .await?;
+                let projection = self
+                    .repository
+                    .get_connection_projection(managed_mcp_id)
+                    .await?;
+                CompensationDescriptor::ManagedUninstallSnapshot {
+                    managed_mcp_id: managed_mcp_id.to_string(),
+                    active_version: version.to_string(),
+                    versions: inventory
+                        .managed
+                        .versions
+                        .iter()
+                        .map(|version| version.version.clone())
+                        .collect(),
+                    link_key: projection.link_key.clone(),
+                    projection: projection.projection,
+                    enabled: inventory.managed.state.default_enabled,
+                    projection_digest: projection.projection_digest,
+                    manifest_digest: projection.manifest_digest.unwrap_or_default(),
+                    plan_id: projection.plan_id.unwrap_or_default(),
+                    owner_task_id: projection.owner_task_id,
+                    task_id: task.task_id.clone(),
+                }
+            };
+        let (
+            versions,
+            link_key,
+            projection,
+            enabled,
+            projection_digest,
+            manifest_digest,
+            previous_plan_id,
+            owner_task_id,
+        ) = match &uninstall_snapshot {
+            CompensationDescriptor::ManagedUninstallSnapshot {
+                managed_mcp_id: snapshot_id,
+                active_version,
+                versions,
+                link_key,
+                projection,
+                enabled,
+                projection_digest,
+                manifest_digest,
+                plan_id,
+                owner_task_id,
+                task_id,
+            } if snapshot_id == managed_mcp_id
+                && active_version == version
+                && task_id == &task.task_id =>
+            {
+                (
+                    versions.clone(),
+                    link_key.clone(),
+                    projection.clone(),
+                    *enabled,
+                    projection_digest.clone(),
+                    manifest_digest.clone(),
+                    plan_id.clone(),
+                    owner_task_id.clone(),
+                )
+            }
+            _ => return Err(integrity_error()),
+        };
+        if versions.is_empty() || !versions.iter().any(|candidate| candidate == version) {
+            return Err(integrity_error());
+        }
+        let config = self
+            .ports
+            .transport
+            .extension_config(&projection, &link_key)?;
+        let restore_projection = CompensationDescriptor::RestoreManagedProjection {
+            managed_mcp_id: managed_mcp_id.to_string(),
+            link_key: link_key.clone(),
+            projection: projection.clone(),
+            enabled,
+            projection_digest,
+            manifest_digest,
+            plan_id: previous_plan_id,
+            owner_task_id,
+        };
+        let begin = self
+            .start_step(
+                &task,
+                0,
+                uninstall_snapshot,
+                "managed_inventory_repository",
+                "2",
+            )
+            .await?;
+        if begin != TaskStepStatus::Committed {
+            self.repository
+                .begin_managed_uninstall(
+                    managed_mcp_id,
+                    version,
+                    &task.task_id,
+                    self.clock.now_ms(),
+                )
+                .await?;
+            self.commit_step(
+                &task.task_id,
+                0,
+                StepEvidence::PlanRevalidated {
+                    manifest_digest: record.plan.manifest_digest().to_string(),
+                },
+            )
+            .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        let detach = self
+            .start_step(
+                &task,
+                1,
+                restore_projection,
+                self.ports.projection_sink.adapter_id(),
+                self.ports.projection_sink.adapter_version(),
+            )
+            .await?;
+        if detach != TaskStepStatus::Committed {
+            if let Some(current) = self.ports.projection_sink.get(&link_key).await? {
+                if current.entry.config != config || (current.entry.enabled && !enabled) {
+                    return Err(McpPlatformError::new(
+                        McpPlatformErrorCode::ProjectionConflict,
+                        "managed uninstall projection drifted",
+                    ));
+                }
+                self.ports
+                    .projection_sink
+                    .remove_owned(&link_key, &current)
+                    .await?;
+            }
+            self.commit_step(
+                &task.task_id,
+                1,
+                StepEvidence::ProjectionVerified {
+                    link_key: link_key.clone(),
+                    enabled: false,
+                },
+            )
+            .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        self.transition(&task.task_id, TaskStatus::Verifying, 50)
+            .await?;
+        let deactivate = self
+            .start_step(
+                &task,
+                2,
+                CompensationDescriptor::RestoreRuntimeActivation {
+                    managed_mcp_id: managed_mcp_id.to_string(),
+                    previous_version: Some(version.to_string()),
+                    target_version: None,
+                },
+                record.plan.adapter().id.as_str(),
+                distribution.adapter_version(),
+            )
+            .await?;
+        if deactivate != TaskStepStatus::Committed {
+            distribution
+                .restore_activation(managed_mcp_id, None, &task.task_id)
+                .await?;
+            if distribution.active_version(managed_mcp_id).await?.is_some() {
+                return Err(integrity_error());
+            }
+            self.commit_step(
+                &task.task_id,
+                2,
+                StepEvidence::ActivationRecorded {
+                    version: version.to_string(),
+                },
+            )
+            .await?;
+        }
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        let mut quarantine_tokens = Vec::with_capacity(versions.len());
+        for (index, owned_version) in versions.iter().enumerate() {
+            let token_task = format!("{}-uninstall-{index}", task.task_id);
+            let token = format!("{managed_mcp_id}-{owned_version}-{token_task}");
+            let ordinal = 3 + i64::try_from(index).map_err(|_| integrity_error())?;
+            let quarantine = self
+                .start_step(
+                    &task,
+                    ordinal,
+                    CompensationDescriptor::RestoreQuarantinedVersion {
+                        managed_mcp_id: managed_mcp_id.to_string(),
+                        version: owned_version.clone(),
+                        quarantine_token: token.clone(),
+                    },
+                    record.plan.adapter().id.as_str(),
+                    distribution.adapter_version(),
+                )
+                .await?;
+            if quarantine != TaskStepStatus::Committed {
+                let actual = distribution
+                    .quarantine_version(managed_mcp_id, owned_version, &token_task, &cancellation)
+                    .await?;
+                if actual != token {
+                    return Err(integrity_error());
+                }
+                self.commit_step(
+                    &task.task_id,
+                    ordinal,
+                    StepEvidence::ActivationRecorded {
+                        version: owned_version.clone(),
+                    },
+                )
+                .await?;
+            }
+            quarantine_tokens.push(token);
+        }
+        self.repository
+            .mark_managed_uninstall_quarantined(&task.task_id, self.clock.now_ms())
+            .await?;
+        self.cancel_boundary(&task.task_id, &cancellation).await?;
+        self.transition(&task.task_id, TaskStatus::Activating, 75)
+            .await?;
+        let finalize_ordinal = 3 + i64::try_from(versions.len()).map_err(|_| integrity_error())?;
+        let finalize = self
+            .start_step(
+                &task,
+                finalize_ordinal,
+                CompensationDescriptor::FinalizedManagedUninstall {
+                    managed_mcp_id: managed_mcp_id.to_string(),
+                    version: version.to_string(),
+                },
+                "managed_inventory_repository",
+                "2",
+            )
+            .await?;
+        if finalize != TaskStepStatus::Committed {
+            self.repository
+                .finalize_managed_uninstall(
+                    managed_mcp_id,
+                    version,
+                    &task.task_id,
+                    self.clock.now_ms(),
+                )
+                .await?;
+            self.commit_step(
+                &task.task_id,
+                finalize_ordinal,
+                StepEvidence::ActivationRecorded {
+                    version: version.to_string(),
+                },
+            )
+            .await?;
+        }
+        for (index, token) in quarantine_tokens.iter().enumerate() {
+            let ordinal =
+                finalize_ordinal + 1 + i64::try_from(index).map_err(|_| integrity_error())?;
+            let purge = self
+                .start_step(
+                    &task,
+                    ordinal,
+                    CompensationDescriptor::FinalizedManagedUninstall {
+                        managed_mcp_id: managed_mcp_id.to_string(),
+                        version: version.to_string(),
+                    },
+                    record.plan.adapter().id.as_str(),
+                    distribution.adapter_version(),
+                )
+                .await?;
+            if purge != TaskStepStatus::Committed {
+                distribution.purge_quarantined(token, &cancellation).await?;
+                self.commit_step(
+                    &task.task_id,
+                    ordinal,
+                    StepEvidence::ActivationRecorded {
+                        version: version.to_string(),
+                    },
+                )
+                .await?;
+            }
+        }
+        self.transition(&task.task_id, TaskStatus::Succeeded, 100)
+            .await?;
+        Ok(())
     }
 
     async fn execute_register(
@@ -1027,6 +2203,47 @@ impl TaskRunner {
             }
             return Ok(());
         }
+        if self
+            .repository
+            .is_managed_finalizing(task_id, task.operation)
+            .await?
+        {
+            let failures = self
+                .repository
+                .record_managed_finalization_failure(task_id, self.clock.now_ms())
+                .await?;
+            let redacted = RedactedError::new(
+                RedactedErrorCode::Interrupted,
+                if failures == 1 {
+                    "managed lifecycle finalization will resume once from durable cleanup evidence"
+                } else {
+                    "managed lifecycle finalization requires an explicit retry"
+                },
+                std::iter::empty::<&str>(),
+            );
+            if failures > 1 {
+                self.transition_with_error(
+                    task_id,
+                    TaskStatus::RecoveryRequired,
+                    task.progress,
+                    &redacted,
+                )
+                .await?;
+                return Ok(());
+            }
+            if task.status != TaskStatus::Interrupted {
+                self.transition_with_error(
+                    task_id,
+                    TaskStatus::Interrupted,
+                    task.progress,
+                    &redacted,
+                )
+                .await?;
+            }
+            self.transition(task_id, TaskStatus::Queued, task.progress)
+                .await?;
+            return Ok(());
+        }
         let effect_may_have_occurred = self
             .repository
             .list_task_steps(task_id)
@@ -1094,30 +2311,226 @@ impl TaskRunner {
                 incomplete = true;
                 break;
             }
-            let result = match (step.ordinal, &step.compensation) {
-                (
-                    3,
-                    CompensationDescriptor::RemoveOwnedExtensionConfig {
-                        created_by_task: true,
-                        ..
-                    },
-                ) => self
-                    .ports
-                    .projection_sink
-                    .remove_owned(&ids.link_key, &expected_snapshot)
-                    .await
-                    .map(|_| ()),
-                (2, CompensationDescriptor::RemoveOwnedConnectionProjection { .. }) => self
+            let result = match &step.compensation {
+                CompensationDescriptor::RemoveOwnedExtensionConfig {
+                    link_key,
+                    created_by_task: true,
+                    ..
+                } => {
+                    let expected = match self
+                        .repository
+                        .get_connection_projection(&ids.managed_mcp_id)
+                        .await
+                    {
+                        Ok(record) => ProjectionSnapshot {
+                            entry: crate::config::extensions::ExtensionEntry {
+                                enabled: false,
+                                config: self
+                                    .ports
+                                    .transport
+                                    .extension_config(&record.projection, link_key)?,
+                            },
+                            created: true,
+                        },
+                        Err(_) => expected_snapshot.clone(),
+                    };
+                    self.ports
+                        .projection_sink
+                        .remove_owned(link_key, &expected)
+                        .await
+                        .map(|_| ())
+                }
+                CompensationDescriptor::RemoveOwnedExtensionConfig {
+                    created_by_task: false,
+                    ..
+                } => Ok(()),
+                CompensationDescriptor::RemoveOwnedConnectionProjection {
+                    managed_mcp_id, ..
+                } => self
                     .repository
-                    .remove_owned_projection(&ids.managed_mcp_id, task_id)
+                    .remove_owned_projection(managed_mcp_id, task_id)
                     .await
                     .map(|_| ()),
-                (1, CompensationDescriptor::RemoveManagedMcp { .. }) => self
+                CompensationDescriptor::RemoveManagedMcp { managed_mcp_id } => self
                     .repository
-                    .remove_owned_managed_mcp(&ids.managed_mcp_id, task_id)
+                    .remove_owned_managed_mcp(managed_mcp_id, task_id)
                     .await
                     .map(|_| ()),
-                _ => Ok(()),
+                CompensationDescriptor::NoCompensation
+                | CompensationDescriptor::ManagedLifecycleSnapshot { .. } => Ok(()),
+                CompensationDescriptor::ManagedUninstallSnapshot {
+                    managed_mcp_id,
+                    task_id: uninstall_task_id,
+                    ..
+                } => {
+                    self.repository
+                        .cancel_managed_uninstall(
+                            managed_mcp_id,
+                            uninstall_task_id,
+                            self.clock.now_ms(),
+                        )
+                        .await
+                }
+                CompensationDescriptor::RemoveManagedVersion {
+                    managed_mcp_id,
+                    version,
+                    created_by_task,
+                } => match (created_by_task, self.distribution.as_ref()) {
+                    (true, Some(distribution)) => {
+                        distribution
+                            .remove_version(managed_mcp_id, version, &CancellationToken::new())
+                            .await
+                    }
+                    (false, _) => Ok(()),
+                    (true, None) => Err(adapter_incompatible()),
+                },
+                CompensationDescriptor::RestoreManagedActivation {
+                    managed_mcp_id,
+                    previous_version,
+                    target_version,
+                } => {
+                    self.repository
+                        .rollback_managed_installation(
+                            managed_mcp_id,
+                            previous_version.as_deref(),
+                            target_version,
+                            task_id,
+                            self.clock.now_ms(),
+                        )
+                        .await
+                }
+                CompensationDescriptor::RestoreRuntimeActivation {
+                    managed_mcp_id,
+                    previous_version,
+                    target_version,
+                } => match self.distribution.as_ref() {
+                    Some(distribution) => {
+                        let current = distribution.active_version(managed_mcp_id).await?;
+                        if current.as_deref() == target_version.as_deref() {
+                            distribution
+                                .restore_activation(
+                                    managed_mcp_id,
+                                    previous_version.as_deref(),
+                                    task_id,
+                                )
+                                .await?;
+                        } else if current.as_deref() != previous_version.as_deref() {
+                            return Err(integrity_error());
+                        }
+                        if distribution
+                            .active_version(managed_mcp_id)
+                            .await?
+                            .as_deref()
+                            != previous_version.as_deref()
+                        {
+                            return Err(integrity_error());
+                        }
+                        Ok(())
+                    }
+                    None => Err(adapter_incompatible()),
+                },
+                CompensationDescriptor::RestoreManagedProjection {
+                    managed_mcp_id,
+                    link_key,
+                    projection,
+                    enabled,
+                    projection_digest,
+                    manifest_digest,
+                    plan_id,
+                    owner_task_id,
+                } => {
+                    let old_config = self
+                        .ports
+                        .transport
+                        .extension_config(projection, link_key)?;
+                    let old_entry = crate::config::extensions::ExtensionEntry {
+                        enabled: *enabled,
+                        config: old_config,
+                    };
+                    let current = self.ports.projection_sink.get(link_key).await?;
+                    if current
+                        .as_ref()
+                        .is_none_or(|snapshot| snapshot.entry != old_entry)
+                    {
+                        let restored = match current {
+                            Some(current) => {
+                                self.ports
+                                    .projection_sink
+                                    .replace_owned_disabled(
+                                        link_key,
+                                        &current,
+                                        old_entry.config.clone(),
+                                    )
+                                    .await?
+                            }
+                            None => {
+                                self.ports
+                                    .projection_sink
+                                    .put_disabled(link_key, old_entry.config.clone())
+                                    .await?
+                            }
+                        };
+                        if *enabled {
+                            self.ports
+                                .projection_sink
+                                .set_enabled(link_key, true)
+                                .await?;
+                        } else if restored.entry.enabled {
+                            return Err(integrity_error());
+                        }
+                    }
+                    let current_record = self
+                        .repository
+                        .get_connection_projection(managed_mcp_id)
+                        .await?;
+                    if current_record.projection_digest != *projection_digest {
+                        self.repository
+                            .restore_owned_connection_projection(RestoreOwnedProjection {
+                                managed_mcp_id,
+                                link_key,
+                                projection,
+                                plan_id,
+                                manifest_digest,
+                                owner_task_id: owner_task_id.as_deref(),
+                                projection_digest,
+                                replacing_task_id: task_id,
+                                now_ms: self.clock.now_ms(),
+                            })
+                            .await?;
+                    }
+                    Ok(())
+                }
+                CompensationDescriptor::RestoreQuarantinedVersion {
+                    managed_mcp_id,
+                    version,
+                    quarantine_token,
+                } => match self.distribution.as_ref() {
+                    Some(distribution) => {
+                        distribution
+                            .restore_quarantined(managed_mcp_id, version, quarantine_token)
+                            .await
+                    }
+                    None => Err(adapter_incompatible()),
+                },
+                CompensationDescriptor::CancelManagedUninstall {
+                    managed_mcp_id,
+                    task_id: uninstall_task_id,
+                } => {
+                    self.repository
+                        .cancel_managed_uninstall(
+                            managed_mcp_id,
+                            uninstall_task_id,
+                            self.clock.now_ms(),
+                        )
+                        .await
+                }
+                CompensationDescriptor::FinalizedManagedUninstall { .. }
+                | CompensationDescriptor::RemoveConnectionProjection { .. }
+                | CompensationDescriptor::RestoreActivation { .. }
+                | CompensationDescriptor::RemoveOwnedPath { .. }
+                | CompensationDescriptor::RestoreConfigFragment { .. } => {
+                    Err(adapter_incompatible())
+                }
             };
             if result.is_err() {
                 incomplete = true;
@@ -1290,6 +2703,30 @@ async fn registration_health(
     })
 }
 
+fn registration_effect_from_projection(
+    projection: &super::plan::ConnectionProjection,
+) -> McpPlatformResult<RegistrationEffect> {
+    match projection {
+        super::plan::ConnectionProjection::ManagedStdio {
+            executable,
+            args,
+            environment_keys,
+            cwd,
+            timeout_seconds,
+            ..
+        } => Ok(RegistrationEffect::ManualStdio {
+            spawn: DirectSpawnDescriptor {
+                executable: executable.clone(),
+                argv: args.clone(),
+                environment_keys: environment_keys.clone(),
+                working_directory: cwd.clone(),
+                timeout_seconds: *timeout_seconds,
+            },
+        }),
+        _ => Err(integrity_error()),
+    }
+}
+
 struct StableIds {
     managed_mcp_id: String,
     link_key: String,
@@ -1297,17 +2734,26 @@ struct StableIds {
 }
 
 fn stable_ids(mcp_id: &str, installation_scope: &str) -> StableIds {
+    let managed_mcp_id = stable_managed_mcp_id(mcp_id, installation_scope);
+    let suffix = managed_mcp_id
+        .strip_prefix("managed_")
+        .expect("stable managed id prefix")
+        .to_string();
+    StableIds {
+        managed_mcp_id,
+        link_key: format!("managed_mcp_{suffix}"),
+        installation_scope: installation_scope.to_string(),
+    }
+}
+
+pub(crate) fn stable_managed_mcp_id(mcp_id: &str, installation_scope: &str) -> String {
     use sha2::{Digest as _, Sha256};
     let digest = Sha256::digest(format!("{mcp_id}\0{installation_scope}").as_bytes());
     let suffix = digest[..16]
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
-    StableIds {
-        managed_mcp_id: format!("managed_{suffix}"),
-        link_key: format!("managed_mcp_{suffix}"),
-        installation_scope: installation_scope.to_string(),
-    }
+    format!("managed_{suffix}")
 }
 
 const fn integrity_error() -> McpPlatformError {

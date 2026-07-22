@@ -638,6 +638,15 @@ fn plan_review_to_wire(review: crate::mcp_platform::service::PlanReview) -> McpP
                 crate::mcp_platform::PlanWarning::RegistrationOnly => {
                     McpPlanWarning::RegistrationOnly
                 }
+                crate::mcp_platform::PlanWarning::ManagedArtifactDownload => {
+                    McpPlanWarning::ManagedArtifactDownload
+                }
+                crate::mcp_platform::PlanWarning::ExistingVersionRetainedUntilCommit => {
+                    McpPlanWarning::ExistingVersionRetainedUntilCommit
+                }
+                crate::mcp_platform::PlanWarning::RemovesOwnedFilesOnly => {
+                    McpPlanWarning::RemovesOwnedFilesOnly
+                }
             })
             .collect(),
         required_confirmations: review
@@ -1105,6 +1114,76 @@ fn managed_summary_to_wire(
         default_enabled: value.default_enabled,
         revision: value.revision,
         updated_at_ms: value.updated_at_ms,
+        distribution_adapter: value.distribution_adapter,
+        active_version: value.active_version,
+        available_version: value.available_version,
+        available_manifest_digest: value.available_manifest_digest,
+        current_task: value.current_task.map(task_to_wire),
+        recovery_required: value.recovery_required,
+        eligibility: McpManagedEligibility {
+            update: value.eligibility.update,
+            repair: value.eligibility.repair,
+            uninstall: value.eligibility.uninstall,
+            reason: managed_eligibility_reason_to_wire(value.eligibility.reason),
+            update_reason: managed_eligibility_reason_to_wire(value.eligibility.update_reason),
+            repair_reason: managed_eligibility_reason_to_wire(value.eligibility.repair_reason),
+            uninstall_reason: managed_eligibility_reason_to_wire(
+                value.eligibility.uninstall_reason,
+            ),
+        },
+        next_action: match value.next_action {
+            crate::mcp_platform::service::ManagedNextAction::None => McpManagedNextAction::None,
+            crate::mcp_platform::service::ManagedNextAction::EnableAfterHealth => {
+                McpManagedNextAction::EnableAfterHealth
+            }
+            crate::mcp_platform::service::ManagedNextAction::Repair => McpManagedNextAction::Repair,
+            crate::mcp_platform::service::ManagedNextAction::ResolveRecovery => {
+                McpManagedNextAction::ResolveRecovery
+            }
+            crate::mcp_platform::service::ManagedNextAction::WaitForTask => {
+                McpManagedNextAction::WaitForTask
+            }
+            crate::mcp_platform::service::ManagedNextAction::ResumeTask => {
+                McpManagedNextAction::ResumeTask
+            }
+        },
+    }
+}
+
+fn managed_eligibility_reason_to_wire(
+    value: crate::mcp_platform::service::ManagedEligibilityReason,
+) -> McpManagedEligibilityReason {
+    match value {
+        crate::mcp_platform::service::ManagedEligibilityReason::Eligible => {
+            McpManagedEligibilityReason::Eligible
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::RegistrationOnly => {
+            McpManagedEligibilityReason::RegistrationOnly
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::TaskRecoveryRequired => {
+            McpManagedEligibilityReason::TaskRecoveryRequired
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::TaskInProgress => {
+            McpManagedEligibilityReason::TaskInProgress
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::TaskInterrupted => {
+            McpManagedEligibilityReason::TaskInterrupted
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::NotInstalled => {
+            McpManagedEligibilityReason::NotInstalled
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::NoUpdateAvailable => {
+            McpManagedEligibilityReason::NoUpdateAvailable
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::RuntimeUnavailable => {
+            McpManagedEligibilityReason::RuntimeUnavailable
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::PolicyDenied => {
+            McpManagedEligibilityReason::PolicyDenied
+        }
+        crate::mcp_platform::service::ManagedEligibilityReason::Incompatible => {
+            McpManagedEligibilityReason::Incompatible
+        }
     }
 }
 

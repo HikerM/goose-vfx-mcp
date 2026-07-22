@@ -1,10 +1,11 @@
-use sqlx::{Sqlite, Transaction};
+use sqlx::{Row, Sqlite, Transaction};
 
 use crate::mcp_platform::error::McpPlatformResult;
+use crate::mcp_platform::repository::PlanTarget;
 
-use super::map_sqlx;
+use super::{decode, map_sqlx};
 
-pub const CURRENT_SCHEMA_VERSION: i64 = 3;
+pub const CURRENT_SCHEMA_VERSION: i64 = 4;
 
 pub async fn apply_v1(tx: &mut Transaction<'_, Sqlite>) -> McpPlatformResult<()> {
     for statement in V1_STATEMENTS {
@@ -187,12 +188,12 @@ const V2_STATEMENTS: &[&str] = &[
     )"#,
     r#"CREATE TABLE health_task_requests (
         task_id TEXT PRIMARY KEY REFERENCES tasks(task_id) ON DELETE RESTRICT,
-        managed_mcp_id TEXT NOT NULL REFERENCES managed_mcps(managed_mcp_id) ON DELETE RESTRICT,
+        managed_mcp_id TEXT NOT NULL,
         mode TEXT NOT NULL CHECK(mode IN ('registration','runtime'))
     )"#,
     r#"CREATE TABLE health_observations (
         observation_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        managed_mcp_id TEXT NOT NULL REFERENCES managed_mcps(managed_mcp_id) ON DELETE RESTRICT,
+        managed_mcp_id TEXT NOT NULL,
         task_id TEXT NOT NULL REFERENCES tasks(task_id) ON DELETE RESTRICT,
         check_type TEXT NOT NULL,
         result_code TEXT NOT NULL CHECK(result_code IN (
@@ -206,7 +207,7 @@ const V2_STATEMENTS: &[&str] = &[
     )"#,
     r#"CREATE TABLE projection_mutations (
         mutation_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        managed_mcp_id TEXT NOT NULL REFERENCES managed_mcps(managed_mcp_id) ON DELETE RESTRICT,
+        managed_mcp_id TEXT NOT NULL,
         expected_revision INTEGER NOT NULL,
         previous_enabled INTEGER NOT NULL CHECK(previous_enabled IN (0,1)),
         desired_enabled INTEGER NOT NULL CHECK(desired_enabled IN (0,1)),
@@ -214,7 +215,7 @@ const V2_STATEMENTS: &[&str] = &[
         created_at_ms INTEGER NOT NULL,
         updated_at_ms INTEGER NOT NULL
     )"#,
-    "CREATE UNIQUE INDEX projection_mutations_active ON projection_mutations(managed_mcp_id) WHERE status IN ('started','config_committed')",
+    "CREATE UNIQUE INDEX projection_mutations_active ON projection_mutations(managed_mcp_id) WHERE status IN ('started','config_committed','recovery_required')",
     "CREATE INDEX health_observations_managed_checked ON health_observations(managed_mcp_id, checked_at_ms DESC, observation_id DESC)",
     "CREATE UNIQUE INDEX health_observations_task ON health_observations(task_id)",
     "CREATE INDEX tasks_claim ON tasks(status, lease_expires_at_ms, created_at_ms, task_id)",
@@ -238,4 +239,168 @@ const V3_STATEMENTS: &[&str] = &[
     "ALTER TABLE task_step_history ADD COLUMN compensation_status TEXT NOT NULL DEFAULT 'pending' CHECK(compensation_status IN ('pending','started','committed'))",
     "ALTER TABLE task_step_history ADD COLUMN compensation_started_at_ms INTEGER",
     "ALTER TABLE task_step_history ADD COLUMN compensation_committed_at_ms INTEGER",
+];
+
+pub async fn apply_v4(tx: &mut Transaction<'_, Sqlite>) -> McpPlatformResult<()> {
+    for statement in V4_STATEMENTS {
+        sqlx::query(statement)
+            .execute(&mut **tx)
+            .await
+            .map_err(map_sqlx)?;
+    }
+    let rows = sqlx::query(
+        r#"SELECT t.task_id, p.target_json
+           FROM tasks t JOIN install_plans p ON p.plan_id = t.plan_id
+           WHERE t.operation IN ('install','update','repair','uninstall')"#,
+    )
+    .fetch_all(&mut **tx)
+    .await
+    .map_err(map_sqlx)?;
+    for row in rows {
+        let target: PlanTarget =
+            decode(&row.try_get::<String, _>("target_json").map_err(map_sqlx)?)?;
+        if let Some(managed_mcp_id) = target.managed_mcp_id {
+            sqlx::query(
+                "INSERT INTO lifecycle_task_targets(task_id, managed_mcp_id) VALUES (?, ?)",
+            )
+            .bind(row.try_get::<String, _>("task_id").map_err(map_sqlx)?)
+            .bind(managed_mcp_id)
+            .execute(&mut **tx)
+            .await
+            .map_err(map_sqlx)?;
+        }
+    }
+    let active_rows = sqlx::query(
+        r#"SELECT ltt.managed_mcp_id,t.task_id,t.operation
+           FROM lifecycle_task_targets ltt JOIN tasks t ON t.task_id = ltt.task_id
+           WHERE t.status NOT IN ('succeeded','failed','cancelled')
+           ORDER BY t.created_at_ms,t.task_id"#,
+    )
+    .fetch_all(&mut **tx)
+    .await
+    .map_err(map_sqlx)?;
+    for row in active_rows {
+        sqlx::query(
+            "INSERT INTO managed_lifecycle_leases(managed_mcp_id,task_id,operation,acquired_at_ms) VALUES (?,?,?,0)",
+        )
+        .bind(row.try_get::<String, _>("managed_mcp_id").map_err(map_sqlx)?)
+        .bind(row.try_get::<String, _>("task_id").map_err(map_sqlx)?)
+        .bind(row.try_get::<String, _>("operation").map_err(map_sqlx)?)
+        .execute(&mut **tx)
+        .await
+        .map_err(map_sqlx)?;
+    }
+    Ok(())
+}
+
+const V4_STATEMENTS: &[&str] = &[
+    "ALTER TABLE health_task_requests RENAME TO health_task_requests_v3",
+    r#"CREATE TABLE health_task_requests (
+        task_id TEXT PRIMARY KEY REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        managed_mcp_id TEXT NOT NULL,
+        mode TEXT NOT NULL CHECK(mode IN ('registration','runtime'))
+    )"#,
+    "INSERT INTO health_task_requests(task_id,managed_mcp_id,mode) SELECT task_id,managed_mcp_id,mode FROM health_task_requests_v3",
+    "DROP TABLE health_task_requests_v3",
+    "ALTER TABLE health_observations RENAME TO health_observations_v3",
+    r#"CREATE TABLE health_observations (
+        observation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        managed_mcp_id TEXT NOT NULL,
+        task_id TEXT NOT NULL REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        check_type TEXT NOT NULL,
+        result_code TEXT NOT NULL CHECK(result_code IN (
+            'healthy','unhealthy','blocked_auth','incompatible','timeout','cancelled'
+        )),
+        latency_ms INTEGER NOT NULL CHECK(latency_ms >= 0),
+        capabilities_digest TEXT,
+        tools_digest TEXT,
+        checked_at_ms INTEGER NOT NULL,
+        detail_json TEXT NOT NULL
+    )"#,
+    "INSERT INTO health_observations(observation_id,managed_mcp_id,task_id,check_type,result_code,latency_ms,capabilities_digest,tools_digest,checked_at_ms,detail_json) SELECT observation_id,managed_mcp_id,task_id,check_type,result_code,latency_ms,capabilities_digest,tools_digest,checked_at_ms,detail_json FROM health_observations_v3",
+    "DROP TABLE health_observations_v3",
+    "CREATE INDEX health_observations_managed_checked ON health_observations(managed_mcp_id, checked_at_ms DESC, observation_id DESC)",
+    "CREATE UNIQUE INDEX health_observations_task ON health_observations(task_id)",
+    "ALTER TABLE projection_mutations RENAME TO projection_mutations_v3",
+    r#"CREATE TABLE projection_mutations (
+        mutation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        managed_mcp_id TEXT NOT NULL,
+        expected_revision INTEGER NOT NULL,
+        previous_enabled INTEGER NOT NULL CHECK(previous_enabled IN (0,1)),
+        desired_enabled INTEGER NOT NULL CHECK(desired_enabled IN (0,1)),
+        status TEXT NOT NULL CHECK(status IN ('started','config_committed','committed','recovery_required')),
+        created_at_ms INTEGER NOT NULL,
+        updated_at_ms INTEGER NOT NULL
+    )"#,
+    "INSERT INTO projection_mutations(mutation_id,managed_mcp_id,expected_revision,previous_enabled,desired_enabled,status,created_at_ms,updated_at_ms) SELECT mutation_id,managed_mcp_id,expected_revision,previous_enabled,desired_enabled,status,created_at_ms,updated_at_ms FROM projection_mutations_v3",
+    "DROP TABLE projection_mutations_v3",
+    "CREATE UNIQUE INDEX projection_mutations_active ON projection_mutations(managed_mcp_id) WHERE status IN ('started','config_committed','recovery_required')",
+    "ALTER TABLE managed_versions ADD COLUMN artifact_digest TEXT CHECK(artifact_digest IS NULL OR length(artifact_digest) = 64)",
+    "ALTER TABLE managed_versions ADD COLUMN verification_evidence_json TEXT",
+    "ALTER TABLE managed_versions ADD COLUMN materialized_tree_digest TEXT CHECK(materialized_tree_digest IS NULL OR length(materialized_tree_digest) = 64)",
+    "ALTER TABLE managed_versions ADD COLUMN activation_state TEXT NOT NULL DEFAULT 'inactive' CHECK(activation_state IN ('staged','inactive','active','retained','removal_pending'))",
+    "ALTER TABLE tasks ADD COLUMN finalization_failures INTEGER NOT NULL DEFAULT 0 CHECK(finalization_failures >= 0)",
+    r#"CREATE TABLE artifact_cache (
+        artifact_digest TEXT PRIMARY KEY CHECK(length(artifact_digest) = 64),
+        source_origin TEXT NOT NULL,
+        size_bytes INTEGER NOT NULL CHECK(size_bytes >= 0),
+        adapter_id TEXT NOT NULL,
+        adapter_version TEXT NOT NULL,
+        platform_selector TEXT NOT NULL,
+        verification_evidence_json TEXT NOT NULL,
+        reference_count INTEGER NOT NULL DEFAULT 0 CHECK(reference_count >= 0),
+        verified_at_ms INTEGER NOT NULL
+    )"#,
+    r#"CREATE TABLE artifact_claims (
+        artifact_digest TEXT PRIMARY KEY CHECK(length(artifact_digest) = 64),
+        owner_task_id TEXT NOT NULL REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        status TEXT NOT NULL CHECK(status IN ('fetching','verified','released')),
+        updated_at_ms INTEGER NOT NULL
+    )"#,
+    r#"CREATE TABLE installation_ownership (
+        managed_mcp_id TEXT NOT NULL REFERENCES managed_mcps(managed_mcp_id) ON DELETE RESTRICT,
+        version TEXT NOT NULL,
+        relative_path TEXT NOT NULL,
+        path_kind TEXT NOT NULL CHECK(path_kind IN ('file','directory')),
+        expected_digest TEXT,
+        owner_task_id TEXT NOT NULL REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        remove_on_uninstall INTEGER NOT NULL CHECK(remove_on_uninstall IN (0,1)),
+        PRIMARY KEY(managed_mcp_id, version, relative_path),
+        FOREIGN KEY(managed_mcp_id, version) REFERENCES managed_versions(managed_mcp_id, version) ON DELETE RESTRICT
+    )"#,
+    r#"CREATE TABLE activation_journal (
+        activation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        managed_mcp_id TEXT NOT NULL,
+        task_id TEXT NOT NULL REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        previous_version TEXT,
+        target_version TEXT,
+        previous_state_json TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('started','pointer_committed','health_committed','cleanup_committed','rolled_back','recovery_required')),
+        created_at_ms INTEGER NOT NULL,
+        updated_at_ms INTEGER NOT NULL
+    )"#,
+    "CREATE UNIQUE INDEX activation_journal_pending ON activation_journal(managed_mcp_id) WHERE status IN ('started','pointer_committed')",
+    "CREATE INDEX installation_ownership_owner ON installation_ownership(owner_task_id)",
+    "CREATE INDEX artifact_cache_reference ON artifact_cache(reference_count, verified_at_ms)",
+    r#"CREATE TABLE uninstall_journal (
+        task_id TEXT PRIMARY KEY REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        managed_mcp_id TEXT NOT NULL,
+        version TEXT NOT NULL,
+        previous_state_json TEXT NOT NULL,
+        artifact_digest TEXT,
+        status TEXT NOT NULL CHECK(status IN ('started','quarantined','committed','cancelled','recovery_required')),
+        created_at_ms INTEGER NOT NULL,
+        updated_at_ms INTEGER NOT NULL
+    )"#,
+    r#"CREATE TABLE lifecycle_task_targets (
+        task_id TEXT PRIMARY KEY REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        managed_mcp_id TEXT NOT NULL
+    )"#,
+    "CREATE INDEX lifecycle_task_targets_managed ON lifecycle_task_targets(managed_mcp_id, task_id)",
+    r#"CREATE TABLE managed_lifecycle_leases (
+        managed_mcp_id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL UNIQUE REFERENCES tasks(task_id) ON DELETE RESTRICT,
+        operation TEXT NOT NULL CHECK(operation IN ('install','update','repair','uninstall')),
+        acquired_at_ms INTEGER NOT NULL
+    )"#,
 ];

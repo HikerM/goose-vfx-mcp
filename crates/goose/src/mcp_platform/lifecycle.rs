@@ -142,6 +142,28 @@ pub trait ProjectionSink: Send + Sync {
         key: &str,
         expected: &ProjectionSnapshot,
     ) -> McpPlatformResult<bool>;
+    async fn replace_owned_disabled(
+        &self,
+        _key: &str,
+        _expected: &ProjectionSnapshot,
+        _config: ExtensionConfig,
+    ) -> McpPlatformResult<ProjectionSnapshot> {
+        Err(projection_conflict())
+    }
+    async fn replace_owned(
+        &self,
+        key: &str,
+        expected: &ProjectionSnapshot,
+        config: ExtensionConfig,
+        enabled: bool,
+    ) -> McpPlatformResult<ProjectionSnapshot> {
+        let snapshot = self.replace_owned_disabled(key, expected, config).await?;
+        if enabled {
+            self.set_enabled(key, true).await
+        } else {
+            Ok(snapshot)
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -260,6 +282,22 @@ impl TransportProjectionAdapter for CoreTransportProjectionAdapter {
                     timeout_seconds: *startup_timeout_seconds,
                 },
             }),
+            (
+                Distribution::Npm { entrypoint, .. }
+                | Distribution::PythonWheel { entrypoint, .. }
+                | Distribution::BinaryArchive { entrypoint, .. },
+                Transport::Stdio {
+                    startup_timeout_seconds,
+                },
+            ) => Ok(RegistrationEffect::ManualStdio {
+                spawn: DirectSpawnDescriptor {
+                    executable: entrypoint.executable.clone(),
+                    argv: entrypoint.args.clone(),
+                    environment_keys: entrypoint.environment_keys.clone(),
+                    working_directory: entrypoint.cwd.clone(),
+                    timeout_seconds: *startup_timeout_seconds,
+                },
+            }),
             _ => Err(integrity_error()),
         }
     }
@@ -302,6 +340,24 @@ impl TransportProjectionAdapter for CoreTransportProjectionAdapter {
                 timeout_seconds,
                 ..
             } => ConnectionProjection::ManualStdio {
+                name: stable_key.to_string(),
+                description: description.clone(),
+                executable: executable.clone(),
+                args: args.clone(),
+                environment_keys: environment_keys.clone(),
+                cwd: cwd.clone(),
+                timeout_seconds: *timeout_seconds,
+            }
+            .to_extension_config(),
+            ConnectionProjection::ManagedStdio {
+                name: _,
+                description,
+                executable,
+                args,
+                environment_keys,
+                cwd,
+                timeout_seconds,
+            } => ConnectionProjection::ManagedStdio {
                 name: stable_key.to_string(),
                 description: description.clone(),
                 executable: executable.clone(),
@@ -455,6 +511,50 @@ impl ProjectionSink for ConfigProjectionSink {
         crate::config::extensions::try_remove_platform_extension_with_config(self.config(), key)
             .map_err(|_| projection_failed())?;
         Ok(true)
+    }
+
+    async fn replace_owned_disabled(
+        &self,
+        key: &str,
+        expected: &ProjectionSnapshot,
+        config: ExtensionConfig,
+    ) -> McpPlatformResult<ProjectionSnapshot> {
+        let entry = ExtensionEntry {
+            enabled: false,
+            config,
+        };
+        crate::config::extensions::try_replace_managed_extension_at_key_with_config(
+            self.config(),
+            key,
+            &expected.entry,
+            entry.clone(),
+        )
+        .map_err(|_| projection_conflict())?;
+        Ok(ProjectionSnapshot {
+            entry,
+            created: false,
+        })
+    }
+
+    async fn replace_owned(
+        &self,
+        key: &str,
+        expected: &ProjectionSnapshot,
+        config: ExtensionConfig,
+        enabled: bool,
+    ) -> McpPlatformResult<ProjectionSnapshot> {
+        let entry = ExtensionEntry { enabled, config };
+        crate::config::extensions::try_replace_managed_extension_at_key_with_config(
+            self.config(),
+            key,
+            &expected.entry,
+            entry.clone(),
+        )
+        .map_err(|_| projection_conflict())?;
+        Ok(ProjectionSnapshot {
+            entry,
+            created: false,
+        })
     }
 }
 

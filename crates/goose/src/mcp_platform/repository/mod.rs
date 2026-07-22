@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::domain::{
     HealthCheckMode, HealthDetailCode, HealthResultCode, ManagedMcpState, TrustTier,
 };
+use super::managed_distribution::ArtifactVerificationEvidence;
 use super::manifest::{ManifestProof, VerifiedManifest};
 use super::plan::{ConnectionProjection, InstallationPlan};
 use super::policy::PolicyDecision;
@@ -38,6 +39,7 @@ pub struct ManagedVersionRecord {
     pub verified: bool,
     pub active: bool,
     pub adapter_evidence: Option<AdapterEvidence>,
+    pub materialized_tree_digest: Option<String>,
     pub created_at_ms: i64,
 }
 
@@ -125,6 +127,47 @@ pub struct RegisterManagedMcpOutcome {
 }
 
 #[derive(Debug, Clone)]
+pub struct StageManagedInstallation<'a> {
+    pub managed_mcp_id: &'a str,
+    pub mcp_id: &'a str,
+    pub installation_scope: &'a str,
+    pub distribution_adapter: &'a str,
+    pub manifest_digest: &'a str,
+    pub version: &'a str,
+    pub installation_root: &'a str,
+    pub task_id: &'a str,
+    pub adapter_evidence: &'a AdapterEvidence,
+    pub verification_evidence: &'a ArtifactVerificationEvidence,
+    pub materialized_tree_digest: &'a str,
+    pub owned_relative_paths: &'a [String],
+    pub now_ms: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StageManagedInstallationOutcome {
+    pub record: ManagedMcpInventoryRecord,
+    pub created_managed_mcp: bool,
+    pub created_version: bool,
+    pub previous_version: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ActivateManagedInstallation<'a> {
+    pub managed_mcp_id: &'a str,
+    pub target_version: &'a str,
+    pub task_id: &'a str,
+    pub default_enabled: bool,
+    pub now_ms: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManagedUninstallSnapshot {
+    pub managed_mcp_id: String,
+    pub version: String,
+    pub artifact_digest: Option<String>,
+}
+
+#[derive(Debug, Clone)]
 pub struct PutOwnedProjection<'a> {
     pub managed_mcp_id: &'a str,
     pub link_key: &'a str,
@@ -133,6 +176,19 @@ pub struct PutOwnedProjection<'a> {
     pub manifest_digest: &'a str,
     pub owner_task_id: &'a str,
     pub projection_digest: &'a str,
+    pub now_ms: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct RestoreOwnedProjection<'a> {
+    pub managed_mcp_id: &'a str,
+    pub link_key: &'a str,
+    pub projection: &'a ConnectionProjection,
+    pub plan_id: &'a str,
+    pub manifest_digest: &'a str,
+    pub owner_task_id: Option<&'a str>,
+    pub projection_digest: &'a str,
+    pub replacing_task_id: &'a str,
     pub now_ms: i64,
 }
 

@@ -403,6 +403,7 @@ async fn inventory_versions_and_projection_round_trip_with_revision_control() {
         verified: true,
         active: true,
         adapter_evidence: None,
+        materialized_tree_digest: None,
         created_at_ms: 5,
     };
     repository

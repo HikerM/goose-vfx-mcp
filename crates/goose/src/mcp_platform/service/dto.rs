@@ -207,6 +207,49 @@ pub struct ManagedMcpSummary {
     pub default_enabled: bool,
     pub revision: i64,
     pub updated_at_ms: i64,
+    pub distribution_adapter: String,
+    pub active_version: Option<String>,
+    pub available_version: Option<String>,
+    pub available_manifest_digest: Option<String>,
+    pub current_task: Option<TaskRef>,
+    pub recovery_required: bool,
+    pub eligibility: ManagedEligibility,
+    pub next_action: ManagedNextAction,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManagedEligibility {
+    pub update: bool,
+    pub repair: bool,
+    pub uninstall: bool,
+    pub reason: ManagedEligibilityReason,
+    pub update_reason: ManagedEligibilityReason,
+    pub repair_reason: ManagedEligibilityReason,
+    pub uninstall_reason: ManagedEligibilityReason,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ManagedEligibilityReason {
+    Eligible,
+    RegistrationOnly,
+    TaskRecoveryRequired,
+    TaskInProgress,
+    TaskInterrupted,
+    NotInstalled,
+    NoUpdateAvailable,
+    RuntimeUnavailable,
+    PolicyDenied,
+    Incompatible,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ManagedNextAction {
+    None,
+    EnableAfterHealth,
+    Repair,
+    ResolveRecovery,
+    WaitForTask,
+    ResumeTask,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -11,6 +11,8 @@ activities:
   - Analyze code structure and parsing capabilities
   - Test extension discovery and management
   - Validate managed MCP projections remain disabled until explicitly enabled
+  - Validate managed npm, Python wheel, and binary archive plans expose exact versions and verified sources
+  - Validate managed MCP update, repair, and uninstall retain atomic activation and ownership boundaries
   - Test load tool for knowledge injection and discovery
   - Test delegate tool for task delegation (sync and async)
   - Test error boundaries including nested delegation prevention
@@ -82,6 +84,10 @@ instructions: |
   - Verify a newly registered managed MCP projection is disabled by default
   - Verify health observations do not automatically enable managed MCP projections
   - Verify only explicitly enabled managed MCP projections appear in the active extension set
+  - Verify managed package installs start disabled and never expose staging paths or commands
+  - Verify update eligibility is reported only for a higher compatible exact manifest version
+  - Verify repair preserves enabled intent only after runtime health succeeds
+  - Verify uninstall removes only platform-owned versions and keeps shared cache references consistent
 
   ### Phase 3: Delegate & Load Testing
   Test the unified delegation and knowledge-loading tools:
