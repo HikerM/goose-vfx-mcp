@@ -1382,3 +1382,125 @@ async fn startup_recovery_is_pure_idempotent_redacted_and_survives_reopen() {
     assert!(!database_text.contains("bearer-token"));
     assert!(!database_text.contains("oauth-code"));
 }
+
+#[tokio::test]
+async fn task_replay_uses_immutable_request_identity_not_mutable_rollback_evidence() {
+    let (_directory, _path, repository) = test_repository().await;
+    let plan = save_manifest_and_plan(
+        &repository,
+        REMOTE,
+        TrustTier::Official,
+        "plan-immutable-replay",
+        "plan-immutable-replay-key",
+    )
+    .await;
+    let adapter = AdapterEvidence {
+        adapter_id: "connection_registration".to_string(),
+        adapter_version: "1".to_string(),
+        compatible_for_recovery: true,
+        resume_safe: true,
+    };
+    let requested_rollback = RollbackEvidence {
+        compensation_available: true,
+        remaining_compensations: vec![CompensationDescriptor::RemoveConnectionProjection {
+            link_key: "initial-placeholder".to_string(),
+        }],
+    };
+    let task = create_task(
+        &repository,
+        "plan-immutable-replay",
+        &plan,
+        "immutable-task",
+        "immutable-key",
+        Some(&adapter),
+        Some(&requested_rollback),
+    )
+    .await;
+
+    let execution_rollback = RollbackEvidence {
+        compensation_available: true,
+        remaining_compensations: vec![CompensationDescriptor::RemoveOwnedExtensionConfig {
+            link_key: "managed_mcp_execution_key".to_string(),
+            projection_digest: "a".repeat(64),
+            created_by_task: true,
+        }],
+    };
+    let updated = repository
+        .transition_task(TaskTransition {
+            task_id: &task.task_id,
+            expected_revision: task.revision,
+            next_status: TaskStatus::AwaitingConfirmation,
+            actor: "tester",
+            now_ms: 31,
+            heartbeat_at_ms: None,
+            progress: 0,
+            redacted_error: None,
+            rollback_status: RollbackStatus::NotRequired,
+            rollback_evidence: Some(&execution_rollback),
+        })
+        .await
+        .unwrap();
+    assert_eq!(updated.rollback_evidence, Some(execution_rollback));
+
+    let replay = create_task(
+        &repository,
+        "plan-immutable-replay",
+        &plan,
+        "ignored-replay-task",
+        "immutable-key",
+        Some(&adapter),
+        Some(&requested_rollback),
+    )
+    .await;
+    assert_eq!(replay.task_id, task.task_id);
+
+    let different_adapter = AdapterEvidence {
+        adapter_version: "2".to_string(),
+        ..adapter.clone()
+    };
+    assert_eq!(
+        repository
+            .create_task(CreateTask {
+                task_id: "different-adapter-task",
+                plan_id: "plan-immutable-replay",
+                plan_digest: plan.plan_digest(),
+                operation: TaskOperation::Register,
+                idempotency_key: "immutable-key",
+                actor: "tester",
+                now_ms: 32,
+                adapter_evidence: Some(&different_adapter),
+                rollback_evidence: Some(&requested_rollback),
+            })
+            .await
+            .unwrap_err()
+            .code(),
+        McpPlatformErrorCode::IdempotencyConflict
+    );
+
+    let other_plan = save_manifest_and_plan(
+        &repository,
+        MANUAL,
+        TrustTier::Local,
+        "plan-immutable-conflict",
+        "plan-immutable-conflict-key",
+    )
+    .await;
+    assert_eq!(
+        repository
+            .create_task(CreateTask {
+                task_id: "different-plan-task",
+                plan_id: "plan-immutable-conflict",
+                plan_digest: other_plan.plan_digest(),
+                operation: TaskOperation::Register,
+                idempotency_key: "immutable-key",
+                actor: "tester",
+                now_ms: 33,
+                adapter_evidence: Some(&adapter),
+                rollback_evidence: Some(&requested_rollback),
+            })
+            .await
+            .unwrap_err()
+            .code(),
+        McpPlatformErrorCode::IdempotencyConflict
+    );
+}

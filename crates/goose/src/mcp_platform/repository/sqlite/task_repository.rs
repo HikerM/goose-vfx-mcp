@@ -39,7 +39,6 @@ impl SqliteMcpPlatformRepository {
                 && existing.plan_digest == input.plan_digest
                 && existing.actor == input.actor
                 && existing.adapter_evidence.as_ref() == input.adapter_evidence
-                && existing.rollback_evidence.as_ref() == input.rollback_evidence
             {
                 Ok(existing)
             } else {
