@@ -86,7 +86,6 @@ impl DistributionAdapter for RemoteHttpAdapter {
             description: manifest.description.clone(),
             uri: url.clone(),
             timeout_seconds: *connect_timeout_seconds,
-            auth: manifest.auth.clone(),
         };
 
         InstallationPlan::new(

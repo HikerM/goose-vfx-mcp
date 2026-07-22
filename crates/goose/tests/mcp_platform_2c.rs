@@ -39,6 +39,13 @@ const NPM: &str = include_str!("../../../documentation/static/schemas/examples/n
 const BINARY: &str =
     include_str!("../../../documentation/static/schemas/examples/binary-archive-houdini.json");
 
+fn unauthenticated_remote() -> String {
+    let mut manifest: serde_json::Value = serde_json::from_str(REMOTE).unwrap();
+    manifest["auth"] = serde_json::json!({"type":"none"});
+    manifest["transport"]["allowed_redirect_origins"] = serde_json::json!([]);
+    serde_json::to_string(&manifest).unwrap()
+}
+
 #[derive(Default)]
 struct TestClock(AtomicI64);
 
@@ -70,9 +77,18 @@ impl IdGenerator for TestIds {
 
 struct VerifiedTestRemotePolicy;
 
+#[async_trait]
 impl goose::mcp_platform::RemoteHttpNetworkPolicy for VerifiedTestRemotePolicy {
     fn validate_endpoint(&self, _endpoint: &str) -> goose::mcp_platform::McpPlatformResult<()> {
         Ok(())
+    }
+
+    async fn validate_for_plan(
+        &self,
+        endpoint: &str,
+        _connect_timeout: std::time::Duration,
+    ) -> goose::mcp_platform::McpPlatformResult<()> {
+        self.validate_endpoint(endpoint)
     }
 }
 
@@ -162,23 +178,21 @@ impl Harness {
         let path = directory.path().join("mcp-platform/platform.db");
         let repository = Arc::new(SqliteMcpPlatformRepository::open_path(&path).await.unwrap());
         let clock = Arc::new(TestClock::new(100));
-        let service = Arc::new(
-            McpPlatformService::new(
-                repository.clone(),
-                clock.clone(),
-                Arc::new(TestIds::default()),
-                McpPlatformServiceOptions {
-                    compatibility_target: goose::mcp_platform::CompatibilityTarget {
-                        platform: Platform::Windows,
-                        arch: Architecture::Aarch64,
-                    },
-                    plan_ttl_ms: 1_000,
-                    development_mode: false,
-                    docker_daemon_policy_allowed: true,
+        let service = Arc::new(McpPlatformService::new_with_remote_http_network_policy(
+            repository.clone(),
+            clock.clone(),
+            Arc::new(TestIds::default()),
+            McpPlatformServiceOptions {
+                compatibility_target: goose::mcp_platform::CompatibilityTarget {
+                    platform: Platform::Windows,
+                    arch: Architecture::Aarch64,
                 },
-            )
-            .with_remote_http_network_policy(Arc::new(VerifiedTestRemotePolicy)),
-        );
+                plan_ttl_ms: 1_000,
+                development_mode: false,
+                docker_daemon_policy_allowed: true,
+            },
+            Arc::new(VerifiedTestRemotePolicy),
+        ));
         Self {
             _directory: directory,
             path,
@@ -189,8 +203,9 @@ impl Harness {
     }
 
     async fn seed_catalog(&self) -> BTreeMap<&'static str, String> {
+        let remote = unauthenticated_remote();
         let fixtures = [
-            ("remote", REMOTE, TrustTier::Official),
+            ("remote", remote.as_str(), TrustTier::Official),
             ("manual", MANUAL, TrustTier::Local),
             ("npm", NPM, TrustTier::Community),
             ("binary", BINARY, TrustTier::Local),
@@ -1011,13 +1026,13 @@ async fn service_records_survive_reopen_and_dispatch_schema_registers_all_method
             .await
             .unwrap(),
     );
-    let service = McpPlatformService::new(
+    let service = McpPlatformService::new_with_remote_http_network_policy(
         reopened,
         Arc::new(TestClock::new(500)),
         Arc::new(TestIds::default()),
         McpPlatformServiceOptions::default(),
-    )
-    .with_remote_http_network_policy(Arc::new(VerifiedTestRemotePolicy));
+        Arc::new(VerifiedTestRemotePolicy),
+    );
     let context = service.trusted_local_context();
     assert_eq!(
         service

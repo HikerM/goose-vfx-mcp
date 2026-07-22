@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
 
@@ -122,7 +120,7 @@ pub enum PlanWarning {
     DevelopmentSourcePinnedCommitNoBuild,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ConnectionProjection {
     RemoteHttp {
@@ -130,7 +128,6 @@ pub enum ConnectionProjection {
         description: String,
         uri: String,
         timeout_seconds: Option<u64>,
-        auth: Auth,
     },
     ManualStdio {
         name: String,
@@ -160,6 +157,161 @@ pub enum ConnectionProjection {
     },
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+enum ConnectionProjectionWire {
+    RemoteHttp {
+        name: String,
+        description: String,
+        uri: String,
+        timeout_seconds: Option<u64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        auth: Option<Auth>,
+    },
+    ManualStdio {
+        name: String,
+        description: String,
+        executable: String,
+        args: Vec<String>,
+        environment_keys: Vec<String>,
+        cwd: Option<String>,
+        timeout_seconds: Option<u64>,
+    },
+    ManagedStdio {
+        name: String,
+        description: String,
+        executable: String,
+        args: Vec<String>,
+        environment_keys: Vec<String>,
+        cwd: Option<String>,
+        timeout_seconds: Option<u64>,
+    },
+    ManagedDockerStdio {
+        name: String,
+        description: String,
+        executable: String,
+        args: Vec<String>,
+        cwd: Option<String>,
+        timeout_seconds: Option<u64>,
+    },
+}
+
+impl ConnectionProjectionWire {
+    fn has_unsupported_legacy_auth(&self) -> bool {
+        match self {
+            Self::RemoteHttp {
+                auth: Some(auth), ..
+            } => !matches!(auth, Auth::None),
+            _ => false,
+        }
+    }
+
+    fn into_projection(self) -> ConnectionProjection {
+        match self {
+            Self::RemoteHttp {
+                name,
+                description,
+                uri,
+                timeout_seconds,
+                ..
+            } => ConnectionProjection::RemoteHttp {
+                name,
+                description,
+                uri,
+                timeout_seconds,
+            },
+            Self::ManualStdio {
+                name,
+                description,
+                executable,
+                args,
+                environment_keys,
+                cwd,
+                timeout_seconds,
+            } => ConnectionProjection::ManualStdio {
+                name,
+                description,
+                executable,
+                args,
+                environment_keys,
+                cwd,
+                timeout_seconds,
+            },
+            Self::ManagedStdio {
+                name,
+                description,
+                executable,
+                args,
+                environment_keys,
+                cwd,
+                timeout_seconds,
+            } => ConnectionProjection::ManagedStdio {
+                name,
+                description,
+                executable,
+                args,
+                environment_keys,
+                cwd,
+                timeout_seconds,
+            },
+            Self::ManagedDockerStdio {
+                name,
+                description,
+                executable,
+                args,
+                cwd,
+                timeout_seconds,
+            } => ConnectionProjection::ManagedDockerStdio {
+                name,
+                description,
+                executable,
+                args,
+                cwd,
+                timeout_seconds,
+            },
+        }
+    }
+
+    fn legacy_none_from_projection(projection: &ConnectionProjection) -> Option<Self> {
+        match projection {
+            ConnectionProjection::RemoteHttp {
+                name,
+                description,
+                uri,
+                timeout_seconds,
+            } => Some(Self::RemoteHttp {
+                name: name.clone(),
+                description: description.clone(),
+                uri: uri.clone(),
+                timeout_seconds: *timeout_seconds,
+                auth: Some(Auth::None),
+            }),
+            _ => None,
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for ConnectionProjection {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let wire = ConnectionProjectionWire::deserialize(deserializer)?;
+        if wire.has_unsupported_legacy_auth() {
+            return Err(D::Error::custom(
+                "legacy managed remote authentication requires replanning",
+            ));
+        }
+        Ok(Self::from_wire(wire))
+    }
+}
+
+impl ConnectionProjection {
+    fn from_wire(wire: ConnectionProjectionWire) -> Self {
+        wire.into_projection()
+    }
+}
+
 impl ConnectionProjection {
     pub fn to_extension_config(&self) -> ExtensionConfig {
         match self {
@@ -168,22 +320,14 @@ impl ConnectionProjection {
                 description,
                 uri,
                 timeout_seconds,
-                auth,
-            } => {
-                let (env_keys, headers) = remote_auth_projection(auth);
-                ExtensionConfig::StreamableHttp {
-                    name: name.clone(),
-                    description: description.clone(),
-                    uri: uri.clone(),
-                    envs: Envs::default(),
-                    env_keys,
-                    headers,
-                    timeout: *timeout_seconds,
-                    socket: None,
-                    bundled: None,
-                    available_tools: Vec::new(),
-                }
-            }
+            } => ExtensionConfig::ManagedStreamableHttp {
+                name: name.clone(),
+                description: description.clone(),
+                uri: uri.clone(),
+                timeout: *timeout_seconds,
+                bundled: None,
+                available_tools: Vec::new(),
+            },
             Self::ManualStdio {
                 name,
                 description,
@@ -281,7 +425,7 @@ struct InstallationPlanWire {
     warnings: Vec<PlanWarning>,
     required_confirmations: Vec<RequiredConfirmation>,
     default_enabled: bool,
-    connection_projection: ConnectionProjection,
+    connection_projection: ConnectionProjectionWire,
     policy: PolicyDecision,
 }
 
@@ -291,6 +435,11 @@ impl<'de> Deserialize<'de> for InstallationPlan {
         D: serde::Deserializer<'de>,
     {
         let wire = InstallationPlanWire::deserialize(deserializer)?;
+        if wire.connection_projection.has_unsupported_legacy_auth() {
+            return Err(D::Error::custom(
+                "legacy managed remote authentication requires replanning",
+            ));
+        }
         let plan = Self {
             manifest_id: wire.manifest_id,
             manifest_version: wire.manifest_version,
@@ -304,7 +453,7 @@ impl<'de> Deserialize<'de> for InstallationPlan {
             warnings: wire.warnings,
             required_confirmations: wire.required_confirmations,
             default_enabled: wire.default_enabled,
-            connection_projection: wire.connection_projection,
+            connection_projection: wire.connection_projection.into_projection(),
             policy: wire.policy,
         };
         plan.verify_integrity()
@@ -443,13 +592,39 @@ impl InstallationPlan {
             connection_projection: &self.connection_projection,
             policy: &self.policy,
         };
-        if digest_serializable(&content)? != self.plan_digest {
+        if digest_serializable(&content)? != self.plan_digest
+            && !self.legacy_none_digest_matches()?
+        {
             return Err(McpPlatformError::new(
                 McpPlatformErrorCode::IntegrityError,
                 "stored installation plan digest does not match its content",
             ));
         }
         Ok(())
+    }
+
+    fn legacy_none_digest_matches(&self) -> McpPlatformResult<bool> {
+        let Some(connection_projection) =
+            ConnectionProjectionWire::legacy_none_from_projection(&self.connection_projection)
+        else {
+            return Ok(false);
+        };
+        let content = LegacyPlanDigestContent {
+            manifest_id: &self.manifest_id,
+            manifest_version: &self.manifest_version,
+            manifest_digest: &self.manifest_digest,
+            adapter: &self.adapter,
+            trust_tier: self.trust_tier,
+            operation: self.operation,
+            steps: &self.steps,
+            effects: &self.effects,
+            warnings: &self.warnings,
+            required_confirmations: &self.required_confirmations,
+            default_enabled: self.default_enabled,
+            connection_projection: &connection_projection,
+            policy: &self.policy,
+        };
+        Ok(digest_serializable(&content)? == self.plan_digest)
     }
 }
 
@@ -470,38 +645,19 @@ struct PlanDigestContent<'a> {
     policy: &'a PolicyDecision,
 }
 
-fn remote_auth_projection(auth: &Auth) -> (Vec<String>, HashMap<String, String>) {
-    match auth {
-        Auth::ApiKeyHeader {
-            header_name,
-            prefix,
-            credential_name,
-        } => {
-            let environment_key = credential_environment_key(credential_name);
-            let prefix = prefix.as_deref().unwrap_or_default();
-            let separator = if prefix.is_empty() { "" } else { " " };
-            let value = format!("{prefix}{separator}${{{environment_key}}}");
-            (
-                vec![environment_key],
-                HashMap::from([(header_name.clone(), value)]),
-            )
-        }
-        Auth::Environment {
-            environment_key, ..
-        } => (vec![environment_key.clone()], HashMap::new()),
-        Auth::None | Auth::Oauth2 { .. } => (Vec::new(), HashMap::new()),
-    }
-}
-
-fn credential_environment_key(credential_name: &str) -> String {
-    credential_name
-        .chars()
-        .map(|character| {
-            if character.is_ascii_alphanumeric() {
-                character.to_ascii_uppercase()
-            } else {
-                '_'
-            }
-        })
-        .collect()
+#[derive(Serialize)]
+struct LegacyPlanDigestContent<'a> {
+    manifest_id: &'a str,
+    manifest_version: &'a str,
+    manifest_digest: &'a str,
+    adapter: &'a AdapterIdentity,
+    trust_tier: TrustTier,
+    operation: PlanOperation,
+    steps: &'a [PlanStep],
+    effects: &'a EffectSummary,
+    warnings: &'a [PlanWarning],
+    required_confirmations: &'a [RequiredConfirmation],
+    default_enabled: bool,
+    connection_projection: &'a ConnectionProjectionWire,
+    policy: &'a PolicyDecision,
 }

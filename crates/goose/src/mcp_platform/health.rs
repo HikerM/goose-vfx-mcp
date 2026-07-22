@@ -17,11 +17,25 @@ use super::lifecycle::{
     HealthAdapterResult, HealthCheckAdapter, HealthCheckSession, HealthExecution,
     RegistrationEffect,
 };
+use super::managed_remote::{CoreManagedRemoteHttpNetworkPolicy, RemoteHttpNetworkPolicy};
 use super::manifest::HealthCheck;
 use super::{HealthDetailCode, HealthResultCode};
 
-#[derive(Debug, Default)]
-pub struct ProductionHealthCheckAdapter;
+pub struct ProductionHealthCheckAdapter {
+    remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
+}
+
+impl Default for ProductionHealthCheckAdapter {
+    fn default() -> Self {
+        Self::new(Arc::new(CoreManagedRemoteHttpNetworkPolicy::default()))
+    }
+}
+
+impl ProductionHealthCheckAdapter {
+    pub fn new(remote_http: Arc<dyn RemoteHttpNetworkPolicy>) -> Self {
+        Self { remote_http }
+    }
+}
 
 #[async_trait]
 impl HealthCheckAdapter for ProductionHealthCheckAdapter {
@@ -52,6 +66,7 @@ impl HealthCheckAdapter for ProductionHealthCheckAdapter {
                     false,
                     Duration::from_secs(timeout_seconds),
                     cancellation,
+                    self.remote_http.clone(),
                 )
                 .await?
             }
@@ -61,12 +76,13 @@ impl HealthCheckAdapter for ProductionHealthCheckAdapter {
                     true,
                     Duration::from_secs(timeout_seconds),
                     cancellation,
+                    self.remote_http.clone(),
                 )
                 .await?
             }
             HealthCheck::Http { .. } => tokio::select! {
                 _ = cancellation.cancelled() => cancelled_result(),
-                result = tokio::time::timeout(Duration::from_secs(timeout_seconds), execute_health(execution)) => match result {
+                result = tokio::time::timeout(Duration::from_secs(timeout_seconds), execute_health(execution, self.remote_http.clone())) => match result {
                     Ok(result) => result?,
                     Err(_) => timeout_result(),
                 },
@@ -79,7 +95,10 @@ impl HealthCheckAdapter for ProductionHealthCheckAdapter {
     }
 }
 
-async fn execute_health(execution: HealthExecution) -> McpPlatformResult<HealthAdapterResult> {
+async fn execute_health(
+    execution: HealthExecution,
+    remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
+) -> McpPlatformResult<HealthAdapterResult> {
     match execution.check {
         HealthCheck::Http {
             path,
@@ -91,6 +110,7 @@ async fn execute_health(execution: HealthExecution) -> McpPlatformResult<HealthA
                 execution.projection_config,
                 &path,
                 expected_status,
+                remote_http,
             )
             .await
         }
@@ -105,6 +125,7 @@ async fn http_health(
     config: ExtensionConfig,
     path: &str,
     expected_status: u16,
+    remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
 ) -> McpPlatformResult<HealthAdapterResult> {
     let RegistrationEffect::RemoteHttp { endpoint, .. } = effect else {
         return Ok(incompatible());
@@ -112,27 +133,27 @@ async fn http_health(
     if path.contains("..") || (!path.is_empty() && !path.starts_with('/')) {
         return Ok(incompatible());
     }
-    let resolved = config
-        .resolve(crate::config::Config::global())
-        .await
-        .map_err(|_| health_failed())?;
-    let ExtensionConfig::StreamableHttp { headers, .. } = resolved else {
+    let ExtensionConfig::ManagedStreamableHttp { uri, timeout, .. } = config else {
         return Ok(incompatible());
     };
     let base = url::Url::parse(&endpoint).map_err(|_| health_failed())?;
+    if uri != endpoint {
+        return Ok(incompatible());
+    }
     let target = base.join(path).map_err(|_| health_failed())?;
     if target.scheme() != "https" || target.origin() != base.origin() {
         return Ok(incompatible());
     }
-    let mut request = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .map_err(|_| health_failed())?
-        .get(target);
-    for (name, value) in headers {
-        request = request.header(name, value);
-    }
-    let response = request.send().await.map_err(|_| health_failed())?;
+    let managed = remote_http
+        .secure_client(&endpoint, Duration::from_secs(timeout.unwrap_or(30)))
+        .await
+        .map_err(|_| health_failed())?;
+    let response = managed
+        .client()
+        .get(target)
+        .send()
+        .await
+        .map_err(|_| health_failed())?;
     let healthy = response.status().as_u16() == expected_status;
     Ok(HealthAdapterResult {
         result_code: if healthy {
@@ -241,10 +262,16 @@ async fn mcp_health_bounded(
     list_tools: bool,
     timeout: Duration,
     cancellation: CancellationToken,
+    remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
 ) -> McpPlatformResult<HealthAdapterResult> {
     let extension_name = config.key();
     let session = ExtensionManagerHealthSession {
-        manager: Arc::new(ExtensionManager::new_without_provider(Paths::data_dir())),
+        manager: Arc::new(
+            ExtensionManager::new_without_provider_with_managed_remote_http_policy(
+                Paths::data_dir(),
+                remote_http,
+            ),
+        ),
         config,
         extension_name,
         operation: Arc::new(HealthOpenOperation::default()),

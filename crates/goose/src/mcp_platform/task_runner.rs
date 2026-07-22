@@ -174,6 +174,7 @@ impl TaskRunner {
                 .as_deref()
                 .ok_or_else(integrity_error)?;
             let manifest = self.repository.get_manifest(manifest_digest).await?;
+            reject_managed_remote_http_auth(manifest.verified.manifest())?;
             if inventory.managed.state.health != super::HealthState::Healthy {
                 return Err(McpPlatformError::new(
                     McpPlatformErrorCode::HealthFailed,
@@ -440,6 +441,19 @@ impl TaskRunner {
     async fn recover_projection_mutations(&self) -> McpPlatformResult<()> {
         for mutation in self.repository.list_pending_projection_mutations().await? {
             let result = async {
+                if mutation.desired_enabled {
+                    let inventory = self
+                        .repository
+                        .get_managed_inventory(&mutation.managed_mcp_id)
+                        .await?;
+                    let manifest_digest = inventory
+                        .lifecycle
+                        .active_manifest_digest
+                        .as_deref()
+                        .ok_or_else(integrity_error)?;
+                    let manifest = self.repository.get_manifest(manifest_digest).await?;
+                    reject_managed_remote_http_auth(manifest.verified.manifest())?;
+                }
                 let projection = match self
                     .repository
                     .get_connection_projection(&mutation.managed_mcp_id)
@@ -1738,6 +1752,16 @@ impl TaskRunner {
             .await?;
         let plan = &plan_record.plan;
         let manifest = manifest_record.verified.manifest();
+        if matches!(
+            manifest.distribution,
+            super::manifest::Distribution::RemoteHttp
+        ) && !matches!(manifest.auth, super::manifest::Auth::None)
+        {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::CredentialMissing,
+                "managed remote HTTP credentials are unavailable",
+            ));
+        }
         let adapter = task.adapter_evidence.as_ref().ok_or_else(integrity_error)?;
         if adapter.adapter_id != plan.adapter().id
             || adapter.adapter_version != plan.adapter().version
@@ -2006,6 +2030,7 @@ impl TaskRunner {
             .as_deref()
             .ok_or_else(integrity_error)?;
         let manifest = self.repository.get_manifest(manifest_digest).await?;
+        reject_managed_remote_http_auth(manifest.verified.manifest())?;
         let projection = self
             .repository
             .get_connection_projection(&request.managed_mcp_id)
@@ -2259,9 +2284,14 @@ impl TaskRunner {
                 self.transition(task_id, TaskStatus::Interrupted, task.progress)
                     .await?;
             } else {
+                let message = if error.code() == McpPlatformErrorCode::CredentialMissing {
+                    "managed remote HTTP credentials are unavailable"
+                } else {
+                    "MCP health task failed at a typed execution boundary"
+                };
                 let redacted = RedactedError::new(
                     RedactedErrorCode::AdapterFailed,
-                    "MCP health task failed at a typed execution boundary",
+                    message,
                     std::iter::empty::<&str>(),
                 );
                 self.transition_with_error(task_id, TaskStatus::Failed, task.progress, &redacted)
@@ -2361,17 +2391,6 @@ impl TaskRunner {
         let plan = self.repository.get_plan(&task.plan_id).await?;
         let scope = plan.target.installation_scope.as_deref().unwrap_or("user");
         let ids = stable_ids(plan.plan.manifest_id(), scope);
-        let expected_config = self
-            .ports
-            .transport
-            .extension_config(plan.plan.connection_projection(), &ids.link_key)?;
-        let expected_snapshot = ProjectionSnapshot {
-            entry: crate::config::extensions::ExtensionEntry {
-                enabled: false,
-                config: expected_config,
-            },
-            created: true,
-        };
         let steps = self.repository.list_task_steps(task_id).await?;
         let mut incomplete = false;
         for step in steps
@@ -2420,7 +2439,16 @@ impl TaskRunner {
                             },
                             created: true,
                         },
-                        Err(_) => expected_snapshot.clone(),
+                        Err(_) => ProjectionSnapshot {
+                            entry: crate::config::extensions::ExtensionEntry {
+                                enabled: false,
+                                config: self.ports.transport.extension_config(
+                                    plan.plan.connection_projection(),
+                                    &ids.link_key,
+                                )?,
+                            },
+                            created: true,
+                        },
                     };
                     self.ports
                         .projection_sink
@@ -2527,6 +2555,8 @@ impl TaskRunner {
                     plan_id,
                     owner_task_id,
                 } => {
+                    let manifest = self.repository.get_manifest(manifest_digest).await?;
+                    reject_managed_remote_http_auth(manifest.verified.manifest())?;
                     let old_config = self
                         .ports
                         .transport
@@ -2884,6 +2914,20 @@ const fn integrity_error() -> McpPlatformError {
         McpPlatformErrorCode::IntegrityError,
         "MCP lifecycle journal failed integrity validation",
     )
+}
+
+fn reject_managed_remote_http_auth(manifest: &super::manifest::Manifest) -> McpPlatformResult<()> {
+    if matches!(
+        manifest.distribution,
+        super::manifest::Distribution::RemoteHttp
+    ) && !matches!(manifest.auth, super::manifest::Auth::None)
+    {
+        return Err(McpPlatformError::new(
+            McpPlatformErrorCode::CredentialMissing,
+            "managed remote HTTP credentials are unavailable",
+        ));
+    }
+    Ok(())
 }
 
 const fn adapter_incompatible() -> McpPlatformError {

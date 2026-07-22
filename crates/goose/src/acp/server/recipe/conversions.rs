@@ -442,6 +442,9 @@ impl TryFrom<ExtensionConfig> for RecipeExtensionDto {
                 available_tools: available_tools_to_wire(available_tools),
             },
             ExtensionConfig::Sse { .. } => bail_unsupported_extension("sse")?,
+            ExtensionConfig::ManagedStreamableHttp { .. } => {
+                bail_unsupported_extension("managed_streamable_http")?
+            }
             ExtensionConfig::Frontend { .. } => bail_unsupported_extension("frontend")?,
             ExtensionConfig::InlinePython { .. } => bail_unsupported_extension("inline_python")?,
         })

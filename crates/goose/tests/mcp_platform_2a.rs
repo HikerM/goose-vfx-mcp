@@ -325,7 +325,7 @@ fn connection_projection_is_one_way_and_typed() {
         remote_plan
             .connection_projection()
             .to_extension_config(),
-        ExtensionConfig::StreamableHttp { ref uri, .. }
+        ExtensionConfig::ManagedStreamableHttp { ref uri, .. }
             if uri == "https://mcp.example.com/v1"
     ));
 
@@ -341,7 +341,7 @@ fn connection_projection_is_one_way_and_typed() {
 }
 
 #[test]
-fn api_key_header_projection_uses_braced_environment_placeholder() {
+fn remote_projection_never_contains_credential_or_header_metadata() {
     let mut manifest: Value = serde_json::from_str(REMOTE).unwrap();
     manifest["auth"] = json!({
         "type": "api_key_header",
@@ -351,22 +351,16 @@ fn api_key_header_projection_uses_braced_environment_placeholder() {
     });
     let verified = parse_manifest(&bytes(&manifest)).unwrap();
     let plan = plan_for_manifest(&verified, &phase_2a_context(TrustTier::Official)).unwrap();
-    let ExtensionConfig::StreamableHttp {
-        envs,
-        env_keys,
-        headers,
-        ..
-    } = plan.connection_projection().to_extension_config()
-    else {
-        panic!("expected streamable HTTP projection");
+    let config = plan.connection_projection().to_extension_config();
+    let ExtensionConfig::ManagedStreamableHttp { .. } = &config else {
+        panic!("expected managed streamable HTTP projection");
     };
-
-    assert!(envs.get_env().is_empty());
-    assert_eq!(env_keys, vec!["API_TOKEN"]);
-    assert_eq!(
-        headers.get("Authorization").map(String::as_str),
-        Some("Bearer ${API_TOKEN}")
-    );
+    let projection = serde_json::to_string(plan.connection_projection()).unwrap();
+    let config = serde_json::to_string(&config).unwrap();
+    for forbidden in ["api-token", "credential_name", "header_name", "env_keys"] {
+        assert!(!projection.contains(forbidden));
+        assert!(!config.contains(forbidden));
+    }
 }
 
 #[test]

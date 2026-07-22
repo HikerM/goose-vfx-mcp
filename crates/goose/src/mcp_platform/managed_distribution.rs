@@ -4219,7 +4219,7 @@ mod external_adapter_tests {
             .unwrap(),
         );
         let ports = LifecyclePorts {
-            registration: Arc::new(SafeRegistrationEffectAdapter),
+            registration: Arc::new(SafeRegistrationEffectAdapter::default()),
             host_integration: Arc::new(EmptyHostIntegrationAdapter),
             transport: Arc::new(CoreTransportProjectionAdapter),
             auth: Arc::new(ConfigAuthRequirementResolver),

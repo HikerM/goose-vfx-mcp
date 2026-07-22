@@ -18,8 +18,12 @@ use crate::mcp_platform::lifecycle::{
     ConfigAuthRequirementResolver, ConfigProjectionSink, CoreTransportProjectionAdapter,
     EmptyHostIntegrationAdapter, LifecyclePorts, SafeRegistrationEffectAdapter,
 };
+use crate::mcp_platform::managed_remote::{
+    CoreManagedRemoteHttpNetworkPolicy, RemoteHttpNetworkPolicy, UnavailableRemoteHttpNetworkPolicy,
+};
 use crate::mcp_platform::manifest::{
-    parse_manifest, Architecture, Distribution, ExactVersion, Platform, Transport, VerifiedManifest,
+    parse_manifest, Architecture, Auth, Distribution, ExactVersion, Platform, Transport,
+    VerifiedManifest,
 };
 use crate::mcp_platform::plan::{
     AdapterIdentity, EffectSummary, InstallationPlan, PlanStep, PlanWarning,
@@ -40,8 +44,8 @@ use crate::mcp_platform::{
 };
 
 use super::dependencies::{
-    Clock, IdGenerator, ManualStdioProvider, RemoteHttpNetworkPolicy, SystemClock,
-    UnavailableRemoteHttpNetworkPolicy, UnsupportedManualStdioProvider, UuidGenerator,
+    Clock, IdGenerator, ManualStdioProvider, SystemClock, UnsupportedManualStdioProvider,
+    UuidGenerator,
 };
 use super::dto::{
     unique_task_ids, CatalogDetail, CatalogListInput, CatalogLocator, CatalogPage, CatalogSummary,
@@ -111,13 +115,15 @@ enum WorkerState {
 
 impl McpPlatformService {
     pub fn production(repository: Arc<dyn McpPlatformRepositoryPort>) -> Self {
+        let remote_http = Arc::new(CoreManagedRemoteHttpNetworkPolicy::default());
         Self::new_internal(
             repository,
             Arc::new(SystemClock),
             Arc::new(UuidGenerator),
             McpPlatformServiceOptions::default(),
-            default_lifecycle_ports(),
+            lifecycle_ports(remote_http.clone()),
             true,
+            remote_http,
         )
     }
 
@@ -127,13 +133,15 @@ impl McpPlatformService {
         ids: Arc<dyn IdGenerator>,
         options: McpPlatformServiceOptions,
     ) -> Self {
+        let remote_http = Arc::new(UnavailableRemoteHttpNetworkPolicy);
         Self::new_internal(
             repository,
             clock,
             ids,
             options,
-            default_lifecycle_ports(),
+            lifecycle_ports(remote_http.clone()),
             false,
+            remote_http,
         )
     }
 
@@ -143,8 +151,35 @@ impl McpPlatformService {
         ids: Arc<dyn IdGenerator>,
         options: McpPlatformServiceOptions,
         ports: LifecyclePorts,
+        remote_http_network_policy: Arc<dyn RemoteHttpNetworkPolicy>,
     ) -> Self {
-        Self::new_internal(repository, clock, ids, options, ports, false)
+        Self::new_internal(
+            repository,
+            clock,
+            ids,
+            options,
+            ports,
+            false,
+            remote_http_network_policy,
+        )
+    }
+
+    pub fn new_with_remote_http_network_policy(
+        repository: Arc<dyn McpPlatformRepositoryPort>,
+        clock: Arc<dyn Clock>,
+        ids: Arc<dyn IdGenerator>,
+        options: McpPlatformServiceOptions,
+        remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
+    ) -> Self {
+        Self::new_internal(
+            repository,
+            clock,
+            ids,
+            options,
+            lifecycle_ports(remote_http.clone()),
+            false,
+            remote_http,
+        )
     }
 
     pub fn new_with_distribution_ports(
@@ -233,6 +268,7 @@ impl McpPlatformService {
         options: McpPlatformServiceOptions,
         ports: LifecyclePorts,
         auto_worker: bool,
+        remote_http_network_policy: Arc<dyn RemoteHttpNetworkPolicy>,
     ) -> Self {
         let development_mode = options.development_mode;
         let runtime = RuntimeCapabilities::discover();
@@ -267,20 +303,12 @@ impl McpPlatformService {
             external_capabilities,
             development_mode,
             manual_stdio_provider: Arc::new(UnsupportedManualStdioProvider),
-            remote_http_network_policy: Arc::new(UnavailableRemoteHttpNetworkPolicy),
+            remote_http_network_policy,
         }
     }
 
     pub fn with_manual_stdio_provider(mut self, provider: Arc<dyn ManualStdioProvider>) -> Self {
         self.manual_stdio_provider = provider;
-        self
-    }
-
-    pub fn with_remote_http_network_policy(
-        mut self,
-        policy: Arc<dyn RemoteHttpNetworkPolicy>,
-    ) -> Self {
-        self.remote_http_network_policy = policy;
         self
     }
 
@@ -498,11 +526,14 @@ impl McpPlatformService {
             ManualConnectionInput::RemoteHttp { endpoint, auth } => {
                 self.remote_http_network_policy
                     .validate_endpoint(&endpoint)?;
-                let verified = manual_http_manifest(
-                    &manual_connection_id(&input.idempotency_key),
-                    &endpoint,
-                    auth,
-                )?;
+                if !matches!(auth, ManualHttpAuth::None) {
+                    return Err(credential_missing());
+                }
+                self.remote_http_network_policy
+                    .validate_for_plan(&endpoint, std::time::Duration::from_secs(30))
+                    .await?;
+                let verified =
+                    manual_http_manifest(&manual_connection_id(&input.idempotency_key), &endpoint)?;
                 super::dependencies::ResolvedManualStdioSource {
                     verified,
                     proof: crate::mcp_platform::ManifestProof::LocalBytes,
@@ -655,14 +686,26 @@ impl McpPlatformService {
             };
         if let Transport::StreamableHttp {
             url,
+            connect_timeout_seconds,
             allowed_redirect_origins,
-            ..
         } = &manifest.verified.manifest().transport
         {
             self.remote_http_network_policy.validate_endpoint(url)?;
-            for origin in allowed_redirect_origins {
-                self.remote_http_network_policy.validate_endpoint(origin)?;
+            if !matches!(manifest.verified.manifest().auth, Auth::None) {
+                return Err(credential_missing());
             }
+            if !allowed_redirect_origins.is_empty() {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::UnsafeUrl,
+                    "managed remote HTTP redirects are not supported",
+                ));
+            }
+            self.remote_http_network_policy
+                .validate_for_plan(
+                    url,
+                    std::time::Duration::from_secs(connect_timeout_seconds.unwrap_or(30)),
+                )
+                .await?;
         }
         let policy_context = PolicyContext::new(manifest.trust_tier, operation)
             .with_target(
@@ -1251,15 +1294,12 @@ impl McpPlatformService {
             ..
         } = &verified.manifest().transport
         {
-            if self
-                .remote_http_network_policy
-                .validate_endpoint(url)
-                .is_err()
-                || allowed_redirect_origins.iter().any(|origin| {
-                    self.remote_http_network_policy
-                        .validate_endpoint(origin)
-                        .is_err()
-                })
+            if !allowed_redirect_origins.is_empty()
+                || !matches!(verified.manifest().auth, Auth::None)
+                || self
+                    .remote_http_network_policy
+                    .validate_endpoint(url)
+                    .is_err()
             {
                 return Eligibility {
                     outcome: EligibilityOutcome::Denied,
@@ -1913,7 +1953,6 @@ fn manual_connection_id(idempotency_key: &str) -> String {
 fn manual_http_manifest(
     connection_id: &str,
     endpoint: &str,
-    auth: ManualHttpAuth,
 ) -> McpPlatformResult<VerifiedManifest> {
     let url = Url::parse(endpoint).map_err(|_| invalid_request())?;
     let host = url.host_str().ok_or_else(invalid_request)?;
@@ -1931,34 +1970,13 @@ fn manual_http_manifest(
             "manual HTTP endpoints must use credential-free public HTTPS origins",
         ));
     }
-    let (auth_value, permissions) = match auth {
-        ManualHttpAuth::None => (serde_json::json!({"type":"none"}), Vec::new()),
-        ManualHttpAuth::BearerReference { auth_reference } => {
-            validate_identifier(&auth_reference)?;
-            (
-                serde_json::json!({
-                    "type":"api_key_header",
-                    "header_name":"Authorization",
-                    "prefix":"Bearer",
-                    "credential_name":auth_reference
-                }),
-                vec![serde_json::json!({
-                    "id":"remote-credential",
-                    "kind":"credentials",
-                    "reason":"Uses an opaque credential reference at connection time.",
-                    "required":true
-                })],
-            )
-        }
-    };
-    let mut permissions = permissions;
-    permissions.push(serde_json::json!({
+    let permissions = vec![serde_json::json!({
         "id":"remote-network",
         "kind":"network",
         "reason":"Connects to the reviewed remote MCP HTTPS origin.",
         "required":true,
         "scope":url.origin().ascii_serialization()
-    }));
+    })];
     let raw = serde_json::json!({
         "schema_version":1,
         "id":connection_id,
@@ -1971,7 +1989,7 @@ fn manual_http_manifest(
         "permissions":permissions,
         "distribution":{"type":"remote_http"},
         "transport":{"type":"streamable_http","url":endpoint},
-        "auth":auth_value,
+        "auth":{"type":"none"},
         "health_check":{"type":"mcp_initialize","timeout_seconds":30},
         "owned_files":[],
         "uninstall":{"mode":"remove_owned_files_only","preserve_user_data":true}
@@ -2153,13 +2171,20 @@ const fn revision_conflict() -> McpPlatformError {
     )
 }
 
-fn default_lifecycle_ports() -> LifecyclePorts {
+const fn credential_missing() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::CredentialMissing,
+        "managed remote HTTP credentials are unavailable",
+    )
+}
+
+fn lifecycle_ports(remote_http: Arc<dyn RemoteHttpNetworkPolicy>) -> LifecyclePorts {
     LifecyclePorts {
-        registration: Arc::new(SafeRegistrationEffectAdapter),
+        registration: Arc::new(SafeRegistrationEffectAdapter::new(remote_http.clone())),
         host_integration: Arc::new(EmptyHostIntegrationAdapter),
         transport: Arc::new(CoreTransportProjectionAdapter),
         auth: Arc::new(ConfigAuthRequirementResolver),
-        health: Arc::new(ProductionHealthCheckAdapter),
+        health: Arc::new(ProductionHealthCheckAdapter::new(remote_http)),
         projection_sink: Arc::new(ConfigProjectionSink::default()),
     }
 }

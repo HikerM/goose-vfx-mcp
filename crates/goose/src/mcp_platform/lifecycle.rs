@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -9,6 +10,7 @@ use crate::agents::ExtensionConfig;
 use crate::config::extensions::ExtensionEntry;
 
 use super::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
+use super::managed_remote::{CoreManagedRemoteHttpNetworkPolicy, RemoteHttpNetworkPolicy};
 use super::manifest::{Auth, Distribution, HealthCheck, Manifest, Transport};
 use super::plan::ConnectionProjection;
 use super::{HealthResultCode, InstallationPlan};
@@ -166,8 +168,21 @@ pub trait ProjectionSink: Send + Sync {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct SafeRegistrationEffectAdapter;
+pub struct SafeRegistrationEffectAdapter {
+    remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
+}
+
+impl Default for SafeRegistrationEffectAdapter {
+    fn default() -> Self {
+        Self::new(Arc::new(CoreManagedRemoteHttpNetworkPolicy::default()))
+    }
+}
+
+impl SafeRegistrationEffectAdapter {
+    pub fn new(remote_http: Arc<dyn RemoteHttpNetworkPolicy>) -> Self {
+        Self { remote_http }
+    }
+}
 
 #[async_trait]
 impl RegistrationEffectAdapter for SafeRegistrationEffectAdapter {
@@ -188,15 +203,17 @@ impl RegistrationEffectAdapter for SafeRegistrationEffectAdapter {
             return Err(cancelled());
         }
         match effect {
-            RegistrationEffect::RemoteHttp { endpoint, .. } => {
-                let url = Url::parse(endpoint).map_err(|_| unsafe_effect())?;
-                if url.scheme() != "https"
-                    || url.host_str().is_none()
-                    || !url.username().is_empty()
-                    || url.password().is_some()
-                {
+            RegistrationEffect::RemoteHttp {
+                endpoint,
+                allowed_redirect_origins,
+                timeout_seconds,
+            } => {
+                if !allowed_redirect_origins.is_empty() {
                     return Err(unsafe_effect());
                 }
+                self.remote_http
+                    .secure_client(endpoint, Duration::from_secs(timeout_seconds.unwrap_or(30)))
+                    .await?;
             }
             RegistrationEffect::ManualStdio { spawn } => {
                 if spawn.executable.is_empty() || spawn.executable.contains('\0') {
@@ -253,18 +270,15 @@ impl TransportProjectionAdapter for CoreTransportProjectionAdapter {
                 },
             ) => {
                 let endpoint = Url::parse(url).map_err(|_| unsafe_effect())?;
-                if endpoint.scheme() != "https" || endpoint.host_str().is_none() {
+                if endpoint.scheme() != "https"
+                    || endpoint.host_str().is_none()
+                    || !allowed_redirect_origins.is_empty()
+                {
                     return Err(unsafe_effect());
-                }
-                for origin in allowed_redirect_origins {
-                    let redirect = Url::parse(origin).map_err(|_| unsafe_effect())?;
-                    if redirect.scheme() != "https" || redirect.host_str().is_none() {
-                        return Err(unsafe_effect());
-                    }
                 }
                 Ok(RegistrationEffect::RemoteHttp {
                     endpoint: url.clone(),
-                    allowed_redirect_origins: allowed_redirect_origins.clone(),
+                    allowed_redirect_origins: Vec::new(),
                     timeout_seconds: *connect_timeout_seconds,
                 })
             }
@@ -315,7 +329,6 @@ impl TransportProjectionAdapter for CoreTransportProjectionAdapter {
                 description,
                 uri,
                 timeout_seconds,
-                auth,
                 ..
             } => {
                 let mut config = ConnectionProjection::RemoteHttp {
@@ -323,10 +336,9 @@ impl TransportProjectionAdapter for CoreTransportProjectionAdapter {
                     description: description.clone(),
                     uri: uri.clone(),
                     timeout_seconds: *timeout_seconds,
-                    auth: auth.clone(),
                 }
                 .to_extension_config();
-                if let ExtensionConfig::StreamableHttp { name, .. } = &mut config {
+                if let ExtensionConfig::ManagedStreamableHttp { name, .. } = &mut config {
                     *name = stable_key.to_string();
                 }
                 config
@@ -475,7 +487,30 @@ impl ProjectionSink for ConfigProjectionSink {
                 Ok(crate::config::extensions::ManagedExtensionCreateOutcome::IdempotentReplay) => {
                     false
                 }
-                Err(_) => return Err(projection_conflict()),
+                Err(_) => {
+                    let Some(existing) =
+                        crate::config::extensions::get_extension_entry_by_key_with_config(
+                            self.config(),
+                            key,
+                        )
+                    else {
+                        return Err(projection_conflict());
+                    };
+                    if !key.starts_with("managed_mcp_")
+                        || !matches!(&existing.config, ExtensionConfig::StreamableHttp { .. })
+                        || !matches!(&entry.config, ExtensionConfig::ManagedStreamableHttp { .. })
+                    {
+                        return Err(projection_conflict());
+                    }
+                    crate::config::extensions::try_replace_managed_extension_at_key_with_config(
+                        self.config(),
+                        key,
+                        &existing,
+                        entry.clone(),
+                    )
+                    .map_err(|_| projection_conflict())?;
+                    false
+                }
             };
         Ok(ProjectionSnapshot { entry, created })
     }

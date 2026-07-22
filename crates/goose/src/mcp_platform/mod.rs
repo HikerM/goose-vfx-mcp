@@ -6,6 +6,7 @@ pub(crate) mod external_distribution;
 pub mod health;
 pub mod lifecycle;
 pub mod managed_distribution;
+pub mod managed_remote;
 pub mod manifest;
 pub mod plan;
 pub mod policy;
@@ -24,6 +25,7 @@ pub use external_distribution::SupplyChainEvidence;
 pub use health::{run_bounded_health_session, ProductionHealthCheckAdapter};
 pub use lifecycle::*;
 pub use managed_distribution::*;
+pub use managed_remote::*;
 pub use manifest::{
     parse_manifest, Distribution, Manifest, ManifestProof, SignatureEvidence, VerifiedManifest,
 };

@@ -214,6 +214,7 @@ fn config_to_goose_extension(
         }
         ExtensionConfig::Frontend { .. }
         | ExtensionConfig::InlinePython { .. }
+        | ExtensionConfig::ManagedStreamableHttp { .. }
         | ExtensionConfig::Sse { .. } => return Ok(None),
     };
     Ok(Some(extension))

@@ -1,5 +1,8 @@
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
+
+use async_trait::async_trait;
 
 use goose::custom_requests::{
     McpCatalogDetail, McpInstallConfirmRequest, McpManualPlanCreateRequest, McpTaskRef,
@@ -10,7 +13,7 @@ use goose::mcp_platform::{
     ManualStdioSource, McpPlatformError, McpPlatformErrorCode, McpPlatformResult,
     McpPlatformService, McpPlatformServiceOptions, PlanCreateInput, PlanIntent,
     RemoteHttpNetworkPolicy, ResolvedManualStdioSource, SqliteMcpPlatformRepository, TrustTier,
-    UserDecision,
+    UnavailableRemoteHttpNetworkPolicy, UserDecision,
 };
 
 const REMOTE: &str =
@@ -37,6 +40,7 @@ impl IdGenerator for TestIds {
 
 struct DenyExampleNetwork;
 
+#[async_trait]
 impl RemoteHttpNetworkPolicy for DenyExampleNetwork {
     fn validate_endpoint(&self, endpoint: &str) -> McpPlatformResult<()> {
         if endpoint.contains("mcp.example.com") {
@@ -48,10 +52,19 @@ impl RemoteHttpNetworkPolicy for DenyExampleNetwork {
             VerifiedPublicNetwork.validate_endpoint(endpoint)
         }
     }
+
+    async fn validate_for_plan(
+        &self,
+        endpoint: &str,
+        _connect_timeout: Duration,
+    ) -> McpPlatformResult<()> {
+        self.validate_endpoint(endpoint)
+    }
 }
 
 struct VerifiedPublicNetwork;
 
+#[async_trait]
 impl RemoteHttpNetworkPolicy for VerifiedPublicNetwork {
     fn validate_endpoint(&self, endpoint: &str) -> McpPlatformResult<()> {
         let url = url::Url::parse(endpoint).map_err(|_| {
@@ -70,6 +83,14 @@ impl RemoteHttpNetworkPolicy for VerifiedPublicNetwork {
         } else {
             Ok(())
         }
+    }
+
+    async fn validate_for_plan(
+        &self,
+        endpoint: &str,
+        _connect_timeout: Duration,
+    ) -> McpPlatformResult<()> {
+        self.validate_endpoint(endpoint)
     }
 }
 
@@ -112,13 +133,24 @@ async fn service() -> (
             .await
             .unwrap(),
     );
-    let service = McpPlatformService::new(
+    let service = service_for_repository(
         repository.clone(),
+        Arc::new(UnavailableRemoteHttpNetworkPolicy),
+    );
+    (directory, repository, service)
+}
+
+fn service_for_repository(
+    repository: Arc<SqliteMcpPlatformRepository>,
+    policy: Arc<dyn RemoteHttpNetworkPolicy>,
+) -> McpPlatformService {
+    McpPlatformService::new_with_remote_http_network_policy(
+        repository,
         Arc::new(TestClock(AtomicI64::new(1_000))),
         Arc::new(TestIds::default()),
         McpPlatformServiceOptions::default(),
-    );
-    (directory, repository, service)
+        policy,
+    )
 }
 
 #[tokio::test]
@@ -158,8 +190,8 @@ async fn catalog_and_sources_expose_core_eligibility_and_safe_cache_state() {
 
 #[tokio::test]
 async fn manual_http_uses_the_same_final_network_policy_as_catalog_plans() {
-    let (_directory, repository, service) = service().await;
-    let service = service.with_remote_http_network_policy(Arc::new(DenyExampleNetwork));
+    let (_directory, repository, _service) = service().await;
+    let service = service_for_repository(repository.clone(), Arc::new(DenyExampleNetwork));
     let context = service.trusted_local_context();
     let error = service
         .manual_plan_create(
@@ -206,8 +238,8 @@ async fn manual_http_uses_the_same_final_network_policy_as_catalog_plans() {
 
 #[tokio::test]
 async fn manual_http_rejects_loopback_private_literals_and_persists_a_disabled_plan() {
-    let (_directory, repository, service) = service().await;
-    let service = service.with_remote_http_network_policy(Arc::new(VerifiedPublicNetwork));
+    let (_directory, repository, _service) = service().await;
+    let service = service_for_repository(repository.clone(), Arc::new(VerifiedPublicNetwork));
     let context = service.trusted_local_context();
     for endpoint in [
         "https://localhost/mcp",
@@ -239,9 +271,7 @@ async fn manual_http_rejects_loopback_private_literals_and_persists_a_disabled_p
             ManualPlanCreateInput {
                 connection: ManualConnectionInput::RemoteHttp {
                     endpoint: "https://safe.example.com/mcp".to_string(),
-                    auth: ManualHttpAuth::BearerReference {
-                        auth_reference: "credential_handle_1".to_string(),
-                    },
+                    auth: ManualHttpAuth::None,
                 },
                 idempotency_key: "safe-http-plan".to_string(),
             },
@@ -267,7 +297,7 @@ async fn manual_http_rejects_loopback_private_literals_and_persists_a_disabled_p
 }
 
 #[tokio::test]
-async fn manual_http_default_denies_and_idempotency_never_rebinds_credentials() {
+async fn manual_http_default_denies_and_credentials_remain_unpersisted() {
     let (_directory, repository, service) = service().await;
     let context = service.trusted_local_context();
     let denied = service
@@ -315,63 +345,29 @@ async fn manual_http_default_denies_and_idempotency_never_rebinds_credentials() 
         .unwrap_err();
     assert_eq!(
         ordinary_denied.code(),
-        McpPlatformErrorCode::RemoteHttpPolicyUnavailable
+        McpPlatformErrorCode::CredentialMissing
     );
 
-    let service = service.with_remote_http_network_policy(Arc::new(VerifiedPublicNetwork));
-    let input = ManualPlanCreateInput {
-        connection: ManualConnectionInput::RemoteHttp {
-            endpoint: "https://safe.example.com/mcp".to_string(),
-            auth: ManualHttpAuth::BearerReference {
-                auth_reference: "opaque_handle_a".to_string(),
-            },
-        },
-        idempotency_key: "stable-manual-plan".to_string(),
-    };
-    let first = service
-        .manual_plan_create(&context, input.clone())
-        .await
-        .unwrap();
-    let replay = service.manual_plan_create(&context, input).await.unwrap();
-    assert_eq!(replay.plan_id, first.plan_id);
-    assert_eq!(replay.plan_digest, first.plan_digest);
-    assert_eq!(repository.list_manifests().await.unwrap().len(), 2);
-
-    let conflict = service
-        .manual_plan_create(
-            &context,
-            ManualPlanCreateInput {
-                connection: ManualConnectionInput::RemoteHttp {
-                    endpoint: "https://safe.example.com/mcp".to_string(),
-                    auth: ManualHttpAuth::BearerReference {
-                        auth_reference: "opaque_handle_b".to_string(),
+    let service = service_for_repository(repository.clone(), Arc::new(VerifiedPublicNetwork));
+    for auth_reference in ["opaque_handle_a", "opaque_handle_b"] {
+        let error = service
+            .manual_plan_create(
+                &context,
+                ManualPlanCreateInput {
+                    connection: ManualConnectionInput::RemoteHttp {
+                        endpoint: "https://safe.example.com/mcp".to_string(),
+                        auth: ManualHttpAuth::BearerReference {
+                            auth_reference: auth_reference.to_string(),
+                        },
                     },
+                    idempotency_key: format!("credential-{auth_reference}"),
                 },
-                idempotency_key: "stable-manual-plan".to_string(),
-            },
-        )
-        .await
-        .unwrap_err();
-    assert_eq!(conflict.code(), McpPlatformErrorCode::IdempotencyConflict);
-    assert_eq!(repository.list_manifests().await.unwrap().len(), 2);
-
-    let second_identity = service
-        .manual_plan_create(
-            &context,
-            ManualPlanCreateInput {
-                connection: ManualConnectionInput::RemoteHttp {
-                    endpoint: "https://safe.example.com/mcp".to_string(),
-                    auth: ManualHttpAuth::BearerReference {
-                        auth_reference: "opaque_handle_b".to_string(),
-                    },
-                },
-                idempotency_key: "second-manual-plan".to_string(),
-            },
-        )
-        .await
-        .unwrap();
-    assert_ne!(second_identity.plan.manifest_id(), first.plan.manifest_id());
-    assert_eq!(repository.list_manifests().await.unwrap().len(), 3);
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), McpPlatformErrorCode::CredentialMissing);
+    }
+    assert_eq!(repository.list_manifests().await.unwrap().len(), 1);
 }
 
 #[tokio::test]
@@ -430,6 +426,11 @@ fn wire_schemas_are_closed_and_never_accept_raw_execution_or_auth_material() {
         "credentialName",
         "credentialValue",
         "cwd",
+        "command",
+        "proxy",
+        "socket",
+        "tlsBypass",
+        "dangerAcceptInvalidCerts",
     ] {
         assert!(!manual_schema.contains(forbidden), "found {forbidden}");
     }

@@ -11,6 +11,7 @@ activities:
   - Analyze code structure and parsing capabilities
   - Test extension discovery and management
   - Validate managed MCP projections remain disabled until explicitly enabled
+  - Validate managed Remote HTTP rejects credentials and redirects without persisting sensitive projection metadata
   - Validate managed npm, Python wheel, and binary archive plans expose exact versions and verified sources
   - Validate Docker digest and Git exact-commit plans expose only immutable, redacted product semantics
   - Validate Docker daemon and Git development capability failures remain typed and actionable
@@ -86,6 +87,7 @@ instructions: |
   - Verify a newly registered managed MCP projection is disabled by default
   - Verify health observations do not automatically enable managed MCP projections
   - Verify only explicitly enabled managed MCP projections appear in the active extension set
+  - Verify managed Remote HTTP starts disabled, rejects auth/redirect requests with typed recovery, and never exposes headers, credential handles, environment keys, proxy, socket, or TLS-bypass settings
   - Verify managed package installs start disabled and never expose staging paths or commands
   - Verify update eligibility is reported only for a higher compatible exact manifest version
   - Verify repair preserves enabled intent only after runtime health succeeds

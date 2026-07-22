@@ -19,22 +19,6 @@ pub trait ManualStdioProvider: Send + Sync {
     fn resolve(&self, source_id: &str) -> McpPlatformResult<ResolvedManualStdioSource>;
 }
 
-pub trait RemoteHttpNetworkPolicy: Send + Sync {
-    fn validate_endpoint(&self, endpoint: &str) -> McpPlatformResult<()>;
-}
-
-#[derive(Debug, Default)]
-pub struct UnavailableRemoteHttpNetworkPolicy;
-
-impl RemoteHttpNetworkPolicy for UnavailableRemoteHttpNetworkPolicy {
-    fn validate_endpoint(&self, _endpoint: &str) -> McpPlatformResult<()> {
-        Err(McpPlatformError::new(
-            McpPlatformErrorCode::RemoteHttpPolicyUnavailable,
-            "no verified remote HTTP connection policy is configured",
-        ))
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct ResolvedManualStdioSource {
     pub verified: VerifiedManifest,

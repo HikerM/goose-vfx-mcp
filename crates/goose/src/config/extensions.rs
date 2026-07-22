@@ -396,19 +396,25 @@ pub fn is_extension_enabled(key: &str) -> bool {
 }
 
 pub fn get_enabled_extensions() -> Vec<ExtensionConfig> {
-    get_all_extensions()
+    get_extensions_map()
         .into_iter()
-        .filter(|ext| ext.enabled)
-        .map(|ext| ext.config)
+        .filter(|(key, entry)| enabled_extension_is_runnable(key, entry))
+        .map(|(_, entry)| entry.config)
         .collect()
 }
 
 pub fn get_enabled_extensions_with_config(config: &Config) -> Vec<ExtensionConfig> {
     get_extensions_map_with_config(config)
-        .into_values()
-        .filter(|ext| ext.enabled)
-        .map(|ext| ext.config)
+        .into_iter()
+        .filter(|(key, entry)| enabled_extension_is_runnable(key, entry))
+        .map(|(_, entry)| entry.config)
         .collect()
+}
+
+fn enabled_extension_is_runnable(key: &str, entry: &ExtensionEntry) -> bool {
+    entry.enabled
+        && !(key.starts_with("managed_mcp_")
+            && matches!(&entry.config, ExtensionConfig::StreamableHttp { .. }))
 }
 
 pub fn get_available_extensions() -> Vec<ExtensionConfig> {

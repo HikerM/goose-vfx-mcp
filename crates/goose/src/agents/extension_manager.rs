@@ -47,6 +47,7 @@ use crate::builtin_extension::get_builtin_extension;
 use crate::config::extensions::name_to_key;
 use crate::config::search_path::SearchPaths;
 use crate::config::{get_all_extensions, Config};
+use crate::mcp_platform::{CoreManagedRemoteHttpNetworkPolicy, RemoteHttpNetworkPolicy};
 use crate::oauth::{oauth_flow, GooseCredentialStore};
 use crate::prompt_template;
 use crate::subprocess::configure_subprocess;
@@ -193,6 +194,7 @@ pub struct ExtensionManager {
     tools_cache_version: AtomicU64,
     client_name: String,
     capabilities: ExtensionManagerCapabilities,
+    managed_remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
 }
 
 /// A flattened representation of a resource used by the agent to prepare inference
@@ -917,6 +919,24 @@ impl ExtensionManager {
         capabilities: ExtensionManagerCapabilities,
         use_login_shell_path: bool,
     ) -> Self {
+        Self::new_with_managed_remote_http_policy(
+            provider,
+            session_manager,
+            client_name,
+            capabilities,
+            use_login_shell_path,
+            Arc::new(CoreManagedRemoteHttpNetworkPolicy::default()),
+        )
+    }
+
+    pub fn new_with_managed_remote_http_policy(
+        provider: SharedProvider,
+        session_manager: Arc<crate::session::SessionManager>,
+        client_name: String,
+        capabilities: ExtensionManagerCapabilities,
+        use_login_shell_path: bool,
+        managed_remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
+    ) -> Self {
         Self {
             extensions: Mutex::new(HashMap::new()),
             context: PlatformExtensionContext {
@@ -930,12 +950,23 @@ impl ExtensionManager {
             tools_cache_version: AtomicU64::new(0),
             client_name,
             capabilities,
+            managed_remote_http,
         }
     }
 
     pub fn new_without_provider(data_dir: std::path::PathBuf) -> Self {
+        Self::new_without_provider_with_managed_remote_http_policy(
+            data_dir,
+            Arc::new(CoreManagedRemoteHttpNetworkPolicy::default()),
+        )
+    }
+
+    pub fn new_without_provider_with_managed_remote_http_policy(
+        data_dir: std::path::PathBuf,
+        managed_remote_http: Arc<dyn RemoteHttpNetworkPolicy>,
+    ) -> Self {
         let session_manager = Arc::new(crate::session::SessionManager::new(data_dir));
-        Self::new(
+        Self::new_with_managed_remote_http_policy(
             Arc::new(Mutex::new(None)),
             session_manager,
             "goose-cli".to_string(),
@@ -944,6 +975,7 @@ impl ExtensionManager {
                 host_info: None,
             },
             false,
+            managed_remote_http,
         )
     }
 
@@ -974,6 +1006,15 @@ impl ExtensionManager {
         session_id: Option<&str>,
     ) -> ExtensionResult<()> {
         let sanitized_name = config.key();
+
+        if sanitized_name.starts_with("managed_mcp_")
+            && matches!(&config, ExtensionConfig::StreamableHttp { .. })
+        {
+            return Err(ExtensionError::ConfigError(
+                "legacy managed remote HTTP configuration requires replanning or repair"
+                    .to_string(),
+            ));
+        }
 
         // Compare both the unresolved config (to detect structural changes like
         // migrating from plaintext envs to env_keys) and the resolved config (to
@@ -1035,6 +1076,35 @@ impl ExtensionManager {
                     &effective_working_dir,
                 )
                 .await?
+            }
+            ExtensionConfig::ManagedStreamableHttp { uri, timeout, .. } => {
+                let timeout_duration = Duration::from_secs(resolve_timeout(*timeout));
+                let managed = self
+                    .managed_remote_http
+                    .secure_client(uri, timeout_duration)
+                    .await
+                    .map_err(|_| {
+                        ExtensionError::ConfigError(
+                            "managed remote HTTP connection was denied".to_string(),
+                        )
+                    })?;
+                let transport = StreamableHttpClientTransport::with_client(
+                    managed.client(),
+                    StreamableHttpClientTransportConfig::with_uri(managed.endpoint().as_str()),
+                );
+                let client = McpClient::connect(
+                    transport,
+                    timeout_duration,
+                    self.provider.clone(),
+                    self.client_name.clone(),
+                    self.mcp_client_capabilities(),
+                    effective_working_dir.clone(),
+                )
+                .await
+                .map_err(|_| {
+                    ExtensionError::ConfigError("managed remote HTTP connection failed".to_string())
+                })?;
+                Box::new(client)
             }
             ExtensionConfig::Builtin { ref name, .. }
             | ExtensionConfig::Platform { ref name, .. } => {
@@ -2076,6 +2146,7 @@ impl ExtensionManager {
                     ExtensionConfig::Sse { .. } => "SSE extension (unsupported)",
                     ExtensionConfig::Platform { description, .. }
                     | ExtensionConfig::StreamableHttp { description, .. }
+                    | ExtensionConfig::ManagedStreamableHttp { description, .. }
                     | ExtensionConfig::Stdio { description, .. }
                     | ExtensionConfig::Frontend { description, .. }
                     | ExtensionConfig::InlinePython { description, .. } => description,

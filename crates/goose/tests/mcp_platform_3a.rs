@@ -42,6 +42,13 @@ const REMOTE: &str =
 const MANUAL: &str =
     include_str!("../../../documentation/static/schemas/examples/manual-stdio.json");
 
+fn unauthenticated_remote() -> String {
+    let mut manifest: serde_json::Value = serde_json::from_str(REMOTE).unwrap();
+    manifest["auth"] = serde_json::json!({"type":"none"});
+    manifest["transport"]["allowed_redirect_origins"] = serde_json::json!([]);
+    serde_json::to_string(&manifest).unwrap()
+}
+
 struct TestClock(AtomicI64);
 
 impl TestClock {
@@ -71,9 +78,18 @@ impl IdGenerator for TestIds {
 
 struct VerifiedTestRemotePolicy;
 
+#[async_trait]
 impl goose::mcp_platform::RemoteHttpNetworkPolicy for VerifiedTestRemotePolicy {
     fn validate_endpoint(&self, _endpoint: &str) -> goose::mcp_platform::McpPlatformResult<()> {
         Ok(())
+    }
+
+    async fn validate_for_plan(
+        &self,
+        endpoint: &str,
+        _connect_timeout: std::time::Duration,
+    ) -> goose::mcp_platform::McpPlatformResult<()> {
+        self.validate_endpoint(endpoint)
     }
 }
 
@@ -402,24 +418,19 @@ impl Harness {
             health: health.clone(),
             projection_sink: sink.clone(),
         };
-        let service = Arc::new(
-            McpPlatformService::new_with_lifecycle_ports(
-                repository.clone(),
-                clock.clone(),
-                Arc::new(TestIds::default()),
-                McpPlatformServiceOptions {
-                    compatibility_target: goose::mcp_platform::CompatibilityTarget {
-                        platform,
-                        arch,
-                    },
-                    plan_ttl_ms: 1_000_000,
-                    development_mode: false,
-                    docker_daemon_policy_allowed: true,
-                },
-                ports.clone(),
-            )
-            .with_remote_http_network_policy(Arc::new(VerifiedTestRemotePolicy)),
-        );
+        let service = Arc::new(McpPlatformService::new_with_lifecycle_ports(
+            repository.clone(),
+            clock.clone(),
+            Arc::new(TestIds::default()),
+            McpPlatformServiceOptions {
+                compatibility_target: goose::mcp_platform::CompatibilityTarget { platform, arch },
+                plan_ttl_ms: 1_000_000,
+                development_mode: false,
+                docker_daemon_policy_allowed: true,
+            },
+            ports.clone(),
+            Arc::new(VerifiedTestRemotePolicy),
+        ));
         Self {
             _directory: directory,
             path,
@@ -559,7 +570,10 @@ fn stable_link_key(mcp_id: &str) -> String {
 #[tokio::test]
 async fn remote_and_manual_registration_execute_to_disabled_durable_inventory() {
     let harness = Harness::new().await;
-    let remote = harness.confirm(REMOTE, TrustTier::Official, "remote").await;
+    let remote_source = unauthenticated_remote();
+    let remote = harness
+        .confirm(&remote_source, TrustTier::Official, "remote")
+        .await;
     let manual = harness.confirm(MANUAL, TrustTier::Local, "manual").await;
 
     assert!(harness.service.runner_tick().await.unwrap());
@@ -1026,10 +1040,12 @@ async fn compensation_effect_before_commit_replays_idempotently_after_restart() 
 async fn recovery_isolates_corrupt_steps_and_rejects_incompatible_adapters() {
     let harness = Harness::new().await;
     let first = harness.confirm(MANUAL, TrustTier::Local, "corrupt").await;
+    let remote_source = unauthenticated_remote();
     let second = harness
-        .confirm(REMOTE, TrustTier::Official, "healthy")
+        .confirm(&remote_source, TrustTier::Official, "healthy")
         .await;
-    let third_source = REMOTE.replace("com.example.knowledge-search", "com.example.versioned");
+    let third_source =
+        remote_source.replace("com.example.knowledge-search", "com.example.versioned");
     let third = harness
         .confirm(&third_source, TrustTier::Official, "versioned")
         .await;
@@ -1286,44 +1302,23 @@ async fn health_results_are_orthogonal_and_never_auto_enable() {
         );
     }
 
-    harness.auth.ready.store(false, Ordering::SeqCst);
     let remote_source = REMOTE.replace("com.example.knowledge-search", "com.example.auth-health");
-    harness
-        .confirm(&remote_source, TrustTier::Official, "blocked_auth")
-        .await;
-    harness.service.runner_tick().await.unwrap();
-    let remote = harness
+    let digest = harness.save(&remote_source, TrustTier::Official).await;
+    let error = harness
         .service
-        .managed_list(&harness.context(), ManagedListInput::default())
-        .await
-        .unwrap()
-        .items
-        .into_iter()
-        .find(|item| item.mcp_id == "com.example.auth-health")
-        .unwrap();
-    harness
-        .service
-        .health_run(
+        .plan_create(
             &harness.context(),
-            HealthRunInput {
-                managed_mcp_id: remote.managed_mcp_id.clone(),
-                mode: HealthCheckMode::Runtime,
-                idempotency_key: "health_blocked_auth".to_string(),
+            PlanCreateInput {
+                intent: PlanIntent::Register {
+                    manifest_digest: digest,
+                    installation_scope: InstallationScope::User,
+                },
+                idempotency_key: "blocked_auth".to_string(),
             },
         )
         .await
-        .unwrap();
-    harness.service.runner_tick().await.unwrap();
-    assert_eq!(
-        harness
-            .repository
-            .latest_health_observation(&remote.managed_mcp_id)
-            .await
-            .unwrap()
-            .unwrap()
-            .result_code,
-        HealthResultCode::BlockedAuth
-    );
+        .unwrap_err();
+    assert_eq!(error.code(), McpPlatformErrorCode::CredentialMissing);
 }
 
 #[tokio::test]
@@ -1800,8 +1795,9 @@ async fn projection_mutation_sink_failure_is_reconciled_without_restart() {
 #[tokio::test]
 async fn filtered_keyset_pagination_does_not_skip_late_matches() {
     let harness = Harness::new().await;
+    let remote = unauthenticated_remote();
     for index in 0..5 {
-        let source = REMOTE.replace(
+        let source = remote.replace(
             "com.example.knowledge-search",
             &format!("com.example.pagination-{index}"),
         );

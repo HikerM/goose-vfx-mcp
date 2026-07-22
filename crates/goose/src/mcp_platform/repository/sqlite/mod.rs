@@ -676,7 +676,6 @@ async fn migrate(pool: &Pool<Sqlite>) -> McpPlatformResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::mcp_platform::manifest::Auth;
     use crate::mcp_platform::plan::ConnectionProjection;
 
     use super::*;
@@ -719,12 +718,34 @@ mod tests {
             description: String::new(),
             uri: "https://legacy.example/mcp".to_string(),
             timeout_seconds: Some(5),
-            auth: Auth::None,
         };
+        let mut legacy_none_projection = serde_json::to_value(&projection).unwrap();
+        legacy_none_projection["auth"] = serde_json::json!({"type":"none"});
         sqlx::query(
             "INSERT INTO connection_projections (managed_mcp_id, link_key, projection_json, revision, updated_at_ms) VALUES ('legacy-managed', 'managed_mcp_legacy', ?, 0, 1)",
         )
-        .bind(serde_json::to_string(&projection).unwrap())
+        .bind(serde_json::to_string(&legacy_none_projection).unwrap())
+        .execute(&mut *transaction)
+        .await
+        .unwrap();
+        sqlx::query(
+            "INSERT INTO managed_mcps (managed_mcp_id, mcp_id, installation_scope, state_json, revision, created_at_ms, updated_at_ms) VALUES ('legacy-auth-managed', 'legacy-auth.example', 'user', ?, 0, 1, 1)",
+        )
+        .bind(serde_json::to_string(&ManagedMcpState::default()).unwrap())
+        .execute(&mut *transaction)
+        .await
+        .unwrap();
+        let mut legacy_auth_projection = serde_json::to_value(&projection).unwrap();
+        legacy_auth_projection["auth"] = serde_json::json!({
+            "type":"api_key_header",
+            "header_name":"Authorization",
+            "prefix":"Bearer",
+            "credential_name":"opaque-canary-handle"
+        });
+        sqlx::query(
+            "INSERT INTO connection_projections (managed_mcp_id, link_key, projection_json, revision, updated_at_ms) VALUES ('legacy-auth-managed', 'managed_mcp_legacy_auth', ?, 0, 1)",
+        )
+        .bind(serde_json::to_string(&legacy_auth_projection).unwrap())
         .execute(&mut *transaction)
         .await
         .unwrap();
@@ -737,10 +758,24 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(migrated.projection, projection);
+        assert!(!serde_json::to_string(&migrated.projection)
+            .unwrap()
+            .contains("auth"));
         assert!(migrated.plan_id.is_none());
         assert!(migrated.manifest_digest.is_none());
         assert!(migrated.owner_task_id.is_none());
         assert!(migrated.projection_digest.is_empty());
+        let legacy_auth_error = repository
+            .get_connection_projection("legacy-auth-managed")
+            .await
+            .unwrap_err();
+        assert_eq!(
+            legacy_auth_error.code(),
+            McpPlatformErrorCode::IntegrityError
+        );
+        assert!(!legacy_auth_error
+            .to_string()
+            .contains("opaque-canary-handle"));
         let versions =
             sqlx::query_scalar::<_, i64>("SELECT version FROM schema_version ORDER BY version")
                 .fetch_all(&repository.pool)

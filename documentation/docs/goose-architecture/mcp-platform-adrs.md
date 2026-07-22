@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # MCP Platform Architecture Decision Records
 
-Status for every ADR below is **Accepted for Phase 1**. Reversal requires a superseding ADR, compatibility/migration plan, and security review.
+Status for ADR-001 through ADR-014 is **Accepted for Phase 1**. Later ADRs state their acceptance phase. Reversal requires a superseding ADR, compatibility/migration plan, and security review.
 
 ## ADR-001: Rust Core is the authority
 
@@ -90,3 +90,11 @@ Status for every ADR below is **Accepted for Phase 1**. Reversal requires a supe
 **Decision:** Package adapters use per-user goose-managed runtimes/stores and platform-specific effect adapters. No global npm/pip install, system Python mutation, hard-coded OS data path, or implicit elevation is part of this architecture.
 
 **Consequences:** Artifacts and activation behavior are reproducible per platform/architecture. Docker remains an external, detected dependency with digest and mount policy.
+
+## ADR-015: Managed Remote HTTP uses a Core-owned pinned connector
+
+**Status:** Accepted for Phase 4B.
+
+**Decision:** Platform-managed Remote HTTP uses the isolated `managed_streamable_http` runtime projection, not the generic user-created `streamable_http` path. Core accepts only canonical HTTPS endpoints without userinfo, query, fragment, explicit port, IP literals, IDN/punycode, or local namespaces. At plan, activation, health, and runtime use, Core resolves the hostname, rejects the entire answer set if any peer is non-global or has the wrong port, and builds the exact `reqwest::Client` passed to `rmcp` with static DNS overrides, system proxies disabled, redirects disabled, and default TLS certificate/hostname verification. Reconnects retain that static mapping. Remote authentication remains unavailable until a Core credential store is connected; authenticated requests fail with `CredentialMissing` before DNS or persistence.
+
+**Consequences:** ADR-009 remains valid for stdio and generic user configurations, but its managed Remote HTTP projection is superseded by this isolated connector. No credential handle, header, environment key, proxy, socket, or TLS-bypass option enters a managed projection. Existing generic `streamable_http` behavior is unchanged, except that legacy generic HTTP entries in the Core-reserved `managed_mcp_` namespace are blocked before credential resolution and can only be replaced by a disabled managed projection during replanning or repair. Redirect allowlists are deliberately unsupported rather than partially enforced, and TLS/network failures are returned through redacted platform/runtime outcomes.

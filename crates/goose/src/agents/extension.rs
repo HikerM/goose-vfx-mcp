@@ -290,6 +290,22 @@ pub enum ExtensionConfig {
         #[serde(skip_serializing_if = "Vec::is_empty")]
         available_tools: Vec<String>,
     },
+    /// Core-controlled streamable HTTP transport for MCP platform projections.
+    #[serde(rename = "managed_streamable_http")]
+    ManagedStreamableHttp {
+        name: String,
+        #[serde(default)]
+        #[serde(deserialize_with = "deserialize_null_with_default")]
+        #[schema(required)]
+        description: String,
+        uri: String,
+        timeout: Option<u64>,
+        #[serde(default)]
+        bundled: Option<bool>,
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        available_tools: Vec<String>,
+    },
     /// Frontend-provided tools that will be called through the frontend
     #[serde(rename = "frontend")]
     Frontend {
@@ -442,6 +458,7 @@ impl ExtensionConfig {
         match self {
             Self::Sse { name, .. } => name,
             Self::StreamableHttp { name, .. } => name,
+            Self::ManagedStreamableHttp { name, .. } => name,
             Self::Stdio { name, .. } => name,
             Self::Builtin { name, .. } => name,
             Self::Platform { name, .. } => name,
@@ -456,6 +473,9 @@ impl ExtensionConfig {
         let available_tools = match self {
             Self::Sse { .. } => return false, // SSE is unsupported
             Self::StreamableHttp {
+                available_tools, ..
+            }
+            | Self::ManagedStreamableHttp {
                 available_tools, ..
             }
             | Self::Stdio {
@@ -563,6 +583,9 @@ impl std::fmt::Display for ExtensionConfig {
                 } else {
                     write!(f, "StreamableHttp({}: {})", name, uri)
                 }
+            }
+            ExtensionConfig::ManagedStreamableHttp { name, uri, .. } => {
+                write!(f, "ManagedStreamableHttp({}: {})", name, uri)
             }
             ExtensionConfig::Stdio {
                 name, cmd, args, ..
