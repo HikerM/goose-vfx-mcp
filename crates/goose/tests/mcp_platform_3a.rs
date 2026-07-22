@@ -69,6 +69,14 @@ impl IdGenerator for TestIds {
     }
 }
 
+struct VerifiedTestRemotePolicy;
+
+impl goose::mcp_platform::RemoteHttpNetworkPolicy for VerifiedTestRemotePolicy {
+    fn validate_endpoint(&self, _endpoint: &str) -> goose::mcp_platform::McpPlatformResult<()> {
+        Ok(())
+    }
+}
+
 #[derive(Default)]
 struct FakeRegistration {
     effects: Mutex<Vec<RegistrationEffect>>,
@@ -394,18 +402,24 @@ impl Harness {
             health: health.clone(),
             projection_sink: sink.clone(),
         };
-        let service = Arc::new(McpPlatformService::new_with_lifecycle_ports(
-            repository.clone(),
-            clock.clone(),
-            Arc::new(TestIds::default()),
-            McpPlatformServiceOptions {
-                compatibility_target: goose::mcp_platform::CompatibilityTarget { platform, arch },
-                plan_ttl_ms: 1_000_000,
-                development_mode: false,
-                docker_daemon_policy_allowed: true,
-            },
-            ports.clone(),
-        ));
+        let service = Arc::new(
+            McpPlatformService::new_with_lifecycle_ports(
+                repository.clone(),
+                clock.clone(),
+                Arc::new(TestIds::default()),
+                McpPlatformServiceOptions {
+                    compatibility_target: goose::mcp_platform::CompatibilityTarget {
+                        platform,
+                        arch,
+                    },
+                    plan_ttl_ms: 1_000_000,
+                    development_mode: false,
+                    docker_daemon_policy_allowed: true,
+                },
+                ports.clone(),
+            )
+            .with_remote_http_network_policy(Arc::new(VerifiedTestRemotePolicy)),
+        );
         Self {
             _directory: directory,
             path,

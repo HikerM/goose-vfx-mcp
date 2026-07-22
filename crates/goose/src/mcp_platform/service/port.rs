@@ -15,6 +15,16 @@ use crate::mcp_platform::task::TaskOperation;
 
 #[async_trait]
 pub trait McpPlatformRepositoryPort: Send + Sync {
+    async fn save_manifest(
+        &self,
+        record: &crate::mcp_platform::repository::ManifestRecord,
+    ) -> McpPlatformResult<crate::mcp_platform::repository::InsertOutcome> {
+        let _ = record;
+        Err(crate::mcp_platform::McpPlatformError::new(
+            crate::mcp_platform::McpPlatformErrorCode::OperationNotSupported,
+            "repository does not support verified manifest persistence",
+        ))
+    }
     async fn list_manifests(&self) -> McpPlatformResult<Vec<ManifestRecord>>;
     async fn get_manifest(&self, digest: &str) -> McpPlatformResult<ManifestRecord>;
     async fn get_manifest_by_identity(
@@ -286,6 +296,13 @@ pub trait McpPlatformRepositoryPort: Send + Sync {
 
 #[async_trait]
 impl McpPlatformRepositoryPort for crate::mcp_platform::repository::SqliteMcpPlatformRepository {
+    async fn save_manifest(
+        &self,
+        record: &crate::mcp_platform::repository::ManifestRecord,
+    ) -> McpPlatformResult<crate::mcp_platform::repository::InsertOutcome> {
+        self.save_manifest(record).await
+    }
+
     async fn list_manifests(&self) -> McpPlatformResult<Vec<ManifestRecord>> {
         self.list_manifests().await
     }

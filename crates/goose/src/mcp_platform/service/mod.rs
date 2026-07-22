@@ -4,6 +4,9 @@ mod dto;
 mod port;
 
 pub use application::{McpPlatformService, McpPlatformServiceOptions};
-pub use dependencies::{Clock, IdGenerator, SystemClock, UuidGenerator};
+pub use dependencies::{
+    Clock, IdGenerator, ManualStdioProvider, RemoteHttpNetworkPolicy, ResolvedManualStdioSource,
+    SystemClock, UnavailableRemoteHttpNetworkPolicy, UnsupportedManualStdioProvider, UuidGenerator,
+};
 pub use dto::*;
 pub use port::McpPlatformRepositoryPort;

@@ -72,6 +72,82 @@ impl GooseAcpAgent {
         }
     }
 
+    pub(super) async fn on_mcp_sources_policy_get(
+        &self,
+        _req: McpSourcesPolicyGetRequest,
+    ) -> McpSourcesPolicyGetResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let result = match service {
+            Ok(service) => service
+                .sources_policy_get(&context)
+                .await
+                .map(source_policy_to_wire),
+            Err(error) => Err(error),
+        };
+        McpSourcesPolicyGetResponse {
+            outcome: outcome(&context, result),
+        }
+    }
+
+    pub(super) async fn on_mcp_manual_stdio_sources_list(
+        &self,
+        _req: McpManualStdioSourcesListRequest,
+    ) -> McpManualStdioSourcesListResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let result = match service {
+            Ok(service) => service
+                .manual_stdio_sources_list(&context)
+                .map(manual_stdio_sources_to_wire),
+            Err(error) => Err(error),
+        };
+        McpManualStdioSourcesListResponse {
+            outcome: outcome(&context, result),
+        }
+    }
+
+    pub(super) async fn on_mcp_manual_plan_create(
+        &self,
+        req: McpManualPlanCreateRequest,
+    ) -> McpManualPlanCreateResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let connection = match req.connection {
+            McpManualConnectionInput::RemoteHttp { endpoint, auth } => {
+                crate::mcp_platform::service::ManualConnectionInput::RemoteHttp {
+                    endpoint,
+                    auth: match auth {
+                        McpManualHttpAuth::None => {
+                            crate::mcp_platform::service::ManualHttpAuth::None
+                        }
+                        McpManualHttpAuth::BearerReference { auth_reference } => {
+                            crate::mcp_platform::service::ManualHttpAuth::BearerReference {
+                                auth_reference,
+                            }
+                        }
+                    },
+                }
+            }
+            McpManualConnectionInput::StdioProvider { source_id } => {
+                crate::mcp_platform::service::ManualConnectionInput::StdioProvider { source_id }
+            }
+        };
+        let result = match service {
+            Ok(service) => service
+                .manual_plan_create(
+                    &context,
+                    crate::mcp_platform::service::ManualPlanCreateInput {
+                        connection,
+                        idempotency_key: req.idempotency_key,
+                    },
+                )
+                .await
+                .map(plan_review_to_wire),
+            Err(error) => Err(error),
+        };
+        McpManualPlanCreateResponse {
+            outcome: outcome(&context, result),
+        }
+    }
+
     pub(super) async fn on_mcp_plan_create(
         &self,
         req: McpPlanCreateRequest,
@@ -405,6 +481,30 @@ fn error_to_wire(context: &RequestContext, error: McpPlatformError) -> McpPlatfo
                 operation: "lifecycle".to_string(),
             }),
         ),
+        Code::ManualStdioProviderUnavailable => (
+            McpPlatformErrorCodeDto::ManualStdioProviderUnavailable,
+            "No Core-owned manual stdio source provider is available.",
+            false,
+            Some(McpPlatformErrorDetails::ManualStdioProviderUnavailable {
+                recovery: McpRecoverySuggestion::ContactPolicyAdministrator,
+            }),
+        ),
+        Code::RemoteHttpPolicyUnavailable => (
+            McpPlatformErrorCodeDto::RemoteHttpPolicyUnavailable,
+            "Remote HTTP is unavailable because no verified connection policy is configured.",
+            false,
+            Some(McpPlatformErrorDetails::RemoteHttpPolicyUnavailable {
+                recovery: McpRecoverySuggestion::ContactPolicyAdministrator,
+            }),
+        ),
+        Code::UnsafeUrl => (
+            McpPlatformErrorCodeDto::UnsafeUrl,
+            "The remote MCP endpoint was denied by network policy.",
+            false,
+            Some(McpPlatformErrorDetails::OriginRejected {
+                origin_type: "remote_https".to_string(),
+            }),
+        ),
         Code::DockerUnavailable => (
             McpPlatformErrorCodeDto::DockerUnavailable,
             "The server-owned Docker capability is unavailable.",
@@ -556,7 +656,6 @@ fn error_to_wire(context: &RequestContext, error: McpPlatformError) -> McpPlatfo
         | Code::InvalidManifest
         | Code::UnsupportedSchema
         | Code::VersionNotExact
-        | Code::UnsafeUrl
         | Code::InvalidDigest
         | Code::ImmutableReferenceRequired
         | Code::DuplicateSelector
@@ -593,6 +692,17 @@ fn catalog_page_to_wire(page: crate::mcp_platform::service::CatalogPage) -> McpC
             offline: page.offline,
             local_persistence_only: page.local_persistence_only,
             newest_verified_at_ms: page.newest_verified_at_ms,
+            freshness: if page.newest_verified_at_ms.is_some() {
+                McpCacheFreshness::OfflineVerified
+            } else {
+                McpCacheFreshness::Empty
+            },
+            refresh_state: McpRefreshState::LocalOnly,
+            recovery: if page.newest_verified_at_ms.is_some() {
+                McpRecoverySuggestion::None
+            } else {
+                McpRecoverySuggestion::RestoreVerifiedCache
+            },
         },
     }
 }
@@ -614,6 +724,7 @@ fn catalog_summary_to_wire(
         compatibility: compatibility_to_wire(summary.compatibility),
         distribution: distribution_kind(&summary.distribution_adapter),
         verified_at_ms: summary.verified_at_ms,
+        eligibility: eligibility_to_wire(summary.eligibility),
     }
 }
 
@@ -646,10 +757,14 @@ fn catalog_detail_to_wire(detail: crate::mcp_platform::service::CatalogDetail) -
             .collect(),
         compatibility: compatibility_to_wire(detail.compatibility),
         verified_at_ms: detail.verified_at_ms,
+        eligibility: eligibility_to_wire(detail.eligibility),
     }
 }
 
 fn plan_review_to_wire(review: crate::mcp_platform::service::PlanReview) -> McpPlanReview {
+    let immutable_evidence = immutable_evidence_to_wire(review.immutable_evidence);
+    let policy_recovery = recovery_to_wire(review.recovery);
+    let reversibility = reversibility_to_wire(review.reversibility);
     let manifest = review.manifest;
     McpPlanReview {
         plan_id: review.plan_id,
@@ -662,6 +777,8 @@ fn plan_review_to_wire(review: crate::mcp_platform::service::PlanReview) -> McpP
         mcp_id: manifest.id.clone(),
         name: manifest.name.clone(),
         version: manifest.version.as_str().to_string(),
+        selected_manifest_digest: review.plan.manifest_digest().to_string(),
+        immutable_evidence,
         permissions: manifest
             .permissions
             .iter()
@@ -684,11 +801,7 @@ fn plan_review_to_wire(review: crate::mcp_platform::service::PlanReview) -> McpP
             process_required_for_connection: review.plan.effects().requires_process_spawn,
             starts_during_confirmation: false,
         },
-        reversibility: McpReversibility {
-            reversible: true,
-            rollback_summary: "Registration can be cancelled without installation or file effects."
-                .to_string(),
-        },
+        reversibility,
         policy: McpPolicyReview {
             outcome: policy_outcome_to_wire(review.policy.outcome),
             reasons: review
@@ -750,10 +863,99 @@ fn plan_review_to_wire(review: crate::mcp_platform::service::PlanReview) -> McpP
             })
             .collect(),
         default_disabled: !review.plan.default_enabled(),
+        recovery: policy_recovery,
+    }
+}
+
+fn immutable_evidence_to_wire(
+    evidence: crate::mcp_platform::service::ImmutableEvidence,
+) -> McpImmutableEvidence {
+    match evidence {
+        crate::mcp_platform::service::ImmutableEvidence::Artifact { sha256, size_bytes } => {
+            McpImmutableEvidence::Artifact { sha256, size_bytes }
+        }
+        crate::mcp_platform::service::ImmutableEvidence::Docker {
+            image,
+            image_digest,
+        } => McpImmutableEvidence::Docker {
+            image,
+            image_digest,
+        },
+        crate::mcp_platform::service::ImmutableEvidence::GitDev {
+            repository_origin,
+            commit,
+            tree,
+            materialized_digest,
+        } => McpImmutableEvidence::GitDev {
+            repository_origin,
+            commit,
+            tree: evidence_value_to_wire(tree),
+            materialized_digest: evidence_value_to_wire(materialized_digest),
+        },
+        crate::mcp_platform::service::ImmutableEvidence::Unavailable { reason } => {
+            McpImmutableEvidence::Unavailable {
+                reason: evidence_unavailable_to_wire(reason),
+            }
+        }
+    }
+}
+
+fn evidence_value_to_wire(value: crate::mcp_platform::service::EvidenceValue) -> McpEvidenceValue {
+    match value {
+        crate::mcp_platform::service::EvidenceValue::Verified(value) => {
+            McpEvidenceValue::Verified { value }
+        }
+        crate::mcp_platform::service::EvidenceValue::Unavailable(reason) => {
+            McpEvidenceValue::Unavailable {
+                reason: evidence_unavailable_to_wire(reason),
+            }
+        }
+    }
+}
+
+fn evidence_unavailable_to_wire(
+    reason: crate::mcp_platform::service::EvidenceUnavailableReason,
+) -> McpEvidenceUnavailableReason {
+    match reason {
+        crate::mcp_platform::service::EvidenceUnavailableReason::NotApplicable => {
+            McpEvidenceUnavailableReason::NotApplicable
+        }
+        crate::mcp_platform::service::EvidenceUnavailableReason::AvailableAfterMaterialization => {
+            McpEvidenceUnavailableReason::AvailableAfterMaterialization
+        }
+        crate::mcp_platform::service::EvidenceUnavailableReason::NoArtifactForRegistration => {
+            McpEvidenceUnavailableReason::NoArtifactForRegistration
+        }
+    }
+}
+
+fn reversibility_to_wire(
+    value: crate::mcp_platform::service::PlanReversibility,
+) -> McpReversibility {
+    McpReversibility {
+        reversible: value.reversible,
+        strategy: match value.strategy {
+            crate::mcp_platform::service::RollbackStrategy::RemoveConnectionRegistration => {
+                McpRollbackStrategy::RemoveConnectionRegistration
+            }
+            crate::mcp_platform::service::RollbackStrategy::StagedActivationRestoresPreviousVersion => {
+                McpRollbackStrategy::StagedActivationRestoresPreviousVersion
+            }
+            crate::mcp_platform::service::RollbackStrategy::RepairRestoresVerifiedOwnedContent => {
+                McpRollbackStrategy::RepairRestoresVerifiedOwnedContent
+            }
+            crate::mcp_platform::service::RollbackStrategy::UninstallRemovesOwnedFiles {
+                preserve_user_data,
+            } => McpRollbackStrategy::UninstallRemovesOwnedFiles { preserve_user_data },
+            crate::mcp_platform::service::RollbackStrategy::Unavailable => {
+                McpRollbackStrategy::Unavailable
+            }
+        },
     }
 }
 
 fn task_to_wire(task: crate::mcp_platform::service::TaskRef) -> McpTaskRef {
+    let outcome = task_outcome_to_wire(&task);
     McpTaskRef {
         task_id: task.task_id,
         operation: task_operation_to_wire(task.operation),
@@ -762,6 +964,138 @@ fn task_to_wire(task: crate::mcp_platform::service::TaskRef) -> McpTaskRef {
         cancellable: task.cancellable,
         revision: task.revision,
         updated_at_ms: task.updated_at_ms,
+        outcome,
+    }
+}
+
+fn task_outcome_to_wire(task: &crate::mcp_platform::service::TaskRef) -> McpTaskOutcomeSummary {
+    use crate::mcp_platform::task::{CompensationDescriptor, RedactedErrorCode, RollbackStatus};
+
+    let state = match task.status {
+        TaskStatus::Succeeded => McpTaskOutcomeState::Succeeded,
+        TaskStatus::Failed => McpTaskOutcomeState::Failed,
+        TaskStatus::Cancelled => McpTaskOutcomeState::Cancelled,
+        TaskStatus::Interrupted => McpTaskOutcomeState::Interrupted,
+        TaskStatus::RecoveryRequired => McpTaskOutcomeState::RecoveryRequired,
+        _ => McpTaskOutcomeState::Pending,
+    };
+    let error = task.redacted_error.as_ref().map(|error| {
+        let (code, message, suggestion, retryable) = match error.code() {
+            RedactedErrorCode::AdapterFailed => (
+                McpTaskErrorCode::AdapterFailed,
+                "The MCP adapter could not complete the approved operation.",
+                McpRecoverySuggestion::Retry,
+                true,
+            ),
+            RedactedErrorCode::VerificationFailed => (
+                McpTaskErrorCode::VerificationFailed,
+                "Verification of the approved MCP material failed.",
+                McpRecoverySuggestion::RecreatePlan,
+                false,
+            ),
+            RedactedErrorCode::ActivationFailed => (
+                McpTaskErrorCode::ActivationFailed,
+                "The verified MCP could not be activated.",
+                McpRecoverySuggestion::Retry,
+                true,
+            ),
+            RedactedErrorCode::RollbackFailed => (
+                McpTaskErrorCode::RollbackFailed,
+                "Rollback did not remove every recorded effect.",
+                McpRecoverySuggestion::ResolveRecovery,
+                false,
+            ),
+            RedactedErrorCode::Cancelled => (
+                McpTaskErrorCode::Cancelled,
+                "The operation was cancelled at a safe boundary.",
+                McpRecoverySuggestion::None,
+                false,
+            ),
+            RedactedErrorCode::Interrupted => (
+                McpTaskErrorCode::Interrupted,
+                "The operation was interrupted and requires a recorded recovery decision.",
+                McpRecoverySuggestion::Retry,
+                true,
+            ),
+            RedactedErrorCode::Unknown => (
+                McpTaskErrorCode::Unknown,
+                "The operation ended with a redacted internal error.",
+                McpRecoverySuggestion::Retry,
+                true,
+            ),
+        };
+        McpTaskClosedError {
+            code,
+            retryable,
+            correlation_id: task.task_id.clone(),
+            message: message.to_string(),
+            suggestion,
+        }
+    });
+    let rollback = match task.rollback_status {
+        RollbackStatus::NotRequired => McpTaskRollbackSummary::NotRequired,
+        RollbackStatus::Pending => McpTaskRollbackSummary::Pending,
+        RollbackStatus::InProgress => McpTaskRollbackSummary::InProgress,
+        RollbackStatus::Complete => McpTaskRollbackSummary::Complete,
+        RollbackStatus::Incomplete => McpTaskRollbackSummary::Incomplete,
+    };
+    let finalization = if task.status == TaskStatus::RecoveryRequired
+        || task.rollback_status == RollbackStatus::Incomplete
+    {
+        McpTaskFinalizationState::RecoveryRequired
+    } else if matches!(
+        task.status,
+        TaskStatus::Succeeded | TaskStatus::Failed | TaskStatus::Cancelled
+    ) {
+        McpTaskFinalizationState::Complete
+    } else {
+        McpTaskFinalizationState::Pending
+    };
+    let remaining_effects = task
+        .rollback_evidence
+        .as_ref()
+        .into_iter()
+        .flat_map(|evidence| evidence.remaining_compensations.iter())
+        .filter_map(|effect| match effect {
+            CompensationDescriptor::NoCompensation => None,
+            CompensationDescriptor::RemoveConnectionProjection { .. }
+            | CompensationDescriptor::RestoreManagedProjection { .. }
+            | CompensationDescriptor::RemoveOwnedConnectionProjection { .. }
+            | CompensationDescriptor::RemoveOwnedExtensionConfig { .. } => {
+                Some(McpRemainingEffect::ConnectionProjection)
+            }
+            CompensationDescriptor::ManagedUninstallSnapshot { .. }
+            | CompensationDescriptor::RestoreQuarantinedVersion { .. }
+            | CompensationDescriptor::CancelManagedUninstall { .. }
+            | CompensationDescriptor::FinalizedManagedUninstall { .. } => {
+                Some(McpRemainingEffect::ManagedUninstall)
+            }
+            CompensationDescriptor::RestoreConfigFragment { .. } => {
+                Some(McpRemainingEffect::ExternalResource)
+            }
+            _ => Some(McpRemainingEffect::ManagedInstallation),
+        })
+        .collect();
+    let next_action = match task.status {
+        TaskStatus::RecoveryRequired => McpTaskNextAction::ResolveRecovery,
+        TaskStatus::Interrupted => McpTaskNextAction::Resume,
+        TaskStatus::Failed => McpTaskNextAction::Retry,
+        TaskStatus::Planned | TaskStatus::AwaitingConfirmation => McpTaskNextAction::RecreatePlan,
+        TaskStatus::Queued
+        | TaskStatus::Running
+        | TaskStatus::Cancelling
+        | TaskStatus::Verifying
+        | TaskStatus::Activating
+        | TaskStatus::RollingBack => McpTaskNextAction::Wait,
+        TaskStatus::Succeeded | TaskStatus::Cancelled => McpTaskNextAction::None,
+    };
+    McpTaskOutcomeSummary {
+        state,
+        error,
+        rollback,
+        finalization,
+        remaining_effects,
+        next_action,
     }
 }
 
@@ -898,21 +1232,12 @@ fn transport_to_wire(transport: &Transport) -> McpTransportContract {
 fn auth_to_wire(auth: &Auth) -> McpAuthContract {
     match auth {
         Auth::None => McpAuthContract::None,
-        Auth::ApiKeyHeader {
-            header_name,
-            prefix,
-            credential_name,
-        } => McpAuthContract::ApiKeyHeader {
-            header_name: header_name.clone(),
-            credential_name: credential_name.clone(),
+        Auth::ApiKeyHeader { prefix, .. } => McpAuthContract::ApiKeyHeader {
+            credential_required: true,
             prefix_required: prefix.is_some(),
         },
-        Auth::Environment {
-            environment_key,
-            credential_name,
-        } => McpAuthContract::Environment {
-            environment_key: environment_key.clone(),
-            credential_name: credential_name.clone(),
+        Auth::Environment { .. } => McpAuthContract::Environment {
+            credential_required: true,
         },
         Auth::Oauth2 {
             authorization_url,
@@ -1012,6 +1337,155 @@ fn compatibility_to_wire(
     match compatibility {
         crate::mcp_platform::CatalogCompatibility::Compatible => McpCompatibility::Compatible,
         crate::mcp_platform::CatalogCompatibility::Incompatible => McpCompatibility::Incompatible,
+    }
+}
+
+fn eligibility_to_wire(value: crate::mcp_platform::service::Eligibility) -> McpEligibility {
+    McpEligibility {
+        outcome: match value.outcome {
+            crate::mcp_platform::service::EligibilityOutcome::Allowed => {
+                McpEligibilityOutcome::Allowed
+            }
+            crate::mcp_platform::service::EligibilityOutcome::Restricted => {
+                McpEligibilityOutcome::Restricted
+            }
+            crate::mcp_platform::service::EligibilityOutcome::Denied => {
+                McpEligibilityOutcome::Denied
+            }
+        },
+        reason: match value.reason {
+            crate::mcp_platform::service::EligibilityReason::Eligible => {
+                McpEligibilityReason::Eligible
+            }
+            crate::mcp_platform::service::EligibilityReason::ConfirmationRequired => {
+                McpEligibilityReason::ConfirmationRequired
+            }
+            crate::mcp_platform::service::EligibilityReason::PlatformUnsupported => {
+                McpEligibilityReason::PlatformUnsupported
+            }
+            crate::mcp_platform::service::EligibilityReason::RuntimeUnavailable => {
+                McpEligibilityReason::RuntimeUnavailable
+            }
+            crate::mcp_platform::service::EligibilityReason::PolicyDenied => {
+                McpEligibilityReason::PolicyDenied
+            }
+            crate::mcp_platform::service::EligibilityReason::DevelopmentModeRequired => {
+                McpEligibilityReason::DevelopmentModeRequired
+            }
+            crate::mcp_platform::service::EligibilityReason::ExternalCapabilityUnavailable => {
+                McpEligibilityReason::ExternalCapabilityUnavailable
+            }
+        },
+        recovery: recovery_to_wire(value.recovery),
+    }
+}
+
+fn recovery_to_wire(
+    value: crate::mcp_platform::service::RecoverySuggestion,
+) -> McpRecoverySuggestion {
+    match value {
+        crate::mcp_platform::service::RecoverySuggestion::None => McpRecoverySuggestion::None,
+        crate::mcp_platform::service::RecoverySuggestion::ReviewPermissions => {
+            McpRecoverySuggestion::ReviewPermissions
+        }
+        crate::mcp_platform::service::RecoverySuggestion::ChooseCompatibleRelease => {
+            McpRecoverySuggestion::ChooseCompatibleRelease
+        }
+        crate::mcp_platform::service::RecoverySuggestion::InstallRequiredRuntime => {
+            McpRecoverySuggestion::InstallRequiredRuntime
+        }
+        crate::mcp_platform::service::RecoverySuggestion::EnableDevelopmentMode => {
+            McpRecoverySuggestion::EnableDevelopmentMode
+        }
+        crate::mcp_platform::service::RecoverySuggestion::RestoreVerifiedCache => {
+            McpRecoverySuggestion::RestoreVerifiedCache
+        }
+        crate::mcp_platform::service::RecoverySuggestion::Retry => McpRecoverySuggestion::Retry,
+        crate::mcp_platform::service::RecoverySuggestion::RecreatePlan => {
+            McpRecoverySuggestion::RecreatePlan
+        }
+        crate::mcp_platform::service::RecoverySuggestion::ResolveRecovery => {
+            McpRecoverySuggestion::ResolveRecovery
+        }
+        crate::mcp_platform::service::RecoverySuggestion::ContactPolicyAdministrator => {
+            McpRecoverySuggestion::ContactPolicyAdministrator
+        }
+    }
+}
+
+fn source_policy_to_wire(
+    value: crate::mcp_platform::service::SourcePolicyState,
+) -> McpSourcesPolicyState {
+    McpSourcesPolicyState {
+        sources: value
+            .sources
+            .into_iter()
+            .map(|source| McpSourceState {
+                source_id: source.source_id,
+                trust_tiers: source.trust_tiers.into_iter().map(trust_to_wire).collect(),
+                manifest_count: source.manifest_count,
+                cache: McpCatalogCacheMetadata {
+                    offline: true,
+                    local_persistence_only: true,
+                    newest_verified_at_ms: source.newest_verified_at_ms,
+                    freshness: if source.newest_verified_at_ms.is_some() {
+                        McpCacheFreshness::OfflineVerified
+                    } else {
+                        McpCacheFreshness::Empty
+                    },
+                    refresh_state: McpRefreshState::LocalOnly,
+                    recovery: if source.newest_verified_at_ms.is_some() {
+                        McpRecoverySuggestion::None
+                    } else {
+                        McpRecoverySuggestion::RestoreVerifiedCache
+                    },
+                },
+                compatibility: McpCompatibilitySummary {
+                    compatible: source.compatibility.compatible,
+                    restricted: source.compatibility.restricted,
+                    denied: source.compatibility.denied,
+                },
+                recovery: if source.compatibility.denied > 0 {
+                    McpRecoverySuggestion::ChooseCompatibleRelease
+                } else {
+                    McpRecoverySuggestion::None
+                },
+            })
+            .collect(),
+        policy: McpMachinePolicyState {
+            target_platform: value.policy.target_platform,
+            target_architecture: value.policy.target_architecture,
+            development_mode: value.policy.development_mode,
+            docker_allowed: value.policy.docker_allowed,
+            recovery: McpRecoverySuggestion::None,
+        },
+    }
+}
+
+fn manual_stdio_sources_to_wire(
+    value: crate::mcp_platform::service::ManualStdioSourcesPage,
+) -> McpManualStdioSourcesPage {
+    McpManualStdioSourcesPage {
+        items: value
+            .items
+            .into_iter()
+            .map(|source| McpManualStdioSource {
+                source_id: source.source_id,
+                display_name: source.display_name,
+                publisher_name: source.publisher_name,
+                trust_tier: trust_to_wire(source.trust_tier),
+                compatibility: if source.compatible {
+                    McpCompatibility::Compatible
+                } else {
+                    McpCompatibility::Incompatible
+                },
+            })
+            .collect(),
+        provider: if value.available {
+            McpManualStdioProviderState::Available
+        } else {
+            McpManualStdioProviderState::OperationNotSupported
+        },
     }
 }
 
@@ -1249,6 +1723,12 @@ fn managed_summary_to_wire(
             crate::mcp_platform::service::ManagedNextAction::ResumeTask => {
                 McpManagedNextAction::ResumeTask
             }
+        },
+        phase_capabilities: McpPhaseCapabilities {
+            session_enablement: McpPhaseCapability::NotAvailableInThisPhase,
+            tool_policy: McpPhaseCapability::NotAvailableInThisPhase,
+            profiles: McpPhaseCapability::NotAvailableInThisPhase,
+            model_suggestions: McpPhaseCapability::NotAvailableInThisPhase,
         },
     }
 }

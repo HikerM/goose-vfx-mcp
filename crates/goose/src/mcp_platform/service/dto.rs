@@ -64,6 +64,7 @@ pub struct CatalogSummary {
     pub compatibility: CatalogCompatibility,
     pub distribution_adapter: String,
     pub verified_at_ms: i64,
+    pub eligibility: Eligibility,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,6 +74,45 @@ pub struct CatalogPage {
     pub offline: bool,
     pub local_persistence_only: bool,
     pub newest_verified_at_ms: Option<i64>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EligibilityOutcome {
+    Allowed,
+    Restricted,
+    Denied,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EligibilityReason {
+    Eligible,
+    ConfirmationRequired,
+    PlatformUnsupported,
+    RuntimeUnavailable,
+    PolicyDenied,
+    DevelopmentModeRequired,
+    ExternalCapabilityUnavailable,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RecoverySuggestion {
+    None,
+    ReviewPermissions,
+    ChooseCompatibleRelease,
+    InstallRequiredRuntime,
+    EnableDevelopmentMode,
+    RestoreVerifiedCache,
+    Retry,
+    RecreatePlan,
+    ResolveRecovery,
+    ContactPolicyAdministrator,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Eligibility {
+    pub outcome: EligibilityOutcome,
+    pub reason: EligibilityReason,
+    pub recovery: RecoverySuggestion,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -94,6 +134,7 @@ pub struct CatalogDetail {
     pub compatibility: CatalogCompatibility,
     pub manifest: Manifest,
     pub verified_at_ms: i64,
+    pub eligibility: Eligibility,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -133,6 +174,29 @@ pub enum PlanIntent {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ManualConnectionInput {
+    RemoteHttp {
+        endpoint: String,
+        auth: ManualHttpAuth,
+    },
+    StdioProvider {
+        source_id: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ManualHttpAuth {
+    None,
+    BearerReference { auth_reference: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManualPlanCreateInput {
+    pub connection: ManualConnectionInput,
+    pub idempotency_key: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlanCreateInput {
     pub intent: PlanIntent,
     pub idempotency_key: String,
@@ -150,6 +214,58 @@ pub struct PlanReview {
     pub plan: InstallationPlan,
     pub target: PlanTarget,
     pub policy: PolicyDecision,
+    pub immutable_evidence: ImmutableEvidence,
+    pub reversibility: PlanReversibility,
+    pub recovery: RecoverySuggestion,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ImmutableEvidence {
+    Artifact {
+        sha256: String,
+        size_bytes: Option<u64>,
+    },
+    Docker {
+        image: String,
+        image_digest: String,
+    },
+    GitDev {
+        repository_origin: String,
+        commit: String,
+        tree: EvidenceValue,
+        materialized_digest: EvidenceValue,
+    },
+    Unavailable {
+        reason: EvidenceUnavailableReason,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EvidenceValue {
+    Verified(String),
+    Unavailable(EvidenceUnavailableReason),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EvidenceUnavailableReason {
+    NotApplicable,
+    AvailableAfterMaterialization,
+    NoArtifactForRegistration,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlanReversibility {
+    pub reversible: bool,
+    pub strategy: RollbackStrategy,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RollbackStrategy {
+    RemoveConnectionRegistration,
+    StagedActivationRestoresPreviousVersion,
+    RepairRestoresVerifiedOwnedContent,
+    UninstallRemovesOwnedFiles { preserve_user_data: bool },
+    Unavailable,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -216,6 +332,51 @@ pub struct ManagedMcpSummary {
     pub external_capability: Option<ManagedExternalCapabilityStatus>,
     pub eligibility: ManagedEligibility,
     pub next_action: ManagedNextAction,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SourcePolicyState {
+    pub sources: Vec<SourceState>,
+    pub policy: MachinePolicyState,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SourceState {
+    pub source_id: String,
+    pub trust_tiers: Vec<TrustTier>,
+    pub manifest_count: u32,
+    pub newest_verified_at_ms: Option<i64>,
+    pub compatibility: CompatibilitySummary,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct CompatibilitySummary {
+    pub compatible: u32,
+    pub restricted: u32,
+    pub denied: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MachinePolicyState {
+    pub target_platform: String,
+    pub target_architecture: String,
+    pub development_mode: bool,
+    pub docker_allowed: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManualStdioSourcesPage {
+    pub items: Vec<ManualStdioSource>,
+    pub available: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManualStdioSource {
+    pub source_id: String,
+    pub display_name: String,
+    pub publisher_name: String,
+    pub trust_tier: TrustTier,
+    pub compatible: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -343,6 +504,9 @@ pub struct TaskRef {
     pub cancellable: bool,
     pub revision: i64,
     pub updated_at_ms: i64,
+    pub redacted_error: Option<crate::mcp_platform::task::RedactedError>,
+    pub rollback_status: crate::mcp_platform::task::RollbackStatus,
+    pub rollback_evidence: Option<crate::mcp_platform::task::RollbackEvidence>,
 }
 
 impl From<TaskRecord> for TaskRef {
@@ -360,6 +524,9 @@ impl From<TaskRecord> for TaskRef {
             progress: task.progress,
             revision: task.revision,
             updated_at_ms: task.updated_at_ms,
+            redacted_error: task.redacted_error,
+            rollback_status: task.rollback_status,
+            rollback_evidence: task.rollback_evidence,
         }
     }
 }

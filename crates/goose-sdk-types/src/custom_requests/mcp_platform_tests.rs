@@ -24,6 +24,9 @@ fn method_constants_match_request_contracts() {
     assert_method::<McpHealthRunRequest>(MCP_HEALTH_RUN_METHOD);
     assert_method::<McpHealthGetRequest>(MCP_HEALTH_GET_METHOD);
     assert_method::<McpSetDefaultEnabledRequest>(MCP_SET_DEFAULT_ENABLED_METHOD);
+    assert_method::<McpSourcesPolicyGetRequest>(MCP_SOURCES_POLICY_GET_METHOD);
+    assert_method::<McpManualStdioSourcesListRequest>(MCP_MANUAL_STDIO_SOURCES_LIST_METHOD);
+    assert_method::<McpManualPlanCreateRequest>(MCP_MANUAL_PLAN_CREATE_METHOD);
 }
 
 #[test]
@@ -65,6 +68,8 @@ fn generated_request_schemas_are_closed_and_have_no_execution_escape_hatch() {
         schemars::schema_for!(McpHealthRunRequest),
         schemars::schema_for!(McpHealthGetRequest),
         schemars::schema_for!(McpSetDefaultEnabledRequest),
+        schemars::schema_for!(McpSourcesPolicyGetRequest),
+        schemars::schema_for!(McpManualStdioSourcesListRequest),
     ];
     let forbidden = [
         "\"actor\"",
@@ -84,6 +89,73 @@ fn generated_request_schemas_are_closed_and_have_no_execution_escape_hatch() {
         for field in forbidden {
             assert!(!text.contains(field), "schema contains forbidden {field}");
         }
+    }
+}
+
+#[test]
+fn manual_add_contract_accepts_only_semantic_http_or_opaque_stdio_inputs() {
+    let remote = serde_json::json!({
+        "connection": {
+            "type": "remote_http",
+            "endpoint": "https://mcp.example.com/v1",
+            "auth": {"type":"bearer_reference","authReference":"credential_1"}
+        },
+        "idempotencyKey": "manual-http-1"
+    });
+    assert!(serde_json::from_value::<McpManualPlanCreateRequest>(remote.clone()).is_ok());
+    for forbidden in ["headers", "command", "argv", "env", "cwd", "shell"] {
+        let mut forged = remote.clone();
+        forged["connection"][forbidden] = serde_json::json!("forged");
+        assert!(serde_json::from_value::<McpManualPlanCreateRequest>(forged).is_err());
+    }
+
+    let stdio = serde_json::json!({
+        "connection":{"type":"stdio_provider","sourceId":"provider_item_1"},
+        "idempotencyKey":"manual-stdio-1"
+    });
+    assert!(serde_json::from_value::<McpManualPlanCreateRequest>(stdio.clone()).is_ok());
+    for forbidden in ["executable", "argv", "args", "env", "cwd", "command"] {
+        let mut forged = stdio.clone();
+        forged["connection"][forbidden] = serde_json::json!("forged");
+        assert!(serde_json::from_value::<McpManualPlanCreateRequest>(forged).is_err());
+    }
+
+    let schema = serde_json::to_string(&schemars::schema_for!(McpManualPlanCreateRequest)).unwrap();
+    for forbidden in ["executable", "argv", "headers", "credentialValue", "cwd"] {
+        assert!(
+            !schema.contains(forbidden),
+            "manual schema contains {forbidden}"
+        );
+    }
+}
+
+#[test]
+fn public_contract_does_not_expose_auth_header_or_environment_key() {
+    let schema = serde_json::to_string(&schemars::schema_for!(McpCatalogDetail)).unwrap();
+    for forbidden in [
+        "headerName",
+        "environmentKey",
+        "credentialName",
+        "credentialValue",
+        "oauthCode",
+    ] {
+        assert!(
+            !schema.contains(forbidden),
+            "catalog detail exposes {forbidden}"
+        );
+    }
+    let task_schema = serde_json::to_string(&schemars::schema_for!(McpTaskRef)).unwrap();
+    for forbidden in [
+        "stderr",
+        "stack",
+        "command",
+        "absolutePath",
+        "daemonAddress",
+    ] {
+        assert!(
+            !task_schema.contains(forbidden),
+            "task contract exposes {forbidden}"
+        );
     }
 }
 

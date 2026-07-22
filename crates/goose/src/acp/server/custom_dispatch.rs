@@ -53,6 +53,30 @@ impl GooseAcpAgent {
         Ok(self.on_mcp_catalog_detail(req).await)
     }
 
+    #[custom_method(McpSourcesPolicyGetRequest)]
+    async fn dispatch_mcp_sources_policy_get(
+        &self,
+        req: McpSourcesPolicyGetRequest,
+    ) -> Result<McpSourcesPolicyGetResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_sources_policy_get(req).await)
+    }
+
+    #[custom_method(McpManualStdioSourcesListRequest)]
+    async fn dispatch_mcp_manual_stdio_sources_list(
+        &self,
+        req: McpManualStdioSourcesListRequest,
+    ) -> Result<McpManualStdioSourcesListResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_manual_stdio_sources_list(req).await)
+    }
+
+    #[custom_method(McpManualPlanCreateRequest)]
+    async fn dispatch_mcp_manual_plan_create(
+        &self,
+        req: McpManualPlanCreateRequest,
+    ) -> Result<McpManualPlanCreateResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_manual_plan_create(req).await)
+    }
+
     #[custom_method(McpPlanCreateRequest)]
     async fn dispatch_mcp_plan_create(
         &self,

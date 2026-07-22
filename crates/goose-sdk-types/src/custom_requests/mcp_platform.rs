@@ -15,6 +15,9 @@ pub const MCP_GET_METHOD: &str = "goose.mcpGet_unstable";
 pub const MCP_HEALTH_RUN_METHOD: &str = "goose.mcpHealthRun_unstable";
 pub const MCP_HEALTH_GET_METHOD: &str = "goose.mcpHealthGet_unstable";
 pub const MCP_SET_DEFAULT_ENABLED_METHOD: &str = "goose.mcpSetDefaultEnabled_unstable";
+pub const MCP_SOURCES_POLICY_GET_METHOD: &str = "goose.mcpSourcesPolicyGet_unstable";
+pub const MCP_MANUAL_STDIO_SOURCES_LIST_METHOD: &str = "goose.mcpManualStdioSourcesList_unstable";
+pub const MCP_MANUAL_PLAN_CREATE_METHOD: &str = "goose.mcpManualPlanCreate_unstable";
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
@@ -37,11 +40,14 @@ impl<T> McpPlatformOutcome<T> {
 #[serde(rename_all = "snake_case")]
 pub enum McpPlatformErrorCodeDto {
     InvalidRequest,
+    UnsafeUrl,
     NotFound,
     IntegrityError,
     PolicyDenied,
     NotImplementedForPhase,
     OperationNotSupported,
+    ManualStdioProviderUnavailable,
+    RemoteHttpPolicyUnavailable,
     PlanStale,
     PlanExpired,
     IdempotencyConflict,
@@ -98,6 +104,8 @@ pub enum McpPlatformErrorDetails {
     RecoveryRequired {},
     AdapterVersionIncompatible {},
     ExternalCapabilityUnavailable { capability: String },
+    ManualStdioProviderUnavailable { recovery: McpRecoverySuggestion },
+    RemoteHttpPolicyUnavailable { recovery: McpRecoverySuggestion },
     ExternalPolicyDenied { capability: String },
     SupplyChainMismatch { authority: String },
     AuthenticationRequired { provider: String },
@@ -310,6 +318,87 @@ pub struct McpSetDefaultEnabledResponse {
     pub outcome: McpPlatformOutcome<McpManagedSummary>,
 }
 
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method = "goose.mcpSourcesPolicyGet_unstable", response = McpSourcesPolicyGetResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpSourcesPolicyGetRequest {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpSourcesPolicyGetResponse {
+    pub outcome: McpPlatformOutcome<McpSourcesPolicyState>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(
+    method = "goose.mcpManualStdioSourcesList_unstable",
+    response = McpManualStdioSourcesListResponse
+)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManualStdioSourcesListRequest {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManualStdioSourcesListResponse {
+    pub outcome: McpPlatformOutcome<McpManualStdioSourcesPage>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method = "goose.mcpManualPlanCreate_unstable", response = McpManualPlanCreateResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManualPlanCreateRequest {
+    pub connection: McpManualConnectionInput,
+    pub idempotency_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManualPlanCreateResponse {
+    pub outcome: McpPlatformOutcome<McpPlanReview>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(
+    tag = "type",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum McpManualConnectionInput {
+    RemoteHttp {
+        endpoint: String,
+        #[serde(default)]
+        auth: McpManualHttpAuth,
+    },
+    StdioProvider {
+        source_id: String,
+    },
+}
+
+impl Default for McpManualConnectionInput {
+    fn default() -> Self {
+        Self::RemoteHttp {
+            endpoint: String::new(),
+            auth: McpManualHttpAuth::None,
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(
+    tag = "type",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum McpManualHttpAuth {
+    #[default]
+    None,
+    BearerReference {
+        auth_reference: String,
+    },
+}
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct McpManagedPage {
@@ -340,6 +429,23 @@ pub struct McpManagedSummary {
     pub external_capability: Option<McpExternalCapabilityStatus>,
     pub eligibility: McpManagedEligibility,
     pub next_action: McpManagedNextAction,
+    pub phase_capabilities: McpPhaseCapabilities,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpPhaseCapabilities {
+    pub session_enablement: McpPhaseCapability,
+    pub tool_policy: McpPhaseCapability,
+    pub profiles: McpPhaseCapability,
+    pub model_suggestions: McpPhaseCapability,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpPhaseCapability {
+    #[default]
+    NotAvailableInThisPhase,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -581,6 +687,29 @@ pub struct McpCatalogCacheMetadata {
     pub local_persistence_only: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub newest_verified_at_ms: Option<i64>,
+    pub freshness: McpCacheFreshness,
+    pub refresh_state: McpRefreshState,
+    pub recovery: McpRecoverySuggestion,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpCacheFreshness {
+    Fresh,
+    Stale,
+    #[default]
+    OfflineVerified,
+    Empty,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpRefreshState {
+    Idle,
+    Refreshing,
+    Failed,
+    #[default]
+    LocalOnly,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
@@ -599,6 +728,7 @@ pub struct McpCatalogSummary {
     pub compatibility: McpCompatibility,
     pub distribution: McpDistributionKind,
     pub verified_at_ms: i64,
+    pub eligibility: McpEligibility,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -621,6 +751,53 @@ pub struct McpCatalogDetail {
     pub permissions: Vec<McpPermission>,
     pub compatibility: McpCompatibility,
     pub verified_at_ms: i64,
+    pub eligibility: McpEligibility,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpEligibility {
+    pub outcome: McpEligibilityOutcome,
+    pub reason: McpEligibilityReason,
+    pub recovery: McpRecoverySuggestion,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpEligibilityOutcome {
+    #[default]
+    Allowed,
+    Restricted,
+    Denied,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpEligibilityReason {
+    #[default]
+    Eligible,
+    ConfirmationRequired,
+    PlatformUnsupported,
+    RuntimeUnavailable,
+    PolicyDenied,
+    DevelopmentModeRequired,
+    ExternalCapabilityUnavailable,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpRecoverySuggestion {
+    #[default]
+    None,
+    ReviewPermissions,
+    ChooseCompatibleRelease,
+    InstallRequiredRuntime,
+    EnableDevelopmentMode,
+    RestoreVerifiedCache,
+    Retry,
+    RecreatePlan,
+    ResolveRecovery,
+    ContactPolicyAdministrator,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
@@ -731,13 +908,11 @@ pub enum McpTransportContract {
 pub enum McpAuthContract {
     None,
     ApiKeyHeader {
-        header_name: String,
-        credential_name: String,
+        credential_required: bool,
         prefix_required: bool,
     },
     Environment {
-        environment_key: String,
-        credential_name: String,
+        credential_required: bool,
     },
     Oauth2 {
         authorization_endpoint: String,
@@ -858,6 +1033,8 @@ pub struct McpPlanReview {
     pub mcp_id: String,
     pub name: String,
     pub version: String,
+    pub selected_manifest_digest: String,
+    pub immutable_evidence: McpImmutableEvidence,
     pub permissions: Vec<McpPermission>,
     pub network_origins: Vec<String>,
     pub file_effects: McpFileEffects,
@@ -868,6 +1045,49 @@ pub struct McpPlanReview {
     pub warnings: Vec<McpPlanWarning>,
     pub required_confirmations: Vec<McpRequiredConfirmation>,
     pub default_disabled: bool,
+    pub recovery: McpRecoverySuggestion,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum McpImmutableEvidence {
+    Artifact {
+        sha256: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        size_bytes: Option<u64>,
+    },
+    Docker {
+        image: String,
+        image_digest: String,
+    },
+    GitDev {
+        repository_origin: String,
+        commit: String,
+        tree: McpEvidenceValue,
+        materialized_digest: McpEvidenceValue,
+    },
+    Unavailable {
+        reason: McpEvidenceUnavailableReason,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum McpEvidenceValue {
+    Verified {
+        value: String,
+    },
+    Unavailable {
+        reason: McpEvidenceUnavailableReason,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpEvidenceUnavailableReason {
+    NotApplicable,
+    AvailableAfterMaterialization,
+    NoArtifactForRegistration,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
@@ -895,7 +1115,20 @@ pub struct McpProcessEffects {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct McpReversibility {
     pub reversible: bool,
-    pub rollback_summary: String,
+    pub strategy: McpRollbackStrategy,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum McpRollbackStrategy {
+    RemoveConnectionRegistration,
+    StagedActivationRestoresPreviousVersion,
+    RepairRestoresVerifiedOwnedContent,
+    UninstallRemovesOwnedFiles {
+        preserve_user_data: bool,
+    },
+    #[default]
+    Unavailable,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -950,6 +1183,95 @@ pub struct McpTaskRef {
     pub cancellable: bool,
     pub revision: i64,
     pub updated_at_ms: i64,
+    pub outcome: McpTaskOutcomeSummary,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpTaskOutcomeSummary {
+    pub state: McpTaskOutcomeState,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error: Option<McpTaskClosedError>,
+    pub rollback: McpTaskRollbackSummary,
+    pub finalization: McpTaskFinalizationState,
+    pub remaining_effects: Vec<McpRemainingEffect>,
+    pub next_action: McpTaskNextAction,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpTaskFinalizationState {
+    #[default]
+    Pending,
+    Complete,
+    RecoveryRequired,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpTaskOutcomeState {
+    #[default]
+    Pending,
+    Succeeded,
+    Failed,
+    Cancelled,
+    Interrupted,
+    RecoveryRequired,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpTaskClosedError {
+    pub code: McpTaskErrorCode,
+    pub retryable: bool,
+    pub correlation_id: String,
+    pub message: String,
+    pub suggestion: McpRecoverySuggestion,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpTaskErrorCode {
+    AdapterFailed,
+    VerificationFailed,
+    ActivationFailed,
+    RollbackFailed,
+    Cancelled,
+    Interrupted,
+    Unknown,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpTaskRollbackSummary {
+    #[default]
+    NotRequired,
+    Pending,
+    InProgress,
+    Complete,
+    Incomplete,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpRemainingEffect {
+    ConnectionProjection,
+    ManagedInstallation,
+    ManagedUninstall,
+    ExternalResource,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpTaskNextAction {
+    #[default]
+    None,
+    Wait,
+    CancelWhenSafe,
+    Retry,
+    Resume,
+    ResolveRecovery,
+    RecreatePlan,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -1060,6 +1382,67 @@ pub enum McpRecoveryDecision {
     ResumeFromStep { ordinal: i64 },
     RollbackFromStep { ordinal: i64 },
     RequiresManualRecovery,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpSourcesPolicyState {
+    pub sources: Vec<McpSourceState>,
+    pub policy: McpMachinePolicyState,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpSourceState {
+    pub source_id: String,
+    pub trust_tiers: Vec<McpTrustTier>,
+    pub manifest_count: u32,
+    pub cache: McpCatalogCacheMetadata,
+    pub compatibility: McpCompatibilitySummary,
+    pub recovery: McpRecoverySuggestion,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpCompatibilitySummary {
+    pub compatible: u32,
+    pub restricted: u32,
+    pub denied: u32,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpMachinePolicyState {
+    pub target_platform: String,
+    pub target_architecture: String,
+    pub development_mode: bool,
+    pub docker_allowed: bool,
+    pub recovery: McpRecoverySuggestion,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManualStdioSourcesPage {
+    pub items: Vec<McpManualStdioSource>,
+    pub provider: McpManualStdioProviderState,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManualStdioSource {
+    pub source_id: String,
+    pub display_name: String,
+    pub publisher_name: String,
+    pub trust_tier: McpTrustTier,
+    pub compatibility: McpCompatibility,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpManualStdioProviderState {
+    Available,
+    #[default]
+    OperationNotSupported,
 }
 
 impl<T> Default for McpPlatformOutcome<T>

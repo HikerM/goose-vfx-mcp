@@ -5,6 +5,8 @@ use std::sync::Mutex;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine as _;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest as _, Sha256};
+use url::Url;
 
 use crate::mcp_platform::adapters::plan_for_manifest;
 use crate::mcp_platform::catalog::{CatalogCompatibility, CompatibilityTarget};
@@ -17,7 +19,7 @@ use crate::mcp_platform::lifecycle::{
     EmptyHostIntegrationAdapter, LifecyclePorts, SafeRegistrationEffectAdapter,
 };
 use crate::mcp_platform::manifest::{
-    Architecture, Distribution, ExactVersion, Platform, VerifiedManifest,
+    parse_manifest, Architecture, Distribution, ExactVersion, Platform, Transport, VerifiedManifest,
 };
 use crate::mcp_platform::plan::{
     AdapterIdentity, EffectSummary, InstallationPlan, PlanStep, PlanWarning,
@@ -25,7 +27,8 @@ use crate::mcp_platform::plan::{
 use crate::mcp_platform::policy::{evaluate_manifest_policy, PlanOperation, PolicyContext};
 use crate::mcp_platform::repository::{
     ConfirmationEvidence, CreateHealthTask, CreateTask, ManagedInventoryFilter,
-    ManagedMcpInventoryRecord, PlanRecord, PlanTarget, SavePlan, TaskRecord, TaskTransition,
+    ManagedMcpInventoryRecord, ManifestRecord, PlanRecord, PlanTarget, SavePlan, TaskRecord,
+    TaskTransition,
 };
 use crate::mcp_platform::task::{
     AdapterEvidence, CompensationDescriptor, RollbackEvidence, RollbackStatus, TaskOperation,
@@ -36,13 +39,20 @@ use crate::mcp_platform::{
     RuntimeCapabilities, RuntimeCapabilitySnapshot, TaskRunner,
 };
 
-use super::dependencies::{Clock, IdGenerator, SystemClock, UuidGenerator};
+use super::dependencies::{
+    Clock, IdGenerator, ManualStdioProvider, RemoteHttpNetworkPolicy, SystemClock,
+    UnavailableRemoteHttpNetworkPolicy, UnsupportedManualStdioProvider, UuidGenerator,
+};
 use super::dto::{
     unique_task_ids, CatalogDetail, CatalogListInput, CatalogLocator, CatalogPage, CatalogSummary,
-    EventsResumeInput, EventsResumePage, HealthGetInput, HealthRunInput, HealthStatus,
-    InstallConfirmInput, ManagedGetInput, ManagedListInput, ManagedMcpDetail, ManagedMcpPage,
-    ManagedMcpSummary, ManagedSupplyChainSummary, PlanCreateInput, PlanIntent, PlanReview,
-    RequestContext, SetDefaultEnabledInput, TaskCancelInput, TaskGetInput, TaskRef, TaskRetryInput,
+    CompatibilitySummary, Eligibility, EligibilityOutcome, EligibilityReason, EventsResumeInput,
+    EventsResumePage, EvidenceUnavailableReason, EvidenceValue, HealthGetInput, HealthRunInput,
+    HealthStatus, ImmutableEvidence, InstallConfirmInput, MachinePolicyState, ManagedGetInput,
+    ManagedListInput, ManagedMcpDetail, ManagedMcpPage, ManagedMcpSummary,
+    ManagedSupplyChainSummary, ManualConnectionInput, ManualHttpAuth, ManualPlanCreateInput,
+    ManualStdioSourcesPage, PlanCreateInput, PlanIntent, PlanReversibility, PlanReview,
+    RecoverySuggestion, RequestContext, RollbackStrategy, SetDefaultEnabledInput,
+    SourcePolicyState, SourceState, TaskCancelInput, TaskGetInput, TaskRef, TaskRetryInput,
     UserDecision, LOCAL_PERSISTED_SOURCE_ID,
 };
 use super::port::McpPlatformRepositoryPort;
@@ -89,6 +99,8 @@ pub struct McpPlatformService {
     runtime_capabilities: RuntimeCapabilitySnapshot,
     external_capabilities: ExternalCapabilitySnapshot,
     development_mode: bool,
+    manual_stdio_provider: Arc<dyn ManualStdioProvider>,
+    remote_http_network_policy: Arc<dyn RemoteHttpNetworkPolicy>,
 }
 
 enum WorkerState {
@@ -165,6 +177,8 @@ impl McpPlatformService {
             runtime_capabilities,
             external_capabilities: ExternalCapabilitySnapshot::default(),
             development_mode,
+            manual_stdio_provider: Arc::new(UnsupportedManualStdioProvider),
+            remote_http_network_policy: Arc::new(UnavailableRemoteHttpNetworkPolicy),
         }
     }
 
@@ -207,6 +221,8 @@ impl McpPlatformService {
                 git_available,
             },
             development_mode,
+            manual_stdio_provider: Arc::new(UnsupportedManualStdioProvider),
+            remote_http_network_policy: Arc::new(UnavailableRemoteHttpNetworkPolicy),
         }
     }
 
@@ -250,7 +266,22 @@ impl McpPlatformService {
             runtime_capabilities,
             external_capabilities,
             development_mode,
+            manual_stdio_provider: Arc::new(UnsupportedManualStdioProvider),
+            remote_http_network_policy: Arc::new(UnavailableRemoteHttpNetworkPolicy),
         }
+    }
+
+    pub fn with_manual_stdio_provider(mut self, provider: Arc<dyn ManualStdioProvider>) -> Self {
+        self.manual_stdio_provider = provider;
+        self
+    }
+
+    pub fn with_remote_http_network_policy(
+        mut self,
+        policy: Arc<dyn RemoteHttpNetworkPolicy>,
+    ) -> Self {
+        self.remote_http_network_policy = policy;
+        self
     }
 
     pub fn start_worker_if_configured(&self) {
@@ -347,7 +378,11 @@ impl McpPlatformService {
             .transpose()?;
         let items = matching
             .into_iter()
-            .map(|record| catalog_summary(record, self.options.compatibility_target))
+            .map(|record| {
+                let eligibility =
+                    self.eligibility_for_manifest(&record.verified, record.trust_tier);
+                catalog_summary(record, self.options.compatibility_target, eligibility)
+            })
             .collect();
 
         Ok(CatalogPage {
@@ -385,6 +420,7 @@ impl McpPlatformService {
                     .await?
             }
         };
+        let eligibility = self.eligibility_for_manifest(&record.verified, record.trust_tier);
         Ok(CatalogDetail {
             source_id: LOCAL_PERSISTED_SOURCE_ID.to_string(),
             manifest_digest: record.verified.digest().to_string(),
@@ -393,7 +429,128 @@ impl McpPlatformService {
             compatibility: compatibility(&record.verified, self.options.compatibility_target),
             manifest: record.verified.manifest().clone(),
             verified_at_ms: record.created_at_ms,
+            eligibility,
         })
+    }
+
+    pub async fn sources_policy_get(
+        &self,
+        _context: &RequestContext,
+    ) -> McpPlatformResult<SourcePolicyState> {
+        let records = self.repository.list_manifests().await?;
+        let mut trust_tiers = records
+            .iter()
+            .map(|record| record.trust_tier)
+            .collect::<Vec<_>>();
+        trust_tiers.sort_by_key(|tier| match tier {
+            crate::mcp_platform::TrustTier::Official => 0,
+            crate::mcp_platform::TrustTier::Community => 1,
+            crate::mcp_platform::TrustTier::Local => 2,
+        });
+        trust_tiers.dedup();
+        let mut compatibility = CompatibilitySummary::default();
+        for record in &records {
+            match self
+                .eligibility_for_manifest(&record.verified, record.trust_tier)
+                .outcome
+            {
+                EligibilityOutcome::Allowed => compatibility.compatible += 1,
+                EligibilityOutcome::Restricted => compatibility.restricted += 1,
+                EligibilityOutcome::Denied => compatibility.denied += 1,
+            }
+        }
+        let newest_verified_at_ms = records.iter().map(|record| record.created_at_ms).max();
+        Ok(SourcePolicyState {
+            sources: vec![SourceState {
+                source_id: LOCAL_PERSISTED_SOURCE_ID.to_string(),
+                trust_tiers,
+                manifest_count: records.len().try_into().unwrap_or(u32::MAX),
+                newest_verified_at_ms,
+                compatibility,
+            }],
+            policy: MachinePolicyState {
+                target_platform: platform_name(self.options.compatibility_target.platform),
+                target_architecture: architecture_name(self.options.compatibility_target.arch),
+                development_mode: self.development_mode,
+                docker_allowed: self.external_capabilities.docker_policy_allowed,
+            },
+        })
+    }
+
+    pub fn manual_stdio_sources_list(
+        &self,
+        _context: &RequestContext,
+    ) -> McpPlatformResult<ManualStdioSourcesPage> {
+        let items = self.manual_stdio_provider.list_sources()?;
+        Ok(ManualStdioSourcesPage {
+            available: !items.is_empty(),
+            items,
+        })
+    }
+
+    pub async fn manual_plan_create(
+        &self,
+        context: &RequestContext,
+        input: ManualPlanCreateInput,
+    ) -> McpPlatformResult<PlanReview> {
+        validate_idempotency_key(&input.idempotency_key)?;
+        let resolved = match input.connection {
+            ManualConnectionInput::RemoteHttp { endpoint, auth } => {
+                self.remote_http_network_policy
+                    .validate_endpoint(&endpoint)?;
+                let verified = manual_http_manifest(
+                    &manual_connection_id(&input.idempotency_key),
+                    &endpoint,
+                    auth,
+                )?;
+                super::dependencies::ResolvedManualStdioSource {
+                    verified,
+                    proof: crate::mcp_platform::ManifestProof::LocalBytes,
+                    trust_tier: crate::mcp_platform::TrustTier::Local,
+                }
+            }
+            ManualConnectionInput::StdioProvider { source_id } => {
+                validate_identifier(&source_id)?;
+                let resolved = self.manual_stdio_provider.resolve(&source_id)?;
+                if !matches!(
+                    resolved.verified.manifest().distribution,
+                    Distribution::ManualStdio { .. }
+                ) {
+                    return Err(integrity_error());
+                }
+                resolved
+            }
+        };
+        let digest = resolved.verified.digest().to_string();
+        if let Some(existing) = self
+            .repository
+            .get_plan_by_idempotency_key(&input.idempotency_key)
+            .await?
+        {
+            if existing.plan.manifest_digest() == digest {
+                return self.review_for_plan(existing).await;
+            }
+            return Err(idempotency_conflict());
+        }
+        self.repository
+            .save_manifest(&ManifestRecord {
+                verified: resolved.verified,
+                proof: resolved.proof,
+                trust_tier: resolved.trust_tier,
+                created_at_ms: self.clock.now_ms(),
+            })
+            .await?;
+        self.plan_create(
+            context,
+            PlanCreateInput {
+                intent: PlanIntent::Register {
+                    manifest_digest: digest,
+                    installation_scope: super::dto::InstallationScope::User,
+                },
+                idempotency_key: input.idempotency_key,
+            },
+        )
+        .await
     }
 
     pub async fn plan_create(
@@ -496,6 +653,17 @@ impl McpPlatformService {
                     )
                 }
             };
+        if let Transport::StreamableHttp {
+            url,
+            allowed_redirect_origins,
+            ..
+        } = &manifest.verified.manifest().transport
+        {
+            self.remote_http_network_policy.validate_endpoint(url)?;
+            for origin in allowed_redirect_origins {
+                self.remote_http_network_policy.validate_endpoint(origin)?;
+            }
+        }
         let policy_context = PolicyContext::new(manifest.trust_tier, operation)
             .with_target(
                 self.options.compatibility_target.platform,
@@ -969,6 +1137,9 @@ impl McpPlatformService {
             .repository
             .get_manifest(plan.plan.manifest_digest())
             .await?;
+        let immutable_evidence = immutable_evidence(&plan.plan);
+        let reversibility = plan_reversibility(&plan.plan);
+        let recovery = policy_recovery(&plan.policy_evidence);
         Ok(PlanReview {
             plan_id: plan.plan_id,
             plan_digest: plan.plan.plan_digest().to_string(),
@@ -980,6 +1151,9 @@ impl McpPlatformService {
             plan: plan.plan,
             target: plan.target,
             policy: plan.policy_evidence,
+            immutable_evidence,
+            reversibility,
+            recovery,
         })
     }
 
@@ -1065,6 +1239,81 @@ impl McpPlatformService {
             (false, false) => Ok(None),
         }
     }
+
+    fn eligibility_for_manifest(
+        &self,
+        verified: &VerifiedManifest,
+        trust_tier: crate::mcp_platform::TrustTier,
+    ) -> Eligibility {
+        if let Transport::StreamableHttp {
+            url,
+            allowed_redirect_origins,
+            ..
+        } = &verified.manifest().transport
+        {
+            if self
+                .remote_http_network_policy
+                .validate_endpoint(url)
+                .is_err()
+                || allowed_redirect_origins.iter().any(|origin| {
+                    self.remote_http_network_policy
+                        .validate_endpoint(origin)
+                        .is_err()
+                })
+            {
+                return Eligibility {
+                    outcome: EligibilityOutcome::Denied,
+                    reason: EligibilityReason::PolicyDenied,
+                    recovery: RecoverySuggestion::ContactPolicyAdministrator,
+                };
+            }
+        }
+        let compatible = compatibility(verified, self.options.compatibility_target)
+            == CatalogCompatibility::Compatible;
+        if !compatible {
+            return Eligibility {
+                outcome: EligibilityOutcome::Denied,
+                reason: EligibilityReason::PlatformUnsupported,
+                recovery: RecoverySuggestion::ChooseCompatibleRelease,
+            };
+        }
+        let operation = match verified.manifest().distribution {
+            Distribution::RemoteHttp | Distribution::ManualStdio { .. } => PlanOperation::Register,
+            _ => PlanOperation::Install,
+        };
+        let context = PolicyContext::new(trust_tier, operation)
+            .with_target(
+                self.options.compatibility_target.platform,
+                self.options.compatibility_target.arch,
+            )
+            .with_runtime_capabilities(
+                self.runtime_capabilities.node_available,
+                self.runtime_capabilities.python_major_minor,
+            )
+            .with_external_capabilities(
+                self.external_capabilities.docker_available,
+                self.external_capabilities.git_available,
+                self.development_mode,
+            )
+            .with_docker_policy(self.external_capabilities.docker_policy_allowed);
+        match plan_for_manifest(verified, &context) {
+            Ok(plan)
+                if plan.policy().outcome == crate::mcp_platform::policy::PolicyOutcome::Allow =>
+            {
+                Eligibility {
+                    outcome: EligibilityOutcome::Allowed,
+                    reason: EligibilityReason::Eligible,
+                    recovery: RecoverySuggestion::None,
+                }
+            }
+            Ok(_) => Eligibility {
+                outcome: EligibilityOutcome::Restricted,
+                reason: EligibilityReason::ConfirmationRequired,
+                recovery: RecoverySuggestion::ReviewPermissions,
+            },
+            Err(error) => eligibility_from_error(error.code()),
+        }
+    }
 }
 
 fn supply_chain_summary(
@@ -1096,13 +1345,118 @@ fn supply_chain_summary(
             adapter_version,
             created_at_ms,
         } => ManagedSupplyChainSummary::GitDev {
-            repository_origin: repository_origin.clone(),
+            repository_origin: redact_safe_origin(repository_origin),
             commit: commit.clone(),
             git_tree_id: git_tree_id.clone(),
             materialized_tree_digest: materialized_tree_digest.clone(),
             adapter_version: adapter_version.clone(),
             created_at_ms: *created_at_ms,
         },
+    }
+}
+
+fn redact_safe_origin(value: &str) -> String {
+    Url::parse(value)
+        .ok()
+        .map(|mut url| {
+            let _ = url.set_username("");
+            let _ = url.set_password(None);
+            url.set_query(None);
+            url.set_fragment(None);
+            url.to_string()
+        })
+        .unwrap_or_else(|| "redacted-origin".to_string())
+}
+
+fn immutable_evidence(plan: &InstallationPlan) -> ImmutableEvidence {
+    for step in plan.steps() {
+        match step {
+            PlanStep::AcquireManagedDistribution {
+                artifact_digest,
+                expected_size_bytes,
+                ..
+            } => {
+                return ImmutableEvidence::Artifact {
+                    sha256: artifact_digest.value.clone(),
+                    size_bytes: *expected_size_bytes,
+                };
+            }
+            PlanStep::AcquireDockerDistribution { image, digest, .. } => {
+                return ImmutableEvidence::Docker {
+                    image: image.clone(),
+                    image_digest: digest.value.clone(),
+                };
+            }
+            PlanStep::AcquireGitDevDistribution {
+                repository_origin,
+                commit,
+                ..
+            } => {
+                return ImmutableEvidence::GitDev {
+                    repository_origin: redact_safe_origin(repository_origin),
+                    commit: commit.clone(),
+                    tree: EvidenceValue::Unavailable(
+                        EvidenceUnavailableReason::AvailableAfterMaterialization,
+                    ),
+                    materialized_digest: EvidenceValue::Unavailable(
+                        EvidenceUnavailableReason::AvailableAfterMaterialization,
+                    ),
+                };
+            }
+            _ => {}
+        }
+    }
+    ImmutableEvidence::Unavailable {
+        reason: EvidenceUnavailableReason::NoArtifactForRegistration,
+    }
+}
+
+fn plan_reversibility(plan: &InstallationPlan) -> PlanReversibility {
+    match plan.operation() {
+        PlanOperation::Register => PlanReversibility {
+            reversible: true,
+            strategy: RollbackStrategy::RemoveConnectionRegistration,
+        },
+        PlanOperation::Install | PlanOperation::Update => PlanReversibility {
+            reversible: true,
+            strategy: RollbackStrategy::StagedActivationRestoresPreviousVersion,
+        },
+        PlanOperation::Repair => PlanReversibility {
+            reversible: true,
+            strategy: RollbackStrategy::RepairRestoresVerifiedOwnedContent,
+        },
+        PlanOperation::Uninstall => {
+            let strategy = plan.steps().iter().find_map(|step| match step {
+                PlanStep::RemoveManagedInstallation {
+                    preserve_user_data, ..
+                } => Some(RollbackStrategy::UninstallRemovesOwnedFiles {
+                    preserve_user_data: *preserve_user_data,
+                }),
+                _ => None,
+            });
+            PlanReversibility {
+                reversible: false,
+                strategy: strategy.unwrap_or(RollbackStrategy::Unavailable),
+            }
+        }
+        PlanOperation::Health => PlanReversibility {
+            reversible: false,
+            strategy: RollbackStrategy::Unavailable,
+        },
+    }
+}
+
+fn policy_recovery(decision: &crate::mcp_platform::policy::PolicyDecision) -> RecoverySuggestion {
+    if decision.outcome == crate::mcp_platform::policy::PolicyOutcome::Allow {
+        RecoverySuggestion::None
+    } else if decision.outcome == crate::mcp_platform::policy::PolicyOutcome::NeedsConfirmation {
+        RecoverySuggestion::ReviewPermissions
+    } else if decision.reasons.iter().any(|reason| {
+        reason.code == crate::mcp_platform::policy::PolicyReasonCode::DevelopmentModeRequired
+    }) {
+        RecoverySuggestion::EnableDevelopmentMode
+    } else {
+        RecoverySuggestion::ContactPolicyAdministrator
     }
 }
 
@@ -1147,6 +1501,7 @@ fn decode_cursor(value: &str) -> McpPlatformResult<CatalogCursor> {
 fn catalog_summary(
     record: crate::mcp_platform::repository::ManifestRecord,
     target: CompatibilityTarget,
+    eligibility: Eligibility,
 ) -> CatalogSummary {
     let manifest = record.verified.manifest();
     CatalogSummary {
@@ -1163,6 +1518,7 @@ fn catalog_summary(
         compatibility: compatibility(&record.verified, target),
         distribution_adapter: manifest.distribution.adapter_id().to_string(),
         verified_at_ms: record.created_at_ms,
+        eligibility,
     }
 }
 
@@ -1515,6 +1871,136 @@ fn compatibility(manifest: &VerifiedManifest, target: CompatibilityTarget) -> Ca
     }
 }
 
+fn eligibility_from_error(code: McpPlatformErrorCode) -> Eligibility {
+    let (reason, recovery) = match code {
+        McpPlatformErrorCode::DevelopmentModeRequired => (
+            EligibilityReason::DevelopmentModeRequired,
+            RecoverySuggestion::EnableDevelopmentMode,
+        ),
+        McpPlatformErrorCode::AdapterIncompatible => (
+            EligibilityReason::RuntimeUnavailable,
+            RecoverySuggestion::InstallRequiredRuntime,
+        ),
+        McpPlatformErrorCode::DockerUnavailable | McpPlatformErrorCode::GitUnavailable => (
+            EligibilityReason::ExternalCapabilityUnavailable,
+            RecoverySuggestion::InstallRequiredRuntime,
+        ),
+        McpPlatformErrorCode::RemoteHttpPolicyUnavailable => (
+            EligibilityReason::ExternalCapabilityUnavailable,
+            RecoverySuggestion::ContactPolicyAdministrator,
+        ),
+        _ => (
+            EligibilityReason::PolicyDenied,
+            RecoverySuggestion::ContactPolicyAdministrator,
+        ),
+    };
+    Eligibility {
+        outcome: EligibilityOutcome::Denied,
+        reason,
+        recovery,
+    }
+}
+
+fn manual_connection_id(idempotency_key: &str) -> String {
+    let suffix = Sha256::digest(idempotency_key.as_bytes())
+        .iter()
+        .take(12)
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    format!("manual-http-{suffix}")
+}
+
+fn manual_http_manifest(
+    connection_id: &str,
+    endpoint: &str,
+    auth: ManualHttpAuth,
+) -> McpPlatformResult<VerifiedManifest> {
+    let url = Url::parse(endpoint).map_err(|_| invalid_request())?;
+    let host = url.host_str().ok_or_else(invalid_request)?;
+    if url.scheme() != "https"
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+        || host.eq_ignore_ascii_case("localhost")
+        || host.parse::<std::net::IpAddr>().is_ok()
+        || !host.contains('.')
+    {
+        return Err(McpPlatformError::new(
+            McpPlatformErrorCode::UnsafeUrl,
+            "manual HTTP endpoints must use credential-free public HTTPS origins",
+        ));
+    }
+    let (auth_value, permissions) = match auth {
+        ManualHttpAuth::None => (serde_json::json!({"type":"none"}), Vec::new()),
+        ManualHttpAuth::BearerReference { auth_reference } => {
+            validate_identifier(&auth_reference)?;
+            (
+                serde_json::json!({
+                    "type":"api_key_header",
+                    "header_name":"Authorization",
+                    "prefix":"Bearer",
+                    "credential_name":auth_reference
+                }),
+                vec![serde_json::json!({
+                    "id":"remote-credential",
+                    "kind":"credentials",
+                    "reason":"Uses an opaque credential reference at connection time.",
+                    "required":true
+                })],
+            )
+        }
+    };
+    let mut permissions = permissions;
+    permissions.push(serde_json::json!({
+        "id":"remote-network",
+        "kind":"network",
+        "reason":"Connects to the reviewed remote MCP HTTPS origin.",
+        "required":true,
+        "scope":url.origin().ascii_serialization()
+    }));
+    let raw = serde_json::json!({
+        "schema_version":1,
+        "id":connection_id,
+        "version":"0.0.0",
+        "name":format!("Manual MCP at {host}"),
+        "description":"A manually registered remote MCP connection validated by goose Core.",
+        "publisher":{"id":"manual-local","name":"Local manual connection"},
+        "license":{"spdx":"LicenseRef-Manual"},
+        "capabilities":["tools"],
+        "permissions":permissions,
+        "distribution":{"type":"remote_http"},
+        "transport":{"type":"streamable_http","url":endpoint},
+        "auth":auth_value,
+        "health_check":{"type":"mcp_initialize","timeout_seconds":30},
+        "owned_files":[],
+        "uninstall":{"mode":"remove_owned_files_only","preserve_user_data":true}
+    });
+    serde_json::to_vec(&raw)
+        .map_err(|_| invalid_request())
+        .and_then(|bytes| parse_manifest(&bytes))
+}
+
+fn platform_name(platform: Platform) -> String {
+    match platform {
+        Platform::Windows => "windows",
+        Platform::Macos => "macos",
+        Platform::Linux => "linux",
+        Platform::Any => "any",
+    }
+    .to_string()
+}
+
+fn architecture_name(architecture: Architecture) -> String {
+    match architecture {
+        Architecture::X86_64 => "x86_64",
+        Architecture::Aarch64 => "aarch64",
+        Architecture::Universal => "universal",
+        Architecture::Any => "any",
+    }
+    .to_string()
+}
+
 fn ensure_plan_envelope_matches(
     stored: &PlanRecord,
     expected_plan: &InstallationPlan,
@@ -1684,5 +2170,73 @@ impl Drop for McpPlatformService {
         if let Ok(WorkerState::Running(handle)) = self.worker.get_mut() {
             handle.abort();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const REMOTE: &str =
+        include_str!("../../../../../documentation/static/schemas/examples/remote-http.json");
+    const NPM: &str =
+        include_str!("../../../../../documentation/static/schemas/examples/npm-package.json");
+
+    #[test]
+    fn plan_review_reversibility_is_operation_specific() {
+        let remote = parse_manifest(REMOTE.as_bytes()).unwrap();
+        let register = plan_for_manifest(
+            &remote,
+            &PolicyContext::new(
+                crate::mcp_platform::TrustTier::Local,
+                PlanOperation::Register,
+            ),
+        )
+        .unwrap();
+        assert_eq!(
+            plan_reversibility(&register),
+            PlanReversibility {
+                reversible: true,
+                strategy: RollbackStrategy::RemoveConnectionRegistration,
+            }
+        );
+
+        let npm = parse_manifest(NPM.as_bytes()).unwrap();
+        let install_context = PolicyContext::new(
+            crate::mcp_platform::TrustTier::Local,
+            PlanOperation::Install,
+        )
+        .with_runtime_capabilities(true, Some((3, 11)));
+        let install = plan_for_manifest(&npm, &install_context).unwrap();
+        assert_eq!(
+            plan_reversibility(&install),
+            PlanReversibility {
+                reversible: true,
+                strategy: RollbackStrategy::StagedActivationRestoresPreviousVersion,
+            }
+        );
+
+        let uninstall_context = PolicyContext::new(
+            crate::mcp_platform::TrustTier::Local,
+            PlanOperation::Uninstall,
+        );
+        let uninstall = uninstall_plan(
+            &npm,
+            crate::mcp_platform::TrustTier::Local,
+            "managed_test",
+            true,
+            install.connection_projection().clone(),
+            &uninstall_context,
+        )
+        .unwrap();
+        assert_eq!(
+            plan_reversibility(&uninstall),
+            PlanReversibility {
+                reversible: false,
+                strategy: RollbackStrategy::UninstallRemovesOwnedFiles {
+                    preserve_user_data: true,
+                },
+            }
+        );
     }
 }
