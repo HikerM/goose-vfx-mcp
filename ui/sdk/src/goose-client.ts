@@ -34,10 +34,12 @@ import {
   type GooseClientCallbacks,
 } from "./generated/client.gen.js";
 import { createHttpStream } from "./http-stream.js";
+import { McpPlatformClient } from "./mcp-platform.js";
 
 export class GooseClient {
   private conn: ClientSideConnection;
   private ext: GooseExtClient;
+  private mcpPlatformExt: McpPlatformClient;
 
   constructor(
     toClient: () => GooseClientCallbacks,
@@ -53,6 +55,7 @@ export class GooseClient {
       );
     this.conn = new ClientSideConnection(toAcpClient, stream);
     this.ext = new GooseExtClient(this.conn);
+    this.mcpPlatformExt = new McpPlatformClient(this.conn);
   }
 
   get signal(): AbortSignal {
@@ -136,5 +139,9 @@ export class GooseClient {
 
   get goose(): GooseExtClient {
     return this.ext;
+  }
+
+  get mcpPlatform(): McpPlatformClient {
+    return this.mcpPlatformExt;
   }
 }

@@ -52,6 +52,32 @@ function extractPlaceholders(message) {
   return [...args].sort();
 }
 
+function collectSelectCases(elements, selectors) {
+  for (const element of elements) {
+    if (element.type === TYPE.select) {
+      selectors.push({
+        argument: element.value,
+        cases: Object.keys(element.options).sort(),
+      });
+      for (const option of Object.values(element.options)) {
+        collectSelectCases(option.value, selectors);
+      }
+    } else if (element.type === TYPE.plural) {
+      for (const option of Object.values(element.options)) {
+        collectSelectCases(option.value, selectors);
+      }
+    } else if (element.type === TYPE.tag) {
+      collectSelectCases(element.children, selectors);
+    }
+  }
+}
+
+function extractSelectCases(message) {
+  const selectors = [];
+  collectSelectCases(parse(message), selectors);
+  return selectors;
+}
+
 function listLocales() {
   return fs
     .readdirSync(messagesDir)
@@ -70,6 +96,7 @@ function validateLocale(locale, en, enKeys) {
       missing: [],
       extra: [],
       placeholderIssues: [],
+      selectIssues: [],
     };
   }
 
@@ -78,6 +105,7 @@ function validateLocale(locale, en, enKeys) {
   const missing = enKeys.filter((key) => !Object.prototype.hasOwnProperty.call(translated, key));
   const extra = localeKeys.filter((key) => !Object.prototype.hasOwnProperty.call(en, key));
   const placeholderIssues = [];
+  const selectIssues = [];
 
   for (const key of enKeys) {
     if (!translated[key]) continue;
@@ -88,13 +116,18 @@ function validateLocale(locale, en, enKeys) {
     if (JSON.stringify(sourcePlaceholders) !== JSON.stringify(targetPlaceholders)) {
       placeholderIssues.push({ key, sourcePlaceholders, targetPlaceholders });
     }
+    const sourceSelectCases = extractSelectCases(source);
+    const targetSelectCases = extractSelectCases(target);
+    if (JSON.stringify(sourceSelectCases) !== JSON.stringify(targetSelectCases)) {
+      selectIssues.push({ key, sourceSelectCases, targetSelectCases });
+    }
   }
 
-  return { locale, missingFile: false, missing, extra, placeholderIssues };
+  return { locale, missingFile: false, missing, extra, placeholderIssues, selectIssues };
 }
 
 function printIssues(result) {
-  const { locale, missingFile, missing, extra, placeholderIssues } = result;
+  const { locale, missingFile, missing, extra, placeholderIssues, selectIssues } = result;
   if (missingFile) {
     console.error('Missing locale file for ' + locale + '.');
   }
@@ -116,6 +149,12 @@ function printIssues(result) {
       placeholderIssues.slice(0, 20)
     );
   }
+  if (selectIssues.length) {
+    console.error(
+      'ICU select case issues in ' + locale + ' (' + selectIssues.length + ', showing first 20):',
+      selectIssues.slice(0, 20)
+    );
+  }
 }
 
 const en = readJson(enPath);
@@ -129,8 +168,8 @@ if (!locales.length) {
 
 const results = locales.map((locale) => validateLocale(locale, en, enKeys));
 const failures = results.filter(
-  ({ missingFile, missing, extra, placeholderIssues }) =>
-    missingFile || missing.length || extra.length || placeholderIssues.length
+  ({ missingFile, missing, extra, placeholderIssues, selectIssues }) =>
+    missingFile || missing.length || extra.length || placeholderIssues.length || selectIssues.length
 );
 
 for (const result of failures) {

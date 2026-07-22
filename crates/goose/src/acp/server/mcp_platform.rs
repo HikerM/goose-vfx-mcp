@@ -598,10 +598,10 @@ fn error_to_wire(context: &RequestContext, error: McpPlatformError) -> McpPlatfo
             Some(McpPlatformErrorDetails::IdempotencyConflict {}),
         ),
         Code::RevisionConflict => (
-            McpPlatformErrorCodeDto::ProjectionConflict,
+            McpPlatformErrorCodeDto::RevisionConflict,
             "The record revision changed; reload before retrying.",
             true,
-            Some(McpPlatformErrorDetails::ProjectionConflict {}),
+            Some(McpPlatformErrorDetails::RevisionConflict {}),
         ),
         Code::InvalidTransition => (
             McpPlatformErrorCodeDto::InvalidTransition,
@@ -616,10 +616,10 @@ fn error_to_wire(context: &RequestContext, error: McpPlatformError) -> McpPlatfo
             Some(McpPlatformErrorDetails::RepositoryTemporarilyUnavailable {}),
         ),
         Code::ProjectionConflict => (
-            McpPlatformErrorCodeDto::RevisionConflict,
+            McpPlatformErrorCodeDto::ProjectionConflict,
             "The managed MCP projection conflicts with an existing extension.",
             false,
-            Some(McpPlatformErrorDetails::RevisionConflict {}),
+            Some(McpPlatformErrorDetails::ProjectionConflict {}),
         ),
         Code::CredentialMissing => (
             McpPlatformErrorCodeDto::CredentialMissing,
@@ -1977,5 +1977,35 @@ fn health_state_to_wire(value: crate::mcp_platform::HealthState) -> McpHealthSta
         crate::mcp_platform::HealthState::Unhealthy => McpHealthState::Unhealthy,
         crate::mcp_platform::HealthState::BlockedAuth => McpHealthState::BlockedAuth,
         crate::mcp_platform::HealthState::Incompatible => McpHealthState::Incompatible,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::mcp_platform::{McpPlatformError, McpPlatformErrorCode};
+
+    #[test]
+    fn conflict_error_codes_keep_their_wire_meaning() {
+        let context = RequestContext::local_authenticated_client("correlation".to_string());
+        let cases = [
+            (
+                McpPlatformErrorCode::RevisionConflict,
+                "revision_conflict",
+                "revision_conflict",
+            ),
+            (
+                McpPlatformErrorCode::ProjectionConflict,
+                "projection_conflict",
+                "projection_conflict",
+            ),
+        ];
+
+        for (code, expected_code, expected_details_type) in cases {
+            let envelope = error_to_wire(&context, McpPlatformError::new(code, "test"));
+            let serialized = serde_json::to_value(envelope).expect("error envelope serializes");
+            assert_eq!(serialized["code"], expected_code);
+            assert_eq!(serialized["details"]["type"], expected_details_type);
+        }
     }
 }

@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "Tạo một phiên làm việc mới với tin nhắn đã chỉnh sửa"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "Tệp manifest đang hoạt động:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "Phiên bản đang hoạt động"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "Bộ điều hợp"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "Tất cả khả năng tương thích"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "Tất cả nguồn"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "Tất cả mức độ tin cậy"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "Nhà cung cấp stdio đã được phê duyệt"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "Lệnh, đối số, môi trường và thư mục làm việc được kiểm soát bởi chính sách của nhà cung cấp."
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "Kiến trúc"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "Xác thực"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "Phiên bản có sẵn"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "Tham chiếu thông tin chứng nhận Bearer"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "Đang hủy…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "Hủy tác vụ"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "Khả năng"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "Danh mục MCP"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "Nguồn danh mục"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "Đang kiểm tra…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "Cam kết"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "Cộng đồng"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "Khả năng tương thích"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "Tương thích"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "ID quyền"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "Mã lý do"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "Đang xác nhận…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "Xác nhận và bắt đầu"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "Xác nhận gỡ cài đặt"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "Tạo kế hoạch kết nối"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "Tạo kế hoạch cài đặt"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "Tạo kế hoạch nhà cung cấp"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "Đang tạo kế hoạch…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "Tham chiếu thông tin xác thực"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "Chỉ nhập tham chiếu không rõ ràng. Trung tâm MCP không bao giờ chấp nhận hoặc hiển thị giá trị bearer."
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "Nhiệm vụ hiện tại"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "Người dùng hiện tại"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "Mặc định được kích hoạt"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "Trạng thái mặc định"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "Bị từ chối"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "Chi tiết MCP"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "Chế độ phát triển"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "Bị vô hiệu hóa"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "Khám phá"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "Bộ điều hợp phân phối"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "Docker được phép"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "Điều kiện đủ"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "Được kích hoạt"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "Loại bằng chứng"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "Tham chiếu chứng chỉ hiện có"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "Sức khỏe"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "Hợp đồng sức khỏe"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "Đăng ký máy chủ"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "Điểm cuối HTTPS"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "Hình ảnh"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "Bản tóm tắt hình ảnh"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "Bằng chứng không thay đổi"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "Không tương thích"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "Cài đặt"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "Lần kiểm tra sức khỏe cuối:{result}trong{latency}ms ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "Đang tải…"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "Đang tải nhà cung cấp được phê duyệt"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "Đang tải danh mục"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "Đang tải chi tiết"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "Đang tải MCP được quản lý"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "Đang tải trạng thái MCP"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "Đang tải chính sách nguồn"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "Tải thêm"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "Cục bộ"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "Chính sách máy"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "Chi tiết MCP được quản lý"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "Hàng tồn kho MCP được quản lý"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "Nền tảng MCP được quản lý"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "Tuyên bố"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "Hướng dẫn"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "Loại kết nối MCP thủ công"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "Bản tóm tắt vật chất hóa"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "Giám sát nhiệm vụ thử lại. Bản thân nhiệm vụ tiếp tục độc lập."
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "Không thể làm mới trạng thái nhiệm vụ"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "Các MCP của tôi"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "Nguồn mạng"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "Hành động tiếp theo"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "Không"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "Không có phiên bản hoạt động"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "Không có xác nhận bổ sung."
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "Không có nguồn stdio được phê duyệt"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "Nhà cung cấp khả dụng nhưng hiện tại không có nguồn MCP nào được phê duyệt chính sách."
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "Không xác thực"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "Không có MCP được quản lý"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Cài đặt từ Discover hoặc thêm một kết nối thủ công được phê duyệt."
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "Không tìm thấy MCP nào"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "Không có mục nào trong danh mục phù hợp với bộ lọc tìm kiếm và chính sách hiện tại."
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "Không khai báo"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "Không có quyền nào được khai báo."
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "Không có nguồn danh mục"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "Nền tảng MCP hiện báo cáo không có nguồn danh mục nào được cấu hình."
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "Không có"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "Chính thức"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "Ngoại tuyến"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "Hoạt động"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "Các mục sở hữu"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "Quyền"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "Quyền và chính sách"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "Tác động kế hoạch"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "Chính sách"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "Chính sách và phục hồi"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "Nguồn nhà cung cấp"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "Nhà xuất bản"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "Đang đọc kho hàng được quản lý."
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "Đang đọc bản khai báo đã chọn."
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "Đang đọc chi tiết và hồ sơ sức khỏe."
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "Đang đọc chính sách máy và trạng thái bộ nhớ đệm."
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "Đang đọc chính sách nhà cung cấp."
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "Đang đọc các nguồn MCP đã được xác minh."
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "Chỉ đọc"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "Chính sách chỉ đọc được cung cấp bởi Nền tảng MCP."
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "Phục hồi"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "Kiểm tra kết nối Goose và thử lại."
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "Trung tâm MCP không khả dụng"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "Chọn tham chiếu chứng chỉ hiện có, sau đó tạo một kế hoạch mới."
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "Yêu cầu tham chiếu chứng chỉ"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "Thử lại thao tác."
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "Xem lại trạng thái MCP trước khi tiếp tục."
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "Không thể hoàn tất thao tác MCP"
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "Tạo và xem lại kế hoạch mới trước khi xác nhận."
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "Kế hoạch đã hết hạn"
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "Làm mới trạng thái MCP và tạo kế hoạch mới."
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "Kế hoạch không còn hiện tại"
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "Xem lại các lý do chính sách và liên hệ với quản trị viên chính sách nếu cần."
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "Bị chặn bởi chính sách máy"
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "Xem lại chính sách máy hoặc liên hệ với quản trị viên của nó trước khi thử lại."
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "HTTP từ xa không khả dụng theo chính sách"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "Thử lại khi kho MCP cục bộ khả dụng."
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "Dữ liệu MCP tạm thời không khả dụng"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "Cần khôi phục"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "Làm mới chi tiết MCP trước khi thử lại hành động này."
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "Trạng thái MCP đã thay đổi"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "Khôi phục nguồn nhà cung cấp được phê duyệt hoặc liên hệ với quản trị viên chính sách."
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "Không có nhà cung cấp stdio được phê duyệt nào khả dụng"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "Tham khảo:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "Làm mới"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "Đăng ký"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "Đang từ chối…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "Từ chối kế hoạch"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "Kết nối HTTP từ xa"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Goose xác minh tính an toàn của URL và chính sách máy trước khi tạo kế hoạch có thể được xem xét."
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "HTTP từ xa"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "Xóa các tệp"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "Nguồn kho lưu trữ"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "Yêu cầu của Nền tảng MCP không thể hoàn tất."
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "Các xác nhận cần thiết"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "Bị hạn chế"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "Thử lại"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "Đang thử lại…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "Thử lại tác vụ"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "Có thể đảo ngược"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "Xem xét kế hoạch MCP"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "Chỉ xác nhận sau khi xem xét quyền, chính sách, phạm vi, tác động và khôi phục."
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "Xem xét sửa chữa"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "Xem xét gỡ cài đặt"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "Xem xét cập nhật"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "Chạy kiểm tra sức khỏe"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "Thời gian chạy"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "Phạm vi"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "Tìm kiếm danh mục MCP"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "Tìm kiếm MCP"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "Các phần của Trung tâm MCP"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "Chọn một MCP được quản lý"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "Xem xét thời gian chạy, sức khỏe, phiên bản, tính đủ điều kiện và các hành động an toàn."
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "Chọn một MCP"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "Chọn một thẻ danh mục để xem chi tiết đã được xác minh và tính đủ điều kiện của nó."
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "Kích thước (byte)"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "Nguồn"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "Nguồn & Chính sách"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "Nguồn danh mục và bộ nhớ đệm"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "Bắt đầu trong khi xác nhận"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Nhà cung cấp Stdio không khả dụng"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "Máy này không cung cấp một nhà cung cấp stdio được phê duyệt. Không có tùy chọn nhập lệnh tự do nào khả dụng."
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "Khám phá các MCP đã được xác minh, xem xét mọi kế hoạch và quản lý sức khỏe mà không tiết lộ thông tin đăng nhập hoặc chi tiết thực thi."
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "Nền tảng mục tiêu"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "Tiếp theo:{action}· Tham khảo:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "Trung tâm MCP"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "Vận chuyển"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "Bằng chứng cây"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "Niềm tin"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "Mức độ tin cậy"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "Lý do không khả dụng"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "Gỡ cài đặt sẽ xóa đăng ký MCP và các tệp sở hữu được liệt kê trong kế hoạch này. Xem lại khả năng đảo ngược và dữ liệu người dùng được giữ lại trước khi tiếp tục."
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{Không có} registered{Đã đăng ký} not_applicable{Không áp dụng} not_installed{Chưa cài đặt} staged{Đã chuẩn bị} installed{Đã cài đặt} update_available{Có bản cập nhật} repair_required{Cần sửa chữa} uninstall_pending{Đang chờ gỡ cài đặt} stopped{Đã dừng} starting{Đang khởi động} running{Đang chạy} stopping{Đang dừng} crashed{Đã lỗi} unknown{Không xác định} checking{Đang kiểm tra} healthy{Khỏe mạnh} degraded{Suy giảm} unhealthy{Không khỏe mạnh} blocked_auth{Bị chặn bởi xác thực} compatible{Tương thích} incompatible{Không tương thích} allowed{Được phép} restricted{Bị hạn chế} denied{Bị từ chối} needs_confirmation{Cần xác nhận} allow{Cho phép} deny{Từ chối} eligible{Đủ điều kiện} confirmation_required{Cần xác nhận} platform_unsupported{Nền tảng không được hỗ trợ} runtime_unavailable{Môi trường chạy không khả dụng} policy_denied{Bị chính sách từ chối} development_mode_required{Cần chế độ phát triển} external_capability_unavailable{Khả năng bên ngoài không khả dụng} official{Chính thức} community{Cộng đồng} local{Cục bộ} remote_http{HTTP từ xa} manual_stdio{Đầu vào/ra chuẩn thủ công} stdio_provider{Nhà cung cấp đầu vào/ra chuẩn đã duyệt} npm{Gói npm} python_wheel{Gói wheel Python} binary_archive{Gói lưu trữ nhị phân} docker{Docker} git_dev{Nguồn phát triển Git} stdio{Đầu vào/ra chuẩn} streamable_http{HTTP truyền luồng} none{Không có} api_key_header{Tiêu đề khóa API} environment{Thông tin xác thực môi trường} oauth2{OAuth 2} mcp_initialize{Khởi tạo MCP} mcp_list_tools{Danh sách công cụ MCP} http{Điểm kiểm tra HTTP} tools{Công cụ} resources{Tài nguyên} prompts{Lời nhắc} sampling{Lấy mẫu} elicitation{Yêu cầu thông tin} logging{Ghi nhật ký} filesystem_read{Đọc tệp} filesystem_write{Ghi tệp} network{Truy cập mạng} credentials{Thông tin xác thực} process_spawn{Khởi chạy tiến trình} host_application{Ứng dụng chủ} register{Đăng ký} install{Cài đặt} update{Cập nhật} repair{Sửa chữa} uninstall{Gỡ cài đặt} health{Kiểm tra tình trạng} planned{Đã lên kế hoạch} awaiting_confirmation{Đang chờ xác nhận} queued{Đang xếp hàng} cancelling{Đang hủy} verifying{Đang xác minh} activating{Đang kích hoạt} rolling_back{Đang hoàn tác} succeeded{Thành công} failed{Thất bại} cancelled{Đã hủy} interrupted{Bị gián đoạn} recovery_required{Cần khôi phục} pending{Đang chờ} complete{Hoàn tất} incomplete{Chưa hoàn tất} not_required{Không cần} in_progress{Đang tiến hành} wait{Chờ} cancel_when_safe{Hủy khi an toàn} retry{Thử lại} resume{Tiếp tục} resolve_recovery{Giải quyết khôi phục} recreate_plan{Tạo kế hoạch mới} enable_after_health{Bật sau khi kiểm tra} wait_for_task{Chờ tác vụ} resume_task{Tiếp tục tác vụ} registration_only{Chỉ đăng ký} task_recovery_required{Tác vụ cần khôi phục} task_in_progress{Tác vụ đang chạy} task_interrupted{Tác vụ bị gián đoạn} no_update_available{Không có bản cập nhật} review_permissions{Xem lại quyền} choose_compatible_release{Chọn phiên bản tương thích} install_required_runtime{Cài môi trường chạy cần thiết} enable_development_mode{Bật chế độ phát triển} restore_verified_cache{Khôi phục bộ nhớ đệm đã xác minh} contact_policy_administrator{Liên hệ quản trị viên chính sách} fresh{Mới} stale{Cũ} offline_verified{Đã xác minh ngoại tuyến} empty{Trống} refreshing{Đang làm mới} idle{Nhàn rỗi} local_only{Chỉ cục bộ} default_disabled{Tắt theo mặc định} managed_artifact_download{Tải xuống sản phẩm được quản lý} existing_version_retained_until_commit{Giữ phiên bản hiện tại đến khi commit} removes_owned_files_only{Chỉ xóa tệp sở hữu} immutable_container_image{Ảnh bộ chứa bất biến} writable_container_mount{Điểm gắn bộ chứa có thể ghi} development_source_pinned_commit_no_build{Nguồn phát triển ghim vào commit chưa dựng} policy{Chính sách} permission{Quyền} artifact{Sản phẩm} unavailable{Không khả dụng} available_after_materialization{Khả dụng sau khi hiện thực hóa} no_artifact_for_registration{Không có sản phẩm để đăng ký} remove_connection_registration{Xóa đăng ký kết nối} staged_activation_restores_previous_version{Khôi phục phiên bản chuẩn bị trước} repair_restores_verified_owned_content{Khôi phục nội dung sở hữu đã xác minh} uninstall_removes_owned_files{Xóa tệp sở hữu} projection_consistent{Phép chiếu nhất quán} projection_drift{Sai lệch phép chiếu} credential_handle_missing{Thiếu tham chiếu thông tin xác thực} expected_status{Trạng thái mong đợi} unexpected_status{Trạng thái ngoài dự kiến} mcp_initialize_succeeded{Khởi tạo MCP thành công} mcp_initialize_failed{Khởi tạo MCP thất bại} mcp_list_tools_succeeded{Liệt kê công cụ MCP thành công} mcp_list_tools_failed{Liệt kê công cụ MCP thất bại} incompatible_health_contract{Hợp đồng tình trạng không tương thích} cleanup_failed{Dọn dẹp thất bại} timeout{Hết thời gian} adapter_failed{Bộ điều hợp thất bại} verification_failed{Xác minh thất bại} activation_failed{Kích hoạt thất bại} rollback_failed{Hoàn tác thất bại} connection_projection{Phép chiếu kết nối} managed_installation{Cài đặt được quản lý} managed_uninstall{Gỡ cài đặt được quản lý} external_resource{Tài nguyên bên ngoài} other{Trạng thái không xác định hoặc không được hỗ trợ}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "Phiên bản"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "Ghi tệp"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "Có"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "Trung tâm MCP"
   }
 }

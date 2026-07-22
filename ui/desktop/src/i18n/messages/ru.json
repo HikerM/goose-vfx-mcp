@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "Создать новый сеанс с измененным сообщением"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "Активный манифест:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "Активная версия"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "Адаптер"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "Вся совместимость"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "Все источники"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "Все уровни доверия"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "Одобренный поставщик stdio"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "Команда, аргументы, окружение и рабочая директория контролируются политикой поставщика."
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "Архитектура"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "Аутентификация"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "Доступная версия"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "Ссылка на учетные данные носителя"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "Отмена…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "Отменить задачу"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "Возможности"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "Каталог MCP"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "Источник каталога"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "Проверка…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "Коммит"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "Сообщество"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "Совместимость"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "Совместимо"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "ID разрешения"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "Код причины"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "Подтверждение…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "Подтвердить и запустить"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "Подтвердить удаление"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "Создать план подключения"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "Создать план установки"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "Создать план поставщика"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "Создание плана…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "Ссылка на учетные данные"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "Введите только непрозрачную ссылку. Центр MCP никогда не принимает или не отображает значение носителя."
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "Текущая задача"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "Текущий пользователь"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "Включено по умолчанию"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "Состояние по умолчанию"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "Запрещено"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "Детали MCP"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "Режим разработки"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "Отключено"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "Обнаружить"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "Адаптер распределения"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "Docker разрешен"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "Право на участие"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "Включено"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "Тип доказательства"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "Существующая ссылка на учетные данные"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "Здоровье"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "Договор о здоровье"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "Регистрация хостов"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "HTTPS-конечная точка"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "Изображение"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "Хэш изображения"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "Неизменяемые доказательства"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "Несовместимо"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "Установка"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "Последняя проверка состояния:{result}за{latency}мс ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "Загрузка..."
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "Загрузка одобренных поставщиков"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "Загрузка каталога"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "Загрузка деталей"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "Загрузка управляемых MCP"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "Загрузка состояния MCP"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "Загрузка исходной политики"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "Загрузить больше"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "Локальный"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "Политика машины"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "Детали управляемого MCP"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "Инвентарь управляемого MCP"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "Управляемая платформа MCP"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "Манифесты"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "Руководство"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "Тип подключения к MCP вручную"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "Материализованный дайджест"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "Мониторинг повторной попытки задачи. Сама задача продолжает выполняться независимо."
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "Не удалось обновить статус задачи"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "Мои MCP"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "Сетевые источники"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "Следующее действие"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "Нет"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "Нет активной версии"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "Дополнительных подтверждений нет."
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "Нет одобренных источников stdio"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "Провайдер доступен, но в настоящее время не предоставляет источники MCP, одобренные политикой."
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "Нет аутентификации"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "Нет управляемых MCP"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Установите через Discover или добавьте одобренное ручное подключение."
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "MCP не найдено"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "Нет записей каталога, соответствующих текущим фильтрам поиска и политики."
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "Не указано"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "Не указаны разрешения."
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "Нет источников каталога"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "Платформа MCP в настоящее время сообщает о том, что источники каталога не настроены."
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "Нет"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "Официально"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "Офлайн"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "Операция"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "Владение элементами"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "Разрешения"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "Разрешения и политика"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "Влияние на план"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "Политика"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "Политика и откат"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "Источник поставщика"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "Издатель"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "Чтение управляемого инвентаря."
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "Чтение выбранного манифеста."
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "Чтение детальных и медицинских записей."
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "Чтение политики машины и состояния кэша."
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "Чтение политики поставщика."
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "Чтение проверенных источников MCP."
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "Только для чтения"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "Политика только для чтения, предоставленная платформой MCP."
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "Восстановление"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "Проверьте соединение Goose и повторите попытку."
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "Центр MCP недоступен"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "Выберите существующую ссылку учётных данных, затем создайте новый план."
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "Требуется ссылка на учётные данные"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "Повторите операцию."
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "Проверьте состояние MCP перед продолжением."
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "Невозможно завершить операцию MCP."
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "Создайте и проверьте новый план перед подтверждением."
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "Срок действия плана истек."
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "Обновите состояние MCP и создайте новый план."
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "План больше не актуален."
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "Проверьте причины политики и при необходимости свяжитесь с администратором политики."
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "Заблокировано политикой машины."
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "Проверьте политику машины или свяжитесь с её администратором перед повторной попыткой."
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "Удалённый HTTP недоступен по политике"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "Повторите попытку, когда локальный репозиторий MCP будет доступен."
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "Данные MCP временно недоступны"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "требуется восстановление"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "Обновите сведения MCP перед повторной попыткой выполнения этого действия."
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "Состояние MCP изменилось"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "Восстановите источник утверждённого поставщика или свяжитесь с администратором политики."
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "Нет доступного утверждённого поставщика stdio"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "Ссылка:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "Обновить"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "Регистрация"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "Отклонение…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "Отклонить план"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "Удалённое HTTP-соединение"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Goose проверяет безопасность URL и политику машины перед созданием плана для проверки."
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "Удалённое HTTP"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "Удаляет файлы"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "Происхождение репозитория"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "Запрос к платформе MCP не может быть выполнен."
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "Требуемые подтверждения"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "Ограничено"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "Повторить"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "Повторная попытка…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "Повторить задачу"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "Обратимо"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "Просмотреть план MCP"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "Подтверждать только после проверки разрешений, политики, области, эффектов и отката."
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "Просмотреть исправление"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "Просмотреть удаление"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "Просмотреть обновление"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "Запустить проверку состояния"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "Время выполнения"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "Область"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "Поиск в каталоге MCP"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "Поиск MCP"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "Разделы Центра MCP"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "Выбрать управляемый MCP"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "Проверить время выполнения, состояние, версию, соответствие требованиям и безопасные действия."
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "Выбрать MCP"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "Выбрать карточку каталога для проверки её подтверждённых данных и соответствия требованиям."
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "Размер (байты)"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "Источник"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "Источник и политика"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "Каталог источников и кэш"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "Начинается при подтверждении"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Поставщик Stdio недоступен"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "Эта машина не предоставляет одобренный stdio-провайдер. Ввод команд в свободной форме недоступен."
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "Обнаруживайте проверенные MCP, просматривайте каждый план и управляйте здоровьем без раскрытия учетных данных или деталей выполнения."
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "Целевая платформа"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "Далее:{action}· Справка:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "Центр MCP"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "Транспорт"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "Доказательство дерева"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "Доверие"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "Уровень доверия"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "Причина недоступности"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "Удаление удаляет регистрацию MCP и принадлежащие файлы, указанные в этом плане. Перед продолжением ознакомьтесь с возможностью отмены и сохраненными данными пользователя."
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{Отсутствует} registered{Зарегистрировано} not_applicable{Не применимо} not_installed{Не установлено} staged{Подготовлено} installed{Установлено} update_available{Доступно обновление} repair_required{Требуется восстановление} uninstall_pending{Ожидает удаления} stopped{Остановлено} starting{Запускается} running{Работает} stopping{Останавливается} crashed{Сбой} unknown{Неизвестно} checking{Проверяется} healthy{Исправно} degraded{Работает с ограничениями} unhealthy{Неисправно} blocked_auth{Заблокировано аутентификацией} compatible{Совместимо} incompatible{Несовместимо} allowed{Разрешено} restricted{Ограничено} denied{Запрещено} needs_confirmation{Требуется подтверждение} allow{Разрешить} deny{Запретить} eligible{Доступно} confirmation_required{Требуется подтверждение} platform_unsupported{Платформа не поддерживается} runtime_unavailable{Среда выполнения недоступна} policy_denied{Запрещено политикой} development_mode_required{Требуется режим разработки} external_capability_unavailable{Внешняя возможность недоступна} official{Официальное} community{Сообщество} local{Локальное} remote_http{Удалённый HTTP} manual_stdio{Ручной стандартный ввод-вывод} stdio_provider{Одобренный поставщик стандартного ввода-вывода} npm{Пакет npm} python_wheel{Пакет Python wheel} binary_archive{Бинарный архив} docker{Docker} git_dev{Источник разработки Git} stdio{Стандартный ввод-вывод} streamable_http{Потоковый HTTP} none{Нет} api_key_header{Заголовок ключа API} environment{Учётные данные окружения} oauth2{OAuth 2} mcp_initialize{Инициализация MCP} mcp_list_tools{Список инструментов MCP} http{HTTP-адрес проверки} tools{Инструменты} resources{Ресурсы} prompts{Запросы} sampling{Сэмплирование} elicitation{Запрос сведений} logging{Журналирование} filesystem_read{Чтение файлов} filesystem_write{Запись файлов} network{Доступ к сети} credentials{Учётные данные} process_spawn{Запуск процессов} host_application{Приложение-хост} register{Регистрация} install{Установка} update{Обновление} repair{Восстановление} uninstall{Удаление} health{Проверка состояния} planned{Запланировано} awaiting_confirmation{Ожидает подтверждения} queued{В очереди} cancelling{Отменяется} verifying{Проверяется} activating{Активируется} rolling_back{Откатывается} succeeded{Успешно} failed{Ошибка} cancelled{Отменено} interrupted{Прервано} recovery_required{Требуется восстановление} pending{Ожидается} complete{Завершено} incomplete{Не завершено} not_required{Не требуется} in_progress{Выполняется} wait{Ожидать} cancel_when_safe{Отменить при безопасной возможности} retry{Повторить} resume{Продолжить} resolve_recovery{Решить проблему восстановления} recreate_plan{Создать новый план} enable_after_health{Включить после проверки} wait_for_task{Ожидать задачу} resume_task{Продолжить задачу} registration_only{Только регистрация} task_recovery_required{Требуется восстановление задачи} task_in_progress{Задача выполняется} task_interrupted{Задача прервана} no_update_available{Обновлений нет} review_permissions{Проверить разрешения} choose_compatible_release{Выбрать совместимую версию} install_required_runtime{Установить нужную среду} enable_development_mode{Включить режим разработки} restore_verified_cache{Восстановить проверенный кэш} contact_policy_administrator{Связаться с администратором политик} fresh{Актуально} stale{Устарело} offline_verified{Проверено автономно} empty{Пусто} refreshing{Обновляется} idle{Бездействует} local_only{Только локально} default_disabled{Отключено по умолчанию} managed_artifact_download{Загрузка управляемого артефакта} existing_version_retained_until_commit{Текущая версия сохраняется до фиксации} removes_owned_files_only{Удаляет только собственные файлы} immutable_container_image{Неизменяемый образ контейнера} writable_container_mount{Записываемое подключение контейнера} development_source_pinned_commit_no_build{Источник разработки закреплён на коммите без сборки} policy{Политика} permission{Разрешение} artifact{Артефакт} unavailable{Недоступно} available_after_materialization{Доступно после материализации} no_artifact_for_registration{Артефакт для регистрации не нужен} remove_connection_registration{Удалить регистрацию подключения} staged_activation_restores_previous_version{Восстановить предыдущую подготовленную версию} repair_restores_verified_owned_content{Восстановить проверенное собственное содержимое} uninstall_removes_owned_files{Удалить собственные файлы} projection_consistent{Проекция согласована} projection_drift{Расхождение проекции} credential_handle_missing{Нет ссылки на учётные данные} expected_status{Ожидаемое состояние} unexpected_status{Неожиданное состояние} mcp_initialize_succeeded{Инициализация MCP успешна} mcp_initialize_failed{Ошибка инициализации MCP} mcp_list_tools_succeeded{Список инструментов MCP получен} mcp_list_tools_failed{Ошибка получения инструментов MCP} incompatible_health_contract{Несовместимый контракт проверки} cleanup_failed{Ошибка очистки} timeout{Время истекло} adapter_failed{Ошибка адаптера} verification_failed{Ошибка проверки} activation_failed{Ошибка активации} rollback_failed{Ошибка отката} connection_projection{Проекция подключения} managed_installation{Управляемая установка} managed_uninstall{Управляемое удаление} external_resource{Внешний ресурс} other{Неизвестное или неподдерживаемое состояние}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "Версия"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "Записывает файлы"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "Да"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "Центр MCP"
   }
 }

@@ -8,6 +8,7 @@ export { GooseClient } from "./goose-client.js";
 export { createHttpStream } from "./http-stream.js";
 export * from "./client-capabilities.js";
 export * from "./mcp-apps.js";
+export * from "./mcp-platform.js";
 
 export {
   ClientSideConnection,

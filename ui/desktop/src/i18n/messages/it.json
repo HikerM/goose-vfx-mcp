@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "Crea una nuova sessione con il messaggio modificato"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "Manifest attivo:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "Versione attiva"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "Adattatore"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "Tutte le compatibilità"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "Tutte le fonti"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "Tutti i livelli di fiducia"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "Fornitore stdio approvato"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "Comando, argomenti, ambiente e directory di lavoro sono controllati dalla politica del fornitore."
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "Architettura"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "Autenticazione"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "Versione disponibile"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "Riferimento delle credenziali Bearer"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "Annullamento in corso…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "Annulla attività"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "Capacità"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "Catalogo MCP"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "Fonte del catalogo"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "Verifica in corso…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "Conferma"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "Comunità"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "Compatibilità"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "Compatibile"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "ID permesso"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "Codice motivo"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "Conferma in corso…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "Conferma e avvia"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "Conferma disinstallazione"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "Crea piano di connessione"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "Crea piano di installazione"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "Crea piano provider"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "Creazione piano in corso…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "Riferimento credenziale"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "Inserire solo un riferimento opaco. Il Centro MCP non accetta mai né mostra il valore del bearer."
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "Attività corrente"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "Utente corrente"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "Abilitato di default"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "Stato predefinito"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "Negato"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "Dettagli MCP"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "Modalità sviluppo"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "Disabilitato"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "Scopri"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "Adattatore di distribuzione"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "Docker consentito"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "Idoneità"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "Abilitato"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "Tipo di prova"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "Riferimento alle credenziali esistenti"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "Salute"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "Contratto sanitario"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "Registrazioni host"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "Endpoint HTTPS"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "Immagine"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "Digest dell'immagine"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "Prova immutabile"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "Incompatibile"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "Installazione"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "Ultimo controllo della salute:{result}in{latency}ms ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "Caricamento in corso…"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "Caricamento fornitori approvati"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "Caricamento catalogo"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "Caricamento dettagli"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "Caricamento MCP gestiti"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "Caricamento stato MCP"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "Caricamento politica sorgente"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "Carica altro"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "Locale"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "Politica macchina"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "Dettagli MCP gestiti"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "Inventario MCP gestiti"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "Piattaforma MCP gestita"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "Manifesti"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "Manuale"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "Tipo di connessione MCP manuale"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "Digest materializzato"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "Monitoraggio dei tentativi di ripetizione del task. Il task stesso continua indipendentemente."
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "Impossibile aggiornare lo stato del task"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "I miei MCP"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "Origini di rete"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "Prossima azione"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "No"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "Nessuna versione attiva"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "Nessuna conferma aggiuntiva."
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "Nessuna fonte stdio approvata"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "Il provider è disponibile ma attualmente non espone fonti MCP approvate dalla politica."
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "Nessuna autenticazione"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "Nessun MCP gestito"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Installa da Discover oppure aggiungi una connessione manuale approvata."
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "Nessun MCP trovato"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "Nessuna voce del catalogo corrisponde ai filtri di ricerca e politica attuali."
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "Nessuno dichiarato"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "Nessun permesso dichiarato."
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "Nessuna sorgente del catalogo"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "La piattaforma MCP non rileva attualmente sorgenti del catalogo configurate."
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "Nessuno"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "Ufficiale"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "Offline"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "Operazione"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "Elementi posseduti"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "Permessi"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "Permessi e politica"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "Impatto sul piano"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "Politica"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "Politica e ripristino"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "Sorgente del provider"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "Editore"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "Lettura dell'inventario gestito."
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "Lettura del manifesto selezionato."
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "Lettura dei registri dettagliati e dello stato di salute."
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "Lettura della politica della macchina e dello stato della cache."
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "Lettura della politica del provider."
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "Lettura delle fonti MCP verificate."
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "Sola lettura"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "Politica di sola lettura fornita dalla Piattaforma MCP."
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "Recupero"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "Controllare la connessione Goose e riprovare."
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "Il Centro MCP non è disponibile"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "Scegliere un riferimento di credenziale esistente, quindi creare un nuovo piano."
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "Riferimento alla credenziale richiesto"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "Riprova l'operazione."
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "Esamina lo stato del MCP prima di continuare."
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "L'operazione MCP non può essere completata"
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "Crea e rivedi un nuovo piano prima di confermare."
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "Il piano è scaduto"
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "Aggiorna lo stato del MCP e crea un nuovo piano."
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "Il piano non è più attuale"
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "Esamina le motivazioni della politica e contatta l'amministratore della politica se necessario."
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "Bloccato dalla politica della macchina"
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "Esamina la politica della macchina o contatta il suo amministratore prima di riprovare."
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "HTTP remoto non è disponibile per politica"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "Riprova quando il repository locale MCP è disponibile."
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "I dati MCP non sono temporaneamente disponibili"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "recupero necessario"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "Aggiorna i dettagli MCP prima di riprovare questa azione."
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "Stato MCP cambiato"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "Ripristina la fonte del provider approvata o contatta l'amministratore della politica."
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "Nessun provider stdio approvato è disponibile"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "Riferimento:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "Aggiorna"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "Registrazione"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "Rifiutando…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "Rifiuta piano"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "Connessione HTTP remota"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Goose verifica la sicurezza dell'URL e la policy della macchina prima di produrre un piano revisionabile."
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "HTTP remoto"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "Rimuove file"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "Origine del repository"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "La richiesta della piattaforma MCP non può essere completata."
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "Conferme richieste"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "Riservato"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "Riprova"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "Ritento in corso…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "Riprova attività"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "Reversibile"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "Revisiona piano MCP"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "Conferma solo dopo aver esaminato permessi, policy, ambito, effetti e rollback."
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "Revisiona riparazione"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "Revisiona disinstallazione"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "Revisiona aggiornamento"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "Esegui il controllo dello stato di salute"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "Runtime"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "Ambito"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "Cerca nel catalogo MCP"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "Cerca MCP"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "Sezioni del Centro MCP"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "Seleziona un MCP gestito"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "Esamina runtime, stato di salute, versione, idoneità e azioni sicure."
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "Seleziona un MCP"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "Scegli una scheda del catalogo per esaminarne i dettagli verificati e l'idoneità."
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "Dimensione (byte)"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "Origine"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "Origine e Politica"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "Fonti del catalogo e cache"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "Inizia durante la conferma"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Il provider Stdio non è disponibile"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "Questa macchina non espone un provider stdio approvato. Non è disponibile l'inserimento di comandi libero."
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "Scopri MCP verificati, rivedi ogni piano e gestisci la salute senza esporre credenziali o dettagli di esecuzione."
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "Piattaforma target"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "Successivo:{action}· Riferimento:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "Centro MCP"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "Trasporto"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "Prove ad albero"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "Fiducia"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "Livello di fiducia"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "Motivo non disponibile"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "Disinstallare rimuove la registrazione MCP e i file di proprietà elencati in questo piano. Esaminare la reversibilità e i dati utente conservati prima di continuare."
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{Assente} registered{Registrato} not_applicable{Non applicabile} not_installed{Non installato} staged{Preparato} installed{Installato} update_available{Aggiornamento disponibile} repair_required{Riparazione necessaria} uninstall_pending{Disinstallazione in attesa} stopped{Arrestato} starting{Avvio in corso} running{In esecuzione} stopping{Arresto in corso} crashed{Arresto anomalo} unknown{Sconosciuto} checking{Controllo in corso} healthy{Integro} degraded{Degradato} unhealthy{Non integro} blocked_auth{Bloccato dall’autenticazione} compatible{Compatibile} incompatible{Incompatibile} allowed{Consentito} restricted{Limitato} denied{Negato} needs_confirmation{Conferma necessaria} allow{Consenti} deny{Nega} eligible{Idoneo} confirmation_required{Conferma necessaria} platform_unsupported{Piattaforma non supportata} runtime_unavailable{Runtime non disponibile} policy_denied{Negato dai criteri} development_mode_required{Modalità sviluppo necessaria} external_capability_unavailable{Funzionalità esterna non disponibile} official{Ufficiale} community{Community} local{Locale} remote_http{HTTP remoto} manual_stdio{Input/output standard manuale} stdio_provider{Provider input/output standard approvato} npm{Pacchetto npm} python_wheel{Wheel Python} binary_archive{Archivio binario} docker{Docker} git_dev{Sorgente di sviluppo Git} stdio{Input/output standard} streamable_http{HTTP in streaming} none{Nessuno} api_key_header{Intestazione chiave API} environment{Credenziale d’ambiente} oauth2{OAuth 2} mcp_initialize{Inizializzazione MCP} mcp_list_tools{Elenco strumenti MCP} http{Endpoint di integrità HTTP} tools{Strumenti} resources{Risorse} prompts{Prompt} sampling{Campionamento} elicitation{Richiesta di informazioni} logging{Registrazione} filesystem_read{Lettura file} filesystem_write{Scrittura file} network{Accesso alla rete} credentials{Credenziali} process_spawn{Avvio processi} host_application{Applicazione host} register{Registra} install{Installa} update{Aggiorna} repair{Ripara} uninstall{Disinstalla} health{Controllo integrità} planned{Pianificato} awaiting_confirmation{In attesa di conferma} queued{In coda} cancelling{Annullamento in corso} verifying{Verifica in corso} activating{Attivazione in corso} rolling_back{Ripristino in corso} succeeded{Riuscito} failed{Non riuscito} cancelled{Annullato} interrupted{Interrotto} recovery_required{Ripristino necessario} pending{In attesa} complete{Completo} incomplete{Incompleto} not_required{Non necessario} in_progress{In corso} wait{Attendi} cancel_when_safe{Annulla quando sicuro} retry{Riprova} resume{Riprendi} resolve_recovery{Risolvi il ripristino} recreate_plan{Crea un nuovo piano} enable_after_health{Abilita dopo il controllo} wait_for_task{Attendi l’attività} resume_task{Riprendi l’attività} registration_only{Solo registrazione} task_recovery_required{Ripristino attività necessario} task_in_progress{Attività in corso} task_interrupted{Attività interrotta} no_update_available{Nessun aggiornamento} review_permissions{Controlla autorizzazioni} choose_compatible_release{Scegli una versione compatibile} install_required_runtime{Installa il runtime necessario} enable_development_mode{Abilita modalità sviluppo} restore_verified_cache{Ripristina cache verificata} contact_policy_administrator{Contatta l’amministratore dei criteri} fresh{Recente} stale{Obsoleto} offline_verified{Verificato offline} empty{Vuoto} refreshing{Aggiornamento in corso} idle{Inattivo} local_only{Solo locale} default_disabled{Disabilitato per impostazione predefinita} managed_artifact_download{Download artefatto gestito} existing_version_retained_until_commit{Versione esistente mantenuta fino al commit} removes_owned_files_only{Rimuove solo file di proprietà} immutable_container_image{Immagine contenitore immutabile} writable_container_mount{Montaggio contenitore scrivibile} development_source_pinned_commit_no_build{Sorgente di sviluppo fissata a un commit non compilato} policy{Criterio} permission{Autorizzazione} artifact{Artefatto} unavailable{Non disponibile} available_after_materialization{Disponibile dopo la materializzazione} no_artifact_for_registration{Nessun artefatto per la registrazione} remove_connection_registration{Rimuovi registrazione connessione} staged_activation_restores_previous_version{Ripristina la versione preparata precedente} repair_restores_verified_owned_content{Ripristina contenuto di proprietà verificato} uninstall_removes_owned_files{Rimuovi file di proprietà} projection_consistent{Proiezione coerente} projection_drift{Deriva della proiezione} credential_handle_missing{Riferimento credenziale mancante} expected_status{Stato previsto} unexpected_status{Stato imprevisto} mcp_initialize_succeeded{Inizializzazione MCP riuscita} mcp_initialize_failed{Inizializzazione MCP non riuscita} mcp_list_tools_succeeded{Elenco strumenti MCP riuscito} mcp_list_tools_failed{Elenco strumenti MCP non riuscito} incompatible_health_contract{Contratto di integrità incompatibile} cleanup_failed{Pulizia non riuscita} timeout{Tempo scaduto} adapter_failed{Adapter non riuscito} verification_failed{Verifica non riuscita} activation_failed{Attivazione non riuscita} rollback_failed{Ripristino non riuscito} connection_projection{Proiezione connessione} managed_installation{Installazione gestita} managed_uninstall{Disinstallazione gestita} external_resource{Risorsa esterna} other{Stato sconosciuto o non supportato}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "Versione"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "Scrive file"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "Sì"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "Centro MCP"
   }
 }

@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "संपादित संदेश के साथ एक नया सत्र बनाएं"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "सक्रिय मैनिफेस्ट:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "सक्रिय संस्करण"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "एडाप्टर"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "सभी संगतता"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "सभी स्रोत"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "सभी विश्वसनीयता स्तर"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "स्वीकृत स्टूडियो प्रदाता"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "कमान्ड, तर्क, वातावरण, और कार्यशील निर्देशिका प्रदाता नीति द्वारा नियंत्रित हैं।"
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "वास्तुकला"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "प्रमाणीकरण"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "उपलब्ध संस्करण"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "बीयर क्रेडेंशियल संदर्भ"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "रद्द किया जा रहा है…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "कार्य रद्द करें"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "क्षमताएं"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "MCP सूची"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "सूची स्रोत"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "जाँच कर रहा है…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "प्रतिबद्ध करें"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "समुदाय"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "संगतता"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "संगत"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "अनुमति आईडी"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "कारण कोड"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "पुष्टिकरण हो रहा है…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "पुष्टि करें और शुरू करें"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "अनइंस्टॉल की पुष्टि करें"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "कनेक्शन योजना बनाएं"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "इंस्टॉल योजना बनाएं"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "प्रदाता योजना बनाएं"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "योजना बनाई जा रही है…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "प्रमाण-पत्र संदर्भ"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "केवल अस्पष्ट संदर्भ दर्ज करें। MCP सेंटर कभी भी बीयरर मान स्वीकार या प्रदर्शित नहीं करता है।"
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "वर्तमान कार्य"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "वर्तमान उपयोगकर्ता"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "डिफ़ॉल्ट सक्षम"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "डिफ़ॉल्ट स्थिति"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "अस्वीकृत"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "MCP विवरण"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "विकास मोड"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "अक्षम"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "खोजें"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "वितरण अडैप्टर"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "डॉकर की अनुमति है"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "पात्रता"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "सक्रिय"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "साक्ष्य प्रकार"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "मौजूदा प्रमाण पत्र संदर्भ"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "स्वास्थ्य"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "स्वास्थ्य अनुबंध"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "होस्ट पंजीकरण"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "HTTPS एंडपॉइंट"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "छवि"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "छवि डायजेस्ट"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "अपरिवर्तनीय साक्ष्य"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "असंगत"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "स्थापना"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "अंतिम स्वास्थ्य जांच:{result}में{latency}मि·सेक ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "लोड हो रहा है…"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "स्वीकृत प्रदाताओं को लोड करना"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "कैटलॉग लोड करना"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "विवरण लोड करना"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "प्रबंधित MCP लोड करना"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "MCP स्थिति लोड करना"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "स्रोत नीति लोड करना"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "अधिक लोड करें"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "स्थानीय"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "मशीन नीति"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "प्रबंधित MCP विवरण"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "प्रबंधित MCP सूची"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "प्रबंधित MCP प्लेटफ़ॉर्म"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "प्रदर्शनियाँ"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "मैनुअल"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "मैनुअल MCP कनेक्शन प्रकार"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "संग्रहीत डाइजेस्ट"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "टास्क पुन: प्रयास निगरानी। टास्क स्वयं स्वतंत्र रूप से जारी रहता है।"
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "टास्क स्थिति को ताज़ा नहीं किया जा सका"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "मेरे MCPs"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "नेटवर्क उत्पत्ति"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "अगला कार्य"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "नहीं"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "कोई सक्रिय संस्करण नहीं"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "कोई अतिरिक्त पुष्टियाँ नहीं।"
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "कोई अनुमोदित stdio स्रोत नहीं"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "प्रदाता उपलब्ध है लेकिन वर्तमान में कोई नीति-अनुमोदित MCP स्रोत उजागर नहीं करता है।"
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "कोई प्रमाणीकरण नहीं"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "कोई प्रबंधित MCPs नहीं"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Discover से इंस्टॉल करें या एक अनुमोदित मैनुअल कनेक्शन जोड़ें।"
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "कोई MCP नहीं मिला"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "वर्तमान खोज और नीति फ़िल्टर से मेल खाने वाले कोई कैटलॉग प्रविष्टियाँ नहीं हैं।"
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "कोई घोषित नहीं"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "कोई घोषित अनुमतियाँ नहीं।"
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "कोई कैटलॉग स्रोत नहीं"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "MCP प्लेटफॉर्म वर्तमान में कोई कॉन्फ़िगर किए गए कैटलॉग स्रोत रिपोर्ट नहीं करता है।"
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "कोई नहीं"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "आधिकारिक"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "ऑफ़लाइन"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "ऑपरेशन"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "स्वामित्व वाली वस्तुएँ"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "अनुमतियाँ"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "अनुमतियाँ और नीति"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "योजना प्रभाव"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "नीति"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "नीति और रोलबैक"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "प्रदाता स्रोत"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "प्रकाशक"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "प्रबंधित सूची पढ़ना।"
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "चयनित मैनिफेस्ट पढ़ना।"
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "विवरण और स्वास्थ्य रिकॉर्ड पढ़ना।"
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "मशीन नीति और कैश स्थिति पढ़ना।"
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "प्रदाता नीति पढ़ना।"
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "सत्यापित एमसीपी स्रोत पढ़ना।"
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "केवल पढ़ने के लिए"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "एमसीपी प्लेटफ़ॉर्म द्वारा प्रदत्त केवल-पढ़ने नीति।"
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "पुनर्प्राप्ति"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "गूसे कनेक्शन की जांच करें और फिर प्रयास करें।"
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "एमसीपी केंद्र अनुपलब्ध है"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "मौजूदा बियरर क्रेडेंशियल संदर्भ चुनें, फिर नई योजना बनाएं।"
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "क्रेडेंशियल संदर्भ आवश्यक है"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "ऑपरेशन को फिर से प्रयास करें।"
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "जारी रखने से पहले MCP स्थिति की समीक्षा करें।"
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "MCP संचालन पूरा नहीं किया जा सका"
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "पुष्टि करने से पहले एक नया योजना बनाएं और उसकी समीक्षा करें।"
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "योजना की समय सीमा समाप्त हो गई"
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "MCP स्थिति को रीफ़्रेश करें और एक नई योजना बनाएं।"
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "योजना अब वर्तमान नहीं है"
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "नीतियों के कारणों की समीक्षा करें और आवश्यकता होने पर नीति प्रशासक से संपर्क करें।"
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "मशीन नीति द्वारा अवरुद्ध"
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "फिर से प्रयास करने से पहले मशीन नीति की समीक्षा करें या उसके प्रशासक से संपर्क करें।"
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "नीति के अनुसार रिमोट HTTP उपलब्ध नहीं है"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "स्थानीय MCP रिपॉजिटरी उपलब्ध होने पर पुनः प्रयास करें।"
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "MCP डेटा अस्थायी रूप से उपलब्ध नहीं है"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "पुनर्प्राप्ति आवश्यक है"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "इस क्रिया को फिर से आजमाने से पहले MCP विवरण को रीफ्रेश करें।"
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "MCP स्थिति बदल गई"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "संपन्न प्रदाता स्रोत को पुनर्स्थापित करें या नीति प्रशासक से संपर्क करें।"
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "कोई स्वीकृत stdio प्रदाता उपलब्ध नहीं है"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "संदर्भ:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "रीफ्रेश"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "पंजीकरण"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "अस्वीकृत किया जा रहा है…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "योजना अस्वीकृत करें"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "रिमोट HTTP कनेक्शन"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Goose समीक्षा करने योग्य योजना तैयार करने से पहले URL सुरक्षा और मशीन नीति को मान्य करता है।"
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "रिमोट HTTP"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "फ़ाइलें हटाता है"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "भंडार की उत्पत्ति"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "MCP प्लेटफ़ॉर्म अनुरोध पूरा नहीं किया जा सका।"
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "आवश्यक पुष्टियाँ"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "प्रतिबंधित"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "पुनः प्रयास करें"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "पुनः प्रयास कर रहा है…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "कार्य पुनः प्रयास करें"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "पारिवर्तनीय"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "MCP योजना की समीक्षा करें"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "केवल अनुमतियों, नीति, दायरे, प्रभाव और रोलबैक की समीक्षा करने के बाद पुष्टि करें।"
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "मरम्मत की समीक्षा करें"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "अनइंस्टॉल की समीक्षा करें"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "अद्यतन की समीक्षा करें"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "स्वास्थ्य जांच चलाएँ"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "रनटाइम"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "सीमा"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "MCP सूची खोजें"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "MCP खोजें"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "MCP केंद्र अनुभाग"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "एक प्रबंधित MCP चुनें"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "रनटाइम, स्वास्थ्य, संस्करण, पात्रता और सुरक्षित क्रियाओं की समीक्षा करें।"
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "एक MCP चुनें"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "सत्यापित विवरण और पात्रता की समीक्षा के लिए एक सूची कार्ड चुनें।"
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "आकार (बाइट्स)"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "स्रोत"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "स्रोत और नीति"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "सूची स्रोत और कैश"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "पुष्टिकरण के दौरान शुरू होता है"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Stdio प्रदाता अनुपलब्ध है"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "यह मशीन एक अनुमोदित stdio प्रदाता को उजागर नहीं करती है। कोई फ्री-फॉर्म कमांड प्रविष्टि उपलब्ध नहीं है।"
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "सत्यापित MCPs की खोज करें, हर योजना की समीक्षा करें, और क्रेडेंशियल या निष्पादन विवरण को उजागर किए बिना स्वास्थ्य का प्रबंधन करें।"
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "लक्षित प्लेटफ़ॉर्म"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "अगला:{action}· संदर्भ:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "MCP केंद्र"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "ट्रांसपोर्ट"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "ट्री साक्ष्य"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "विश्वास"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "विश्वास स्तर"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "अनुपलब्ध कारण"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "अनइंस्टॉल इस योजना द्वारा सूचीबद्ध एमसीपी पंजीकरण और स्वामित्व वाली फ़ाइलों को हटाता है। जारी रखने से पहले पलटने योग्य और रखे गए उपयोगकर्ता डेटा की समीक्षा करें।"
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{अनुपस्थित} registered{पंजीकृत} not_applicable{लागू नहीं} not_installed{स्थापित नहीं} staged{तैयार} installed{स्थापित} update_available{अपडेट उपलब्ध} repair_required{मरम्मत आवश्यक} uninstall_pending{हटाना लंबित} stopped{रुका हुआ} starting{शुरू हो रहा है} running{चल रहा है} stopping{रुक रहा है} crashed{क्रैश हुआ} unknown{अज्ञात} checking{जाँच जारी} healthy{स्वस्थ} degraded{कमज़ोर} unhealthy{अस्वस्थ} blocked_auth{प्रमाणीकरण द्वारा अवरुद्ध} compatible{संगत} incompatible{असंगत} allowed{अनुमत} restricted{प्रतिबंधित} denied{अस्वीकृत} needs_confirmation{पुष्टि आवश्यक} allow{अनुमति दें} deny{अस्वीकार करें} eligible{पात्र} confirmation_required{पुष्टि आवश्यक} platform_unsupported{प्लेटफ़ॉर्म असमर्थित} runtime_unavailable{रनटाइम अनुपलब्ध} policy_denied{नीति द्वारा अस्वीकृत} development_mode_required{डेवलपमेंट मोड आवश्यक} external_capability_unavailable{बाहरी क्षमता अनुपलब्ध} official{आधिकारिक} community{समुदाय} local{स्थानीय} remote_http{रिमोट HTTP} manual_stdio{मैनुअल मानक इनपुट/आउटपुट} stdio_provider{स्वीकृत मानक इनपुट/आउटपुट प्रदाता} npm{npm पैकेज} python_wheel{Python wheel} binary_archive{बाइनरी संग्रह} docker{Docker} git_dev{Git डेवलपमेंट स्रोत} stdio{मानक इनपुट/आउटपुट} streamable_http{स्ट्रीमिंग HTTP} none{कोई नहीं} api_key_header{API कुंजी हेडर} environment{पर्यावरण क्रेडेंशियल} oauth2{OAuth 2} mcp_initialize{MCP आरंभीकरण} mcp_list_tools{MCP टूल सूची} http{HTTP स्वास्थ्य एंडपॉइंट} tools{टूल} resources{संसाधन} prompts{प्रॉम्प्ट} sampling{सैंपलिंग} elicitation{जानकारी अनुरोध} logging{लॉगिंग} filesystem_read{फ़ाइलें पढ़ें} filesystem_write{फ़ाइलें लिखें} network{नेटवर्क पहुँच} credentials{क्रेडेंशियल} process_spawn{प्रक्रियाएँ शुरू करें} host_application{होस्ट अनुप्रयोग} register{पंजीकरण} install{स्थापित करें} update{अपडेट} repair{मरम्मत} uninstall{हटाएँ} health{स्वास्थ्य जाँच} planned{नियोजित} awaiting_confirmation{पुष्टि की प्रतीक्षा} queued{कतार में} cancelling{रद्द हो रहा है} verifying{सत्यापन जारी} activating{सक्रिय हो रहा है} rolling_back{वापस किया जा रहा है} succeeded{सफल} failed{विफल} cancelled{रद्द} interrupted{बाधित} recovery_required{पुनर्प्राप्ति आवश्यक} pending{लंबित} complete{पूर्ण} incomplete{अपूर्ण} not_required{आवश्यक नहीं} in_progress{प्रगति पर} wait{प्रतीक्षा करें} cancel_when_safe{सुरक्षित होने पर रद्द करें} retry{पुनः प्रयास} resume{फिर शुरू करें} resolve_recovery{पुनर्प्राप्ति हल करें} recreate_plan{नई योजना बनाएँ} enable_after_health{स्वास्थ्य जाँच के बाद सक्षम करें} wait_for_task{कार्य की प्रतीक्षा करें} resume_task{कार्य फिर शुरू करें} registration_only{केवल पंजीकरण} task_recovery_required{कार्य पुनर्प्राप्ति आवश्यक} task_in_progress{कार्य प्रगति पर} task_interrupted{कार्य बाधित} no_update_available{अपडेट उपलब्ध नहीं} review_permissions{अनुमतियाँ देखें} choose_compatible_release{संगत रिलीज़ चुनें} install_required_runtime{आवश्यक रनटाइम स्थापित करें} enable_development_mode{डेवलपमेंट मोड सक्षम करें} restore_verified_cache{सत्यापित कैश पुनर्स्थापित करें} contact_policy_administrator{नीति व्यवस्थापक से संपर्क करें} fresh{नवीन} stale{पुराना} offline_verified{ऑफ़लाइन सत्यापित} empty{खाली} refreshing{रीफ़्रेश हो रहा है} idle{निष्क्रिय} local_only{केवल स्थानीय} default_disabled{डिफ़ॉल्ट रूप से अक्षम} managed_artifact_download{प्रबंधित आर्टिफ़ैक्ट डाउनलोड} existing_version_retained_until_commit{कमिट तक मौजूदा संस्करण सुरक्षित} removes_owned_files_only{केवल स्वामित्व वाली फ़ाइलें हटाता है} immutable_container_image{अपरिवर्तनीय कंटेनर इमेज} writable_container_mount{लिखने योग्य कंटेनर माउंट} development_source_pinned_commit_no_build{डेवलपमेंट स्रोत बिना बिल्ड वाले कमिट पर स्थिर} policy{नीति} permission{अनुमति} artifact{आर्टिफ़ैक्ट} unavailable{अनुपलब्ध} available_after_materialization{तैयार होने के बाद उपलब्ध} no_artifact_for_registration{पंजीकरण के लिए आर्टिफ़ैक्ट नहीं} remove_connection_registration{कनेक्शन पंजीकरण हटाएँ} staged_activation_restores_previous_version{पिछला तैयार संस्करण पुनर्स्थापित करें} repair_restores_verified_owned_content{सत्यापित स्वामित्व सामग्री पुनर्स्थापित करें} uninstall_removes_owned_files{स्वामित्व वाली फ़ाइलें हटाएँ} projection_consistent{प्रोजेक्शन संगत} projection_drift{प्रोजेक्शन विचलन} credential_handle_missing{क्रेडेंशियल संदर्भ अनुपस्थित} expected_status{अपेक्षित स्थिति} unexpected_status{अनपेक्षित स्थिति} mcp_initialize_succeeded{MCP आरंभीकरण सफल} mcp_initialize_failed{MCP आरंभीकरण विफल} mcp_list_tools_succeeded{MCP टूल सूची सफल} mcp_list_tools_failed{MCP टूल सूची विफल} incompatible_health_contract{असंगत स्वास्थ्य अनुबंध} cleanup_failed{सफ़ाई विफल} timeout{समय समाप्त} adapter_failed{एडाप्टर विफल} verification_failed{सत्यापन विफल} activation_failed{सक्रियण विफल} rollback_failed{वापसी विफल} connection_projection{कनेक्शन प्रोजेक्शन} managed_installation{प्रबंधित स्थापना} managed_uninstall{प्रबंधित हटाना} external_resource{बाहरी संसाधन} other{अज्ञात या असमर्थित स्थिति}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "संस्करण"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "फ़ाइलें लिखता है"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "हाँ"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "MCP केंद्र"
   }
 }

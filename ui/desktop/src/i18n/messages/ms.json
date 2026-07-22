@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "Cipta sesi baharu dengan mesej yang disunting"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "Manifest aktif:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "Versi aktif"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "Penyesuai"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "Semua keserasian"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "Semua sumber"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "Semua tahap kepercayaan"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "Penyedia stdio yang diluluskan"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "Arahan, hujah, persekitaran, dan direktori kerja dikawal oleh polisi penyedia."
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "Senibina"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "Pengesahan"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "Versi tersedia"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "Rujukan kelayakan pemegang"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "Membatalkan…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "Batal tugas"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "Keupayaan"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "Katalog MCP"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "Sumber katalog"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "Memeriksa…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "Komit"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "Komuniti"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "Keserasian"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "Serasi"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "ID Kebenaran"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "Kod sebab"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "Sedang mengesahkan…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "Sahkan dan mula"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "Sahkan nyahpasang"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "Buat pelan sambungan"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "Buat pelan pemasangan"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "Buat pelan penyedia"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "Sedang membuat pelan…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "Rujukan kelayakan"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "Masukkan hanya rujukan kabur. Pusat MCP tidak pernah menerima atau memaparkan nilai pemegang."
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "Tugas semasa"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "Pengguna semasa"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "Didayakan secara lalai"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "Keadaan lalai"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "Ditolak"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "Butiran MCP"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "Mod pembangunan"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "Dinonaktifkan"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "Temui"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "Penyesuai pengedaran"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "Docker dibenarkan"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "Kelayakan"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "Didayakan"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "Jenis bukti"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "Rujukan kredensial sedia ada"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "Kesihatan"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "Kontrak kesihatan"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "Pendaftaran hos"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "Titik hujung HTTPS"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "Imej"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "Digest imej"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "Bukti tidak berubah"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "Tidak serasi"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "Pemasangan"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "Pemeriksaan kesihatan terakhir:{result}dalam{latency}ms ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "Sedang memuat …"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "Sedang memuat pembekal yang diluluskan"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "Sedang memuat katalog"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "Sedang memuat butiran"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "Sedang memuat MCP yang diurus"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "Sedang memuat status MCP"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "Sedang memuat polisi sumber"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "Muat lebih banyak"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "Tempatan"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "Polisi mesin"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "Butiran MCP yang diurus"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "Inventori MCP yang diurus"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "Platform MCP yang Diurus"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "Manifest"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "Manual"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "Jenis sambungan MCP manual"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "Digest termaterialisasi"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "Pemantauan tugas semula. Tugas itu sendiri berterusan secara bebas."
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "Status tugas tidak dapat disegarkan"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "MCP saya"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "Asal rangkaian"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "Tindakan seterusnya"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "Tidak"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "Tiada versi aktif"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "Tiada pengesahan tambahan."
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "Tiada sumber stdio yang diluluskan"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "Penyedia tersedia tetapi pada masa ini tidak mendedahkan sebarang sumber MCP yang diluluskan polisi."
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "Tiada pengesahan"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "Tiada MCP yang diurus"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Pasang dari Discover atau tambah sambungan manual yang diluluskan."
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "Tiada MCP ditemui"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "Tiada entri katalog yang sepadan dengan carian semasa dan penapis dasar."
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "Tiada diisytiharkan"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "Tiada kebenaran yang diisytiharkan."
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "Tiada sumber katalog"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "Platform MCP pada masa ini melaporkan tiada sumber katalog yang dikonfigurasi."
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "Tiada"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "Rasmi"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "Luar talian"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "Operasi"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "Item yang dimiliki"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "Kebenaran"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "Kebenaran dan dasar"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "Impak pelan"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "Dasar"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "Dasar dan pemulihan"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "Sumber pembekal"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "Penerbit"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "Membaca inventori yang diurus."
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "Membaca manifest yang dipilih."
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "Membaca rekod butiran dan kesihatan."
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "Membaca dasar mesin dan keadaan cache."
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "Membaca dasar penyedia."
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "Membaca sumber MCP yang disahkan."
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "Baca sahaja"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "Dasar baca sahaja disediakan oleh Platform MCP."
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "Pemulihan"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "Periksa sambungan Goose dan cuba semula."
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "Pusat MCP tidak tersedia"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "Pilih rujukan kelayakan pemegang yang sedia ada, kemudian buat pelan baru."
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "Rujukan kelayakan diperlukan"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "Cuba semula operasi."
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "Semak keadaan MCP sebelum meneruskan."
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "Operasi MCP tidak dapat diselesaikan"
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "Buat dan semak rancangan baru sebelum mengesahkan."
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "Rancangan telah tamat"
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "Segarkan keadaan MCP dan buat rancangan baru."
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "Rancangan tidak lagi terkini"
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "Semak sebab dasar dan hubungi pentadbir dasar sekiranya perlu."
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "Disekat oleh dasar mesin"
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "Semak dasar mesin atau hubungi pentadbirnya sebelum mencuba semula."
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "HTTP Jauh tidak tersedia oleh dasar"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "Cuba semula apabila repositori MCP tempatan tersedia."
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "Data MCP sementara tidak tersedia"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "pemulihan diperlukan"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "Segarkan butiran MCP sebelum mencuba tindakan ini semula."
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "Keadaan MCP telah berubah"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "Pulihkan sumber penyedia yang diluluskan atau hubungi pentadbir dasar."
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "Tiada penyedia stdio yang diluluskan tersedia"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "Rujukan:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "Segarkan"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "Pendaftaran"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "Menolak…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "Tolak pelan"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "Sambungan HTTP Jauh"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Goose mengesahkan keselamatan URL dan polisi mesin sebelum menghasilkan pelan yang boleh dikaji."
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "HTTP Jauh"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "Menghapuskan fail"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "Asal repositori"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "Permintaan Platform MCP tidak dapat diselesaikan."
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "Pengesahan yang diperlukan"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "Terhad"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "Cuba lagi"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "Sedang mencuba semula…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "Cuba semula tugas"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "Boleh diterbalikkan"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "Kaji pelan MCP"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "Sahkan hanya selepas mengkaji kebenaran, polisi, skop, kesan, dan pemulihan."
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "Kaji pembaikan"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "Kaji nyahpasang"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "Kaji kemas kini"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "Jalankan pemeriksaan kesihatan"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "Masa jalan"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "Skop"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "Cari katalog MCP"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "Cari MCP"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "Bahagian Pusat MCP"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "Pilih MCP yang diurus"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "Semak masa jalan, kesihatan, versi, kelayakan, dan tindakan selamat."
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "Pilih một MCP"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "Pilih kad katalog untuk menyemak butiran yang disahkan dan kelayakannya."
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "Saiz (bait)"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "Sumber"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "Sumber & Polisi"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "Sumber katalog dan cache"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "Bermula semasa pengesahan"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Penyedia Stdio tidak tersedia"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "Mesin ini tidak mendedahkan penyedia stdio yang diluluskan. Tiada kemasukan arahan bebas tersedia."
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "Temui MCP yang disahkan, semak setiap pelan, dan urus kesihatan tanpa mendedahkan kelayakan atau butiran pelaksanaan."
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "Platform sasaran"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "Seterusnya:{action}· Rujukan:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "Pusat MCP"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "Pengangkutan"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "Bukti pokok"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "Kepercayaan"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "Tahap kepercayaan"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "Sebab tidak tersedia"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "Nyahpasang akan mengeluarkan pendaftaran MCP dan fail yang dimiliki yang disenaraikan oleh pelan ini. Semak kebolehubalikan dan data pengguna yang disimpan sebelum meneruskan."
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{Tiada} registered{Berdaftar} not_applicable{Tidak berkenaan} not_installed{Belum dipasang} staged{Disediakan} installed{Dipasang} update_available{Kemas kini tersedia} repair_required{Pembaikan diperlukan} uninstall_pending{Menunggu nyahpasang} stopped{Dihentikan} starting{Sedang bermula} running{Sedang berjalan} stopping{Sedang berhenti} crashed{Ranap} unknown{Tidak diketahui} checking{Sedang diperiksa} healthy{Sihat} degraded{Merosot} unhealthy{Tidak sihat} blocked_auth{Disekat pengesahan} compatible{Serasi} incompatible{Tidak serasi} allowed{Dibenarkan} restricted{Terhad} denied{Ditolak} needs_confirmation{Pengesahan diperlukan} allow{Benarkan} deny{Tolak} eligible{Layak} confirmation_required{Pengesahan diperlukan} platform_unsupported{Platform tidak disokong} runtime_unavailable{Runtime tidak tersedia} policy_denied{Ditolak oleh dasar} development_mode_required{Mod pembangunan diperlukan} external_capability_unavailable{Keupayaan luaran tidak tersedia} official{Rasmi} community{Komuniti} local{Setempat} remote_http{HTTP jauh} manual_stdio{Input/output standard manual} stdio_provider{Penyedia input/output standard yang diluluskan} npm{Pakej npm} python_wheel{Wheel Python} binary_archive{Arkib binari} docker{Docker} git_dev{Sumber pembangunan Git} stdio{Input/output standard} streamable_http{HTTP penstriman} none{Tiada} api_key_header{Pengepala kunci API} environment{Kelayakan persekitaran} oauth2{OAuth 2} mcp_initialize{Permulaan MCP} mcp_list_tools{Senarai alat MCP} http{Titik kesihatan HTTP} tools{Alat} resources{Sumber} prompts{Prom} sampling{Pensampelan} elicitation{Permintaan maklumat} logging{Pengelogan} filesystem_read{Baca fail} filesystem_write{Tulis fail} network{Akses rangkaian} credentials{Kelayakan} process_spawn{Mulakan proses} host_application{Aplikasi hos} register{Daftar} install{Pasang} update{Kemas kini} repair{Baiki} uninstall{Nyahpasang} health{Pemeriksaan kesihatan} planned{Dirancang} awaiting_confirmation{Menunggu pengesahan} queued{Dalam baris gilir} cancelling{Sedang membatalkan} verifying{Sedang mengesahkan} activating{Sedang mengaktifkan} rolling_back{Sedang mengembalikan} succeeded{Berjaya} failed{Gagal} cancelled{Dibatalkan} interrupted{Terganggu} recovery_required{Pemulihan diperlukan} pending{Belum selesai} complete{Selesai} incomplete{Tidak lengkap} not_required{Tidak diperlukan} in_progress{Sedang berlangsung} wait{Tunggu} cancel_when_safe{Batal apabila selamat} retry{Cuba lagi} resume{Sambung} resolve_recovery{Selesaikan pemulihan} recreate_plan{Cipta pelan baharu} enable_after_health{Aktifkan selepas pemeriksaan} wait_for_task{Tunggu tugas} resume_task{Sambung tugas} registration_only{Pendaftaran sahaja} task_recovery_required{Pemulihan tugas diperlukan} task_in_progress{Tugas sedang berjalan} task_interrupted{Tugas terganggu} no_update_available{Tiada kemas kini} review_permissions{Semak kebenaran} choose_compatible_release{Pilih keluaran serasi} install_required_runtime{Pasang runtime diperlukan} enable_development_mode{Aktifkan mod pembangunan} restore_verified_cache{Pulihkan cache disahkan} contact_policy_administrator{Hubungi pentadbir dasar} fresh{Terkini} stale{Lapuk} offline_verified{Disahkan luar talian} empty{Kosong} refreshing{Sedang menyegar semula} idle{Melahu} local_only{Setempat sahaja} default_disabled{Dilumpuhkan secara lalai} managed_artifact_download{Muat turun artifak terurus} existing_version_retained_until_commit{Versi sedia ada dikekalkan hingga commit} removes_owned_files_only{Hanya membuang fail milik sendiri} immutable_container_image{Imej bekas tidak berubah} writable_container_mount{Lekapan bekas boleh tulis} development_source_pinned_commit_no_build{Sumber pembangunan ditetapkan pada commit tanpa binaan} policy{Dasar} permission{Kebenaran} artifact{Artifak} unavailable{Tidak tersedia} available_after_materialization{Tersedia selepas pewujudan} no_artifact_for_registration{Tiada artifak untuk pendaftaran} remove_connection_registration{Buang pendaftaran sambungan} staged_activation_restores_previous_version{Pulihkan versi disediakan sebelumnya} repair_restores_verified_owned_content{Pulihkan kandungan milik sendiri yang disahkan} uninstall_removes_owned_files{Buang fail milik sendiri} projection_consistent{Unjuran konsisten} projection_drift{Sisihan unjuran} credential_handle_missing{Rujukan kelayakan tiada} expected_status{Status dijangka} unexpected_status{Status tidak dijangka} mcp_initialize_succeeded{Permulaan MCP berjaya} mcp_initialize_failed{Permulaan MCP gagal} mcp_list_tools_succeeded{Senarai alat MCP berjaya} mcp_list_tools_failed{Senarai alat MCP gagal} incompatible_health_contract{Kontrak kesihatan tidak serasi} cleanup_failed{Pembersihan gagal} timeout{Masa tamat} adapter_failed{Penyesuai gagal} verification_failed{Pengesahan gagal} activation_failed{Pengaktifan gagal} rollback_failed{Pengembalian gagal} connection_projection{Unjuran sambungan} managed_installation{Pemasangan terurus} managed_uninstall{Nyahpasang terurus} external_resource{Sumber luaran} other{Status tidak diketahui atau tidak disokong}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "Versi"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "Menulis fail"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "Ya"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "Pusat MCP"
   }
 }

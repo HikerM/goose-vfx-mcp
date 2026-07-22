@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "編集したメッセージで新しいセッションを作成"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "アクティブ マニフェスト:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "アクティブ バージョン"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "アダプター"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "すべての互換性"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "すべてのソース"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "すべての信頼レベル"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "承認済み stdio プロバイダー"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "コマンド、引数、環境、および作業ディレクトリはプロバイダーポリシーによって制御されます。"
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "アーキテクチャ"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "認証"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "使用可能なバージョン"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "ベアラー認証情報参照"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "キャンセル中…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "タスクをキャンセル"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "機能"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "MCP カタログ"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "カタログソース"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "チェック中…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "コミット"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "コミュニティ"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "互換性"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "互換"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "権限ID"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "理由コード"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "確認中…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "確認して開始"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "アンインストールを確認"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "接続プランを作成"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "インストールプランを作成"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "プロバイダプランを作成"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "プラン作成中…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "資格情報参照"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "不透明な参照のみ入力してください。MCPセンターはベアラ値を受け入れたり表示したりしません。"
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "現在のタスク"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "現在のユーザー"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "デフォルトで有効"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "デフォルトの状態"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "拒否されました"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "MCPの詳細"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "開発モード"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "無効"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "検出"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "配布アダプター"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "Docker許可済み"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "適格性"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "有効"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "証拠の種類"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "既存の資格参照"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "ヘルス"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "ヘルス契約"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "ホスト登録"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "HTTPS エンドポイント"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "イメージ"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "イメージダイジェスト"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "不変の証拠"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "互換性なし"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "インストール"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "最終ヘルスチェック:{result}in{latency}ms ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "読み込み中…"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "承認されたプロバイダーを読み込み中"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "カタログを読み込み中"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "詳細を読み込み中"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "管理された MCP を読み込み中"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "MCP ステートを読み込み中"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "ソースポリシーを読み込み中"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "もっと読み込む"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "ローカル"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "マシンポリシー"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "管理された MCP の詳細"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "管理された MCP のインベントリ"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "管理されたMCPプラットフォーム"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "マニフェスト"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "マニュアル"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "手動MCP接続タイプ"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "具体化されたダイジェスト"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "タスク再試行監視。タスク自体は独立して継続します。"
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "タスクのステータスを更新できませんでした"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "私のMCP"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "ネットワークのオリジン"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "次のアクション"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "いいえ"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "アクティブなバージョンなし"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "追加の確認はありません。"
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "承認されたstdioソースはありません"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "プロバイダーは利用可能ですが、現在ポリシー承認済みのMCPソースを公開していません。"
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "認証なし"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "管理されたMCPなし"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Discover からインストールするか、承認された手動接続を追加してください。"
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "MCP が見つかりません"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "現在の検索およびポリシーフィルターに一致するカタログ項目はありません。"
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "宣言なし"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "宣言された権限はありません。"
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "カタログソースなし"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "MCP プラットフォームでは現在、構成されたカタログソースは報告されていません。"
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "なし"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "公式"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "オフライン"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "操作"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "所有アイテム"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "権限"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "権限とポリシー"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "プランの影響"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "ポリシー"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "ポリシーとロールバック"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "プロバイダーソース"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "発行者"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "管理対象インベントリを読み取ります。"
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "選択されたマニフェストを読み取ります。"
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "詳細およびヘルスレコードを読み取ります。"
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "マシンポリシーおよびキャッシュ状態を読み取ります。"
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "プロバイダーポリシーを読み取ります。"
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "確認済みMCPソースを読み取ります。"
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "読み取り専用"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "MCPプラットフォームによって提供される読み取り専用ポリシー。"
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "復旧"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "Goose接続を確認して再試行してください。"
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "MCPセンターが利用できません"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "既存のベアラー認証情報参照を選択し、新しいプランを作成します。"
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "認証情報参照が必要です"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "操作を再試行してください。"
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "続行する前にMCPの状態を確認してください。"
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "MCPの操作を完了できませんでした。"
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "確認する前に新しい計画を作成して確認してください。"
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "計画の有効期限が切れています。"
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "MCPの状態を更新し、新しい計画を作成してください。"
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "計画は現在のものではありません。"
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "ポリシーの理由を確認し、必要に応じてポリシー管理者に連絡してください。"
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "マシンポリシーによってブロックされました。"
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "再試行する前にマシンポリシーを確認するか、管理者に連絡してください。"
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "ポリシーによりリモートHTTPは利用できません"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "ローカルMCPリポジトリが利用可能になったら再試行してください。"
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "MCPデータは一時的に利用できません"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "回復が必要です"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "この操作を再度行う前にMCPの詳細を更新してください。"
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "MCPの状態が変更されました"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "承認されたプロバイダーソースを復元するか、ポリシー管理者に連絡してください。"
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "承認されたstdioプロバイダーは利用できません"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "参照:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "更新"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "登録"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "拒否中…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "プランを拒否"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "リモートHTTP接続"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Gooseは、レビュー可能なプランを作成する前にURLの安全性とマシンポリシーを検証します。"
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "リモートHTTP"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "ファイルを削除"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "リポジトリの起源"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "MCPプラットフォームのリクエストを完了できませんでした。"
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "必要な確認"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "制限付き"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "再試行"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "再試行中…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "タスクを再試行"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "可逆"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "MCPプランを確認"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "権限、ポリシー、範囲、影響、およびロールバックを確認した後にのみ確認してください。"
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "修復を確認"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "アンインストールを確認"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "更新を確認"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "ヘルスチェックを実行"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "ランタイム"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "スコープ"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "MCPカタログを検索"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "MCPを検索"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "MCPセンターのセクション"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "管理されたMCPを選択"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "ランタイム、ヘルス、バージョン、適格性、安全な操作を確認"
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "MCPを選択"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "カタログカードを選択してその検証済みの詳細情報と適格性を確認"
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "サイズ（バイト）"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "ソース"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "ソース & ポリシー"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "カタログソースとキャッシュ"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "確認中に開始"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Stdioプロバイダーは利用できません"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "このマシンは承認されたstdioプロバイダーを公開していません。自由形式のコマンド入力は利用できません。"
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "検証済みMCPを発見し、すべてのプランを確認し、資格情報や実行の詳細を公開せずにヘルスを管理します。"
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "対象プラットフォーム"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "次へ:{action}· 参照:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "MCPセンター"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "トランスポート"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "ツリー証拠"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "信頼"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "信頼レベル"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "利用不可の理由"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "アンインストールは、このプランで一覧表示されているMCPの登録と所有ファイルを削除します。続行する前に、可逆性と保持されるユーザーデータを確認してください。"
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{未登録} registered{登録済み} not_applicable{該当なし} not_installed{未インストール} staged{ステージ済み} installed{インストール済み} update_available{更新あり} repair_required{修復が必要} uninstall_pending{アンインストール待ち} stopped{停止中} starting{起動中} running{実行中} stopping{停止処理中} crashed{クラッシュ} unknown{不明} checking{確認中} healthy{正常} degraded{低下} unhealthy{異常} blocked_auth{認証でブロック} compatible{互換} incompatible{非互換} allowed{許可} restricted{制限付き} denied{拒否} needs_confirmation{確認が必要} allow{許可} deny{拒否} eligible{利用可能} confirmation_required{確認が必要} platform_unsupported{未対応プラットフォーム} runtime_unavailable{ランタイム利用不可} policy_denied{ポリシーにより拒否} development_mode_required{開発モードが必要} external_capability_unavailable{外部機能が利用不可} official{公式} community{コミュニティ} local{ローカル} remote_http{リモート HTTP} manual_stdio{手動標準入出力} stdio_provider{承認済み標準入出力プロバイダー} npm{npm パッケージ} python_wheel{Python wheel} binary_archive{バイナリアーカイブ} docker{Docker} git_dev{Git 開発ソース} stdio{標準入出力} streamable_http{ストリーミング HTTP} none{なし} api_key_header{API キーヘッダー} environment{環境認証情報} oauth2{OAuth 2} mcp_initialize{MCP 初期化} mcp_list_tools{MCP ツール一覧} http{HTTP ヘルスエンドポイント} tools{ツール} resources{リソース} prompts{プロンプト} sampling{サンプリング} elicitation{情報要求} logging{ログ} filesystem_read{ファイル読み取り} filesystem_write{ファイル書き込み} network{ネットワークアクセス} credentials{認証情報} process_spawn{プロセス起動} host_application{ホストアプリケーション} register{登録} install{インストール} update{更新} repair{修復} uninstall{アンインストール} health{ヘルスチェック} planned{計画済み} awaiting_confirmation{確認待ち} queued{待機中} cancelling{キャンセル中} verifying{検証中} activating{有効化中} rolling_back{ロールバック中} succeeded{成功} failed{失敗} cancelled{キャンセル済み} interrupted{中断} recovery_required{復旧が必要} pending{保留中} complete{完了} incomplete{未完了} not_required{不要} in_progress{進行中} wait{待機} cancel_when_safe{安全になったらキャンセル} retry{再試行} resume{再開} resolve_recovery{復旧問題を解決} recreate_plan{新しいプランを作成} enable_after_health{ヘルスチェック後に有効化} wait_for_task{タスクを待機} resume_task{タスクを再開} registration_only{登録のみ} task_recovery_required{タスクの復旧が必要} task_in_progress{タスク進行中} task_interrupted{タスク中断} no_update_available{更新なし} review_permissions{権限を確認} choose_compatible_release{互換リリースを選択} install_required_runtime{必要なランタイムをインストール} enable_development_mode{開発モードを有効化} restore_verified_cache{検証済みキャッシュを復元} contact_policy_administrator{ポリシー管理者に連絡} fresh{最新} stale{期限切れ} offline_verified{オフライン検証済み} empty{空} refreshing{更新中} idle{待機} local_only{ローカルのみ} default_disabled{既定で無効} managed_artifact_download{管理対象成果物のダウンロード} existing_version_retained_until_commit{コミットまで既存バージョンを保持} removes_owned_files_only{所有ファイルのみ削除} immutable_container_image{不変コンテナイメージ} writable_container_mount{書き込み可能なコンテナマウント} development_source_pinned_commit_no_build{開発ソースは未ビルドのコミットに固定} policy{ポリシー} permission{権限} artifact{成果物} unavailable{利用不可} available_after_materialization{実体化後に利用可能} no_artifact_for_registration{登録用成果物なし} remove_connection_registration{接続登録を削除} staged_activation_restores_previous_version{以前のステージ済みバージョンを復元} repair_restores_verified_owned_content{検証済み所有コンテンツを復元} uninstall_removes_owned_files{所有ファイルを削除} projection_consistent{プロジェクション整合} projection_drift{プロジェクション差異} credential_handle_missing{認証情報参照なし} expected_status{期待された状態} unexpected_status{予期しない状態} mcp_initialize_succeeded{MCP 初期化成功} mcp_initialize_failed{MCP 初期化失敗} mcp_list_tools_succeeded{MCP ツール一覧取得成功} mcp_list_tools_failed{MCP ツール一覧取得失敗} incompatible_health_contract{非互換のヘルス契約} cleanup_failed{クリーンアップ失敗} timeout{タイムアウト} adapter_failed{アダプター失敗} verification_failed{検証失敗} activation_failed{有効化失敗} rollback_failed{ロールバック失敗} connection_projection{接続プロジェクション} managed_installation{管理対象インストール} managed_uninstall{管理対象アンインストール} external_resource{外部リソース} other{不明または未対応の状態}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "バージョン"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "ファイルを書き込む"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "はい"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "MCPセンター"
   }
 }

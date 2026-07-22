@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "편집한 메시지로 새 세션 만들기"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "활성 매니페스트:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "활성 버전"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "어댑터"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "모든 호환성"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "모든 소스"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "모든 신뢰 수준"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "승인된 stdio 제공자"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "명령, 인수, 환경 및 작업 디렉터리는 제공자 정책에 의해 제어됩니다."
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "아키텍처"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "인증"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "사용 가능한 버전"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "Bearer 자격 증명 참조"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "취소 중…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "작업 취소"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "기능"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "MCP 카탈로그"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "카탈로그 소스"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "확인 중…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "커밋"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "커뮤니티"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "호환성"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "호환됨"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "권한 ID"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "사유 코드"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "확인 중…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "확인하고 시작"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "제거 확인"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "연결 계획 생성"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "설치 계획 생성"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "공급자 계획 생성"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "계획 생성 중…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "자격 증명 참조"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "불투명한 참조만 입력하십시오. MCP 센터는 절대 토큰 값을 수락하거나 표시하지 않습니다."
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "현재 작업"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "현재 사용자"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "기본 활성화"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "기본 상태"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "거부됨"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "MCP 세부 정보"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "개발 모드"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "비활성화됨"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "검색"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "배포 어댑터"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "Docker 허용됨"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "적격성"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "활성화됨"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "증거 유형"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "기존 자격 증명 참조"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "건강"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "건강 계약"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "호스트 등록"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "HTTPS 엔드포인트"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "이미지"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "이미지 다이제스트"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "불변 증거"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "호환되지 않음"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "설치"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "마지막 건강 체크:{result},{latency}ms ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "로딩 중…"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "승인된 제공자 로딩 중"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "카탈로그 로딩 중"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "세부 정보 로딩 중"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "관리되는 MCP 로딩 중"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "MCP 상태 로딩 중"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "소스 정책 로딩 중"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "더 보기"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "로컬"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "머신 정책"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "관리되는 MCP 세부 정보"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "관리되는 MCP 인벤토리"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "관리되는 MCP 플랫폼"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "매니페스트"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "매뉴얼"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "수동 MCP 연결 유형"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "구체화된 다이제스트"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "재시도 작업 모니터링. 작업 자체는 독립적으로 계속됩니다."
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "작업 상태를 새로 고칠 수 없습니다"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "내 MCP"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "네트워크 출처"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "다음 작업"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "아니요"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "활성 버전 없음"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "추가 확인 없음."
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "승인된 stdio 소스 없음"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "제공자는 사용 가능하지만 현재 정책 승인 MCP 소스를 노출하지 않습니다."
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "인증 없음"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "관리되는 MCP 없음"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Discover에서 설치하거나 승인된 수동 연결을 추가하십시오."
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "MCP를 찾을 수 없음"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "현재 검색 및 정책 필터와 일치하는 카탈로그 항목이 없습니다."
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "선언된 없음"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "선언된 권한이 없습니다."
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "카탈로그 소스 없음"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "MCP 플랫폼은 현재 구성된 카탈로그 소스를 보고하지 않습니다."
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "없음"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "공식"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "오프라인"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "작업"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "보유 항목"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "권한"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "권한 및 정책"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "계획 영향"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "정책"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "정책 및 롤백"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "공급자 소스"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "게시자"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "관리되는 인벤토리 읽기."
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "선택한 매니페스트 읽기."
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "세부 정보 및 상태 레코드 읽기."
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "머신 정책 및 캐시 상태 읽기."
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "공급자 정책 읽기."
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "검증된 MCP 소스 읽기."
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "읽기 전용"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "MCP 플랫폼에서 제공하는 읽기 전용 정책."
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "복구"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "Goose 연결을 확인하고 다시 시도하십시오."
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "MCP 센터를 사용할 수 없습니다."
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "기존 베어러 자격 증명 참조를 선택한 후 새 계획을 만드십시오."
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "자격 증명 참조가 필요합니다."
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "작업을 다시 시도하십시오."
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "계속하기 전에 MCP 상태를 검토하십시오."
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "MCP 작업을 완료할 수 없습니다."
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "확인하기 전에 새 계획을 작성하고 검토하십시오."
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "계획이 만료되었습니다."
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "MCP 상태를 새로고침하고 새 계획을 작성하십시오."
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "계획이 더 이상 유효하지 않습니다."
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "정책 사유를 검토하고 필요한 경우 정책 관리자에게 연락하십시오."
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "머신 정책에 의해 차단됨"
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "다시 시도하기 전에 머신 정책을 검토하거나 관리자에게 문의하십시오."
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "정책상 원격 HTTP를 사용할 수 없습니다"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "로컬 MCP 저장소를 사용할 수 있을 때 다시 시도하십시오."
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "MCP 데이터를 일시적으로 사용할 수 없습니다"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "복구 필요"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "이 작업을 다시 시도하기 전에 MCP 세부 정보를 새로 고치십시오."
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "MCP 상태가 변경되었습니다"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "승인된 공급자 소스를 복원하거나 정책 관리자에게 문의하십시오."
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "사용 가능한 승인된 stdio 공급자가 없습니다"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "참조:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "새로 고치기"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "등록"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "거부 중…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "계획 거부"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "원격 HTTP 연결"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Goose는 검토 가능한 계획을 생성하기 전에 URL 안전성과 머신 정책을 검증합니다."
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "원격 HTTP"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "파일 제거"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "저장소 출처"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "MCP 플랫폼 요청을 완료할 수 없습니다."
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "필요한 확인"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "제한됨"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "다시 시도"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "다시 시도 중…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "작업 다시 시도"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "되돌릴 수 있음"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "MCP 계획 검토"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "권한, 정책, 범위, 영향 및 롤백을 검토한 후에만 확인합니다."
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "복구 검토"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "제거 검토"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "업데이트 검토"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "건강 상태 점검 실행"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "런타임"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "범위"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "MCP 카탈로그 검색"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "MCP 검색"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "MCP 센터 섹션"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "관리되는 MCP 선택"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "런타임, 상태, 버전, 적격성 및 안전한 작업 검토"
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "MCP 선택"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "카탈로그 카드를 선택하여 검증된 세부 정보와 적격성 검토"
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "크기(바이트)"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "출처"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "출처 및 정책"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "카탈로그 소스 및 캐시"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "확인 과정 중 시작"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Stdio 공급자를 사용할 수 없음"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "이 기계는 승인된 stdio 제공자를 노출하지 않습니다. 자유 형식 명령 입력은 사용할 수 없습니다."
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "검증된 MCP를 발견하고, 모든 계획을 검토하며, 자격 증명이나 실행 세부 정보를 노출하지 않고 건강을 관리하세요."
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "대상 플랫폼"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "다음:{action}· 참조:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "MCP 센터"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "전송"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "트리 증거"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "신뢰"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "신뢰 수준"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "이용 불가 이유"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "제거는 이 계획에 나열된 MCP 등록 및 소유 파일을 삭제합니다. 계속하기 전에 복원 가능성과 유지되는 사용자 데이터를 검토하십시오."
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{없음} registered{등록됨} not_applicable{해당 없음} not_installed{설치되지 않음} staged{준비됨} installed{설치됨} update_available{업데이트 가능} repair_required{복구 필요} uninstall_pending{제거 대기 중} stopped{중지됨} starting{시작 중} running{실행 중} stopping{중지 중} crashed{충돌함} unknown{알 수 없음} checking{확인 중} healthy{정상} degraded{성능 저하} unhealthy{비정상} blocked_auth{인증으로 차단됨} compatible{호환됨} incompatible{호환되지 않음} allowed{허용됨} restricted{제한됨} denied{거부됨} needs_confirmation{확인 필요} allow{허용} deny{거부} eligible{사용 가능} confirmation_required{확인 필요} platform_unsupported{지원되지 않는 플랫폼} runtime_unavailable{런타임을 사용할 수 없음} policy_denied{정책으로 거부됨} development_mode_required{개발 모드 필요} external_capability_unavailable{외부 기능을 사용할 수 없음} official{공식} community{커뮤니티} local{로컬} remote_http{원격 HTTP} manual_stdio{수동 표준 입출력} stdio_provider{승인된 표준 입출력 공급자} npm{npm 패키지} python_wheel{Python wheel} binary_archive{바이너리 압축 파일} docker{Docker} git_dev{Git 개발 소스} stdio{표준 입출력} streamable_http{스트리밍 HTTP} none{없음} api_key_header{API 키 헤더} environment{환경 자격 증명} oauth2{OAuth 2} mcp_initialize{MCP 초기화} mcp_list_tools{MCP 도구 목록} http{HTTP 상태 엔드포인트} tools{도구} resources{리소스} prompts{프롬프트} sampling{샘플링} elicitation{정보 요청} logging{로깅} filesystem_read{파일 읽기} filesystem_write{파일 쓰기} network{네트워크 접근} credentials{자격 증명} process_spawn{프로세스 시작} host_application{호스트 애플리케이션} register{등록} install{설치} update{업데이트} repair{복구} uninstall{제거} health{상태 확인} planned{계획됨} awaiting_confirmation{확인 대기 중} queued{대기열에 있음} cancelling{취소 중} verifying{검증 중} activating{활성화 중} rolling_back{롤백 중} succeeded{성공} failed{실패} cancelled{취소됨} interrupted{중단됨} recovery_required{복구 필요} pending{대기 중} complete{완료} incomplete{미완료} not_required{필요 없음} in_progress{진행 중} wait{대기} cancel_when_safe{안전할 때 취소} retry{다시 시도} resume{재개} resolve_recovery{복구 문제 해결} recreate_plan{새 계획 만들기} enable_after_health{상태 확인 후 활성화} wait_for_task{작업 대기} resume_task{작업 재개} registration_only{등록만} task_recovery_required{작업 복구 필요} task_in_progress{작업 진행 중} task_interrupted{작업 중단됨} no_update_available{업데이트 없음} review_permissions{권한 검토} choose_compatible_release{호환 버전 선택} install_required_runtime{필요한 런타임 설치} enable_development_mode{개발 모드 활성화} restore_verified_cache{검증된 캐시 복원} contact_policy_administrator{정책 관리자에게 문의} fresh{최신} stale{오래됨} offline_verified{오프라인 검증됨} empty{비어 있음} refreshing{새로 고치는 중} idle{유휴} local_only{로컬 전용} default_disabled{기본적으로 비활성화} managed_artifact_download{관리형 아티팩트 다운로드} existing_version_retained_until_commit{커밋 전까지 기존 버전 유지} removes_owned_files_only{소유 파일만 제거} immutable_container_image{변경 불가 컨테이너 이미지} writable_container_mount{쓰기 가능한 컨테이너 마운트} development_source_pinned_commit_no_build{개발 소스가 빌드 없는 커밋에 고정됨} policy{정책} permission{권한} artifact{아티팩트} unavailable{사용할 수 없음} available_after_materialization{구체화 후 사용 가능} no_artifact_for_registration{등록용 아티팩트 없음} remove_connection_registration{연결 등록 제거} staged_activation_restores_previous_version{이전 준비 버전 복원} repair_restores_verified_owned_content{검증된 소유 콘텐츠 복원} uninstall_removes_owned_files{소유 파일 제거} projection_consistent{프로젝션 일치} projection_drift{프로젝션 불일치} credential_handle_missing{자격 증명 참조 없음} expected_status{예상 상태} unexpected_status{예기치 않은 상태} mcp_initialize_succeeded{MCP 초기화 성공} mcp_initialize_failed{MCP 초기화 실패} mcp_list_tools_succeeded{MCP 도구 목록 성공} mcp_list_tools_failed{MCP 도구 목록 실패} incompatible_health_contract{호환되지 않는 상태 계약} cleanup_failed{정리 실패} timeout{시간 초과} adapter_failed{어댑터 실패} verification_failed{검증 실패} activation_failed{활성화 실패} rollback_failed{롤백 실패} connection_projection{연결 프로젝션} managed_installation{관리형 설치} managed_uninstall{관리형 제거} external_resource{외부 리소스} other{알 수 없거나 지원되지 않는 상태}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "버전"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "파일 작성"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "예"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "MCP 센터"
   }
 }

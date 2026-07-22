@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "用编辑过的消息创建新会话"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "活动清单：{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "活动版本"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "适配器"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "所有兼容性"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "所有来源"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "所有信任级别"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "已批准的stdio提供程序"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "命令、参数、环境和工作目录由提供程序策略控制。"
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "建筑"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "身份验证"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "可用版本"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "持票人凭据参考"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "正在取消…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "取消任务"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "能力"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "MCP目录"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "目录源"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "正在检查……"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "提交"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "社区"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "兼容性"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "兼容"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "权限ID"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "原因代码"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "确认中……"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "确认并开始"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "确认卸载"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "创建连接计划"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "创建安装计划"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "创建提供程序计划"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "正在创建计划…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "凭据参考"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "仅输入不透明的参考。 MCP中心从不接受或显示承载值。"
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "当前任务"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "当前用户"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "默认已启用"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "默认状态"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "已拒绝"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "MCP详细信息"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "开发模式"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "已禁用"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "发现"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "配电适配器"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "允许使用Docker"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "资格"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "已启用"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "证据类型"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "现有凭据引用"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "健康"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "健康合约"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "房东登记"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "HTTPS端点"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "图片"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "图像摘要"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "不可变证据"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "不兼容"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "安装"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "上次健康检查：{result}在{latency}ms ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "正在加载…"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "正在加载已批准的提供商"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "正在加载目录"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "正在加载详细信息"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "正在加载托管MCP"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "正在加载MCP状态"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "正在加载源策略"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "加载更多"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "本地"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "机器策略"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "托管MCP详细信息"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "托管MCP库存"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "托管MCP平台"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "清单"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "手动"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "手动MCP连接类型"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "物化摘要"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "重试任务监控。任务本身独立继续。"
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "无法刷新任务状态"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "我的MCP"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "网络来源"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "下一步操作"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "否"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "无活动版本"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "无其他确认。"
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "没有已批准的stdio源"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "提供程序可用，但当前未公开任何策略批准的MCP源。"
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "无身份验证"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "无托管MCP"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "从Discover安装或添加已批准的手动连接。"
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "未找到MCP"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "没有与当前搜索和策略筛选器匹配的目录条目。"
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "未申报"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "没有声明的权限。"
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "无目录源"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "MCP平台当前未报告配置的目录源。"
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "无"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "官方"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "离线"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "操作"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "自有物品"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "权限"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "权限和政策"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "计划影响"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "政策"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "策略和回滚"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "提供程序源"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "Publisher"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "正在读取托管库存。"
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "正在读取所选清单。"
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "阅读详细信息和健康记录。"
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "正在读取计算机策略和缓存状态。"
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "正在读取提供程序策略。"
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "正在读取已验证的MCP源。"
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "只读"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "MCP平台提供的只读策略。"
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "恢复"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "检查Goose连接并重试。"
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "MCP中心不可用"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "选择现有持有人凭据参考，然后创建新计划。"
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "需要凭据参考"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "重试该操作。"
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "继续之前，请检查MCP状态。"
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "MCP操作无法完成"
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "在确认之前创建并查看新计划。"
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "套餐已过期"
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "刷新MCP状态并创建新计划。"
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "计划不再是最新的"
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "查看政策原因，如有需要，请联系政策管理员。"
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "被机器策略阻止"
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "请查看机器策略或联系其管理员，然后重试。"
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "策略无法使用远程HTTP"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "本地MCP存储库可用时重试。"
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "MCP数据暂时不可用"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "需要恢复"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "请刷新MCP详细信息，然后重试此操作。"
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "MCP状态已更改"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "还原已批准的提供程序源或联系策略管理员。"
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "没有经批准的stdio提供程序可用"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "参考号：{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "刷新"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "注册"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "拒绝中……"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "拒绝计划"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "远程HTTP连接"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "在制定可审核的计划之前， Goose会验证URL安全和机器策略。"
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "远程HTTP"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "删除文件"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "存储库来源"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "MCP平台请求无法完成。"
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "需要确认"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "受限"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "重试"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "重试中…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "重试任务"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "可逆"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "审查MCP计划"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "仅在查看权限、策略、范围、效果和回滚后确认。"
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "审核维修"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "查看卸载"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "审阅更新"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "运行健康检查"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "运行时"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "范围"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "搜索MCP目录"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "搜索MCP"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "MCP中心部分"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "选择一个托管MCP"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "查看运行时、运行状况、版本、资格和安全操作。"
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "选择一个MCP"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "选择目录卡，查看其已验证的详细信息和资格。"
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "大小（字节）"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "来源"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "来源和政策"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "目录源和缓存"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "在确认过程中开始"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Stdio提供程序不可用"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "此机器不会暴露经批准的stdio提供程序。 没有可用的自由格式命令条目。"
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "发现经过验证的MCP ，审查每个计划，并在不暴露凭据或执行详细信息的情况下管理健康状况。"
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "目标平台"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "下一个：{action}·参考：{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "MCP中心"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "交通"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "树证据"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "信任"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "信任级别"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "不可订的原因"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "卸载将删除此计划列出的MCP注册和所有文件。 在继续之前，请查看可逆性和保留的用户数据。"
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{缺失} registered{已注册} not_applicable{不适用} not_installed{未安装} staged{已暂存} installed{已安装} update_available{有可用更新} repair_required{需要修复} uninstall_pending{等待卸载} stopped{已停止} starting{正在启动} running{运行中} stopping{正在停止} crashed{已崩溃} unknown{未知} checking{正在检查} healthy{健康} degraded{性能下降} unhealthy{不健康} blocked_auth{身份验证受阻} compatible{兼容} incompatible{不兼容} allowed{允许} restricted{受限} denied{拒绝} needs_confirmation{需要确认} allow{允许} deny{拒绝} eligible{符合条件} confirmation_required{需要确认} platform_unsupported{平台不受支持} runtime_unavailable{运行时不可用} policy_denied{策略拒绝} development_mode_required{需要开发模式} external_capability_unavailable{外部能力不可用} official{官方} community{社区} local{本地} remote_http{远程 HTTP} manual_stdio{手动标准输入输出} stdio_provider{已批准的标准输入输出提供方} npm{npm 软件包} python_wheel{Python wheel 包} binary_archive{二进制归档} docker{Docker} git_dev{Git 开发源} stdio{标准输入输出} streamable_http{可流式传输 HTTP} none{无} api_key_header{API 密钥请求头} environment{环境凭据} oauth2{OAuth 2} mcp_initialize{MCP 初始化} mcp_list_tools{MCP 工具列表} http{HTTP 健康端点} tools{工具} resources{资源} prompts{提示词} sampling{采样} elicitation{信息征询} logging{日志} filesystem_read{读取文件} filesystem_write{写入文件} network{网络访问} credentials{凭据} process_spawn{启动进程} host_application{宿主应用} register{注册} install{安装} update{更新} repair{修复} uninstall{卸载} health{健康检查} planned{已计划} awaiting_confirmation{等待确认} queued{已排队} cancelling{正在取消} verifying{正在验证} activating{正在激活} rolling_back{正在回滚} succeeded{成功} failed{失败} cancelled{已取消} interrupted{已中断} recovery_required{需要恢复} pending{待处理} complete{已完成} incomplete{未完成} not_required{不需要} in_progress{进行中} wait{等待} cancel_when_safe{安全时取消} retry{重试} resume{恢复执行} resolve_recovery{解决恢复问题} recreate_plan{创建新计划} enable_after_health{健康检查后启用} wait_for_task{等待任务} resume_task{恢复任务} registration_only{仅注册} task_recovery_required{任务需要恢复} task_in_progress{任务进行中} task_interrupted{任务已中断} no_update_available{没有可用更新} review_permissions{检查权限} choose_compatible_release{选择兼容版本} install_required_runtime{安装所需运行时} enable_development_mode{启用开发模式} restore_verified_cache{恢复已验证缓存} contact_policy_administrator{联系策略管理员} fresh{最新} stale{已过期} offline_verified{已离线验证} empty{空} refreshing{正在刷新} idle{空闲} local_only{仅本地} default_disabled{默认禁用} managed_artifact_download{托管制品下载} existing_version_retained_until_commit{提交前保留现有版本} removes_owned_files_only{仅删除自有文件} immutable_container_image{不可变容器镜像} writable_container_mount{可写容器挂载} development_source_pinned_commit_no_build{开发源固定到未构建的提交} policy{策略} permission{权限} artifact{制品} unavailable{不可用} available_after_materialization{物化后可用} no_artifact_for_registration{注册无需制品} remove_connection_registration{移除连接注册} staged_activation_restores_previous_version{恢复之前的暂存版本} repair_restores_verified_owned_content{恢复已验证的自有内容} uninstall_removes_owned_files{删除自有文件} projection_consistent{投影一致} projection_drift{投影偏移} credential_handle_missing{缺少凭据引用} expected_status{预期状态} unexpected_status{意外状态} mcp_initialize_succeeded{MCP 初始化成功} mcp_initialize_failed{MCP 初始化失败} mcp_list_tools_succeeded{MCP 工具列出成功} mcp_list_tools_failed{MCP 工具列出失败} incompatible_health_contract{健康检查约定不兼容} cleanup_failed{清理失败} timeout{已超时} adapter_failed{适配器失败} verification_failed{验证失败} activation_failed{激活失败} rollback_failed{回滚失败} connection_projection{连接投影} managed_installation{托管安装} managed_uninstall{托管卸载} external_resource{外部资源} other{未知或不支持的状态}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "版本"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "写入文件"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "是"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "MCP 中心"
   }
 }

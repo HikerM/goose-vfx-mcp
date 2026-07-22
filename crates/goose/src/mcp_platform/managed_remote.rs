@@ -166,10 +166,10 @@ impl CoreManagedRemoteHttpNetworkPolicy {
     fn parse_endpoint(endpoint: &str) -> McpPlatformResult<ManagedRemoteEndpoint> {
         let url = Url::parse(endpoint).map_err(|_| unsafe_endpoint())?;
         let host = match url.host() {
-            Some(Host::Domain(host)) => host,
+            Some(Host::Domain(host)) => host.to_string(),
             Some(Host::Ipv4(_)) | Some(Host::Ipv6(_)) | None => return Err(unsafe_endpoint()),
         };
-        let path = url.path();
+        let path = url.path().to_string();
         let encoded_path = path.to_ascii_lowercase();
         let local_namespace = [
             ".localhost",
@@ -211,7 +211,7 @@ impl CoreManagedRemoteHttpNetworkPolicy {
         }
         Ok(ManagedRemoteEndpoint {
             url,
-            host: host.to_string(),
+            host,
             port: 443,
         })
     }
@@ -386,16 +386,19 @@ mod tests {
 
     struct RecordingDialer {
         peers: Mutex<Vec<SocketAddr>>,
+        endpoint: Mutex<Option<(Url, String, u16)>>,
     }
 
     impl ManagedRemoteDialer for RecordingDialer {
         fn build_client(
             &self,
-            _endpoint: &ManagedRemoteEndpoint,
+            endpoint: &ManagedRemoteEndpoint,
             peers: &[SocketAddr],
             _connect_timeout: Duration,
         ) -> McpPlatformResult<reqwest::Client> {
             *self.peers.lock().unwrap() = peers.to_vec();
+            *self.endpoint.lock().unwrap() =
+                Some((endpoint.url.clone(), endpoint.host.clone(), endpoint.port));
             reqwest::Client::builder()
                 .redirect(reqwest::redirect::Policy::none())
                 .no_proxy()
@@ -406,26 +409,37 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn verified_peers_are_the_only_addresses_given_to_the_dialer() {
+    async fn verified_endpoint_and_peers_are_preserved_for_the_dialer() {
         let peer = "93.184.216.34:443".parse().unwrap();
         let dialer = Arc::new(RecordingDialer {
             peers: Mutex::new(Vec::new()),
+            endpoint: Mutex::new(None),
         });
         let policy = CoreManagedRemoteHttpNetworkPolicy {
             resolver: Arc::new(StaticResolver(vec![peer])),
             dialer: dialer.clone(),
         };
-        policy
+        let client = policy
             .secure_client("https://mcp.example.com/v1", Duration::from_secs(1))
             .await
             .unwrap();
         assert_eq!(*dialer.peers.lock().unwrap(), vec![peer]);
+        assert_eq!(client.endpoint().as_str(), "https://mcp.example.com/v1");
+        assert_eq!(
+            *dialer.endpoint.lock().unwrap(),
+            Some((
+                Url::parse("https://mcp.example.com/v1").unwrap(),
+                "mcp.example.com".to_string(),
+                443,
+            ))
+        );
     }
 
     #[tokio::test]
     async fn any_unsafe_dns_answer_prevents_dialer_use() {
         let dialer = Arc::new(RecordingDialer {
             peers: Mutex::new(Vec::new()),
+            endpoint: Mutex::new(None),
         });
         let policy = CoreManagedRemoteHttpNetworkPolicy {
             resolver: Arc::new(StaticResolver(vec![

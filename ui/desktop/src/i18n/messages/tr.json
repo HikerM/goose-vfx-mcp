@@ -4594,5 +4594,584 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "Düzenlenen mesajla yeni bir oturum oluşturun"
+  },
+  "mcpCenter.activeManifest": {
+    "defaultMessage": "Aktif manifest:{value}"
+  },
+  "mcpCenter.activeVersion": {
+    "defaultMessage": "Aktif sürüm"
+  },
+  "mcpCenter.adapter": {
+    "defaultMessage": "Adaptör"
+  },
+  "mcpCenter.allCompatibility": {
+    "defaultMessage": "Tüm uyumluluk"
+  },
+  "mcpCenter.allSources": {
+    "defaultMessage": "Tüm kaynaklar"
+  },
+  "mcpCenter.allTrustLevels": {
+    "defaultMessage": "Tüm güven seviyeleri"
+  },
+  "mcpCenter.approvedStdio": {
+    "defaultMessage": "Onaylanmış stdio sağlayıcısı"
+  },
+  "mcpCenter.approvedStdioDescription": {
+    "defaultMessage": "Komut, argümanlar, ortam ve çalışma dizini sağlayıcı politikası tarafından kontrol edilir."
+  },
+  "mcpCenter.architecture": {
+    "defaultMessage": "Mimari"
+  },
+  "mcpCenter.authentication": {
+    "defaultMessage": "Kimlik doğrulama"
+  },
+  "mcpCenter.availableVersion": {
+    "defaultMessage": "Mevcut sürüm"
+  },
+  "mcpCenter.bearerReference": {
+    "defaultMessage": "Taşıyıcı kimlik referansı"
+  },
+  "mcpCenter.cancelling": {
+    "defaultMessage": "İptal ediliyor…"
+  },
+  "mcpCenter.cancelTask": {
+    "defaultMessage": "Görevi iptal et"
+  },
+  "mcpCenter.capabilities": {
+    "defaultMessage": "Yetenekler"
+  },
+  "mcpCenter.catalogLabel": {
+    "defaultMessage": "MCP kataloğu"
+  },
+  "mcpCenter.catalogSource": {
+    "defaultMessage": "Katalog kaynağı"
+  },
+  "mcpCenter.checking": {
+    "defaultMessage": "Kontrol ediliyor…"
+  },
+  "mcpCenter.commit": {
+    "defaultMessage": "Taahhüt et"
+  },
+  "mcpCenter.community": {
+    "defaultMessage": "Topluluk"
+  },
+  "mcpCenter.compatibility": {
+    "defaultMessage": "Uyumluluk"
+  },
+  "mcpCenter.compatible": {
+    "defaultMessage": "Uyumlu"
+  },
+  "mcpCenter.confirmationPermissionId": {
+    "defaultMessage": "İzin Kimliği"
+  },
+  "mcpCenter.confirmationReasonCode": {
+    "defaultMessage": "Sebep kodu"
+  },
+  "mcpCenter.confirming": {
+    "defaultMessage": "Onaylanıyor…"
+  },
+  "mcpCenter.confirmStart": {
+    "defaultMessage": "Onayla ve başlat"
+  },
+  "mcpCenter.confirmUninstall": {
+    "defaultMessage": "Kaldırmayı onayla"
+  },
+  "mcpCenter.createConnectionPlan": {
+    "defaultMessage": "Bağlantı planı oluştur"
+  },
+  "mcpCenter.createInstallPlan": {
+    "defaultMessage": "Kurulum planı oluştur"
+  },
+  "mcpCenter.createProviderPlan": {
+    "defaultMessage": "Sağlayıcı planı oluştur"
+  },
+  "mcpCenter.creatingPlan": {
+    "defaultMessage": "Plan oluşturuluyor…"
+  },
+  "mcpCenter.credentialReference": {
+    "defaultMessage": "Kimlik bilgisi referansı"
+  },
+  "mcpCenter.credentialReferenceHelp": {
+    "defaultMessage": "Sadece opak bir referans girin. MCP Merkezi asla taşıyıcı değerini kabul etmez veya göstermez."
+  },
+  "mcpCenter.currentTask": {
+    "defaultMessage": "Mevcut görev"
+  },
+  "mcpCenter.currentUser": {
+    "defaultMessage": "Mevcut kullanıcı"
+  },
+  "mcpCenter.defaultEnabled": {
+    "defaultMessage": "Varsayılan etkin"
+  },
+  "mcpCenter.defaultState": {
+    "defaultMessage": "Varsayılan durum"
+  },
+  "mcpCenter.denied": {
+    "defaultMessage": "Reddedildi"
+  },
+  "mcpCenter.detailsLabel": {
+    "defaultMessage": "MCP detayları"
+  },
+  "mcpCenter.developmentMode": {
+    "defaultMessage": "Geliştirme modu"
+  },
+  "mcpCenter.disabled": {
+    "defaultMessage": "Devre dışı"
+  },
+  "mcpCenter.discover": {
+    "defaultMessage": "Keşfet"
+  },
+  "mcpCenter.distributionAdapter": {
+    "defaultMessage": "Dağıtım adaptörü"
+  },
+  "mcpCenter.dockerAllowed": {
+    "defaultMessage": "Docker izinli"
+  },
+  "mcpCenter.eligibility": {
+    "defaultMessage": "Uygunluk"
+  },
+  "mcpCenter.enabled": {
+    "defaultMessage": "Etkin"
+  },
+  "mcpCenter.endpointPlaceholder": {
+    "defaultMessage": "https://mcp.example.com/v1"
+  },
+  "mcpCenter.evidenceType": {
+    "defaultMessage": "Kanıt tipi"
+  },
+  "mcpCenter.existingCredentialReference": {
+    "defaultMessage": "Mevcut kimlik referansı"
+  },
+  "mcpCenter.health": {
+    "defaultMessage": "Sağlık"
+  },
+  "mcpCenter.healthContract": {
+    "defaultMessage": "Sağlık sözleşmesi"
+  },
+  "mcpCenter.hostRegistrations": {
+    "defaultMessage": "Ana bilgisayar kayıtları"
+  },
+  "mcpCenter.httpsEndpoint": {
+    "defaultMessage": "HTTPS uç noktası"
+  },
+  "mcpCenter.image": {
+    "defaultMessage": "Görüntü"
+  },
+  "mcpCenter.imageDigest": {
+    "defaultMessage": "Görüntü özeti"
+  },
+  "mcpCenter.immutableEvidence": {
+    "defaultMessage": "Değiştirilemez kanıt"
+  },
+  "mcpCenter.incompatible": {
+    "defaultMessage": "Uyumsuz"
+  },
+  "mcpCenter.installation": {
+    "defaultMessage": "Kurulum"
+  },
+  "mcpCenter.lastHealthCheck": {
+    "defaultMessage": "Son sağlık kontrolü:{result}{latency}ms içinde ·{detail}"
+  },
+  "mcpCenter.loading": {
+    "defaultMessage": "Yükleniyor…"
+  },
+  "mcpCenter.loadingApprovedProviders": {
+    "defaultMessage": "Onaylı sağlayıcılar yükleniyor"
+  },
+  "mcpCenter.loadingCatalog": {
+    "defaultMessage": "Katalog yükleniyor"
+  },
+  "mcpCenter.loadingDetails": {
+    "defaultMessage": "Ayrıntılar yükleniyor"
+  },
+  "mcpCenter.loadingManaged": {
+    "defaultMessage": "Yönetilen MCP'ler yükleniyor"
+  },
+  "mcpCenter.loadingMcpState": {
+    "defaultMessage": "MCP durumu yükleniyor"
+  },
+  "mcpCenter.loadingPolicy": {
+    "defaultMessage": "Kaynak politikası yükleniyor"
+  },
+  "mcpCenter.loadMore": {
+    "defaultMessage": "Daha fazla yükle"
+  },
+  "mcpCenter.local": {
+    "defaultMessage": "Yerel"
+  },
+  "mcpCenter.machinePolicy": {
+    "defaultMessage": "Makine politikası"
+  },
+  "mcpCenter.managedDetails": {
+    "defaultMessage": "Yönetilen MCP ayrıntıları"
+  },
+  "mcpCenter.managedInventory": {
+    "defaultMessage": "Yönetilen MCP envanteri"
+  },
+  "mcpCenter.managedPlatform": {
+    "defaultMessage": "Yönetilen MCP Platformu"
+  },
+  "mcpCenter.manifests": {
+    "defaultMessage": "Manifetsler"
+  },
+  "mcpCenter.manual": {
+    "defaultMessage": "Kılavuz"
+  },
+  "mcpCenter.manualTypeLabel": {
+    "defaultMessage": "Manuel MCP bağlantı türü"
+  },
+  "mcpCenter.materializedDigest": {
+    "defaultMessage": "Maddesel özet"
+  },
+  "mcpCenter.monitorFailedNext": {
+    "defaultMessage": "Görev tekrar izleme. Görev kendiliğinden devam eder."
+  },
+  "mcpCenter.monitorFailedTitle": {
+    "defaultMessage": "Görev durumu yenilenemedi"
+  },
+  "mcpCenter.myMcps": {
+    "defaultMessage": "Benim MCP’lerim"
+  },
+  "mcpCenter.networkOrigins": {
+    "defaultMessage": "Ağ kaynakları"
+  },
+  "mcpCenter.nextAction": {
+    "defaultMessage": "Sonraki işlem"
+  },
+  "mcpCenter.no": {
+    "defaultMessage": "Hayır"
+  },
+  "mcpCenter.noActiveVersion": {
+    "defaultMessage": "Aktif sürüm yok"
+  },
+  "mcpCenter.noAdditionalConfirmations": {
+    "defaultMessage": "Ek onay yok."
+  },
+  "mcpCenter.noApprovedStdio": {
+    "defaultMessage": "Onaylanmış stdio kaynakları yok"
+  },
+  "mcpCenter.noApprovedStdioDescription": {
+    "defaultMessage": "Sağlayıcı mevcut ancak şu anda politika tarafından onaylanmış MCP kaynaklarını sunmuyor."
+  },
+  "mcpCenter.noAuthentication": {
+    "defaultMessage": "Kimlik doğrulama yok"
+  },
+  "mcpCenter.noManaged": {
+    "defaultMessage": "Yönetilen MCP yok"
+  },
+  "mcpCenter.noManagedDescription": {
+    "defaultMessage": "Discover üzerinden yükleyin veya onaylanmış bir manuel bağlantı ekleyin."
+  },
+  "mcpCenter.noMcpsFound": {
+    "defaultMessage": "MCP bulunamadı"
+  },
+  "mcpCenter.noMcpsFoundDescription": {
+    "defaultMessage": "Mevcut arama ve politika filtreleri ile eşleşen katalog girişi yok."
+  },
+  "mcpCenter.noneDeclared": {
+    "defaultMessage": "Beyan edilmemiş"
+  },
+  "mcpCenter.noPermissions": {
+    "defaultMessage": "Beyan edilmiş izin yok."
+  },
+  "mcpCenter.noSources": {
+    "defaultMessage": "Katalog kaynakları yok"
+  },
+  "mcpCenter.noSourcesDescription": {
+    "defaultMessage": "MCP Platformu şu anda yapılandırılmış katalog kaynağı bildirmiyor."
+  },
+  "mcpCenter.noValue": {
+    "defaultMessage": "Hiçbiri"
+  },
+  "mcpCenter.official": {
+    "defaultMessage": "Resmî"
+  },
+  "mcpCenter.offline": {
+    "defaultMessage": "Çevrimdışı"
+  },
+  "mcpCenter.operation": {
+    "defaultMessage": "İşlem"
+  },
+  "mcpCenter.ownedItems": {
+    "defaultMessage": "Sahip olunan öğeler"
+  },
+  "mcpCenter.permissions": {
+    "defaultMessage": "İzinler"
+  },
+  "mcpCenter.permissionsPolicy": {
+    "defaultMessage": "İzinler ve politika"
+  },
+  "mcpCenter.planImpact": {
+    "defaultMessage": "Plan etkisi"
+  },
+  "mcpCenter.policy": {
+    "defaultMessage": "Politika"
+  },
+  "mcpCenter.policyRollback": {
+    "defaultMessage": "Politika ve geri alım"
+  },
+  "mcpCenter.providerSource": {
+    "defaultMessage": "Sağlayıcı kaynağı"
+  },
+  "mcpCenter.publisher": {
+    "defaultMessage": "Yayıncı"
+  },
+  "mcpCenter.readingManaged": {
+    "defaultMessage": "Yönetilen envanteri okuma."
+  },
+  "mcpCenter.readingManifest": {
+    "defaultMessage": "Seçilen manifestoyu okuma."
+  },
+  "mcpCenter.readingMcpState": {
+    "defaultMessage": "Detay ve sağlık kayıtlarını okuma."
+  },
+  "mcpCenter.readingPolicy": {
+    "defaultMessage": "Makine politikası ve önbellek durumunu okuma."
+  },
+  "mcpCenter.readingProviderPolicy": {
+    "defaultMessage": "Sağlayıcı politikasını okuma."
+  },
+  "mcpCenter.readingVerifiedSources": {
+    "defaultMessage": "Doğrulanmış MCP kaynaklarını okuma."
+  },
+  "mcpCenter.readOnly": {
+    "defaultMessage": "Salt okunur"
+  },
+  "mcpCenter.readOnlyPolicy": {
+    "defaultMessage": "MCP Platform tarafından sağlanan salt okunur politika."
+  },
+  "mcpCenter.recovery": {
+    "defaultMessage": "Kurtarma"
+  },
+  "mcpCenter.recoveryConnectionNext": {
+    "defaultMessage": "Goose bağlantısını kontrol edin ve tekrar deneyin."
+  },
+  "mcpCenter.recoveryConnectionTitle": {
+    "defaultMessage": "MCP Merkezi kullanılamıyor"
+  },
+  "mcpCenter.recoveryCredentialNext": {
+    "defaultMessage": "Mevcut bir taşıyıcı kimlik bilgisi referansı seçin, ardından yeni bir plan oluşturun."
+  },
+  "mcpCenter.recoveryCredentialTitle": {
+    "defaultMessage": "Kimlik bilgisi referansı gerekli"
+  },
+  "mcpCenter.recoveryGenericRetry": {
+    "defaultMessage": "İşlemi tekrar deneyin."
+  },
+  "mcpCenter.recoveryGenericReview": {
+    "defaultMessage": "Devam etmeden önce MCP durumunu gözden geçirin."
+  },
+  "mcpCenter.recoveryGenericTitle": {
+    "defaultMessage": "MCP işlemi tamamlanamadı."
+  },
+  "mcpCenter.recoveryPlanExpiredNext": {
+    "defaultMessage": "Onaylamadan önce yeni bir plan oluşturun ve gözden geçirin."
+  },
+  "mcpCenter.recoveryPlanExpiredTitle": {
+    "defaultMessage": "Planın süresi doldu."
+  },
+  "mcpCenter.recoveryPlanStaleNext": {
+    "defaultMessage": "MCP durumunu yenileyin ve yeni bir plan oluşturun."
+  },
+  "mcpCenter.recoveryPlanStaleTitle": {
+    "defaultMessage": "Plan artık güncel değil."
+  },
+  "mcpCenter.recoveryPolicyNext": {
+    "defaultMessage": "Politika nedenlerini gözden geçirin ve gerekirse politika yöneticisi ile iletişime geçin."
+  },
+  "mcpCenter.recoveryPolicyTitle": {
+    "defaultMessage": "Makine politikası tarafından engellendi."
+  },
+  "mcpCenter.recoveryRemotePolicyNext": {
+    "defaultMessage": "Tekrar denemeden önce makine politikasını gözden geçirin veya yöneticisi ile iletişime geçin."
+  },
+  "mcpCenter.recoveryRemotePolicyTitle": {
+    "defaultMessage": "Politika gereği uzak HTTP kullanılamıyor"
+  },
+  "mcpCenter.recoveryRepositoryNext": {
+    "defaultMessage": "Yerel MCP deposu kullanılabilir olduğunda tekrar deneyin."
+  },
+  "mcpCenter.recoveryRepositoryTitle": {
+    "defaultMessage": "MCP verileri geçici olarak kullanılamıyor"
+  },
+  "mcpCenter.recoveryRequired": {
+    "defaultMessage": "yeniden kurtarma gerekiyor"
+  },
+  "mcpCenter.recoveryRevisionNext": {
+    "defaultMessage": "Bu işlemi tekrar denemeden önce MCP detaylarını yenileyin."
+  },
+  "mcpCenter.recoveryRevisionTitle": {
+    "defaultMessage": "MCP durumu değişti"
+  },
+  "mcpCenter.recoveryStdioNext": {
+    "defaultMessage": "Onaylı sağlayıcı kaynağını geri yükleyin veya politika yöneticisiyle iletişime geçin."
+  },
+  "mcpCenter.recoveryStdioTitle": {
+    "defaultMessage": "Kullanılabilir onaylı stdio sağlayıcısı yok"
+  },
+  "mcpCenter.reference": {
+    "defaultMessage": "Referans:{value}"
+  },
+  "mcpCenter.refresh": {
+    "defaultMessage": "Yenile"
+  },
+  "mcpCenter.registration": {
+    "defaultMessage": "Kayıt"
+  },
+  "mcpCenter.rejecting": {
+    "defaultMessage": "Reddediliyor…"
+  },
+  "mcpCenter.rejectPlan": {
+    "defaultMessage": "Planı reddet"
+  },
+  "mcpCenter.remoteConnection": {
+    "defaultMessage": "Uzaktan HTTP bağlantısı"
+  },
+  "mcpCenter.remoteConnectionDescription": {
+    "defaultMessage": "Goose, incelenebilir bir plan oluşturmadan önce URL güvenliğini ve makine politikasını doğrular."
+  },
+  "mcpCenter.remoteHttp": {
+    "defaultMessage": "Uzaktan HTTP"
+  },
+  "mcpCenter.removesFiles": {
+    "defaultMessage": "Dosyaları kaldırır"
+  },
+  "mcpCenter.repositoryOrigin": {
+    "defaultMessage": "Depo kaynağı"
+  },
+  "mcpCenter.requestFailedMessage": {
+    "defaultMessage": "MCP Platformu isteği tamamlanamadı."
+  },
+  "mcpCenter.requiredConfirmations": {
+    "defaultMessage": "Gerekli onaylar"
+  },
+  "mcpCenter.restricted": {
+    "defaultMessage": "Kısıtlı"
+  },
+  "mcpCenter.retry": {
+    "defaultMessage": "Yeniden dene"
+  },
+  "mcpCenter.retrying": {
+    "defaultMessage": "Yeniden deneniyor…"
+  },
+  "mcpCenter.retryTask": {
+    "defaultMessage": "Görevi yeniden dene"
+  },
+  "mcpCenter.reversible": {
+    "defaultMessage": "Geri alınabilir"
+  },
+  "mcpCenter.reviewPlan": {
+    "defaultMessage": "MCP planını incele"
+  },
+  "mcpCenter.reviewPlanDescription": {
+    "defaultMessage": "Sadece izinleri, politikayı, kapsamı, etkileri ve geri almayı gözden geçirdikten sonra onaylayın."
+  },
+  "mcpCenter.reviewRepair": {
+    "defaultMessage": "Onarımı incele"
+  },
+  "mcpCenter.reviewUninstall": {
+    "defaultMessage": "Kaldırmayı incele"
+  },
+  "mcpCenter.reviewUpdate": {
+    "defaultMessage": "Güncellemeyi incele"
+  },
+  "mcpCenter.runHealth": {
+    "defaultMessage": "Sağlık kontrolünü çalıştır"
+  },
+  "mcpCenter.runtime": {
+    "defaultMessage": "Çalışma zamanı"
+  },
+  "mcpCenter.scope": {
+    "defaultMessage": "Kapsam"
+  },
+  "mcpCenter.searchCatalog": {
+    "defaultMessage": "MCP kataloğunu ara"
+  },
+  "mcpCenter.searchMcps": {
+    "defaultMessage": "MCP'leri ara"
+  },
+  "mcpCenter.sectionsLabel": {
+    "defaultMessage": "MCP Merkezi bölümleri"
+  },
+  "mcpCenter.selectManaged": {
+    "defaultMessage": "Yönetilen bir MCP seç"
+  },
+  "mcpCenter.selectManagedDescription": {
+    "defaultMessage": "Çalışma zamanı, sağlık, sürüm, uygunluk ve güvenli işlemleri gözden geçir."
+  },
+  "mcpCenter.selectMcp": {
+    "defaultMessage": "Bir MCP seç"
+  },
+  "mcpCenter.selectMcpDescription": {
+    "defaultMessage": "Doğrulanmış detaylarını ve uygunluğunu gözden geçirmek için bir katalog kartı seç."
+  },
+  "mcpCenter.sha256": {
+    "defaultMessage": "SHA-256"
+  },
+  "mcpCenter.sizeBytes": {
+    "defaultMessage": "Boyut (bayt)"
+  },
+  "mcpCenter.source": {
+    "defaultMessage": "Kaynak"
+  },
+  "mcpCenter.sourcePolicy": {
+    "defaultMessage": "Kaynak ve Politika"
+  },
+  "mcpCenter.sourcesCache": {
+    "defaultMessage": "Katalog kaynakları ve önbellek"
+  },
+  "mcpCenter.startsDuringConfirmation": {
+    "defaultMessage": "Onay sırasında başlar"
+  },
+  "mcpCenter.stdioUnavailable": {
+    "defaultMessage": "Stdio sağlayıcısı kullanılamıyor"
+  },
+  "mcpCenter.stdioUnavailableDescription": {
+    "defaultMessage": "Bu makine onaylanmış bir stdio sağlayıcısı sunmaz. Serbest biçimli komut girişi mevcut değildir."
+  },
+  "mcpCenter.subtitle": {
+    "defaultMessage": "Doğrulanmış MCP'leri keşfedin, her planı inceleyin ve kimlik bilgilerini veya yürütme detaylarını açığa çıkarmadan sağlığı yönetin."
+  },
+  "mcpCenter.targetPlatform": {
+    "defaultMessage": "Hedef platform"
+  },
+  "mcpCenter.taskErrorNext": {
+    "defaultMessage": "İleri:{action}· Referans:{reference}"
+  },
+  "mcpCenter.title": {
+    "defaultMessage": "MCP Merkezi"
+  },
+  "mcpCenter.transport": {
+    "defaultMessage": "Taşıma"
+  },
+  "mcpCenter.tree": {
+    "defaultMessage": "Ağaç kanıtı"
+  },
+  "mcpCenter.trust": {
+    "defaultMessage": "Güven"
+  },
+  "mcpCenter.trustLevel": {
+    "defaultMessage": "Güven seviyesi"
+  },
+  "mcpCenter.unavailableReason": {
+    "defaultMessage": "Kullanılamama nedeni"
+  },
+  "mcpCenter.uninstallWarning": {
+    "defaultMessage": "Kaldırma, bu plan tarafından listelenen MCP kaydını ve sahip olunan dosyaları kaldırır. Devam etmeden önce geri alınabilirliği ve saklanan kullanıcı verilerini gözden geçirin."
+  },
+  "mcpCenter.valueLabel": {
+    "defaultMessage": "{value,select,absent{Yok} registered{Kayıtlı} not_applicable{Uygulanamaz} not_installed{Yüklü değil} staged{Hazırlandı} installed{Yüklü} update_available{Güncelleme var} repair_required{Onarım gerekli} uninstall_pending{Kaldırma bekliyor} stopped{Durduruldu} starting{Başlatılıyor} running{Çalışıyor} stopping{Durduruluyor} crashed{Çöktü} unknown{Bilinmiyor} checking{Kontrol ediliyor} healthy{Sağlıklı} degraded{Performansı düşük} unhealthy{Sağlıksız} blocked_auth{Kimlik doğrulama engelledi} compatible{Uyumlu} incompatible{Uyumsuz} allowed{İzin verildi} restricted{Kısıtlı} denied{Reddedildi} needs_confirmation{Onay gerekli} allow{İzin ver} deny{Reddet} eligible{Uygun} confirmation_required{Onay gerekli} platform_unsupported{Platform desteklenmiyor} runtime_unavailable{Çalışma zamanı kullanılamıyor} policy_denied{İlke tarafından reddedildi} development_mode_required{Geliştirme modu gerekli} external_capability_unavailable{Harici özellik kullanılamıyor} official{Resmî} community{Topluluk} local{Yerel} remote_http{Uzak HTTP} manual_stdio{El ile standart giriş/çıkış} stdio_provider{Onaylı standart giriş/çıkış sağlayıcısı} npm{npm paketi} python_wheel{Python wheel} binary_archive{İkili arşiv} docker{Docker} git_dev{Git geliştirme kaynağı} stdio{Standart giriş/çıkış} streamable_http{Akışlı HTTP} none{Yok} api_key_header{API anahtarı üst bilgisi} environment{Ortam kimlik bilgisi} oauth2{OAuth 2} mcp_initialize{MCP başlatma} mcp_list_tools{MCP araç listesi} http{HTTP sağlık uç noktası} tools{Araçlar} resources{Kaynaklar} prompts{İstemler} sampling{Örnekleme} elicitation{Bilgi isteme} logging{Günlükleme} filesystem_read{Dosya okuma} filesystem_write{Dosya yazma} network{Ağ erişimi} credentials{Kimlik bilgileri} process_spawn{İşlem başlatma} host_application{Ana uygulama} register{Kaydet} install{Yükle} update{Güncelle} repair{Onar} uninstall{Kaldır} health{Sağlık kontrolü} planned{Planlandı} awaiting_confirmation{Onay bekliyor} queued{Kuyrukta} cancelling{İptal ediliyor} verifying{Doğrulanıyor} activating{Etkinleştiriliyor} rolling_back{Geri alınıyor} succeeded{Başarılı} failed{Başarısız} cancelled{İptal edildi} interrupted{Kesildi} recovery_required{Kurtarma gerekli} pending{Bekliyor} complete{Tamamlandı} incomplete{Eksik} not_required{Gerekli değil} in_progress{Devam ediyor} wait{Bekle} cancel_when_safe{Güvenli olduğunda iptal et} retry{Yeniden dene} resume{Sürdür} resolve_recovery{Kurtarmayı çöz} recreate_plan{Yeni plan oluştur} enable_after_health{Kontrolden sonra etkinleştir} wait_for_task{Görevi bekle} resume_task{Görevi sürdür} registration_only{Yalnızca kayıt} task_recovery_required{Görev kurtarma gerektiriyor} task_in_progress{Görev sürüyor} task_interrupted{Görev kesildi} no_update_available{Güncelleme yok} review_permissions{İzinleri gözden geçir} choose_compatible_release{Uyumlu sürüm seç} install_required_runtime{Gerekli çalışma zamanını yükle} enable_development_mode{Geliştirme modunu etkinleştir} restore_verified_cache{Doğrulanmış önbelleği geri yükle} contact_policy_administrator{İlke yöneticisine başvur} fresh{Güncel} stale{Eski} offline_verified{Çevrimdışı doğrulandı} empty{Boş} refreshing{Yenileniyor} idle{Boşta} local_only{Yalnızca yerel} default_disabled{Varsayılan olarak devre dışı} managed_artifact_download{Yönetilen yapıt indirme} existing_version_retained_until_commit{Mevcut sürüm commit'e kadar korunur} removes_owned_files_only{Yalnızca sahip olunan dosyaları kaldırır} immutable_container_image{Değişmez konteyner imajı} writable_container_mount{Yazılabilir konteyner bağlaması} development_source_pinned_commit_no_build{Geliştirme kaynağı derlenmemiş commit'e sabitlendi} policy{İlke} permission{İzin} artifact{Yapıt} unavailable{Kullanılamıyor} available_after_materialization{Somutlaştırmadan sonra kullanılabilir} no_artifact_for_registration{Kayıt için yapıt yok} remove_connection_registration{Bağlantı kaydını kaldır} staged_activation_restores_previous_version{Önceki hazırlanmış sürümü geri yükle} repair_restores_verified_owned_content{Doğrulanmış sahip olunan içeriği geri yükle} uninstall_removes_owned_files{Sahip olunan dosyaları kaldır} projection_consistent{Projeksiyon tutarlı} projection_drift{Projeksiyon sapması} credential_handle_missing{Kimlik bilgisi başvurusu eksik} expected_status{Beklenen durum} unexpected_status{Beklenmeyen durum} mcp_initialize_succeeded{MCP başlatma başarılı} mcp_initialize_failed{MCP başlatma başarısız} mcp_list_tools_succeeded{MCP araç listesi başarılı} mcp_list_tools_failed{MCP araç listesi başarısız} incompatible_health_contract{Uyumsuz sağlık sözleşmesi} cleanup_failed{Temizleme başarısız} timeout{Zaman aşımı} adapter_failed{Bağdaştırıcı başarısız} verification_failed{Doğrulama başarısız} activation_failed{Etkinleştirme başarısız} rollback_failed{Geri alma başarısız} connection_projection{Bağlantı projeksiyonu} managed_installation{Yönetilen yükleme} managed_uninstall{Yönetilen kaldırma} external_resource{Harici kaynak} other{Bilinmeyen veya desteklenmeyen durum}}"
+  },
+  "mcpCenter.version": {
+    "defaultMessage": "Sürüm"
+  },
+  "mcpCenter.writesFiles": {
+    "defaultMessage": "Dosyaları yazar"
+  },
+  "mcpCenter.yes": {
+    "defaultMessage": "Evet"
+  },
+  "navigation.itemMcpCenter": {
+    "defaultMessage": "MCP Merkezi"
   }
 }
