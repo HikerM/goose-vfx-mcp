@@ -1896,6 +1896,10 @@ impl SummonClient {
 
 #[async_trait]
 impl McpClientTrait for SummonClient {
+    async fn close(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
     async fn list_tools(
         &self,
         session_id: &str,

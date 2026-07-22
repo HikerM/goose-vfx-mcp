@@ -19,6 +19,11 @@ fn method_constants_match_request_contracts() {
     assert_method::<McpTaskCancelRequest>(MCP_TASK_CANCEL_METHOD);
     assert_method::<McpTaskRetryRequest>(MCP_TASK_RETRY_METHOD);
     assert_method::<McpEventsResumeRequest>(MCP_EVENTS_RESUME_METHOD);
+    assert_method::<McpListRequest>(MCP_LIST_METHOD);
+    assert_method::<McpGetRequest>(MCP_GET_METHOD);
+    assert_method::<McpHealthRunRequest>(MCP_HEALTH_RUN_METHOD);
+    assert_method::<McpHealthGetRequest>(MCP_HEALTH_GET_METHOD);
+    assert_method::<McpSetDefaultEnabledRequest>(MCP_SET_DEFAULT_ENABLED_METHOD);
 }
 
 #[test]
@@ -55,12 +60,21 @@ fn generated_request_schemas_are_closed_and_have_no_execution_escape_hatch() {
         schemars::schema_for!(McpTaskCancelRequest),
         schemars::schema_for!(McpTaskRetryRequest),
         schemars::schema_for!(McpEventsResumeRequest),
+        schemars::schema_for!(McpListRequest),
+        schemars::schema_for!(McpGetRequest),
+        schemars::schema_for!(McpHealthRunRequest),
+        schemars::schema_for!(McpHealthGetRequest),
+        schemars::schema_for!(McpSetDefaultEnabledRequest),
     ];
     let forbidden = [
         "\"actor\"",
         "\"command\"",
         "\"shell\"",
         "\"credentialValue\"",
+        "\"endpoint\"",
+        "\"path\"",
+        "\"env\"",
+        "flatten",
         "serde_json::Value",
     ];
     for schema in schemas {
@@ -71,6 +85,34 @@ fn generated_request_schemas_are_closed_and_have_no_execution_escape_hatch() {
             assert!(!text.contains(field), "schema contains forbidden {field}");
         }
     }
+}
+
+#[test]
+fn phase_3a_health_and_enable_requests_reject_execution_fields() {
+    let valid = serde_json::json!({
+        "managedMcpId": "managed_1",
+        "mode": "runtime",
+        "idempotencyKey": "health-1"
+    });
+    assert!(serde_json::from_value::<McpHealthRunRequest>(valid.clone()).is_ok());
+    for field in [
+        "endpoint",
+        "command",
+        "path",
+        "env",
+        "credentialValue",
+        "actor",
+    ] {
+        let mut forged = valid.clone();
+        forged[field] = serde_json::json!("forged");
+        assert!(serde_json::from_value::<McpHealthRunRequest>(forged).is_err());
+    }
+    let enable =
+        serde_json::json!({"managedMcpId":"managed_1","enabled":true,"expectedRevision":4});
+    assert!(serde_json::from_value::<McpSetDefaultEnabledRequest>(enable.clone()).is_ok());
+    let mut forged = enable;
+    forged["execute"] = serde_json::json!(true);
+    assert!(serde_json::from_value::<McpSetDefaultEnabledRequest>(forged).is_err());
 }
 
 #[test]

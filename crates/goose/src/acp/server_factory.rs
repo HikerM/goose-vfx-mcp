@@ -19,6 +19,7 @@ pub struct AcpServerFactoryConfig {
 pub struct AcpServer {
     config: AcpServerFactoryConfig,
     scheduler: OnceCell<Arc<dyn SchedulerTrait>>,
+    mcp_platform_service: Arc<OnceCell<Arc<crate::mcp_platform::McpPlatformService>>>,
 }
 
 impl AcpServer {
@@ -26,6 +27,13 @@ impl AcpServer {
         Self {
             config,
             scheduler: OnceCell::new(),
+            mcp_platform_service: Arc::new(OnceCell::new()),
+        }
+    }
+
+    pub async fn shutdown(&self) {
+        if let Some(service) = self.mcp_platform_service.get() {
+            service.shutdown_worker().await;
         }
     }
 
@@ -77,10 +85,66 @@ impl AcpServer {
             additional_source_roots: self.config.additional_source_roots.clone(),
             scheduler,
             mcp_platform_service: None,
+            mcp_platform_service_cell: Some(self.mcp_platform_service.clone()),
         })
         .await?;
         info!("Created new ACP agent");
 
         Ok(Arc::new(agent))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_server(directory: &tempfile::TempDir) -> AcpServer {
+        AcpServer::new(AcpServerFactoryConfig {
+            builtins: Vec::new(),
+            data_dir: directory.path().join("data"),
+            config_dir: directory.path().join("config"),
+            goose_platform: GoosePlatform::GooseCli,
+            additional_source_roots: Vec::new(),
+        })
+    }
+
+    #[tokio::test]
+    async fn agents_share_one_lazy_platform_service_owned_by_the_server() {
+        let directory = tempfile::tempdir().unwrap();
+        let server = test_server(&directory);
+        let first = server.create_agent().await.unwrap();
+        let second = server.create_agent().await.unwrap();
+        assert!(server.mcp_platform_service.get().is_none());
+        assert!(!directory
+            .path()
+            .join("data/mcp-platform/platform.db")
+            .exists());
+        assert!(Arc::ptr_eq(
+            &first.test_mcp_platform_service_cell(),
+            &second.test_mcp_platform_service_cell()
+        ));
+
+        let first_service = first.test_initialize_mcp_platform().await.unwrap();
+        let second_service = second.test_initialize_mcp_platform().await.unwrap();
+        assert!(Arc::ptr_eq(&first_service, &second_service));
+        drop(first);
+        assert!(server.mcp_platform_service.get().is_some());
+        server.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn platform_database_failure_is_lazy_and_does_not_break_agent_creation() {
+        let directory = tempfile::tempdir().unwrap();
+        let data_dir = directory.path().join("data");
+        std::fs::create_dir_all(&data_dir).unwrap();
+        std::fs::write(data_dir.join("mcp-platform"), b"not a directory").unwrap();
+        let server = test_server(&directory);
+        let first = server.create_agent().await.unwrap();
+        let second = server.create_agent().await.unwrap();
+        assert!(server.mcp_platform_service.get().is_none());
+        assert!(first.test_initialize_mcp_platform().await.is_err());
+        assert!(server.mcp_platform_service.get().is_none());
+        let _ordinary_non_mcp_dependency = second.permission_manager();
+        server.shutdown().await;
     }
 }

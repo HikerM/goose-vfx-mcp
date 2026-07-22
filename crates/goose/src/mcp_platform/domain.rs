@@ -53,6 +53,73 @@ pub enum HealthState {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+pub enum HealthCheckMode {
+    Registration,
+    Runtime,
+}
+
+impl HealthCheckMode {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Registration => "registration",
+            Self::Runtime => "runtime",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HealthResultCode {
+    Healthy,
+    Unhealthy,
+    BlockedAuth,
+    Incompatible,
+    Timeout,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HealthDetailCode {
+    ProjectionConsistent,
+    ProjectionDrift,
+    CredentialHandleMissing,
+    ExpectedStatus,
+    UnexpectedStatus,
+    McpInitializeSucceeded,
+    McpInitializeFailed,
+    McpListToolsSucceeded,
+    McpListToolsFailed,
+    IncompatibleHealthContract,
+    CleanupFailed,
+    Timeout,
+    Cancelled,
+}
+
+impl HealthResultCode {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Healthy => "healthy",
+            Self::Unhealthy => "unhealthy",
+            Self::BlockedAuth => "blocked_auth",
+            Self::Incompatible => "incompatible",
+            Self::Timeout => "timeout",
+            Self::Cancelled => "cancelled",
+        }
+    }
+
+    pub const fn health_state(self) -> HealthState {
+        match self {
+            Self::Healthy => HealthState::Healthy,
+            Self::BlockedAuth => HealthState::BlockedAuth,
+            Self::Incompatible => HealthState::Incompatible,
+            Self::Unhealthy | Self::Timeout | Self::Cancelled => HealthState::Unhealthy,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ToolPolicyDecision {
     Ask,
     Allow,

@@ -13,7 +13,7 @@ pub const DEFAULT_EXTENSION_DESCRIPTION: &str = "";
 pub const DEFAULT_DISPLAY_NAME: &str = "Developer";
 const EXTENSIONS_CONFIG_KEY: &str = "extensions";
 
-#[derive(Debug, Deserialize, Serialize, Clone, ToSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, ToSchema, PartialEq)]
 pub struct ExtensionEntry {
     pub enabled: bool,
     #[serde(flatten)]
@@ -93,7 +93,7 @@ enum ExtensionMutation {
     Noop,
 }
 
-fn with_raw_extensions_mapping<F>(config: &Config, mutate: F)
+fn try_with_raw_extensions_mapping<F>(config: &Config, mutate: F) -> Result<(), String>
 where
     F: FnOnce(&mut IndexMap<String, ExtensionEntry>) -> ExtensionMutation,
 {
@@ -119,10 +119,19 @@ where
         raw
     });
 
-    if let Some(e) = serialize_error {
-        warn!("Failed to serialize extensions config entry: {}", e);
-    } else if let Err(e) = result {
-        warn!("Failed to save extensions config: {}", e);
+    if let Some(error) = serialize_error {
+        Err(error.to_string())
+    } else {
+        result.map(|_| ()).map_err(|error| error.to_string())
+    }
+}
+
+fn with_raw_extensions_mapping<F>(config: &Config, mutate: F)
+where
+    F: FnOnce(&mut IndexMap<String, ExtensionEntry>) -> ExtensionMutation,
+{
+    if let Err(error) = try_with_raw_extensions_mapping(config, mutate) {
+        warn!("Failed to save extensions config: {}", error);
     }
 }
 
@@ -151,13 +160,125 @@ pub fn set_extension(entry: ExtensionEntry) {
     set_extension_with_config(Config::global(), entry);
 }
 
+pub fn try_set_extension_at_key(key: &str, entry: ExtensionEntry) -> Result<(), String> {
+    try_set_user_extension_at_key_with_config(Config::global(), key, entry)
+}
+
+fn try_set_user_extension_at_key_with_config(
+    config: &Config,
+    key: &str,
+    entry: ExtensionEntry,
+) -> Result<(), String> {
+    if key.starts_with("managed_mcp_") {
+        return Err("managed MCP extension keys are platform-owned".to_string());
+    }
+    try_set_extension_at_key_with_config(config, key, entry)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ManagedExtensionCreateOutcome {
+    Created,
+    IdempotentReplay,
+}
+
+pub fn try_create_managed_extension_at_key(
+    key: &str,
+    entry: ExtensionEntry,
+) -> Result<ManagedExtensionCreateOutcome, String> {
+    try_create_managed_extension_at_key_with_config(Config::global(), key, entry)
+}
+
+pub(crate) fn try_create_managed_extension_at_key_with_config(
+    config: &Config,
+    key: &str,
+    entry: ExtensionEntry,
+) -> Result<ManagedExtensionCreateOutcome, String> {
+    if !key.starts_with("managed_mcp_") {
+        return Err("invalid managed MCP extension key".to_string());
+    }
+    let mut outcome = None;
+    try_with_raw_extensions_mapping(config, |extensions| match extensions.get(key) {
+        Some(existing) if existing == &entry => {
+            outcome = Some(ManagedExtensionCreateOutcome::IdempotentReplay);
+            ExtensionMutation::Noop
+        }
+        Some(_) => {
+            outcome = None;
+            ExtensionMutation::Noop
+        }
+        None => {
+            outcome = Some(ManagedExtensionCreateOutcome::Created);
+            ExtensionMutation::Upsert(key.to_string(), Box::new(entry.clone()))
+        }
+    })?;
+    outcome.ok_or_else(|| "managed MCP extension key conflicts with existing content".to_string())
+}
+
+fn try_set_extension_at_key_with_config(
+    config: &Config,
+    key: &str,
+    entry: ExtensionEntry,
+) -> Result<(), String> {
+    try_with_raw_extensions_mapping(config, |_| {
+        ExtensionMutation::Upsert(key.to_string(), Box::new(entry))
+    })
+}
+
+pub fn get_extension_entry_by_key(key: &str) -> Option<ExtensionEntry> {
+    get_extension_entry_by_key_with_config(Config::global(), key)
+}
+
+pub(crate) fn get_extension_entry_by_key_with_config(
+    config: &Config,
+    key: &str,
+) -> Option<ExtensionEntry> {
+    get_extensions_map_with_config(config).shift_remove(key)
+}
+
 fn set_extension_with_config(config: &Config, entry: ExtensionEntry) {
     let key = entry.config.key();
+    if key.starts_with("managed_mcp_") {
+        warn!("Managed MCP extension keys are platform-owned");
+        return;
+    }
     with_raw_extensions_mapping(config, |_| ExtensionMutation::Upsert(key, Box::new(entry)));
 }
 
 pub fn remove_extension(key: &str) {
+    if key.starts_with("managed_mcp_") {
+        warn!("Managed MCP extension keys are platform-owned");
+        return;
+    }
     remove_extension_with_config(Config::global(), key);
+}
+
+pub fn try_remove_extension(key: &str) -> Result<(), String> {
+    try_remove_user_extension_with_config(Config::global(), key)
+}
+
+fn try_remove_user_extension_with_config(config: &Config, key: &str) -> Result<(), String> {
+    if key.starts_with("managed_mcp_") {
+        return Err("managed MCP extension keys are platform-owned".to_string());
+    }
+    try_remove_extension_inner(config, key)
+}
+
+pub fn try_remove_platform_extension(key: &str) -> Result<(), String> {
+    try_remove_platform_extension_with_config(Config::global(), key)
+}
+
+pub(crate) fn try_remove_platform_extension_with_config(
+    config: &Config,
+    key: &str,
+) -> Result<(), String> {
+    if !key.starts_with("managed_mcp_") {
+        return Err("invalid managed MCP extension key".to_string());
+    }
+    try_remove_extension_inner(config, key)
+}
+
+fn try_remove_extension_inner(config: &Config, key: &str) -> Result<(), String> {
+    try_with_raw_extensions_mapping(config, |_| ExtensionMutation::Remove(key.to_string()))
 }
 
 fn remove_extension_with_config(config: &Config, key: &str) {
@@ -166,7 +287,58 @@ fn remove_extension_with_config(config: &Config, key: &str) {
 
 /// Returns true when an existing extension was updated, false when the key was missing.
 pub fn set_extension_enabled(key: &str, enabled: bool) -> bool {
+    if key.starts_with("managed_mcp_") {
+        warn!("Managed MCP extension keys are platform-owned");
+        return false;
+    }
     set_extension_enabled_with_config(Config::global(), key, enabled)
+}
+
+pub fn try_set_extension_enabled(key: &str, enabled: bool) -> Result<bool, String> {
+    try_set_user_extension_enabled_with_config(Config::global(), key, enabled)
+}
+
+fn try_set_user_extension_enabled_with_config(
+    config: &Config,
+    key: &str,
+    enabled: bool,
+) -> Result<bool, String> {
+    if key.starts_with("managed_mcp_") {
+        return Err("managed MCP extension keys are platform-owned".to_string());
+    }
+    try_set_extension_enabled_inner(config, key, enabled)
+}
+
+pub fn try_set_platform_extension_enabled(key: &str, enabled: bool) -> Result<bool, String> {
+    try_set_platform_extension_enabled_with_config(Config::global(), key, enabled)
+}
+
+pub(crate) fn try_set_platform_extension_enabled_with_config(
+    config: &Config,
+    key: &str,
+    enabled: bool,
+) -> Result<bool, String> {
+    if !key.starts_with("managed_mcp_") {
+        return Err("invalid managed MCP extension key".to_string());
+    }
+    try_set_extension_enabled_inner(config, key, enabled)
+}
+
+fn try_set_extension_enabled_inner(
+    config: &Config,
+    key: &str,
+    enabled: bool,
+) -> Result<bool, String> {
+    let mut updated = false;
+    try_with_raw_extensions_mapping(config, |extensions| {
+        let Some(entry) = extensions.get_mut(key) else {
+            return ExtensionMutation::Noop;
+        };
+        entry.enabled = enabled;
+        updated = true;
+        ExtensionMutation::Upsert(key.to_string(), Box::new(entry.clone()))
+    })?;
+    Ok(updated)
 }
 
 fn set_extension_enabled_with_config(config: &Config, key: &str, enabled: bool) -> bool {
@@ -662,6 +834,32 @@ extensions:
             other_keys.is_empty(),
             "expected no logs for other extension keys, got {:?}",
             other_keys
+        );
+    }
+
+    #[test]
+    fn managed_namespace_rejects_user_mutations_and_allows_platform_mutations() {
+        let (config, _config_file, _secrets_file) = test_config("");
+        let key = "managed_mcp_0123456789abcdef";
+        let entry = builtin_entry(key, false);
+
+        assert_eq!(
+            try_create_managed_extension_at_key_with_config(&config, key, entry.clone()).unwrap(),
+            ManagedExtensionCreateOutcome::Created
+        );
+        assert!(try_set_user_extension_at_key_with_config(&config, key, entry.clone()).is_err());
+        assert!(try_set_user_extension_enabled_with_config(&config, key, true).is_err());
+        assert!(try_remove_user_extension_with_config(&config, key).is_err());
+        assert!(!get_extensions_map_with_config(&config)[key].enabled);
+
+        assert!(try_set_platform_extension_enabled_with_config(&config, key, true).unwrap());
+        assert!(get_extensions_map_with_config(&config)[key].enabled);
+        try_remove_platform_extension_with_config(&config, key).unwrap();
+        assert!(!get_extensions_map_with_config(&config).contains_key(key));
+
+        assert!(
+            try_create_managed_extension_at_key_with_config(&config, "ordinary_key", entry)
+                .is_err()
         );
     }
 }

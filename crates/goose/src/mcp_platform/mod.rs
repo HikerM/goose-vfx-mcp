@@ -2,12 +2,15 @@ pub mod adapters;
 pub mod catalog;
 pub mod domain;
 pub mod error;
+pub mod health;
+pub mod lifecycle;
 pub mod manifest;
 pub mod plan;
 pub mod policy;
 pub mod repository;
 pub mod service;
 pub mod task;
+pub mod task_runner;
 
 pub use catalog::{
     CatalogCompatibility, CatalogEntry, CatalogFilter, CatalogInsertOutcome, CompatibilityTarget,
@@ -15,6 +18,8 @@ pub use catalog::{
 };
 pub use domain::*;
 pub use error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
+pub use health::{run_bounded_health_session, ProductionHealthCheckAdapter};
+pub use lifecycle::*;
 pub use manifest::{
     parse_manifest, Distribution, Manifest, ManifestProof, SignatureEvidence, VerifiedManifest,
 };
@@ -23,3 +28,4 @@ pub use policy::*;
 pub use repository::*;
 pub use service::*;
 pub use task::*;
+pub use task_runner::TaskRunner;

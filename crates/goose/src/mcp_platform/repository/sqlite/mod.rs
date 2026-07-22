@@ -1,3 +1,4 @@
+mod lifecycle_repository;
 mod migrations;
 mod records;
 mod task_repository;
@@ -417,7 +418,8 @@ impl SqliteMcpPlatformRepository {
         managed_mcp_id: &str,
     ) -> McpPlatformResult<ConnectionProjectionRecord> {
         let row = sqlx::query(
-            r#"SELECT managed_mcp_id, link_key, projection_json, revision, updated_at_ms
+            r#"SELECT managed_mcp_id, link_key, projection_json, revision, updated_at_ms,
+                plan_id, manifest_digest, owner_task_id, projection_digest
                 FROM connection_projections WHERE managed_mcp_id = ?"#,
         )
         .bind(managed_mcp_id)
@@ -425,7 +427,7 @@ impl SqliteMcpPlatformRepository {
         .await
         .map_err(map_sqlx)?
         .ok_or_else(not_found)?;
-        Ok(ConnectionProjectionRecord {
+        let record = ConnectionProjectionRecord {
             managed_mcp_id: row.try_get("managed_mcp_id").map_err(map_sqlx)?,
             link_key: row.try_get("link_key").map_err(map_sqlx)?,
             projection: decode(
@@ -434,7 +436,35 @@ impl SqliteMcpPlatformRepository {
             )?,
             revision: row.try_get("revision").map_err(map_sqlx)?,
             updated_at_ms: row.try_get("updated_at_ms").map_err(map_sqlx)?,
-        })
+            plan_id: row.try_get("plan_id").map_err(map_sqlx)?,
+            manifest_digest: row.try_get("manifest_digest").map_err(map_sqlx)?,
+            owner_task_id: row.try_get("owner_task_id").map_err(map_sqlx)?,
+            projection_digest: row.try_get("projection_digest").map_err(map_sqlx)?,
+        };
+        let legacy = record.plan_id.is_none()
+            && record.manifest_digest.is_none()
+            && record.owner_task_id.is_none()
+            && record.projection_digest.is_empty();
+        if !legacy {
+            let (Some(plan_id), Some(manifest_digest), Some(_owner_task_id)) = (
+                record.plan_id.as_deref(),
+                record.manifest_digest.as_deref(),
+                record.owner_task_id.as_deref(),
+            ) else {
+                return Err(integrity_error());
+            };
+            if record.projection_digest.is_empty() {
+                return Err(integrity_error());
+            }
+            let managed = self.get_managed_mcp(managed_mcp_id).await?;
+            let plan = self.get_plan(plan_id).await?;
+            if plan.plan.manifest_digest() != manifest_digest
+                || plan.target.mcp_id != managed.mcp_id
+            {
+                return Err(integrity_error());
+            }
+        }
+        Ok(record)
     }
 
     pub async fn save_plan(&self, input: SavePlan<'_>) -> McpPlatformResult<PlanRecord> {
@@ -607,6 +637,113 @@ async fn migrate(pool: &Pool<Sqlite>) -> McpPlatformResult<()> {
             .await
             .map_err(map_sqlx)?;
     }
+    if current < 2 {
+        migrations::apply_v2(&mut tx).await?;
+        sqlx::query("INSERT INTO schema_version(version, applied_at_ms) VALUES (2, 0)")
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+    }
+    if current < 3 {
+        migrations::apply_v3(&mut tx).await?;
+        sqlx::query("INSERT INTO schema_version(version, applied_at_ms) VALUES (3, 0)")
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+    }
     tx.commit().await.map_err(map_sqlx)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::mcp_platform::manifest::Auth;
+    use crate::mcp_platform::plan::ConnectionProjection;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn v1_projection_migrates_through_v3_with_explicit_legacy_read_compatibility() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("legacy-platform.db");
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect_with(
+                SqliteConnectOptions::new()
+                    .filename(&path)
+                    .create_if_missing(true),
+            )
+            .await
+            .unwrap();
+        let mut transaction = pool.begin().await.unwrap();
+        sqlx::query(
+            "CREATE TABLE schema_version(version INTEGER PRIMARY KEY, applied_at_ms INTEGER NOT NULL)",
+        )
+        .execute(&mut *transaction)
+        .await
+        .unwrap();
+        migrations::apply_v1(&mut transaction).await.unwrap();
+        sqlx::query("INSERT INTO schema_version VALUES (1, 1)")
+            .execute(&mut *transaction)
+            .await
+            .unwrap();
+        let state = serde_json::to_string(&ManagedMcpState::default()).unwrap();
+        sqlx::query(
+            "INSERT INTO managed_mcps (managed_mcp_id, mcp_id, installation_scope, state_json, revision, created_at_ms, updated_at_ms) VALUES ('legacy-managed', 'legacy.example', 'user', ?, 0, 1, 1)",
+        )
+        .bind(state)
+        .execute(&mut *transaction)
+        .await
+        .unwrap();
+        let projection = ConnectionProjection::RemoteHttp {
+            name: "legacy".to_string(),
+            description: String::new(),
+            uri: "https://legacy.example/mcp".to_string(),
+            timeout_seconds: Some(5),
+            auth: Auth::None,
+        };
+        sqlx::query(
+            "INSERT INTO connection_projections (managed_mcp_id, link_key, projection_json, revision, updated_at_ms) VALUES ('legacy-managed', 'managed_mcp_legacy', ?, 0, 1)",
+        )
+        .bind(serde_json::to_string(&projection).unwrap())
+        .execute(&mut *transaction)
+        .await
+        .unwrap();
+        transaction.commit().await.unwrap();
+        pool.close().await;
+
+        let repository = SqliteMcpPlatformRepository::open_path(&path).await.unwrap();
+        let migrated = repository
+            .get_connection_projection("legacy-managed")
+            .await
+            .unwrap();
+        assert_eq!(migrated.projection, projection);
+        assert!(migrated.plan_id.is_none());
+        assert!(migrated.manifest_digest.is_none());
+        assert!(migrated.owner_task_id.is_none());
+        assert!(migrated.projection_digest.is_empty());
+        let versions =
+            sqlx::query_scalar::<_, i64>("SELECT version FROM schema_version ORDER BY version")
+                .fetch_all(&repository.pool)
+                .await
+                .unwrap();
+        assert_eq!(versions, [1, 2, 3]);
+        let compensation_columns = sqlx::query("PRAGMA table_info(task_steps)")
+            .fetch_all(&repository.pool)
+            .await
+            .unwrap()
+            .into_iter()
+            .filter_map(|row| row.try_get::<String, _>("name").ok())
+            .filter(|name| name.starts_with("compensation_"))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            compensation_columns,
+            [
+                "compensation_json",
+                "compensation_status",
+                "compensation_started_at_ms",
+                "compensation_committed_at_ms"
+            ]
+        );
+    }
 }

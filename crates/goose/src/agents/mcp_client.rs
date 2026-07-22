@@ -76,6 +76,8 @@ impl GooseMcpHostInfo {
 
 #[async_trait::async_trait]
 pub trait McpClientTrait: Send + Sync {
+    async fn close(&self) -> Result<(), Error>;
+
     async fn list_tools(
         &self,
         session_id: &str,
@@ -705,6 +707,16 @@ async fn send_cancel_message(
 
 #[async_trait::async_trait]
 impl McpClientTrait for McpClient {
+    async fn close(&self) -> Result<(), Error> {
+        let mut client = self.client.lock().await;
+        client
+            .close_with_timeout(std::time::Duration::from_secs(5))
+            .await
+            .map_err(|_| Error::TransportClosed)?
+            .ok_or(Error::TransportClosed)?;
+        Ok(())
+    }
+
     fn get_info(&self) -> Option<&InitializeResult> {
         self.server_info.as_ref()
     }

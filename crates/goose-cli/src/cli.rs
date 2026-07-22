@@ -1465,7 +1465,7 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
         .collect::<Result<Vec<_>>>()?;
     let secret_key = env_secret.unwrap_or_else(generate_serve_secret_key);
     let router = create_router(
-        server,
+        server.clone(),
         secret_key,
         require_token,
         additional_allowed_origins,
@@ -1482,46 +1482,57 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
         || tls_key_path.is_some();
 
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
-    if tls {
-        #[cfg(any(feature = "rustls-tls", feature = "native-tls"))]
-        {
-            let tls_setup = goose::acp::transport::tls::setup_tls(
-                tls_cert_path.as_deref(),
-                tls_key_path.as_deref(),
+    let serve = async {
+        if tls {
+            #[cfg(any(feature = "rustls-tls", feature = "native-tls"))]
+            {
+                let tls_setup = goose::acp::transport::tls::setup_tls(
+                    tls_cert_path.as_deref(),
+                    tls_key_path.as_deref(),
+                )
+                .await?;
+                info!("Starting ACP server on https://{}", addr);
+
+                #[cfg(feature = "rustls-tls")]
+                axum_server::bind_rustls(addr, tls_setup.config)
+                    .serve(router.into_make_service_with_connect_info::<SocketAddr>())
+                    .await?;
+
+                #[cfg(feature = "native-tls")]
+                axum_server::bind_openssl(addr, tls_setup.config)
+                    .serve(router.into_make_service_with_connect_info::<SocketAddr>())
+                    .await?;
+            }
+
+            #[cfg(not(any(feature = "rustls-tls", feature = "native-tls")))]
+            {
+                let _ = (tls_cert_path, tls_key_path);
+                anyhow::bail!(
+                    "TLS was requested but no TLS backend is enabled. \
+                 Enable the `rustls-tls` or `native-tls` feature."
+                );
+            }
+        } else {
+            info!("Starting ACP server on http://{}", addr);
+            let listener = tokio::net::TcpListener::bind(addr).await?;
+            axum::serve(
+                listener,
+                router.into_make_service_with_connect_info::<SocketAddr>(),
             )
             .await?;
-            info!("Starting ACP server on https://{}", addr);
-
-            #[cfg(feature = "rustls-tls")]
-            axum_server::bind_rustls(addr, tls_setup.config)
-                .serve(router.into_make_service_with_connect_info::<SocketAddr>())
-                .await?;
-
-            #[cfg(feature = "native-tls")]
-            axum_server::bind_openssl(addr, tls_setup.config)
-                .serve(router.into_make_service_with_connect_info::<SocketAddr>())
-                .await?;
         }
+        Ok(())
+    };
+    await_serve_then_shutdown(serve, server.shutdown()).await
+}
 
-        #[cfg(not(any(feature = "rustls-tls", feature = "native-tls")))]
-        {
-            let _ = (tls_cert_path, tls_key_path);
-            anyhow::bail!(
-                "TLS was requested but no TLS backend is enabled. \
-                 Enable the `rustls-tls` or `native-tls` feature."
-            );
-        }
-    } else {
-        info!("Starting ACP server on http://{}", addr);
-        let listener = tokio::net::TcpListener::bind(addr).await?;
-        axum::serve(
-            listener,
-            router.into_make_service_with_connect_info::<SocketAddr>(),
-        )
-        .await?;
-    }
-
-    Ok(())
+async fn await_serve_then_shutdown<T, E>(
+    serve: impl std::future::Future<Output = std::result::Result<T, E>>,
+    shutdown: impl std::future::Future<Output = ()>,
+) -> std::result::Result<T, E> {
+    let result = serve.await;
+    shutdown.await;
+    result
 }
 
 async fn handle_session_subcommand(command: SessionCommand) -> Result<()> {
@@ -2382,6 +2393,29 @@ pub async fn cli() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    #[tokio::test]
+    async fn serve_completion_awaits_shutdown_before_returning() {
+        let stopped = AtomicBool::new(false);
+        let result = await_serve_then_shutdown(async { Ok::<_, &'static str>(7) }, async {
+            stopped.store(true, Ordering::SeqCst);
+        })
+        .await;
+        assert_eq!(result, Ok(7));
+        assert!(stopped.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn serve_error_still_awaits_shutdown_before_propagation() {
+        let stopped = AtomicBool::new(false);
+        let result = await_serve_then_shutdown(async { Err::<(), _>("serve failed") }, async {
+            stopped.store(true, Ordering::SeqCst);
+        })
+        .await;
+        assert_eq!(result, Err("serve failed"));
+        assert!(stopped.load(Ordering::SeqCst));
+    }
 
     #[test]
     fn completion_command_accepts_nushell_alias() {

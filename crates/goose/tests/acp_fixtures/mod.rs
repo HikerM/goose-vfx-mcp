@@ -372,6 +372,7 @@ pub async fn spawn_acp_server_in_process(
         additional_source_roots: Vec::new(),
         scheduler: Arc::new(FixtureScheduler::new()),
         mcp_platform_service: None,
+        mcp_platform_service_cell: None,
     })
     .await
     .unwrap();

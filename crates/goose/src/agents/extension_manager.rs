@@ -1226,7 +1226,14 @@ impl ExtensionManager {
     /// Get aggregated usage statistics
     pub async fn remove_extension(&self, name: &str) -> ExtensionResult<()> {
         let sanitized_name = name_to_key(name);
-        self.extensions.lock().await.remove(&sanitized_name);
+        let extension = self.extensions.lock().await.remove(&sanitized_name);
+        if let Some(extension) = extension {
+            extension
+                .client
+                .close()
+                .await
+                .map_err(|error| ExtensionError::SetupError(error.to_string()))?;
+        }
         self.invalidate_tools_cache_and_bump_version().await;
         Ok(())
     }
@@ -2155,6 +2162,10 @@ mod tests {
 
     #[async_trait::async_trait]
     impl McpClientTrait for MockClient {
+        async fn close(&self) -> Result<(), Error> {
+            Ok(())
+        }
+
         fn get_info(&self) -> Option<&InitializeResult> {
             None
         }
@@ -2691,6 +2702,10 @@ mod tests {
 
     #[async_trait::async_trait]
     impl McpClientTrait for MockDottedClient {
+        async fn close(&self) -> Result<(), Error> {
+            Ok(())
+        }
+
         fn get_info(&self) -> Option<&InitializeResult> {
             None
         }

@@ -386,6 +386,10 @@ impl AcpTools {
 
 #[async_trait]
 impl McpClientTrait for AcpTools {
+    async fn close(&self) -> Result<(), McpError> {
+        Ok(())
+    }
+
     async fn list_tools(
         &self,
         session_id: &str,

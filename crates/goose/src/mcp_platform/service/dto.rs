@@ -4,10 +4,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::mcp_platform::catalog::CatalogCompatibility;
 use crate::mcp_platform::domain::TrustTier;
+use crate::mcp_platform::domain::{
+    HealthCheckMode, HealthState, InstallationState, RegistrationState, RuntimeState,
+};
 use crate::mcp_platform::manifest::{Manifest, ManifestProof};
 use crate::mcp_platform::plan::InstallationPlan;
 use crate::mcp_platform::policy::PolicyDecision;
-use crate::mcp_platform::repository::{AuditEventRecord, PlanTarget, TaskRecord};
+use crate::mcp_platform::repository::{
+    AuditEventRecord, HealthObservationRecord, PlanTarget, TaskRecord,
+};
 
 pub const LOCAL_PERSISTED_SOURCE_ID: &str = "local_persistence";
 
@@ -177,6 +182,80 @@ pub struct TaskRetryInput {
     pub task_id: String,
     pub expected_revision: i64,
     pub idempotency_key: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ManagedListInput {
+    pub cursor: Option<String>,
+    pub page_size: Option<u16>,
+    pub registration: Option<RegistrationState>,
+    pub installation: Option<InstallationState>,
+    pub runtime: Option<RuntimeState>,
+    pub health: Option<HealthState>,
+    pub default_enabled: Option<bool>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManagedMcpSummary {
+    pub managed_mcp_id: String,
+    pub mcp_id: String,
+    pub installation_scope: String,
+    pub registration: RegistrationState,
+    pub installation: InstallationState,
+    pub runtime: RuntimeState,
+    pub health: HealthState,
+    pub default_enabled: bool,
+    pub revision: i64,
+    pub updated_at_ms: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManagedMcpPage {
+    pub items: Vec<ManagedMcpSummary>,
+    pub next_cursor: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManagedGetInput {
+    pub managed_mcp_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ManagedMcpDetail {
+    pub summary: ManagedMcpSummary,
+    pub distribution_adapter: String,
+    pub active_manifest_digest: String,
+    pub active_version: String,
+    pub extension_config_key: String,
+    pub projection_digest: String,
+    pub latest_health: Option<HealthObservationRecord>,
+    pub registration_task: Option<TaskRef>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HealthRunInput {
+    pub managed_mcp_id: String,
+    pub mode: HealthCheckMode,
+    pub idempotency_key: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HealthGetInput {
+    pub managed_mcp_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HealthStatus {
+    pub managed_mcp_id: String,
+    pub state: HealthState,
+    pub latest: Option<HealthObservationRecord>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SetDefaultEnabledInput {
+    pub managed_mcp_id: String,
+    pub enabled: bool,
+    pub expected_revision: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

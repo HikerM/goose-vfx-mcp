@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine as _;
@@ -7,19 +8,30 @@ use serde::{Deserialize, Serialize};
 use crate::mcp_platform::adapters::plan_for_manifest;
 use crate::mcp_platform::catalog::{CatalogCompatibility, CompatibilityTarget};
 use crate::mcp_platform::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
+use crate::mcp_platform::lifecycle::{
+    ConfigAuthRequirementResolver, ConfigProjectionSink, CoreTransportProjectionAdapter,
+    EmptyHostIntegrationAdapter, LifecyclePorts, SafeRegistrationEffectAdapter,
+};
 use crate::mcp_platform::manifest::{Architecture, Distribution, Platform, VerifiedManifest};
 use crate::mcp_platform::policy::{PlanOperation, PolicyContext};
 use crate::mcp_platform::repository::{
-    ConfirmationEvidence, CreateTask, PlanRecord, PlanTarget, SavePlan, TaskTransition,
+    ConfirmationEvidence, CreateHealthTask, CreateTask, ManagedInventoryFilter,
+    ManagedMcpInventoryRecord, PlanRecord, PlanTarget, SavePlan, TaskTransition,
 };
-use crate::mcp_platform::task::{RollbackStatus, TaskOperation, TaskStatus};
+use crate::mcp_platform::task::{
+    AdapterEvidence, CompensationDescriptor, RollbackEvidence, RollbackStatus, TaskOperation,
+    TaskStatus,
+};
+use crate::mcp_platform::{ProductionHealthCheckAdapter, TaskRunner};
 
 use super::dependencies::{Clock, IdGenerator, SystemClock, UuidGenerator};
 use super::dto::{
     unique_task_ids, CatalogDetail, CatalogListInput, CatalogLocator, CatalogPage, CatalogSummary,
-    EventsResumeInput, EventsResumePage, InstallConfirmInput, PlanCreateInput, PlanIntent,
-    PlanReview, RequestContext, TaskCancelInput, TaskGetInput, TaskRef, TaskRetryInput,
-    UserDecision, LOCAL_PERSISTED_SOURCE_ID,
+    EventsResumeInput, EventsResumePage, HealthGetInput, HealthRunInput, HealthStatus,
+    InstallConfirmInput, ManagedGetInput, ManagedListInput, ManagedMcpDetail, ManagedMcpPage,
+    ManagedMcpSummary, PlanCreateInput, PlanIntent, PlanReview, RequestContext,
+    SetDefaultEnabledInput, TaskCancelInput, TaskGetInput, TaskRef, TaskRetryInput, UserDecision,
+    LOCAL_PERSISTED_SOURCE_ID,
 };
 use super::port::McpPlatformRepositoryPort;
 
@@ -55,15 +67,26 @@ pub struct McpPlatformService {
     clock: Arc<dyn Clock>,
     ids: Arc<dyn IdGenerator>,
     options: McpPlatformServiceOptions,
+    runner: Arc<TaskRunner>,
+    auto_worker: bool,
+    worker: Mutex<WorkerState>,
+}
+
+enum WorkerState {
+    NotStarted,
+    Running(tokio::task::JoinHandle<()>),
+    Stopped,
 }
 
 impl McpPlatformService {
     pub fn production(repository: Arc<dyn McpPlatformRepositoryPort>) -> Self {
-        Self::new(
+        Self::new_internal(
             repository,
             Arc::new(SystemClock),
             Arc::new(UuidGenerator),
             McpPlatformServiceOptions::default(),
+            default_lifecycle_ports(),
+            true,
         )
     }
 
@@ -73,11 +96,76 @@ impl McpPlatformService {
         ids: Arc<dyn IdGenerator>,
         options: McpPlatformServiceOptions,
     ) -> Self {
+        Self::new_internal(
+            repository,
+            clock,
+            ids,
+            options,
+            default_lifecycle_ports(),
+            false,
+        )
+    }
+
+    pub fn new_with_lifecycle_ports(
+        repository: Arc<dyn McpPlatformRepositoryPort>,
+        clock: Arc<dyn Clock>,
+        ids: Arc<dyn IdGenerator>,
+        options: McpPlatformServiceOptions,
+        ports: LifecyclePorts,
+    ) -> Self {
+        Self::new_internal(repository, clock, ids, options, ports, false)
+    }
+
+    fn new_internal(
+        repository: Arc<dyn McpPlatformRepositoryPort>,
+        clock: Arc<dyn Clock>,
+        ids: Arc<dyn IdGenerator>,
+        options: McpPlatformServiceOptions,
+        ports: LifecyclePorts,
+        auto_worker: bool,
+    ) -> Self {
+        let runner = Arc::new(TaskRunner::new(
+            repository.clone(),
+            clock.clone(),
+            ports,
+            ids.next_id("worker"),
+        ));
         Self {
             repository,
             clock,
             ids,
             options,
+            runner,
+            auto_worker,
+            worker: Mutex::new(WorkerState::NotStarted),
+        }
+    }
+
+    pub fn start_worker_if_configured(&self) {
+        if !self.auto_worker {
+            return;
+        }
+        let mut state = self.worker.lock().expect("MCP worker state lock");
+        if matches!(*state, WorkerState::NotStarted) {
+            *state = WorkerState::Running(tokio::spawn(self.runner.clone().run()));
+        }
+    }
+
+    pub async fn runner_tick(&self) -> McpPlatformResult<bool> {
+        self.runner.tick().await
+    }
+
+    pub async fn shutdown_worker(&self) {
+        let handle = {
+            let mut state = self.worker.lock().expect("MCP worker state lock");
+            match std::mem::replace(&mut *state, WorkerState::Stopped) {
+                WorkerState::Running(handle) => Some(handle),
+                WorkerState::NotStarted | WorkerState::Stopped => None,
+            }
+        };
+        self.runner.shutdown();
+        if let Some(handle) = handle {
+            let _ = handle.await;
         }
     }
 
@@ -316,6 +404,18 @@ impl McpPlatformService {
         }
 
         let task_id = self.ids.next_id("task");
+        let adapter_evidence = AdapterEvidence {
+            adapter_id: plan.plan.adapter().id.clone(),
+            adapter_version: plan.plan.adapter().version.clone(),
+            compatible_for_recovery: true,
+            resume_safe: true,
+        };
+        let rollback_evidence = RollbackEvidence {
+            compensation_available: true,
+            remaining_compensations: vec![CompensationDescriptor::RemoveConnectionProjection {
+                link_key: "server_owned_at_execution".to_string(),
+            }],
+        };
         let created = self
             .repository
             .create_task(CreateTask {
@@ -326,14 +426,16 @@ impl McpPlatformService {
                 idempotency_key: &input.idempotency_key,
                 actor: context.actor(),
                 now_ms: self.clock.now_ms(),
-                adapter_evidence: None,
-                rollback_evidence: None,
+                adapter_evidence: Some(&adapter_evidence),
+                rollback_evidence: Some(&rollback_evidence),
             })
             .await?;
         let settled = self
             .settle_confirmation(context, created, input.decision)
             .await?;
-        Ok(settled.into())
+        let task_ref = settled.into();
+        self.runner.notify();
+        Ok(task_ref)
     }
 
     pub async fn task_get(
@@ -355,7 +457,8 @@ impl McpPlatformService {
     ) -> McpPlatformResult<TaskRef> {
         validate_identifier(&input.task_id)?;
         validate_revision(input.expected_revision)?;
-        self.repository
+        let task = self
+            .repository
             .request_cancel(
                 &input.task_id,
                 input.expected_revision,
@@ -363,7 +466,9 @@ impl McpPlatformService {
                 self.clock.now_ms(),
             )
             .await
-            .map(Into::into)
+            .map(TaskRef::from)?;
+        self.runner.cancel(&input.task_id).await;
+        Ok(task)
     }
 
     pub async fn task_retry(
@@ -374,7 +479,8 @@ impl McpPlatformService {
         validate_identifier(&input.task_id)?;
         validate_revision(input.expected_revision)?;
         validate_idempotency_key(&input.idempotency_key)?;
-        self.repository
+        let task = self
+            .repository
             .retry_task(
                 &input.task_id,
                 input.expected_revision,
@@ -383,7 +489,152 @@ impl McpPlatformService {
                 self.clock.now_ms(),
             )
             .await
-            .map(Into::into)
+            .map(TaskRef::from)?;
+        self.runner.notify();
+        Ok(task)
+    }
+
+    pub async fn managed_list(
+        &self,
+        _context: &RequestContext,
+        input: ManagedListInput,
+    ) -> McpPlatformResult<ManagedMcpPage> {
+        validate_optional_text(input.cursor.as_deref(), MAX_CURSOR_LENGTH)?;
+        let page_size = validate_page_size(input.page_size)? as usize;
+        let records = self
+            .repository
+            .list_managed_inventory(
+                input.cursor.as_deref(),
+                page_size + 1,
+                &ManagedInventoryFilter {
+                    registration: input.registration,
+                    installation: input.installation,
+                    runtime: input.runtime,
+                    health: input.health,
+                    default_enabled: input.default_enabled,
+                },
+            )
+            .await?;
+        let has_more = records.len() > page_size;
+        let scanned_cursor =
+            has_more.then(|| records[page_size - 1].managed.managed_mcp_id.clone());
+        let items = records
+            .into_iter()
+            .take(page_size)
+            .map(managed_summary)
+            .collect();
+        Ok(ManagedMcpPage {
+            items,
+            next_cursor: scanned_cursor,
+        })
+    }
+
+    pub async fn managed_get(
+        &self,
+        _context: &RequestContext,
+        input: ManagedGetInput,
+    ) -> McpPlatformResult<ManagedMcpDetail> {
+        validate_identifier(&input.managed_mcp_id)?;
+        let inventory = self
+            .repository
+            .get_managed_inventory(&input.managed_mcp_id)
+            .await?;
+        let projection = self
+            .repository
+            .get_connection_projection(&input.managed_mcp_id)
+            .await?;
+        let latest_health = self
+            .repository
+            .latest_health_observation(&input.managed_mcp_id)
+            .await?;
+        let registration_task = match inventory.lifecycle.owner_task_id.as_deref() {
+            Some(task_id) => Some(self.repository.get_task(task_id).await?.into()),
+            None => None,
+        };
+        Ok(ManagedMcpDetail {
+            summary: managed_summary(inventory.clone()),
+            distribution_adapter: inventory.lifecycle.distribution_adapter,
+            active_manifest_digest: inventory
+                .lifecycle
+                .active_manifest_digest
+                .ok_or_else(integrity_error)?,
+            active_version: inventory
+                .lifecycle
+                .active_version
+                .ok_or_else(integrity_error)?,
+            extension_config_key: projection.link_key,
+            projection_digest: projection.projection_digest,
+            latest_health,
+            registration_task,
+        })
+    }
+
+    pub async fn health_run(
+        &self,
+        context: &RequestContext,
+        input: HealthRunInput,
+    ) -> McpPlatformResult<TaskRef> {
+        validate_identifier(&input.managed_mcp_id)?;
+        validate_idempotency_key(&input.idempotency_key)?;
+        let inventory = self
+            .repository
+            .get_managed_inventory(&input.managed_mcp_id)
+            .await?;
+        if inventory.managed.state.registration
+            != crate::mcp_platform::RegistrationState::Registered
+        {
+            return Err(invalid_transition());
+        }
+        let task = self
+            .repository
+            .create_health_task(CreateHealthTask {
+                task_id: &self.ids.next_id("task"),
+                managed_mcp_id: &input.managed_mcp_id,
+                mode: input.mode,
+                idempotency_key: &input.idempotency_key,
+                actor: context.actor(),
+                now_ms: self.clock.now_ms(),
+            })
+            .await?;
+        self.runner.notify();
+        Ok(task.into())
+    }
+
+    pub async fn health_get(
+        &self,
+        _context: &RequestContext,
+        input: HealthGetInput,
+    ) -> McpPlatformResult<HealthStatus> {
+        validate_identifier(&input.managed_mcp_id)?;
+        let inventory = self
+            .repository
+            .get_managed_inventory(&input.managed_mcp_id)
+            .await?;
+        Ok(HealthStatus {
+            managed_mcp_id: input.managed_mcp_id.clone(),
+            state: inventory.managed.state.health,
+            latest: self
+                .repository
+                .latest_health_observation(&input.managed_mcp_id)
+                .await?,
+        })
+    }
+
+    pub async fn set_default_enabled(
+        &self,
+        _context: &RequestContext,
+        input: SetDefaultEnabledInput,
+    ) -> McpPlatformResult<ManagedMcpSummary> {
+        validate_identifier(&input.managed_mcp_id)?;
+        validate_revision(input.expected_revision)?;
+        self.runner
+            .set_default_enabled(
+                &input.managed_mcp_id,
+                input.expected_revision,
+                input.enabled,
+            )
+            .await
+            .map(managed_summary)
     }
 
     pub async fn events_resume(
@@ -581,6 +832,21 @@ fn catalog_summary(
     }
 }
 
+fn managed_summary(record: ManagedMcpInventoryRecord) -> ManagedMcpSummary {
+    ManagedMcpSummary {
+        managed_mcp_id: record.managed.managed_mcp_id,
+        mcp_id: record.managed.mcp_id,
+        installation_scope: record.managed.installation_scope,
+        registration: record.managed.state.registration,
+        installation: record.managed.state.installation,
+        runtime: record.managed.state.runtime,
+        health: record.managed.state.health,
+        default_enabled: record.managed.state.default_enabled,
+        revision: record.managed.revision,
+        updated_at_ms: record.managed.updated_at_ms,
+    }
+}
+
 fn manifest_key(record: &crate::mcp_platform::repository::ManifestRecord) -> (&str, &str, &str) {
     (
         &record.verified.manifest().id,
@@ -717,6 +983,13 @@ const fn invalid_request() -> McpPlatformError {
     )
 }
 
+const fn integrity_error() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::IntegrityError,
+        "stored MCP platform data failed integrity validation",
+    )
+}
+
 const fn not_found() -> McpPlatformError {
     McpPlatformError::new(
         McpPlatformErrorCode::NotFound,
@@ -764,4 +1037,24 @@ const fn revision_conflict() -> McpPlatformError {
         McpPlatformErrorCode::RevisionConflict,
         "record revision no longer matches",
     )
+}
+
+fn default_lifecycle_ports() -> LifecyclePorts {
+    LifecyclePorts {
+        registration: Arc::new(SafeRegistrationEffectAdapter),
+        host_integration: Arc::new(EmptyHostIntegrationAdapter),
+        transport: Arc::new(CoreTransportProjectionAdapter),
+        auth: Arc::new(ConfigAuthRequirementResolver),
+        health: Arc::new(ProductionHealthCheckAdapter),
+        projection_sink: Arc::new(ConfigProjectionSink::default()),
+    }
+}
+
+impl Drop for McpPlatformService {
+    fn drop(&mut self) {
+        self.runner.shutdown();
+        if let Ok(WorkerState::Running(handle)) = self.worker.get_mut() {
+            handle.abort();
+        }
+    }
 }

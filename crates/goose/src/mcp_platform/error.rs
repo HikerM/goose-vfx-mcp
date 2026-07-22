@@ -30,6 +30,12 @@ pub enum McpPlatformErrorCode {
     RepositoryUnavailable,
     NotFound,
     SerializationFailed,
+    ProjectionConflict,
+    CredentialMissing,
+    HealthFailed,
+    TaskNotCancellable,
+    RollbackIncomplete,
+    AdapterIncompatible,
 }
 
 impl McpPlatformErrorCode {
@@ -63,6 +69,12 @@ impl McpPlatformErrorCode {
             Self::RepositoryUnavailable => "repository_unavailable",
             Self::NotFound => "not_found",
             Self::SerializationFailed => "serialization_failed",
+            Self::ProjectionConflict => "projection_conflict",
+            Self::CredentialMissing => "credential_missing",
+            Self::HealthFailed => "health_failed",
+            Self::TaskNotCancellable => "task_not_cancellable",
+            Self::RollbackIncomplete => "rollback_incomplete",
+            Self::AdapterIncompatible => "adapter_incompatible",
         }
     }
 }

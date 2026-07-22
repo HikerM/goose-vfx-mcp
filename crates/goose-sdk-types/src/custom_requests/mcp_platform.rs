@@ -10,6 +10,11 @@ pub const MCP_TASK_GET_METHOD: &str = "goose.mcpTaskGet_unstable";
 pub const MCP_TASK_CANCEL_METHOD: &str = "goose.mcpTaskCancel_unstable";
 pub const MCP_TASK_RETRY_METHOD: &str = "goose.mcpTaskRetry_unstable";
 pub const MCP_EVENTS_RESUME_METHOD: &str = "goose.mcpEventsResume_unstable";
+pub const MCP_LIST_METHOD: &str = "goose.mcpList_unstable";
+pub const MCP_GET_METHOD: &str = "goose.mcpGet_unstable";
+pub const MCP_HEALTH_RUN_METHOD: &str = "goose.mcpHealthRun_unstable";
+pub const MCP_HEALTH_GET_METHOD: &str = "goose.mcpHealthGet_unstable";
+pub const MCP_SET_DEFAULT_ENABLED_METHOD: &str = "goose.mcpSetDefaultEnabled_unstable";
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
@@ -43,6 +48,12 @@ pub enum McpPlatformErrorCodeDto {
     RevisionConflict,
     InvalidTransition,
     RepositoryUnavailable,
+    ProjectionConflict,
+    CredentialMissing,
+    HealthFailed,
+    TaskNotCancellable,
+    RollbackIncomplete,
+    AdapterIncompatible,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -70,6 +81,12 @@ pub enum McpPlatformErrorDetails {
     RevisionConflict {},
     TransitionRejected {},
     RepositoryTemporarilyUnavailable {},
+    ProjectionConflict {},
+    CredentialMissing {},
+    HealthGateFailed {},
+    CancellationDeferred {},
+    RecoveryRequired {},
+    AdapterVersionIncompatible {},
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
@@ -197,6 +214,213 @@ pub struct McpEventsResumeRequest {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct McpEventsResumeResponse {
     pub outcome: McpPlatformOutcome<McpEventsPage>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method = "goose.mcpList_unstable", response = McpListResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpListRequest {
+    pub cursor: Option<String>,
+    pub page_size: Option<u16>,
+    pub registration: Option<McpRegistrationState>,
+    pub installation: Option<McpInstallationState>,
+    pub runtime: Option<McpRuntimeState>,
+    pub health: Option<McpHealthState>,
+    pub default_enabled: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpListResponse {
+    pub outcome: McpPlatformOutcome<McpManagedPage>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method = "goose.mcpGet_unstable", response = McpGetResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpGetRequest {
+    pub managed_mcp_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpGetResponse {
+    pub outcome: McpPlatformOutcome<McpManagedDetail>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method = "goose.mcpHealthRun_unstable", response = McpHealthRunResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpHealthRunRequest {
+    pub managed_mcp_id: String,
+    pub mode: McpHealthCheckMode,
+    pub idempotency_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpHealthRunResponse {
+    pub outcome: McpPlatformOutcome<McpTaskRef>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method = "goose.mcpHealthGet_unstable", response = McpHealthGetResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpHealthGetRequest {
+    pub managed_mcp_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpHealthGetResponse {
+    pub outcome: McpPlatformOutcome<McpHealthStatus>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method = "goose.mcpSetDefaultEnabled_unstable", response = McpSetDefaultEnabledResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpSetDefaultEnabledRequest {
+    pub managed_mcp_id: String,
+    pub enabled: bool,
+    pub expected_revision: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpSetDefaultEnabledResponse {
+    pub outcome: McpPlatformOutcome<McpManagedSummary>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManagedPage {
+    pub items: Vec<McpManagedSummary>,
+    pub next_cursor: Option<String>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManagedSummary {
+    pub managed_mcp_id: String,
+    pub mcp_id: String,
+    pub installation_scope: McpInstallationScope,
+    pub registration: McpRegistrationState,
+    pub installation: McpInstallationState,
+    pub runtime: McpRuntimeState,
+    pub health: McpHealthState,
+    pub default_enabled: bool,
+    pub revision: i64,
+    pub updated_at_ms: i64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpManagedDetail {
+    pub summary: McpManagedSummary,
+    pub distribution_adapter: String,
+    pub active_manifest_digest: String,
+    pub active_version: String,
+    pub extension_config_key: String,
+    pub projection_digest: String,
+    pub latest_health: Option<McpHealthObservation>,
+    pub registration_task: Option<McpTaskRef>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpHealthStatus {
+    pub managed_mcp_id: String,
+    pub state: McpHealthState,
+    pub latest: Option<McpHealthObservation>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct McpHealthObservation {
+    pub task_id: String,
+    pub mode: McpHealthCheckMode,
+    pub result: McpHealthResult,
+    pub latency_ms: i64,
+    pub capabilities_digest: Option<String>,
+    pub tools_digest: Option<String>,
+    pub checked_at_ms: i64,
+    pub detail_code: McpHealthDetailCode,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpHealthCheckMode {
+    #[default]
+    Registration,
+    Runtime,
+}
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpRegistrationState {
+    #[default]
+    Absent,
+    Registered,
+}
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpInstallationState {
+    #[default]
+    NotApplicable,
+    NotInstalled,
+    Staged,
+    Installed,
+    UpdateAvailable,
+    RepairRequired,
+    UninstallPending,
+}
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpRuntimeState {
+    #[default]
+    Stopped,
+    Starting,
+    Running,
+    Stopping,
+    Crashed,
+}
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpHealthState {
+    #[default]
+    Unknown,
+    Checking,
+    Healthy,
+    Degraded,
+    Unhealthy,
+    BlockedAuth,
+    Incompatible,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpHealthResult {
+    Healthy,
+    Unhealthy,
+    BlockedAuth,
+    Incompatible,
+    Timeout,
+    Cancelled,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum McpHealthDetailCode {
+    ProjectionConsistent,
+    ProjectionDrift,
+    CredentialHandleMissing,
+    ExpectedStatus,
+    UnexpectedStatus,
+    McpInitializeSucceeded,
+    McpInitializeFailed,
+    McpListToolsSucceeded,
+    McpListToolsFailed,
+    IncompatibleHealthContract,
+    CleanupFailed,
+    Timeout,
+    Cancelled,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

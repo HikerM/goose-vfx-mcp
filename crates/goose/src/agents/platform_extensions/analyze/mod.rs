@@ -212,6 +212,10 @@ impl AnalyzeClient {
 
 #[async_trait]
 impl McpClientTrait for AnalyzeClient {
+    async fn close(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
     async fn list_tools(
         &self,
         _session_id: &str,

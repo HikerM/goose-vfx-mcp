@@ -141,6 +141,10 @@ impl TodoClient {
 
 #[async_trait]
 impl McpClientTrait for TodoClient {
+    async fn close(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
     async fn list_tools(
         &self,
         _session_id: &str,

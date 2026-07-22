@@ -1,10 +1,12 @@
 use crate::mcp_platform::error::{McpPlatformErrorCode, McpPlatformResult};
 use crate::mcp_platform::repository::GlobalAuditPage;
 use crate::mcp_platform::repository::{
-    AuditEventRecord, AuditEventType, AuditPayload, CreateTask, RecoveryRecord, StepTransition,
-    TaskRecord, TaskStepRecord, TaskTransition,
+    AuditEventRecord, AuditEventType, AuditPayload, CompensationTransition, CreateTask,
+    RecoveryRecord, StepTransition, TaskRecord, TaskStepRecord, TaskTransition,
 };
-use crate::mcp_platform::task::{CompensationDescriptor, TaskStatus, TaskStepStatus};
+use crate::mcp_platform::task::{
+    CompensationDescriptor, CompensationStatus, TaskStatus, TaskStepStatus,
+};
 use sqlx::{QueryBuilder, Sqlite};
 
 use super::records::{
@@ -244,6 +246,35 @@ impl SqliteMcpPlatformRepository {
         idempotency_token: &str,
         compensation: &CompensationDescriptor,
     ) -> McpPlatformResult<TaskStepRecord> {
+        let task = self.get_task(task_id).await?;
+        let adapter_id = task
+            .adapter_evidence
+            .as_ref()
+            .map_or("", |value| value.adapter_id.as_str());
+        let adapter_version = task
+            .adapter_evidence
+            .as_ref()
+            .map_or("", |value| value.adapter_version.as_str());
+        self.add_task_step_with_adapter(
+            task_id,
+            ordinal,
+            idempotency_token,
+            compensation,
+            adapter_id,
+            adapter_version,
+        )
+        .await
+    }
+
+    pub async fn add_task_step_with_adapter(
+        &self,
+        task_id: &str,
+        ordinal: i64,
+        idempotency_token: &str,
+        compensation: &CompensationDescriptor,
+        adapter_id: &str,
+        adapter_version: &str,
+    ) -> McpPlatformResult<TaskStepRecord> {
         if ordinal < 0 {
             return Err(integrity_error());
         }
@@ -287,12 +318,15 @@ impl SqliteMcpPlatformRepository {
             r#"INSERT INTO task_steps (
                 task_id, ordinal, status, idempotency_token, compensation_json,
                 evidence_json, started_at_ms, committed_at_ms
-            ) VALUES (?, ?, 'not_started', ?, ?, NULL, NULL, NULL)"#,
+                , adapter_id, adapter_version
+            ) VALUES (?, ?, 'not_started', ?, ?, NULL, NULL, NULL, ?, ?)"#,
         )
         .bind(task_id)
         .bind(ordinal)
         .bind(idempotency_token)
         .bind(encode(compensation)?)
+        .bind(adapter_id)
+        .bind(adapter_version)
         .execute(&mut *tx)
         .await
         .map_err(map_sqlx)?;
@@ -388,6 +422,61 @@ impl SqliteMcpPlatformRepository {
         rows.iter().map(decode_task_step_row).collect()
     }
 
+    pub async fn transition_compensation(
+        &self,
+        transition: CompensationTransition<'_>,
+    ) -> McpPlatformResult<TaskStepRecord> {
+        if !transition
+            .expected_status
+            .can_transition_to(transition.next_status)
+        {
+            return Err(error(
+                McpPlatformErrorCode::InvalidTransition,
+                "task compensation status transition is not allowed",
+            ));
+        }
+        let mut tx = self.begin_immediate().await?;
+        let step = fetch_task_step(&mut tx, transition.task_id, transition.ordinal).await?;
+        if step.compensation_status != transition.expected_status {
+            return Err(error(
+                McpPlatformErrorCode::InvalidTransition,
+                "task compensation no longer has the expected status",
+            ));
+        }
+        let (started_at_ms, committed_at_ms) = match transition.next_status {
+            CompensationStatus::Started => {
+                (Some(transition.now_ms), step.compensation_committed_at_ms)
+            }
+            CompensationStatus::Committed => {
+                (step.compensation_started_at_ms, Some(transition.now_ms))
+            }
+            CompensationStatus::Pending => unreachable!(),
+        };
+        sqlx::query(
+            r#"UPDATE task_steps SET compensation_status = ?, compensation_started_at_ms = ?,
+                compensation_committed_at_ms = ? WHERE task_id = ? AND ordinal = ?"#,
+        )
+        .bind(transition.next_status.as_str())
+        .bind(started_at_ms)
+        .bind(committed_at_ms)
+        .bind(transition.task_id)
+        .bind(transition.ordinal)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        sqlx::query(
+            "UPDATE tasks SET updated_at_ms = ?, revision = revision + 1 WHERE task_id = ?",
+        )
+        .bind(transition.now_ms)
+        .bind(transition.task_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        let updated = fetch_task_step(&mut tx, transition.task_id, transition.ordinal).await?;
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(updated)
+    }
+
     pub async fn confirm_task(
         &self,
         task_id: &str,
@@ -465,7 +554,9 @@ impl SqliteMcpPlatformRepository {
         let current = fetch_task(&mut tx, task_id).await?;
         let next_status = match current.status {
             TaskStatus::AwaitingConfirmation | TaskStatus::Queued => TaskStatus::Cancelled,
-            TaskStatus::Running => TaskStatus::Cancelling,
+            TaskStatus::Running | TaskStatus::Verifying | TaskStatus::Activating => {
+                TaskStatus::Cancelling
+            }
             TaskStatus::Cancelling | TaskStatus::Cancelled => {
                 tx.commit().await.map_err(map_sqlx)?;
                 return Ok(current);
@@ -525,35 +616,66 @@ impl SqliteMcpPlatformRepository {
     ) -> McpPlatformResult<TaskRecord> {
         let mut tx = self.begin_immediate().await?;
         let current = fetch_task(&mut tx, task_id).await?;
-        let stored_key = sqlx::query_scalar::<_, Option<String>>(
-            "SELECT retry_idempotency_key FROM tasks WHERE task_id = ?",
+        let replay_attempt = sqlx::query_scalar::<_, i64>(
+            "SELECT attempt FROM task_retry_attempts WHERE task_id = ? AND idempotency_key = ?",
         )
         .bind(task_id)
-        .fetch_one(&mut *tx)
+        .bind(retry_idempotency_key)
+        .fetch_optional(&mut *tx)
         .await
         .map_err(map_sqlx)?;
-        if let Some(stored_key) = stored_key {
+        if replay_attempt.is_some() {
             tx.commit().await.map_err(map_sqlx)?;
-            return if stored_key == retry_idempotency_key && current.status == TaskStatus::Queued {
-                Ok(current)
-            } else {
-                Err(error(
-                    McpPlatformErrorCode::IdempotencyConflict,
-                    "task retry already used a different idempotency key",
-                ))
-            };
+            return Ok(current);
         }
         if current.revision != expected_revision {
             return Err(revision_conflict());
         }
         current.status.ensure_transition(TaskStatus::Queued)?;
         let sequence = current.event_sequence + 1;
+        let attempt = current.attempt_count + 1;
         sqlx::query(
-            r#"UPDATE tasks SET status = 'queued', retry_idempotency_key = ?,
+            r#"INSERT INTO task_step_history (
+                task_id, attempt, ordinal, status, idempotency_token, compensation_json,
+                evidence_json, started_at_ms, committed_at_ms, adapter_id, adapter_version,
+                compensation_status, compensation_started_at_ms, compensation_committed_at_ms
+            ) SELECT task_id, ?, ordinal, status, idempotency_token, compensation_json,
+                evidence_json, started_at_ms, committed_at_ms, adapter_id, adapter_version,
+                compensation_status, compensation_started_at_ms, compensation_committed_at_ms
+                FROM task_steps WHERE task_id = ?"#,
+        )
+        .bind(current.attempt_count)
+        .bind(task_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        sqlx::query("DELETE FROM task_steps WHERE task_id = ?")
+            .bind(task_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(map_sqlx)?;
+        sqlx::query(
+            r#"INSERT INTO task_retry_attempts (
+                task_id, attempt, idempotency_key, requested_from_status, actor, created_at_ms
+            ) VALUES (?, ?, ?, ?, ?, ?)"#,
+        )
+        .bind(task_id)
+        .bind(attempt)
+        .bind(retry_idempotency_key)
+        .bind(current.status.as_str())
+        .bind(actor)
+        .bind(now_ms)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        sqlx::query(
+            r#"UPDATE tasks SET status = 'queued', retry_idempotency_key = ?, attempt_count = ?,
                 updated_at_ms = ?, heartbeat_at_ms = NULL, revision = revision + 1,
-                event_sequence = ? WHERE task_id = ? AND revision = ?"#,
+                event_sequence = ?, owner_id = NULL, lease_expires_at_ms = NULL,
+                redacted_error_json = NULL WHERE task_id = ? AND revision = ?"#,
         )
         .bind(retry_idempotency_key)
+        .bind(attempt)
         .bind(now_ms)
         .bind(sequence)
         .bind(task_id)
@@ -582,6 +704,105 @@ impl SqliteMcpPlatformRepository {
         Ok(updated)
     }
 
+    pub async fn claim_next_task(
+        &self,
+        owner_id: &str,
+        now_ms: i64,
+        lease_duration_ms: i64,
+    ) -> McpPlatformResult<Option<TaskRecord>> {
+        let lease_expires_at_ms = now_ms
+            .checked_add(lease_duration_ms)
+            .ok_or_else(integrity_error)?;
+        let mut tx = self.begin_immediate().await?;
+        let row = sqlx::query(
+            r#"SELECT * FROM tasks WHERE status = 'queued'
+                AND (owner_id IS NULL OR lease_expires_at_ms IS NULL OR lease_expires_at_ms <= ?)
+                ORDER BY created_at_ms, task_id LIMIT 1"#,
+        )
+        .bind(now_ms)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        let Some(row) = row else {
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(None);
+        };
+        let current = decode_task_row(&row)?;
+        current.status.ensure_transition(TaskStatus::Running)?;
+        let sequence = current.event_sequence + 1;
+        let result = sqlx::query(
+            r#"UPDATE tasks SET status = 'running', owner_id = ?, lease_expires_at_ms = ?,
+                heartbeat_at_ms = ?, updated_at_ms = ?, revision = revision + 1,
+                event_sequence = ? WHERE task_id = ? AND status = 'queued' AND revision = ?"#,
+        )
+        .bind(owner_id)
+        .bind(lease_expires_at_ms)
+        .bind(now_ms)
+        .bind(now_ms)
+        .bind(sequence)
+        .bind(&current.task_id)
+        .bind(current.revision)
+        .execute(&mut *tx)
+        .await
+        .map_err(map_sqlx)?;
+        if result.rows_affected() != 1 {
+            tx.commit().await.map_err(map_sqlx)?;
+            return Ok(None);
+        }
+        append_audit(
+            &mut tx,
+            NewAuditEvent {
+                task_id: &current.task_id,
+                sequence,
+                event_type: AuditEventType::TaskStatusChanged,
+                actor: owner_id,
+                occurred_at_ms: now_ms,
+                payload: &AuditPayload::TaskStatusChanged {
+                    from: TaskStatus::Queued,
+                    to: TaskStatus::Running,
+                },
+                redacted_error: None,
+            },
+        )
+        .await?;
+        let claimed = fetch_task(&mut tx, &current.task_id).await?;
+        tx.commit().await.map_err(map_sqlx)?;
+        Ok(Some(claimed))
+    }
+
+    pub async fn renew_task_lease(
+        &self,
+        task_id: &str,
+        owner_id: &str,
+        now_ms: i64,
+        lease_duration_ms: i64,
+    ) -> McpPlatformResult<TaskRecord> {
+        let lease_expires_at_ms = now_ms
+            .checked_add(lease_duration_ms)
+            .ok_or_else(integrity_error)?;
+        let result = sqlx::query(
+            r#"UPDATE tasks SET heartbeat_at_ms = ?, lease_expires_at_ms = ?, updated_at_ms = ?
+                WHERE task_id = ? AND owner_id = ? AND status IN (
+                    'running','cancelling','verifying','activating','rolling_back'
+                )"#,
+        )
+        .bind(now_ms)
+        .bind(lease_expires_at_ms)
+        .bind(now_ms)
+        .bind(task_id)
+        .bind(owner_id)
+        .execute(&self.pool)
+        .await
+        .map_err(map_sqlx)?;
+        if result.rows_affected() != 1 {
+            return Err(error(
+                McpPlatformErrorCode::RevisionConflict,
+                "task lease is no longer owned by this worker",
+            ));
+        }
+        self.get_task(task_id).await
+    }
+
     pub async fn recover_stale_tasks(
         &self,
         heartbeat_cutoff_ms: i64,
@@ -607,11 +828,14 @@ impl SqliteMcpPlatformRepository {
                     .fetch_all(&mut *tx)
                     .await
                     .map_err(map_sqlx)?;
-            let steps = step_rows
+            let decoded_steps = step_rows
                 .iter()
                 .map(decode_task_step_row)
-                .collect::<McpPlatformResult<Vec<_>>>()?;
-            let decision = recovery_decision(&task, &steps);
+                .collect::<McpPlatformResult<Vec<_>>>();
+            let decision = decoded_steps.as_deref().map_or(
+                crate::mcp_platform::task::RecoveryDecision::RequiresManualRecovery,
+                |steps| recovery_decision(&task, steps),
+            );
             let sequence = task.event_sequence + 1;
             sqlx::query(
                 r#"UPDATE tasks SET status = 'interrupted', updated_at_ms = ?,

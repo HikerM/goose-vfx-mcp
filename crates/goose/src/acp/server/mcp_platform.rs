@@ -5,8 +5,10 @@ use crate::mcp_platform::manifest::{
 };
 use crate::mcp_platform::policy::PolicyOutcome;
 use crate::mcp_platform::service::{
-    CatalogListInput, CatalogLocator, EventsResumeInput, InstallConfirmInput, InstallationScope,
-    PlanCreateInput, PlanIntent, TaskCancelInput, TaskGetInput, TaskRetryInput, UserDecision,
+    CatalogListInput, CatalogLocator, EventsResumeInput, HealthGetInput, HealthRunInput,
+    InstallConfirmInput, InstallationScope, ManagedGetInput, ManagedListInput, PlanCreateInput,
+    PlanIntent, SetDefaultEnabledInput, TaskCancelInput, TaskGetInput, TaskRetryInput,
+    UserDecision,
 };
 use crate::mcp_platform::task::{RecoveryDecision, TaskOperation, TaskStatus, TaskStepStatus};
 use crate::mcp_platform::{AuditEventType, AuditPayload};
@@ -234,6 +236,121 @@ impl GooseAcpAgent {
             outcome: outcome(&context, result),
         }
     }
+
+    pub(super) async fn on_mcp_list(&self, req: McpListRequest) -> McpListResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let result = match service {
+            Ok(service) => service
+                .managed_list(
+                    &context,
+                    ManagedListInput {
+                        cursor: req.cursor,
+                        page_size: req.page_size,
+                        registration: req.registration.map(registration_from_wire),
+                        installation: req.installation.map(installation_from_wire),
+                        runtime: req.runtime.map(runtime_from_wire),
+                        health: req.health.map(health_from_wire),
+                        default_enabled: req.default_enabled,
+                    },
+                )
+                .await
+                .map(managed_page_to_wire),
+            Err(error) => Err(error),
+        };
+        McpListResponse {
+            outcome: outcome(&context, result),
+        }
+    }
+
+    pub(super) async fn on_mcp_get(&self, req: McpGetRequest) -> McpGetResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let result = match service {
+            Ok(service) => service
+                .managed_get(
+                    &context,
+                    ManagedGetInput {
+                        managed_mcp_id: req.managed_mcp_id,
+                    },
+                )
+                .await
+                .map(managed_detail_to_wire),
+            Err(error) => Err(error),
+        };
+        McpGetResponse {
+            outcome: outcome(&context, result),
+        }
+    }
+
+    pub(super) async fn on_mcp_health_run(&self, req: McpHealthRunRequest) -> McpHealthRunResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let result = match service {
+            Ok(service) => service
+                .health_run(
+                    &context,
+                    HealthRunInput {
+                        managed_mcp_id: req.managed_mcp_id,
+                        mode: match req.mode {
+                            McpHealthCheckMode::Registration => {
+                                crate::mcp_platform::HealthCheckMode::Registration
+                            }
+                            McpHealthCheckMode::Runtime => {
+                                crate::mcp_platform::HealthCheckMode::Runtime
+                            }
+                        },
+                        idempotency_key: req.idempotency_key,
+                    },
+                )
+                .await
+                .map(task_to_wire),
+            Err(error) => Err(error),
+        };
+        McpHealthRunResponse {
+            outcome: outcome(&context, result),
+        }
+    }
+
+    pub(super) async fn on_mcp_health_get(&self, req: McpHealthGetRequest) -> McpHealthGetResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let result = match service {
+            Ok(service) => service
+                .health_get(
+                    &context,
+                    HealthGetInput {
+                        managed_mcp_id: req.managed_mcp_id,
+                    },
+                )
+                .await
+                .map(health_status_to_wire),
+            Err(error) => Err(error),
+        };
+        McpHealthGetResponse {
+            outcome: outcome(&context, result),
+        }
+    }
+
+    pub(super) async fn on_mcp_set_default_enabled(
+        &self,
+        req: McpSetDefaultEnabledRequest,
+    ) -> McpSetDefaultEnabledResponse {
+        let (context, service) = self.mcp_platform_context_and_service().await;
+        let result = match service {
+            Ok(service) => service
+                .set_default_enabled(
+                    &context,
+                    SetDefaultEnabledInput {
+                        managed_mcp_id: req.managed_mcp_id,
+                        enabled: req.enabled,
+                        expected_revision: req.expected_revision,
+                    },
+                )
+                .await
+                .map(managed_summary_to_wire),
+            Err(error) => Err(error),
+        };
+        McpSetDefaultEnabledResponse {
+            outcome: outcome(&context, result),
+        }
+    }
 }
 
 fn outcome<T>(
@@ -307,10 +424,10 @@ fn error_to_wire(context: &RequestContext, error: McpPlatformError) -> McpPlatfo
             Some(McpPlatformErrorDetails::IdempotencyConflict {}),
         ),
         Code::RevisionConflict => (
-            McpPlatformErrorCodeDto::RevisionConflict,
+            McpPlatformErrorCodeDto::ProjectionConflict,
             "The record revision changed; reload before retrying.",
             true,
-            Some(McpPlatformErrorDetails::RevisionConflict {}),
+            Some(McpPlatformErrorDetails::ProjectionConflict {}),
         ),
         Code::InvalidTransition => (
             McpPlatformErrorCodeDto::InvalidTransition,
@@ -323,6 +440,42 @@ fn error_to_wire(context: &RequestContext, error: McpPlatformError) -> McpPlatfo
             "The MCP platform repository is temporarily unavailable.",
             true,
             Some(McpPlatformErrorDetails::RepositoryTemporarilyUnavailable {}),
+        ),
+        Code::ProjectionConflict => (
+            McpPlatformErrorCodeDto::RevisionConflict,
+            "The managed MCP projection conflicts with an existing extension.",
+            false,
+            Some(McpPlatformErrorDetails::RevisionConflict {}),
+        ),
+        Code::CredentialMissing => (
+            McpPlatformErrorCodeDto::CredentialMissing,
+            "A required credential handle is missing.",
+            false,
+            Some(McpPlatformErrorDetails::CredentialMissing {}),
+        ),
+        Code::HealthFailed => (
+            McpPlatformErrorCodeDto::HealthFailed,
+            "The MCP health check failed.",
+            true,
+            Some(McpPlatformErrorDetails::HealthGateFailed {}),
+        ),
+        Code::TaskNotCancellable => (
+            McpPlatformErrorCodeDto::TaskNotCancellable,
+            "Task cancellation is deferred to a safe boundary.",
+            false,
+            Some(McpPlatformErrorDetails::CancellationDeferred {}),
+        ),
+        Code::RollbackIncomplete => (
+            McpPlatformErrorCodeDto::RollbackIncomplete,
+            "The lifecycle mutation requires durable recovery.",
+            false,
+            Some(McpPlatformErrorDetails::RecoveryRequired {}),
+        ),
+        Code::AdapterIncompatible => (
+            McpPlatformErrorCodeDto::AdapterIncompatible,
+            "The journal adapter version is incompatible with this worker.",
+            false,
+            Some(McpPlatformErrorDetails::AdapterVersionIncompatible {}),
         ),
         Code::InvalidRequest
         | Code::InvalidJson
@@ -924,5 +1077,209 @@ const fn git_adapter_name(adapter: GitDevAdapter) -> &'static str {
         GitDevAdapter::PythonWheel => "python_wheel",
         GitDevAdapter::BinaryArchive => "binary_archive",
         GitDevAdapter::Docker => "docker",
+    }
+}
+
+fn managed_page_to_wire(page: crate::mcp_platform::service::ManagedMcpPage) -> McpManagedPage {
+    McpManagedPage {
+        items: page
+            .items
+            .into_iter()
+            .map(managed_summary_to_wire)
+            .collect(),
+        next_cursor: page.next_cursor,
+    }
+}
+
+fn managed_summary_to_wire(
+    value: crate::mcp_platform::service::ManagedMcpSummary,
+) -> McpManagedSummary {
+    McpManagedSummary {
+        managed_mcp_id: value.managed_mcp_id,
+        mcp_id: value.mcp_id,
+        installation_scope: McpInstallationScope::User,
+        registration: registration_to_wire(value.registration),
+        installation: installation_to_wire(value.installation),
+        runtime: runtime_to_wire(value.runtime),
+        health: health_state_to_wire(value.health),
+        default_enabled: value.default_enabled,
+        revision: value.revision,
+        updated_at_ms: value.updated_at_ms,
+    }
+}
+
+fn managed_detail_to_wire(
+    value: crate::mcp_platform::service::ManagedMcpDetail,
+) -> McpManagedDetail {
+    McpManagedDetail {
+        summary: managed_summary_to_wire(value.summary),
+        distribution_adapter: value.distribution_adapter,
+        active_manifest_digest: value.active_manifest_digest,
+        active_version: value.active_version,
+        extension_config_key: value.extension_config_key,
+        projection_digest: value.projection_digest,
+        latest_health: value.latest_health.map(health_observation_to_wire),
+        registration_task: value.registration_task.map(task_to_wire),
+    }
+}
+
+fn health_status_to_wire(value: crate::mcp_platform::service::HealthStatus) -> McpHealthStatus {
+    McpHealthStatus {
+        managed_mcp_id: value.managed_mcp_id,
+        state: health_state_to_wire(value.state),
+        latest: value.latest.map(health_observation_to_wire),
+    }
+}
+
+fn health_observation_to_wire(
+    value: crate::mcp_platform::HealthObservationRecord,
+) -> McpHealthObservation {
+    McpHealthObservation {
+        task_id: value.task_id,
+        mode: if value.check_type == "runtime" {
+            McpHealthCheckMode::Runtime
+        } else {
+            McpHealthCheckMode::Registration
+        },
+        result: match value.result_code {
+            crate::mcp_platform::HealthResultCode::Healthy => McpHealthResult::Healthy,
+            crate::mcp_platform::HealthResultCode::Unhealthy => McpHealthResult::Unhealthy,
+            crate::mcp_platform::HealthResultCode::BlockedAuth => McpHealthResult::BlockedAuth,
+            crate::mcp_platform::HealthResultCode::Incompatible => McpHealthResult::Incompatible,
+            crate::mcp_platform::HealthResultCode::Timeout => McpHealthResult::Timeout,
+            crate::mcp_platform::HealthResultCode::Cancelled => McpHealthResult::Cancelled,
+        },
+        latency_ms: value.latency_ms,
+        capabilities_digest: value.capabilities_digest,
+        tools_digest: value.tools_digest,
+        checked_at_ms: value.checked_at_ms,
+        detail_code: match value.detail_code {
+            crate::mcp_platform::HealthDetailCode::ProjectionConsistent => {
+                McpHealthDetailCode::ProjectionConsistent
+            }
+            crate::mcp_platform::HealthDetailCode::ProjectionDrift => {
+                McpHealthDetailCode::ProjectionDrift
+            }
+            crate::mcp_platform::HealthDetailCode::CredentialHandleMissing => {
+                McpHealthDetailCode::CredentialHandleMissing
+            }
+            crate::mcp_platform::HealthDetailCode::ExpectedStatus => {
+                McpHealthDetailCode::ExpectedStatus
+            }
+            crate::mcp_platform::HealthDetailCode::UnexpectedStatus => {
+                McpHealthDetailCode::UnexpectedStatus
+            }
+            crate::mcp_platform::HealthDetailCode::McpInitializeSucceeded => {
+                McpHealthDetailCode::McpInitializeSucceeded
+            }
+            crate::mcp_platform::HealthDetailCode::McpInitializeFailed => {
+                McpHealthDetailCode::McpInitializeFailed
+            }
+            crate::mcp_platform::HealthDetailCode::McpListToolsSucceeded => {
+                McpHealthDetailCode::McpListToolsSucceeded
+            }
+            crate::mcp_platform::HealthDetailCode::McpListToolsFailed => {
+                McpHealthDetailCode::McpListToolsFailed
+            }
+            crate::mcp_platform::HealthDetailCode::IncompatibleHealthContract => {
+                McpHealthDetailCode::IncompatibleHealthContract
+            }
+            crate::mcp_platform::HealthDetailCode::CleanupFailed => {
+                McpHealthDetailCode::CleanupFailed
+            }
+            crate::mcp_platform::HealthDetailCode::Timeout => McpHealthDetailCode::Timeout,
+            crate::mcp_platform::HealthDetailCode::Cancelled => McpHealthDetailCode::Cancelled,
+        },
+    }
+}
+
+fn registration_from_wire(value: McpRegistrationState) -> crate::mcp_platform::RegistrationState {
+    match value {
+        McpRegistrationState::Absent => crate::mcp_platform::RegistrationState::Absent,
+        McpRegistrationState::Registered => crate::mcp_platform::RegistrationState::Registered,
+    }
+}
+fn registration_to_wire(value: crate::mcp_platform::RegistrationState) -> McpRegistrationState {
+    match value {
+        crate::mcp_platform::RegistrationState::Absent => McpRegistrationState::Absent,
+        crate::mcp_platform::RegistrationState::Registered => McpRegistrationState::Registered,
+    }
+}
+fn installation_from_wire(value: McpInstallationState) -> crate::mcp_platform::InstallationState {
+    match value {
+        McpInstallationState::NotApplicable => {
+            crate::mcp_platform::InstallationState::NotApplicable
+        }
+        McpInstallationState::NotInstalled => crate::mcp_platform::InstallationState::NotInstalled,
+        McpInstallationState::Staged => crate::mcp_platform::InstallationState::Staged,
+        McpInstallationState::Installed => crate::mcp_platform::InstallationState::Installed,
+        McpInstallationState::UpdateAvailable => {
+            crate::mcp_platform::InstallationState::UpdateAvailable
+        }
+        McpInstallationState::RepairRequired => {
+            crate::mcp_platform::InstallationState::RepairRequired
+        }
+        McpInstallationState::UninstallPending => {
+            crate::mcp_platform::InstallationState::UninstallPending
+        }
+    }
+}
+fn installation_to_wire(value: crate::mcp_platform::InstallationState) -> McpInstallationState {
+    match value {
+        crate::mcp_platform::InstallationState::NotApplicable => {
+            McpInstallationState::NotApplicable
+        }
+        crate::mcp_platform::InstallationState::NotInstalled => McpInstallationState::NotInstalled,
+        crate::mcp_platform::InstallationState::Staged => McpInstallationState::Staged,
+        crate::mcp_platform::InstallationState::Installed => McpInstallationState::Installed,
+        crate::mcp_platform::InstallationState::UpdateAvailable => {
+            McpInstallationState::UpdateAvailable
+        }
+        crate::mcp_platform::InstallationState::RepairRequired => {
+            McpInstallationState::RepairRequired
+        }
+        crate::mcp_platform::InstallationState::UninstallPending => {
+            McpInstallationState::UninstallPending
+        }
+    }
+}
+fn runtime_from_wire(value: McpRuntimeState) -> crate::mcp_platform::RuntimeState {
+    match value {
+        McpRuntimeState::Stopped => crate::mcp_platform::RuntimeState::Stopped,
+        McpRuntimeState::Starting => crate::mcp_platform::RuntimeState::Starting,
+        McpRuntimeState::Running => crate::mcp_platform::RuntimeState::Running,
+        McpRuntimeState::Stopping => crate::mcp_platform::RuntimeState::Stopping,
+        McpRuntimeState::Crashed => crate::mcp_platform::RuntimeState::Crashed,
+    }
+}
+fn runtime_to_wire(value: crate::mcp_platform::RuntimeState) -> McpRuntimeState {
+    match value {
+        crate::mcp_platform::RuntimeState::Stopped => McpRuntimeState::Stopped,
+        crate::mcp_platform::RuntimeState::Starting => McpRuntimeState::Starting,
+        crate::mcp_platform::RuntimeState::Running => McpRuntimeState::Running,
+        crate::mcp_platform::RuntimeState::Stopping => McpRuntimeState::Stopping,
+        crate::mcp_platform::RuntimeState::Crashed => McpRuntimeState::Crashed,
+    }
+}
+fn health_from_wire(value: McpHealthState) -> crate::mcp_platform::HealthState {
+    match value {
+        McpHealthState::Unknown => crate::mcp_platform::HealthState::Unknown,
+        McpHealthState::Checking => crate::mcp_platform::HealthState::Checking,
+        McpHealthState::Healthy => crate::mcp_platform::HealthState::Healthy,
+        McpHealthState::Degraded => crate::mcp_platform::HealthState::Degraded,
+        McpHealthState::Unhealthy => crate::mcp_platform::HealthState::Unhealthy,
+        McpHealthState::BlockedAuth => crate::mcp_platform::HealthState::BlockedAuth,
+        McpHealthState::Incompatible => crate::mcp_platform::HealthState::Incompatible,
+    }
+}
+fn health_state_to_wire(value: crate::mcp_platform::HealthState) -> McpHealthState {
+    match value {
+        crate::mcp_platform::HealthState::Unknown => McpHealthState::Unknown,
+        crate::mcp_platform::HealthState::Checking => McpHealthState::Checking,
+        crate::mcp_platform::HealthState::Healthy => McpHealthState::Healthy,
+        crate::mcp_platform::HealthState::Degraded => McpHealthState::Degraded,
+        crate::mcp_platform::HealthState::Unhealthy => McpHealthState::Unhealthy,
+        crate::mcp_platform::HealthState::BlockedAuth => McpHealthState::BlockedAuth,
+        crate::mcp_platform::HealthState::Incompatible => McpHealthState::Incompatible,
     }
 }

@@ -101,6 +101,46 @@ impl GooseAcpAgent {
         Ok(self.on_mcp_events_resume(req).await)
     }
 
+    #[custom_method(McpListRequest)]
+    async fn dispatch_mcp_list(
+        &self,
+        req: McpListRequest,
+    ) -> Result<McpListResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_list(req).await)
+    }
+
+    #[custom_method(McpGetRequest)]
+    async fn dispatch_mcp_get(
+        &self,
+        req: McpGetRequest,
+    ) -> Result<McpGetResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_get(req).await)
+    }
+
+    #[custom_method(McpHealthRunRequest)]
+    async fn dispatch_mcp_health_run(
+        &self,
+        req: McpHealthRunRequest,
+    ) -> Result<McpHealthRunResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_health_run(req).await)
+    }
+
+    #[custom_method(McpHealthGetRequest)]
+    async fn dispatch_mcp_health_get(
+        &self,
+        req: McpHealthGetRequest,
+    ) -> Result<McpHealthGetResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_health_get(req).await)
+    }
+
+    #[custom_method(McpSetDefaultEnabledRequest)]
+    async fn dispatch_mcp_set_default_enabled(
+        &self,
+        req: McpSetDefaultEnabledRequest,
+    ) -> Result<McpSetDefaultEnabledResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_set_default_enabled(req).await)
+    }
+
     #[custom_method(RemoveSessionExtensionRequest)]
     async fn dispatch_remove_session_extension(
         &self,

@@ -100,15 +100,23 @@ impl TaskStatus {
                 )
                 | (
                     Self::Verifying,
-                    Self::Activating | Self::RollingBack | Self::Failed | Self::Interrupted
+                    Self::Activating
+                        | Self::Cancelling
+                        | Self::RollingBack
+                        | Self::Failed
+                        | Self::Interrupted
                 )
                 | (
                     Self::Activating,
-                    Self::Succeeded | Self::RollingBack | Self::Failed | Self::Interrupted
+                    Self::Succeeded
+                        | Self::Cancelling
+                        | Self::RollingBack
+                        | Self::Failed
+                        | Self::Interrupted
                 )
                 | (
                     Self::RollingBack,
-                    Self::Failed | Self::RecoveryRequired | Self::Interrupted
+                    Self::Failed | Self::Cancelled | Self::RecoveryRequired | Self::Interrupted
                 )
                 | (
                     Self::Interrupted,
@@ -136,6 +144,31 @@ pub enum TaskStepStatus {
     NotStarted,
     Started,
     Committed,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CompensationStatus {
+    Pending,
+    Started,
+    Committed,
+}
+
+impl CompensationStatus {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Pending => "pending",
+            Self::Started => "started",
+            Self::Committed => "committed",
+        }
+    }
+
+    pub const fn can_transition_to(self, next: Self) -> bool {
+        matches!(
+            (self, next),
+            (Self::Pending, Self::Started) | (Self::Started, Self::Committed)
+        )
+    }
 }
 
 impl TaskStepStatus {
@@ -196,19 +229,72 @@ pub struct RollbackEvidence {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum CompensationDescriptor {
-    RemoveConnectionProjection { link_key: String },
-    RestoreActivation { version: String },
-    RemoveOwnedPath { root: String, relative_path: String },
-    RestoreConfigFragment { registration_id: String },
+    RemoveConnectionProjection {
+        link_key: String,
+    },
+    RestoreActivation {
+        version: String,
+    },
+    RemoveOwnedPath {
+        root: String,
+        relative_path: String,
+    },
+    RestoreConfigFragment {
+        registration_id: String,
+    },
+    RemoveManagedMcp {
+        managed_mcp_id: String,
+    },
+    RemoveOwnedConnectionProjection {
+        managed_mcp_id: String,
+        link_key: String,
+    },
+    RemoveOwnedExtensionConfig {
+        link_key: String,
+        projection_digest: String,
+        created_by_task: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum StepEvidence {
-    ConnectionProjected { link_key: String, revision: i64 },
-    ArtifactVerified { digest: String },
-    ActivationRecorded { version: String },
-    HealthObserved { result_code: String },
+    ConnectionProjected {
+        link_key: String,
+        revision: i64,
+    },
+    ArtifactVerified {
+        digest: String,
+    },
+    ActivationRecorded {
+        version: String,
+    },
+    HealthObserved {
+        result_code: String,
+    },
+    PlanRevalidated {
+        manifest_digest: String,
+    },
+    ManagedMcpUpserted {
+        managed_mcp_id: String,
+        created: bool,
+    },
+    ProjectionPersisted {
+        managed_mcp_id: String,
+        link_key: String,
+        revision: i64,
+        created: bool,
+    },
+    ExtensionConfigProjected {
+        link_key: String,
+        projection_digest: String,
+        enabled: bool,
+        created: bool,
+    },
+    ProjectionVerified {
+        link_key: String,
+        enabled: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

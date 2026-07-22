@@ -379,6 +379,10 @@ impl ExtensionManagerClient {
 
 #[async_trait]
 impl McpClientTrait for ExtensionManagerClient {
+    async fn close(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
     async fn list_resources(
         &self,
         _session_id: &str,

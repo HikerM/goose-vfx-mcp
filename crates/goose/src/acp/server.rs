@@ -213,6 +213,7 @@ pub struct GooseAcpAgentOptions {
     pub additional_source_roots: Vec<SourceRoot>,
     pub scheduler: Arc<dyn SchedulerTrait>,
     pub mcp_platform_service: Option<Arc<McpPlatformService>>,
+    pub mcp_platform_service_cell: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
 }
 
 pub struct GooseAcpAgent {
@@ -237,7 +238,7 @@ pub struct GooseAcpAgent {
     provider_inventory: ProviderInventoryService,
     additional_source_roots: Vec<SourceRoot>,
     recipe_path_cache: Arc<Mutex<HashMap<String, PathBuf>>>,
-    mcp_platform_service: OnceCell<Arc<McpPlatformService>>,
+    mcp_platform_service: Arc<OnceCell<Arc<McpPlatformService>>>,
     mcp_platform_database_path: PathBuf,
 }
 
@@ -936,7 +937,9 @@ impl GooseAcpAgent {
     // TODO: goose reads Paths::in_state_dir globally (e.g. RequestLog), ignoring this data_dir.
     pub async fn new(options: GooseAcpAgentOptions) -> Result<Self> {
         let mcp_platform_database_path = options.data_dir.join("mcp-platform/platform.db");
-        let mcp_platform_service = OnceCell::new();
+        let mcp_platform_service = options
+            .mcp_platform_service_cell
+            .unwrap_or_else(|| Arc::new(OnceCell::new()));
         if let Some(service) = options.mcp_platform_service {
             let _ = mcp_platform_service.set(service);
         }
@@ -1014,7 +1017,22 @@ impl GooseAcpAgent {
             },
             |service| service.trusted_local_context(),
         );
+        if let Ok(service) = &result {
+            service.start_worker_if_configured();
+        }
         (context, result)
+    }
+
+    #[cfg(test)]
+    pub(super) fn test_mcp_platform_service_cell(&self) -> Arc<OnceCell<Arc<McpPlatformService>>> {
+        self.mcp_platform_service.clone()
+    }
+
+    #[cfg(test)]
+    pub(super) async fn test_initialize_mcp_platform(
+        &self,
+    ) -> std::result::Result<Arc<McpPlatformService>, McpPlatformError> {
+        self.mcp_platform_context_and_service().await.1
     }
 
     fn config(&self) -> Result<&'static Config, agent_client_protocol::Error> {
@@ -3186,12 +3204,13 @@ where
     Box::pin(async move {
         let handler = GooseAcpHandler { agent };
 
-        SacpAgent
+        let result = SacpAgent
             .builder()
             .name("goose-acp")
             .with_handler(handler)
             .connect_to(ByteStreams::new(write, read))
-            .await?;
+            .await;
+        result?;
 
         Ok(())
     })
@@ -3220,12 +3239,13 @@ impl agent_client_protocol::ConnectTo<Client> for GooseAgentConnection {
     ) -> std::result::Result<(), agent_client_protocol::Error> {
         let agent = self.server.create_agent().await.internal_err()?;
         let handler = GooseAcpHandler { agent };
-        SacpAgent
+        let result = SacpAgent
             .builder()
             .name("goose-acp")
             .with_handler(handler)
             .connect_to(client)
-            .await
+            .await;
+        result
     }
 }
 
@@ -3235,7 +3255,7 @@ pub async fn run(builtins: Vec<String>) -> Result<()> {
     let outgoing = tokio::io::stdout().compat_write();
     let incoming = tokio::io::stdin().compat();
 
-    let server = crate::acp::server_factory::AcpServer::new(
+    let server = Arc::new(crate::acp::server_factory::AcpServer::new(
         crate::acp::server_factory::AcpServerFactoryConfig {
             builtins,
             data_dir: Paths::data_dir(),
@@ -3243,9 +3263,11 @@ pub async fn run(builtins: Vec<String>) -> Result<()> {
             goose_platform: GoosePlatform::GooseCli,
             additional_source_roots: Vec::new(),
         },
-    );
+    ));
     let agent = server.create_agent().await?;
-    serve(agent, incoming, outgoing).await
+    let result = serve(agent, incoming, outgoing).await;
+    server.shutdown().await;
+    result
 }
 
 #[cfg(test)]

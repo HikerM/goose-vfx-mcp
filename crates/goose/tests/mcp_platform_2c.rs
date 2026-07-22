@@ -1067,6 +1067,7 @@ async fn acp_handler_maps_repository_failure_without_breaking_existing_custom_me
         additional_source_roots: Vec::new(),
         scheduler: Arc::new(UnusedScheduler),
         mcp_platform_service: Some(harness.service.clone()),
+        mcp_platform_service_cell: None,
     })
     .await
     .unwrap();

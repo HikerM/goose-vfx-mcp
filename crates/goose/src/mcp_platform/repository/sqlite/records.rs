@@ -315,6 +315,9 @@ pub(super) fn decode_task_row(row: &sqlx::sqlite::SqliteRow) -> McpPlatformResul
         )?,
         revision: row.try_get("revision").map_err(map_sqlx)?,
         event_sequence: row.try_get("event_sequence").map_err(map_sqlx)?,
+        owner_id: row.try_get("owner_id").map_err(map_sqlx)?,
+        lease_expires_at_ms: row.try_get("lease_expires_at_ms").map_err(map_sqlx)?,
+        attempt_count: row.try_get("attempt_count").map_err(map_sqlx)?,
     })
 }
 
@@ -351,6 +354,18 @@ pub(super) fn decode_task_step_row(
         )?,
         started_at_ms: row.try_get("started_at_ms").map_err(map_sqlx)?,
         committed_at_ms: row.try_get("committed_at_ms").map_err(map_sqlx)?,
+        adapter_id: row.try_get("adapter_id").map_err(map_sqlx)?,
+        adapter_version: row.try_get("adapter_version").map_err(map_sqlx)?,
+        compensation_status: decode_database_enum(
+            &row.try_get::<String, _>("compensation_status")
+                .map_err(map_sqlx)?,
+        )?,
+        compensation_started_at_ms: row
+            .try_get("compensation_started_at_ms")
+            .map_err(map_sqlx)?,
+        compensation_committed_at_ms: row
+            .try_get("compensation_committed_at_ms")
+            .map_err(map_sqlx)?,
     })
 }
 
