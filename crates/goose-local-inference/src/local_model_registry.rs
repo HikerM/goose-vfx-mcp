@@ -222,6 +222,12 @@ pub fn default_settings_for_model(model_id: &str) -> ModelSettings {
         }
     });
     ModelSettings {
+        context_size: Some(8192),
+        max_output_tokens: Some(1024),
+        // None delegates the choice to the loader, which checks the model size
+        // against currently available accelerator memory at load time.
+        n_gpu_layers: None,
+        flash_attention: None,
         tool_calling: if featured.is_some_and(|m| m.native_tool_calling) {
             ToolCallingMode::ForceNative
         } else {
@@ -617,6 +623,24 @@ impl LocalModelRegistry {
     pub fn list_models_mut(&mut self) -> &mut [LocalModelEntry] {
         &mut self.models
     }
+
+    pub fn apply_safe_runtime_defaults(&mut self) -> Result<()> {
+        let mut changed = false;
+        for model in &mut self.models {
+            if model.settings.context_size.is_none() {
+                model.settings.context_size = Some(8192);
+                changed = true;
+            }
+            if model.settings.max_output_tokens.is_none() {
+                model.settings.max_output_tokens = Some(1024);
+                changed = true;
+            }
+        }
+        if changed {
+            self.save()?;
+        }
+        Ok(())
+    }
 }
 
 struct ModelDeletionPlan {
@@ -706,6 +730,8 @@ mod tests {
             speed_bps: None,
             eta_seconds: None,
             error: None,
+            retry_attempt: 0,
+            max_retries: 10,
             task_exited: true,
         });
     }

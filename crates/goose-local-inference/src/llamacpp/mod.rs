@@ -4,7 +4,7 @@ mod inference_native_tools;
 
 use std::any::Any;
 use std::ffi::CStr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use llama_cpp_2::llama_backend::LlamaBackend;
@@ -29,6 +29,29 @@ use goose_provider_types::formats::openai::format_tools;
 pub(super) const LLAMACPP_BACKEND_ID: &str = "llamacpp";
 
 const CODE_EXECUTION_TOOL: &str = "code_execution__execute_typescript";
+
+fn automatic_gpu_layers(model_path: &Path) -> u32 {
+    let model_bytes = std::fs::metadata(model_path)
+        .map(|metadata| metadata.len())
+        .unwrap_or(0);
+    let available_accelerator_memory = list_llama_ggml_backend_devices()
+        .iter()
+        .filter(|device| is_accelerator_device(device.device_type))
+        .map(|device| device.memory_free)
+        .max()
+        .unwrap_or(0) as u64;
+
+    // Leave room for the KV cache and the operating system. A model that cannot fit
+    // comfortably is kept on the CPU instead of failing half way through loading.
+    if available_accelerator_memory > 0
+        && model_bytes > 0
+        && model_bytes <= available_accelerator_memory.saturating_mul(65) / 100
+    {
+        u32::MAX
+    } else {
+        0
+    }
+}
 
 pub(super) fn builtin_chat_template_names() -> Vec<String> {
     let count = unsafe { llama_cpp_sys_2::llama_chat_builtin_templates(std::ptr::null_mut(), 0) };
@@ -434,10 +457,20 @@ impl LocalInferenceBackend for LlamaCppBackend {
             model_path.display()
         );
 
-        let mut params = LlamaModelParams::default();
-        if let Some(n_gpu_layers) = settings.n_gpu_layers {
-            params = params.with_n_gpu_layers(n_gpu_layers);
-        }
+        let selected_gpu_layers = settings
+            .n_gpu_layers
+            .unwrap_or_else(|| automatic_gpu_layers(model_path));
+        tracing::info!(
+            backend = self.id(),
+            gpu_layers = selected_gpu_layers,
+            execution = if selected_gpu_layers == 0 {
+                "cpu"
+            } else {
+                "gpu"
+            },
+            "Selected local inference execution mode"
+        );
+        let mut params = LlamaModelParams::default().with_n_gpu_layers(selected_gpu_layers);
         if settings.use_mlock {
             params = params.with_use_mlock(true);
         }

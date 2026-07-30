@@ -22,9 +22,9 @@ import {
 import { defineMessages, useIntl } from '../../../i18n';
 
 const i18n = defineMessages({
-  searchHuggingFace: {
+  searchModelScope: {
     id: 'huggingFaceModelSearch.searchHuggingFace',
-    defaultMessage: 'Search HuggingFace',
+    defaultMessage: 'Search ModelScope',
   },
   searchPlaceholder: {
     id: 'huggingFaceModelSearch.searchPlaceholder',
@@ -241,7 +241,7 @@ export const HuggingFaceModelSearch = ({
     <div className="space-y-4">
       <div>
         <h4 className="text-sm font-medium text-text-default mb-2">
-          {intl.formatMessage(i18n.searchHuggingFace)}
+          {intl.formatMessage(i18n.searchModelScope)}
         </h4>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />

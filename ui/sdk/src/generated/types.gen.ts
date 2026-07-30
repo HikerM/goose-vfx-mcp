@@ -2432,6 +2432,8 @@ export type LocalInferenceDownloadProgressDto = {
     speedBps?: number | null;
     etaSeconds?: number | null;
     error?: string | null;
+    retryAttempt: number;
+    maxRetries: number;
     taskExited: boolean;
 };
 
