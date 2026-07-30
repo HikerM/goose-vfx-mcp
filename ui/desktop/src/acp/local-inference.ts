@@ -9,7 +9,10 @@ import type {
 import { getAcpClient } from './acpConnection';
 
 export type LocalModelResponse = LocalInferenceModelDto;
-export type DownloadProgress = LocalInferenceDownloadProgressDto;
+export type DownloadProgress = LocalInferenceDownloadProgressDto & {
+  retryAttempt?: number;
+  maxRetries?: number;
+};
 export type DownloadModelRequest = LocalInferenceModelDownloadRequest_unstable;
 export type HfModelInfo = LocalInferenceHfModelInfoDto;
 export type HfModelVariant = LocalInferenceHfModelVariantDto;

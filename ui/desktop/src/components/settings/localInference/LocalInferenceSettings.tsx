@@ -511,11 +511,11 @@ export const LocalInferenceSettings = () => {
                           )}
                         </span>
                       </div>
-                      {progress.retryAttempt > 0 && (
+                      {(progress.retryAttempt ?? 0) > 0 && (
                         <p className="text-xs text-amber-600 dark:text-amber-400">
                           {intl.formatMessage(i18n.retryingConnection, {
-                            attempt: progress.retryAttempt,
-                            maximum: progress.maxRetries,
+                            attempt: progress.retryAttempt ?? 0,
+                            maximum: progress.maxRetries ?? 10,
                           })}
                         </p>
                       )}
