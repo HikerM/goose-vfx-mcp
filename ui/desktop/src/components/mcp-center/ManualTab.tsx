@@ -13,6 +13,7 @@ import { RecoveryPanel, StatePanel, StatusBadge } from './McpCenterCommon';
 import { PlanReviewDialog } from './PlanReviewDialog';
 import { mcpCenterMessages as messages } from './messages';
 import { useIntl } from '../../i18n';
+import ExtensionsSection from '../settings/extensions/ExtensionsSection';
 
 export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef) => void }) {
   const intl = useIntl();
@@ -85,6 +86,9 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
         <TabsList aria-label={intl.formatMessage(messages.manualTypeLabel)}>
           <TabsTrigger value="remote">{intl.formatMessage(messages.remoteHttp)}</TabsTrigger>
           <TabsTrigger value="stdio">{intl.formatMessage(messages.approvedStdio)}</TabsTrigger>
+          <TabsTrigger value="custom-stdio">
+            {intl.formatMessage(messages.customStdio)}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="remote">
@@ -222,6 +226,20 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
                 </Button>
               </>
             )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="custom-stdio">
+          <div className="space-y-5 rounded-xl border border-border-primary bg-background-primary p-5">
+            <div>
+              <h2 className="text-lg font-medium text-text-primary">
+                {intl.formatMessage(messages.customStdioTitle)}
+              </h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                {intl.formatMessage(messages.customStdioDescription)}
+              </p>
+            </div>
+            <ExtensionsSection />
           </div>
         </TabsContent>
       </Tabs>

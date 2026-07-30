@@ -527,6 +527,10 @@ fn create_tool_callback(
 
 #[async_trait]
 impl McpClientTrait for CodeExecutionClient {
+    async fn close(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
     #[allow(clippy::too_many_lines)]
     async fn list_tools(
         &self,
