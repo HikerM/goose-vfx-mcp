@@ -54,6 +54,7 @@ fn extract_secrets_from_extensions(
         let (extension_name, env_keys) = match ext {
             ExtensionConfig::Stdio { name, env_keys, .. } => (name, env_keys),
             ExtensionConfig::StreamableHttp { name, env_keys, .. } => (name, env_keys),
+            ExtensionConfig::ManagedStreamableHttp { name, .. } => (name, &Vec::new()),
             ExtensionConfig::Builtin { name, .. } => (name, &Vec::new()),
             ExtensionConfig::Platform { name, .. } => (name, &Vec::new()),
             ExtensionConfig::Frontend { name, .. } => (name, &Vec::new()),

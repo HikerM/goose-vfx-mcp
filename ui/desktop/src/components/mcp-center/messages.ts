@@ -221,6 +221,16 @@ export const mcpCenterMessages = defineMessages({
   },
   remoteHttp: { id: 'mcpCenter.remoteHttp', defaultMessage: 'Remote HTTP' },
   approvedStdio: { id: 'mcpCenter.approvedStdio', defaultMessage: 'Approved stdio provider' },
+  customStdio: { id: 'mcpCenter.customStdio', defaultMessage: 'Custom stdio' },
+  customStdioTitle: {
+    id: 'mcpCenter.customStdioTitle',
+    defaultMessage: 'Custom local stdio MCP',
+  },
+  customStdioDescription: {
+    id: 'mcpCenter.customStdioDescription',
+    defaultMessage:
+      'Add an MCP command, arguments, environment variables, and working directory for this machine.',
+  },
   remoteConnection: { id: 'mcpCenter.remoteConnection', defaultMessage: 'Remote HTTP connection' },
   remoteConnectionDescription: {
     id: 'mcpCenter.remoteConnectionDescription',
