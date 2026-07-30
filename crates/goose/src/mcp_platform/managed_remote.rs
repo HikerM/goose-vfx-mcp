@@ -15,11 +15,84 @@ struct ManagedRemoteEndpoint {
 
 #[derive(Debug, Clone)]
 pub struct ManagedRemoteHttpClient {
+    #[cfg(test)]
+    pub(crate) client: reqwest::Client,
+    #[cfg(not(test))]
     client: reqwest::Client,
+    #[cfg(test)]
+    pub(crate) endpoint: Url,
+    #[cfg(not(test))]
     endpoint: Url,
 }
 
 impl ManagedRemoteHttpClient {
+    #[cfg(feature = "integration-test-support")]
+    pub fn new_for_integration_test(
+        endpoint: Url,
+        address: SocketAddr,
+        root_certificate_der: &[u8],
+    ) -> McpPlatformResult<Self> {
+        let host = match endpoint.host() {
+            Some(Host::Domain(host)) => host,
+            Some(Host::Ipv4(_)) | Some(Host::Ipv6(_)) | None => return Err(unsafe_endpoint()),
+        };
+        let path = endpoint.path();
+        let encoded_path = path.to_ascii_lowercase();
+        let local_namespace = [
+            ".localhost",
+            ".local",
+            ".internal",
+            ".localdomain",
+            ".lan",
+            ".home.arpa",
+            ".test",
+            ".invalid",
+            ".example",
+            ".onion",
+        ];
+        let port = match endpoint.port() {
+            Some(port) => port,
+            None => return Err(unsafe_endpoint()),
+        };
+        if endpoint.as_str().trim() != endpoint.as_str()
+            || endpoint.scheme() != "https"
+            || endpoint.username() != ""
+            || endpoint.password().is_some()
+            || endpoint.query().is_some()
+            || endpoint.fragment().is_some()
+            || host.is_empty()
+            || host.ends_with('.')
+            || !host.contains('.')
+            || host.eq_ignore_ascii_case("localhost")
+            || local_namespace
+                .iter()
+                .any(|suffix| host == suffix.trim_start_matches('.') || host.ends_with(suffix))
+            || host.starts_with("xn--")
+            || host.contains(".xn--")
+            || path.contains('\\')
+            || encoded_path.contains("%2e")
+            || !path.bytes().all(|byte| {
+                byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'-' | b'_' | b'.' | b'~')
+            })
+            || endpoint.as_str().chars().any(char::is_control)
+            || address.port() != port
+            || root_certificate_der.is_empty()
+        {
+            return Err(unsafe_endpoint());
+        }
+        let certificate = reqwest::Certificate::from_der(root_certificate_der)
+            .map_err(|_| connection_unavailable())?;
+        let client = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .no_proxy()
+            .https_only(true)
+            .resolve_to_addrs(host, &[address])
+            .add_root_certificate(certificate)
+            .build()
+            .map_err(|_| connection_unavailable())?;
+        Ok(Self { client, endpoint })
+    }
+
     pub(crate) fn client(&self) -> reqwest::Client {
         self.client.clone()
     }

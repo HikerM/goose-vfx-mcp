@@ -1,7 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::mcp_platform::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
-use crate::mcp_platform::manifest::{ManifestProof, VerifiedManifest};
+use crate::mcp_platform::manifest::{ManifestProof, ManifestSourceMetadata, VerifiedManifest};
 use crate::mcp_platform::TrustTier;
 
 use super::dto::ManualStdioSource;
@@ -24,6 +24,7 @@ pub struct ResolvedManualStdioSource {
     pub verified: VerifiedManifest,
     pub proof: ManifestProof,
     pub trust_tier: TrustTier,
+    pub source_metadata: ManifestSourceMetadata,
 }
 
 #[derive(Debug, Default)]

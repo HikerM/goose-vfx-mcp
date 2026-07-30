@@ -26,7 +26,8 @@ use crate::conversation::message::{
 };
 use crate::execution::manager::{AgentManager, AgentManagerGetResult, RuntimeContext};
 use crate::mcp_platform::{
-    McpPlatformError, McpPlatformService, RequestContext, SqliteMcpPlatformRepository,
+    ConsumedProfileApplication, McpPlatformError, McpPlatformService, ProfileApplicationMarker,
+    ProfileManagedReference, RequestContext, SqliteMcpPlatformRepository,
 };
 use crate::mcp_utils::ToolResult;
 use crate::permission::permission_confirmation::PrincipalType;
@@ -61,7 +62,7 @@ use agent_client_protocol::schema::v1::{
 };
 use agent_client_protocol::util::MatchDispatchFrom;
 use agent_client_protocol::{
-    Agent as SacpAgent, ByteStreams, Client, ConnectionTo, Dispatch, HandleDispatchFrom, Handled,
+    Agent as SacpAgent, Client, ConnectionTo, Dispatch, HandleDispatchFrom, Handled, Lines,
     Responder,
 };
 use anyhow::Result;
@@ -75,7 +76,8 @@ use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::panic::AssertUnwindSafe;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Weak};
 use tokio::sync::{Mutex, OnceCell};
 use tokio_util::compat::{TokioAsyncReadCompatExt as _, TokioAsyncWriteCompatExt as _};
 use tokio_util::sync::CancellationToken;
@@ -89,6 +91,9 @@ mod agent_mentions;
 mod apps;
 mod config;
 mod custom_dispatch;
+pub use custom_dispatch::{
+    available_custom_method_schemas, is_unavailable_custom_route, UNAVAILABLE_CUSTOM_ROUTE_METHODS,
+};
 mod diagnostics;
 mod dictation;
 mod dispatch;
@@ -122,6 +127,9 @@ pub type AcpProviderFactory = Arc<
         + Sync,
 >;
 
+#[cfg(test)]
+const TEST_GATE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
+
 /// Convenience conversions from any `Display` error into an `agent_client_protocol::Error`.
 ///
 /// Replaces the repetitive `.internal_err()`
@@ -135,22 +143,20 @@ trait ResultExt<T> {
     fn invalid_params_err_ctx(self, context: &str) -> Result<T, agent_client_protocol::Error>;
 }
 
-impl<T, E: std::fmt::Display> ResultExt<T> for Result<T, E> {
+impl<T, E> ResultExt<T> for Result<T, E> {
     fn internal_err(self) -> Result<T, agent_client_protocol::Error> {
-        self.map_err(|e| agent_client_protocol::Error::internal_error().data(e.to_string()))
+        self.map_err(|_| agent_client_protocol::Error::internal_error().data("ACP internal error"))
     }
     fn invalid_params_err(self) -> Result<T, agent_client_protocol::Error> {
-        self.map_err(|e| agent_client_protocol::Error::invalid_params().data(e.to_string()))
+        self.map_err(|_| {
+            agent_client_protocol::Error::invalid_params().data("ACP request rejected")
+        })
     }
     fn internal_err_ctx(self, context: &str) -> Result<T, agent_client_protocol::Error> {
-        self.map_err(|e| {
-            agent_client_protocol::Error::internal_error().data(format!("{context}: {e}"))
-        })
+        self.map_err(|_| agent_client_protocol::Error::internal_error().data(context))
     }
     fn invalid_params_err_ctx(self, context: &str) -> Result<T, agent_client_protocol::Error> {
-        self.map_err(|e| {
-            agent_client_protocol::Error::invalid_params().data(format!("{context}: {e}"))
-        })
+        self.map_err(|_| agent_client_protocol::Error::invalid_params().data(context))
     }
 }
 
@@ -186,9 +192,39 @@ struct GooseAcpSession {
     summarized_chains: HashSet<String>,
 }
 
+#[derive(Default)]
+struct ManagedRuntimeSessionState {
+    active: HashMap<String, Arc<Agent>>,
+    stopped: HashMap<String, HashMap<String, Arc<Agent>>>,
+}
+
+#[derive(Clone)]
+struct SessionRegistration {
+    id: u64,
+    agent: Arc<Agent>,
+}
+
 struct ActivePromptRun {
     run_id: String,
     cancel_token: CancellationToken,
+}
+
+#[cfg(test)]
+struct MessageContentTestGate {
+    entered: tokio::sync::oneshot::Sender<()>,
+    release: tokio::sync::oneshot::Receiver<()>,
+}
+
+#[cfg(test)]
+struct RegistrationTestGate {
+    entered: tokio::sync::oneshot::Sender<()>,
+    release: tokio::sync::oneshot::Receiver<()>,
+}
+
+#[cfg(test)]
+struct CloseSessionTestGate {
+    entered: tokio::sync::oneshot::Sender<()>,
+    release: tokio::sync::oneshot::Receiver<()>,
 }
 
 /// A run of consecutive ToolRequest blocks within one assistant message,
@@ -218,8 +254,18 @@ pub struct GooseAcpAgentOptions {
 
 pub struct GooseAcpAgent {
     sessions: Arc<Mutex<HashMap<String, GooseAcpSession>>>,
+    managed_runtime_sessions: Arc<Mutex<ManagedRuntimeSessionState>>,
+    session_registrations: Arc<Mutex<HashMap<String, SessionRegistration>>>,
+    next_session_registration_id: Arc<AtomicU64>,
     active_prompt_runs: Arc<Mutex<HashMap<String, ActivePromptRun>>>,
     closed_session_ids: Arc<Mutex<HashSet<String>>>,
+    closed_session_agents: Arc<Mutex<HashMap<String, Option<Arc<Agent>>>>>,
+    #[cfg(test)]
+    message_content_test_gate: Arc<Mutex<Option<MessageContentTestGate>>>,
+    #[cfg(test)]
+    registration_test_gate: Arc<Mutex<Option<RegistrationTestGate>>>,
+    #[cfg(test)]
+    close_session_test_gate: Arc<Mutex<Option<CloseSessionTestGate>>>,
     agent_manager: Arc<AgentManager>,
     provider_factory: AcpProviderFactory,
     builtins: Vec<String>,
@@ -239,14 +285,79 @@ pub struct GooseAcpAgent {
     additional_source_roots: Vec<SourceRoot>,
     recipe_path_cache: Arc<Mutex<HashMap<String, PathBuf>>>,
     mcp_platform_service: Arc<OnceCell<Arc<McpPlatformService>>>,
+    trusted_mcp_platform_service: Arc<OnceCell<Arc<McpPlatformService>>>,
     mcp_platform_database_path: PathBuf,
 }
 
-/// Shorten a session/thread id for perf log correlation.
-/// All `perf:` logs use `sid=<8-char-prefix>` so a single session's activity
-/// can be extracted with `grep 'perf:' <log> | grep 'sid=abc12345'`.
-pub(super) fn sid_short(id: &str) -> String {
-    id.chars().take(8).collect()
+#[derive(Clone)]
+struct TransportWriteSession {
+    live: Arc<AtomicBool>,
+    binding: String,
+}
+
+impl TransportWriteSession {
+    fn trusted() -> Self {
+        Self {
+            live: Arc::new(AtomicBool::new(true)),
+            binding: Uuid::new_v4().to_string(),
+        }
+    }
+
+    fn authority(&self) -> TransportSessionMcpWriteAuthority {
+        TransportSessionMcpWriteAuthority {
+            live: Arc::downgrade(&self.live),
+            binding: self.binding.clone(),
+        }
+    }
+}
+
+impl Drop for TransportWriteSession {
+    fn drop(&mut self) {
+        if Arc::strong_count(&self.live) == 1 {
+            self.live.store(false, Ordering::Release);
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(super) struct TransportSessionMcpWriteAuthority {
+    live: Weak<AtomicBool>,
+    binding: String,
+}
+
+impl TransportSessionMcpWriteAuthority {
+    fn is_live(&self) -> bool {
+        self.live
+            .upgrade()
+            .is_some_and(|live| live.load(Ordering::Acquire))
+    }
+
+    fn binding(&self) -> &str {
+        &self.binding
+    }
+}
+
+#[cfg(test)]
+fn test_transport_session_authority() -> (TransportWriteSession, TransportSessionMcpWriteAuthority)
+{
+    let session = TransportWriteSession::trusted();
+    let authority = session.authority();
+    (session, authority)
+}
+
+#[cfg(test)]
+#[test]
+fn transport_write_session_stays_live_until_its_last_clone_is_dropped() {
+    let (session, authority) = test_transport_session_authority();
+    let request_scope = session.clone();
+    drop(request_scope);
+    assert!(authority.is_live());
+    drop(session);
+    assert!(!authority.is_live());
+}
+
+tokio::task_local! {
+    static MCP_PLATFORM_TRANSPORT_SESSION_AUTHORITY: Option<TransportSessionMcpWriteAuthority>;
 }
 
 fn meta_string(
@@ -261,7 +372,7 @@ fn meta_string(
     }
     let Some(value) = value.as_str() else {
         return Err(
-            agent_client_protocol::Error::invalid_params().data(format!("{key} must be a string"))
+            agent_client_protocol::Error::invalid_params().data("metadata value must be a string")
         );
     };
     Ok(Some(value.to_string()))
@@ -307,11 +418,8 @@ fn spawn_session_name_update_notifier(
                 ),
             );
             if let Err(error) = cx.send_notification(notification) {
-                warn!(
-                    session_id = %update.session_id,
-                    error = %error,
-                    "Failed to send generated session name update"
-                );
+                let _ = error;
+                warn!("Failed to send generated ACP session name update");
             }
         }
     });
@@ -438,19 +546,16 @@ fn push_or_replace_extension(extensions: &mut Vec<ExtensionConfig>, extension: E
 fn resolve_default_provider_model_config(
     config: &Config,
 ) -> Result<(String, goose_providers::model::ModelConfig), agent_client_protocol::Error> {
-    let resolved_provider = config.get_goose_provider().map_err(|error| {
-        agent_client_protocol::Error::internal_error()
-            .data(format!("Failed to resolve provider: {}", error))
+    let resolved_provider = config.get_goose_provider().map_err(|_| {
+        agent_client_protocol::Error::internal_error().data("Failed to resolve provider")
     })?;
-    let resolved_model = config.get_goose_model().map_err(|error| {
-        agent_client_protocol::Error::internal_error()
-            .data(format!("Failed to resolve model: {}", error))
+    let resolved_model = config.get_goose_model().map_err(|_| {
+        agent_client_protocol::Error::internal_error().data("Failed to resolve model")
     })?;
     let resolved_model_config =
         crate::model_config::model_config_from_user_config(&resolved_provider, &resolved_model)
-            .map_err(|error| {
-                agent_client_protocol::Error::internal_error()
-                    .data(format!("Failed to resolve model: {}", error))
+            .map_err(|_| {
+                agent_client_protocol::Error::internal_error().data("Failed to resolve model")
             })?;
     Ok((resolved_provider, resolved_model_config))
 }
@@ -460,18 +565,12 @@ async fn resolve_provider_default_model_config(
 ) -> Result<goose_providers::model::ModelConfig, agent_client_protocol::Error> {
     let entry = crate::providers::get_from_registry(provider_name)
         .await
-        .map_err(|error| {
-            agent_client_protocol::Error::invalid_params()
-                .data(format!("Unknown provider '{}': {}", provider_name, error))
-        })?;
+        .map_err(|_| agent_client_protocol::Error::invalid_params().data("Unknown provider"))?;
     crate::model_config::model_config_from_user_config(
         provider_name,
         &entry.metadata().default_model,
     )
-    .map_err(|error| {
-        agent_client_protocol::Error::internal_error()
-            .data(format!("Failed to resolve model: {}", error))
-    })
+    .map_err(|_| agent_client_protocol::Error::internal_error().data("Failed to resolve model"))
 }
 
 fn get_requested_line(arguments: Option<&rmcp::model::JsonObject>) -> Option<u32> {
@@ -891,6 +990,12 @@ pub(super) fn validate_absolute_cwd(cwd: &Path) -> Result<(), agent_client_proto
 }
 
 impl GooseAcpAgent {
+    #[cfg(test)]
+    pub(crate) fn set_configured_provider_override(&self, provider_id: impl Into<String>) {
+        self.provider_inventory
+            .set_configured_provider_override(provider_id);
+    }
+
     pub fn permission_manager(&self) -> Arc<PermissionManager> {
         Arc::clone(&self.permission_manager)
     }
@@ -936,14 +1041,44 @@ impl GooseAcpAgent {
 
     // TODO: goose reads Paths::in_state_dir globally (e.g. RequestLog), ignoring this data_dir.
     pub async fn new(options: GooseAcpAgentOptions) -> Result<Self> {
+        Self::new_with_trusted_mcp_platform_service_cell(options, None).await
+    }
+
+    #[cfg(feature = "integration-test-support")]
+    pub async fn new_for_trusted_in_process(
+        mut options: GooseAcpAgentOptions,
+        service_cell: Arc<OnceCell<Arc<McpPlatformService>>>,
+    ) -> Result<Self> {
+        options.mcp_platform_service_cell = Some(Arc::clone(&service_cell));
+        Self::new_with_trusted_mcp_platform_service_cell(options, Some(service_cell)).await
+    }
+
+    pub(crate) async fn new_with_trusted_mcp_platform_service_cell(
+        options: GooseAcpAgentOptions,
+        trusted_mcp_platform_service: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
+    ) -> Result<Self> {
         let mcp_platform_database_path = options.data_dir.join("mcp-platform/platform.db");
         let mcp_platform_service = options
             .mcp_platform_service_cell
             .unwrap_or_else(|| Arc::new(OnceCell::new()));
+        let trusted_mcp_platform_service =
+            trusted_mcp_platform_service.unwrap_or_else(|| Arc::new(OnceCell::new()));
         if let Some(service) = options.mcp_platform_service {
             let _ = mcp_platform_service.set(service);
         }
-        let session_manager = Arc::new(SessionManager::new(options.data_dir));
+        #[cfg(feature = "integration-test-support")]
+        let session_manager = trusted_mcp_platform_service
+            .get()
+            .cloned()
+            .map(|service| {
+                Arc::new(SessionManager::new_with_provenance_verifier(
+                    options.data_dir.clone(),
+                    Arc::new(crate::session::ServiceProvenanceVerifier::new(service)),
+                ))
+            })
+            .unwrap_or_else(|| Arc::new(SessionManager::new(options.data_dir.clone())));
+        #[cfg(not(feature = "integration-test-support"))]
+        let session_manager = Arc::new(SessionManager::new(options.data_dir.clone()));
 
         // Eagerly initialize the SQLite pool so it's ready when providers/sessions need it.
         let storage_clone = session_manager.storage().clone();
@@ -965,8 +1100,18 @@ impl GooseAcpAgent {
 
         Ok(Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
+            managed_runtime_sessions: Arc::new(Mutex::new(ManagedRuntimeSessionState::default())),
+            session_registrations: Arc::new(Mutex::new(HashMap::new())),
+            next_session_registration_id: Arc::new(AtomicU64::new(1)),
             active_prompt_runs: Arc::new(Mutex::new(HashMap::new())),
             closed_session_ids: Arc::new(Mutex::new(HashSet::new())),
+            closed_session_agents: Arc::new(Mutex::new(HashMap::new())),
+            #[cfg(test)]
+            message_content_test_gate: Arc::new(Mutex::new(None)),
+            #[cfg(test)]
+            registration_test_gate: Arc::new(Mutex::new(None)),
+            #[cfg(test)]
+            close_session_test_gate: Arc::new(Mutex::new(None)),
             agent_manager,
             provider_factory: options.provider_factory,
             builtins: options.builtins,
@@ -986,11 +1131,56 @@ impl GooseAcpAgent {
             additional_source_roots: options.additional_source_roots,
             recipe_path_cache: Arc::new(Mutex::new(HashMap::new())),
             mcp_platform_service,
+            trusted_mcp_platform_service,
             mcp_platform_database_path,
         })
     }
 
     async fn mcp_platform_context_and_service(
+        &self,
+    ) -> (
+        RequestContext,
+        std::result::Result<Arc<McpPlatformService>, McpPlatformError>,
+    ) {
+        let unauthorized_context =
+            RequestContext::local_authenticated_client(format!("correlation_{}", Uuid::now_v7()));
+        let Some(transport_authority) = current_transport_mcp_platform_write_authority() else {
+            return (
+                unauthorized_context,
+                Err(McpPlatformError::new(
+                    crate::mcp_platform::McpPlatformErrorCode::PolicyDenied,
+                    "authenticated ACP transport is required for MCP platform mutations",
+                )),
+            );
+        };
+        let result = self
+            .trusted_mcp_platform_service
+            .get_or_try_init(|| async {
+                let repository =
+                    SqliteMcpPlatformRepository::open_path(&self.mcp_platform_database_path)
+                        .await?;
+                Ok::<_, McpPlatformError>(Arc::new(McpPlatformService::production(Arc::new(
+                    repository,
+                ))))
+            })
+            .await
+            .cloned();
+        let context = result.as_ref().map_or_else(
+            |_| unauthorized_context,
+            |_| {
+                RequestContext::authenticated_transport_client(
+                    format!("correlation_{}", Uuid::now_v7()),
+                    transport_authority.binding().to_string(),
+                )
+            },
+        );
+        if let Ok(service) = &result {
+            service.start_worker_if_configured();
+        }
+        (context, result)
+    }
+
+    async fn mcp_platform_context_and_service_read_only(
         &self,
     ) -> (
         RequestContext,
@@ -1017,9 +1207,6 @@ impl GooseAcpAgent {
             },
             |service| service.trusted_local_context(),
         );
-        if let Ok(service) = &result {
-            service.start_worker_if_configured();
-        }
         (context, result)
     }
 
@@ -1029,10 +1216,87 @@ impl GooseAcpAgent {
     }
 
     #[cfg(test)]
+    pub(super) fn test_trusted_mcp_platform_service_cell(
+        &self,
+    ) -> Arc<OnceCell<Arc<McpPlatformService>>> {
+        self.trusted_mcp_platform_service.clone()
+    }
+
+    #[cfg(test)]
     pub(super) async fn test_initialize_mcp_platform(
         &self,
     ) -> std::result::Result<Arc<McpPlatformService>, McpPlatformError> {
-        self.mcp_platform_context_and_service().await.1
+        let (_session, authority) = test_transport_session_authority();
+        with_transport_mcp_platform_write_authority(
+            Some(authority),
+            self.mcp_platform_context_and_service(),
+        )
+        .await
+        .1
+    }
+
+    #[cfg(test)]
+    pub(super) async fn test_initialize_mcp_platform_read_only(
+        &self,
+    ) -> std::result::Result<Arc<McpPlatformService>, McpPlatformError> {
+        self.mcp_platform_context_and_service_read_only().await.1
+    }
+
+    #[cfg(test)]
+    pub(super) async fn test_profile_query_handlers_read_only(&self) {
+        let _ = self
+            .on_mcp_profile_list(McpProfileListRequest {
+                include_archived: true,
+            })
+            .await;
+        let _ = self
+            .on_mcp_profile_get(McpProfileGetRequest {
+                profile_id: "profile_missing".to_string(),
+            })
+            .await;
+        let _ = self
+            .on_mcp_profile_draft_create(McpProfileDraftCreateRequest {
+                text: "local deterministic draft".to_string(),
+                locale: "en-US".to_string(),
+            })
+            .await;
+        let _ = self
+            .on_mcp_profile_model_recommend(McpProfileModelRecommendRequest {
+                text: "coding".to_string(),
+                provider_ids: Vec::new(),
+            })
+            .await;
+    }
+
+    #[cfg(test)]
+    pub(super) async fn test_dispatch_transport_custom_request(
+        &self,
+        method: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value, agent_client_protocol::Error> {
+        let (_session, authority) = test_transport_session_authority();
+        self.dispatch_transport_custom_request(authority, method, params)
+            .await
+    }
+
+    #[cfg(test)]
+    pub(super) async fn test_dispatch_transport_custom_request_with_authority(
+        &self,
+        authority: TransportSessionMcpWriteAuthority,
+        method: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value, agent_client_protocol::Error> {
+        self.dispatch_transport_custom_request(authority, method, params)
+            .await
+    }
+
+    #[cfg(test)]
+    pub(super) async fn test_dispatch_transport_custom_request_without_authority(
+        &self,
+        method: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value, agent_client_protocol::Error> {
+        self.dispatch_custom_request(method, params).await
     }
 
     fn config(&self) -> Result<&'static Config, agent_client_protocol::Error> {
@@ -1042,10 +1306,9 @@ impl GooseAcpAgent {
     async fn create_provider(
         &self,
         provider_name: &str,
-        extensions: Vec<ExtensionConfig>,
         working_dir: Option<PathBuf>,
     ) -> Result<Arc<dyn Provider>> {
-        (self.provider_factory)(provider_name.to_string(), extensions, working_dir).await
+        (self.provider_factory)(provider_name.to_string(), Vec::new(), working_dir).await
     }
 
     async fn maybe_refresh_provider_inventory_with_agent(
@@ -1069,12 +1332,8 @@ impl GooseAcpAgent {
         let provider = match agent.provider().await {
             Ok(provider) => provider,
             Err(error) => {
-                warn!(
-                    provider = %provider_name,
-                    session = %goose_session.id,
-                    error = %error,
-                    "agent has no provider available for inventory refresh"
-                );
+                let _ = error;
+                warn!("ACP provider inventory refresh skipped");
                 return;
             }
         };
@@ -1087,6 +1346,7 @@ impl GooseAcpAgent {
         &self,
         cx: &ConnectionTo<Client>,
         session_id: String,
+        extension_bundle: Option<crate::session::session_manager::ValidatedExtensionBundle>,
     ) -> Result<AgentManagerGetResult, agent_client_protocol::Error> {
         self.agent_manager
             .get_or_create_agent_with_runtime_context(
@@ -1096,6 +1356,7 @@ impl GooseAcpAgent {
                     use_login_shell_path: self.use_login_shell_path.get().copied(),
                     session_name_update_tx: (!self.disable_session_naming)
                         .then(|| spawn_session_name_update_notifier(cx.clone())),
+                    extension_bundle,
                 },
             )
             .await
@@ -1175,7 +1436,8 @@ impl GooseAcpAgent {
         let dev_client = match DeveloperClient::new(context) {
             Ok(dev_client) => dev_client,
             Err(error) => {
-                warn!(error = %error, "Failed to create ACP developer client");
+                let _ = error;
+                warn!("Failed to create ACP developer client");
                 return;
             }
         };
@@ -1208,10 +1470,97 @@ impl GooseAcpAgent {
         &self,
         cx: &ConnectionTo<Client>,
         session: &Session,
+        profile_application: Option<&ConsumedProfileApplication>,
     ) -> Result<(Arc<Agent>, Vec<ExtensionLoadResult>), agent_client_protocol::Error> {
+        validate_activation_extension_data(&session.extension_data)?;
+        self.session_manager
+            .verify_session_extension_provenance_for_activation(session)
+            .await
+            .map_err(|_| {
+                agent_client_protocol::Error::invalid_params()
+                    .data("session extension configuration rejected")
+            })?;
+        let marker = ProfileApplicationMarker::from_extension_data(&session.extension_data);
+        if profile_application.is_some() && marker.is_none() {
+            return Err(profile_application_marker_error());
+        }
+        if let Some(application) = profile_application {
+            validate_profile_application_marker(application, marker.as_ref(), &session.id)?;
+            let (context, service) = self.mcp_platform_context_and_service_read_only().await;
+            service
+                .map_err(new_session::profile_application_public_error)?
+                .verify_profile_application_runtime(&context, application)
+                .await
+                .map_err(new_session::profile_application_public_error)?;
+        }
+        let hydrated_application = if profile_application.is_none() {
+            if let Some(marker) = marker.as_ref() {
+                let (context, service) = self.mcp_platform_context_and_service_read_only().await;
+                Some(
+                    service
+                        .map_err(new_session::profile_application_public_error)?
+                        .hydrate_profile_application(&context, marker, &session.id)
+                        .await
+                        .map_err(new_session::profile_application_public_error)?,
+                )
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        let application = profile_application.or(hydrated_application.as_ref());
+        if let Some(application) = application {
+            validate_profile_application_marker(application, marker.as_ref(), &session.id)?;
+        }
+        let extension_configs = application.map(|application| {
+            let mut extensions =
+                EnabledExtensionsState::from_extension_data(&session.extension_data)
+                    .map(|state| state.extensions)
+                    .unwrap_or_default();
+            for reference in application.managed_references() {
+                extensions.retain(|extension| {
+                    crate::mcp_platform::extension_source_fingerprint(extension)
+                        .is_ok_and(|fingerprint| fingerprint != reference.source_fingerprint)
+                });
+            }
+            for extension in application.extensions() {
+                extensions.retain(|current| current.name() != extension.name());
+                extensions.push(extension.clone());
+            }
+            extensions
+        });
+        let extension_bundle = match extension_configs {
+            Some(extensions) => Some(
+                self.session_manager
+                    .validate_profile_extension_bundle_for_activation_with_bindings(
+                        session,
+                        extensions,
+                        application
+                            .map(|application| application.managed_references())
+                            .unwrap_or_default(),
+                    )
+                    .await
+                    .map_err(|_| {
+                        agent_client_protocol::Error::invalid_params()
+                            .data("session extension configuration rejected")
+                    })?,
+            ),
+            None => None,
+        };
+        if let Some(application) = application {
+            let (context, service) = self.mcp_platform_context_and_service_read_only().await;
+            service
+                .map_err(new_session::profile_application_public_error)?
+                .verify_profile_application_runtime(&context, application)
+                .await
+                .map_err(new_session::profile_application_public_error)?;
+        }
         let agent_result = self
-            .get_or_create_session_agent_with_results(cx, session.id.clone())
+            .get_or_create_session_agent_with_results(cx, session.id.clone(), extension_bundle)
             .await?;
+        #[cfg(feature = "integration-test-support")]
+        eprintln!("PROFILE_EXT_RESULTS {:?}", agent_result.extension_results);
         let agent = agent_result.agent.clone();
         self.apply_acp_extension_overrides(cx, &agent, session)
             .await;
@@ -1229,6 +1578,14 @@ impl GooseAcpAgent {
         include_messages_on_reload: bool,
     ) -> Result<Session, agent_client_protocol::Error> {
         let config = Config::global();
+        validate_activation_extension_data(&session.extension_data)?;
+        self.session_manager
+            .verify_session_extension_provenance_for_activation(&session)
+            .await
+            .map_err(|_| {
+                agent_client_protocol::Error::invalid_params()
+                    .data("session extension configuration rejected")
+            })?;
         let mut builder = self.session_manager.update(&session.id);
         let mut session_needs_update = false;
 
@@ -1246,12 +1603,15 @@ impl GooseAcpAgent {
             session_needs_update = true;
         }
 
-        if !mcp_servers.is_empty()
-            || EnabledExtensionsState::from_extension_data(&session.extension_data).is_none()
-        {
+        if !mcp_servers.is_empty() {
             let extension_data =
                 self.build_enabled_extensions_data(config, &session, mcp_servers, None, None)?;
             builder = builder.extension_data(extension_data);
+            session_needs_update = true;
+        } else if EnabledExtensionsState::from_extension_data(&session.extension_data).is_none() {
+            let extension_data =
+                self.build_enabled_extensions_data(config, &session, Vec::new(), None, None)?;
+            builder = builder.trusted_extension_data(extension_data);
             session_needs_update = true;
         }
 
@@ -1262,10 +1622,12 @@ impl GooseAcpAgent {
                 .await
                 .internal_err_ctx("Failed to update session")?;
 
-            self.agent_manager
-                .remove_session_if_loaded(&session_id)
-                .await
-                .internal_err_ctx("Failed to remove in-memory agent")?;
+            if let Some(expected_agent) = self.session_agent_if_current(&session_id).await {
+                self.agent_manager
+                    .remove_session_if_current(&session_id, &expected_agent)
+                    .await
+                    .internal_err_ctx("Failed to remove in-memory agent")?;
+            }
 
             session = self
                 .session_manager
@@ -1305,14 +1667,51 @@ impl GooseAcpAgent {
         agent: Arc<Agent>,
         tool_requests: HashMap<String, ToolRequest>,
     ) {
+        let registration_id = self
+            .next_session_registration_id
+            .fetch_add(1, Ordering::Relaxed);
+        self.session_registrations.lock().await.insert(
+            session_id.clone(),
+            SessionRegistration {
+                id: registration_id,
+                agent: agent.clone(),
+            },
+        );
+        #[cfg(test)]
+        self.wait_for_registration_test_gate().await;
+
         let acp_session = GooseAcpSession {
-            agent,
+            agent: agent.clone(),
             tool_requests,
             chain_membership: HashMap::new(),
             responded_tool_ids: HashSet::new(),
             summarized_chains: HashSet::new(),
         };
-        self.sessions.lock().await.insert(session_id, acp_session);
+        // Registration reserves a monotonic id before taking these guards. A delayed
+        // older registration must not overwrite a newer reservation after it resumes.
+        // The only lock acquisition order is registrations, sessions, then runtimes;
+        // no application await occurs while any of these guards is held.
+        let registrations = self.session_registrations.lock().await;
+        if !registrations.get(&session_id).is_some_and(|registration| {
+            registration.id == registration_id && Arc::ptr_eq(&registration.agent, &agent)
+        }) {
+            return;
+        }
+        let mut sessions = self.sessions.lock().await;
+        let mut runtimes = self.managed_runtime_sessions.lock().await;
+        sessions.insert(session_id.clone(), acp_session);
+
+        runtimes.active.insert(session_id.clone(), agent);
+        runtimes.stopped.retain(|_, sessions| {
+            sessions.remove(&session_id);
+            !sessions.is_empty()
+        });
+        drop(runtimes);
+        drop(sessions);
+        drop(registrations);
+
+        self.closed_session_ids.lock().await.remove(&session_id);
+        self.closed_session_agents.lock().await.remove(&session_id);
     }
 
     async fn activate_acp_session(
@@ -1320,8 +1719,11 @@ impl GooseAcpAgent {
         cx: &ConnectionTo<Client>,
         session: &Session,
         tool_requests: HashMap<String, ToolRequest>,
+        profile_application: Option<&ConsumedProfileApplication>,
     ) -> Result<(Arc<Agent>, Vec<ExtensionLoadResult>), agent_client_protocol::Error> {
-        let (agent, extension_results) = self.prepare_acp_session_agent(cx, session).await?;
+        let (agent, extension_results) = self
+            .prepare_acp_session_agent(cx, session, profile_application)
+            .await?;
         self.register_acp_session(session.id.clone(), agent.clone(), tool_requests)
             .await;
 
@@ -1411,9 +1813,11 @@ impl GooseAcpAgent {
         role: &Role,
         steer: bool,
         agent: &Arc<Agent>,
-        session: &mut GooseAcpSession,
         cx: &ConnectionTo<Client>,
     ) -> Result<(), agent_client_protocol::Error> {
+        #[cfg(test)]
+        self.wait_for_message_content_test_gate().await;
+
         match content_item {
             MessageContent::Text(text) => {
                 let chunk =
@@ -1431,7 +1835,7 @@ impl GooseAcpAgent {
                     session_id,
                     session_id_str,
                     message_id,
-                    session,
+                    agent,
                     cx,
                 )
                 .await?;
@@ -1442,7 +1846,7 @@ impl GooseAcpAgent {
                     session_id,
                     session_id_str,
                     message_id,
-                    session,
+                    agent,
                     cx,
                 )
                 .await?;
@@ -1509,18 +1913,78 @@ impl GooseAcpAgent {
         Ok(())
     }
 
+    #[cfg(test)]
+    async fn install_message_content_test_gate(&self, gate: MessageContentTestGate) {
+        *self.message_content_test_gate.lock().await = Some(gate);
+    }
+
+    #[cfg(test)]
+    async fn wait_for_message_content_test_gate(&self) {
+        let gate = self.message_content_test_gate.lock().await.take();
+        if let Some(gate) = gate {
+            let _ = gate.entered.send(());
+            let _ = tokio::time::timeout(TEST_GATE_TIMEOUT, gate.release)
+                .await
+                .expect("message content test gate release timed out");
+        }
+    }
+
+    #[cfg(test)]
+    async fn install_registration_test_gate(&self, gate: RegistrationTestGate) {
+        *self.registration_test_gate.lock().await = Some(gate);
+    }
+
+    #[cfg(test)]
+    async fn wait_for_registration_test_gate(&self) {
+        let gate = self.registration_test_gate.lock().await.take();
+        if let Some(gate) = gate {
+            let _ = gate.entered.send(());
+            let _ = tokio::time::timeout(TEST_GATE_TIMEOUT, gate.release)
+                .await
+                .expect("registration test gate release timed out");
+        }
+    }
+
+    #[cfg(test)]
+    async fn install_close_session_test_gate(&self, gate: CloseSessionTestGate) {
+        *self.close_session_test_gate.lock().await = Some(gate);
+    }
+
+    #[cfg(test)]
+    async fn wait_for_close_session_test_gate(&self) {
+        let gate = self.close_session_test_gate.lock().await.take();
+        if let Some(gate) = gate {
+            let _ = gate.entered.send(());
+            let _ = tokio::time::timeout(TEST_GATE_TIMEOUT, gate.release)
+                .await
+                .expect("close session test gate release timed out");
+        }
+    }
+
     async fn handle_tool_request(
         &self,
         tool_request: &crate::conversation::message::ToolRequest,
         session_id: &SessionId,
         session_id_for_persist: &str,
         message_id: Option<&str>,
-        session: &mut GooseAcpSession,
+        expected_agent: &Arc<Agent>,
         cx: &ConnectionTo<Client>,
     ) -> Result<(), agent_client_protocol::Error> {
-        session
-            .tool_requests
-            .insert(tool_request.id.clone(), tool_request.clone());
+        let agent = {
+            let mut sessions = self.sessions.lock().await;
+            let session = sessions.get_mut(session_id_for_persist).ok_or_else(|| {
+                agent_client_protocol::Error::invalid_params().data("Session not found")
+            })?;
+            if !Arc::ptr_eq(&session.agent, expected_agent) {
+                return Err(
+                    agent_client_protocol::Error::invalid_params().data("Session not found")
+                );
+            }
+            session
+                .tool_requests
+                .insert(tool_request.id.clone(), tool_request.clone());
+            session.agent.clone()
+        };
 
         let pending_tool_call = pending_tool_call_from_request(tool_request);
         let initial_tool_call = pending_tool_call
@@ -1539,7 +2003,6 @@ impl GooseAcpAgent {
         }
 
         if let Ok(tool_call) = &tool_request.tool_call {
-            let agent = session.agent.clone();
             let sid = session_id.clone();
             let request_id = tool_request.id.clone();
             let cx = cx.clone();
@@ -1619,23 +2082,21 @@ impl GooseAcpAgent {
                                     }
                                     if attempt == 0 {
                                         warn!(
-                                            "tool call summary: fast_complete returned empty for {request_id} ({name}), retrying once",
+                                            "ACP tool call summary retrying after empty response"
                                         );
                                         tokio::time::sleep(std::time::Duration::from_millis(150))
                                             .await;
                                     }
                                 }
-                                Err(e) => {
+                                Err(_) => {
                                     if attempt == 0 {
                                         warn!(
-                                            "tool call summary: fast_complete errored for {request_id} ({name}): {e}, retrying once",
+                                            "ACP tool call summary retrying after provider error"
                                         );
                                         tokio::time::sleep(std::time::Duration::from_millis(150))
                                             .await;
                                     } else {
-                                        warn!(
-                                            "tool call summary: fast_complete errored for {request_id} ({name}) after retry: {e}",
-                                        );
+                                        warn!("ACP tool call summary failed after retry");
                                     }
                                 }
                             }
@@ -1643,15 +2104,13 @@ impl GooseAcpAgent {
                         match llm_outcome {
                             Some(summary) => (summary, true),
                             None => {
-                                warn!(
-                                    "tool call summary: falling back to deterministic title for {request_id} ({name}) — replay will not show an LLM summary for this call",
-                                );
+                                warn!("ACP tool call summary using deterministic fallback");
                                 (fallback_title.clone(), false)
                             }
                         }
                     }
-                    Err(e) => {
-                        warn!("tool call summary: failed to get provider: {e}");
+                    Err(_) => {
+                        warn!("ACP tool call summary provider unavailable");
                         (fallback_title.clone(), false)
                     }
                 };
@@ -1673,7 +2132,7 @@ impl GooseAcpAgent {
                         let patch = serde_json::json!({
                             crate::conversation::message::TOOL_META_TITLE_KEY: title,
                         });
-                        if let Err(e) = session_manager
+                        if session_manager
                             .update_tool_request_meta(
                                 &session_id_for_persist,
                                 &msg_id,
@@ -1681,15 +2140,12 @@ impl GooseAcpAgent {
                                 patch,
                             )
                             .await
+                            .is_err()
                         {
-                            warn!(
-                                "tool call summary: persist failed for {request_id} in {msg_id}: {e}",
-                            );
+                            warn!("ACP tool call summary persistence failed");
                         }
                     } else {
-                        warn!(
-                            "tool call summary: missing message_id for {request_id} — title will not survive reload",
-                        );
+                        warn!("ACP tool call summary persistence skipped");
                     }
                 }
             });
@@ -1704,7 +2160,7 @@ impl GooseAcpAgent {
         session_id: &SessionId,
         session_id_str: &str,
         message_id: Option<&str>,
-        session: &mut GooseAcpSession,
+        expected_agent: &Arc<Agent>,
         cx: &ConnectionTo<Client>,
     ) -> Result<(), agent_client_protocol::Error> {
         let status = match &tool_response.tool_result {
@@ -1725,8 +2181,15 @@ impl GooseAcpAgent {
             let content = build_tool_call_content(&tool_response.tool_result);
             fields = fields.content(content);
 
+            let tool_request = {
+                let sessions = self.sessions.lock().await;
+                sessions
+                    .get(session_id_str)
+                    .filter(|session| Arc::ptr_eq(&session.agent, expected_agent))
+                    .and_then(|session| session.tool_requests.get(&tool_response.id).cloned())
+            };
             let locations = extract_locations_from_meta(tool_response).unwrap_or_else(|| {
-                if let Some(tool_request) = session.tool_requests.get(&tool_response.id) {
+                if let Some(tool_request) = tool_request.as_ref() {
                     extract_tool_locations(tool_request, tool_response)
                 } else {
                     Vec::new()
@@ -1746,6 +2209,13 @@ impl GooseAcpAgent {
 
         // Chain summarization: when this response completes a multi-tool
         // chain, fire one LLM summary covering the run.
+        let mut sessions = self.sessions.lock().await;
+        let session = sessions.get_mut(session_id_str).ok_or_else(|| {
+            agent_client_protocol::Error::invalid_params().data("Session not found")
+        })?;
+        if !Arc::ptr_eq(&session.agent, expected_agent) {
+            return Err(agent_client_protocol::Error::invalid_params().data("Session not found"));
+        }
         session.responded_tool_ids.insert(tool_response.id.clone());
         self.maybe_summarize_chain(&tool_response.id, session_id, session_id_str, session, cx);
         let _ = message_id;
@@ -1767,9 +2237,7 @@ impl GooseAcpAgent {
         cx: &ConnectionTo<Client>,
     ) {
         let Some(chain) = session.chain_membership.get(tool_call_id).cloned() else {
-            warn!(
-                "tool chain summary: skipped — no chain registered for tool_call_id {tool_call_id}",
-            );
+            warn!("ACP tool chain summary skipped without registered chain");
             return;
         };
         if !chain
@@ -1783,24 +2251,18 @@ impl GooseAcpAgent {
                 .iter()
                 .filter(|id| session.responded_tool_ids.contains(*id))
                 .count();
-            let missing: Vec<&String> = chain
-                .ids
-                .iter()
-                .filter(|id| !session.responded_tool_ids.contains(*id))
-                .collect();
             warn!(
-                "tool chain summary: waiting on {pending}/{total} responses for chain anchored at {anchor:?} (missing: {missing:?})",
+                "ACP tool chain summary awaiting responses: {pending}/{total}",
                 pending = total - responded,
-                anchor = chain.ids.first(),
             );
             return;
         }
         let Some(first_id) = chain.ids.first() else {
-            warn!("tool chain summary: skipped — empty chain.ids for tool_call_id {tool_call_id}");
+            warn!("ACP tool chain summary skipped with empty chain");
             return;
         };
         if !session.summarized_chains.insert(first_id.clone()) {
-            debug!("tool chain summary: chain anchored at {first_id} already summarized; skipping");
+            debug!("ACP tool chain summary already completed");
             return;
         }
 
@@ -1845,17 +2307,13 @@ impl GooseAcpAgent {
         tokio::spawn(async move {
             let provider = match agent.provider().await {
                 Ok(p) => p,
-                Err(e) => {
-                    warn!(
-                        "tool chain summary: failed to get provider for chain anchored at {first_id}: {e}",
-                    );
+                Err(_) => {
+                    warn!("ACP tool chain summary provider unavailable");
                     return;
                 }
             };
             if provider.manages_own_context() {
-                warn!(
-                    "tool chain summary: provider manages own context; skipping chain anchored at {first_id}",
-                );
+                warn!("ACP tool chain summary skipped for provider-managed context");
                 return;
             }
 
@@ -1910,30 +2368,24 @@ impl GooseAcpAgent {
                         }
                         if attempt == 0 {
                             warn!(
-                                "tool chain summary: fast_complete returned empty for chain anchored at {first_id} ({} steps), retrying once",
-                                steps.len(),
+                                steps = steps.len(),
+                                "ACP tool chain summary retrying after empty response"
                             );
                             tokio::time::sleep(std::time::Duration::from_millis(150)).await;
                         }
                     }
-                    Err(e) => {
+                    Err(_) => {
                         if attempt == 0 {
-                            warn!(
-                                "tool chain summary: fast_complete errored for chain anchored at {first_id}: {e}, retrying once",
-                            );
+                            warn!("ACP tool chain summary retrying after provider error");
                             tokio::time::sleep(std::time::Duration::from_millis(150)).await;
                         } else {
-                            warn!(
-                                "tool chain summary: fast_complete errored for chain anchored at {first_id} after retry: {e}",
-                            );
+                            warn!("ACP tool chain summary failed after retry");
                         }
                     }
                 }
             }
             let Some(summary) = summary else {
-                warn!(
-                    "tool chain summary: no LLM summary produced for chain anchored at {first_id} — replay will fall back to the deterministic phrase",
-                );
+                warn!("ACP tool chain summary fell back to deterministic title");
                 return;
             };
 
@@ -1944,14 +2396,12 @@ impl GooseAcpAgent {
                     "count": count,
                 },
             });
-            if let Err(e) = session_manager
+            if session_manager
                 .update_tool_request_meta(&sid.0, &chain_for_task.message_id, &first_id, patch)
                 .await
+                .is_err()
             {
-                warn!(
-                    "tool chain summary: persist failed for chain anchored at {first_id} in {}: {e}",
-                    chain_for_task.message_id,
-                );
+                warn!("ACP tool chain summary persistence failed");
             }
 
             let meta = with_tool_chain_summary_meta(identity_meta, &summary, count);
@@ -2024,8 +2474,8 @@ impl GooseAcpAgent {
                             .await;
                         Ok(())
                     }
-                    Err(e) => {
-                        error!(error = ?e, "permission request failed");
+                    Err(_) => {
+                        error!("ACP permission request failed");
                         agent
                             .handle_confirmation(
                                 request_id,
@@ -2054,6 +2504,83 @@ impl GooseAcpAgent {
                 .filter_map(|trigger| trigger.strip_prefix('/'))
                 .any(|trigger| trigger == normalized)
     }
+}
+
+fn profile_application_marker_error() -> agent_client_protocol::Error {
+    agent_client_protocol::Error::invalid_params().data("profile application marker rejected")
+}
+
+fn has_duplicate_names(names: &[String]) -> bool {
+    names
+        .iter()
+        .enumerate()
+        .any(|(index, name)| names[..index].contains(name))
+}
+
+#[cfg(test)]
+#[test]
+fn has_duplicate_names_detects_adjacent_and_non_adjacent_duplicates() {
+    assert!(!has_duplicate_names(&[]));
+    assert!(!has_duplicate_names(&["first".into(), "second".into()]));
+    assert!(has_duplicate_names(&["same".into(), "same".into()]));
+    assert!(has_duplicate_names(&[
+        "first".into(),
+        "second".into(),
+        "first".into(),
+    ]));
+}
+
+fn validate_profile_application_marker(
+    application: &ConsumedProfileApplication,
+    marker: Option<&ProfileApplicationMarker>,
+    session_id: &str,
+) -> Result<(), agent_client_protocol::Error> {
+    let Some(marker) = marker else {
+        return Err(profile_application_marker_error());
+    };
+    if marker.application_id.is_empty()
+        || marker.profile_id.is_empty()
+        || marker.original_session_id.is_empty()
+        || marker.original_session_id != session_id
+        || application.application_id != marker.application_id
+        || application.profile_id != marker.profile_id
+        || application.profile_revision != marker.profile_revision
+        || has_duplicate_names(application.managed_extension_names())
+        || has_duplicate_names(&marker.managed_extension_names)
+        || application.managed_extension_names() != marker.managed_extension_names
+        || (!marker.managed_extension_names.is_empty()
+            && application.managed_references().is_empty())
+    {
+        return Err(profile_application_marker_error());
+    }
+    Ok(())
+}
+
+fn validate_activation_extension_data(
+    extension_data: &ExtensionData,
+) -> Result<(), agent_client_protocol::Error> {
+    let raw_marker = extension_data.get_extension_state(
+        ProfileApplicationMarker::EXTENSION_NAME,
+        ProfileApplicationMarker::VERSION,
+    );
+    if raw_marker.is_some()
+        && ProfileApplicationMarker::from_extension_data(extension_data).is_none()
+    {
+        return Err(agent_client_protocol::Error::invalid_params()
+            .data("profile application rejected: invalid_profile_marker"));
+    }
+    if extension_data
+        .get_extension_state(
+            EnabledExtensionsState::EXTENSION_NAME,
+            EnabledExtensionsState::VERSION,
+        )
+        .is_some()
+        && <EnabledExtensionsState as ExtensionState>::from_extension_data(extension_data).is_none()
+    {
+        return Err(agent_client_protocol::Error::invalid_params()
+            .data("session extension configuration rejected"));
+    }
+    Ok(())
 }
 
 fn extract_client_supports_goose_custom_notifications(
@@ -2093,28 +2620,10 @@ fn prompt_error_from_message_content(
 }
 
 fn credits_exhausted_prompt_error(
-    notification: &SystemNotificationContent,
+    _notification: &SystemNotificationContent,
 ) -> agent_client_protocol::Error {
-    let mut data = serde_json::Map::new();
-    data.insert(
-        "reason".to_string(),
-        serde_json::Value::String("credits_exhausted".to_string()),
-    );
-
-    if let Some(url) = notification
-        .data
-        .as_ref()
-        .and_then(|data| data.get("top_up_url"))
-        .and_then(|url| url.as_str())
-    {
-        data.insert(
-            "url".to_string(),
-            serde_json::Value::String(url.to_string()),
-        );
-    }
-
-    agent_client_protocol::Error::new(-32603, notification.msg.clone())
-        .data(serde_json::Value::Object(data))
+    agent_client_protocol::Error::new(-32603, "Credits exhausted")
+        .data(serde_json::json!({ "reason": "credits_exhausted" }))
 }
 
 fn send_status_message_update(
@@ -2319,7 +2828,7 @@ impl GooseAcpAgent {
         &self,
         args: InitializeRequest,
     ) -> Result<InitializeResponse, agent_client_protocol::Error> {
-        debug!(?args, "initialize request");
+        debug!("ACP initialize request received");
 
         let _ = self
             .client_fs_capabilities
@@ -2382,10 +2891,9 @@ impl GooseAcpAgent {
         session_id: &str,
     ) -> Result<Arc<Agent>, agent_client_protocol::Error> {
         if self.closed_session_ids.lock().await.contains(session_id) {
-            return Err(agent_client_protocol::Error::resource_not_found(Some(
-                session_id.to_string(),
-            ))
-            .data(format!("Session not found: {}", session_id)));
+            return Err(
+                agent_client_protocol::Error::resource_not_found(None).data("Session not found")
+            );
         }
 
         {
@@ -2396,19 +2904,17 @@ impl GooseAcpAgent {
         }
 
         let cx = self.client_cx.get().ok_or_else(|| {
-            agent_client_protocol::Error::resource_not_found(Some(session_id.to_string()))
-                .data(format!("Session not found: {}", session_id))
+            agent_client_protocol::Error::resource_not_found(None).data("Session not found")
         })?;
         let session = self
             .session_manager
             .get_session(session_id, false)
             .await
             .map_err(|_| {
-                agent_client_protocol::Error::resource_not_found(Some(session_id.to_string()))
-                    .data(format!("Session not found: {}", session_id))
+                agent_client_protocol::Error::resource_not_found(None).data("Session not found")
             })?;
         let (agent, _) = self
-            .activate_acp_session(cx, &session, HashMap::new())
+            .activate_acp_session(cx, &session, HashMap::new(), None)
             .await?;
         Ok(agent)
     }
@@ -2420,18 +2926,15 @@ impl GooseAcpAgent {
         cancel_token: CancellationToken,
     ) -> Result<(), agent_client_protocol::Error> {
         if self.closed_session_ids.lock().await.contains(session_id) {
-            return Err(agent_client_protocol::Error::resource_not_found(Some(
-                session_id.to_string(),
-            ))
-            .data(format!("Session not found: {}", session_id)));
+            return Err(
+                agent_client_protocol::Error::resource_not_found(None).data("Session not found")
+            );
         }
 
         let mut active_prompt_runs = self.active_prompt_runs.lock().await;
         if let Some(active_run) = active_prompt_runs.get(session_id) {
-            return Err(agent_client_protocol::Error::invalid_params().data(format!(
-                "session already has active run `{}`; use _goose/unstable/session/steer",
-                active_run.run_id.as_str()
-            )));
+            return Err(agent_client_protocol::Error::invalid_params()
+                .data("session already has an active run; use _goose/unstable/session/steer"));
         }
 
         active_prompt_runs.insert(
@@ -2444,7 +2947,12 @@ impl GooseAcpAgent {
         Ok(())
     }
 
-    async fn clear_active_run(&self, session_id: &str, run_id: &str) {
+    async fn clear_active_run(
+        &self,
+        session_id: &str,
+        run_id: &str,
+        expected_agent: Option<&Arc<Agent>>,
+    ) {
         {
             let mut active_prompt_runs = self.active_prompt_runs.lock().await;
             let Some(active_run) = active_prompt_runs.get(session_id) else {
@@ -2464,22 +2972,37 @@ impl GooseAcpAgent {
                 .get(session_id)
                 .map(|session| session.agent.clone())
         };
-        if let Some(agent) = agent {
+        if expected_agent.is_some_and(|expected| {
+            !agent
+                .as_ref()
+                .is_some_and(|current| Arc::ptr_eq(current, expected))
+        }) {
+            return;
+        }
+        if let Some(agent) = agent.as_ref() {
             agent.discard_pending_steers(session_id).await;
         }
 
-        if self.closed_session_ids.lock().await.contains(session_id) {
-            self.sessions.lock().await.remove(session_id);
-            if let Err(error) = self
+        let closed_agent = self
+            .closed_session_agents
+            .lock()
+            .await
+            .get(session_id)
+            .cloned()
+            .flatten();
+        if let (Some(agent), Some(closed_agent)) = (agent.as_ref(), closed_agent.as_ref()) {
+            if !Arc::ptr_eq(agent, closed_agent) {
+                return;
+            }
+            self.unregister_acp_session_and_managed_runtime(session_id, agent)
+                .await;
+            if self
                 .agent_manager
-                .remove_session_if_loaded(session_id)
+                .remove_session_if_current(session_id, agent)
                 .await
+                .is_err()
             {
-                tracing::warn!(
-                    session_id,
-                    %error,
-                    "Failed to remove in-memory agent for closed session"
-                );
+                tracing::warn!("Failed to remove ACP in-memory agent for closed session");
             }
         }
     }
@@ -2499,16 +3022,7 @@ impl GooseAcpAgent {
             agent_client_protocol::Error::invalid_params().data("no active run to steer")
         })?;
         if active_run.run_id != expected_run_id {
-            return Err(
-                agent_client_protocol::Error::invalid_params().data(serde_json::json!({
-                    "message": format!(
-                        "expected active run id `{expected_run_id}` but found `{}`",
-                        active_run.run_id.as_str()
-                    ),
-                    "expectedRunId": expected_run_id,
-                    "actualRunId": active_run.run_id.as_str(),
-                })),
-            );
+            return Err(agent_client_protocol::Error::invalid_params().data("active run mismatch"));
         }
         Ok(active_run.run_id.clone())
     }
@@ -2616,7 +3130,6 @@ impl GooseAcpAgent {
     ) -> Result<PromptResponse, agent_client_protocol::Error> {
         // The ACP session_id IS the thread ID.
         let session_id = args.session_id.0.to_string();
-        let sid = sid_short(&session_id);
         let t_start = std::time::Instant::now();
 
         let run_id = format!("run_{}", Uuid::new_v4());
@@ -2627,19 +3140,21 @@ impl GooseAcpAgent {
         let agent = match self.get_session_agent(&session_id).await {
             Ok(agent) => agent,
             Err(error) => {
-                self.clear_active_run(&session_id, &run_id).await;
+                self.clear_active_run(&session_id, &run_id, None).await;
                 return Err(error);
             }
         };
 
         if cancel_token.is_cancelled() {
-            self.clear_active_run(&session_id, &run_id).await;
+            self.clear_active_run(&session_id, &run_id, Some(&agent))
+                .await;
             Self::send_active_run_update(cx, &args.session_id, None)?;
             return Ok(PromptResponse::new(StopReason::Cancelled));
         }
 
         if let Err(error) = Self::send_active_run_update(cx, &args.session_id, Some(&run_id)) {
-            self.clear_active_run(&session_id, &run_id).await;
+            self.clear_active_run(&session_id, &run_id, Some(&agent))
+                .await;
             return Err(error);
         }
 
@@ -2647,7 +3162,8 @@ impl GooseAcpAgent {
             .send_local_inference_progress_update(cx, &args.session_id, &session_id, &agent)
             .await
         {
-            self.clear_active_run(&session_id, &run_id).await;
+            self.clear_active_run(&session_id, &run_id, Some(&agent))
+                .await;
             let _ = Self::send_active_run_update(cx, &args.session_id, None);
             return Err(error);
         }
@@ -2674,7 +3190,8 @@ impl GooseAcpAgent {
                                 ))),
                             )),
                         )) {
-                            self.clear_active_run(&session_id, &run_id).await;
+                            self.clear_active_run(&session_id, &run_id, Some(&agent))
+                                .await;
                             let _ = Self::send_active_run_update(cx, &args.session_id, None);
                             return Err(error);
                         }
@@ -2696,10 +3213,12 @@ impl GooseAcpAgent {
         {
             Ok(stream) => stream,
             Err(error) => {
-                self.clear_active_run(&session_id, &run_id).await;
+                self.clear_active_run(&session_id, &run_id, Some(&agent))
+                    .await;
                 let _ = Self::send_active_run_update(cx, &args.session_id, None);
+                let _ = error;
                 return Err(agent_client_protocol::Error::internal_error()
-                    .data(format!("Error getting agent reply: {error}")));
+                    .data("Error getting agent reply"));
             }
         };
 
@@ -2728,9 +3247,8 @@ impl GooseAcpAgent {
             if !first_event_logged {
                 debug!(
                     target: "perf",
-                    sid = %sid,
                     ttft_ms = t_start.elapsed().as_millis() as u64,
-                    "perf: prompt first stream event (time-to-first-token from prompt start)"
+                    "perf: ACP prompt first stream event (time-to-first-token from prompt start)"
                 );
                 first_event_logged = true;
             }
@@ -2740,46 +3258,59 @@ impl GooseAcpAgent {
                     // Agent persists messages via session_manager.add_message() internally.
                     let stored_message_id = message.id.clone();
 
-                    let mut sessions = self.sessions.lock().await;
-                    let Some(session) = sessions.get_mut(&session_id) else {
-                        stream_error = Some(
-                            agent_client_protocol::Error::invalid_params()
-                                .data(format!("Session not found: {}", session_id)),
-                        );
-                        break;
-                    };
-
                     for content_item in &message.content {
                         if let Some(error) = prompt_error_from_message_content(content_item) {
                             stream_error = Some(error);
                             break;
                         }
 
-                        match content_item {
-                            MessageContent::ToolRequest(tr) => {
-                                if let Some(msg_id) = stored_message_id.as_deref() {
-                                    chain_buffer.push((tr.id.clone(), msg_id.to_string()));
-                                    // Re-register eagerly so the chain is in
-                                    // place by the time the matching
-                                    // `tool_response` triggers
-                                    // `maybe_summarize_chain` (sequential
-                                    // tool use interleaves request/response
-                                    // events).
-                                    extend_chain_membership(
-                                        &chain_buffer,
-                                        &mut session.chain_membership,
-                                    );
+                        {
+                            let mut sessions = self.sessions.lock().await;
+                            let Some(session) = sessions.get_mut(&session_id) else {
+                                stream_error = Some(
+                                    agent_client_protocol::Error::invalid_params()
+                                        .data("Session not found"),
+                                );
+                                break;
+                            };
+                            if !Arc::ptr_eq(&session.agent, &agent) {
+                                stream_error = Some(
+                                    agent_client_protocol::Error::invalid_params()
+                                        .data("Session not found"),
+                                );
+                                break;
+                            }
+
+                            match content_item {
+                                MessageContent::ToolRequest(tr) => {
+                                    if let Some(msg_id) = stored_message_id.as_deref() {
+                                        chain_buffer.push((tr.id.clone(), msg_id.to_string()));
+                                        // Re-register eagerly so the chain is in
+                                        // place by the time the matching
+                                        // `tool_response` triggers
+                                        // `maybe_summarize_chain` (sequential
+                                        // tool use interleaves request/response
+                                        // events).
+                                        extend_chain_membership(
+                                            &chain_buffer,
+                                            &mut session.chain_membership,
+                                        );
+                                    }
+                                }
+                                MessageContent::ToolResponse(_) => {
+                                    // Chain-neutral: a response between two
+                                    // requests doesn't break the run, matching
+                                    // the frontend's `groupContentSections`.
+                                }
+                                _ => {
+                                    // Text, thinking, image, etc. end the run.
+                                    chain_buffer.clear();
                                 }
                             }
-                            MessageContent::ToolResponse(_) => {
-                                // Chain-neutral: a response between two
-                                // requests doesn't break the run, matching
-                                // the frontend's `groupContentSections`.
-                            }
-                            _ => {
-                                // Text, thinking, image, etc. end the run.
-                                chain_buffer.clear();
-                            }
+                        }
+
+                        if stream_error.is_some() {
+                            break;
                         }
 
                         if let Err(error) = self
@@ -2792,7 +3323,6 @@ impl GooseAcpAgent {
                                 &message.role,
                                 message.metadata.steer,
                                 &agent,
-                                session,
                                 cx,
                             )
                             .await
@@ -2826,10 +3356,10 @@ impl GooseAcpAgent {
                     }
                 }
                 Ok(_) => {}
-                Err(e) => {
+                Err(_) => {
                     stream_error = Some(
                         agent_client_protocol::Error::internal_error()
-                            .data(format!("Error in agent response stream: {}", e)),
+                            .data("Error in agent response stream"),
                     );
                     break;
                 }
@@ -2838,7 +3368,10 @@ impl GooseAcpAgent {
 
         {
             let mut sessions = self.sessions.lock().await;
-            if let Some(session) = sessions.get_mut(&session_id) {
+            if let Some(session) = sessions
+                .get_mut(&session_id)
+                .filter(|session| Arc::ptr_eq(&session.agent, &agent))
+            {
                 // Final safety net: in case the stream ended without any
                 // chain-breaking content, make sure a multi-tool buffer is
                 // registered. (Eager registration during the loop usually
@@ -2846,7 +3379,8 @@ impl GooseAcpAgent {
                 extend_chain_membership(&chain_buffer, &mut session.chain_membership);
             }
         }
-        self.clear_active_run(&session_id, &run_id).await;
+        self.clear_active_run(&session_id, &run_id, Some(&agent))
+            .await;
         Self::send_active_run_update(cx, &args.session_id, None)?;
         if let Some(error) = stream_error {
             return Err(error);
@@ -2877,11 +3411,10 @@ impl GooseAcpAgent {
 
         debug!(
             target: "perf",
-            sid = %sid,
             ms = t_start.elapsed().as_millis() as u64,
             events = event_count,
             cancelled = was_cancelled,
-            "perf: prompt done"
+            "perf: ACP prompt done"
         );
         let stop_reason = if was_cancelled {
             StopReason::Cancelled
@@ -2942,7 +3475,7 @@ impl GooseAcpAgent {
         &self,
         args: CancelNotification,
     ) -> Result<(), agent_client_protocol::Error> {
-        debug!(?args, "cancel request");
+        debug!("ACP cancel request received");
 
         let session_id = args.session_id.0.to_string();
         let token = {
@@ -2953,10 +3486,10 @@ impl GooseAcpAgent {
         };
 
         if let Some(token) = token {
-            info!(session_id = %session_id, "prompt cancelled");
+            info!("ACP prompt cancelled");
             token.cancel();
         } else if !self.sessions.lock().await.contains_key(&session_id) {
-            warn!(session_id = %session_id, "cancel request for unknown session");
+            warn!("ACP cancel request for unknown session");
         }
 
         Ok(())
@@ -3021,8 +3554,9 @@ impl GooseAcpAgent {
             .await
             .internal_err()?;
         let Some(inventory) = inventory else {
-            return Err(agent_client_protocol::Error::internal_error()
-                .data(format!("Unknown provider inventory: {}", provider_name)));
+            return Err(
+                agent_client_protocol::Error::internal_error().data("Unknown provider inventory")
+            );
         };
         let model_state = build_model_state(current_model.as_str(), &inventory);
         let mode_state = build_mode_state(goose_mode)?;
@@ -3046,10 +3580,9 @@ impl GooseAcpAgent {
         session_id: &str,
         mode_id: &str,
     ) -> Result<SetSessionModeResponse, agent_client_protocol::Error> {
-        let mode = mode_id.parse::<GooseMode>().map_err(|_| {
-            agent_client_protocol::Error::invalid_params()
-                .data(format!("Invalid mode: {}", mode_id))
-        })?;
+        let mode = mode_id
+            .parse::<GooseMode>()
+            .map_err(|_| agent_client_protocol::Error::invalid_params().data("Invalid mode"))?;
 
         let agent = self.get_session_agent(session_id).await?;
         agent
@@ -3070,8 +3603,7 @@ impl GooseAcpAgent {
         let effort = effort_id
             .parse::<goose_providers::thinking::ThinkingEffort>()
             .map_err(|_| {
-                agent_client_protocol::Error::invalid_params()
-                    .data(format!("Invalid thinking effort: {}", effort_id))
+                agent_client_protocol::Error::invalid_params().data("Invalid thinking effort")
             })?;
         let agent = self.get_session_agent(session_id).await?;
         agent
@@ -3158,10 +3690,26 @@ impl GooseAcpAgent {
         &self,
         session_id: &str,
     ) -> Result<CloseSessionResponse, agent_client_protocol::Error> {
+        let expected_agent = self.session_agent_if_current(session_id).await;
+        #[cfg(test)]
+        self.wait_for_close_session_test_gate().await;
+        if let Some(expected_agent) = expected_agent.as_ref() {
+            let current_agent = self.session_agent_if_current(session_id).await;
+            if !current_agent
+                .as_ref()
+                .is_some_and(|current| Arc::ptr_eq(current, expected_agent))
+            {
+                return Ok(CloseSessionResponse::new());
+            }
+        }
         self.closed_session_ids
             .lock()
             .await
             .insert(session_id.to_string());
+        self.closed_session_agents
+            .lock()
+            .await
+            .insert(session_id.to_string(), expected_agent.clone());
 
         let active_run_token = {
             let active_prompt_runs = self.active_prompt_runs.lock().await;
@@ -3174,22 +3722,92 @@ impl GooseAcpAgent {
             token.cancel();
         }
 
-        let mut sessions = self.sessions.lock().await;
-        sessions.remove(session_id);
-        drop(sessions);
+        if let Some(expected_agent) = expected_agent {
+            self.unregister_acp_session_and_managed_runtime(session_id, &expected_agent)
+                .await;
+            self.agent_manager
+                .remove_session_if_current(session_id, &expected_agent)
+                .await
+                .internal_err_ctx("Failed to remove in-memory agent")?;
+        }
 
-        self.agent_manager
-            .remove_session_if_loaded(session_id)
-            .await
-            .internal_err_ctx("Failed to remove in-memory agent")?;
-
-        info!(session_id = %session_id, "ACP session closed");
+        info!("ACP session closed");
         Ok(CloseSessionResponse::new())
+    }
+
+    async fn session_agent_if_current(&self, session_id: &str) -> Option<Arc<Agent>> {
+        self.sessions
+            .lock()
+            .await
+            .get(session_id)
+            .map(|session| session.agent.clone())
+    }
+
+    pub(super) async fn unregister_acp_session_and_managed_runtime(
+        &self,
+        session_id: &str,
+        expected_agent: &Arc<Agent>,
+    ) -> bool {
+        let session_removed = {
+            let mut sessions = self.sessions.lock().await;
+            if sessions
+                .get(session_id)
+                .is_some_and(|session| Arc::ptr_eq(&session.agent, expected_agent))
+            {
+                sessions.remove(session_id);
+                true
+            } else {
+                false
+            }
+        };
+        let mut runtimes = self.managed_runtime_sessions.lock().await;
+        if runtimes
+            .active
+            .get(session_id)
+            .is_some_and(|agent| Arc::ptr_eq(agent, expected_agent))
+        {
+            runtimes.active.remove(session_id);
+        }
+        runtimes.stopped.retain(|_, sessions| {
+            if sessions
+                .get(session_id)
+                .is_some_and(|agent| Arc::ptr_eq(agent, expected_agent))
+            {
+                sessions.remove(session_id);
+            }
+            !sessions.is_empty()
+        });
+        drop(runtimes);
+        let mut registrations = self.session_registrations.lock().await;
+        if registrations
+            .get(session_id)
+            .is_some_and(|registration| Arc::ptr_eq(&registration.agent, expected_agent))
+        {
+            registrations.remove(session_id);
+        }
+        session_removed
     }
 }
 
 pub struct GooseAcpHandler {
     pub agent: Arc<GooseAcpAgent>,
+    transport_mcp_platform_write_session: Option<TransportWriteSession>,
+}
+
+impl GooseAcpHandler {
+    fn read_only_transport(agent: Arc<GooseAcpAgent>) -> Self {
+        Self {
+            agent,
+            transport_mcp_platform_write_session: None,
+        }
+    }
+
+    fn trusted_transport(agent: Arc<GooseAcpAgent>) -> Self {
+        Self {
+            agent,
+            transport_mcp_platform_write_session: Some(TransportWriteSession::trusted()),
+        }
+    }
 }
 
 pub fn serve<R, W>(
@@ -3201,19 +3819,122 @@ where
     R: futures::AsyncRead + Unpin + Send + 'static,
     W: futures::AsyncWrite + Unpin + Send + 'static,
 {
-    Box::pin(async move {
-        let handler = GooseAcpHandler { agent };
+    serve_with_handler(GooseAcpHandler::read_only_transport(agent), read, write)
+}
 
+fn serve_trusted<R, W>(
+    agent: Arc<GooseAcpAgent>,
+    read: R,
+    write: W,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send>>
+where
+    R: futures::AsyncRead + Unpin + Send + 'static,
+    W: futures::AsyncWrite + Unpin + Send + 'static,
+{
+    serve_with_handler(GooseAcpHandler::trusted_transport(agent), read, write)
+}
+
+#[cfg(feature = "integration-test-support")]
+pub fn serve_trusted_in_process<R, W>(
+    agent: Arc<GooseAcpAgent>,
+    read: R,
+    write: W,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send>>
+where
+    R: futures::AsyncRead + Unpin + Send + 'static,
+    W: futures::AsyncWrite + Unpin + Send + 'static,
+{
+    serve_trusted(agent, read, write)
+}
+
+fn serve_with_handler<R, W>(
+    handler: GooseAcpHandler,
+    read: R,
+    write: W,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<()>> + Send>>
+where
+    R: futures::AsyncRead + Unpin + Send + 'static,
+    W: futures::AsyncWrite + Unpin + Send + 'static,
+{
+    Box::pin(async move {
+        use futures::AsyncWriteExt;
+
+        let incoming = bounded_validated_acp_lines(read);
+        let outgoing = futures::sink::unfold(write, async move |mut writer, line: String| {
+            writer.write_all(line.as_bytes()).await?;
+            writer.write_all(b"\n").await?;
+            Ok::<_, std::io::Error>(writer)
+        });
         let result = SacpAgent
             .builder()
             .name("goose-acp")
             .with_handler(handler)
-            .connect_to(ByteStreams::new(write, read))
+            .connect_to(Lines::new(outgoing, incoming))
             .await;
         result?;
 
         Ok(())
     })
+}
+
+fn bounded_validated_acp_lines<R>(
+    read: R,
+) -> impl futures::Stream<Item = std::io::Result<String>> + Send
+where
+    R: futures::AsyncRead + Unpin + Send + 'static,
+{
+    async_stream::stream! {
+        use futures::{AsyncReadExt, io::BufReader};
+
+        let mut reader = BufReader::new(read);
+        let mut chunk = [0_u8; 4096];
+        let mut line = Vec::new();
+        let mut exceeded_limit = false;
+
+        loop {
+            let count = match reader.read(&mut chunk).await {
+                Ok(count) => count,
+                Err(error) => {
+                    yield Err(error);
+                    return;
+                }
+            };
+            if count == 0 {
+                if !line.is_empty() || exceeded_limit {
+                    yield Ok(sanitize_acp_line(&mut line, exceeded_limit));
+                }
+                return;
+            }
+
+            for byte in &chunk[..count] {
+                if *byte == b'\n' {
+                    yield Ok(sanitize_acp_line(&mut line, exceeded_limit));
+                    line.clear();
+                    exceeded_limit = false;
+                } else if !exceeded_limit {
+                    if line.len() == crate::acp::transport::json_safety::MAX_ACP_JSON_BYTES {
+                        line.clear();
+                        exceeded_limit = true;
+                    } else {
+                        line.push(*byte);
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn sanitize_acp_line(line: &mut Vec<u8>, exceeded_limit: bool) -> String {
+    if exceeded_limit {
+        return "{".to_string();
+    }
+    if line.last() == Some(&b'\r') {
+        line.pop();
+    }
+    match String::from_utf8(std::mem::take(line)) {
+        Ok(line) if crate::acp::transport::json_safety::accepts_acp_json(line.as_bytes()) => line,
+        Ok(_) | Err(_) => "{".to_string(),
+    }
 }
 
 /// A lazily-initialized agent connection used by the HTTP/WebSocket transport.
@@ -3224,11 +3945,22 @@ where
 /// which runs as the connection's serving future.
 pub struct GooseAgentConnection {
     server: Arc<crate::acp::server_factory::AcpServer>,
+    transport_mcp_platform_write_session: Option<TransportWriteSession>,
 }
 
 impl GooseAgentConnection {
     pub fn new(server: Arc<crate::acp::server_factory::AcpServer>) -> Self {
-        Self { server }
+        Self {
+            server,
+            transport_mcp_platform_write_session: None,
+        }
+    }
+
+    pub(crate) fn authenticated_http(server: Arc<crate::acp::server_factory::AcpServer>) -> Self {
+        Self {
+            server,
+            transport_mcp_platform_write_session: Some(TransportWriteSession::trusted()),
+        }
     }
 }
 
@@ -3238,7 +3970,13 @@ impl agent_client_protocol::ConnectTo<Client> for GooseAgentConnection {
         client: impl agent_client_protocol::ConnectTo<SacpAgent>,
     ) -> std::result::Result<(), agent_client_protocol::Error> {
         let agent = self.server.create_agent().await.internal_err()?;
-        let handler = GooseAcpHandler { agent };
+        let handler = match self.transport_mcp_platform_write_session {
+            Some(session) => GooseAcpHandler {
+                agent,
+                transport_mcp_platform_write_session: Some(session),
+            },
+            None => GooseAcpHandler::read_only_transport(agent),
+        };
         let result = SacpAgent
             .builder()
             .name("goose-acp")
@@ -3249,8 +3987,29 @@ impl agent_client_protocol::ConnectTo<Client> for GooseAgentConnection {
     }
 }
 
+fn current_transport_mcp_platform_write_authority() -> Option<TransportSessionMcpWriteAuthority> {
+    MCP_PLATFORM_TRANSPORT_SESSION_AUTHORITY
+        .try_with(|authority| authority.clone())
+        .ok()
+        .flatten()
+        .filter(TransportSessionMcpWriteAuthority::is_live)
+}
+
+async fn with_transport_mcp_platform_write_authority<F>(
+    authority: Option<TransportSessionMcpWriteAuthority>,
+    future: F,
+) -> F::Output
+where
+    F: std::future::Future,
+{
+    MCP_PLATFORM_TRANSPORT_SESSION_AUTHORITY
+        .scope(authority, future)
+        .await
+}
+
 pub async fn run(builtins: Vec<String>) -> Result<()> {
     info!("listening on stdio");
+    Paths::ensure_windows_governed_root()?;
 
     let outgoing = tokio::io::stdout().compat_write();
     let incoming = tokio::io::stdin().compat();
@@ -3273,18 +4032,332 @@ pub async fn run(builtins: Vec<String>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::base::Config;
+    use crate::config::extensions::get_extension_entry_by_key_with_config;
     use crate::conversation::message::{ToolRequest, ToolResponse};
+    use crate::custom_requests::{
+        McpPlatformErrorCodeDto, McpPlatformOutcome, McpSetDefaultEnabledResponse,
+        MCP_SET_DEFAULT_ENABLED_METHOD,
+    };
+    use crate::mcp_platform::{
+        parse_manifest, AuthRequirement, AuthRequirementResolver, Clock, ConfigProjectionSink,
+        CoreTransportProjectionAdapter, HealthAdapterResult, HealthCheckAdapter, HealthCheckMode,
+        HealthDetailCode, HealthExecution, HealthResultCode, HealthRunInput, IdGenerator,
+        InMemoryIntegritySigner, InstallConfirmInput, LifecyclePorts, ManagedListInput,
+        ManifestProof, ManifestRecord, McpPlatformService, McpPlatformServiceOptions,
+        PlanCreateInput, PlanIntent, RequestContext, SetDefaultEnabledInput,
+        SqliteMcpPlatformRepository, TrustTier, UnavailableRemoteHttpNetworkPolicy, UserDecision,
+    };
+    use crate::scheduler::{ScheduledJob, SchedulerError};
+    use crate::scheduler_trait::SchedulerTrait;
     use crate::session::session_manager::SessionType;
     use agent_client_protocol::schema::v1::{
         EnvVariable, HttpHeader, McpServer, McpServerHttp, McpServerSse, McpServerStdio,
         PermissionOptionId, ResourceLink, SelectedPermissionOutcome,
     };
+    use async_trait::async_trait;
     use goose_providers::conversation::token_usage::Usage as TokenUsage;
     use rmcp::model::{CallToolRequestParams, Content as RmcpContent};
     use std::io::Write;
     use std::path::PathBuf;
+    use std::pin::Pin;
+    use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
+    use std::task::{Context, Poll};
     use tempfile::NamedTempFile;
     use test_case::test_case;
+
+    #[derive(Clone)]
+    struct CapturingAsyncWrite {
+        writes: tokio::sync::mpsc::UnboundedSender<Vec<u8>>,
+    }
+
+    impl futures::AsyncWrite for CapturingAsyncWrite {
+        fn poll_write(
+            self: Pin<&mut Self>,
+            _cx: &mut Context<'_>,
+            buffer: &[u8],
+        ) -> Poll<std::io::Result<usize>> {
+            let _ = self.writes.send(buffer.to_vec());
+            Poll::Ready(Ok(buffer.len()))
+        }
+
+        fn poll_flush(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn poll_close(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+    }
+
+    #[tokio::test]
+    async fn stdio_raw_lines_reject_duplicate_keys_before_the_protocol_parser() {
+        use futures::TryStreamExt as _;
+
+        let input = concat!(
+            "{\"jsonrpc\":\"2.0\",\"jsonrpc\":\"2.0\"}\n",
+            "{\"params\":{\"a\":1,\"a\":2}}\n",
+            "[{\"nested\":{\"a\":1,\"a\":2}}]\n",
+            "{\"jsonrpc\":\"2.0\",\"method\":\"initialized\",\"params\":{}}\n",
+        );
+        let lines = bounded_validated_acp_lines(futures::io::Cursor::new(input.as_bytes()));
+        let lines = lines.try_collect::<Vec<_>>().await.unwrap();
+
+        assert_eq!(
+            lines,
+            vec![
+                "{".to_string(),
+                "{".to_string(),
+                "{".to_string(),
+                "{\"jsonrpc\":\"2.0\",\"method\":\"initialized\",\"params\":{}}".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn stdio_rejected_raw_line_omits_original_secret_input() {
+        const SECRET: &str = "stdio-raw-secret-input";
+        let mut line =
+            format!(r#"{{"jsonrpc":"2.0","params":{{"token":"{SECRET}","token":"duplicate"}}}}"#)
+                .into_bytes();
+
+        let sanitized = sanitize_acp_line(&mut line, false);
+
+        assert_eq!(sanitized, "{");
+        assert!(!sanitized.contains(SECRET));
+    }
+
+    #[tokio::test]
+    async fn stdio_serve_replaces_rejected_raw_lines_before_lines_parses_them() {
+        use tokio::io::AsyncWriteExt as _;
+
+        let directory = tempfile::tempdir().unwrap();
+        let server = crate::acp::server_factory::AcpServer::new(
+            crate::acp::server_factory::AcpServerFactoryConfig {
+                builtins: Vec::new(),
+                data_dir: directory.path().join("data"),
+                config_dir: directory.path().join("config"),
+                goose_platform: GoosePlatform::GooseCli,
+                additional_source_roots: Vec::new(),
+            },
+        );
+        let agent = server.create_agent().await.unwrap();
+        let (input_writer, input_reader) = tokio::io::duplex(4096);
+        let (writes, mut output) = tokio::sync::mpsc::unbounded_channel();
+        let serving = tokio::spawn(serve(
+            agent,
+            input_reader.compat(),
+            CapturingAsyncWrite { writes },
+        ));
+        let mut input_writer = input_writer;
+        input_writer
+            .write_all(
+                b"{\"jsonrpc\":\"2.0\",\"params\":{\"token\":\"secret-stdio-payload\",\"top_up_url\":\"https://billing.invalid/?token=secret-stdio-url\",\"token\":\"duplicate\"}}\n",
+            )
+            .await
+            .unwrap();
+        input_writer
+            .write_all(
+                b"{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"initialize\",\"params\":{\"protocolVersion\":1,\"clientCapabilities\":{}}}\n",
+            )
+            .await
+            .unwrap();
+
+        let mut written = Vec::new();
+        while !String::from_utf8_lossy(&written).contains("\"id\":7") {
+            written.extend(
+                tokio::time::timeout(std::time::Duration::from_secs(1), output.recv())
+                    .await
+                    .unwrap()
+                    .unwrap(),
+            );
+        }
+        let written = String::from_utf8(written).unwrap();
+        assert!(!written.contains("secret-stdio-payload"));
+        assert!(!written.contains("secret-stdio-url"));
+        assert!(written.contains("\"id\":7"));
+
+        serving.abort();
+        server.shutdown().await;
+    }
+
+    #[test]
+    fn activation_rejects_broken_profile_marker_without_disclosing_contents() {
+        let mut extension_data = ExtensionData::new();
+        extension_data.set_extension_state(
+            ProfileApplicationMarker::EXTENSION_NAME,
+            ProfileApplicationMarker::VERSION,
+            serde_json::json!({"application_id": "secret-fragment"}),
+        );
+
+        let error = validate_activation_extension_data(&extension_data).unwrap_err();
+        let text = error.to_string();
+        assert!(!text.contains("secret-fragment"));
+        assert!(text.contains("invalid_profile_marker"));
+    }
+
+    fn marker_test_application(
+        managed_references: Vec<ProfileManagedReference>,
+    ) -> ConsumedProfileApplication {
+        marker_test_application_with_managed_extension_names(
+            vec!["managed".into()],
+            managed_references,
+        )
+    }
+
+    fn marker_test_application_with_managed_extension_names(
+        managed_extension_names: Vec<String>,
+        managed_references: Vec<ProfileManagedReference>,
+    ) -> ConsumedProfileApplication {
+        ConsumedProfileApplication::verified(
+            "application-1".into(),
+            "profile-1".into(),
+            7,
+            "plan-digest".into(),
+            managed_extension_names,
+            managed_references,
+            Vec::new(),
+        )
+        .unwrap()
+    }
+
+    fn marker_test_marker() -> ProfileApplicationMarker {
+        ProfileApplicationMarker {
+            application_id: "application-1".into(),
+            profile_id: "profile-1".into(),
+            profile_revision: 7,
+            merge_policy: "replace_managed_only".into(),
+            original_session_id: "session-1".into(),
+            managed_extension_names: vec!["managed".into()],
+        }
+    }
+
+    #[test]
+    fn profile_application_activation_requires_matching_marker_identity() {
+        let reference = ProfileManagedReference {
+            managed_mcp_id: "mcp-1".into(),
+            extension_name: "managed".into(),
+            projection_digest: "projection".into(),
+            source_fingerprint: "fingerprint".into(),
+        };
+        let application = marker_test_application(vec![reference]);
+        let marker = marker_test_marker();
+
+        let mutations: [fn(&mut ProfileApplicationMarker); 4] = [
+            |marker| marker.application_id = "other".into(),
+            |marker| marker.profile_id = "other".into(),
+            |marker| marker.profile_revision = 8,
+            |marker| marker.original_session_id = "other".into(),
+        ];
+        for mutate in mutations {
+            let mut mismatched = marker.clone();
+            mutate(&mut mismatched);
+            assert!(validate_profile_application_marker(
+                &application,
+                Some(&mismatched),
+                "session-1"
+            )
+            .is_err());
+        }
+
+        assert!(validate_profile_application_marker(&application, None, "session-1").is_err());
+        assert!(validate_profile_application_marker(
+            &marker_test_application(Vec::new()),
+            Some(&marker),
+            "session-1"
+        )
+        .is_err());
+        let marker_without_managed_extensions = ProfileApplicationMarker {
+            managed_extension_names: Vec::new(),
+            ..marker.clone()
+        };
+        assert!(validate_profile_application_marker(
+            &marker_test_application_with_managed_extension_names(Vec::new(), Vec::new()),
+            Some(&marker_without_managed_extensions),
+            "session-1"
+        )
+        .is_ok());
+        assert!(
+            validate_profile_application_marker(&application, Some(&marker), "session-1").is_ok()
+        );
+
+        let mut marker_with_extra_name = marker.clone();
+        marker_with_extra_name
+            .managed_extension_names
+            .push("extra".into());
+        assert!(validate_profile_application_marker(
+            &application,
+            Some(&marker_with_extra_name),
+            "session-1"
+        )
+        .is_err());
+
+        let marker_with_missing_name = ProfileApplicationMarker {
+            managed_extension_names: Vec::new(),
+            ..marker.clone()
+        };
+        assert!(validate_profile_application_marker(
+            &application,
+            Some(&marker_with_missing_name),
+            "session-1"
+        )
+        .is_err());
+
+        let marker_with_reordered_names = ProfileApplicationMarker {
+            managed_extension_names: vec!["other".into(), "managed".into()],
+            ..marker.clone()
+        };
+        let application_with_two_names = marker_test_application_with_managed_extension_names(
+            vec!["managed".into(), "other".into()],
+            vec![
+                ProfileManagedReference {
+                    managed_mcp_id: "mcp-1".into(),
+                    extension_name: "managed".into(),
+                    projection_digest: "projection".into(),
+                    source_fingerprint: "fingerprint".into(),
+                },
+                ProfileManagedReference {
+                    managed_mcp_id: "mcp-2".into(),
+                    extension_name: "other".into(),
+                    projection_digest: "projection".into(),
+                    source_fingerprint: "fingerprint".into(),
+                },
+            ],
+        );
+        assert!(validate_profile_application_marker(
+            &application_with_two_names,
+            Some(&marker_with_reordered_names),
+            "session-1"
+        )
+        .is_err());
+
+        let marker_with_duplicate_name = ProfileApplicationMarker {
+            managed_extension_names: vec!["managed".into(), "managed".into()],
+            ..marker.clone()
+        };
+        assert!(validate_profile_application_marker(
+            &application,
+            Some(&marker_with_duplicate_name),
+            "session-1"
+        )
+        .is_err());
+
+        let application_with_duplicate_name = marker_test_application_with_managed_extension_names(
+            vec!["managed".into(), "managed".into()],
+            vec![ProfileManagedReference {
+                managed_mcp_id: "mcp-1".into(),
+                extension_name: "managed".into(),
+                projection_digest: "projection".into(),
+                source_fingerprint: "fingerprint".into(),
+            }],
+        );
+        assert!(validate_profile_application_marker(
+            &application_with_duplicate_name,
+            Some(&marker_with_duplicate_name),
+            "session-1"
+        )
+        .is_err());
+    }
 
     #[test_case(
         McpServer::Stdio(
@@ -3940,29 +5013,36 @@ print(\"hello, world\")
 
     #[test]
     fn test_credits_exhausted_system_notification_maps_to_prompt_error() {
+        const MESSAGE_SECRET: &str = "credits-message-secret";
+        const URL_SECRET: &str = "credits-url-secret";
         let content = MessageContent::SystemNotification(SystemNotificationContent {
             notification_type: SystemNotificationType::CreditsExhausted,
-            msg: "Please add credits to your account, then resend your message to continue."
-                .to_string(),
+            msg: format!("Please add credits: {MESSAGE_SECRET}"),
             data: Some(serde_json::json!({
-                "top_up_url": "https://router.tetrate.ai/billing"
+                "top_up_url": format!("https://router.tetrate.ai/billing?token={URL_SECRET}")
             })),
         });
 
         let error = prompt_error_from_message_content(&content).expect("expected prompt error");
+        let display = error.to_string();
+        let debug = format!("{error:?}");
         let value = serde_json::to_value(error).unwrap();
+        let serialized = serde_json::to_string(&value).unwrap();
 
         assert_eq!(
             value,
             serde_json::json!({
                 "code": -32603,
-                "message": "Please add credits to your account, then resend your message to continue.",
+                "message": "Credits exhausted",
                 "data": {
-                    "reason": "credits_exhausted",
-                    "url": "https://router.tetrate.ai/billing"
+                    "reason": "credits_exhausted"
                 }
             })
         );
+        for rendered in [display, debug, serialized] {
+            assert!(!rendered.contains(MESSAGE_SECRET));
+            assert!(!rendered.contains(URL_SECRET));
+        }
     }
 
     #[test]
@@ -4134,5 +5214,458 @@ print(\"hello, world\")
         assert!(extract_client_supports_goose_custom_notifications(
             goose_client_capabilities.as_ref()
         ));
+    }
+
+    const MANUAL_MCP_MANIFEST: &str =
+        include_str!("../../../../documentation/static/schemas/examples/manual-stdio.json");
+
+    struct PlatformTestClock(AtomicI64);
+
+    impl Clock for PlatformTestClock {
+        fn now_ms(&self) -> i64 {
+            self.0.load(Ordering::SeqCst)
+        }
+    }
+
+    #[derive(Default)]
+    struct PlatformTestIds(AtomicU64);
+
+    impl IdGenerator for PlatformTestIds {
+        fn next_id(&self, prefix: &str) -> String {
+            format!("{prefix}_{:04}", self.0.fetch_add(1, Ordering::SeqCst))
+        }
+    }
+
+    struct AlwaysReadyAuth;
+
+    impl AuthRequirementResolver for AlwaysReadyAuth {
+        fn requirement(
+            &self,
+            _auth: &crate::mcp_platform::manifest::Auth,
+        ) -> crate::mcp_platform::McpPlatformResult<AuthRequirement> {
+            Ok(AuthRequirement::Ready)
+        }
+    }
+
+    struct AlwaysHealthyAdapter;
+
+    #[async_trait]
+    impl HealthCheckAdapter for AlwaysHealthyAdapter {
+        fn adapter_id(&self) -> &'static str {
+            "test_health"
+        }
+
+        fn adapter_version(&self) -> &'static str {
+            "1"
+        }
+
+        async fn run(
+            &self,
+            _execution: HealthExecution,
+            _cancellation: tokio_util::sync::CancellationToken,
+        ) -> crate::mcp_platform::McpPlatformResult<HealthAdapterResult> {
+            Ok(HealthAdapterResult {
+                result_code: HealthResultCode::Healthy,
+                latency_ms: 1,
+                capabilities_digest: None,
+                tools_digest: None,
+                detail_code: HealthDetailCode::McpInitializeSucceeded,
+            })
+        }
+    }
+
+    fn platform_test_context(label: &str) -> RequestContext {
+        RequestContext::local_authenticated_client(label.to_string())
+    }
+
+    struct TestScheduler;
+
+    #[async_trait]
+    impl SchedulerTrait for TestScheduler {
+        async fn add_scheduled_job(
+            &self,
+            _job: ScheduledJob,
+            _copy_recipe: bool,
+        ) -> std::result::Result<(), SchedulerError> {
+            unreachable!()
+        }
+
+        async fn add_scheduled_job_from_content(
+            &self,
+            _job: ScheduledJob,
+            _recipe_content: &[u8],
+        ) -> std::result::Result<ScheduledJob, SchedulerError> {
+            unreachable!()
+        }
+
+        async fn schedule_recipe(
+            &self,
+            _recipe_path: PathBuf,
+            _cron_schedule: Option<String>,
+        ) -> std::result::Result<(), SchedulerError> {
+            unreachable!()
+        }
+
+        async fn list_scheduled_jobs(&self) -> Vec<ScheduledJob> {
+            Vec::new()
+        }
+
+        async fn remove_scheduled_job(
+            &self,
+            _id: &str,
+            _remove_recipe: bool,
+        ) -> std::result::Result<(), SchedulerError> {
+            unreachable!()
+        }
+
+        async fn pause_schedule(&self, _id: &str) -> std::result::Result<(), SchedulerError> {
+            unreachable!()
+        }
+
+        async fn unpause_schedule(&self, _id: &str) -> std::result::Result<(), SchedulerError> {
+            unreachable!()
+        }
+
+        async fn run_now(&self, _id: &str) -> std::result::Result<String, SchedulerError> {
+            unreachable!()
+        }
+
+        async fn sessions(
+            &self,
+            _sched_id: &str,
+            _limit: usize,
+        ) -> std::result::Result<Vec<(String, Session)>, SchedulerError> {
+            unreachable!()
+        }
+
+        async fn update_schedule(
+            &self,
+            _sched_id: &str,
+            _new_cron: String,
+        ) -> std::result::Result<(), SchedulerError> {
+            unreachable!()
+        }
+
+        async fn kill_running_job(
+            &self,
+            _sched_id: &str,
+        ) -> std::result::Result<(), SchedulerError> {
+            unreachable!()
+        }
+
+        async fn get_running_job_info(
+            &self,
+            _sched_id: &str,
+        ) -> std::result::Result<Option<(String, chrono::DateTime<chrono::Utc>)>, SchedulerError>
+        {
+            unreachable!()
+        }
+    }
+
+    async fn authorized_mcp_service(
+        config: Arc<Config>,
+        repository: Arc<SqliteMcpPlatformRepository>,
+    ) -> Arc<McpPlatformService> {
+        let ports = LifecyclePorts {
+            registration: Arc::new(crate::mcp_platform::SafeRegistrationEffectAdapter::new(
+                Arc::new(UnavailableRemoteHttpNetworkPolicy),
+            )),
+            host_integration: Arc::new(crate::mcp_platform::EmptyHostIntegrationAdapter),
+            transport: Arc::new(CoreTransportProjectionAdapter),
+            auth: Arc::new(AlwaysReadyAuth),
+            health: Arc::new(AlwaysHealthyAdapter),
+            projection_sink: Arc::new(ConfigProjectionSink::with_config(config)),
+        };
+        Arc::new(McpPlatformService::new_with_lifecycle_ports(
+            repository,
+            Arc::new(PlatformTestClock(AtomicI64::new(1_000))),
+            Arc::new(PlatformTestIds::default()),
+            McpPlatformServiceOptions::default(),
+            ports,
+            Arc::new(UnavailableRemoteHttpNetworkPolicy),
+        ))
+    }
+
+    #[tokio::test]
+    async fn raw_custom_mcp_mutation_requires_transport_capability_before_side_effects() {
+        let directory = tempfile::tempdir().unwrap();
+        let config_file = directory.path().join("config.yaml");
+        let secrets_file = directory.path().join("secrets.yaml");
+        std::fs::write(&config_file, "").unwrap();
+        std::fs::write(&secrets_file, "").unwrap();
+        let config = Arc::new(Config::new_with_file_secrets(&config_file, &secrets_file).unwrap());
+        let repository = Arc::new(
+            SqliteMcpPlatformRepository::open_path_with_integrity_signer(
+                directory.path().join("platform.db"),
+                InMemoryIntegritySigner::new_for_testing([0x61; 32]),
+            )
+            .await
+            .unwrap(),
+        );
+        let service = authorized_mcp_service(config.clone(), repository.clone()).await;
+        let context = platform_test_context("acp-transport-auth");
+        let verified = parse_manifest(MANUAL_MCP_MANIFEST.as_bytes()).unwrap();
+        let digest = verified.digest().to_string();
+        repository
+            .save_manifest(&ManifestRecord {
+                verified,
+                proof: ManifestProof::LocalBytes,
+                trust_tier: TrustTier::Local,
+                source_metadata: Default::default(),
+                created_at_ms: 1_000,
+            })
+            .await
+            .unwrap();
+        let plan = service
+            .plan_create(
+                &context,
+                PlanCreateInput {
+                    intent: PlanIntent::Register {
+                        manifest_digest: digest,
+                        installation_scope: crate::mcp_platform::InstallationScope::User,
+                    },
+                    idempotency_key: "register-plan".to_string(),
+                },
+            )
+            .await
+            .unwrap();
+        let task = service
+            .install_confirm(
+                &context,
+                InstallConfirmInput {
+                    plan_id: plan.plan_id,
+                    plan_digest: plan.plan_digest,
+                    decision: UserDecision::Confirm,
+                    idempotency_key: "register-task".to_string(),
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(task.status, crate::mcp_platform::TaskStatus::Queued);
+        for _ in 0..4 {
+            if !service.runner_tick().await.unwrap() {
+                break;
+            }
+        }
+        let managed = service
+            .managed_list(
+                &context,
+                ManagedListInput {
+                    cursor: None,
+                    page_size: None,
+                    registration: None,
+                    installation: None,
+                    runtime: None,
+                    health: None,
+                    default_enabled: None,
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(managed.items.len(), 1);
+        let detail = service
+            .managed_get(
+                &context,
+                crate::mcp_platform::ManagedGetInput {
+                    managed_mcp_id: managed.items[0].managed_mcp_id.clone(),
+                },
+            )
+            .await
+            .unwrap();
+        let health_task = service
+            .health_run(
+                &context,
+                HealthRunInput {
+                    managed_mcp_id: detail.summary.managed_mcp_id.clone(),
+                    mode: HealthCheckMode::Registration,
+                    idempotency_key: "health-task".to_string(),
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(health_task.status, crate::mcp_platform::TaskStatus::Queued);
+        for _ in 0..4 {
+            if !service.runner_tick().await.unwrap() {
+                break;
+            }
+        }
+        let enabled = service
+            .set_default_enabled(
+                &context,
+                SetDefaultEnabledInput {
+                    managed_mcp_id: detail.summary.managed_mcp_id.clone(),
+                    enabled: true,
+                    expected_revision: detail.summary.revision,
+                },
+            )
+            .await
+            .unwrap();
+        let key = service
+            .managed_get(
+                &context,
+                crate::mcp_platform::ManagedGetInput {
+                    managed_mcp_id: enabled.managed_mcp_id.clone(),
+                },
+            )
+            .await
+            .unwrap()
+            .extension_config_key;
+        assert!(
+            get_extension_entry_by_key_with_config(config.as_ref(), &key)
+                .unwrap()
+                .enabled
+        );
+
+        let provider_factory: AcpProviderFactory = Arc::new(|_, _, _| {
+            Box::pin(async { Err(anyhow::anyhow!("provider is unused in ACP auth regression")) })
+        });
+        let agent = GooseAcpAgent::new(GooseAcpAgentOptions {
+            provider_factory,
+            builtins: Vec::new(),
+            data_dir: directory.path().join("agent-data"),
+            config_dir: directory.path().join("agent-config"),
+            disable_session_naming: true,
+            goose_platform: GoosePlatform::GooseCli,
+            additional_source_roots: Vec::new(),
+            scheduler: Arc::new(TestScheduler),
+            mcp_platform_service: Some(service.clone()),
+            mcp_platform_service_cell: None,
+        })
+        .await
+        .unwrap();
+
+        let unauthorized = agent
+            .dispatch_custom_request(
+                MCP_SET_DEFAULT_ENABLED_METHOD,
+                serde_json::json!({
+                    "managedMcpId": enabled.managed_mcp_id,
+                    "enabled": false,
+                    "expectedRevision": enabled.revision,
+                }),
+            )
+            .await
+            .unwrap();
+        let unauthorized: McpSetDefaultEnabledResponse =
+            serde_json::from_value(unauthorized).unwrap();
+        let McpPlatformOutcome::Error { error } = unauthorized.outcome else {
+            panic!("raw ACP dispatch must fail closed without transport capability");
+        };
+        assert_eq!(error.code, McpPlatformErrorCodeDto::PolicyDenied);
+        let unchanged = service
+            .managed_get(
+                &context,
+                crate::mcp_platform::ManagedGetInput {
+                    managed_mcp_id: detail.summary.managed_mcp_id.clone(),
+                },
+            )
+            .await
+            .unwrap();
+        assert!(unchanged.summary.default_enabled);
+        assert_eq!(unchanged.summary.revision, enabled.revision);
+        assert!(
+            get_extension_entry_by_key_with_config(config.as_ref(), &key)
+                .unwrap()
+                .enabled
+        );
+
+        let unauthorized_transport = agent
+            .test_dispatch_transport_custom_request_without_authority(
+                MCP_SET_DEFAULT_ENABLED_METHOD,
+                serde_json::json!({
+                    "managedMcpId": enabled.managed_mcp_id,
+                    "enabled": false,
+                    "expectedRevision": enabled.revision,
+                }),
+            )
+            .await
+            .unwrap();
+        let unauthorized_transport: McpSetDefaultEnabledResponse =
+            serde_json::from_value(unauthorized_transport).unwrap();
+        let McpPlatformOutcome::Error { error } = unauthorized_transport.outcome else {
+            panic!("unauthenticated ACP transport must fail closed");
+        };
+        assert_eq!(error.code, McpPlatformErrorCodeDto::PolicyDenied);
+
+        let authorized = agent
+            .test_dispatch_transport_custom_request(
+                MCP_SET_DEFAULT_ENABLED_METHOD,
+                serde_json::json!({
+                    "managedMcpId": detail.summary.managed_mcp_id,
+                    "enabled": false,
+                    "expectedRevision": enabled.revision,
+                }),
+            )
+            .await
+            .unwrap();
+        let authorized: McpSetDefaultEnabledResponse = serde_json::from_value(authorized).unwrap();
+        let McpPlatformOutcome::Success { value } = authorized.outcome else {
+            panic!("authorized ACP dispatch must commit the managed projection");
+        };
+        assert!(!value.default_enabled);
+        assert!(value.revision > enabled.revision);
+        assert!(
+            !get_extension_entry_by_key_with_config(config.as_ref(), &key)
+                .unwrap()
+                .enabled
+        );
+
+        let raw_after_authorized = agent
+            .dispatch_custom_request(
+                MCP_SET_DEFAULT_ENABLED_METHOD,
+                serde_json::json!({
+                    "managedMcpId": value.managed_mcp_id,
+                    "enabled": true,
+                    "expectedRevision": value.revision,
+                }),
+            )
+            .await
+            .unwrap();
+        let raw_after_authorized: McpSetDefaultEnabledResponse =
+            serde_json::from_value(raw_after_authorized).unwrap();
+        let McpPlatformOutcome::Error { error } = raw_after_authorized.outcome else {
+            panic!("raw ACP dispatch must stay unauthorized after an authenticated transport call");
+        };
+        assert_eq!(error.code, McpPlatformErrorCodeDto::PolicyDenied);
+
+        let (transport_session, reusable_authority) = test_transport_session_authority();
+        let reconnect = agent
+            .test_dispatch_transport_custom_request_with_authority(
+                reusable_authority.clone(),
+                MCP_SET_DEFAULT_ENABLED_METHOD,
+                serde_json::json!({
+                    "managedMcpId": value.managed_mcp_id,
+                    "enabled": true,
+                    "expectedRevision": value.revision,
+                }),
+            )
+            .await
+            .unwrap();
+        let reconnect: McpSetDefaultEnabledResponse = serde_json::from_value(reconnect).unwrap();
+        let McpPlatformOutcome::Success {
+            value: reconnected_value,
+        } = reconnect.outcome
+        else {
+            panic!("live transport authority must authorize the reconnect write");
+        };
+        assert!(reconnected_value.default_enabled);
+        drop(transport_session);
+
+        let expired = agent
+            .test_dispatch_transport_custom_request_with_authority(
+                reusable_authority,
+                MCP_SET_DEFAULT_ENABLED_METHOD,
+                serde_json::json!({
+                    "managedMcpId": reconnected_value.managed_mcp_id,
+                    "enabled": false,
+                    "expectedRevision": reconnected_value.revision,
+                }),
+            )
+            .await
+            .unwrap();
+        let expired: McpSetDefaultEnabledResponse = serde_json::from_value(expired).unwrap();
+        let McpPlatformOutcome::Error { error } = expired.outcome else {
+            panic!("dropped transport authority must not be reusable");
+        };
+        assert_eq!(error.code, McpPlatformErrorCodeDto::PolicyDenied);
     }
 }

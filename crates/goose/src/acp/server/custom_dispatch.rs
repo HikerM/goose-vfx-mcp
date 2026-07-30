@@ -1,6 +1,52 @@
 use super::*;
 use goose_acp_macros::custom_methods;
 
+fn safe_custom_dispatch_error() -> agent_client_protocol::Error {
+    agent_client_protocol::Error::internal_error().data("acp_custom_dispatch_failed")
+}
+
+fn safe_custom_request_params_error() -> agent_client_protocol::Error {
+    agent_client_protocol::Error::invalid_params().data("invalid_custom_request_params")
+}
+
+fn unavailable_custom_route_error() -> agent_client_protocol::Error {
+    agent_client_protocol::Error::method_not_found().data("custom_route_not_available")
+}
+
+fn log_custom_request_failure(is_error: bool) {
+    if is_error {
+        tracing::error!(event = "acp_custom_request_failed");
+    }
+}
+
+pub const UNAVAILABLE_CUSTOM_ROUTE_METHODS: &[&str] = &[
+    MCP_GOVERNED_IMPORT_METHOD,
+    MCP_SOURCE_PROVISION_PREPARE_METHOD,
+    MCP_SOURCE_PROVISION_CONFIRM_METHOD,
+    MCP_CATALOG_LIST_METHOD,
+    MCP_CATALOG_DETAIL_METHOD,
+    MCP_SOURCES_POLICY_GET_METHOD,
+    MCP_SOURCE_REFRESH_METHOD,
+    MCP_SOURCE_ADAPTERS_LIST_METHOD,
+    MCP_MANUAL_STDIO_SOURCES_LIST_METHOD,
+    MCP_MANUAL_PLAN_CREATE_METHOD,
+    MCP_PLAN_CREATE_METHOD,
+    MCP_PROJECTION_RECOVERY_RESOLVE_METHOD,
+];
+
+pub fn is_unavailable_custom_route(method: &str) -> bool {
+    UNAVAILABLE_CUSTOM_ROUTE_METHODS.contains(&method)
+}
+
+pub fn available_custom_method_schemas(
+    generator: &mut schemars::SchemaGenerator,
+) -> Vec<crate::custom_requests::CustomMethodSchema> {
+    GooseAcpAgent::custom_method_schemas(generator)
+        .into_iter()
+        .filter(|schema| !is_unavailable_custom_route(&schema.method))
+        .collect()
+}
+
 #[custom_methods]
 impl GooseAcpAgent {
     pub async fn dispatch_custom_request(
@@ -8,23 +54,59 @@ impl GooseAcpAgent {
         method: &str,
         params: serde_json::Value,
     ) -> Result<serde_json::Value, agent_client_protocol::Error> {
-        let result = async {
-            if <SaveRecipeRequest as agent_client_protocol::JsonRpcMessage>::matches_method(method)
-            {
-                let req = recipe::deserialize_save_recipe_request(params)?;
-                let result = self.on_save_recipe(req).await?;
-                return serde_json::to_value(&result).map_err(|e| {
-                    agent_client_protocol::Error::internal_error().data(e.to_string())
-                });
+        self.dispatch_custom_request_scoped(None, method, params)
+            .await
+    }
+
+    pub(super) async fn dispatch_transport_custom_request(
+        &self,
+        authority: TransportSessionMcpWriteAuthority,
+        method: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value, agent_client_protocol::Error> {
+        self.dispatch_custom_request_scoped(Some(authority), method, params)
+            .await
+    }
+
+    async fn dispatch_custom_request_scoped(
+        &self,
+        authority: Option<TransportSessionMcpWriteAuthority>,
+        method: &str,
+        params: serde_json::Value,
+    ) -> Result<serde_json::Value, agent_client_protocol::Error> {
+        let result = with_transport_mcp_platform_write_authority(authority, async {
+            let is_transport_mcp_platform_write_route =
+                <McpHttpsManifestPrepareRequest as agent_client_protocol::JsonRpcMessage>::matches_method(method)
+                    || <McpHttpsManifestConfirmRequest as agent_client_protocol::JsonRpcMessage>::matches_method(method)
+                    || <McpHttpsProvisionPlanCreateRequest as agent_client_protocol::JsonRpcMessage>::matches_method(method)
+                    || <McpInstallConfirmRequest as agent_client_protocol::JsonRpcMessage>::matches_method(method);
+            if is_transport_mcp_platform_write_route && current_transport_mcp_platform_write_authority().is_none() {
+                return Err(unavailable_custom_route_error());
+            }
+            if is_unavailable_custom_route(method) {
+                return Err(unavailable_custom_route_error());
             }
 
-            self.handle_custom_request(method, params).await
-        }
+            if <SaveRecipeRequest as agent_client_protocol::JsonRpcMessage>::matches_method(method)
+            {
+                let req = recipe::deserialize_save_recipe_request(params)
+                    .map_err(|_| safe_custom_request_params_error())?;
+                let result = self
+                    .on_save_recipe(req)
+                    .await
+                    .map_err(|_| safe_custom_dispatch_error())?;
+                return serde_json::to_value(&result).map_err(|_| safe_custom_dispatch_error());
+            }
+
+            let result = self
+                .handle_custom_request(method, params)
+                .await;
+            result
+                .map_err(|_| safe_custom_dispatch_error())
+        })
         .await;
 
-        if let Err(error) = &result {
-            tracing::error!(method, error = ?error, "ACP custom request failed");
-        }
+        log_custom_request_failure(result.is_err());
 
         result
     }
@@ -37,52 +119,36 @@ impl GooseAcpAgent {
         self.on_add_session_extension(req).await
     }
 
-    #[custom_method(McpCatalogListRequest)]
-    async fn dispatch_mcp_catalog_list(
+    #[custom_method(McpTaskGetRequest)]
+    async fn dispatch_mcp_task_get(
         &self,
-        req: McpCatalogListRequest,
-    ) -> Result<McpCatalogListResponse, agent_client_protocol::Error> {
-        Ok(self.on_mcp_catalog_list(req).await)
+        req: McpTaskGetRequest,
+    ) -> Result<McpTaskGetResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_task_get(req).await)
     }
 
-    #[custom_method(McpCatalogDetailRequest)]
-    async fn dispatch_mcp_catalog_detail(
+    #[custom_method(McpHttpsManifestPrepareRequest)]
+    async fn dispatch_mcp_https_manifest_prepare(
         &self,
-        req: McpCatalogDetailRequest,
-    ) -> Result<McpCatalogDetailResponse, agent_client_protocol::Error> {
-        Ok(self.on_mcp_catalog_detail(req).await)
+        req: McpHttpsManifestPrepareRequest,
+    ) -> Result<McpHttpsManifestPrepareResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_https_manifest_prepare(req).await)
     }
 
-    #[custom_method(McpSourcesPolicyGetRequest)]
-    async fn dispatch_mcp_sources_policy_get(
+    #[custom_method(McpHttpsManifestConfirmRequest)]
+    async fn dispatch_mcp_https_manifest_confirm(
         &self,
-        req: McpSourcesPolicyGetRequest,
-    ) -> Result<McpSourcesPolicyGetResponse, agent_client_protocol::Error> {
-        Ok(self.on_mcp_sources_policy_get(req).await)
+        req: McpHttpsManifestConfirmRequest,
+    ) -> Result<McpHttpsManifestConfirmResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_https_manifest_confirm(req).await)
     }
 
-    #[custom_method(McpManualStdioSourcesListRequest)]
-    async fn dispatch_mcp_manual_stdio_sources_list(
+    #[custom_method(McpHttpsProvisionPlanCreateRequest)]
+    async fn dispatch_mcp_https_provision_plan_create(
         &self,
-        req: McpManualStdioSourcesListRequest,
-    ) -> Result<McpManualStdioSourcesListResponse, agent_client_protocol::Error> {
-        Ok(self.on_mcp_manual_stdio_sources_list(req).await)
-    }
-
-    #[custom_method(McpManualPlanCreateRequest)]
-    async fn dispatch_mcp_manual_plan_create(
-        &self,
-        req: McpManualPlanCreateRequest,
-    ) -> Result<McpManualPlanCreateResponse, agent_client_protocol::Error> {
-        Ok(self.on_mcp_manual_plan_create(req).await)
-    }
-
-    #[custom_method(McpPlanCreateRequest)]
-    async fn dispatch_mcp_plan_create(
-        &self,
-        req: McpPlanCreateRequest,
-    ) -> Result<McpPlanCreateResponse, agent_client_protocol::Error> {
-        Ok(self.on_mcp_plan_create(req).await)
+        req: McpHttpsProvisionPlanCreateRequest,
+    ) -> Result<McpHttpsProvisionPlanCreateResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_https_provision_plan_create(req).await)
     }
 
     #[custom_method(McpInstallConfirmRequest)]
@@ -91,14 +157,6 @@ impl GooseAcpAgent {
         req: McpInstallConfirmRequest,
     ) -> Result<McpInstallConfirmResponse, agent_client_protocol::Error> {
         Ok(self.on_mcp_install_confirm(req).await)
-    }
-
-    #[custom_method(McpTaskGetRequest)]
-    async fn dispatch_mcp_task_get(
-        &self,
-        req: McpTaskGetRequest,
-    ) -> Result<McpTaskGetResponse, agent_client_protocol::Error> {
-        Ok(self.on_mcp_task_get(req).await)
     }
 
     #[custom_method(McpTaskCancelRequest)]
@@ -163,6 +221,102 @@ impl GooseAcpAgent {
         req: McpSetDefaultEnabledRequest,
     ) -> Result<McpSetDefaultEnabledResponse, agent_client_protocol::Error> {
         Ok(self.on_mcp_set_default_enabled(req).await)
+    }
+
+    #[custom_method(McpRuntimeControlRequest)]
+    async fn dispatch_mcp_runtime_control(
+        &self,
+        req: McpRuntimeControlRequest,
+    ) -> Result<McpRuntimeControlResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_runtime_control(req).await)
+    }
+
+    #[custom_method(McpProfileListRequest)]
+    async fn dispatch_mcp_profile_list(
+        &self,
+        req: McpProfileListRequest,
+    ) -> Result<McpProfileListResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_list(req).await)
+    }
+
+    #[custom_method(McpProfileGetRequest)]
+    async fn dispatch_mcp_profile_get(
+        &self,
+        req: McpProfileGetRequest,
+    ) -> Result<McpProfileGetResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_get(req).await)
+    }
+
+    #[custom_method(McpProfileCreateRequest)]
+    async fn dispatch_mcp_profile_create(
+        &self,
+        req: McpProfileCreateRequest,
+    ) -> Result<McpProfileCreateResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_create(req).await)
+    }
+
+    #[custom_method(McpProfileUpdateRequest)]
+    async fn dispatch_mcp_profile_update(
+        &self,
+        req: McpProfileUpdateRequest,
+    ) -> Result<McpProfileUpdateResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_update(req).await)
+    }
+
+    #[custom_method(McpProfileRestoreRequest)]
+    async fn dispatch_mcp_profile_restore(
+        &self,
+        req: McpProfileRestoreRequest,
+    ) -> Result<McpProfileRestoreResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_restore(req).await)
+    }
+
+    #[custom_method(McpProfileArchiveRequest)]
+    async fn dispatch_mcp_profile_archive(
+        &self,
+        req: McpProfileArchiveRequest,
+    ) -> Result<McpProfileArchiveResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_archive(req).await)
+    }
+
+    #[custom_method(McpProfileDraftCreateRequest)]
+    async fn dispatch_mcp_profile_draft_create(
+        &self,
+        req: McpProfileDraftCreateRequest,
+    ) -> Result<McpProfileDraftCreateResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_draft_create(req).await)
+    }
+
+    #[custom_method(McpProfileModelRecommendRequest)]
+    async fn dispatch_mcp_profile_model_recommend(
+        &self,
+        req: McpProfileModelRecommendRequest,
+    ) -> Result<McpProfileModelRecommendResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_model_recommend(req).await)
+    }
+
+    #[custom_method(McpProfileConnectionTestRequest)]
+    async fn dispatch_mcp_profile_connection_test(
+        &self,
+        req: McpProfileConnectionTestRequest,
+    ) -> Result<McpProfileConnectionTestResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_connection_test(req).await)
+    }
+
+    #[custom_method(McpProfileApplyPlanCreateRequest)]
+    async fn dispatch_mcp_profile_apply_plan_create(
+        &self,
+        req: McpProfileApplyPlanCreateRequest,
+    ) -> Result<McpProfileApplyPlanCreateResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_apply_plan_create(req).await)
+    }
+
+    #[custom_method(McpProfileApplyConfirmRequest)]
+    async fn dispatch_mcp_profile_apply_confirm(
+        &self,
+        req: McpProfileApplyConfirmRequest,
+    ) -> Result<McpProfileApplyConfirmResponse, agent_client_protocol::Error> {
+        Ok(self.on_mcp_profile_apply_confirm(req).await)
     }
 
     #[custom_method(RemoveSessionExtensionRequest)]
@@ -1058,5 +1212,189 @@ impl GooseAcpAgent {
     ) -> Result<LocalInferenceBuiltinChatTemplatesListResponse, agent_client_protocol::Error> {
         self.on_local_inference_builtin_chat_templates_list(req)
             .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use agent_client_protocol::JsonRpcMessage;
+    use std::fmt;
+    use std::sync::{Arc, Mutex};
+    use tracing::field::Visit;
+    use tracing::{Event, Subscriber};
+    use tracing_subscriber::layer::{Context, SubscriberExt};
+    use tracing_subscriber::Layer;
+
+    #[derive(Clone, Default)]
+    struct CapturedLogs(Arc<Mutex<Vec<String>>>);
+
+    impl<S> Layer<S> for CapturedLogs
+    where
+        S: Subscriber,
+    {
+        fn on_event(&self, event: &Event<'_>, _context: Context<'_, S>) {
+            let mut visitor = CapturedFields::default();
+            event.record(&mut visitor);
+            self.0.lock().unwrap().push(visitor.0);
+        }
+    }
+
+    #[derive(Default)]
+    struct CapturedFields(String);
+
+    impl Visit for CapturedFields {
+        fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
+            self.0.push_str(field.name());
+            self.0.push('=');
+            self.0.push_str(value);
+            self.0.push(';');
+        }
+
+        fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn fmt::Debug) {
+            self.0.push_str(field.name());
+            self.0.push('=');
+            self.0.push_str(&format!("{value:?}"));
+            self.0.push(';');
+        }
+    }
+
+    fn assert_redacted(error: agent_client_protocol::Error, secrets: &[&str]) {
+        let display = error.to_string();
+        let debug = format!("{error:?}");
+        let serialized = serde_json::to_string(&error).unwrap();
+
+        for secret in secrets {
+            assert!(!display.contains(secret));
+            assert!(!debug.contains(secret));
+            assert!(!serialized.contains(secret));
+        }
+    }
+
+    #[test]
+    fn unavailable_custom_routes_are_unregistered_and_redacted() {
+        const METHOD_SECRET: &str = "acp-method-secret";
+        const ID_SECRET: &str = "acp-id-secret";
+        const PAGE_SIZE_SECRET: &str = "acp-page-size-secret";
+        const PARAMS_SECRET: &str = "acp-params-secret";
+        let params = serde_json::json!({
+            "pageSize": PAGE_SIZE_SECRET,
+            "query": PARAMS_SECRET,
+        });
+
+        assert!(UNAVAILABLE_CUSTOM_ROUTE_METHODS
+            .iter()
+            .all(|method| is_unavailable_custom_route(method)));
+        assert_eq!(
+            UNAVAILABLE_CUSTOM_ROUTE_METHODS,
+            &[
+                MCP_GOVERNED_IMPORT_METHOD,
+                MCP_SOURCE_PROVISION_PREPARE_METHOD,
+                MCP_SOURCE_PROVISION_CONFIRM_METHOD,
+                MCP_CATALOG_LIST_METHOD,
+                MCP_CATALOG_DETAIL_METHOD,
+                MCP_SOURCES_POLICY_GET_METHOD,
+                MCP_SOURCE_REFRESH_METHOD,
+                MCP_SOURCE_ADAPTERS_LIST_METHOD,
+                MCP_MANUAL_STDIO_SOURCES_LIST_METHOD,
+                MCP_MANUAL_PLAN_CREATE_METHOD,
+                MCP_PLAN_CREATE_METHOD,
+                MCP_PROJECTION_RECOVERY_RESOLVE_METHOD,
+            ]
+        );
+        assert!(McpGovernedImportRequest::matches_method(
+            MCP_GOVERNED_IMPORT_METHOD
+        ));
+        assert!(McpSourceProvisionPrepareRequest::matches_method(
+            MCP_SOURCE_PROVISION_PREPARE_METHOD
+        ));
+        assert!(McpSourceProvisionConfirmRequest::matches_method(
+            MCP_SOURCE_PROVISION_CONFIRM_METHOD
+        ));
+        assert!(McpCatalogListRequest::matches_method(
+            MCP_CATALOG_LIST_METHOD
+        ));
+        assert!(McpCatalogDetailRequest::matches_method(
+            MCP_CATALOG_DETAIL_METHOD
+        ));
+        assert!(McpSourcesPolicyGetRequest::matches_method(
+            MCP_SOURCES_POLICY_GET_METHOD
+        ));
+        assert!(McpSourceRefreshRequest::matches_method(
+            MCP_SOURCE_REFRESH_METHOD
+        ));
+        assert!(McpSourceAdaptersListRequest::matches_method(
+            MCP_SOURCE_ADAPTERS_LIST_METHOD
+        ));
+        assert!(McpManualStdioSourcesListRequest::matches_method(
+            MCP_MANUAL_STDIO_SOURCES_LIST_METHOD
+        ));
+        assert!(McpManualPlanCreateRequest::matches_method(
+            MCP_MANUAL_PLAN_CREATE_METHOD
+        ));
+        assert!(McpPlanCreateRequest::matches_method(MCP_PLAN_CREATE_METHOD));
+        assert!(McpInstallConfirmRequest::matches_method(
+            MCP_INSTALL_CONFIRM_METHOD
+        ));
+        assert!(!is_unavailable_custom_route(MCP_INSTALL_CONFIRM_METHOD));
+        assert!(McpProjectionRecoveryResolveRequest::matches_method(
+            MCP_PROJECTION_RECOVERY_RESOLVE_METHOD
+        ));
+        assert!(!is_unavailable_custom_route(METHOD_SECRET));
+        assert_eq!(params["pageSize"], PAGE_SIZE_SECRET);
+        let conversion: std::result::Result<McpCatalogListRequest, _> =
+            serde_json::from_value(params);
+        assert!(conversion.is_err());
+        assert_redacted(
+            conversion
+                .map_err(|_| safe_custom_request_params_error())
+                .unwrap_err(),
+            &[METHOD_SECRET, ID_SECRET, PAGE_SIZE_SECRET, PARAMS_SECRET],
+        );
+        assert_redacted(
+            unavailable_custom_route_error(),
+            &[METHOD_SECRET, ID_SECRET, PAGE_SIZE_SECRET, PARAMS_SECRET],
+        );
+
+        let mut generator = schemars::SchemaGenerator::default();
+        let schemas = available_custom_method_schemas(&mut generator);
+        assert!(!schemas
+            .iter()
+            .any(|schema| UNAVAILABLE_CUSTOM_ROUTE_METHODS.contains(&schema.method.as_str())));
+        assert!(schemas
+            .iter()
+            .any(|schema| schema.method == MCP_INSTALL_CONFIRM_METHOD));
+    }
+
+    #[test]
+    fn https_provision_plan_route_is_strict_and_transport_bound() {
+        assert!(McpHttpsProvisionPlanCreateRequest::matches_method(
+            MCP_HTTPS_PROVISION_PLAN_CREATE_METHOD
+        ));
+        let params = serde_json::json!({
+            "provisionId": "provision",
+            "expectedManifestDigest": "digest",
+            "idempotencyKey": "request",
+            "actor": "forged",
+            "sourceUrl": "https://attacker.invalid/manifest.json"
+        });
+        assert!(serde_json::from_value::<McpHttpsProvisionPlanCreateRequest>(params).is_err());
+    }
+
+    #[test]
+    fn custom_dispatch_logs_only_a_fixed_event_and_leaves_standard_methods_unmatched() {
+        const SECRET: &str = "acp-tracing-secret";
+        let logs = CapturedLogs::default();
+        let subscriber = tracing_subscriber::registry().with(logs.clone());
+
+        tracing::subscriber::with_default(subscriber, || {
+            log_custom_request_failure(true);
+        });
+
+        let captured = logs.0.lock().unwrap().join("\n");
+        assert!(captured.contains("acp_custom_request_failed"));
+        assert!(!captured.contains(SECRET));
+        assert!(!is_unavailable_custom_route("initialize"));
+        assert!(!is_unavailable_custom_route("session/cancel"));
     }
 }

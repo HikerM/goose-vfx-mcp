@@ -1,4 +1,5 @@
 use super::*;
+use crate::mcp_platform::McpPlatformErrorCode;
 
 impl GooseAcpAgent {
     pub(super) async fn on_update_working_dir(
@@ -99,15 +100,191 @@ impl GooseAcpAgent {
         &self,
         req: DeleteSessionRequest,
     ) -> Result<EmptyResponse, agent_client_protocol::Error> {
-        self.session_manager
-            .delete_session(&req.session_id)
-            .await
-            .internal_err()?;
-        self.sessions.lock().await.remove(&req.session_id);
-        self.agent_manager
-            .remove_session_if_loaded(&req.session_id)
-            .await
-            .internal_err_ctx("Failed to remove in-memory agent")?;
+        let expected_agent = self.session_agent_if_current(&req.session_id).await;
+        let session = self
+            .session_manager
+            .get_session(&req.session_id, false)
+            .await;
+        let profile_marker = session.as_ref().ok().and_then(|session| {
+            let raw = session.extension_data.get_extension_state(
+                crate::mcp_platform::ProfileApplicationMarker::EXTENSION_NAME,
+                crate::mcp_platform::ProfileApplicationMarker::VERSION,
+            );
+            let marker = <crate::mcp_platform::ProfileApplicationMarker as crate::session::ExtensionState>::from_extension_data(
+                &session.extension_data,
+            );
+            if raw.is_some() && marker.is_none() {
+                Some(Err(agent_client_protocol::Error::invalid_params()
+                    .data("profile application rejected: invalid_profile_marker")))
+            } else {
+                marker.map(Ok)
+            }
+        }).transpose()?;
+
+        let mut profile_cleanup = None;
+        let mut profile_service = None;
+        if let Some(marker) = &profile_marker {
+            let (_, service) = self.mcp_platform_context_and_service().await;
+            let service = service.map_err(|error| match error.code() {
+                McpPlatformErrorCode::PolicyDenied => {
+                    agent_client_protocol::Error::invalid_params()
+                        .data("profile application rejected: policy_denied")
+                }
+                _ => agent_client_protocol::Error::internal_error().data(format!(
+                    "profile_application_recovery_required:session_delete_state_unavailable;application_id={};session_id={}",
+                    marker.application_id, req.session_id
+                )),
+            })?;
+            let stored = service
+                .profile_application_cleanup_state(&req.session_id)
+                .await
+                .map_err(|_| {
+                    agent_client_protocol::Error::internal_error().data(format!(
+                        "profile_application_recovery_required:session_delete_state_unavailable;application_id={};session_id={}",
+                        marker.application_id, req.session_id
+                    ))
+                })?;
+            if marker.original_session_id != req.session_id {
+                return Err(agent_client_protocol::Error::invalid_params()
+                    .data("profile application rejected: cleanup_binding_mismatch"));
+            }
+            if stored
+                .as_ref()
+                .is_some_and(|(application_id, _)| application_id != &marker.application_id)
+            {
+                return Err(agent_client_protocol::Error::invalid_params()
+                    .data("profile application rejected: cleanup_binding_mismatch"));
+            }
+            profile_cleanup = Some(
+                stored.unwrap_or_else(|| (marker.application_id.clone(), "created".to_string())),
+            );
+            profile_service = Some(service);
+        } else if session.is_err() {
+            let (_, service) = self.mcp_platform_context_and_service_read_only().await;
+            if let Ok(service) = service {
+                match service
+                    .profile_application_cleanup_state(&req.session_id)
+                    .await
+                {
+                    Ok(Some(stored)) => {
+                        let (_, trusted_service) = self.mcp_platform_context_and_service().await;
+                        let trusted_service = trusted_service.map_err(|error| {
+                            if error.code() == McpPlatformErrorCode::PolicyDenied {
+                                agent_client_protocol::Error::invalid_params()
+                                    .data("profile application rejected: policy_denied")
+                            } else {
+                                agent_client_protocol::Error::internal_error()
+                                    .data("session delete state lookup failed")
+                            }
+                        })?;
+                        profile_cleanup = Some(stored);
+                        profile_service = Some(trusted_service);
+                    }
+                    Ok(None) => {}
+                    Err(_) => {
+                        return Err(agent_client_protocol::Error::internal_error()
+                            .data("session delete state lookup failed"));
+                    }
+                }
+            }
+        }
+
+        if let Some((application_id, status)) = &profile_cleanup {
+            let service = profile_service
+                .as_ref()
+                .expect("cleanup state requires service");
+            if status != "deleted" {
+                service
+                    .finish_profile_application(
+                        application_id,
+                        Some(&req.session_id),
+                        "recovery_required",
+                        "session_delete_started",
+                    )
+                    .await
+                    .map_err(|_| {
+                        agent_client_protocol::Error::internal_error().data(format!(
+                            "profile_application_recovery_required:session_delete_state_transition_failed;application_id={application_id};session_id={}",
+                            req.session_id
+                        ))
+                    })?;
+            }
+        }
+
+        if session.is_ok() {
+            self.session_manager
+                .delete_session(&req.session_id)
+                .await
+                .map_err(|_| {
+                    if let Some((application_id, _)) = &profile_cleanup {
+                        agent_client_protocol::Error::internal_error().data(format!(
+                            "profile_application_recovery_required:session_delete_failed;application_id={application_id};session_id={}",
+                            req.session_id
+                        ))
+                    } else {
+                        agent_client_protocol::Error::internal_error()
+                    }
+                })?;
+        } else if profile_cleanup.is_none() {
+            self.session_manager
+                .delete_session(&req.session_id)
+                .await
+                .internal_err()?;
+        }
+        if let Some(expected_agent) = expected_agent {
+            self.unregister_acp_session_and_managed_runtime(&req.session_id, &expected_agent)
+                .await;
+            if self
+                .agent_manager
+                .remove_session_if_current(&req.session_id, &expected_agent)
+                .await
+                .is_err()
+            {
+                if let Some((application_id, _)) = &profile_cleanup {
+                    profile_service
+                    .as_ref()
+                    .expect("cleanup state requires service")
+                    .finish_profile_application(
+                        application_id,
+                        Some(&req.session_id),
+                        "recovery_required",
+                        "agent_cleanup_failed",
+                    )
+                    .await
+                    .map_err(|_| {
+                        agent_client_protocol::Error::internal_error().data(format!(
+                            "profile_application_recovery_required:session_delete_state_transition_failed;application_id={application_id};session_id={}",
+                            req.session_id
+                        ))
+                    })?;
+                    return Err(agent_client_protocol::Error::internal_error().data(format!(
+                    "profile_application_recovery_required:agent_cleanup_failed;application_id={application_id};session_id={}",
+                    req.session_id
+                )));
+                }
+                return Err(agent_client_protocol::Error::internal_error()
+                    .data("Failed to remove in-memory agent"));
+            }
+        }
+        if let Some((application_id, status)) = profile_cleanup {
+            if status != "deleted" {
+                profile_service
+                    .expect("cleanup state requires service")
+                .finish_profile_application(
+                    &application_id,
+                    Some(&req.session_id),
+                    "deleted",
+                    "session_deleted",
+                )
+                .await
+                .map_err(|_| {
+                    agent_client_protocol::Error::internal_error().data(format!(
+                        "profile_application_recovery_required:session_delete_audit_failed;application_id={application_id};session_id={}",
+                        req.session_id
+                    ))
+                })?;
+            }
+        }
         Ok(EmptyResponse {})
     }
 
@@ -250,17 +427,21 @@ impl GooseAcpAgent {
         &self,
         req: ArchiveSessionRequest,
     ) -> Result<EmptyResponse, agent_client_protocol::Error> {
+        let expected_agent = self.session_agent_if_current(&req.session_id).await;
         self.session_manager
             .update(&req.session_id)
             .archived_at(Some(chrono::Utc::now()))
             .apply()
             .await
             .internal_err()?;
-        self.sessions.lock().await.remove(&req.session_id);
-        self.agent_manager
-            .remove_session_if_loaded(&req.session_id)
-            .await
-            .internal_err_ctx("Failed to remove in-memory agent")?;
+        if let Some(expected_agent) = expected_agent {
+            self.unregister_acp_session_and_managed_runtime(&req.session_id, &expected_agent)
+                .await;
+            self.agent_manager
+                .remove_session_if_current(&req.session_id, &expected_agent)
+                .await
+                .internal_err_ctx("Failed to remove in-memory agent")?;
+        }
         Ok(EmptyResponse {})
     }
 

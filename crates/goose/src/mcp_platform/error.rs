@@ -1,5 +1,7 @@
 use std::fmt;
 
+pub const MANAGED_STORAGE_ROOT_UNAVAILABLE_MESSAGE: &str = "Managed MCP storage on Windows is unavailable. Choose or repair a regular writable folder on D and restart Goose before retrying.";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum McpPlatformErrorCode {
     InvalidRequest,
@@ -20,9 +22,12 @@ pub enum McpPlatformErrorCode {
     OperationNotSupported,
     ManualStdioProviderUnavailable,
     RemoteHttpPolicyUnavailable,
+    CandidateStateConflict,
+    ManifestIdentityConflict,
     ManifestConflict,
     SchemaTooNew,
     IntegrityError,
+    IntegrityUnavailable,
     PlanConflict,
     PlanStale,
     PlanExpired,
@@ -33,6 +38,8 @@ pub enum McpPlatformErrorCode {
     NotFound,
     SerializationFailed,
     ProjectionConflict,
+    ProjectionWitnessExpired,
+    ProjectionWitnessConsumed,
     CredentialMissing,
     HealthFailed,
     TaskNotCancellable,
@@ -48,6 +55,7 @@ pub enum McpPlatformErrorCode {
     CommitUnavailable,
     UnsafeRepositoryTree,
     DevelopmentModeRequired,
+    RuntimeControlUnavailable,
 }
 
 impl McpPlatformErrorCode {
@@ -71,9 +79,12 @@ impl McpPlatformErrorCode {
             Self::OperationNotSupported => "operation_not_supported",
             Self::ManualStdioProviderUnavailable => "manual_stdio_provider_unavailable",
             Self::RemoteHttpPolicyUnavailable => "remote_http_policy_unavailable",
+            Self::CandidateStateConflict => "candidate_state_conflict",
+            Self::ManifestIdentityConflict => "manifest_identity_conflict",
             Self::ManifestConflict => "manifest_conflict",
             Self::SchemaTooNew => "schema_too_new",
             Self::IntegrityError => "integrity_error",
+            Self::IntegrityUnavailable => "integrity_unavailable",
             Self::PlanConflict => "plan_conflict",
             Self::PlanStale => "plan_stale",
             Self::PlanExpired => "plan_expired",
@@ -84,6 +95,8 @@ impl McpPlatformErrorCode {
             Self::NotFound => "not_found",
             Self::SerializationFailed => "serialization_failed",
             Self::ProjectionConflict => "projection_conflict",
+            Self::ProjectionWitnessExpired => "projection_witness_expired",
+            Self::ProjectionWitnessConsumed => "projection_witness_consumed",
             Self::CredentialMissing => "credential_missing",
             Self::HealthFailed => "health_failed",
             Self::TaskNotCancellable => "task_not_cancellable",
@@ -99,6 +112,7 @@ impl McpPlatformErrorCode {
             Self::CommitUnavailable => "commit_unavailable",
             Self::UnsafeRepositoryTree => "unsafe_repository_tree",
             Self::DevelopmentModeRequired => "development_mode_required",
+            Self::RuntimeControlUnavailable => "runtime_control_unavailable",
         }
     }
 }

@@ -16,6 +16,9 @@ pub use diagnostics::{
     DiagnosticsScheduledRecipe, DiagnosticsTextFile, SystemInfo,
 };
 pub use extension_data::{EnabledExtensionsState, ExtensionData, ExtensionState, TodoState};
+#[cfg(feature = "integration-test-support")]
+pub(crate) use session_manager::ServiceProvenanceVerifier;
 pub use session_manager::{
-    Session, SessionInsights, SessionManager, SessionNameUpdate, SessionType, SessionUpdateBuilder,
+    ManagedExtensionProvenance, Session, SessionExtensionProvenanceVerifier, SessionInsights,
+    SessionManager, SessionNameUpdate, SessionType, SessionUpdateBuilder,
 };

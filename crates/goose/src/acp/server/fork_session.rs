@@ -51,7 +51,9 @@ impl GooseAcpAgent {
             )
             .await?;
 
-        let (agent, extension_results) = self.prepare_acp_session_agent(cx, &goose_session).await?;
+        let (agent, extension_results) = self
+            .prepare_acp_session_agent(cx, &goose_session, None)
+            .await?;
         self.apply_session_recipe(&agent, &goose_session).await?;
         self.register_acp_session(goose_session.id.clone(), agent, HashMap::new())
             .await;

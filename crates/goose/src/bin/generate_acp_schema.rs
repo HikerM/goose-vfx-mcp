@@ -1,5 +1,5 @@
 use goose::acp::custom_notifications::custom_notification_schemas;
-use goose::acp::server::{agent_request_schemas, GooseAcpAgent};
+use goose::acp::server::{agent_request_schemas, available_custom_method_schemas};
 use schemars::SchemaGenerator;
 use serde_json::{json, Map, Value};
 use std::collections::{BTreeSet, HashMap};
@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 fn main() {
     let mut generator = SchemaGenerator::default();
-    let methods = GooseAcpAgent::custom_method_schemas(&mut generator);
+    let mut methods = available_custom_method_schemas(&mut generator);
     let notifications = custom_notification_schemas(&mut generator);
     let agent_requests = agent_request_schemas(&mut generator);
 

@@ -1,4 +1,9 @@
 pub mod auth;
+/// Raw JSON validation used by every ACP transport before its typed parser.
+///
+/// This transport capability is a prerequisite for future custom request registration; it does
+/// not register, authorize, or dispatch any custom handler itself.
+pub(crate) mod json_safety;
 #[cfg(any(feature = "rustls-tls", feature = "native-tls"))]
 pub mod tls;
 
@@ -185,22 +190,34 @@ fn aux_cors_layer() -> CorsLayer {
         ])
 }
 
-fn create_acp_router_inner(server: Arc<AcpServer>, policy: AcpOriginPolicy) -> Router {
-    AcpHttpServer::new(move || GooseAgentConnection::new(server.clone()))
-        .with_options(acp_http_options())
-        .into_router()
-        .layer(axum::middleware::from_fn_with_state(
-            policy,
-            enforce_websocket_origin,
-        ))
+fn create_acp_router_inner(
+    server: Arc<AcpServer>,
+    policy: AcpOriginPolicy,
+    authenticated_transport: bool,
+) -> Router {
+    AcpHttpServer::new(move || {
+        if authenticated_transport {
+            GooseAgentConnection::authenticated_http(server.clone())
+        } else {
+            GooseAgentConnection::new(server.clone())
+        }
+    })
+    .with_raw_json_validator(json_safety::accepts_acp_json)
+    .with_options(acp_http_options())
+    .into_router()
+    .layer(axum::middleware::from_fn_with_state(
+        policy,
+        enforce_websocket_origin,
+    ))
 }
 
 fn create_acp_router_with_policy(
     server: Arc<AcpServer>,
     policy: AcpOriginPolicy,
     secret_key: Option<String>,
+    authenticated_transport: bool,
 ) -> Router {
-    let mut acp_routes = create_acp_router_inner(server, policy.clone());
+    let mut acp_routes = create_acp_router_inner(server, policy.clone(), authenticated_transport);
     if let Some(secret_key) = secret_key {
         acp_routes = acp_routes.layer(axum::middleware::from_fn_with_state(
             secret_key,
@@ -213,7 +230,7 @@ fn create_acp_router_with_policy(
 /// The bare ACP HTTP/WebSocket router (POST/GET/DELETE on `/acp`), without auth
 /// or goose-specific auxiliary routes.
 pub fn create_acp_router(server: Arc<AcpServer>) -> Router {
-    create_acp_router_with_policy(server, AcpOriginPolicy::loopback(), None)
+    create_acp_router_with_policy(server, AcpOriginPolicy::loopback(), None, false)
 }
 
 async fn health() -> &'static str {
@@ -235,8 +252,12 @@ pub fn create_router(
     } else {
         AcpOriginPolicy::loopback()
     };
-    let acp_routes =
-        create_acp_router_with_policy(server, policy, require_token.then_some(secret_key.clone()));
+    let acp_routes = create_acp_router_with_policy(
+        server,
+        policy,
+        require_token.then_some(secret_key.clone()),
+        require_token,
+    );
 
     let aux_routes = Router::new()
         .route("/health", get(health))

@@ -4,6 +4,7 @@
 use crate::config::base::Config;
 use crate::config::extensions::is_extension_available;
 use crate::config::ExtensionConfig;
+use crate::mcp_platform::ProfileApplicationMarker;
 use crate::session::SessionManager;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -37,6 +38,72 @@ impl ExtensionData {
     pub fn set_extension_state(&mut self, extension_name: &str, version: &str, state: Value) {
         let key = format!("{}.{}", extension_name, version);
         self.extension_states.insert(key, state);
+    }
+
+    pub fn remove_extension_state(&mut self, extension_name: &str, version: &str) {
+        self.extension_states
+            .remove(&format!("{}.{}", extension_name, version));
+    }
+
+    pub fn redact_profile_managed_configs(&mut self) -> Result<()> {
+        let marker_value = self.get_extension_state(
+            ProfileApplicationMarker::EXTENSION_NAME,
+            ProfileApplicationMarker::VERSION,
+        );
+        let marker = ProfileApplicationMarker::from_extension_data(self);
+        if marker_value.is_some() && marker.is_none() {
+            return Err(anyhow::anyhow!(
+                "invalid MCP profile application provenance"
+            ));
+        }
+        let Some(marker) = marker else { return Ok(()) };
+        if let Some(mut extensions) =
+            <EnabledExtensionsState as ExtensionState>::from_extension_data(self)
+        {
+            marker.strip_managed_extensions(&mut extensions.extensions);
+            extensions.to_extension_data(self)?;
+        }
+        Ok(())
+    }
+
+    pub fn strip_profile_application_binding(&mut self) -> Result<()> {
+        self.redact_profile_managed_configs()?;
+        self.remove_extension_state(
+            ProfileApplicationMarker::EXTENSION_NAME,
+            ProfileApplicationMarker::VERSION,
+        );
+        Ok(())
+    }
+
+    pub fn redact_managed_configs(
+        &mut self,
+        managed_names: &std::collections::HashSet<String>,
+        managed_source_fingerprints: &std::collections::HashSet<String>,
+    ) -> Result<()> {
+        let raw_extensions = self.get_extension_state("enabled_extensions", "v0");
+        let mut state = <EnabledExtensionsState as ExtensionState>::from_extension_data(self);
+        if raw_extensions.is_some() && state.is_none() {
+            return Err(anyhow::anyhow!(
+                "unable to verify session extension provenance"
+            ));
+        }
+        if let Some(state) = &mut state {
+            let mut retained = Vec::with_capacity(state.extensions.len());
+            for extension in state.extensions.drain(..) {
+                let fingerprint = crate::mcp_platform::extension_source_fingerprint(&extension)
+                    .map_err(|_| {
+                        anyhow::anyhow!("unable to verify session extension provenance")
+                    })?;
+                if !managed_names.contains(&extension.name())
+                    && !managed_source_fingerprints.contains(&fingerprint)
+                {
+                    retained.push(extension);
+                }
+            }
+            state.extensions = retained;
+            state.to_extension_data(self)?;
+        }
+        Ok(())
     }
 }
 
@@ -108,6 +175,11 @@ pub struct EnabledExtensionsState {
 impl ExtensionState for EnabledExtensionsState {
     const EXTENSION_NAME: &'static str = "enabled_extensions";
     const VERSION: &'static str = "v0";
+}
+
+impl ExtensionState for ProfileApplicationMarker {
+    const EXTENSION_NAME: &'static str = "mcp_profile_application";
+    const VERSION: &'static str = "v1";
 }
 
 impl EnabledExtensionsState {

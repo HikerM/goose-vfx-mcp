@@ -1,24 +1,37 @@
+mod enrollment_runtime_binding_resolver;
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
 
-use tokio::sync::Notify;
+use tokio::sync::{Mutex as AsyncMutex, Notify};
 use tokio_util::sync::CancellationToken;
 
+use super::credential_runtime_gate::CredentialRuntimeSnapshot;
+use super::credential_runtime_gate::CredentialRuntimeStatus;
 use super::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
 use super::lifecycle::{
-    AuthRequirement, DirectSpawnDescriptor, HealthExecution, LifecyclePorts, ProjectionSnapshot,
-    RegistrationEffect,
+    observed_projection_digest, DirectSpawnDescriptor, HealthExecution, LifecyclePorts,
+    ProjectionCommitPlan, ProjectionSnapshot, RegistrationEffect,
 };
 use super::managed_distribution::{
     DistributionEffectAdapter, ExternalManagedAcquisition, ManagedInstallEffect,
 };
-use super::manifest::digest_serializable;
-use super::plan::PlanStep;
+use super::manifest::{digest_serializable, Architecture, Auth, Distribution, Platform};
+use super::plan::{
+    ManagedCapacityContractStatus, PlanStep, TrustedPlanAdapter, TrustedPlanSelectionContext,
+};
+use super::policy::PlanOperation;
+use super::projection_runtime::{
+    authoritative_persisted_projection_entry, RuntimeProjectionAuthority,
+};
+use super::repository::SqliteMcpPlatformRepository;
 use super::repository::{
-    ActivateManagedInstallation, CompensationTransition, ManagedMcpInventoryRecord,
-    NewHealthObservation, ProjectionMutationStatus, PutOwnedProjection, RegisterManagedMcp,
+    ActivateManagedInstallation, CompensationTransition, ExecutionAuthorization,
+    ManagedMcpInventoryRecord, NewHealthObservation, ProjectionAuthorization,
+    ProjectionMutationStatus, ProjectionRecoveryConfirmationReceipt, PutOwnedProjection,
+    QueuedTaskPreflight, RecoveryEligibility, RegisterManagedMcp, RemoveOwnedProjection,
     RestoreOwnedProjection, StageManagedInstallation, StepTransition, TaskRecord, TaskTransition,
 };
 use super::service::{Clock, McpPlatformRepositoryPort};
@@ -27,39 +40,107 @@ use super::task::{
     RollbackEvidence, RollbackStatus, StepEvidence, TaskOperation, TaskStatus, TaskStepStatus,
 };
 use super::{HealthCheckMode, HealthDetailCode, HealthResultCode};
+use enrollment_runtime_binding_resolver::FailClosedEnrollmentRuntimeBindingResolver;
+#[cfg(test)]
+pub(crate) use enrollment_runtime_binding_resolver::RecordingEnrollmentRuntimeBindingResolver;
+#[cfg(test)]
+pub(crate) use enrollment_runtime_binding_resolver::StaticEnrollmentRuntimeBindingResolver;
+pub(crate) use enrollment_runtime_binding_resolver::{
+    EnrollmentRuntimeBindingResolver, RepositoryEnrollmentRuntimeBindingResolver,
+    SharedManagedCredentialStatusEvaluator,
+};
 
 const LEASE_DURATION_MS: i64 = 30_000;
 const STALE_HEARTBEAT_MS: i64 = 60_000;
 const STALE_ARTIFACT_CLAIM_MS: i64 = 30 * 60 * 1_000;
 
+enum ProjectionRecoveryObservation {
+    Desired(super::repository::ProjectionSinkCommitReceipt),
+    PersistedAuthority(ProjectionRecoveryConfirmationReceipt),
+    Mismatch,
+}
+
+struct RecoveryAuthorizationGrant {
+    authorization: ProjectionAuthorization,
+}
+
+impl RecoveryAuthorizationGrant {
+    fn authorization(&self) -> &ProjectionAuthorization {
+        &self.authorization
+    }
+}
+
 pub struct TaskRunner {
     repository: Arc<dyn McpPlatformRepositoryPort>,
+    projection_repository: Arc<SqliteMcpPlatformRepository>,
+    projection_authority: RuntimeProjectionAuthority,
     clock: Arc<dyn Clock>,
     ports: LifecyclePorts,
+    managed_credential_status_evaluator: Arc<SharedManagedCredentialStatusEvaluator>,
     owner_id: String,
     active: Mutex<HashMap<String, CancellationToken>>,
+    recovery_gate: AsyncMutex<()>,
     wake: Notify,
     shutdown: CancellationToken,
     distribution: Option<Arc<dyn DistributionEffectAdapter>>,
+    distribution_unavailable_error: Option<McpPlatformError>,
 }
 
 impl TaskRunner {
-    pub fn new(
-        repository: Arc<dyn McpPlatformRepositoryPort>,
+    #[cfg(windows)]
+    pub(crate) async fn acquire_verified_runtime_activation(
+        &self,
+        managed_mcp_id: &str,
+    ) -> McpPlatformResult<super::managed_distribution::VerifiedManagedRuntimeActivation> {
+        self.distribution
+            .as_ref()
+            .ok_or_else(|| {
+                McpPlatformError::new(
+                    McpPlatformErrorCode::RuntimeControlUnavailable,
+                    "managed runtime activation verification is unavailable",
+                )
+            })?
+            .acquire_verified_runtime_activation(managed_mcp_id)
+            .await
+    }
+
+    pub(super) fn new_with_authority(
+        repository: Arc<SqliteMcpPlatformRepository>,
+        projection_authority: RuntimeProjectionAuthority,
         clock: Arc<dyn Clock>,
         ports: LifecyclePorts,
         owner_id: String,
     ) -> Self {
         Self {
-            repository,
+            repository: repository.clone(),
+            projection_repository: repository,
+            projection_authority,
             clock,
             ports,
+            managed_credential_status_evaluator: SharedManagedCredentialStatusEvaluator::new(
+                Arc::new(FailClosedEnrollmentRuntimeBindingResolver::new()),
+            ),
             owner_id,
             active: Mutex::new(HashMap::new()),
+            recovery_gate: AsyncMutex::new(()),
             wake: Notify::new(),
             shutdown: CancellationToken::new(),
             distribution: None,
+            distribution_unavailable_error: None,
         }
+    }
+
+    pub(crate) fn new(
+        repository: Arc<SqliteMcpPlatformRepository>,
+        clock: Arc<dyn Clock>,
+        ports: LifecyclePorts,
+        owner_id: String,
+    ) -> Self {
+        let projection_authority = super::projection_runtime::bootstrap_debug_runner_authority(
+            repository.as_ref(),
+            &ports,
+        );
+        Self::new_with_authority(repository, projection_authority, clock, ports, owner_id)
     }
 
     pub fn with_distribution_adapter(
@@ -70,8 +151,51 @@ impl TaskRunner {
         self
     }
 
+    pub(crate) fn with_distribution_unavailable_error(mut self, error: McpPlatformError) -> Self {
+        self.distribution_unavailable_error = Some(error);
+        self
+    }
+
+    pub(crate) fn set_distribution_unavailable_error(&mut self, error: McpPlatformError) {
+        self.distribution_unavailable_error = Some(error);
+    }
+
+    pub(crate) fn with_enrollment_runtime_binding_resolver(
+        self,
+        resolver: Arc<dyn EnrollmentRuntimeBindingResolver>,
+    ) -> Self {
+        self.set_enrollment_runtime_binding_resolver(resolver);
+        self
+    }
+
+    pub(crate) fn with_managed_credential_status_evaluator(
+        mut self,
+        evaluator: Arc<SharedManagedCredentialStatusEvaluator>,
+    ) -> Self {
+        self.managed_credential_status_evaluator = evaluator;
+        self
+    }
+
+    pub(crate) fn set_enrollment_runtime_binding_resolver(
+        &self,
+        resolver: Arc<dyn EnrollmentRuntimeBindingResolver>,
+    ) {
+        self.managed_credential_status_evaluator
+            .set_resolver(resolver);
+    }
+
     pub fn notify(&self) {
         self.wake.notify_one();
+    }
+
+    fn distribution(&self) -> McpPlatformResult<&Arc<dyn DistributionEffectAdapter>> {
+        if let Some(error) = self.distribution_unavailable_error.clone() {
+            return Err(error);
+        }
+        if let Some(distribution) = self.distribution.as_ref() {
+            return Ok(distribution);
+        }
+        Err(adapter_incompatible())
     }
 
     pub async fn cancel(&self, task_id: &str) {
@@ -91,20 +215,63 @@ impl TaskRunner {
 
     pub async fn tick(&self) -> McpPlatformResult<bool> {
         self.recover_projection_mutations().await?;
-        let Some(task) = self
-            .repository
-            .claim_next_task(&self.owner_id, self.clock.now_ms(), LEASE_DURATION_MS)
-            .await?
-        else {
-            return Ok(false);
+        let task = loop {
+            let now_ms = self.clock.now_ms();
+            let Some(candidate) = self.repository.next_queued_task_candidate(now_ms).await? else {
+                return Ok(false);
+            };
+            let preflight = match self.repository.load_queued_task_preflight(&candidate).await {
+                Ok(preflight) => preflight,
+                Err(_) => {
+                    if self
+                        .repository
+                        .reject_queued_task_candidate(
+                            &candidate,
+                            &self.owner_id,
+                            now_ms,
+                            &preflight_rejected_error(),
+                        )
+                        .await?
+                    {
+                        return Ok(true);
+                    }
+                    continue;
+                }
+            };
+            if self.preflight_queued_task(&preflight).await.is_err() {
+                if self
+                    .repository
+                    .reject_queued_task_candidate(
+                        &candidate,
+                        &self.owner_id,
+                        now_ms,
+                        &preflight_rejected_error(),
+                    )
+                    .await?
+                {
+                    return Ok(true);
+                }
+                continue;
+            }
+            if let Some(task) = self
+                .repository
+                .claim_preflighted_task(&preflight, &self.owner_id, now_ms, LEASE_DURATION_MS)
+                .await?
+            {
+                break task;
+            }
         };
+        let authorization = self
+            .repository
+            .authorize_execution(&task.task_id, &self.owner_id, self.clock.now_ms())
+            .await?;
         let cancellation = CancellationToken::new();
         self.active
             .lock()
             .expect("runner active lock")
             .insert(task.task_id.clone(), cancellation.clone());
         let heartbeat_stop = CancellationToken::new();
-        let execution = self.execute(task.clone(), cancellation.clone());
+        let execution = self.execute(authorization, cancellation.clone());
         let heartbeat = self.heartbeat(
             task.task_id.clone(),
             cancellation.clone(),
@@ -146,11 +313,22 @@ impl TaskRunner {
             .await?
             .iter()
             .any(|mutation| {
-                mutation.managed_mcp_id == managed_mcp_id
+                mutation.status != ProjectionMutationStatus::RecoveryRequired
+                    && mutation.managed_mcp_id == managed_mcp_id
                     && mutation.expected_revision == expected_revision
                     && mutation.desired_enabled == enabled
             });
         self.recover_projection_mutations().await?;
+        if self
+            .projection_repository
+            .projection_recovery_required(managed_mcp_id)
+            .await?
+        {
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::ProjectionConflict,
+                "managed MCP projection recovery must be resolved before changing enablement",
+            ));
+        }
         let inventory = self
             .repository
             .get_managed_inventory(managed_mcp_id)
@@ -181,21 +359,21 @@ impl TaskRunner {
                     "managed MCP must be healthy before it can be enabled",
                 ));
             }
-            if !matches!(
-                self.ports
-                    .auth
-                    .requirement(&manifest.verified.manifest().auth)?,
-                AuthRequirement::Ready
-            ) {
-                return Err(McpPlatformError::new(
-                    McpPlatformErrorCode::CredentialMissing,
-                    "managed MCP credential handle is unavailable",
-                ));
-            }
             let projection = self
                 .repository
                 .get_connection_projection(managed_mcp_id)
                 .await?;
+            if projection.manifest_digest.as_deref() != Some(manifest_digest) {
+                return Err(integrity_error());
+            }
+            self.ensure_managed_enable_ready(
+                &manifest.verified.manifest().auth,
+                managed_mcp_id,
+                inventory.managed.revision,
+                manifest_digest,
+                "managed MCP credential handle is unavailable",
+            )
+            .await?;
             let plan_id = projection.plan_id.as_deref().ok_or_else(integrity_error)?;
             if self
                 .repository
@@ -219,6 +397,15 @@ impl TaskRunner {
             Err(error) if !enabled && error.code() == McpPlatformErrorCode::NotFound => None,
             Err(error) => return Err(error),
         };
+        if let Some(projection) = projection.as_ref() {
+            if projection.manifest_digest.as_deref()
+                != inventory.lifecycle.active_manifest_digest.as_deref()
+                || projection.plan_id.is_none()
+                || projection.owner_task_id.is_none()
+            {
+                return Err(integrity_error());
+            }
+        }
         if enabled {
             let projection = projection.as_ref().ok_or_else(integrity_error)?;
             let expected_config = self
@@ -257,47 +444,121 @@ impl TaskRunner {
             }
         }
         let mutation = self
-            .repository
-            .begin_projection_mutation(
+            .projection_repository
+            .begin_projection_mutation_authorized(
+                self.projection_authority.write_capability(),
+                &self.projection_authority,
                 managed_mcp_id,
                 expected_revision,
                 enabled,
                 self.clock.now_ms(),
             )
             .await?;
-        let sink_result = match projection.as_ref() {
-            Some(projection) => match self.ports.projection_sink.get(&projection.link_key).await? {
-                Some(_) => self
-                    .ports
-                    .projection_sink
-                    .set_enabled(&projection.link_key, enabled)
-                    .await
-                    .map(|_| ()),
-                None if !enabled => Ok(()),
-                None => Err(integrity_error()),
-            },
-            None if !enabled => Ok(()),
-            None => Err(integrity_error()),
-        };
-        if let Err(error) = sink_result {
-            let _ = self.recover_projection_mutations().await;
-            self.notify();
-            return Err(error);
+        let authorization = self
+            .projection_repository
+            .authorize_projection_mutation(
+                self.projection_authority.write_capability(),
+                &self.projection_authority,
+                mutation.mutation_id,
+            )
+            .await?;
+        if enabled {
+            let manifest = authorization.manifest().ok_or_else(integrity_error)?;
+            let projection = authorization.projection().ok_or_else(integrity_error)?;
+            reject_managed_remote_http_auth(manifest.verified.manifest())?;
+            if projection.manifest_digest.as_deref() != Some(manifest.verified.digest())
+                || projection.plan_id.is_none()
+                || projection.owner_task_id.is_none()
+            {
+                return Err(integrity_error());
+            }
+            self.ensure_managed_enable_ready(
+                &manifest.verified.manifest().auth,
+                managed_mcp_id,
+                authorization.inventory().managed.revision,
+                manifest.verified.digest(),
+                "managed MCP credential handle is unavailable",
+            )
+            .await?;
         }
-        if mutation.status == ProjectionMutationStatus::Started {
-            self.repository
-                .mark_projection_config_committed(mutation.mutation_id, self.clock.now_ms())
-                .await?;
-        }
-        self.repository
-            .complete_projection_mutation(mutation.mutation_id, self.clock.now_ms())
-            .await
-            .map_err(|_| {
-                McpPlatformError::new(
-                    McpPlatformErrorCode::RollbackIncomplete,
-                    "managed MCP projection mutation requires recovery",
+        let committed = async {
+            let receipt = self.projection_sink_commit_receipt(&authorization).await?;
+            let completion_authorization = if matches!(
+                authorization.mutation().status,
+                ProjectionMutationStatus::Started | ProjectionMutationStatus::RecoveryRequired
+            ) {
+                self.projection_repository
+                    .mark_projection_config_committed_authorized(
+                        self.projection_authority.write_capability(),
+                        &self.projection_authority,
+                        &authorization,
+                        self.clock.now_ms(),
+                    )
+                    .await?;
+                self.projection_repository
+                    .authorize_projection_mutation(
+                        self.projection_authority.write_capability(),
+                        &self.projection_authority,
+                        mutation.mutation_id,
+                    )
+                    .await?
+            } else {
+                authorization.clone()
+            };
+            if matches!(
+                completion_authorization.mutation().status,
+                ProjectionMutationStatus::Started | ProjectionMutationStatus::RecoveryRequired
+            ) {
+                return Err(integrity_error());
+            }
+            if enabled {
+                let manifest = completion_authorization
+                    .manifest()
+                    .ok_or_else(integrity_error)?;
+                let projection = completion_authorization
+                    .projection()
+                    .ok_or_else(integrity_error)?;
+                if projection.manifest_digest.as_deref() != Some(manifest.verified.digest())
+                    || projection.plan_id.is_none()
+                    || projection.owner_task_id.is_none()
+                {
+                    return Err(integrity_error());
+                }
+                self.ensure_managed_enable_ready(
+                    &manifest.verified.manifest().auth,
+                    managed_mcp_id,
+                    completion_authorization.inventory().managed.revision,
+                    manifest.verified.digest(),
+                    "managed MCP credential handle changed during projection mutation",
                 )
-            })?;
+                .await?;
+            }
+            self.projection_repository
+                .complete_projection_mutation_authorized(
+                    self.projection_authority.write_capability(),
+                    &self.projection_authority,
+                    &completion_authorization,
+                    &receipt,
+                    self.clock.now_ms(),
+                )
+                .await
+        }
+        .await;
+        if let Err(error) = committed {
+            self.recover_projection_mutations().await?;
+            if self
+                .projection_repository
+                .projection_recovery_required(managed_mcp_id)
+                .await?
+            {
+                return Err(match error.code() {
+                    McpPlatformErrorCode::ProjectionWitnessExpired
+                    | McpPlatformErrorCode::ProjectionWitnessConsumed => error,
+                    _ => projection_recovery_required(),
+                });
+            }
+            return self.repository.get_managed_inventory(managed_mcp_id).await;
+        }
         self.repository.get_managed_inventory(managed_mcp_id).await
     }
 
@@ -349,8 +610,389 @@ impl TaskRunner {
         }
     }
 
+    async fn authorize_effect(&self, task_id: &str) -> McpPlatformResult<ExecutionAuthorization> {
+        let now_ms = self.clock.now_ms();
+        let authorization = self
+            .repository
+            .authorize_execution(task_id, &self.owner_id, now_ms)
+            .await?;
+        self.repository
+            .validate_execution_authorization(&authorization, now_ms)
+            .await?;
+        Ok(authorization)
+    }
+
+    pub(crate) async fn managed_enrollment_runtime_snapshot(
+        &self,
+        auth: &Auth,
+        managed_mcp_id: &str,
+        current_managed_revision: i64,
+        current_manifest_digest: &str,
+    ) -> CredentialRuntimeSnapshot {
+        self.managed_credential_status_evaluator
+            .safe_runtime_snapshot(
+                managed_mcp_id,
+                current_managed_revision,
+                current_manifest_digest,
+                auth,
+            )
+            .await
+    }
+
+    async fn managed_enrollment_runtime_status(
+        &self,
+        auth: &Auth,
+        managed_mcp_id: &str,
+        current_managed_revision: i64,
+        current_manifest_digest: &str,
+    ) -> CredentialRuntimeStatus {
+        self.managed_enrollment_runtime_snapshot(
+            auth,
+            managed_mcp_id,
+            current_managed_revision,
+            current_manifest_digest,
+        )
+        .await
+        .status()
+    }
+
+    async fn ensure_managed_enable_ready(
+        &self,
+        auth: &Auth,
+        managed_mcp_id: &str,
+        current_managed_revision: i64,
+        current_manifest_digest: &str,
+        message: &'static str,
+    ) -> McpPlatformResult<()> {
+        match self
+            .managed_enrollment_runtime_status(
+                auth,
+                managed_mcp_id,
+                current_managed_revision,
+                current_manifest_digest,
+            )
+            .await
+        {
+            CredentialRuntimeStatus::Ready => Ok(()),
+            CredentialRuntimeStatus::Unconfigured
+            | CredentialRuntimeStatus::ReRegistrationRequired => Err(McpPlatformError::new(
+                McpPlatformErrorCode::CredentialMissing,
+                message,
+            )),
+            CredentialRuntimeStatus::TrustedStateConflict => Err(McpPlatformError::new(
+                McpPlatformErrorCode::IntegrityError,
+                message,
+            )),
+            CredentialRuntimeStatus::TemporarilyUnavailable => Err(McpPlatformError::new(
+                McpPlatformErrorCode::IntegrityUnavailable,
+                message,
+            )),
+        }
+    }
+
+    async fn ensure_desired_managed_enable_ready(
+        &self,
+        desired_enabled: bool,
+        task_id: &str,
+        managed_mcp_id: &str,
+        manifest_digest: &str,
+        message: &'static str,
+    ) -> McpPlatformResult<()> {
+        if !desired_enabled {
+            return Ok(());
+        }
+        let authorization = self.authorize_effect(task_id).await?;
+        let inventory = authorization
+            .inventory
+            .as_ref()
+            .ok_or_else(integrity_error)?;
+        let manifest = &authorization.manifest;
+        if inventory.managed.managed_mcp_id != managed_mcp_id
+            || inventory.lifecycle.active_manifest_digest.as_deref() != Some(manifest_digest)
+            || manifest.verified.digest() != manifest_digest
+        {
+            return Err(integrity_error());
+        }
+        self.ensure_managed_enable_ready(
+            &manifest.verified.manifest().auth,
+            managed_mcp_id,
+            inventory.managed.revision,
+            manifest_digest,
+            message,
+        )
+        .await
+    }
+
+    async fn ensure_desired_managed_enable_ready_or_disable(
+        &self,
+        desired_enabled: bool,
+        task_id: &str,
+        managed_mcp_id: &str,
+        link_key: &str,
+        manifest_digest: &str,
+        message: &'static str,
+    ) -> McpPlatformResult<()> {
+        match self
+            .ensure_desired_managed_enable_ready(
+                desired_enabled,
+                task_id,
+                managed_mcp_id,
+                manifest_digest,
+                message,
+            )
+            .await
+        {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                self.disable_managed_projection_and_runtime(
+                    task_id,
+                    managed_mcp_id,
+                    Some(link_key),
+                )
+                .await?;
+                Err(error)
+            }
+        }
+    }
+
+    async fn disable_managed_projection_and_runtime(
+        &self,
+        task_id: &str,
+        managed_mcp_id: &str,
+        link_key: Option<&str>,
+    ) -> McpPlatformResult<()> {
+        if let Some(distribution) = self.distribution.as_ref() {
+            distribution
+                .restore_activation(managed_mcp_id, None, task_id)
+                .await?;
+            if distribution.active_version(managed_mcp_id).await?.is_some() {
+                return Err(integrity_error());
+            }
+        }
+        let link_key = match link_key {
+            Some(link_key) => Some(link_key.to_string()),
+            None => match self
+                .repository
+                .get_connection_projection(managed_mcp_id)
+                .await
+            {
+                Ok(projection) => Some(projection.link_key),
+                Err(error) if error.code() == McpPlatformErrorCode::NotFound => None,
+                Err(error) => return Err(error),
+            },
+        };
+        if let Some(link_key) = link_key {
+            if matches!(
+                self.ports.projection_sink.get(&link_key).await?,
+                Some(snapshot) if snapshot.entry.enabled
+            ) {
+                self.ports
+                    .projection_sink
+                    .set_enabled(&link_key, false)
+                    .await?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn ensure_runtime_activation_restore_ready_or_disable(
+        &self,
+        task_id: &str,
+        managed_mcp_id: &str,
+    ) -> McpPlatformResult<()> {
+        let readiness = async {
+            let inventory = self
+                .repository
+                .get_managed_inventory(managed_mcp_id)
+                .await?;
+            let manifest_digest = inventory
+                .lifecycle
+                .active_manifest_digest
+                .as_deref()
+                .ok_or_else(integrity_error)?;
+            let manifest = self.repository.get_manifest(manifest_digest).await?;
+            reject_managed_remote_http_auth(manifest.verified.manifest())?;
+            self.ensure_managed_enable_ready(
+                &manifest.verified.manifest().auth,
+                managed_mcp_id,
+                inventory.managed.revision,
+                manifest_digest,
+                "managed MCP credential handle is unavailable for runtime activation restoration",
+            )
+            .await
+        }
+        .await;
+        match readiness {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                self.disable_managed_projection_and_runtime(task_id, managed_mcp_id, None)
+                    .await?;
+                Err(error)
+            }
+        }
+    }
+
+    async fn ensure_projection_recovery_enable_ready_or_disable(
+        &self,
+        authorization: &ProjectionAuthorization,
+        message: &'static str,
+    ) -> McpPlatformResult<()> {
+        match self
+            .ensure_projection_recovery_enable_ready(authorization, message)
+            .await
+        {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                self.disable_managed_projection_and_runtime(
+                    "projection-recovery",
+                    &authorization.inventory().managed.managed_mcp_id,
+                    authorization
+                        .projection()
+                        .map(|projection| projection.link_key.as_str()),
+                )
+                .await?;
+                Err(error)
+            }
+        }
+    }
+
+    async fn ensure_projection_recovery_enable_ready(
+        &self,
+        authorization: &ProjectionAuthorization,
+        message: &'static str,
+    ) -> McpPlatformResult<()> {
+        if !self
+            .projection_recovery_has_enabled_sink(authorization)
+            .await?
+        {
+            return Ok(());
+        }
+        let manifest = authorization.manifest().ok_or_else(integrity_error)?;
+        let manifest_digest = manifest.verified.digest();
+        let projection = authorization.projection().ok_or_else(integrity_error)?;
+        if authorization
+            .inventory()
+            .lifecycle
+            .active_manifest_digest
+            .as_deref()
+            != Some(manifest_digest)
+            || projection.manifest_digest.as_deref() != Some(manifest_digest)
+            || projection.plan_id.is_none()
+            || projection.owner_task_id.is_none()
+        {
+            return Err(integrity_error());
+        }
+        self.ensure_managed_enable_ready(
+            &manifest.verified.manifest().auth,
+            &authorization.inventory().managed.managed_mcp_id,
+            authorization.inventory().managed.revision,
+            manifest_digest,
+            message,
+        )
+        .await
+    }
+
+    async fn projection_recovery_has_enabled_sink(
+        &self,
+        authorization: &ProjectionAuthorization,
+    ) -> McpPlatformResult<bool> {
+        let persisted = authoritative_persisted_projection_entry(
+            authorization.inventory().managed.state.default_enabled,
+            authorization.projection(),
+        )?;
+        if persisted.is_some_and(|entry| entry.enabled) {
+            return Ok(true);
+        }
+        let witness = authorization.witness_v2()?;
+        Ok(self
+            .ports
+            .projection_sink
+            .get(&witness.runtime_id)
+            .await?
+            .is_some_and(|snapshot| snapshot.entry.enabled))
+    }
+
+    async fn projection_sink_commit_receipt(
+        &self,
+        authorization: &super::repository::ProjectionAuthorization,
+    ) -> McpPlatformResult<super::repository::ProjectionSinkCommitReceipt> {
+        self.ensure_projection_recovery_enable_ready(
+            authorization,
+            "managed MCP credential handle became unavailable before projection enablement",
+        )
+        .await?;
+        let plan = self.projection_commit_plan(authorization)?;
+        let proof = self
+            .ports
+            .projection_sink
+            .commit_enabled_projection(&plan)
+            .await?;
+        self.projection_authority
+            .issue_sink_commit_receipt(authorization, proof)
+    }
+
+    fn projection_commit_plan(
+        &self,
+        authorization: &super::repository::ProjectionAuthorization,
+    ) -> McpPlatformResult<ProjectionCommitPlan> {
+        let witness = authorization.witness_v2()?;
+        match authorization.projection() {
+            Some(projection) => self.projection_authority.commit_plan(
+                Some(crate::config::extensions::ExtensionEntry {
+                    enabled: witness.desired_enabled,
+                    config: self
+                        .ports
+                        .transport
+                        .extension_config(&projection.projection, &projection.link_key)?,
+                }),
+                witness,
+            ),
+            None if !witness.desired_enabled => {
+                self.projection_authority.commit_plan(None, witness)
+            }
+            None => Err(integrity_error()),
+        }
+    }
+
+    fn projection_recovery_confirm_plan(
+        &self,
+        authorization: &ProjectionAuthorization,
+    ) -> McpPlatformResult<ProjectionCommitPlan> {
+        let witness = authorization.witness_v2()?;
+        let expected = authoritative_persisted_projection_entry(
+            authorization.inventory().managed.state.default_enabled,
+            authorization.projection(),
+        )?;
+        self.projection_authority
+            .confirm_existing_plan(expected, witness)
+    }
+
+    async fn projection_recovery_confirmation_receipt(
+        &self,
+        authorization: &ProjectionAuthorization,
+    ) -> McpPlatformResult<ProjectionRecoveryConfirmationReceipt> {
+        self.validate_recovery_authorization(authorization).await?;
+        let plan = self.projection_recovery_confirm_plan(authorization)?;
+        let proof = self
+            .ports
+            .projection_sink
+            .confirm_target_state(&plan)
+            .await
+            .map_err(|_| projection_witness_expired())?
+            .ok_or_else(projection_witness_expired)?;
+        self.projection_authority
+            .issue_sink_recovery_confirmation_receipt(
+                authorization,
+                plan.target_state_digest(),
+                proof,
+            )
+            .map_err(|_| projection_witness_expired())
+    }
+
     pub async fn recover_startup(&self) -> McpPlatformResult<()> {
         self.recover_projection_mutations().await?;
+        let _recovery_guard = self.recovery_gate.lock().await;
+        self.ensure_recovery_eligible().await?;
         let now_ms = self.clock.now_ms();
         let recovered = self
             .repository
@@ -362,10 +1004,9 @@ impl TaskRunner {
             .await?;
         for record in recovered {
             let result = async {
-                let adapters_compatible = self
-                    .repository
-                    .list_task_steps(&record.task.task_id)
-                    .await?
+                let authorization = self.authorize_effect(&record.task.task_id).await?;
+                let adapters_compatible = authorization
+                    .steps
                     .iter()
                     .all(|step| self.step_adapter_compatible(step));
                 let decision = if adapters_compatible {
@@ -415,6 +1056,80 @@ impl TaskRunner {
         Ok(())
     }
 
+    pub(crate) async fn resolve_projection_recovery(
+        &self,
+        managed_mcp_id: &str,
+    ) -> McpPlatformResult<()> {
+        let _recovery_guard = self.recovery_gate.lock().await;
+        self.ensure_recovery_eligible().await?;
+        let mutation = self
+            .projection_repository
+            .list_pending_projection_mutations()
+            .await?
+            .into_iter()
+            .find(|mutation| {
+                mutation.managed_mcp_id == managed_mcp_id
+                    && mutation.status == ProjectionMutationStatus::RecoveryRequired
+            })
+            .ok_or_else(|| {
+                McpPlatformError::new(
+                    McpPlatformErrorCode::NotFound,
+                    "managed MCP projection recovery record not found",
+                )
+            })?;
+        let recovery_grant = self
+            .issue_recovery_authorization(mutation.mutation_id)
+            .await?;
+        let authorization = recovery_grant.authorization();
+        let result = async {
+            match self.observe_projection_recovery(&authorization).await? {
+                ProjectionRecoveryObservation::Desired(receipt) => {
+                    self.complete_projection_mutation_without_writing(&authorization, &receipt)
+                        .await
+                }
+                ProjectionRecoveryObservation::PersistedAuthority(receipt) => {
+                    self.ensure_projection_recovery_enable_ready_or_disable(
+                        &authorization,
+                        "managed MCP projection recovery requires refreshed credential enrollment",
+                    )
+                    .await?;
+                    self.projection_repository
+                        .resolve_projection_mutation_recovery_authorized(
+                            self.projection_authority.write_capability(),
+                            &self.projection_authority,
+                            &authorization,
+                            &receipt,
+                            self.clock.now_ms(),
+                        )
+                        .await
+                }
+                ProjectionRecoveryObservation::Mismatch => {
+                    self.disable_managed_projection_and_runtime(
+                        "projection-recovery",
+                        managed_mcp_id,
+                        authorization
+                            .projection()
+                            .map(|projection| projection.link_key.as_str()),
+                    )
+                    .await?;
+                    Err(projection_recovery_required())
+                }
+            }
+        }
+        .await;
+        if let Err(error) = result {
+            self.projection_repository
+                .force_projection_mutation_recovery_required(
+                    self.projection_authority.write_capability(),
+                    mutation.mutation_id,
+                    self.clock.now_ms(),
+                )
+                .await?;
+            return Err(error);
+        }
+        Ok(())
+    }
+
     fn step_adapter_compatible(&self, step: &super::repository::TaskStepRecord) -> bool {
         match step.adapter_id.as_str() {
             "connection_registration" => {
@@ -439,77 +1154,49 @@ impl TaskRunner {
     }
 
     async fn recover_projection_mutations(&self) -> McpPlatformResult<()> {
-        for mutation in self.repository.list_pending_projection_mutations().await? {
+        let _recovery_guard = self.recovery_gate.lock().await;
+        self.ensure_recovery_eligible().await?;
+        for mutation in self
+            .projection_repository
+            .list_pending_projection_mutations()
+            .await?
+        {
             let result = async {
-                if mutation.desired_enabled {
-                    let inventory = self
-                        .repository
-                        .get_managed_inventory(&mutation.managed_mcp_id)
+                let recovery_grant = self
+                    .issue_recovery_authorization(mutation.mutation_id)
+                    .await?;
+                let authorization = recovery_grant.authorization();
+                match self.observe_projection_recovery(&authorization).await? {
+                    ProjectionRecoveryObservation::Desired(receipt) => {
+                        self.complete_projection_mutation_without_writing(&authorization, &receipt)
+                            .await
+                    }
+                    ProjectionRecoveryObservation::PersistedAuthority(_) => {
+                        self.ensure_projection_recovery_enable_ready_or_disable(
+                            &authorization,
+                            "managed MCP projection recovery requires refreshed credential enrollment",
+                        )
                         .await?;
-                    let manifest_digest = inventory
-                        .lifecycle
-                        .active_manifest_digest
-                        .as_deref()
-                        .ok_or_else(integrity_error)?;
-                    let manifest = self.repository.get_manifest(manifest_digest).await?;
-                    reject_managed_remote_http_auth(manifest.verified.manifest())?;
-                }
-                let projection = match self
-                    .repository
-                    .get_connection_projection(&mutation.managed_mcp_id)
-                    .await
-                {
-                    Ok(projection) => Some(projection),
-                    Err(error)
-                        if !mutation.desired_enabled
-                            && error.code() == McpPlatformErrorCode::NotFound =>
-                    {
-                        None
+                        Err(projection_recovery_required())
                     }
-                    Err(error) => return Err(error),
-                };
-                if let Some(projection) = projection {
-                    let snapshot = self.ports.projection_sink.get(&projection.link_key).await?;
-                    let snapshot = snapshot.ok_or_else(integrity_error)?;
-                    let expected = self
-                        .ports
-                        .transport
-                        .extension_config(&projection.projection, &projection.link_key)?;
-                    if snapshot.entry.config != expected {
-                        return Err(McpPlatformError::new(
-                            McpPlatformErrorCode::ProjectionConflict,
-                            "projection mutation cannot be reconciled",
-                        ));
-                    }
-                    if snapshot.entry.enabled != mutation.desired_enabled {
-                        if snapshot.entry.enabled != mutation.previous_enabled {
-                            return Err(McpPlatformError::new(
-                                McpPlatformErrorCode::ProjectionConflict,
-                                "projection mutation state drifted",
-                            ));
-                        }
-                        self.ports
-                            .projection_sink
-                            .set_enabled(&projection.link_key, mutation.desired_enabled)
-                            .await?;
-                    }
-                }
-                if matches!(
-                    mutation.status,
-                    ProjectionMutationStatus::Started | ProjectionMutationStatus::RecoveryRequired
-                ) {
-                    self.repository
-                        .mark_projection_config_committed(mutation.mutation_id, self.clock.now_ms())
+                    ProjectionRecoveryObservation::Mismatch => {
+                        self.disable_managed_projection_and_runtime(
+                            "projection-recovery",
+                            &authorization.inventory().managed.managed_mcp_id,
+                            authorization
+                                .projection()
+                                .map(|projection| projection.link_key.as_str()),
+                        )
                         .await?;
+                        Err(projection_recovery_required())
+                    }
                 }
-                self.repository
-                    .complete_projection_mutation(mutation.mutation_id, self.clock.now_ms())
-                    .await
             }
             .await;
-            if result.is_err() {
-                self.repository
-                    .mark_projection_mutation_recovery_required(
+            if let Err(error) = result {
+                self.projection_repository
+                    .force_projection_mutation_recovery_required(
+                        self.projection_authority.write_capability(),
                         mutation.mutation_id,
                         self.clock.now_ms(),
                     )
@@ -519,35 +1206,257 @@ impl TaskRunner {
         Ok(())
     }
 
+    async fn ensure_recovery_eligible(&self) -> McpPlatformResult<()> {
+        if self
+            .repository
+            .recovery_eligibility()
+            .await
+            .unwrap_or(RecoveryEligibility::Blocked)
+            != RecoveryEligibility::Eligible
+        {
+            return Err(recovery_blocked());
+        }
+        Ok(())
+    }
+
+    async fn validate_recovery_authorization(
+        &self,
+        authorization: &ProjectionAuthorization,
+    ) -> McpPlatformResult<()> {
+        let refreshed = self
+            .issue_recovery_authorization(authorization.mutation().mutation_id)
+            .await?;
+        let refreshed = refreshed.authorization();
+        if refreshed.checkpoint() != authorization.checkpoint()
+            || refreshed.mutation().expected_revision != authorization.mutation().expected_revision
+            || refreshed.mutation().writer_commitment != authorization.mutation().writer_commitment
+        {
+            return Err(projection_witness_expired());
+        }
+        Ok(())
+    }
+
+    async fn issue_recovery_authorization(
+        &self,
+        mutation_id: i64,
+    ) -> McpPlatformResult<RecoveryAuthorizationGrant> {
+        self.ensure_recovery_eligible().await?;
+        let authorization = self
+            .projection_repository
+            .authorize_projection_mutation(
+                self.projection_authority.write_capability(),
+                &self.projection_authority,
+                mutation_id,
+            )
+            .await?;
+        self.ensure_recovery_eligible().await?;
+        Ok(RecoveryAuthorizationGrant { authorization })
+    }
+
+    async fn observe_projection_recovery(
+        &self,
+        authorization: &ProjectionAuthorization,
+    ) -> McpPlatformResult<ProjectionRecoveryObservation> {
+        self.validate_recovery_authorization(authorization).await?;
+        let witness = authorization.witness_v2()?;
+        let current = self.ports.projection_sink.get(&witness.runtime_id).await?;
+        let current_digest = observed_projection_digest(
+            &witness.sink_identity,
+            &witness.runtime_id,
+            current.as_ref().map(|snapshot| &snapshot.entry),
+        )?;
+        if current_digest == witness.observed_state_digest {
+            let plan = self.projection_commit_plan(authorization)?;
+            self.validate_recovery_authorization(authorization).await?;
+            let Some(proof) = self
+                .ports
+                .projection_sink
+                .confirm_target_state(&plan)
+                .await?
+            else {
+                return Err(projection_witness_expired());
+            };
+            let receipt = self
+                .projection_authority
+                .issue_sink_commit_receipt(authorization, proof)?;
+            return Ok(ProjectionRecoveryObservation::Desired(receipt));
+        }
+        let persisted = authoritative_persisted_projection_entry(
+            authorization.inventory().managed.state.default_enabled,
+            authorization.projection(),
+        )
+        .map_err(|_| projection_witness_expired())?;
+        let persisted_digest = observed_projection_digest(
+            &witness.sink_identity,
+            &witness.runtime_id,
+            persisted.as_ref(),
+        )?;
+        if current_digest == persisted_digest {
+            self.validate_recovery_authorization(authorization).await?;
+            let receipt = self
+                .projection_recovery_confirmation_receipt(authorization)
+                .await?;
+            Ok(ProjectionRecoveryObservation::PersistedAuthority(receipt))
+        } else {
+            Ok(ProjectionRecoveryObservation::Mismatch)
+        }
+    }
+
+    async fn complete_projection_mutation_without_writing(
+        &self,
+        authorization: &ProjectionAuthorization,
+        receipt: &super::repository::ProjectionSinkCommitReceipt,
+    ) -> McpPlatformResult<()> {
+        let completion_authorization = if matches!(
+            authorization.mutation().status,
+            ProjectionMutationStatus::Started | ProjectionMutationStatus::RecoveryRequired
+        ) {
+            self.projection_repository
+                .mark_projection_config_committed_authorized(
+                    self.projection_authority.write_capability(),
+                    &self.projection_authority,
+                    authorization,
+                    self.clock.now_ms(),
+                )
+                .await?;
+            self.projection_repository
+                .authorize_projection_mutation(
+                    self.projection_authority.write_capability(),
+                    &self.projection_authority,
+                    authorization.mutation().mutation_id,
+                )
+                .await?
+        } else {
+            authorization.clone()
+        };
+        if completion_authorization.mutation().status != ProjectionMutationStatus::ConfigCommitted {
+            return Err(projection_witness_consumed());
+        }
+        self.ensure_projection_recovery_enable_ready_or_disable(
+            &completion_authorization,
+            "managed MCP projection recovery requires refreshed credential enrollment",
+        )
+        .await?;
+        self.projection_repository
+            .complete_projection_mutation_authorized(
+                self.projection_authority.write_capability(),
+                &self.projection_authority,
+                &completion_authorization,
+                receipt,
+                self.clock.now_ms(),
+            )
+            .await
+    }
+
     async fn execute(
         &self,
-        task: TaskRecord,
+        authorization: ExecutionAuthorization,
         cancellation: CancellationToken,
     ) -> McpPlatformResult<()> {
-        match task.operation {
-            TaskOperation::Register => self.execute_register(task, cancellation).await,
-            TaskOperation::Health => self.execute_health(task, cancellation).await,
+        let operation = authorization.task.operation;
+        match operation {
+            TaskOperation::Register => self.execute_register(authorization, cancellation).await,
+            TaskOperation::Health => self.execute_health(authorization, cancellation).await,
             TaskOperation::Install | TaskOperation::Update | TaskOperation::Repair => {
-                self.execute_managed_install(task, cancellation).await
+                self.execute_managed_install(authorization, cancellation)
+                    .await
             }
-            TaskOperation::Uninstall => self.execute_managed_uninstall(task, cancellation).await,
+            TaskOperation::Uninstall => {
+                self.execute_managed_uninstall(authorization, cancellation)
+                    .await
+            }
         }
+    }
+
+    async fn preflight_managed_storage_capacity(
+        &self,
+        distribution: &Arc<dyn DistributionEffectAdapter>,
+        acquisition: &PlanStep,
+        capacity_contract: ManagedCapacityContractStatus,
+    ) -> McpPlatformResult<()> {
+        #[cfg(target_os = "windows")]
+        {
+            if !matches!(acquisition, PlanStep::AcquireManagedDistribution { .. }) {
+                return Ok(());
+            }
+            let ManagedCapacityContractStatus::Known {
+                required_peak_bytes,
+            } = capacity_contract
+            else {
+                return Err(managed_storage_capacity_preflight_unavailable());
+            };
+            let observation = distribution
+                .check_managed_storage_capacity(required_peak_bytes)
+                .await
+                .map_err(|_| managed_storage_capacity_preflight_unavailable())?;
+            if observation.required_peak_bytes != required_peak_bytes
+                || observation.available_bytes < required_peak_bytes
+            {
+                return Err(managed_storage_capacity_preflight_unavailable());
+            }
+            Ok(())
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let _ = (distribution, acquisition, capacity_contract);
+            Ok(())
+        }
+    }
+
+    async fn preflight_queued_task(
+        &self,
+        preflight: &QueuedTaskPreflight,
+    ) -> McpPlatformResult<()> {
+        if !matches!(
+            preflight.candidate().task().operation,
+            TaskOperation::Install | TaskOperation::Update | TaskOperation::Repair
+        ) {
+            return Ok(());
+        }
+        let distribution = self.distribution()?;
+        let plan = &preflight.plan().plan;
+        plan.verify_integrity()?;
+        if preflight.manifest().verified.digest() != plan.manifest_digest()
+            || plan.adapter().version != distribution.adapter_version()
+        {
+            return Err(adapter_incompatible());
+        }
+        let selection = TrustedPlanSelectionContext::new(
+            executing_platform(),
+            executing_architecture(),
+            plan_operation_for_task(preflight.candidate().task().operation),
+            trusted_dispatch_adapter(&preflight.manifest().verified.manifest().distribution),
+        );
+        let capacity_contract =
+            plan.verify_trusted_acquisition_contract(&preflight.manifest().verified, selection)?;
+        let acquisitions = plan
+            .steps()
+            .iter()
+            .filter(|step| {
+                matches!(
+                    step,
+                    PlanStep::AcquireManagedDistribution { .. }
+                        | PlanStep::AcquireDockerDistribution { .. }
+                        | PlanStep::AcquireGitDevDistribution { .. }
+                )
+            })
+            .collect::<Vec<_>>();
+        let [acquisition] = acquisitions.as_slice() else {
+            return Err(integrity_error());
+        };
+        self.preflight_managed_storage_capacity(distribution, acquisition, capacity_contract)
+            .await
     }
 
     async fn execute_managed_install(
         &self,
-        task: TaskRecord,
+        authorization: ExecutionAuthorization,
         cancellation: CancellationToken,
     ) -> McpPlatformResult<()> {
-        let distribution = self
-            .distribution
-            .as_ref()
-            .ok_or_else(adapter_incompatible)?;
-        let plan_record = self.repository.get_plan(&task.plan_id).await?;
-        let manifest_record = self
-            .repository
-            .get_manifest(plan_record.plan.manifest_digest())
-            .await?;
+        let task = authorization.task.clone();
+        let distribution = self.distribution()?;
+        let plan_record = authorization.plan.clone();
+        let manifest_record = authorization.manifest.clone();
         let plan = &plan_record.plan;
         plan.verify_integrity()?;
         if manifest_record.verified.digest() != plan.manifest_digest()
@@ -555,6 +1464,34 @@ impl TaskRunner {
         {
             return Err(adapter_incompatible());
         }
+        let selection = TrustedPlanSelectionContext::new(
+            executing_platform(),
+            executing_architecture(),
+            plan_operation_for_task(task.operation),
+            trusted_dispatch_adapter(&manifest_record.verified.manifest().distribution),
+        );
+        let capacity_contract =
+            plan.verify_trusted_acquisition_contract(&manifest_record.verified, selection)?;
+        let acquisition = {
+            let candidates = plan
+                .steps()
+                .iter()
+                .filter(|step| {
+                    matches!(
+                        step,
+                        PlanStep::AcquireManagedDistribution { .. }
+                            | PlanStep::AcquireDockerDistribution { .. }
+                            | PlanStep::AcquireGitDevDistribution { .. }
+                    )
+                })
+                .collect::<Vec<_>>();
+            match candidates.as_slice() {
+                [acquisition] => *acquisition,
+                _ => return Err(integrity_error()),
+            }
+        };
+        self.preflight_managed_storage_capacity(distribution, acquisition, capacity_contract)
+            .await?;
         if !self
             .ports
             .host_integration
@@ -565,42 +1502,66 @@ impl TaskRunner {
                 "managed host integration is unavailable",
             ));
         }
-        let acquire = plan
-            .steps()
-            .iter()
-            .find_map(|step| match step {
-                PlanStep::AcquireManagedDistribution {
-                    artifact_url,
-                    artifact_digest,
-                    expected_size_bytes,
-                    platform,
-                    arch,
-                    ..
-                } => Some((
-                    artifact_url.clone(),
-                    artifact_digest.value.clone(),
-                    *expected_size_bytes,
-                    format!("{:?}/{:?}", platform, arch).to_ascii_lowercase(),
-                )),
-                PlanStep::AcquireDockerDistribution { image, digest, .. } => Some((
-                    format!("https://{}", image.split('/').next().unwrap_or_default()),
-                    digest.value.clone(),
-                    None,
-                    "docker/immutable".to_string(),
-                )),
-                PlanStep::AcquireGitDevDistribution {
-                    repository,
-                    acquisition_digest,
-                    ..
-                } => Some((
-                    repository.clone(),
-                    acquisition_digest.clone(),
-                    None,
-                    "git_dev/exact_commit".to_string(),
-                )),
-                _ => None,
-            })
-            .ok_or_else(integrity_error)?;
+        let (
+            source_url,
+            expected_sha256,
+            expected_size_bytes,
+            platform_selector,
+            external_acquisition,
+        ) = match acquisition {
+            PlanStep::AcquireManagedDistribution {
+                artifact_url,
+                artifact_digest,
+                expected_size_bytes,
+                platform,
+                arch,
+                ..
+            } => (
+                artifact_url.clone(),
+                artifact_digest.value.clone(),
+                *expected_size_bytes,
+                format!("{:?}/{:?}", platform, arch).to_ascii_lowercase(),
+                None,
+            ),
+            PlanStep::AcquireDockerDistribution {
+                image,
+                digest,
+                mount_plan_digest,
+                ..
+            } => (
+                format!("https://{}", image.split('/').next().unwrap_or_default()),
+                digest.value.clone(),
+                None,
+                "docker/immutable".to_string(),
+                Some(ExternalManagedAcquisition::Docker {
+                    image: image.clone(),
+                    digest: digest.value.clone(),
+                    mount_plan_digest: mount_plan_digest.clone(),
+                }),
+            ),
+            PlanStep::AcquireGitDevDistribution {
+                repository,
+                acquisition_digest,
+                repository_origin,
+                commit,
+                subdirectory,
+                underlying_adapter,
+            } => (
+                repository.clone(),
+                acquisition_digest.clone(),
+                None,
+                "git_dev/exact_commit".to_string(),
+                Some(ExternalManagedAcquisition::GitDev {
+                    repository_origin: repository_origin.clone(),
+                    repository: repository.clone(),
+                    commit: commit.clone(),
+                    subdirectory: subdirectory.clone(),
+                    underlying_adapter: *underlying_adapter,
+                    acquisition_digest: acquisition_digest.clone(),
+                }),
+            ),
+            _ => return Err(integrity_error()),
+        };
         let scope = plan_record
             .target
             .installation_scope
@@ -616,66 +1577,23 @@ impl TaskRunner {
             task_id: task.task_id.clone(),
             managed_mcp_id: ids.managed_mcp_id.clone(),
             manifest: manifest_record.verified.manifest().clone(),
-            source_url: acquire.0.clone(),
-            expected_sha256: acquire.1.clone(),
-            expected_size_bytes: acquire.2,
-            platform_selector: acquire.3.clone(),
+            source_url,
+            expected_sha256,
+            expected_size_bytes,
+            platform_selector,
             now_ms: task.created_at_ms,
             operation: task.operation,
             expected_tree_digest: None,
             rebuild_uncommitted_version: false,
-            external_acquisition: plan.steps().iter().find_map(|step| match step {
-                PlanStep::AcquireDockerDistribution {
-                    image,
-                    digest,
-                    mount_plan_digest,
-                    ..
-                } => Some(ExternalManagedAcquisition::Docker {
-                    image: image.clone(),
-                    digest: digest.value.clone(),
-                    mount_plan_digest: mount_plan_digest.clone(),
-                }),
-                PlanStep::AcquireGitDevDistribution {
-                    repository_origin,
-                    repository,
-                    commit,
-                    subdirectory,
-                    underlying_adapter,
-                    acquisition_digest,
-                } => Some(ExternalManagedAcquisition::GitDev {
-                    repository_origin: repository_origin.clone(),
-                    repository: repository.clone(),
-                    commit: commit.clone(),
-                    subdirectory: subdirectory.clone(),
-                    underlying_adapter: *underlying_adapter,
-                    acquisition_digest: acquisition_digest.clone(),
-                }),
-                _ => None,
-            }),
+            external_acquisition,
         };
-        let durable_steps = self.repository.list_task_steps(&task.task_id).await?;
+        let durable_steps = authorization.steps.clone();
         let snapshot_compensation =
             if let Some(step) = durable_steps.iter().find(|step| step.ordinal == 0) {
                 step.compensation.clone()
             } else {
-                let previous_inventory = match self
-                    .repository
-                    .get_managed_inventory(&ids.managed_mcp_id)
-                    .await
-                {
-                    Ok(value) => Some(value),
-                    Err(error) if error.code() == McpPlatformErrorCode::NotFound => None,
-                    Err(error) => return Err(error),
-                };
-                let previous_projection = match self
-                    .repository
-                    .get_connection_projection(&ids.managed_mcp_id)
-                    .await
-                {
-                    Ok(value) => Some(value),
-                    Err(error) if error.code() == McpPlatformErrorCode::NotFound => None,
-                    Err(error) => return Err(error),
-                };
+                let previous_inventory = authorization.inventory.clone();
+                let previous_projection = authorization.projection.clone();
                 CompensationDescriptor::ManagedLifecycleSnapshot {
                     managed_mcp_id: ids.managed_mcp_id.clone(),
                     previous_version: previous_inventory
@@ -730,6 +1648,9 @@ impl TaskRunner {
             ),
             _ => return Err(integrity_error()),
         };
+        let desired_enabled = previous_state
+            .as_ref()
+            .is_some_and(|state| state.default_enabled);
         let validate = self
             .start_step(
                 &task,
@@ -757,6 +1678,7 @@ impl TaskRunner {
             if let Some(step) = durable_steps.iter().find(|step| step.ordinal == 1) {
                 step.compensation.clone()
             } else if task.operation == TaskOperation::Repair {
+                self.authorize_effect(&task.task_id).await?;
                 if distribution
                     .version_exists(&ids.managed_mcp_id, plan.manifest_version())
                     .await?
@@ -779,6 +1701,7 @@ impl TaskRunner {
                     }
                 }
             } else {
+                self.authorize_effect(&task.task_id).await?;
                 let version_preexisted = distribution
                     .version_exists(&ids.managed_mcp_id, plan.manifest_version())
                     .await?;
@@ -798,20 +1721,14 @@ impl TaskRunner {
                 _ => None,
             });
         if effect.expected_tree_digest.is_none() && task.operation != TaskOperation::Repair {
-            effect.expected_tree_digest = match self
-                .repository
-                .get_managed_inventory(&ids.managed_mcp_id)
-                .await
-            {
-                Ok(inventory) => inventory
+            effect.expected_tree_digest = authorization.inventory.as_ref().and_then(|inventory| {
+                inventory
                     .managed
                     .versions
                     .iter()
                     .find(|version| version.version == plan.manifest_version())
-                    .and_then(|version| version.materialized_tree_digest.clone()),
-                Err(error) if error.code() == McpPlatformErrorCode::NotFound => None,
-                Err(error) => return Err(error),
-            };
+                    .and_then(|version| version.materialized_tree_digest.clone())
+            });
         }
         effect.rebuild_uncommitted_version = matches!(
             &materialize_compensation,
@@ -830,12 +1747,17 @@ impl TaskRunner {
             )
             .await?;
         let outcome = if materialize == TaskStepStatus::Committed {
+            self.authorize_effect(&task.task_id).await?;
             match distribution.inspect_installed(&effect, &cancellation).await {
                 Ok(outcome) => outcome,
                 Err(error) => {
                     let _ = self
                         .repository
-                        .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                        .release_artifact_claim(
+                            &effect.expected_sha256,
+                            &task.task_id,
+                            self.clock.now_ms(),
+                        )
                         .await;
                     return Err(error);
                 }
@@ -844,29 +1766,42 @@ impl TaskRunner {
             let now_ms = self.clock.now_ms();
             self.repository
                 .claim_artifact(
-                    &acquire.1,
+                    &effect.expected_sha256,
                     &task.task_id,
                     now_ms,
                     now_ms - STALE_ARTIFACT_CLAIM_MS,
                 )
                 .await?;
+            self.authorize_effect(&task.task_id).await?;
             let outcome = match distribution.install(&effect, &cancellation).await {
                 Ok(outcome) => outcome,
                 Err(error) => {
                     self.repository
-                        .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                        .release_artifact_claim(
+                            &effect.expected_sha256,
+                            &task.task_id,
+                            self.clock.now_ms(),
+                        )
                         .await?;
                     return Err(error);
                 }
             };
             if let Err(error) = self
                 .repository
-                .mark_artifact_claim_verified(&acquire.1, &task.task_id, self.clock.now_ms())
+                .mark_artifact_claim_verified(
+                    &effect.expected_sha256,
+                    &task.task_id,
+                    self.clock.now_ms(),
+                )
                 .await
             {
                 let _ = self
                     .repository
-                    .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                    .release_artifact_claim(
+                        &effect.expected_sha256,
+                        &task.task_id,
+                        self.clock.now_ms(),
+                    )
                     .await;
                 return Err(error);
             }
@@ -882,14 +1817,14 @@ impl TaskRunner {
                 )
                 .await;
             self.repository
-                .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                .release_artifact_claim(&effect.expected_sha256, &task.task_id, self.clock.now_ms())
                 .await?;
             commit?;
             outcome
         };
         if materialize == TaskStepStatus::Committed {
             self.repository
-                .release_artifact_claim(&acquire.1, &task.task_id, self.clock.now_ms())
+                .release_artifact_claim(&effect.expected_sha256, &task.task_id, self.clock.now_ms())
                 .await?;
         }
         self.cancel_boundary(&task.task_id, &cancellation).await?;
@@ -910,7 +1845,7 @@ impl TaskRunner {
                 "2",
             )
             .await?;
-        if inventory != TaskStepStatus::Committed {
+        let expected_managed_revision = if inventory != TaskStepStatus::Committed {
             let staged = self
                 .repository
                 .stage_managed_installation(StageManagedInstallation {
@@ -933,6 +1868,7 @@ impl TaskRunner {
             if staged.previous_version != previous_version {
                 return Err(integrity_error());
             }
+            let revision = staged.record.managed.revision;
             self.commit_step(
                 &task.task_id,
                 2,
@@ -942,13 +1878,17 @@ impl TaskRunner {
                 },
             )
             .await?;
-        }
+            Some(revision)
+        } else {
+            None
+        };
         self.cancel_boundary(&task.task_id, &cancellation).await?;
         let extension_config = self
             .ports
             .transport
             .extension_config(&outcome.projection, &ids.link_key)?;
-        let projection_digest = digest_serializable(&extension_config)?;
+        let extension_config_digest = digest_serializable(&extension_config)?;
+        let projection_digest = crate::mcp_platform::projection_config_digest(&outcome.projection)?;
         let projection_compensation = previous_projection.as_ref().map_or_else(
             || CompensationDescriptor::RemoveOwnedConnectionProjection {
                 managed_mcp_id: ids.managed_mcp_id.clone(),
@@ -990,7 +1930,7 @@ impl TaskRunner {
         let config_compensation = previous_projection.as_ref().map_or_else(
             || CompensationDescriptor::RemoveOwnedExtensionConfig {
                 link_key: ids.link_key.clone(),
-                projection_digest: projection_digest.clone(),
+                projection_digest: extension_config_digest.clone(),
                 created_by_task: true,
             },
             |_| projection_compensation.clone(),
@@ -1010,7 +1950,7 @@ impl TaskRunner {
                 4,
                 StepEvidence::ExtensionConfigProjected {
                     link_key: ids.link_key.clone(),
-                    projection_digest: projection_digest.clone(),
+                    projection_digest: extension_config_digest.clone(),
                     enabled: false,
                     created: false,
                 },
@@ -1018,6 +1958,73 @@ impl TaskRunner {
             .await?;
         }
         self.cancel_boundary(&task.task_id, &cancellation).await?;
+        #[cfg(windows)]
+        let verified_activation = {
+            let runtime_activate = self
+                .start_step(
+                    &task,
+                    6,
+                    CompensationDescriptor::RestoreRuntimeActivation {
+                        managed_mcp_id: ids.managed_mcp_id.clone(),
+                        previous_version: previous_version.clone(),
+                        target_version: Some(plan.manifest_version().to_string()),
+                    },
+                    plan.adapter().id.as_str(),
+                    distribution.adapter_version(),
+                )
+                .await?;
+            if runtime_activate != TaskStepStatus::Committed {
+                self.ensure_desired_managed_enable_ready_or_disable(
+                    desired_enabled,
+                    &task.task_id,
+                    &ids.managed_mcp_id,
+                    &ids.link_key,
+                    plan.manifest_digest(),
+                    "managed MCP credential handle became unavailable before runtime activation",
+                )
+                .await?;
+                self.authorize_effect(&task.task_id).await?;
+                distribution
+                    .activate_version(
+                        &ids.managed_mcp_id,
+                        plan.manifest_version(),
+                        &task.task_id,
+                        &cancellation,
+                    )
+                    .await?;
+                if distribution
+                    .active_version(&ids.managed_mcp_id)
+                    .await?
+                    .as_deref()
+                    != Some(plan.manifest_version())
+                {
+                    return Err(integrity_error());
+                }
+                self.repository
+                    .mark_managed_runtime_activated(
+                        &ids.managed_mcp_id,
+                        plan.manifest_version(),
+                        &task.task_id,
+                        self.clock.now_ms(),
+                    )
+                    .await?;
+                self.commit_step(
+                    &task.task_id,
+                    6,
+                    StepEvidence::ActivationRecorded {
+                        version: plan.manifest_version().to_string(),
+                    },
+                )
+                .await?;
+            }
+            let activation = distribution
+                .acquire_verified_runtime_activation(&ids.managed_mcp_id)
+                .await?;
+            if activation.projection() != &outcome.projection {
+                return Err(integrity_error());
+            }
+            activation
+        };
         let health_step = self
             .start_step(
                 &task,
@@ -1028,38 +2035,64 @@ impl TaskRunner {
             )
             .await?;
         if health_step != TaskStepStatus::Committed {
-            let effect = registration_effect_from_projection(&outcome.projection)?;
+            #[cfg(windows)]
+            let runtime_projection = verified_activation.projection();
+            #[cfg(not(windows))]
+            let runtime_projection = &outcome.projection;
+            let effect = registration_effect_from_projection(runtime_projection)?;
+            let runtime_extension_config = self
+                .ports
+                .transport
+                .extension_config(runtime_projection, &ids.link_key)?;
+            let current_authorization = self.authorize_effect(&task.task_id).await?;
             self.ports
                 .registration
                 .verify(&effect, &cancellation)
                 .await?;
-            let result = match self
-                .ports
-                .auth
-                .requirement(&manifest_record.verified.manifest().auth)?
+            let current_inventory = current_authorization
+                .inventory
+                .as_ref()
+                .ok_or_else(integrity_error)?;
+            let current_manifest = current_authorization.manifest.clone();
+            let current_manifest_digest = current_manifest.verified.digest();
+            if current_inventory.managed.managed_mcp_id != ids.managed_mcp_id
+                || expected_managed_revision
+                    .is_some_and(|revision| current_inventory.managed.revision != revision)
+                || current_inventory
+                    .lifecycle
+                    .active_manifest_digest
+                    .as_deref()
+                    != Some(current_manifest_digest)
+                || current_manifest_digest != manifest_record.verified.digest()
             {
-                AuthRequirement::MissingOpaqueHandle { .. } => {
-                    super::lifecycle::HealthAdapterResult {
-                        result_code: HealthResultCode::BlockedAuth,
-                        latency_ms: 0,
-                        capabilities_digest: None,
-                        tools_digest: None,
-                        detail_code: HealthDetailCode::CredentialHandleMissing,
-                    }
-                }
-                AuthRequirement::Ready => {
+                return Err(integrity_error());
+            }
+            let result = match self
+                .managed_enrollment_runtime_status(
+                    &current_manifest.verified.manifest().auth,
+                    &ids.managed_mcp_id,
+                    current_inventory.managed.revision,
+                    current_manifest_digest,
+                )
+                .await
+            {
+                CredentialRuntimeStatus::Ready => {
                     self.ports
                         .health
                         .run(
                             HealthExecution {
                                 effect,
                                 check: manifest_record.verified.manifest().health_check.clone(),
-                                projection_config: extension_config.clone(),
+                                projection_config: runtime_extension_config,
                             },
                             cancellation.clone(),
                         )
                         .await?
                 }
+                CredentialRuntimeStatus::Unconfigured
+                | CredentialRuntimeStatus::ReRegistrationRequired
+                | CredentialRuntimeStatus::TrustedStateConflict
+                | CredentialRuntimeStatus::TemporarilyUnavailable => blocked_auth_result(),
             };
             self.repository
                 .append_health_observation(NewHealthObservation {
@@ -1108,6 +2141,15 @@ impl TaskRunner {
                 "managed MCP runtime health gate failed",
             ));
         }
+        self.ensure_desired_managed_enable_ready_or_disable(
+            desired_enabled,
+            &task.task_id,
+            &ids.managed_mcp_id,
+            &ids.link_key,
+            plan.manifest_digest(),
+            "managed MCP credential handle became unavailable before activation",
+        )
+        .await?;
         let runtime_activate = self
             .start_step(
                 &task,
@@ -1122,6 +2164,16 @@ impl TaskRunner {
             )
             .await?;
         if runtime_activate != TaskStepStatus::Committed {
+            self.ensure_desired_managed_enable_ready_or_disable(
+                desired_enabled,
+                &task.task_id,
+                &ids.managed_mcp_id,
+                &ids.link_key,
+                plan.manifest_digest(),
+                "managed MCP credential handle became unavailable before runtime activation",
+            )
+            .await?;
+            self.authorize_effect(&task.task_id).await?;
             distribution
                 .activate_version(
                     &ids.managed_mcp_id,
@@ -1156,10 +2208,6 @@ impl TaskRunner {
             .await?;
         }
         self.cancel_boundary(&task.task_id, &cancellation).await?;
-        let desired_enabled = previous_state
-            .as_ref()
-            .is_some_and(|state| state.default_enabled)
-            && observation.result_code == HealthResultCode::Healthy;
         let activate = self
             .start_step(
                 &task,
@@ -1174,12 +2222,20 @@ impl TaskRunner {
             )
             .await?;
         if activate != TaskStepStatus::Committed {
+            self.ensure_desired_managed_enable_ready_or_disable(
+                desired_enabled,
+                &task.task_id,
+                &ids.managed_mcp_id,
+                &ids.link_key,
+                plan.manifest_digest(),
+                "managed MCP credential handle became unavailable before installation activation",
+            )
+            .await?;
             self.repository
                 .activate_managed_installation(ActivateManagedInstallation {
                     managed_mcp_id: &ids.managed_mcp_id,
                     target_version: plan.manifest_version(),
                     task_id: &task.task_id,
-                    default_enabled: desired_enabled,
                     now_ms: self.clock.now_ms(),
                 })
                 .await?;
@@ -1205,13 +2261,11 @@ impl TaskRunner {
             let projection = self
                 .repository
                 .put_owned_connection_projection(PutOwnedProjection {
-                    managed_mcp_id: &ids.managed_mcp_id,
-                    link_key: &ids.link_key,
-                    projection: &outcome.projection,
                     plan_id: &task.plan_id,
-                    manifest_digest: plan.manifest_digest(),
                     owner_task_id: &task.task_id,
-                    projection_digest: &projection_digest,
+                    worker_owner_id: &self.owner_id,
+                    step_ordinal: 8,
+                    step_token: &format!("{}:{}:8", task.task_id, task.attempt_count),
                     now_ms: self.clock.now_ms(),
                 })
                 .await?;
@@ -1237,10 +2291,20 @@ impl TaskRunner {
             )
             .await?;
         if live_config != TaskStepStatus::Committed {
+            self.ensure_desired_managed_enable_ready_or_disable(
+                desired_enabled,
+                &task.task_id,
+                &ids.managed_mcp_id,
+                &ids.link_key,
+                plan.manifest_digest(),
+                "managed MCP credential handle became unavailable before projection enablement",
+            )
+            .await?;
             let target_entry = crate::config::extensions::ExtensionEntry {
                 enabled: desired_enabled,
                 config: extension_config.clone(),
             };
+            self.authorize_effect(&task.task_id).await?;
             let snapshot = match self.ports.projection_sink.get(&ids.link_key).await? {
                 Some(existing) if existing.entry == target_entry => existing,
                 Some(existing)
@@ -1260,6 +2324,16 @@ impl TaskRunner {
                             })
                     }) =>
                 {
+                    self.ensure_desired_managed_enable_ready_or_disable(
+                        desired_enabled,
+                        &task.task_id,
+                        &ids.managed_mcp_id,
+                        &ids.link_key,
+                        plan.manifest_digest(),
+                        "managed MCP credential handle became unavailable before projection enablement",
+                    )
+                    .await?;
+                    self.authorize_effect(&task.task_id).await?;
                     self.ports
                         .projection_sink
                         .replace_owned(
@@ -1274,9 +2348,10 @@ impl TaskRunner {
                     return Err(McpPlatformError::new(
                         McpPlatformErrorCode::ProjectionConflict,
                         "managed live projection drifted during activation",
-                    ))
+                    ));
                 }
                 None if !desired_enabled => {
+                    self.authorize_effect(&task.task_id).await?;
                     self.ports
                         .projection_sink
                         .put_disabled(&ids.link_key, extension_config.clone())
@@ -1292,7 +2367,7 @@ impl TaskRunner {
                 9,
                 StepEvidence::ExtensionConfigProjected {
                     link_key: ids.link_key.clone(),
-                    projection_digest: projection_digest.clone(),
+                    projection_digest: extension_config_digest.clone(),
                     enabled: desired_enabled,
                     created: snapshot.created,
                 },
@@ -1322,6 +2397,7 @@ impl TaskRunner {
                     )
                     .await?;
                 if quarantine != TaskStepStatus::Committed {
+                    self.authorize_effect(&task.task_id).await?;
                     let actual = distribution
                         .quarantine_version(
                             &ids.managed_mcp_id,
@@ -1385,6 +2461,7 @@ impl TaskRunner {
                     )
                     .await?;
                 if purge != TaskStepStatus::Committed {
+                    self.authorize_effect(&task.task_id).await?;
                     distribution
                         .purge_quarantined(&token, &cancellation)
                         .await?;
@@ -1413,6 +2490,7 @@ impl TaskRunner {
                 )
                 .await?;
             if purge != TaskStepStatus::Committed {
+                self.authorize_effect(&task.task_id).await?;
                 distribution.purge_quarantined(token, &cancellation).await?;
                 self.commit_step(
                     &task.task_id,
@@ -1431,14 +2509,12 @@ impl TaskRunner {
 
     async fn execute_managed_uninstall(
         &self,
-        task: TaskRecord,
+        authorization: ExecutionAuthorization,
         cancellation: CancellationToken,
     ) -> McpPlatformResult<()> {
-        let distribution = self
-            .distribution
-            .as_ref()
-            .ok_or_else(adapter_incompatible)?;
-        let record = self.repository.get_plan(&task.plan_id).await?;
+        let task = authorization.task.clone();
+        let distribution = self.distribution()?;
+        let record = authorization.plan.clone();
         record.plan.verify_integrity()?;
         let (managed_mcp_id, version) = record
             .plan
@@ -1454,19 +2530,19 @@ impl TaskRunner {
                 _ => None,
             })
             .ok_or_else(integrity_error)?;
-        let durable_steps = self.repository.list_task_steps(&task.task_id).await?;
+        let durable_steps = authorization.steps.clone();
         let uninstall_snapshot =
             if let Some(step) = durable_steps.iter().find(|step| step.ordinal == 0) {
                 step.compensation.clone()
             } else {
-                let inventory = self
-                    .repository
-                    .get_managed_inventory(managed_mcp_id)
-                    .await?;
-                let projection = self
-                    .repository
-                    .get_connection_projection(managed_mcp_id)
-                    .await?;
+                let inventory = authorization
+                    .inventory
+                    .clone()
+                    .ok_or_else(integrity_error)?;
+                let projection = authorization
+                    .projection
+                    .clone()
+                    .ok_or_else(integrity_error)?;
                 CompensationDescriptor::ManagedUninstallSnapshot {
                     managed_mcp_id: managed_mcp_id.to_string(),
                     active_version: version.to_string(),
@@ -1580,6 +2656,7 @@ impl TaskRunner {
             )
             .await?;
         if detach != TaskStepStatus::Committed {
+            self.authorize_effect(&task.task_id).await?;
             if let Some(current) = self.ports.projection_sink.get(&link_key).await? {
                 if current.entry.config != config || (current.entry.enabled && !enabled) {
                     return Err(McpPlatformError::new(
@@ -1587,6 +2664,7 @@ impl TaskRunner {
                         "managed uninstall projection drifted",
                     ));
                 }
+                self.authorize_effect(&task.task_id).await?;
                 self.ports
                     .projection_sink
                     .remove_owned(&link_key, &current)
@@ -1619,6 +2697,7 @@ impl TaskRunner {
             )
             .await?;
         if deactivate != TaskStepStatus::Committed {
+            self.authorize_effect(&task.task_id).await?;
             distribution
                 .restore_activation(managed_mcp_id, None, &task.task_id)
                 .await?;
@@ -1654,6 +2733,7 @@ impl TaskRunner {
                 )
                 .await?;
             if quarantine != TaskStepStatus::Committed {
+                self.authorize_effect(&task.task_id).await?;
                 let actual = distribution
                     .quarantine_version(managed_mcp_id, owned_version, &token_task, &cancellation)
                     .await?;
@@ -1724,6 +2804,7 @@ impl TaskRunner {
                 )
                 .await?;
             if purge != TaskStepStatus::Committed {
+                self.authorize_effect(&task.task_id).await?;
                 distribution.purge_quarantined(token, &cancellation).await?;
                 self.commit_step(
                     &task.task_id,
@@ -1742,14 +2823,12 @@ impl TaskRunner {
 
     async fn execute_register(
         &self,
-        task: TaskRecord,
+        authorization: ExecutionAuthorization,
         cancellation: CancellationToken,
     ) -> McpPlatformResult<()> {
-        let plan_record = self.repository.get_plan(&task.plan_id).await?;
-        let manifest_record = self
-            .repository
-            .get_manifest(plan_record.plan.manifest_digest())
-            .await?;
+        let task = authorization.task.clone();
+        let plan_record = authorization.plan.clone();
+        let manifest_record = authorization.manifest.clone();
         let plan = &plan_record.plan;
         let manifest = manifest_record.verified.manifest();
         if matches!(
@@ -1777,19 +2856,17 @@ impl TaskRunner {
             ));
         }
         let effect = self.ports.transport.registration_effect(manifest, plan)?;
-        let stable_ids = stable_ids(
+        let stable_ids = register_stable_ids(
             plan.manifest_id(),
-            plan_record
-                .target
-                .installation_scope
-                .as_deref()
-                .ok_or_else(integrity_error)?,
+            plan_record.target.installation_scope.as_deref(),
         );
         let extension_config = self
             .ports
             .transport
             .extension_config(plan.connection_projection(), &stable_ids.link_key)?;
-        let projection_digest = digest_serializable(&extension_config)?;
+        let extension_config_digest = digest_serializable(&extension_config)?;
+        let projection_digest =
+            crate::mcp_platform::projection_config_digest(plan.connection_projection())?;
 
         if self.cancel_requested(&task.task_id, &cancellation).await? {
             return self.cancel_without_effects(&task.task_id).await;
@@ -1811,6 +2888,7 @@ impl TaskRunner {
             if manifest_record.verified.digest() != plan.manifest_digest() {
                 return Err(integrity_error());
             }
+            self.authorize_effect(&task.task_id).await?;
             let effect_evidence = self
                 .ports
                 .registration
@@ -1888,13 +2966,11 @@ impl TaskRunner {
             let projection = self
                 .repository
                 .put_owned_connection_projection(PutOwnedProjection {
-                    managed_mcp_id: &stable_ids.managed_mcp_id,
-                    link_key: &stable_ids.link_key,
-                    projection: plan.connection_projection(),
                     plan_id: &task.plan_id,
-                    manifest_digest: plan.manifest_digest(),
                     owner_task_id: &task.task_id,
-                    projection_digest: &projection_digest,
+                    worker_owner_id: &self.owner_id,
+                    step_ordinal: 2,
+                    step_token: &format!("{}:{}:2", task.task_id, task.attempt_count),
                     now_ms: self.clock.now_ms(),
                 })
                 .await?;
@@ -1914,10 +2990,9 @@ impl TaskRunner {
         self.transition(&task.task_id, TaskStatus::Activating, 60)
             .await?;
 
-        let existing_config_step = self
-            .repository
-            .list_task_steps(&task.task_id)
-            .await?
+        let config_authorization = self.authorize_effect(&task.task_id).await?;
+        let existing_config_step = config_authorization
+            .steps
             .into_iter()
             .find(|step| step.ordinal == 3);
         let config_created_by_task =
@@ -1940,7 +3015,7 @@ impl TaskRunner {
                 3,
                 CompensationDescriptor::RemoveOwnedExtensionConfig {
                     link_key: stable_ids.link_key.clone(),
-                    projection_digest: projection_digest.clone(),
+                    projection_digest: extension_config_digest.clone(),
                     created_by_task: config_created_by_task,
                 },
                 self.ports.projection_sink.adapter_id(),
@@ -1948,6 +3023,7 @@ impl TaskRunner {
             )
             .await?;
         if config_status != TaskStepStatus::Committed {
+            self.authorize_effect(&task.task_id).await?;
             let snapshot = self
                 .ports
                 .projection_sink
@@ -1961,7 +3037,7 @@ impl TaskRunner {
                 3,
                 StepEvidence::ExtensionConfigProjected {
                     link_key: stable_ids.link_key.clone(),
-                    projection_digest: projection_digest.clone(),
+                    projection_digest: extension_config_digest.clone(),
                     enabled: false,
                     created: config_created_by_task,
                 },
@@ -1976,7 +3052,7 @@ impl TaskRunner {
                 4,
                 CompensationDescriptor::RemoveOwnedExtensionConfig {
                     link_key: stable_ids.link_key.clone(),
-                    projection_digest,
+                    projection_digest: extension_config_digest,
                     created_by_task: false,
                 },
                 self.ports.transport.adapter_id(),
@@ -1984,6 +3060,7 @@ impl TaskRunner {
             )
             .await?;
         if verify_status != TaskStepStatus::Committed {
+            let authorization = self.authorize_effect(&task.task_id).await?;
             let snapshot = self
                 .ports
                 .projection_sink
@@ -1993,9 +3070,10 @@ impl TaskRunner {
             if snapshot.entry.enabled || snapshot.entry.config != extension_config {
                 return Err(integrity_error());
             }
-            self.repository
-                .get_connection_projection(&stable_ids.managed_mcp_id)
-                .await?;
+            let projection = authorization.projection.ok_or_else(integrity_error)?;
+            if projection.managed_mcp_id != stable_ids.managed_mcp_id {
+                return Err(integrity_error());
+            }
             self.commit_step(
                 &task.task_id,
                 4,
@@ -2013,36 +3091,14 @@ impl TaskRunner {
 
     async fn execute_health(
         &self,
-        task: TaskRecord,
+        authorization: ExecutionAuthorization,
         cancellation: CancellationToken,
     ) -> McpPlatformResult<()> {
-        let request = self
-            .repository
-            .get_health_task_request(&task.task_id)
-            .await?;
-        let inventory = self
-            .repository
-            .get_managed_inventory(&request.managed_mcp_id)
-            .await?;
-        let manifest_digest = inventory
-            .lifecycle
-            .active_manifest_digest
-            .as_deref()
+        let task = authorization.task.clone();
+        let request = authorization
+            .health_request
+            .clone()
             .ok_or_else(integrity_error)?;
-        let manifest = self.repository.get_manifest(manifest_digest).await?;
-        reject_managed_remote_http_auth(manifest.verified.manifest())?;
-        let projection = self
-            .repository
-            .get_connection_projection(&request.managed_mcp_id)
-            .await?;
-        let config = self
-            .ports
-            .transport
-            .extension_config(&projection.projection, &projection.link_key)?;
-        let effect = self.ports.transport.registration_effect(
-            manifest.verified.manifest(),
-            &self.repository.get_plan(&task.plan_id).await?.plan,
-        )?;
         let compensation = CompensationDescriptor::RemoveManagedMcp {
             managed_mcp_id: request.managed_mcp_id.clone(),
         };
@@ -2057,21 +3113,46 @@ impl TaskRunner {
             .await?
             != TaskStepStatus::Committed
         {
-            let result = match self
+            let current_authorization = self.authorize_effect(&task.task_id).await?;
+            let current_request = current_authorization
+                .health_request
+                .clone()
+                .ok_or_else(integrity_error)?;
+            let inventory = current_authorization
+                .inventory
+                .clone()
+                .ok_or_else(integrity_error)?;
+            let manifest_digest = inventory
+                .lifecycle
+                .active_manifest_digest
+                .as_deref()
+                .ok_or_else(integrity_error)?;
+            let manifest = current_authorization.manifest.clone();
+            reject_managed_remote_http_auth(manifest.verified.manifest())?;
+            let projection = current_authorization
+                .projection
+                .clone()
+                .ok_or_else(integrity_error)?;
+            let config = self
                 .ports
-                .auth
-                .requirement(&manifest.verified.manifest().auth)?
+                .transport
+                .extension_config(&projection.projection, &projection.link_key)?;
+            let effect = self.ports.transport.registration_effect(
+                manifest.verified.manifest(),
+                &current_authorization.plan.plan,
+            )?;
+            let result = match self
+                .managed_enrollment_runtime_status(
+                    &manifest.verified.manifest().auth,
+                    &current_request.managed_mcp_id,
+                    inventory.managed.revision,
+                    manifest_digest,
+                )
+                .await
             {
-                AuthRequirement::MissingOpaqueHandle { .. } => {
-                    super::lifecycle::HealthAdapterResult {
-                        result_code: HealthResultCode::BlockedAuth,
-                        latency_ms: 0,
-                        capabilities_digest: None,
-                        tools_digest: None,
-                        detail_code: HealthDetailCode::CredentialHandleMissing,
-                    }
-                }
-                AuthRequirement::Ready if request.mode == HealthCheckMode::Registration => {
+                CredentialRuntimeStatus::Ready
+                    if current_request.mode == HealthCheckMode::Registration =>
+                {
                     registration_health(
                         self.ports.projection_sink.as_ref(),
                         &projection.link_key,
@@ -2080,7 +3161,7 @@ impl TaskRunner {
                     )
                     .await?
                 }
-                AuthRequirement::Ready => {
+                CredentialRuntimeStatus::Ready => {
                     self.ports
                         .health
                         .run(
@@ -2093,6 +3174,10 @@ impl TaskRunner {
                         )
                         .await?
                 }
+                CredentialRuntimeStatus::Unconfigured
+                | CredentialRuntimeStatus::ReRegistrationRequired
+                | CredentialRuntimeStatus::TrustedStateConflict
+                | CredentialRuntimeStatus::TemporarilyUnavailable => blocked_auth_result(),
             };
             if cancellation.is_cancelled() {
                 return self.cancel_without_effects(&task.task_id).await;
@@ -2126,6 +3211,15 @@ impl TaskRunner {
                 },
             )
             .await?;
+            if !matches!(
+                result.result_code,
+                HealthResultCode::Healthy | HealthResultCode::BlockedAuth
+            ) {
+                return Err(McpPlatformError::new(
+                    McpPlatformErrorCode::HealthFailed,
+                    "managed MCP runtime health gate failed",
+                ));
+            }
         }
         self.transition(&task.task_id, TaskStatus::Verifying, 70)
             .await?;
@@ -2144,10 +3238,9 @@ impl TaskRunner {
         adapter_id: &str,
         adapter_version: &str,
     ) -> McpPlatformResult<TaskStepStatus> {
-        if let Some(step) = self
-            .repository
-            .list_task_steps(&task.task_id)
-            .await?
+        let authorization = self.authorize_effect(&task.task_id).await?;
+        if let Some(step) = authorization
+            .steps
             .into_iter()
             .find(|step| step.ordinal == ordinal)
         {
@@ -2163,14 +3256,20 @@ impl TaskRunner {
                 &compensation,
                 adapter_id,
                 adapter_version,
+                &self.owner_id,
+                authorization.task.revision,
+                self.clock.now_ms(),
             )
             .await?;
         if step.status == TaskStepStatus::NotStarted {
+            let authorization = self.authorize_effect(&task.task_id).await?;
             return self
                 .repository
                 .transition_task_step(StepTransition {
                     task_id: &task.task_id,
                     ordinal,
+                    owner_id: &self.owner_id,
+                    expected_task_revision: authorization.task.revision,
                     expected_status: TaskStepStatus::NotStarted,
                     next_status: TaskStepStatus::Started,
                     evidence: None,
@@ -2197,18 +3296,22 @@ impl TaskRunner {
                 LEASE_DURATION_MS,
             )
             .await?;
-        let steps = self.repository.list_task_steps(task_id).await?;
-        let step = steps
+        let authorization = self.authorize_effect(task_id).await?;
+        let step = authorization
+            .steps
             .iter()
             .find(|step| step.ordinal == ordinal)
             .ok_or_else(integrity_error)?;
         if step.status == TaskStepStatus::Committed {
             return Ok(());
         }
+        let expected_task_revision = authorization.task.revision;
         self.repository
             .transition_task_step(StepTransition {
                 task_id,
                 ordinal,
+                owner_id: &self.owner_id,
+                expected_task_revision,
                 expected_status: TaskStepStatus::Started,
                 next_status: TaskStepStatus::Committed,
                 evidence: Some(&evidence),
@@ -2248,11 +3351,11 @@ impl TaskRunner {
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<bool> {
         Ok(cancellation.is_cancelled()
-            || self.repository.get_task(task_id).await?.status == TaskStatus::Cancelling)
+            || self.authorize_effect(task_id).await?.task.status == TaskStatus::Cancelling)
     }
 
     async fn cancel_without_effects(&self, task_id: &str) -> McpPlatformResult<()> {
-        let task = self.repository.get_task(task_id).await?;
+        let task = self.authorize_effect(task_id).await?.task;
         let next = if task.status == TaskStatus::Running {
             self.transition(task_id, TaskStatus::Cancelling, task.progress)
                 .await?;
@@ -2269,7 +3372,11 @@ impl TaskRunner {
         task_id: &str,
         error: McpPlatformError,
     ) -> McpPlatformResult<()> {
-        let task = self.repository.get_task(task_id).await?;
+        let task = self
+            .repository
+            .authorize_execution(task_id, &self.owner_id, self.clock.now_ms())
+            .await?
+            .task;
         if matches!(
             task.status,
             TaskStatus::Cancelled | TaskStatus::RecoveryRequired
@@ -2284,16 +3391,8 @@ impl TaskRunner {
                 self.transition(task_id, TaskStatus::Interrupted, task.progress)
                     .await?;
             } else {
-                let message = if error.code() == McpPlatformErrorCode::CredentialMissing {
-                    "managed remote HTTP credentials are unavailable"
-                } else {
-                    "MCP health task failed at a typed execution boundary"
-                };
-                let redacted = RedactedError::new(
-                    RedactedErrorCode::AdapterFailed,
-                    message,
-                    std::iter::empty::<&str>(),
-                );
+                let (code, message) = task_error_boundary(&error);
+                let redacted = RedactedError::new(code, message, std::iter::empty::<&str>());
                 self.transition_with_error(task_id, TaskStatus::Failed, task.progress, &redacted)
                     .await?;
             }
@@ -2341,25 +3440,14 @@ impl TaskRunner {
             return Ok(());
         }
         let effect_may_have_occurred = self
-            .repository
-            .list_task_steps(task_id)
+            .authorize_effect(task_id)
             .await?
+            .steps
             .iter()
             .any(|step| step.status != TaskStepStatus::NotStarted && step.ordinal > 0);
         if effect_may_have_occurred || task.status == TaskStatus::Cancelling {
-            let redacted = RedactedError::new(
-                if error.code() == McpPlatformErrorCode::IntegrityError {
-                    RedactedErrorCode::VerificationFailed
-                } else {
-                    RedactedErrorCode::AdapterFailed
-                },
-                if error.code() == McpPlatformErrorCode::IntegrityError {
-                    "MCP lifecycle authority failed integrity verification"
-                } else {
-                    "MCP lifecycle task failed at a typed execution boundary"
-                },
-                std::iter::empty::<&str>(),
-            );
+            let (code, message) = task_error_boundary(&error);
+            let redacted = RedactedError::new(code, message, std::iter::empty::<&str>());
             self.rollback(
                 task_id,
                 task.status == TaskStatus::Cancelling,
@@ -2367,11 +3455,8 @@ impl TaskRunner {
             )
             .await
         } else {
-            let redacted = RedactedError::new(
-                RedactedErrorCode::AdapterFailed,
-                "MCP lifecycle task failed at a typed execution boundary",
-                std::iter::empty::<&str>(),
-            );
+            let (code, message) = task_error_boundary(&error);
+            let redacted = RedactedError::new(code, message, std::iter::empty::<&str>());
             self.transition_with_error(task_id, TaskStatus::Failed, task.progress, &redacted)
                 .await
         }
@@ -2383,15 +3468,17 @@ impl TaskRunner {
         cancelled: bool,
         execution_error: Option<&RedactedError>,
     ) -> McpPlatformResult<()> {
-        let task = self.repository.get_task(task_id).await?;
+        let task = self.authorize_effect(task_id).await?.task;
         if task.status != TaskStatus::RollingBack {
             self.transition(task_id, TaskStatus::RollingBack, task.progress)
                 .await?;
         }
-        let plan = self.repository.get_plan(&task.plan_id).await?;
+        let rollback_authorization = self.authorize_effect(task_id).await?;
+        let task = rollback_authorization.task.clone();
+        let plan = rollback_authorization.plan.clone();
         let scope = plan.target.installation_scope.as_deref().unwrap_or("user");
         let ids = stable_ids(plan.plan.manifest_id(), scope);
-        let steps = self.repository.list_task_steps(task_id).await?;
+        let steps = rollback_authorization.steps.clone();
         let mut incomplete = false;
         for step in steps
             .iter()
@@ -2401,12 +3488,15 @@ impl TaskRunner {
             if step.compensation_status == CompensationStatus::Committed {
                 continue;
             }
-            if step.compensation_status == CompensationStatus::Pending
-                && self
+            if step.compensation_status == CompensationStatus::Pending {
+                let authorization = self.authorize_effect(task_id).await?;
+                if self
                     .repository
                     .transition_compensation(CompensationTransition {
                         task_id,
                         ordinal: step.ordinal,
+                        owner_id: &self.owner_id,
+                        expected_task_revision: authorization.task.revision,
                         expected_status: CompensationStatus::Pending,
                         next_status: CompensationStatus::Started,
                         actor: &self.owner_id,
@@ -2414,41 +3504,38 @@ impl TaskRunner {
                     })
                     .await
                     .is_err()
-            {
-                incomplete = true;
-                break;
+                {
+                    incomplete = true;
+                    break;
+                }
             }
+            let effect_authorization = self.authorize_effect(task_id).await?;
             let result = match &step.compensation {
                 CompensationDescriptor::RemoveOwnedExtensionConfig {
                     link_key,
+                    projection_digest,
                     created_by_task: true,
-                    ..
                 } => {
-                    let expected = match self
-                        .repository
-                        .get_connection_projection(&ids.managed_mcp_id)
-                        .await
+                    let record = effect_authorization
+                        .projection
+                        .clone()
+                        .ok_or_else(integrity_error)?;
+                    if record.owner_task_id.as_deref() != Some(task_id)
+                        || record.plan_id.as_deref() != Some(&task.plan_id)
+                        || record.link_key != *link_key
+                        || record.projection_digest != *projection_digest
                     {
-                        Ok(record) => ProjectionSnapshot {
-                            entry: crate::config::extensions::ExtensionEntry {
-                                enabled: false,
-                                config: self
-                                    .ports
-                                    .transport
-                                    .extension_config(&record.projection, link_key)?,
-                            },
-                            created: true,
+                        return Err(integrity_error());
+                    }
+                    let expected = ProjectionSnapshot {
+                        entry: crate::config::extensions::ExtensionEntry {
+                            enabled: false,
+                            config: self
+                                .ports
+                                .transport
+                                .extension_config(&record.projection, link_key)?,
                         },
-                        Err(_) => ProjectionSnapshot {
-                            entry: crate::config::extensions::ExtensionEntry {
-                                enabled: false,
-                                config: self.ports.transport.extension_config(
-                                    plan.plan.connection_projection(),
-                                    &ids.link_key,
-                                )?,
-                            },
-                            created: true,
-                        },
+                        created: true,
                     };
                     self.ports
                         .projection_sink
@@ -2464,7 +3551,13 @@ impl TaskRunner {
                     managed_mcp_id, ..
                 } => self
                     .repository
-                    .remove_owned_projection(managed_mcp_id, task_id)
+                    .remove_owned_projection(RemoveOwnedProjection {
+                        managed_mcp_id,
+                        task_id,
+                        worker_owner_id: &self.owner_id,
+                        compensation_ordinal: step.ordinal,
+                        now_ms: self.clock.now_ms(),
+                    })
                     .await
                     .map(|_| ()),
                 CompensationDescriptor::RemoveManagedMcp { managed_mcp_id } => self
@@ -2521,6 +3614,31 @@ impl TaskRunner {
                     target_version,
                 } => match self.distribution.as_ref() {
                     Some(distribution) => {
+                        let previous_projection_enabled = steps
+                            .iter()
+                            .find_map(|candidate| match &candidate.compensation {
+                                CompensationDescriptor::ManagedLifecycleSnapshot {
+                                    managed_mcp_id: snapshot_managed_mcp_id,
+                                    previous_state,
+                                    ..
+                                } if snapshot_managed_mcp_id == managed_mcp_id => {
+                                    previous_state.as_ref().map(|state| state.default_enabled)
+                                }
+                                CompensationDescriptor::RestoreManagedProjection {
+                                    managed_mcp_id: snapshot_managed_mcp_id,
+                                    enabled,
+                                    ..
+                                } if snapshot_managed_mcp_id == managed_mcp_id => Some(*enabled),
+                                _ => None,
+                            })
+                            .ok_or_else(integrity_error)?;
+                        if previous_version.is_some() && previous_projection_enabled {
+                            self.ensure_runtime_activation_restore_ready_or_disable(
+                                task_id,
+                                managed_mcp_id,
+                            )
+                            .await?;
+                        }
                         let current = distribution.active_version(managed_mcp_id).await?;
                         if current.as_deref() == target_version.as_deref() {
                             distribution
@@ -2555,8 +3673,54 @@ impl TaskRunner {
                     plan_id,
                     owner_task_id,
                 } => {
-                    let manifest = self.repository.get_manifest(manifest_digest).await?;
+                    let restore = RestoreOwnedProjection {
+                        managed_mcp_id,
+                        link_key,
+                        projection,
+                        plan_id,
+                        manifest_digest,
+                        owner_task_id: owner_task_id.as_deref(),
+                        projection_digest,
+                        replacing_task_id: task_id,
+                        worker_owner_id: &self.owner_id,
+                        compensation_ordinal: step.ordinal,
+                        now_ms: self.clock.now_ms(),
+                    };
+                    self.repository
+                        .validate_owned_connection_projection_restore(restore.clone())
+                        .await?;
+                    let manifest = effect_authorization.manifest.clone();
+                    if manifest.verified.digest() != manifest_digest {
+                        return Err(integrity_error());
+                    }
                     reject_managed_remote_http_auth(manifest.verified.manifest())?;
+                    if *enabled {
+                        let inventory = effect_authorization
+                            .inventory
+                            .as_ref()
+                            .ok_or_else(integrity_error)?;
+                        if inventory.managed.managed_mcp_id != managed_mcp_id.as_str() {
+                            return Err(integrity_error());
+                        }
+                        if let Err(error) = self
+                            .ensure_managed_enable_ready(
+                            &manifest.verified.manifest().auth,
+                            managed_mcp_id,
+                            inventory.managed.revision,
+                            manifest_digest,
+                            "managed MCP credential handle is unavailable for projection restoration",
+                        )
+                        .await
+                        {
+                            self.disable_managed_projection_and_runtime(
+                                task_id,
+                                managed_mcp_id,
+                                Some(link_key),
+                            )
+                            .await?;
+                            return Err(error);
+                        }
+                    }
                     let old_config = self
                         .ports
                         .transport
@@ -2589,6 +3753,28 @@ impl TaskRunner {
                             }
                         };
                         if *enabled {
+                            let inventory = effect_authorization
+                                .inventory
+                                .as_ref()
+                                .ok_or_else(integrity_error)?;
+                            if let Err(error) = self
+                                .ensure_managed_enable_ready(
+                                &manifest.verified.manifest().auth,
+                                managed_mcp_id,
+                                inventory.managed.revision,
+                                manifest_digest,
+                                "managed MCP credential handle became unavailable before projection restoration",
+                            )
+                            .await
+                            {
+                                self.disable_managed_projection_and_runtime(
+                                    task_id,
+                                    managed_mcp_id,
+                                    Some(link_key),
+                                )
+                                .await?;
+                                return Err(error);
+                            }
                             self.ports
                                 .projection_sink
                                 .set_enabled(link_key, true)
@@ -2597,25 +3783,9 @@ impl TaskRunner {
                             return Err(integrity_error());
                         }
                     }
-                    let current_record = self
-                        .repository
-                        .get_connection_projection(managed_mcp_id)
+                    self.repository
+                        .restore_owned_connection_projection(restore)
                         .await?;
-                    if current_record.projection_digest != *projection_digest {
-                        self.repository
-                            .restore_owned_connection_projection(RestoreOwnedProjection {
-                                managed_mcp_id,
-                                link_key,
-                                projection,
-                                plan_id,
-                                manifest_digest,
-                                owner_task_id: owner_task_id.as_deref(),
-                                projection_digest,
-                                replacing_task_id: task_id,
-                                now_ms: self.clock.now_ms(),
-                            })
-                            .await?;
-                    }
                     Ok(())
                 }
                 CompensationDescriptor::RestoreQuarantinedVersion {
@@ -2654,11 +3824,14 @@ impl TaskRunner {
                 incomplete = true;
                 break;
             }
+            let authorization = self.authorize_effect(task_id).await?;
             if self
                 .repository
                 .transition_compensation(CompensationTransition {
                     task_id,
                     ordinal: step.ordinal,
+                    owner_id: &self.owner_id,
+                    expected_task_revision: authorization.task.revision,
                     expected_status: CompensationStatus::Started,
                     next_status: CompensationStatus::Committed,
                     actor: &self.owner_id,
@@ -2719,7 +3892,7 @@ impl TaskRunner {
         next_status: TaskStatus,
         progress: u8,
     ) -> McpPlatformResult<TaskRecord> {
-        let current = self.repository.get_task(task_id).await?;
+        let current = self.authorize_effect(task_id).await?.task;
         self.repository
             .transition_task(TaskTransition {
                 task_id,
@@ -2743,7 +3916,7 @@ impl TaskRunner {
         progress: u8,
         redacted_error: &RedactedError,
     ) -> McpPlatformResult<()> {
-        let current = self.repository.get_task(task_id).await?;
+        let current = self.authorize_effect(task_id).await?.task;
         self.repository
             .transition_task(TaskTransition {
                 task_id,
@@ -2768,7 +3941,7 @@ impl TaskRunner {
         redacted_error: &RedactedError,
         rollback_status: RollbackStatus,
     ) -> McpPlatformResult<()> {
-        let current = self.repository.get_task(task_id).await?;
+        let current = self.authorize_effect(task_id).await?.task;
         let evidence = RollbackEvidence {
             compensation_available: rollback_status != RollbackStatus::Complete,
             remaining_compensations: if rollback_status == RollbackStatus::Complete {
@@ -2815,6 +3988,16 @@ fn existing_step_status(
     Ok(step.status)
 }
 
+fn blocked_auth_result() -> super::lifecycle::HealthAdapterResult {
+    super::lifecycle::HealthAdapterResult {
+        result_code: HealthResultCode::BlockedAuth,
+        latency_ms: 0,
+        capabilities_digest: None,
+        tools_digest: None,
+        detail_code: HealthDetailCode::CredentialHandleMissing,
+    }
+}
+
 async fn registration_health(
     sink: &dyn super::lifecycle::ProjectionSink,
     key: &str,
@@ -2844,6 +4027,7 @@ async fn registration_health(
 fn registration_effect_from_projection(
     projection: &super::plan::ConnectionProjection,
 ) -> McpPlatformResult<RegistrationEffect> {
+    projection.require_runtime_transport()?;
     match projection {
         super::plan::ConnectionProjection::ManagedStdio {
             executable,
@@ -2899,6 +4083,10 @@ fn stable_ids(mcp_id: &str, installation_scope: &str) -> StableIds {
     }
 }
 
+fn register_stable_ids(mcp_id: &str, installation_scope: Option<&str>) -> StableIds {
+    stable_ids(mcp_id, installation_scope.unwrap_or("user"))
+}
+
 pub(crate) fn stable_managed_mcp_id(mcp_id: &str, installation_scope: &str) -> String {
     use sha2::{Digest as _, Sha256};
     let digest = Sha256::digest(format!("{mcp_id}\0{installation_scope}").as_bytes());
@@ -2909,10 +4097,108 @@ pub(crate) fn stable_managed_mcp_id(mcp_id: &str, installation_scope: &str) -> S
     format!("managed_{suffix}")
 }
 
+fn executing_platform() -> Platform {
+    if cfg!(target_os = "windows") {
+        Platform::Windows
+    } else if cfg!(target_os = "macos") {
+        Platform::Macos
+    } else {
+        Platform::Linux
+    }
+}
+
+fn executing_architecture() -> Architecture {
+    if cfg!(target_arch = "aarch64") {
+        Architecture::Aarch64
+    } else {
+        Architecture::X86_64
+    }
+}
+
+fn plan_operation_for_task(operation: TaskOperation) -> PlanOperation {
+    match operation {
+        TaskOperation::Register => PlanOperation::Register,
+        TaskOperation::Install => PlanOperation::Install,
+        TaskOperation::Update => PlanOperation::Update,
+        TaskOperation::Repair => PlanOperation::Repair,
+        TaskOperation::Uninstall => PlanOperation::Uninstall,
+        TaskOperation::Health => PlanOperation::Health,
+    }
+}
+
+fn trusted_dispatch_adapter(distribution: &Distribution) -> TrustedPlanAdapter {
+    match distribution {
+        Distribution::RemoteHttp => TrustedPlanAdapter::RemoteHttp,
+        Distribution::ManualStdio { .. } => TrustedPlanAdapter::ManualStdio,
+        Distribution::Npm { .. } => TrustedPlanAdapter::Npm,
+        Distribution::PythonWheel { .. } => TrustedPlanAdapter::PythonWheel,
+        Distribution::BinaryArchive { .. } => TrustedPlanAdapter::BinaryArchive,
+        Distribution::Docker { .. } => TrustedPlanAdapter::Docker,
+        Distribution::GitDev { .. } => TrustedPlanAdapter::GitDev,
+    }
+}
+
 const fn integrity_error() -> McpPlatformError {
     McpPlatformError::new(
         McpPlatformErrorCode::IntegrityError,
         "MCP lifecycle journal failed integrity validation",
+    )
+}
+
+const fn managed_storage_capacity_preflight_unavailable() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::IntegrityUnavailable,
+        "managed storage capacity preflight is unavailable",
+    )
+}
+
+fn preflight_rejected_error() -> RedactedError {
+    RedactedError::new(
+        RedactedErrorCode::VerificationFailed,
+        "MCP task preflight rejected before execution",
+        std::iter::empty::<&str>(),
+    )
+}
+
+fn task_error_boundary(error: &McpPlatformError) -> (RedactedErrorCode, &'static str) {
+    match error.code() {
+        McpPlatformErrorCode::CredentialMissing => (
+            RedactedErrorCode::AdapterFailed,
+            "managed remote HTTP credentials are unavailable",
+        ),
+        McpPlatformErrorCode::IntegrityError | McpPlatformErrorCode::IntegrityUnavailable => (
+            RedactedErrorCode::VerificationFailed,
+            "MCP lifecycle authority failed integrity verification",
+        ),
+        _ => (
+            RedactedErrorCode::AdapterFailed,
+            "MCP lifecycle task failed at a typed execution boundary",
+        ),
+    }
+}
+
+const fn projection_recovery_required() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::RollbackIncomplete,
+        "managed MCP projection mutation requires recovery",
+    )
+}
+
+const fn recovery_blocked() -> McpPlatformError {
+    McpPlatformError::new(McpPlatformErrorCode::IntegrityError, "recovery_blocked")
+}
+
+const fn projection_witness_expired() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::ProjectionWitnessExpired,
+        "stored projection witness no longer matches current authority",
+    )
+}
+
+const fn projection_witness_consumed() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::ProjectionWitnessConsumed,
+        "stored projection witness was already consumed",
     )
 }
 
@@ -2940,8 +4226,20 @@ const fn adapter_incompatible() -> McpPlatformError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::mcp_platform::credential_runtime_gate::CredentialAuthorityRuntimeGateAdapter;
+    use crate::mcp_platform::error::MANAGED_STORAGE_ROOT_UNAVAILABLE_MESSAGE;
+    use crate::mcp_platform::lifecycle::{
+        ConfigProjectionSink, CoreTransportProjectionAdapter, EmptyHostIntegrationAdapter,
+        SafeRegistrationEffectAdapter,
+    };
+    use crate::mcp_platform::managed_remote::UnavailableRemoteHttpNetworkPolicy;
+    use crate::mcp_platform::repository::InMemoryIntegritySigner;
     use crate::mcp_platform::repository::TaskStepRecord;
+    use crate::mcp_platform::service::SystemClock;
     use crate::mcp_platform::task::CompensationStatus;
+    use crate::mcp_platform::ProductionHealthCheckAdapter;
+    use async_trait::async_trait;
+    use std::sync::Arc;
 
     fn durable_step() -> TaskStepRecord {
         TaskStepRecord {
@@ -2962,6 +4260,22 @@ mod tests {
             compensation_started_at_ms: None,
             compensation_committed_at_ms: None,
         }
+    }
+
+    #[test]
+    fn task_error_boundary_never_reuses_integrity_unavailable_detail() {
+        let raw = "token=secret https://example.invalid/path {\"credential\":\"secret\"}";
+        let error = McpPlatformError::new(McpPlatformErrorCode::IntegrityUnavailable, raw);
+
+        let (code, message) = task_error_boundary(&error);
+
+        assert_eq!(code, RedactedErrorCode::VerificationFailed);
+        assert_eq!(
+            message,
+            "MCP lifecycle authority failed integrity verification"
+        );
+        assert!(!message.contains("secret"));
+        assert!(!message.contains("example.invalid"));
     }
 
     #[test]
@@ -2992,5 +4306,290 @@ mod tests {
                 McpPlatformErrorCode::IntegrityError
             );
         }
+    }
+
+    #[derive(Default)]
+    struct NoopDistribution {
+        capacity_checks: std::sync::atomic::AtomicU64,
+    }
+
+    #[async_trait]
+    impl DistributionEffectAdapter for NoopDistribution {
+        fn adapter_version(&self) -> &'static str {
+            "1"
+        }
+
+        async fn check_managed_storage_capacity(
+            &self,
+            _required_peak_bytes: u64,
+        ) -> McpPlatformResult<crate::mcp_platform::ManagedStorageCapacity> {
+            self.capacity_checks
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            Err(managed_storage_capacity_preflight_unavailable())
+        }
+
+        async fn install(
+            &self,
+            _effect: &ManagedInstallEffect,
+            _cancellation: &CancellationToken,
+        ) -> McpPlatformResult<crate::mcp_platform::ManagedInstallOutcome> {
+            unreachable!("distribution lookup test should not execute installs")
+        }
+
+        async fn inspect_installed(
+            &self,
+            _effect: &ManagedInstallEffect,
+            _cancellation: &CancellationToken,
+        ) -> McpPlatformResult<crate::mcp_platform::ManagedInstallOutcome> {
+            unreachable!("distribution lookup test should not inspect installs")
+        }
+
+        async fn version_exists(
+            &self,
+            _managed_mcp_id: &str,
+            _version: &str,
+        ) -> McpPlatformResult<bool> {
+            Ok(false)
+        }
+
+        async fn activate_version(
+            &self,
+            _managed_mcp_id: &str,
+            _version: &str,
+            _task_id: &str,
+            _cancellation: &CancellationToken,
+        ) -> McpPlatformResult<()> {
+            Ok(())
+        }
+
+        async fn restore_activation(
+            &self,
+            _managed_mcp_id: &str,
+            _previous_version: Option<&str>,
+            _task_id: &str,
+        ) -> McpPlatformResult<()> {
+            Ok(())
+        }
+
+        async fn active_version(&self, _managed_mcp_id: &str) -> McpPlatformResult<Option<String>> {
+            Ok(None)
+        }
+
+        async fn remove_version(
+            &self,
+            _managed_mcp_id: &str,
+            _version: &str,
+            _cancellation: &CancellationToken,
+        ) -> McpPlatformResult<()> {
+            Ok(())
+        }
+
+        async fn quarantine_version(
+            &self,
+            _managed_mcp_id: &str,
+            _version: &str,
+            task_id: &str,
+            _cancellation: &CancellationToken,
+        ) -> McpPlatformResult<String> {
+            Ok(format!("quarantine-{task_id}"))
+        }
+
+        async fn restore_quarantined(
+            &self,
+            _managed_mcp_id: &str,
+            _version: &str,
+            _token: &str,
+        ) -> McpPlatformResult<()> {
+            Ok(())
+        }
+
+        async fn purge_quarantined(
+            &self,
+            _token: &str,
+            _cancellation: &CancellationToken,
+        ) -> McpPlatformResult<()> {
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn adapters_without_anchor_authority_cannot_issue_runtime_activation() {
+        let error = NoopDistribution::default()
+            .acquire_verified_runtime_activation("managed_unanchored")
+            .await
+            .expect_err("unanchored runtime activation must fail closed");
+        assert_eq!(
+            error.code(),
+            McpPlatformErrorCode::RuntimeControlUnavailable
+        );
+    }
+
+    async fn runner_fixture() -> TaskRunner {
+        let repository = Arc::new(
+            SqliteMcpPlatformRepository::open_url_with_integrity_signer(
+                "sqlite::memory:",
+                Arc::new(InMemoryIntegritySigner::new_for_testing([0x41; 32])),
+            )
+            .await
+            .unwrap(),
+        );
+        let remote_http = Arc::new(UnavailableRemoteHttpNetworkPolicy);
+        let ports = LifecyclePorts {
+            registration: Arc::new(SafeRegistrationEffectAdapter::new(remote_http.clone())),
+            host_integration: Arc::new(EmptyHostIntegrationAdapter),
+            transport: Arc::new(CoreTransportProjectionAdapter),
+            auth: Arc::new(CredentialAuthorityRuntimeGateAdapter::production_default()),
+            health: Arc::new(ProductionHealthCheckAdapter::new(remote_http)),
+            projection_sink: Arc::new(ConfigProjectionSink::default()),
+        };
+        TaskRunner::new(
+            repository,
+            Arc::new(SystemClock),
+            ports,
+            "tester".to_string(),
+        )
+    }
+
+    #[tokio::test]
+    async fn distribution_lookup_prefers_stable_storage_root_error() {
+        let runner = runner_fixture()
+            .await
+            .with_distribution_adapter(Arc::new(NoopDistribution::default()))
+            .with_distribution_unavailable_error(McpPlatformError::new(
+                McpPlatformErrorCode::IntegrityUnavailable,
+                MANAGED_STORAGE_ROOT_UNAVAILABLE_MESSAGE,
+            ));
+
+        let error = match runner.distribution() {
+            Ok(_) => panic!("distribution lookup should fail closed on the stored root error"),
+            Err(error) => error,
+        };
+
+        assert_eq!(error.code(), McpPlatformErrorCode::IntegrityUnavailable);
+        assert_eq!(error.message(), MANAGED_STORAGE_ROOT_UNAVAILABLE_MESSAGE);
+    }
+
+    #[tokio::test]
+    async fn storage_capacity_preflight_never_calls_adapter_for_nonmanaged_acquisition() {
+        let runner = runner_fixture().await;
+        let no_op = Arc::new(NoopDistribution::default());
+        let distribution: Arc<dyn DistributionEffectAdapter> = no_op.clone();
+        let acquisition = PlanStep::AcquireGitDevDistribution {
+            repository_origin: "https://example.invalid".to_string(),
+            repository: "https://example.invalid/managed.git".to_string(),
+            commit: "a".repeat(40),
+            subdirectory: None,
+            underlying_adapter: crate::mcp_platform::manifest::GitDevAdapter::Npm,
+            acquisition_digest: "b".repeat(64),
+        };
+
+        runner
+            .preflight_managed_storage_capacity(
+                &distribution,
+                &acquisition,
+                ManagedCapacityContractStatus::Unknown,
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(
+            no_op
+                .capacity_checks
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
+    }
+
+    #[tokio::test]
+    async fn credential_drift_fails_closed_before_enabled_managed_activation() {
+        let runner = runner_fixture().await;
+        let auth = Auth::Environment {
+            environment_key: "MANAGED_MCP_TEST_TOKEN".to_string(),
+            credential_name: "managed-mcp-test-token".to_string(),
+        };
+        let manifest_digest = "d".repeat(64);
+
+        runner.set_enrollment_runtime_binding_resolver(
+            StaticEnrollmentRuntimeBindingResolver::ready(
+                "managed-test",
+                7,
+                &manifest_digest,
+                &auth,
+            ),
+        );
+        runner
+            .ensure_managed_enable_ready(
+                &auth,
+                "managed-test",
+                7,
+                &manifest_digest,
+                "managed MCP credential handle is unavailable",
+            )
+            .await
+            .unwrap();
+
+        runner.set_enrollment_runtime_binding_resolver(
+            StaticEnrollmentRuntimeBindingResolver::missing(),
+        );
+        let error = runner
+            .ensure_managed_enable_ready(
+                &auth,
+                "managed-test",
+                7,
+                &manifest_digest,
+                "managed MCP credential handle is unavailable",
+            )
+            .await
+            .unwrap_err();
+
+        assert_eq!(error.code(), McpPlatformErrorCode::CredentialMissing);
+    }
+
+    #[test]
+    fn windows_managed_local_health_cannot_create_a_direct_spawn_effect() {
+        let projection = crate::mcp_platform::ConnectionProjection::ManagedDockerStdio {
+            name: "managed-docker".to_string(),
+            description: "managed docker".to_string(),
+            executable: "docker".to_string(),
+            args: Vec::new(),
+            cwd: None,
+            timeout_seconds: None,
+        };
+
+        #[cfg(windows)]
+        {
+            let error = registration_effect_from_projection(&projection).unwrap_err();
+            assert_eq!(
+                error.code(),
+                McpPlatformErrorCode::RuntimeControlUnavailable
+            );
+        }
+
+        #[cfg(not(windows))]
+        assert!(matches!(
+            registration_effect_from_projection(&projection),
+            Ok(RegistrationEffect::ManualStdio { .. })
+        ));
+    }
+
+    #[test]
+    fn register_stable_id_defaults_missing_scope_to_user() {
+        let mcp_id = "example.mcp";
+        let missing_scope = None::<&str>;
+
+        let missing_scope_ids = register_stable_ids(mcp_id, missing_scope);
+        let user_scope_ids = stable_ids(mcp_id, "user");
+        let system_scope_ids = stable_ids(mcp_id, "system");
+
+        assert_eq!(
+            missing_scope_ids.managed_mcp_id,
+            user_scope_ids.managed_mcp_id
+        );
+        assert_eq!(missing_scope_ids.link_key, user_scope_ids.link_key);
+        assert_ne!(
+            user_scope_ids.managed_mcp_id,
+            system_scope_ids.managed_mcp_id
+        );
+        assert_ne!(user_scope_ids.link_key, system_scope_ids.link_key);
     }
 }

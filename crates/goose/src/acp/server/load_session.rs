@@ -1,5 +1,9 @@
 use super::*;
 
+fn sid_short(session_id: &str) -> String {
+    session_id.chars().take(8).collect()
+}
+
 fn replay_audience_annotations(audience: &[Role]) -> Annotations {
     Annotations::new().audience(
         audience
@@ -207,7 +211,7 @@ impl GooseAcpAgent {
             &session,
             self.supports_goose_custom_notifications(),
         )?;
-        let (agent, extension_results) = self.prepare_acp_session_agent(cx, &session).await?;
+        let (agent, extension_results) = self.prepare_acp_session_agent(cx, &session, None).await?;
         self.apply_session_recipe(&agent, &session).await?;
         self.register_acp_session(session_id_str.clone(), agent.clone(), replay_tool_requests)
             .await;

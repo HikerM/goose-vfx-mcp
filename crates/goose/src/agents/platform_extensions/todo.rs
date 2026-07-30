@@ -91,7 +91,7 @@ impl TodoClient {
                 {
                     match manager
                         .update(session_id)
-                        .extension_data(session.extension_data)
+                        .trusted_extension_data(session.extension_data)
                         .apply()
                         .await
                     {

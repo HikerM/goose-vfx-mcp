@@ -5,11 +5,13 @@ use crate::config::permission::PermissionManager;
 use crate::config::Config;
 use crate::scheduler::Scheduler;
 use crate::scheduler_trait::SchedulerTrait;
-use crate::session::{SessionManager, SessionNameUpdate};
+use crate::session::session_manager::ValidatedExtensionBundle;
+use crate::session::{ExtensionState, SessionManager, SessionNameUpdate};
 use anyhow::Result;
 use lru::LruCache;
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex, OnceCell, RwLock};
 use tokio_util::sync::CancellationToken;
@@ -24,6 +26,7 @@ pub struct RuntimeContext {
     pub mcp_host_info: Option<GooseMcpHostInfo>,
     pub use_login_shell_path: Option<bool>,
     pub session_name_update_tx: Option<mpsc::UnboundedSender<SessionNameUpdate>>,
+    pub(crate) extension_bundle: Option<ValidatedExtensionBundle>,
 }
 
 pub struct AgentManagerGetResult {
@@ -36,7 +39,8 @@ pub struct AgentManager {
     sessions: Arc<RwLock<LruCache<String, Arc<Agent>>>>,
     agent_config: AgentConfig,
     default_provider: Arc<RwLock<Option<Arc<dyn crate::providers::base::Provider>>>>,
-    cancel_tokens: Arc<RwLock<HashMap<String, CancellationToken>>>,
+    cancel_tokens: Arc<RwLock<HashMap<String, CancelTokenRegistration>>>,
+    next_cancel_token_id: Arc<AtomicU64>,
     /// Per-session creation locks.  When `get_or_create_agent` misses the
     /// `sessions` cache it acquires the per-session lock before doing the
     /// expensive work (provider restore, MCP extension initialization) so
@@ -46,6 +50,13 @@ pub struct AgentManager {
     /// `Arc<Mutex<()>>` stays alive as long as any caller still holds it,
     /// even after the HashMap entry is removed.
     creation_locks: Arc<Mutex<HashMap<String, Arc<Mutex<()>>>>>,
+}
+
+#[derive(Clone)]
+struct CancelTokenRegistration {
+    agent: Arc<Agent>,
+    token: CancellationToken,
+    token_id: u64,
 }
 
 impl AgentManager {
@@ -58,6 +69,7 @@ impl AgentManager {
             agent_config,
             default_provider: Arc::new(RwLock::new(None)),
             cancel_tokens: Arc::new(RwLock::new(HashMap::new())),
+            next_cancel_token_id: Arc::new(AtomicU64::new(1)),
             creation_locks: Arc::new(Mutex::new(HashMap::new())),
         };
 
@@ -214,18 +226,35 @@ impl AgentManager {
         let agent = Arc::new(Agent::with_config(config));
         let mut extension_results = Vec::new();
 
-        if let Ok(session) = self
+        if let Ok(mut session) = self
             .agent_config
             .session_manager
             .get_session(session_id, false)
             .await
         {
+            self.agent_config
+                .session_manager
+                .verify_session_extension_provenance_for_activation(&session)
+                .await?;
+            let extension_bundle = if let Some(bundle) = runtime_context.extension_bundle {
+                crate::session::EnabledExtensionsState::new(bundle.extensions().to_vec())
+                    .to_extension_data(&mut session.extension_data)?;
+                bundle
+            } else {
+                self.agent_config
+                    .session_manager
+                    .validate_persisted_extensions_for_activation(&session)
+                    .await?
+            };
             if session.provider_name.is_some() {
                 info!(
                     "Restoring evicted session {} (provider: {:?})",
                     session_id, session.provider_name
                 );
-                if let Err(e) = agent.restore_provider_from_session(&session).await {
+                if let Err(e) = agent
+                    .restore_provider_from_validated_bundle(&session, extension_bundle.clone())
+                    .await
+                {
                     tracing::warn!(
                         "Failed to restore provider for session {}: {}",
                         session_id,
@@ -233,7 +262,9 @@ impl AgentManager {
                     );
                 }
             }
-            extension_results = agent.load_extensions_from_session(&session).await;
+            extension_results = agent
+                .load_extensions_from_validated_bundle(&session, extension_bundle)
+                .await;
         }
 
         if agent.provider().await.is_err() {
@@ -311,8 +342,8 @@ impl AgentManager {
     }
 
     pub async fn remove_session(&self, session_id: &str) -> Result<()> {
-        if let Some(token) = self.cancel_tokens.write().await.remove(session_id) {
-            token.cancel();
+        if let Some(registration) = self.cancel_tokens.write().await.remove(session_id) {
+            registration.token.cancel();
         }
         let mut sessions = self.sessions.write().await;
         sessions
@@ -330,8 +361,8 @@ impl AgentManager {
 
     /// Drops an in-memory agent when one is loaded for `session_id`.
     pub async fn remove_session_if_loaded(&self, session_id: &str) -> Result<()> {
-        if let Some(token) = self.cancel_tokens.write().await.remove(session_id) {
-            token.cancel();
+        if let Some(registration) = self.cancel_tokens.write().await.remove(session_id) {
+            registration.token.cancel();
         }
         let mut sessions = self.sessions.write().await;
         if sessions.pop(session_id).is_none() {
@@ -341,6 +372,47 @@ impl AgentManager {
         self.prune_creation_lock(session_id).await;
         info!("Removed session {}", session_id);
         Ok(())
+    }
+
+    /// Drops an in-memory agent only when it is still the registration owned
+    /// by the caller. This prevents cleanup for a closed ACP session from
+    /// evicting a newer agent that reused the same session id.
+    pub async fn remove_session_if_current(
+        &self,
+        session_id: &str,
+        expected_agent: &Arc<Agent>,
+    ) -> Result<bool> {
+        let removed = {
+            let mut sessions = self.sessions.write().await;
+            if sessions
+                .get(session_id)
+                .is_some_and(|agent| Arc::ptr_eq(agent, expected_agent))
+            {
+                sessions.pop(session_id);
+                true
+            } else {
+                false
+            }
+        };
+
+        if !removed {
+            return Ok(false);
+        }
+
+        {
+            let mut tokens = self.cancel_tokens.write().await;
+            if tokens
+                .get(session_id)
+                .is_some_and(|registration| Arc::ptr_eq(&registration.agent, expected_agent))
+            {
+                if let Some(registration) = tokens.remove(session_id) {
+                    registration.token.cancel();
+                }
+            }
+        }
+        self.prune_creation_lock(session_id).await;
+        info!("Removed session {}", session_id);
+        Ok(true)
     }
 
     pub async fn has_session(&self, session_id: &str) -> bool {
@@ -355,19 +427,34 @@ impl AgentManager {
     pub async fn try_register_cancel_token(
         &self,
         session_id: &str,
+        agent: Arc<Agent>,
         token: CancellationToken,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         let mut tokens = self.cancel_tokens.write().await;
         if tokens.contains_key(session_id) {
             anyhow::bail!("Session '{}' is currently busy", session_id);
         }
-        tokens.insert(session_id.to_string(), token);
-        Ok(())
+        let token_id = self.next_cancel_token_id.fetch_add(1, Ordering::Relaxed);
+        tokens.insert(
+            session_id.to_string(),
+            CancelTokenRegistration {
+                agent,
+                token,
+                token_id,
+            },
+        );
+        Ok(token_id)
     }
 
     /// Remove the cancellation token for a session (called when reply finishes)
-    pub async fn unregister_cancel_token(&self, session_id: &str) {
-        self.cancel_tokens.write().await.remove(session_id);
+    pub async fn unregister_cancel_token(&self, session_id: &str, token_id: u64) {
+        let mut tokens = self.cancel_tokens.write().await;
+        if tokens
+            .get(session_id)
+            .is_some_and(|registration| registration.token_id == token_id)
+        {
+            tokens.remove(session_id);
+        }
     }
 
     /// Cancel a running agent by triggering its cancellation token
@@ -376,7 +463,7 @@ impl AgentManager {
         let token = tokens
             .get(session_id)
             .ok_or_else(|| anyhow::anyhow!("No active operation for session {}", session_id))?;
-        token.cancel();
+        token.token.cancel();
         Ok(())
     }
 
@@ -384,6 +471,15 @@ impl AgentManager {
     pub async fn is_session_busy(&self, session_id: &str) -> bool {
         let tokens = self.cancel_tokens.read().await;
         tokens.contains_key(session_id)
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn current_cancel_token_is_cancelled(&self, session_id: &str) -> Option<bool> {
+        self.cancel_tokens
+            .read()
+            .await
+            .get(session_id)
+            .map(|registration| registration.token.is_cancelled())
     }
 
     /// List session IDs that currently have active agents loaded
@@ -401,6 +497,7 @@ impl AgentManager {
 mod tests {
     use std::sync::Arc;
     use tempfile::TempDir;
+    use tokio_util::sync::CancellationToken;
 
     use test_case::test_case;
 
@@ -511,6 +608,60 @@ mod tests {
         manager.remove_session_if_loaded(&session).await.unwrap();
         assert!(!manager.has_session(&session).await);
         manager.remove_session_if_loaded(&session).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn remove_session_if_current_preserves_re_registered_agent() {
+        let temp_dir = TempDir::new().unwrap();
+        let manager = create_test_manager(&temp_dir).await;
+        let session = String::from("owner-aware-remove-test");
+
+        let old_agent = manager.get_or_create_agent(session.clone()).await.unwrap();
+        assert!(manager
+            .remove_session_if_current(&session, &old_agent)
+            .await
+            .unwrap());
+
+        let new_agent = manager.get_or_create_agent(session.clone()).await.unwrap();
+        assert!(!Arc::ptr_eq(&old_agent, &new_agent));
+        assert!(!manager
+            .remove_session_if_current(&session, &old_agent)
+            .await
+            .unwrap());
+
+        let current = manager.get_or_create_agent(session.clone()).await.unwrap();
+        assert!(Arc::ptr_eq(&current, &new_agent));
+    }
+
+    #[tokio::test]
+    async fn stale_cancel_token_completion_preserves_new_registration() {
+        let temp_dir = TempDir::new().unwrap();
+        let manager = create_test_manager(&temp_dir).await;
+        let session = String::from("owner-aware-token-test");
+        let old_agent = manager.get_or_create_agent(session.clone()).await.unwrap();
+        let old_token = CancellationToken::new();
+        let old_token_id = manager
+            .try_register_cancel_token(&session, old_agent.clone(), old_token.clone())
+            .await
+            .unwrap();
+
+        manager
+            .remove_session_if_current(&session, &old_agent)
+            .await
+            .unwrap();
+        let new_agent = manager.get_or_create_agent(session.clone()).await.unwrap();
+        let new_token = CancellationToken::new();
+        let _new_token_id = manager
+            .try_register_cancel_token(&session, new_agent, new_token.clone())
+            .await
+            .unwrap();
+
+        manager
+            .unregister_cancel_token(&session, old_token_id)
+            .await;
+        assert!(old_token.is_cancelled());
+        assert!(!new_token.is_cancelled());
+        assert!(manager.is_session_busy(&session).await);
     }
 
     #[tokio::test]

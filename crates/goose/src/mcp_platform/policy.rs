@@ -97,7 +97,14 @@ pub struct PolicyContext {
     pub docker_policy_allowed: bool,
     pub git_available: bool,
     pub development_mode: bool,
+    source_confirmation: SourceConfirmation,
     known_adapters: BTreeSet<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SourceConfirmation {
+    None,
+    VerifiedHttpsProvision,
 }
 
 impl PolicyContext {
@@ -113,6 +120,7 @@ impl PolicyContext {
             docker_policy_allowed: true,
             git_available: false,
             development_mode: false,
+            source_confirmation: SourceConfirmation::None,
             known_adapters: [
                 "remote_http",
                 "manual_stdio",
@@ -175,6 +183,11 @@ impl PolicyContext {
         adapters: impl IntoIterator<Item = impl Into<String>>,
     ) -> Self {
         self.known_adapters = adapters.into_iter().map(Into::into).collect();
+        self
+    }
+
+    pub(crate) fn with_verified_https_provision_source_confirmation(mut self) -> Self {
+        self.source_confirmation = SourceConfirmation::VerifiedHttpsProvision;
         self
     }
 }
@@ -257,10 +270,11 @@ pub fn evaluate_manifest_policy(manifest: &Manifest, context: &PolicyContext) ->
             PolicyReasonCode::CommunitySourceConfirmation,
             "community catalog sources require confirmation",
         )),
-        TrustTier::Local => reasons.push(reason(
+        TrustTier::Local if local_source_confirmation_required(context) => reasons.push(reason(
             PolicyReasonCode::LocalSourceConfirmation,
             "local manifest sources require confirmation",
         )),
+        TrustTier::Local => {}
     }
 
     if manifest
@@ -301,5 +315,109 @@ fn reason(code: PolicyReasonCode, message: &str) -> PolicyReason {
     PolicyReason {
         code,
         message: message.to_string(),
+    }
+}
+
+fn local_source_confirmation_required(context: &PolicyContext) -> bool {
+    context.source_confirmation == SourceConfirmation::None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn manifest(required_permission: bool) -> Manifest {
+        serde_json::from_value(serde_json::json!({
+            "schema_version": 1,
+            "id": "policy.fixture",
+            "version": "1.0.0",
+            "name": "Policy fixture",
+            "description": "Policy fixture",
+            "publisher": {"id": "goose", "name": "Goose"},
+            "license": {"spdx": "MIT"},
+            "capabilities": ["tools"],
+            "permissions": if required_permission {
+                serde_json::json!([{
+                    "id": "network",
+                    "kind": "network",
+                    "reason": "required for the fixture",
+                    "required": true
+                }])
+            } else {
+                serde_json::json!([])
+            },
+            "distribution": {"type": "remote_http"},
+            "transport": {
+                "type": "streamable_http",
+                "url": "https://example.com/mcp"
+            },
+            "auth": {"type": "none"},
+            "health_check": {"type": "mcp_initialize", "timeout_seconds": 1},
+            "owned_files": [],
+            "uninstall": {
+                "mode": "remove_owned_files_only",
+                "preserve_user_data": true
+            }
+        }))
+        .expect("policy fixture must deserialize as a Manifest")
+    }
+
+    fn has_reason(decision: &PolicyDecision, code: PolicyReasonCode) -> bool {
+        decision.reasons.iter().any(|reason| reason.code == code)
+    }
+
+    #[test]
+    fn local_context_requires_source_confirmation_by_default() {
+        let decision = evaluate_manifest_policy(
+            &manifest(false),
+            &PolicyContext::new(TrustTier::Local, PlanOperation::Install),
+        );
+
+        assert_eq!(decision.outcome, PolicyOutcome::NeedsConfirmation);
+        assert!(has_reason(
+            &decision,
+            PolicyReasonCode::LocalSourceConfirmation
+        ));
+    }
+
+    #[test]
+    fn verified_https_provision_confirms_only_the_local_source() {
+        let context = PolicyContext::new(TrustTier::Local, PlanOperation::Install);
+        let verified_context = context
+            .clone()
+            .with_verified_https_provision_source_confirmation();
+        let default_decision = evaluate_manifest_policy(&manifest(true), &context);
+        let verified_decision = evaluate_manifest_policy(&manifest(true), &verified_context);
+
+        assert!(has_reason(
+            &default_decision,
+            PolicyReasonCode::LocalSourceConfirmation
+        ));
+        assert!(!has_reason(
+            &verified_decision,
+            PolicyReasonCode::LocalSourceConfirmation
+        ));
+        assert!(has_reason(
+            &verified_decision,
+            PolicyReasonCode::RequiredPermissionConfirmation
+        ));
+    }
+
+    #[test]
+    fn unknown_adapter_deny_is_not_changed_by_source_confirmation() {
+        let context = PolicyContext::new(TrustTier::Community, PlanOperation::Install)
+            .with_known_adapters(std::iter::empty::<&str>());
+        let verified_context = context
+            .clone()
+            .with_verified_https_provision_source_confirmation();
+        let decision = evaluate_manifest_policy(&manifest(false), &context);
+        let verified_decision = evaluate_manifest_policy(&manifest(false), &verified_context);
+
+        assert_eq!(decision.outcome, PolicyOutcome::Deny);
+        assert_eq!(verified_decision, decision);
+        assert!(has_reason(
+            &verified_decision,
+            PolicyReasonCode::UnknownDistributionAdapter
+        ));
     }
 }

@@ -185,7 +185,7 @@ impl GatewayHandler {
         if let Err(e) = extensions_state.to_extension_data(&mut extension_data) {
             tracing::warn!(error = %e, "failed to initialize gateway session extensions");
         } else {
-            update = update.extension_data(extension_data);
+            update = update.trusted_extension_data(extension_data);
         }
 
         update.apply().await?;
@@ -276,7 +276,7 @@ impl GatewayHandler {
             if let Err(e) = extensions_state.to_extension_data(&mut extension_data) {
                 tracing::warn!(error = %e, "failed to update gateway session extensions");
             } else {
-                update = update.extension_data(extension_data);
+                update = update.trusted_extension_data(extension_data);
             }
         }
 
@@ -324,6 +324,10 @@ impl GatewayHandler {
             .session_manager()
             .get_session(session_id, false)
             .await?;
+        self.agent_manager
+            .session_manager()
+            .verify_session_extension_provenance_for_activation(&session)
+            .await?;
 
         // Ensure provider is configured (handles first use and LRU eviction).
         if let Err(e) = agent.restore_provider_from_session(&session).await {
@@ -339,7 +343,7 @@ impl GatewayHandler {
         }
 
         // Load extensions (skips any already loaded on the agent).
-        agent.load_extensions_from_session(&session).await;
+        agent.load_extensions_from_session(&session).await?;
 
         let cancel = CancellationToken::new();
         let user_message = Message::user().with_text(&message.text);

@@ -90,20 +90,24 @@ pub fn custom_methods(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 Some(_) => {
                     quote! {
                         if <#req_type as agent_client_protocol::JsonRpcMessage>::matches_method(method) {
-                            let req = serde_json::from_value(params)
-                                .map_err(|e| agent_client_protocol::Error::invalid_params().data(e.to_string()))?;
-                            let result = self.#fn_ident(req).await?;
-                            return serde_json::to_value(&result)
-                                .map_err(|e| agent_client_protocol::Error::internal_error().data(e.to_string()));
+                            return Box::pin(async move {
+                                let req = serde_json::from_value(params)
+                                    .map_err(|e| agent_client_protocol::Error::invalid_params().data(e.to_string()))?;
+                                let result = self.#fn_ident(req).await?;
+                                serde_json::to_value(&result)
+                                    .map_err(|e| agent_client_protocol::Error::internal_error().data(e.to_string()))
+                            }).await;
                         }
                     }
                 }
                 None => {
                     quote! {
                         if <#req_type as agent_client_protocol::JsonRpcMessage>::matches_method(method) {
-                            let result = self.#fn_ident().await?;
-                            return serde_json::to_value(&result)
-                                .map_err(|e| agent_client_protocol::Error::internal_error().data(e.to_string()));
+                            return Box::pin(async move {
+                                let result = self.#fn_ident().await?;
+                                serde_json::to_value(&result)
+                                    .map_err(|e| agent_client_protocol::Error::internal_error().data(e.to_string()))
+                            }).await;
                         }
                     }
                 }

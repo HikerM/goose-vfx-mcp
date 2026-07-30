@@ -2,7 +2,6 @@
 //! Usage: cargo run -p goose --bin analyze_cli -- <path> [--focus <symbol>] [--depth <n>] [--follow <n>] [--force]
 
 use clap::Parser;
-use goose::agents::platform_extensions::analyze::{format, graph, AnalyzeClient};
 use rayon::prelude::*;
 use std::path::PathBuf;
 
@@ -43,25 +42,37 @@ fn main() {
         let files = if path.is_file() {
             vec![path.clone()]
         } else {
-            AnalyzeClient::collect_files(&path, cli.depth)
+            goose::agents::platform_extensions::analyze::AnalyzeClient::collect_files(
+                &path, cli.depth,
+            )
         };
         let analyses: Vec<_> = files
             .par_iter()
-            .filter_map(|f| AnalyzeClient::analyze_file(f))
+            .filter_map(|f| {
+                goose::agents::platform_extensions::analyze::AnalyzeClient::analyze_file(f)
+            })
             .collect();
         let root = if path.is_file() {
             path.parent().unwrap_or(&path)
         } else {
             &path
         };
-        let g = graph::CallGraph::build(&analyses);
-        format::format_focused(symbol, &g, cli.follow, analyses.len(), root)
+        let g = goose::agents::platform_extensions::analyze::graph::CallGraph::build(&analyses);
+        goose::agents::platform_extensions::analyze::format::format_focused(
+            symbol,
+            &g,
+            cli.follow,
+            analyses.len(),
+            root,
+        )
     } else if path.is_file() {
         // Semantic mode: single file details
-        match AnalyzeClient::analyze_file(&path) {
+        match goose::agents::platform_extensions::analyze::AnalyzeClient::analyze_file(&path) {
             Some(analysis) => {
                 let root = path.parent().unwrap_or(&path);
-                format::format_semantic(&analysis, root)
+                goose::agents::platform_extensions::analyze::format::format_semantic(
+                    &analysis, root,
+                )
             }
             None => {
                 eprintln!(
@@ -73,16 +84,25 @@ fn main() {
         }
     } else {
         // Structure mode: directory overview
-        let files = AnalyzeClient::collect_files(&path, cli.depth);
+        let files = goose::agents::platform_extensions::analyze::AnalyzeClient::collect_files(
+            &path, cli.depth,
+        );
         let total_files = files.len();
         let analyses: Vec<_> = files
             .par_iter()
-            .filter_map(|f| AnalyzeClient::analyze_file(f))
+            .filter_map(|f| {
+                goose::agents::platform_extensions::analyze::AnalyzeClient::analyze_file(f)
+            })
             .collect();
-        format::format_structure(&analyses, &path, cli.depth, total_files)
+        goose::agents::platform_extensions::analyze::format::format_structure(
+            &analyses,
+            &path,
+            cli.depth,
+            total_files,
+        )
     };
 
-    match format::check_size(&output, cli.force) {
+    match goose::agents::platform_extensions::analyze::format::check_size(&output, cli.force) {
         Ok(text) => print!("{text}"),
         Err(warning) => {
             eprintln!("{warning}");

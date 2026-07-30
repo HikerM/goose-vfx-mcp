@@ -475,7 +475,7 @@ impl GooseAcpAgent {
         req: ProviderSupportedModelsListRequest,
     ) -> Result<ProviderSupportedModelsListResponse, agent_client_protocol::Error> {
         let provider = self
-            .create_provider(&req.provider_id, Vec::new(), None)
+            .create_provider(&req.provider_id, None)
             .await
             .internal_err_ctx("Failed to initialize provider")?;
         let models = provider

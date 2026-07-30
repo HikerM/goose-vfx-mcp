@@ -1,6 +1,10 @@
 use super::*;
 use crate::providers::inventory::ensure_refresh_identity_current;
 
+fn safe_dispatch_error() -> agent_client_protocol::Error {
+    agent_client_protocol::Error::internal_error().data("acp_dispatch_failed")
+}
+
 impl HandleDispatchFrom<Client> for GooseAcpHandler {
     fn describe_chain(&self) -> impl std::fmt::Debug {
         "goose-acp"
@@ -13,6 +17,8 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
     ) -> impl std::future::Future<Output = Result<Handled<Dispatch>, agent_client_protocol::Error>> + Send
     {
         let agent = self.agent.clone();
+        let transport_mcp_platform_write_session =
+            self.transport_mcp_platform_write_session.clone();
 
         // The MatchDispatchFrom chain produces an ~85KB async state machine.
         // Box::pin moves it to the heap so it doesn't overflow the tokio worker stack.
@@ -29,7 +35,7 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
             MatchDispatchFrom::new(message, &cx)
                 .if_request(
                     |req: InitializeRequest, responder: Responder<InitializeResponse>| async {
-                        responder.respond_with_result(agent.on_initialize(req).await)
+                        responder.respond_with_result(agent.on_initialize(req).await.map_err(|_| safe_dispatch_error()))
                     },
                 )
                 .await
@@ -43,8 +49,20 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                     |req: NewSessionRequest, responder: Responder<NewSessionResponse>| async {
                         let agent = agent.clone();
                         let cx_clone = cx.clone();
+                        let transport_mcp_platform_write_session =
+                            transport_mcp_platform_write_session.clone();
                         cx.spawn(async move {
-                            responder.respond_with_result(agent.on_new_session(&cx_clone, req).await)?;
+                            let result = match transport_mcp_platform_write_session {
+                                Some(session) => {
+                                    with_transport_mcp_platform_write_authority(
+                                        Some(session.authority()),
+                                        agent.on_new_session(&cx_clone, req),
+                                    )
+                                    .await
+                                }
+                                None => agent.on_new_session(&cx_clone, req).await,
+                            };
+                            responder.respond_with_result(result.map_err(|_| safe_dispatch_error()))?;
                             Ok(())
                         })?;
                         Ok(())
@@ -56,18 +74,13 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                         let agent = agent.clone();
                         let cx_clone = cx.clone();
                         cx.spawn(async move {
-                            let session_id = req.session_id.0.to_string();
                             match agent.on_load_session(&cx_clone, req).await {
                                 Ok(response) => {
                                     responder.respond(response)?;
                                 }
-                                Err(e) => {
-                                    tracing::error!(
-                                        session_id = %session_id,
-                                        error = ?e,
-                                        "ACP load_session failed"
-                                    );
-                                    responder.respond_with_error(e)?;
+                                Err(_) => {
+                                    tracing::error!(event = "acp_load_session_failed");
+                                    responder.respond_with_error(safe_dispatch_error())?;
                                 }
                             }
                             Ok(())
@@ -85,8 +98,8 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                 Ok(response) => {
                                     responder.respond(response)?;
                                 }
-                                Err(e) => {
-                                    responder.respond_with_error(e)?;
+                                Err(_) => {
+                                    responder.respond_with_error(safe_dispatch_error())?;
                                 }
                             }
                             Ok(())
@@ -113,7 +126,6 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                 .ok_or_else(|| agent_client_protocol::Error::invalid_params().data("Expected a value ID"))?
                                 .clone();
                             let session_id = req.session_id.clone();
-                            let sid = sid_short(session_id.0.as_ref());
                             let config_id = req.config_id.0.to_string();
                             let t_handler = std::time::Instant::now();
                             match config_id.as_ref() {
@@ -121,30 +133,30 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                     Config::global().invalidate_secrets_cache();
                                     match agent.update_provider(&session_id.0, &value_id.0, None, None, None).await {
                                         Ok(_) => {}
-                                        Err(e) => { responder.respond_with_error(e)?; return Ok(()); }
+                                        Err(_) => { responder.respond_with_error(safe_dispatch_error())?; return Ok(()); }
                                     }
                                 }
                                 "mode" => {
                                     match agent.on_set_mode(&session_id.0, &value_id.0).await {
                                         Ok(_) => {}
-                                        Err(e) => { responder.respond_with_error(e)?; return Ok(()); }
+                                        Err(_) => { responder.respond_with_error(safe_dispatch_error())?; return Ok(()); }
                                     }
                                 }
                                 "model" => {
                                     match agent.on_set_model(&session_id.0, &value_id.0).await {
                                         Ok(_) => {}
-                                        Err(e) => { responder.respond_with_error(e)?; return Ok(()); }
+                                        Err(_) => { responder.respond_with_error(safe_dispatch_error())?; return Ok(()); }
                                     }
                                 }
                                 "thinking_effort" => {
                                     match agent.on_set_thinking_effort(&session_id.0, &value_id.0).await {
                                         Ok(_) => {}
-                                        Err(e) => { responder.respond_with_error(e)?; return Ok(()); }
+                                        Err(_) => { responder.respond_with_error(safe_dispatch_error())?; return Ok(()); }
                                     }
                                 }
-                                other => {
+                                _ => {
                                     responder.respond_with_error(
-                                        agent_client_protocol::Error::invalid_params().data(format!("Unsupported config option: {}", other))
+                                        agent_client_protocol::Error::invalid_params().data("invalid_config_option")
                                     )?;
                                     return Ok(());
                                 }
@@ -185,7 +197,11 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                             let provider = session_agent
                                                 .provider()
                                                 .await
-                                                .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+                                                .map_err(|_| {
+                                                    anyhow::anyhow!(
+                                                        "provider_inventory_provider_unavailable"
+                                                    )
+                                                })?;
                                             let provider_name = provider.get_name().to_string();
                                             if provider_name != refresh_provider_id {
                                                 return Err(anyhow::anyhow!(
@@ -218,17 +234,21 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                             .await
                                             {
                                                 Ok(Ok(models)) => Ok(models),
-                                                Ok(Err(error)) => {
-                                                    Err(anyhow::anyhow!(error.to_string()))
-                                                }
+                                                Ok(Err(_)) => Err(anyhow::anyhow!(
+                                                    "provider_inventory_fetch_failed"
+                                                )),
                                                 Err(_) => Err(anyhow::anyhow!(
                                                     "provider inventory refresh task panicked"
                                                 )),
                                             },
-                                            Err(error) => Err(error),
+                                            Err(_) => Err(anyhow::anyhow!(
+                                                "provider_inventory_identity_check_failed"
+                                            )),
                                         }
                                     }
-                                    Err(error) => Err(error),
+                                    Err(_) => Err(anyhow::anyhow!(
+                                        "provider_inventory_provider_setup_failed"
+                                    )),
                                 };
 
                                 match fetch_result {
@@ -248,21 +268,13 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                                     let _ = cx_bg
                                                         .send_notification(fresh_notification);
                                                 }
-                                                Err(error) => warn!(
-                                                    provider = %refresh_provider_id,
-                                                    error = %error,
-                                                    "failed to build config update after provider inventory refresh"
-                                                ),
+                                                Err(_) => warn!(event = "acp_provider_inventory_update_failed"),
                                             }
                                         }
-                                        Err(error) => warn!(
-                                            provider = %refresh_provider_id,
-                                            error = %error,
-                                            "failed to store refreshed provider inventory after config change"
-                                        ),
+                                        Err(_) => warn!(event = "acp_provider_inventory_store_failed"),
                                     },
-                                    Err(error) => {
-                                        let error_message = error.to_string();
+                                    Err(_) => {
+                                        let error_message = "provider_inventory_refresh_failed".to_string();
                                         match agent_bg
                                             .provider_inventory
                                             .store_refresh_error_for_identity(
@@ -272,24 +284,15 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                             .await
                                         {
                                             Ok(()) => refresh_guard.complete(),
-                                            Err(store_error) => warn!(
-                                                provider = %refresh_provider_id,
-                                                error = %store_error,
-                                                refresh_error = %error_message,
-                                                "failed to store provider inventory refresh error after config change"
-                                            ),
+                                            Err(_) => warn!(event = "acp_provider_inventory_error_store_failed"),
                                         }
-                                        warn!(
-                                            provider = %refresh_provider_id,
-                                            error = %error_message,
-                                            "provider inventory refresh failed after config change"
-                                        );
+                                        warn!(event = "acp_provider_inventory_refresh_failed");
                                     }
                                 }
                                 });
                             }
 
-                            debug!(target: "perf", sid = %sid, ms = t_handler.elapsed().as_millis() as u64, config_id = %config_id, "perf: set_config_option done");
+                            debug!(target: "perf", ms = t_handler.elapsed().as_millis() as u64, "acp_set_config_option_completed");
                             Ok(())
                         })?;
                         Ok(())
@@ -316,8 +319,8 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                                     ))?;
                                     responder.respond(resp)?;
                                 }
-                                Err(e) => {
-                                    responder.respond_with_error(e)?;
+                                Err(_) => {
+                                    responder.respond_with_error(safe_dispatch_error())?;
                                 }
                             }
                             Ok(())
@@ -333,7 +336,7 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                         cx.spawn(async move {
                             match agent.on_list_sessions(req).await {
                                 Ok(response) => responder.respond(response)?,
-                                Err(e) => responder.respond_with_error(e)?,
+                                Err(_) => responder.respond_with_error(safe_dispatch_error())?,
                             }
                             Ok(())
                         })?;
@@ -346,7 +349,12 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                     let cx = cx.clone();
                     |req: CloseSessionRequest, responder: Responder<CloseSessionResponse>| async move {
                         cx.spawn(async move {
-                            responder.respond(agent.on_close_session(&req.session_id.0).await?)?;
+                            responder.respond_with_result(
+                                agent
+                                    .on_close_session(&req.session_id.0)
+                                    .await
+                                    .map_err(|_| safe_dispatch_error()),
+                            )?;
                             Ok(())
                         })?;
                         Ok(())
@@ -359,7 +367,12 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                     |req: ForkSessionRequest, responder: Responder<ForkSessionResponse>| async move {
                         let cx_spawn = cx.clone();
                         cx.spawn(async move {
-                            responder.respond_with_result(agent.on_fork_session(&cx_spawn, req).await)?;
+                            responder.respond_with_result(
+                                agent
+                                    .on_fork_session(&cx_spawn, req)
+                                    .await
+                                    .map_err(|_| safe_dispatch_error()),
+                            )?;
                             Ok(())
                         })?;
                         Ok(())
@@ -369,25 +382,39 @@ impl HandleDispatchFrom<Client> for GooseAcpHandler {
                 .otherwise({
                     let agent = agent.clone();
                     let cx = cx.clone();
+                    let transport_mcp_platform_write_session =
+                        transport_mcp_platform_write_session;
                     |message: Dispatch| async move {
                         match message {
                             Dispatch::Request(req, responder) => {
                                 cx.spawn(async move {
-                                    match agent.dispatch_custom_request(&req.method, req.params).await {
+                                    let result = match transport_mcp_platform_write_session {
+                                        Some(session) => agent
+                                            .dispatch_transport_custom_request(
+                                                session.authority(),
+                                                &req.method,
+                                                req.params,
+                                            )
+                                            .await,
+                                        None => {
+                                            agent.dispatch_custom_request(&req.method, req.params).await
+                                        }
+                                    };
+                                    match result {
                                         Ok(json) => responder.respond(json)?,
-                                        Err(e) => responder.respond_with_error(e)?,
+                                        Err(error) => responder.respond_with_error(error)?,
                                     }
                                     Ok(())
                                 })?;
                                 Ok(())
                             }
                             Dispatch::Response(result, router) => {
-                                debug!(method = %router.method(), id = %router.id(), ok = result.is_ok(), "routing response");
+                                debug!(event = "acp_response_routed", ok = result.is_ok());
                                 router.respond_with_result(result)?;
                                 Ok(())
                             }
-                            Dispatch::Notification(notif) => {
-                                debug!(method = %notif.method, "unhandled notification");
+                            Dispatch::Notification(_) => {
+                                debug!(event = "acp_unhandled_notification");
                                 Ok(())
                             }
                         }

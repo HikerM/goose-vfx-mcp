@@ -1,3 +1,4 @@
+use crate::agents::ExtensionConfig;
 use crate::config::paths::Paths;
 use crate::config::GooseMode;
 use crate::conversation::message::{Message, MessageUsage, TokenState};
@@ -5,11 +6,12 @@ use crate::conversation::Conversation;
 use crate::providers::base::CostSource;
 use crate::providers::base::Provider;
 use crate::recipe::Recipe;
-use crate::session::extension_data::ExtensionData;
+use crate::session::extension_data::{EnabledExtensionsState, ExtensionData, ExtensionState};
 use crate::session::session_naming::{
     generate_session_name, MSG_COUNT_FOR_SESSION_NAME_GENERATION,
 };
 use anyhow::Result;
+use async_trait::async_trait;
 use chrono::{DateTime, TimeZone, Utc};
 use goose_providers::conversation::token_usage::Usage;
 use goose_providers::model::ModelConfig;
@@ -17,7 +19,8 @@ use rmcp::model::Role;
 use serde::{Deserialize, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Pool, Sqlite};
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
+use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
@@ -155,6 +158,7 @@ pub struct SessionUpdateBuilder<'a> {
     session_type: Option<SessionType>,
     working_dir: Option<PathBuf>,
     extension_data: Option<ExtensionData>,
+    trusted_extension_data: bool,
     usage: Option<Usage>,
     accumulated_usage: Option<Usage>,
     accumulated_cost: Option<Option<f64>>,
@@ -193,6 +197,7 @@ impl<'a> SessionUpdateBuilder<'a> {
             session_type: None,
             working_dir: None,
             extension_data: None,
+            trusted_extension_data: false,
             usage: None,
             accumulated_usage: None,
             accumulated_cost: None,
@@ -242,6 +247,12 @@ impl<'a> SessionUpdateBuilder<'a> {
 
     pub fn extension_data(mut self, data: ExtensionData) -> Self {
         self.extension_data = Some(data);
+        self
+    }
+
+    pub(crate) fn trusted_extension_data(mut self, data: ExtensionData) -> Self {
+        self.extension_data = Some(data);
+        self.trusted_extension_data = true;
         self
     }
 
@@ -316,6 +327,170 @@ impl<'a> SessionUpdateBuilder<'a> {
 
 pub struct SessionManager {
     storage: Arc<SessionStorage>,
+    provenance_verifier: Arc<dyn SessionExtensionProvenanceVerifier>,
+}
+
+/// Safe public view of managed extension provenance.
+///
+/// ```rust
+/// use goose::session::ManagedExtensionProvenance;
+///
+/// let mut provenance = ManagedExtensionProvenance::default();
+/// provenance.names.insert("managed".to_string());
+///
+/// assert!(format!("{provenance:?}").contains("managed"));
+/// ```
+///
+/// ```compile_fail
+/// use goose::session::ManagedExtensionProvenance;
+///
+/// let mut provenance = ManagedExtensionProvenance::default();
+/// provenance.source_fingerprints.insert("fingerprint".to_string());
+/// ```
+///
+/// ```compile_fail
+/// use goose::session::ManagedExtensionProvenance;
+///
+/// let provenance = ManagedExtensionProvenance::default();
+/// let _ = &provenance.bindings;
+/// ```
+///
+/// ```compile_fail
+/// use goose::session::ManagedExtensionProvenance;
+///
+/// let _ = ManagedExtensionProvenance {
+///     names: Default::default(),
+///     source_fingerprints: Default::default(),
+///     bindings: Default::default(),
+/// };
+/// ```
+#[derive(Clone, Default)]
+pub struct ManagedExtensionProvenance {
+    pub names: std::collections::HashSet<String>,
+    source_fingerprints: std::collections::HashSet<String>,
+    bindings: std::collections::HashSet<(String, String, String, String)>,
+}
+
+impl ManagedExtensionProvenance {
+    pub(crate) fn with_evidence(
+        names: std::collections::HashSet<String>,
+        source_fingerprints: std::collections::HashSet<String>,
+        bindings: std::collections::HashSet<(String, String, String, String)>,
+    ) -> Self {
+        Self {
+            names,
+            source_fingerprints,
+            bindings,
+        }
+    }
+}
+
+impl fmt::Debug for ManagedExtensionProvenance {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("ManagedExtensionProvenance")
+            .field("names", &self.names)
+            .finish_non_exhaustive()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct ValidatedExtensionBundle {
+    extensions: Vec<ExtensionConfig>,
+}
+
+impl ValidatedExtensionBundle {
+    pub(crate) fn extensions(&self) -> &[ExtensionConfig] {
+        &self.extensions
+    }
+
+    pub(crate) fn into_extensions(self) -> Vec<ExtensionConfig> {
+        self.extensions
+    }
+}
+
+#[async_trait]
+pub trait SessionExtensionProvenanceVerifier: Send + Sync {
+    async fn verified_provenance(&self) -> Result<ManagedExtensionProvenance>;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum ExtensionProvenanceError {
+    #[error("extension provenance rejected")]
+    SecurityRejected,
+    #[error("extension provenance repository unavailable")]
+    RepositoryUnavailable,
+}
+
+struct PlatformDatabaseProvenanceVerifier {
+    database_path: PathBuf,
+}
+
+#[cfg(feature = "integration-test-support")]
+pub(crate) struct ServiceProvenanceVerifier {
+    service: Arc<crate::mcp_platform::McpPlatformService>,
+}
+
+#[cfg(feature = "integration-test-support")]
+impl ServiceProvenanceVerifier {
+    pub(crate) fn new(service: Arc<crate::mcp_platform::McpPlatformService>) -> Self {
+        Self { service }
+    }
+}
+
+#[cfg(feature = "integration-test-support")]
+#[async_trait]
+impl SessionExtensionProvenanceVerifier for ServiceProvenanceVerifier {
+    async fn verified_provenance(&self) -> Result<ManagedExtensionProvenance> {
+        let entries = self.service.managed_extension_provenance().await?;
+        Ok(ManagedExtensionProvenance::with_evidence(
+            entries.iter().map(|(_, name, _)| name.clone()).collect(),
+            entries
+                .iter()
+                .map(|(_, _, reference)| reference.source_fingerprint.clone())
+                .collect(),
+            entries
+                .into_iter()
+                .map(|(managed_mcp_id, extension_name, reference)| {
+                    (
+                        managed_mcp_id,
+                        extension_name,
+                        reference.projection_digest,
+                        reference.source_fingerprint,
+                    )
+                })
+                .collect(),
+        ))
+    }
+}
+
+#[async_trait]
+impl SessionExtensionProvenanceVerifier for PlatformDatabaseProvenanceVerifier {
+    async fn verified_provenance(&self) -> Result<ManagedExtensionProvenance> {
+        let repository =
+            crate::mcp_platform::SqliteMcpPlatformRepository::open_path(&self.database_path)
+                .await?;
+        let service = crate::mcp_platform::McpPlatformService::production(Arc::new(repository));
+        let entries = service.managed_extension_provenance().await?;
+        Ok(ManagedExtensionProvenance::with_evidence(
+            entries.iter().map(|(_, name, _)| name.clone()).collect(),
+            entries
+                .iter()
+                .map(|(_, _, reference)| reference.source_fingerprint.clone())
+                .collect(),
+            entries
+                .into_iter()
+                .map(|(managed_mcp_id, extension_name, reference)| {
+                    (
+                        managed_mcp_id,
+                        extension_name,
+                        reference.projection_digest,
+                        reference.source_fingerprint,
+                    )
+                })
+                .collect(),
+        ))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -393,21 +568,368 @@ pub struct SessionNameUpdate {
     pub user_set_name: bool,
 }
 
+fn extension_data_requires_provenance(extension_data: &ExtensionData) -> bool {
+    if extension_data
+        .get_extension_state("mcp_profile_application", "v1")
+        .is_some()
+    {
+        return true;
+    }
+    let Some(_) = extension_data.get_extension_state("enabled_extensions", "v0") else {
+        return false;
+    };
+    match <EnabledExtensionsState as ExtensionState>::from_extension_data(extension_data) {
+        Some(state) => !state.extensions.is_empty(),
+        None => true,
+    }
+}
+
+fn recipe_extensions(recipe: Option<&Recipe>) -> &[ExtensionConfig] {
+    recipe
+        .and_then(|recipe| recipe.extensions.as_deref())
+        .unwrap_or_default()
+}
+
+fn session_extensions_require_provenance(
+    extension_data: &ExtensionData,
+    recipe: Option<&Recipe>,
+) -> bool {
+    extension_data_requires_provenance(extension_data) || !recipe_extensions(recipe).is_empty()
+}
+
+fn verified_enabled_extensions(extension_data: &ExtensionData) -> Result<Vec<ExtensionConfig>> {
+    let raw_extensions = extension_data.get_extension_state("enabled_extensions", "v0");
+    let state = <EnabledExtensionsState as ExtensionState>::from_extension_data(extension_data);
+    if raw_extensions.is_some() && state.is_none() {
+        return Err(anyhow::anyhow!(
+            "unable to verify session extension provenance"
+        ));
+    }
+    Ok(state.map(|state| state.extensions).unwrap_or_default())
+}
+
+fn verify_marker_provenance(
+    extension_data: &ExtensionData,
+    provenance: &ManagedExtensionProvenance,
+) -> Result<Option<crate::mcp_platform::ProfileApplicationMarker>> {
+    let raw_marker = extension_data.get_extension_state("mcp_profile_application", "v1");
+    let marker = crate::mcp_platform::ProfileApplicationMarker::from_extension_data(extension_data);
+    if raw_marker.is_some() && marker.is_none() {
+        return Err(anyhow::anyhow!(
+            "unable to verify session extension provenance"
+        ));
+    }
+    if let Some(marker) = &marker {
+        if marker
+            .managed_extension_names
+            .iter()
+            .any(|name| !provenance.names.contains(name))
+        {
+            return Err(anyhow::anyhow!(
+                "unable to verify session extension provenance"
+            ));
+        }
+    }
+    Ok(marker)
+}
+
+fn extension_matches_provenance(
+    extension: &ExtensionConfig,
+    provenance: &ManagedExtensionProvenance,
+) -> Result<bool> {
+    let fingerprint = crate::mcp_platform::extension_source_fingerprint(extension)
+        .map_err(|_| anyhow::anyhow!("unable to verify session extension provenance"))?;
+    Ok(provenance.names.contains(&extension.name())
+        || provenance.source_fingerprints.contains(&fingerprint))
+}
+
+fn retain_ordinary_extensions(
+    extensions: &mut Vec<ExtensionConfig>,
+    provenance: &ManagedExtensionProvenance,
+) -> Result<()> {
+    let mut retained = Vec::with_capacity(extensions.len());
+    for extension in extensions.drain(..) {
+        if !extension_matches_provenance(&extension, provenance)? {
+            retained.push(extension);
+        }
+    }
+    *extensions = retained;
+    Ok(())
+}
+
+fn sanitize_session_for_distribution(
+    session: &mut Session,
+    provenance: &ManagedExtensionProvenance,
+) -> Result<()> {
+    let marker = verify_marker_provenance(&session.extension_data, provenance)?;
+    let has_enabled_extensions = session
+        .extension_data
+        .get_extension_state("enabled_extensions", "v0")
+        .is_some();
+    let mut enabled_extensions = verified_enabled_extensions(&session.extension_data)?;
+    if let Some(marker) = &marker {
+        marker.strip_managed_extensions(&mut enabled_extensions);
+        if let Some(recipe_extensions) = session
+            .recipe
+            .as_mut()
+            .and_then(|recipe| recipe.extensions.as_mut())
+        {
+            marker.strip_managed_extensions(recipe_extensions);
+        }
+    }
+    retain_ordinary_extensions(&mut enabled_extensions, provenance)?;
+    if has_enabled_extensions {
+        EnabledExtensionsState::new(enabled_extensions)
+            .to_extension_data(&mut session.extension_data)?;
+    }
+    session.extension_data.remove_extension_state(
+        crate::mcp_platform::ProfileApplicationMarker::EXTENSION_NAME,
+        crate::mcp_platform::ProfileApplicationMarker::VERSION,
+    );
+    if let Some(recipe_extensions) = session
+        .recipe
+        .as_mut()
+        .and_then(|recipe| recipe.extensions.as_mut())
+    {
+        retain_ordinary_extensions(recipe_extensions, provenance)?;
+    }
+    Ok(())
+}
+
+async fn sanitize_untrusted_session_extensions(
+    extension_data: &mut ExtensionData,
+    recipe: &mut Option<Recipe>,
+    provenance_verifier: &dyn SessionExtensionProvenanceVerifier,
+    additional_forbidden_fingerprints: Option<&[String]>,
+) -> Result<()> {
+    if !extension_data_requires_provenance(extension_data)
+        && recipe_extensions(recipe.as_ref()).is_empty()
+    {
+        return Ok(());
+    }
+    let mut provenance = provenance_verifier
+        .verified_provenance()
+        .await
+        .map_err(|_| anyhow::anyhow!("unable to verify session extension provenance"))?;
+    if let Some(additional) = additional_forbidden_fingerprints {
+        provenance
+            .source_fingerprints
+            .extend(additional.iter().cloned());
+    }
+    let marker = verify_marker_provenance(extension_data, &provenance)?;
+    let has_enabled_extensions = extension_data
+        .get_extension_state("enabled_extensions", "v0")
+        .is_some();
+    let mut session_extensions = verified_enabled_extensions(extension_data)?;
+    if let Some(marker) = marker {
+        marker.strip_managed_extensions(&mut session_extensions);
+        if let Some(recipe_extensions) = recipe
+            .as_mut()
+            .and_then(|recipe| recipe.extensions.as_mut())
+        {
+            marker.strip_managed_extensions(recipe_extensions);
+        }
+        extension_data.remove_extension_state(
+            crate::mcp_platform::ProfileApplicationMarker::EXTENSION_NAME,
+            crate::mcp_platform::ProfileApplicationMarker::VERSION,
+        );
+        if has_enabled_extensions {
+            EnabledExtensionsState::new(session_extensions.clone())
+                .to_extension_data(extension_data)?;
+        }
+    }
+    for extension in session_extensions
+        .iter()
+        .chain(recipe_extensions(recipe.as_ref()))
+    {
+        if extension_matches_provenance(extension, &provenance)? {
+            return Err(anyhow::anyhow!(
+                "session import contains platform-managed MCP configuration"
+            ));
+        }
+    }
+    Ok(())
+}
+
 impl SessionManager {
     pub fn new(data_dir: PathBuf) -> Self {
+        let database_path = data_dir.join("mcp-platform/platform.db");
         Self {
             storage: Arc::new(SessionStorage::new(data_dir)),
+            provenance_verifier: Arc::new(PlatformDatabaseProvenanceVerifier { database_path }),
+        }
+    }
+
+    pub fn new_with_provenance_verifier(
+        data_dir: PathBuf,
+        provenance_verifier: Arc<dyn SessionExtensionProvenanceVerifier>,
+    ) -> Self {
+        Self {
+            storage: Arc::new(SessionStorage::new(data_dir)),
+            provenance_verifier,
         }
     }
 
     pub fn instance() -> Self {
         Self {
             storage: Arc::clone(&SESSION_STORAGE),
+            provenance_verifier: Arc::new(PlatformDatabaseProvenanceVerifier {
+                database_path: Paths::in_data_dir("mcp-platform/platform.db"),
+            }),
         }
     }
 
     pub fn storage(&self) -> &Arc<SessionStorage> {
         &self.storage
+    }
+
+    pub async fn verify_recipe_extension_provenance(
+        &self,
+        extensions: Option<&[ExtensionConfig]>,
+    ) -> std::result::Result<(), ExtensionProvenanceError> {
+        let extensions = extensions.unwrap_or_default();
+        if extensions.is_empty() {
+            return Ok(());
+        }
+        let provenance = self
+            .provenance_verifier
+            .verified_provenance()
+            .await
+            .map_err(|_| ExtensionProvenanceError::RepositoryUnavailable)?;
+        for extension in extensions {
+            if extension_matches_provenance(extension, &provenance)
+                .map_err(|_| ExtensionProvenanceError::SecurityRejected)?
+            {
+                return Err(ExtensionProvenanceError::SecurityRejected);
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn verify_session_extension_provenance_for_activation(
+        &self,
+        session: &Session,
+    ) -> Result<()> {
+        if !session_extensions_require_provenance(&session.extension_data, session.recipe.as_ref())
+        {
+            return Ok(());
+        }
+        let provenance = self
+            .provenance_verifier
+            .verified_provenance()
+            .await
+            .map_err(|_| anyhow::anyhow!("unable to verify session extension provenance"))?;
+        verify_marker_provenance(&session.extension_data, &provenance)?;
+        let enabled_extensions = verified_enabled_extensions(&session.extension_data)?;
+        for extension in enabled_extensions
+            .iter()
+            .chain(recipe_extensions(session.recipe.as_ref()))
+        {
+            if extension_matches_provenance(extension, &provenance)? {
+                return Err(anyhow::anyhow!(
+                    "session contains unverifiable platform-managed MCP configuration"
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn validate_extension_bundle_for_activation(
+        &self,
+        session: &Session,
+        extensions: Vec<ExtensionConfig>,
+    ) -> Result<ValidatedExtensionBundle> {
+        self.validate_extension_bundle(session, extensions, false, None)
+            .await
+    }
+
+    pub(crate) async fn validate_profile_extension_bundle_for_activation(
+        &self,
+        session: &Session,
+        extensions: Vec<ExtensionConfig>,
+    ) -> Result<ValidatedExtensionBundle> {
+        self.validate_extension_bundle(session, extensions, true, None)
+            .await
+    }
+
+    pub(crate) async fn validate_profile_extension_bundle_for_activation_with_bindings(
+        &self,
+        session: &Session,
+        extensions: Vec<ExtensionConfig>,
+        bindings: &[crate::mcp_platform::ProfileManagedReference],
+    ) -> Result<ValidatedExtensionBundle> {
+        self.validate_extension_bundle(session, extensions, true, Some(bindings))
+            .await
+    }
+
+    async fn validate_extension_bundle(
+        &self,
+        session: &Session,
+        extensions: Vec<ExtensionConfig>,
+        allow_profile_managed: bool,
+        profile_bindings: Option<&[crate::mcp_platform::ProfileManagedReference]>,
+    ) -> Result<ValidatedExtensionBundle> {
+        self.verify_session_extension_provenance_for_activation(session)
+            .await?;
+        if extensions.is_empty() {
+            return Ok(ValidatedExtensionBundle { extensions });
+        }
+
+        let provenance = self
+            .provenance_verifier
+            .verified_provenance()
+            .await
+            .map_err(|_| anyhow::anyhow!("unable to verify session extension provenance"))?;
+        let marker = verify_marker_provenance(&session.extension_data, &provenance)?;
+        for extension in &extensions {
+            if !extension_matches_provenance(extension, &provenance)? {
+                continue;
+            }
+            let fingerprint = crate::mcp_platform::extension_source_fingerprint(extension)
+                .map_err(|_| anyhow::anyhow!("unable to verify session extension provenance"))?;
+            let bound = allow_profile_managed
+                && marker.as_ref().is_some_and(|marker| {
+                    let Some(bindings) = profile_bindings else {
+                        return false;
+                    };
+                    let matches = bindings
+                        .iter()
+                        .filter(|binding| &binding.extension_name == &extension.name())
+                        .filter(|binding| {
+                            provenance.bindings.contains(&(
+                                binding.managed_mcp_id.clone(),
+                                binding.extension_name.clone(),
+                                binding.projection_digest.clone(),
+                                binding.source_fingerprint.clone(),
+                            ))
+                        })
+                        .filter(|binding| &binding.source_fingerprint == &fingerprint)
+                        .count();
+                    matches == 1
+                        && marker
+                            .managed_extension_names
+                            .iter()
+                            .filter(|name| *name == &extension.name())
+                            .count()
+                            == 1
+                });
+            if !bound {
+                return Err(anyhow::anyhow!(
+                    "session contains unverifiable platform-managed MCP configuration"
+                ));
+            }
+        }
+
+        Ok(ValidatedExtensionBundle { extensions })
+    }
+
+    pub(crate) async fn validate_persisted_extensions_for_activation(
+        &self,
+        session: &Session,
+    ) -> Result<ValidatedExtensionBundle> {
+        let extensions = verified_enabled_extensions(&session.extension_data)?;
+        self.validate_extension_bundle_for_activation(session, extensions)
+            .await
     }
 
     pub async fn create_session(
@@ -431,6 +953,23 @@ impl SessionManager {
     }
 
     async fn apply_update_inner(&self, builder: SessionUpdateBuilder<'_>) -> Result<()> {
+        let current = self.storage.get_session(&builder.session_id, false).await?;
+        let extension_data_is_new = builder.extension_data.is_some();
+        let extension_data = builder
+            .extension_data
+            .as_ref()
+            .unwrap_or(&current.extension_data);
+        let recipe = builder
+            .recipe
+            .as_ref()
+            .map(|recipe| recipe.as_ref())
+            .unwrap_or(current.recipe.as_ref());
+        self.verify_persistable_session_extensions(
+            extension_data,
+            recipe,
+            !extension_data_is_new || builder.trusted_extension_data,
+        )
+        .await?;
         self.storage.apply_update(builder).await
     }
 
@@ -489,7 +1028,31 @@ impl SessionManager {
     }
 
     pub async fn export_session(&self, id: &str) -> Result<String> {
-        self.storage.export_session(id).await
+        let session = self.storage.get_session(id, true).await?;
+        let provenance = self.provenance_for_session(&session).await?;
+        self.storage
+            .export_session(session, provenance.as_ref())
+            .await
+    }
+
+    pub async fn export_session_with_managed_provenance(
+        &self,
+        id: &str,
+        managed_names: &std::collections::HashSet<String>,
+        managed_source_fingerprints: &std::collections::HashSet<String>,
+    ) -> Result<String> {
+        let session = self.storage.get_session(id, true).await?;
+        let mut provenance = self
+            .provenance_for_session(&session)
+            .await?
+            .unwrap_or_default();
+        provenance.names.extend(managed_names.iter().cloned());
+        provenance
+            .source_fingerprints
+            .extend(managed_source_fingerprints.iter().cloned());
+        self.storage
+            .export_session(session, Some(&provenance))
+            .await
     }
 
     pub async fn import_session(
@@ -497,13 +1060,105 @@ impl SessionManager {
         json: &str,
         session_type_override: Option<SessionType>,
     ) -> Result<Session> {
-        self.storage
-            .import_session(self, json, session_type_override)
+        self.import_session_guarded(json, session_type_override, None)
             .await
     }
 
+    pub async fn import_session_with_managed_provenance(
+        &self,
+        json: &str,
+        session_type_override: Option<SessionType>,
+        forbidden_source_fingerprints: &[String],
+    ) -> Result<Session> {
+        self.import_session_guarded(
+            json,
+            session_type_override,
+            Some(forbidden_source_fingerprints),
+        )
+        .await
+    }
+
     pub async fn copy_session(&self, session_id: &str, new_name: String) -> Result<Session> {
-        self.storage.copy_session(self, session_id, new_name).await
+        let session = self.storage.get_session(session_id, true).await?;
+        let provenance = self.provenance_for_session(&session).await?;
+        self.storage
+            .copy_session(self, session, new_name, provenance.as_ref())
+            .await
+    }
+
+    async fn import_session_guarded(
+        &self,
+        json: &str,
+        session_type_override: Option<SessionType>,
+        additional_forbidden_fingerprints: Option<&[String]>,
+    ) -> Result<Session> {
+        let normalized = super::import_formats::convert_to_goose_session_json(json)?;
+        let mut import: Session = serde_json::from_str(&normalized)?;
+        sanitize_untrusted_session_extensions(
+            &mut import.extension_data,
+            &mut import.recipe,
+            self.provenance_verifier.as_ref(),
+            additional_forbidden_fingerprints,
+        )
+        .await?;
+        self.storage
+            .import_session(self, import, session_type_override)
+            .await
+    }
+
+    async fn provenance_for_session(
+        &self,
+        session: &Session,
+    ) -> Result<Option<ManagedExtensionProvenance>> {
+        if !session_extensions_require_provenance(&session.extension_data, session.recipe.as_ref())
+        {
+            return Ok(None);
+        }
+        self.provenance_verifier
+            .verified_provenance()
+            .await
+            .map(Some)
+            .map_err(|_| anyhow::anyhow!("unable to verify session extension provenance"))
+    }
+
+    async fn verify_persistable_session_extensions(
+        &self,
+        extension_data: &ExtensionData,
+        recipe: Option<&Recipe>,
+        trusted_extension_data: bool,
+    ) -> Result<()> {
+        if !session_extensions_require_provenance(extension_data, recipe) {
+            return Ok(());
+        }
+        let provenance = self
+            .provenance_verifier
+            .verified_provenance()
+            .await
+            .map_err(|_| anyhow::anyhow!("unable to verify session extension provenance"))?;
+        let marker = verify_marker_provenance(extension_data, &provenance)?;
+        if marker.is_some() && !trusted_extension_data {
+            return Err(anyhow::anyhow!(
+                "session contains an untrusted MCP profile application binding"
+            ));
+        }
+        for extension in recipe_extensions(recipe) {
+            if extension_matches_provenance(extension, &provenance)? {
+                return Err(anyhow::anyhow!(
+                    "session recipe contains platform-managed MCP configuration"
+                ));
+            }
+        }
+        let enabled_extensions = verified_enabled_extensions(extension_data)?;
+        if !trusted_extension_data {
+            for extension in enabled_extensions {
+                if extension_matches_provenance(&extension, &provenance)? {
+                    return Err(anyhow::anyhow!(
+                        "session contains platform-managed MCP configuration"
+                    ));
+                }
+            }
+        }
+        Ok(())
     }
 
     pub async fn truncate_conversation(&self, session_id: &str, timestamp: i64) -> Result<()> {
@@ -653,6 +1308,43 @@ pub struct SessionStorage {
     pool: Pool<Sqlite>,
     initialized: tokio::sync::OnceCell<()>,
     session_dir: PathBuf,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LegacySessionSchemaShape {
+    Fresh,
+    CompleteLegacy,
+    IncompleteOrCorrupt(LegacySessionSchemaProbe),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct LegacySessionSchemaProbe {
+    has_session_thread_id: bool,
+    has_threads_table: bool,
+    has_thread_messages_table: bool,
+}
+
+impl LegacySessionSchemaProbe {
+    fn classify(self) -> LegacySessionSchemaShape {
+        match (
+            self.has_session_thread_id,
+            self.has_threads_table,
+            self.has_thread_messages_table,
+        ) {
+            (false, false, false) => LegacySessionSchemaShape::Fresh,
+            (true, true, true) => LegacySessionSchemaShape::CompleteLegacy,
+            _ => LegacySessionSchemaShape::IncompleteOrCorrupt(self),
+        }
+    }
+
+    fn integrity_error(self) -> anyhow::Error {
+        anyhow::anyhow!(
+            "session delete blocked by incomplete legacy schema: sessions.thread_id={}, threads={}, thread_messages={}",
+            self.has_session_thread_id,
+            self.has_threads_table,
+            self.has_thread_messages_table
+        )
+    }
 }
 
 pub(crate) fn role_to_string(role: &Role) -> &'static str {
@@ -1047,6 +1739,11 @@ impl SessionStorage {
     async fn import_legacy(pool: &Pool<Sqlite>, session_dir: &PathBuf) -> Result<()> {
         use crate::session::legacy;
 
+        let data_dir = session_dir.parent().unwrap_or(session_dir);
+        let provenance_verifier = PlatformDatabaseProvenanceVerifier {
+            database_path: data_dir.join("mcp-platform/platform.db"),
+        };
+
         let sessions = match legacy::list_sessions(session_dir) {
             Ok(sessions) => sessions,
             Err(_) => {
@@ -1064,16 +1761,30 @@ impl SessionStorage {
 
         for (session_name, session_path) in sessions {
             match legacy::load_session(&session_name, &session_path) {
-                Ok(session) => match Self::import_legacy_session(pool, &session).await {
-                    Ok(_) => {
-                        imported_count += 1;
-                        info!("  ✓ Imported: {}", session_name);
-                    }
-                    Err(e) => {
+                Ok(mut session) => {
+                    if let Err(error) = sanitize_untrusted_session_extensions(
+                        &mut session.extension_data,
+                        &mut session.recipe,
+                        &provenance_verifier,
+                        None,
+                    )
+                    .await
+                    {
                         failed_count += 1;
-                        info!("  ✗ Failed to import {}: {}", session_name, e);
+                        info!("  ✗ Failed to import {}: {}", session_name, error);
+                        continue;
                     }
-                },
+                    match Self::import_legacy_session(pool, &session).await {
+                        Ok(_) => {
+                            imported_count += 1;
+                            info!("  ✓ Imported: {}", session_name);
+                        }
+                        Err(e) => {
+                            failed_count += 1;
+                            info!("  ✗ Failed to import {}: {}", session_name, e);
+                        }
+                    }
+                }
                 Err(e) => {
                     failed_count += 1;
                     info!("  ✗ Failed to load {}: {}", session_name, e);
@@ -1202,6 +1913,132 @@ impl SessionStorage {
             .await?;
 
         Ok(version)
+    }
+
+    async fn sqlite_table_exists(
+        tx: &mut sqlx::Transaction<'_, Sqlite>,
+        table_name: &str,
+    ) -> Result<bool> {
+        sqlx::query_scalar::<_, bool>(
+            r#"
+            SELECT EXISTS (
+                SELECT 1
+                FROM sqlite_master
+                WHERE type='table' AND name=?
+            )
+        "#,
+        )
+        .bind(table_name)
+        .fetch_one(&mut **tx)
+        .await
+        .map_err(Into::into)
+    }
+
+    async fn detect_legacy_session_schema(
+        tx: &mut sqlx::Transaction<'_, Sqlite>,
+    ) -> Result<LegacySessionSchemaShape> {
+        let has_session_thread_id = sqlx::query_scalar::<_, i32>(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'thread_id'",
+        )
+        .fetch_one(&mut **tx)
+        .await?
+            > 0;
+        let has_threads_table = Self::sqlite_table_exists(tx, "threads").await?;
+        let has_thread_messages_table = Self::sqlite_table_exists(tx, "thread_messages").await?;
+
+        Ok(LegacySessionSchemaProbe {
+            has_session_thread_id,
+            has_threads_table,
+            has_thread_messages_table,
+        }
+        .classify())
+    }
+
+    async fn ensure_complete_legacy_schema_row_integrity(
+        tx: &mut sqlx::Transaction<'_, Sqlite>,
+    ) -> Result<()> {
+        let dangling_reference = sqlx::query_as::<_, (String, String, String, i64)>(
+            r#"
+            WITH
+            dangling_session_threads AS (
+                SELECT
+                    s.id AS row_id,
+                    s.id AS row_sort,
+                    s.thread_id AS reference_id
+                FROM sessions s
+                LEFT JOIN threads t ON t.id = s.thread_id
+                WHERE s.thread_id IS NOT NULL AND t.id IS NULL
+            ),
+            dangling_thread_message_threads AS (
+                SELECT
+                    CAST(tm.id AS TEXT) AS row_id,
+                    tm.id AS row_sort,
+                    tm.thread_id AS reference_id
+                FROM thread_messages tm
+                LEFT JOIN threads t ON t.id = tm.thread_id
+                WHERE t.id IS NULL
+            ),
+            dangling_thread_message_sessions AS (
+                SELECT
+                    CAST(tm.id AS TEXT) AS row_id,
+                    tm.id AS row_sort,
+                    tm.session_id AS reference_id
+                FROM thread_messages tm
+                LEFT JOIN sessions s ON s.id = tm.session_id
+                WHERE tm.session_id IS NOT NULL AND s.id IS NULL
+            )
+            SELECT violation, row_id, reference_id, total_count
+            FROM (
+                SELECT * FROM (
+                    SELECT
+                        'sessions.thread_id -> threads.id' AS violation,
+                        row_id,
+                        reference_id,
+                        (SELECT COUNT(*) FROM dangling_session_threads) AS total_count,
+                        1 AS priority
+                    FROM dangling_session_threads
+                    ORDER BY row_sort, reference_id
+                    LIMIT 1
+                )
+                UNION ALL
+                SELECT * FROM (
+                    SELECT
+                        'thread_messages.thread_id -> threads.id' AS violation,
+                        row_id,
+                        reference_id,
+                        (SELECT COUNT(*) FROM dangling_thread_message_threads) AS total_count,
+                        2 AS priority
+                    FROM dangling_thread_message_threads
+                    ORDER BY row_sort, reference_id
+                    LIMIT 1
+                )
+                UNION ALL
+                SELECT * FROM (
+                    SELECT
+                        'thread_messages.session_id -> sessions.id' AS violation,
+                        row_id,
+                        reference_id,
+                        (SELECT COUNT(*) FROM dangling_thread_message_sessions) AS total_count,
+                        3 AS priority
+                    FROM dangling_thread_message_sessions
+                    ORDER BY row_sort, reference_id
+                    LIMIT 1
+                )
+            ) violations
+            ORDER BY priority
+            LIMIT 1
+            "#,
+        )
+        .fetch_optional(&mut **tx)
+        .await?;
+
+        if let Some((violation, row_id, reference_id, total_count)) = dangling_reference {
+            return Err(anyhow::anyhow!(
+                "session delete blocked by dangling legacy reference: {violation}; sample_row={row_id}; missing_reference={reference_id}; total_violations={total_count}"
+            ));
+        }
+
+        Ok(())
     }
 
     async fn update_schema_version(
@@ -2026,6 +2863,19 @@ impl SessionStorage {
         let pool = self.pool().await?;
         let mut tx = pool.begin_with("BEGIN IMMEDIATE").await?;
 
+        let legacy_schema = Self::detect_legacy_session_schema(&mut tx).await?;
+        let has_complete_legacy_schema = match legacy_schema {
+            LegacySessionSchemaShape::Fresh => false,
+            LegacySessionSchemaShape::CompleteLegacy => true,
+            LegacySessionSchemaShape::IncompleteOrCorrupt(probe) => {
+                return Err(probe.integrity_error());
+            }
+        };
+
+        if has_complete_legacy_schema {
+            Self::ensure_complete_legacy_schema_row_integrity(&mut tx).await?;
+        }
+
         let exists =
             sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM sessions WHERE id = ?)")
                 .bind(session_id)
@@ -2034,6 +2884,34 @@ impl SessionStorage {
 
         if !exists {
             return Err(anyhow::anyhow!("Session not found"));
+        }
+
+        let mut legacy_thread_ids = BTreeSet::new();
+        if has_complete_legacy_schema {
+            if let Some(thread_id) = sqlx::query_scalar::<_, Option<String>>(
+                "SELECT thread_id FROM sessions WHERE id = ?",
+            )
+            .bind(session_id)
+            .fetch_one(&mut *tx)
+            .await?
+            {
+                legacy_thread_ids.insert(thread_id);
+            }
+
+            for thread_id in sqlx::query_scalar::<_, String>(
+                "SELECT DISTINCT thread_id FROM thread_messages WHERE session_id = ?",
+            )
+            .bind(session_id)
+            .fetch_all(&mut *tx)
+            .await?
+            {
+                legacy_thread_ids.insert(thread_id);
+            }
+
+            sqlx::query("DELETE FROM thread_messages WHERE session_id = ?")
+                .bind(session_id)
+                .execute(&mut *tx)
+                .await?;
         }
 
         sqlx::query("DELETE FROM messages WHERE session_id = ?")
@@ -2050,6 +2928,30 @@ impl SessionStorage {
             .bind(session_id)
             .execute(&mut *tx)
             .await?;
+
+        if has_complete_legacy_schema {
+            for thread_id in legacy_thread_ids {
+                let thread_still_used_by_session = sqlx::query_scalar::<_, bool>(
+                    "SELECT EXISTS(SELECT 1 FROM sessions WHERE thread_id = ?)",
+                )
+                .bind(&thread_id)
+                .fetch_one(&mut *tx)
+                .await?;
+                let thread_still_used_by_message = sqlx::query_scalar::<_, bool>(
+                    "SELECT EXISTS(SELECT 1 FROM thread_messages WHERE thread_id = ?)",
+                )
+                .bind(&thread_id)
+                .fetch_one(&mut *tx)
+                .await?;
+
+                if !thread_still_used_by_session && !thread_still_used_by_message {
+                    sqlx::query("DELETE FROM threads WHERE id = ?")
+                        .bind(&thread_id)
+                        .execute(&mut *tx)
+                        .await?;
+                }
+            }
+        }
 
         tx.commit().await?;
         Ok(())
@@ -2262,20 +3164,23 @@ impl SessionStorage {
         })
     }
 
-    async fn export_session(&self, id: &str) -> Result<String> {
-        let session = self.get_session(id, true).await?;
+    async fn export_session(
+        &self,
+        mut session: Session,
+        provenance: Option<&ManagedExtensionProvenance>,
+    ) -> Result<String> {
+        if let Some(provenance) = provenance {
+            sanitize_session_for_distribution(&mut session, provenance)?;
+        }
         serde_json::to_string_pretty(&session).map_err(Into::into)
     }
 
     async fn import_session(
         &self,
         session_manager: &SessionManager,
-        json: &str,
+        import: Session,
         session_type_override: Option<SessionType>,
     ) -> Result<Session> {
-        let normalized = super::import_formats::convert_to_goose_session_json(json)?;
-        let import: Session = serde_json::from_str(&normalized)?;
-
         let session = self
             .create_session(
                 import.working_dir.clone(),
@@ -2287,7 +3192,7 @@ impl SessionStorage {
 
         let mut builder = session_manager
             .update(&session.id)
-            .extension_data(import.extension_data)
+            .trusted_extension_data(import.extension_data)
             .usage(import.usage)
             .accumulated_usage(import.accumulated_usage)
             .accumulated_cost(import.accumulated_cost)
@@ -2312,10 +3217,13 @@ impl SessionStorage {
     async fn copy_session(
         &self,
         session_manager: &SessionManager,
-        session_id: &str,
+        mut original_session: Session,
         new_name: String,
+        provenance: Option<&ManagedExtensionProvenance>,
     ) -> Result<Session> {
-        let original_session = self.get_session(session_id, true).await?;
+        if let Some(provenance) = provenance {
+            sanitize_session_for_distribution(&mut original_session, provenance)?;
+        }
 
         let new_session = self
             .create_session(
@@ -2328,7 +3236,7 @@ impl SessionStorage {
 
         let mut builder = session_manager
             .update(&new_session.id)
-            .extension_data(original_session.extension_data)
+            .trusted_extension_data(original_session.extension_data)
             .schedule_id(original_session.schedule_id)
             .recipe(original_session.recipe)
             .user_recipe_values(original_session.user_recipe_values);
@@ -2543,8 +3451,14 @@ fn merge_tool_meta(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::agents::extension::Envs;
+    use crate::agents::ExtensionConfig;
+    use crate::agents::{Agent, AgentConfig, GoosePlatform};
+    use crate::config::permission::PermissionManager;
     use crate::conversation::message::{Message, MessageContent};
+    use crate::mcp_platform::{extension_source_fingerprint, ProfileApplicationMarker};
     use crate::providers::base::MessageStream;
+    use crate::session::ExtensionState;
     use goose_providers::conversation::token_usage::{CostSource, ProviderUsage};
     use goose_providers::errors::ProviderError;
     use rmcp::model::Tool;
@@ -2553,6 +3467,22 @@ mod tests {
 
     const NUM_CONCURRENT_SESSIONS: i32 = 10;
     const GENERATED_SESSION_NAME: &str = "Generated session name";
+
+    struct StaticProvenanceVerifier {
+        provenance: ManagedExtensionProvenance,
+        available: bool,
+    }
+
+    #[async_trait::async_trait]
+    impl SessionExtensionProvenanceVerifier for StaticProvenanceVerifier {
+        async fn verified_provenance(&self) -> Result<ManagedExtensionProvenance> {
+            if self.available {
+                Ok(self.provenance.clone())
+            } else {
+                Err(anyhow::anyhow!("platform database unavailable"))
+            }
+        }
+    }
 
     struct NamingTestProvider;
 
@@ -2588,6 +3518,28 @@ mod tests {
 
     fn naming_test_provider() -> Arc<dyn Provider> {
         Arc::new(NamingTestProvider)
+    }
+
+    #[test]
+    fn managed_extension_provenance_debug_redacts_internal_evidence() {
+        let provenance = ManagedExtensionProvenance::with_evidence(
+            std::collections::HashSet::from(["managed".to_string()]),
+            std::collections::HashSet::from(["fingerprint-secret".to_string()]),
+            std::collections::HashSet::from([(
+                "managed-id".to_string(),
+                "managed".to_string(),
+                "projection-digest-secret".to_string(),
+                "fingerprint-secret".to_string(),
+            )]),
+        );
+
+        let debug = format!("{provenance:?}");
+
+        assert!(debug.contains("managed"));
+        assert!(!debug.contains("fingerprint-secret"));
+        assert!(!debug.contains("projection-digest-secret"));
+        assert!(!debug.contains("source_fingerprints"));
+        assert!(!debug.contains("bindings"));
     }
 
     fn test_recipe(title: &str) -> Recipe {
@@ -3603,8 +4555,44 @@ mod tests {
         let accumulated_usage =
             Usage::new(Some(600), Some(400), Some(1000)).with_cache_tokens(Some(400), Some(150));
 
+        let managed = ExtensionConfig::Stdio {
+            name: "managed-owned".to_string(),
+            description: "managed".to_string(),
+            cmd: "platform-secret-command".to_string(),
+            args: vec!["--platform-owned".to_string()],
+            envs: Envs::new(HashMap::from([(
+                "PROFILE_SECRET".to_string(),
+                "must-not-export".to_string(),
+            )])),
+            env_keys: Vec::new(),
+            timeout: None,
+            cwd: None,
+            bundled: Some(false),
+            available_tools: Vec::new(),
+        };
+        let ordinary = ExtensionConfig::Builtin {
+            name: "developer".to_string(),
+            description: "ordinary".to_string(),
+            display_name: None,
+            timeout: None,
+            bundled: Some(true),
+            available_tools: Vec::new(),
+        };
+        let managed_fingerprint = extension_source_fingerprint(&managed).unwrap();
         let temp_dir = TempDir::new().unwrap();
-        let sm = SessionManager::new(temp_dir.path().to_path_buf());
+        let sm = SessionManager::new_with_provenance_verifier(
+            temp_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance {
+                    names: std::collections::HashSet::from([managed.name()]),
+                    source_fingerprints: std::collections::HashSet::from([
+                        managed_fingerprint.clone()
+                    ]),
+                    bindings: std::collections::HashSet::new(),
+                },
+                available: true,
+            }),
+        );
 
         let original = sm
             .create_session(
@@ -3615,8 +4603,23 @@ mod tests {
             )
             .await
             .unwrap();
+        let mut extension_data = ExtensionData::new();
+        EnabledExtensionsState::new(vec![ordinary.clone(), managed.clone()])
+            .to_extension_data(&mut extension_data)
+            .unwrap();
+        ProfileApplicationMarker {
+            application_id: "application-id".to_string(),
+            profile_id: "profile-id".to_string(),
+            profile_revision: 1,
+            merge_policy: "replace_managed_only".to_string(),
+            original_session_id: original.id.clone(),
+            managed_extension_names: vec!["managed-owned".to_string()],
+        }
+        .to_extension_data(&mut extension_data)
+        .unwrap();
 
         sm.update(&original.id)
+            .trusted_extension_data(extension_data)
             .usage(usage)
             .accumulated_usage(accumulated_usage)
             .apply()
@@ -3650,6 +4653,53 @@ mod tests {
         .unwrap();
 
         let exported = sm.export_session(&original.id).await.unwrap();
+        assert!(!exported.contains("platform-secret-command"));
+        assert!(!exported.contains("must-not-export"));
+        assert!(!exported.contains("mcp_profile_application.v1"));
+        let managed_names = std::collections::HashSet::from(["managed-owned".to_string()]);
+        let managed_fingerprints =
+            std::collections::HashSet::from([extension_source_fingerprint(&managed).unwrap()]);
+        let provenance_export = sm
+            .export_session_with_managed_provenance(
+                &original.id,
+                &managed_names,
+                &managed_fingerprints,
+            )
+            .await
+            .unwrap();
+        assert!(!provenance_export.contains("platform-secret-command"));
+        assert!(provenance_export.contains("developer"));
+        let copied = sm
+            .copy_session(&original.id, "Copied session".to_string())
+            .await
+            .unwrap();
+        assert!(ProfileApplicationMarker::from_extension_data(&copied.extension_data).is_none());
+        let copied_extensions =
+            EnabledExtensionsState::from_extension_data(&copied.extension_data).unwrap();
+        assert_eq!(copied_extensions.extensions, vec![ordinary.clone()]);
+        let mut malicious = sm.get_session(&original.id, true).await.unwrap();
+        let mut alias = managed;
+        if let ExtensionConfig::Stdio { name, .. } = &mut alias {
+            *name = "renamed-managed-alias".to_string();
+        }
+        EnabledExtensionsState::new(vec![ordinary.clone(), alias])
+            .to_extension_data(&mut malicious.extension_data)
+            .unwrap();
+        malicious.extension_data.remove_extension_state(
+            ProfileApplicationMarker::EXTENSION_NAME,
+            ProfileApplicationMarker::VERSION,
+        );
+        let malicious_json = serde_json::to_string(&malicious).unwrap();
+        let forbidden = vec![extension_source_fingerprint(
+            &EnabledExtensionsState::from_extension_data(&malicious.extension_data)
+                .unwrap()
+                .extensions[1],
+        )
+        .unwrap()];
+        assert!(sm
+            .import_session_with_managed_provenance(&malicious_json, None, &forbidden)
+            .await
+            .is_err());
         let imported = sm.import_session(&exported, None).await.unwrap();
 
         assert_ne!(imported.id, original.id);
@@ -3658,11 +4708,959 @@ mod tests {
         assert_eq!(imported.usage, usage);
         assert_eq!(imported.accumulated_usage, accumulated_usage);
         assert_eq!(imported.message_count, 2);
+        assert!(ProfileApplicationMarker::from_extension_data(&imported.extension_data).is_none());
+        let imported_extensions =
+            EnabledExtensionsState::from_extension_data(&imported.extension_data).unwrap();
+        assert_eq!(imported_extensions.extensions, vec![ordinary]);
 
         let conversation = imported.conversation.unwrap();
         assert_eq!(conversation.messages().len(), 2);
         assert_eq!(conversation.messages()[0].role, Role::User);
         assert_eq!(conversation.messages()[1].role, Role::Assistant);
+    }
+
+    #[tokio::test]
+    async fn direct_session_manager_guards_managed_alias_persist_import_export_and_copy() {
+        let managed = ExtensionConfig::Stdio {
+            name: "managed-original".to_string(),
+            description: "managed".to_string(),
+            cmd: "managed-command".to_string(),
+            args: vec!["--managed".to_string()],
+            envs: Envs::new(HashMap::new()),
+            env_keys: Vec::new(),
+            timeout: None,
+            cwd: None,
+            bundled: Some(false),
+            available_tools: Vec::new(),
+        };
+        let mut alias = managed.clone();
+        if let ExtensionConfig::Stdio { name, .. } = &mut alias {
+            *name = "renamed-managed-alias".to_string();
+        }
+        let provenance = ManagedExtensionProvenance {
+            names: std::collections::HashSet::from([managed.name()]),
+            source_fingerprints: std::collections::HashSet::from([extension_source_fingerprint(
+                &managed,
+            )
+            .unwrap()]),
+            ..Default::default()
+        };
+        let temp_dir = TempDir::new().unwrap();
+        let sm = SessionManager::new_with_provenance_verifier(
+            temp_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance,
+                available: true,
+            }),
+        );
+        let session = sm
+            .create_session(
+                PathBuf::from("/tmp/test"),
+                "managed alias".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        let mut extension_data = ExtensionData::new();
+        EnabledExtensionsState::new(vec![alias.clone()])
+            .to_extension_data(&mut extension_data)
+            .unwrap();
+
+        let ordinary = ExtensionConfig::Builtin {
+            name: "developer".to_string(),
+            description: String::new(),
+            display_name: None,
+            timeout: None,
+            bundled: Some(true),
+            available_tools: Vec::new(),
+        };
+        let mut ordinary_data = ExtensionData::new();
+        EnabledExtensionsState::new(vec![ordinary])
+            .to_extension_data(&mut ordinary_data)
+            .unwrap();
+        sm.update(&session.id)
+            .extension_data(ordinary_data)
+            .apply()
+            .await
+            .unwrap();
+
+        let mut managed_recipe = test_recipe("managed recipe");
+        managed_recipe.extensions = Some(vec![alias.clone()]);
+        assert!(sm
+            .update(&session.id)
+            .recipe(Some(managed_recipe.clone()))
+            .apply()
+            .await
+            .is_err());
+
+        assert!(sm
+            .update(&session.id)
+            .extension_data(extension_data.clone())
+            .apply()
+            .await
+            .is_err());
+        sm.update(&session.id)
+            .trusted_extension_data(extension_data.clone())
+            .apply()
+            .await
+            .unwrap();
+        sm.storage
+            .apply_update(sm.update(&session.id).recipe(Some(managed_recipe.clone())))
+            .await
+            .unwrap();
+
+        let exported = sm.export_session(&session.id).await.unwrap();
+        assert!(!exported.contains("managed-command"));
+        assert!(!exported.contains("renamed-managed-alias"));
+        let copied = sm
+            .copy_session(&session.id, "copy".to_string())
+            .await
+            .unwrap();
+        assert!(
+            EnabledExtensionsState::from_extension_data(&copied.extension_data)
+                .unwrap()
+                .extensions
+                .is_empty()
+        );
+        assert!(recipe_extensions(copied.recipe.as_ref()).is_empty());
+
+        let mut imported_extension = sm.get_session(&session.id, true).await.unwrap();
+        imported_extension.extension_data = extension_data;
+        imported_extension.recipe = None;
+        imported_extension.id = "client-controlled-extension-id".to_string();
+        assert!(sm
+            .import_session(&serde_json::to_string(&imported_extension).unwrap(), None)
+            .await
+            .is_err());
+        let mut imported_recipe = sm.get_session(&session.id, true).await.unwrap();
+        imported_recipe.extension_data = ExtensionData::new();
+        imported_recipe.recipe = Some(managed_recipe);
+        imported_recipe.id = "client-controlled-recipe-id".to_string();
+        assert!(sm
+            .import_session(&serde_json::to_string(&imported_recipe).unwrap(), None)
+            .await
+            .is_err());
+
+        let ordinary_session = sm
+            .create_session(
+                PathBuf::from("/tmp/test"),
+                "ordinary recipe".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        let mut ordinary_recipe = test_recipe("ordinary recipe");
+        ordinary_recipe.extensions = Some(vec![ExtensionConfig::Builtin {
+            name: "developer".to_string(),
+            description: String::new(),
+            display_name: None,
+            timeout: None,
+            bundled: Some(true),
+            available_tools: Vec::new(),
+        }]);
+        sm.update(&ordinary_session.id)
+            .recipe(Some(ordinary_recipe))
+            .apply()
+            .await
+            .unwrap();
+        let ordinary_export = sm.export_session(&ordinary_session.id).await.unwrap();
+        assert!(ordinary_export.contains("developer"));
+        let ordinary_import = sm.import_session(&ordinary_export, None).await.unwrap();
+        assert_eq!(recipe_extensions(ordinary_import.recipe.as_ref()).len(), 1);
+        let ordinary_copy = sm
+            .copy_session(&ordinary_session.id, "ordinary copy".to_string())
+            .await
+            .unwrap();
+        assert_eq!(recipe_extensions(ordinary_copy.recipe.as_ref()).len(), 1);
+    }
+
+    #[tokio::test]
+    async fn unavailable_provenance_allows_plain_sessions_and_rejects_extension_data() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = SessionManager::new_with_provenance_verifier(
+            temp_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance::default(),
+                available: false,
+            }),
+        );
+        let plain = sm
+            .create_session(
+                PathBuf::from("/tmp/test"),
+                "plain".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        let exported = sm.export_session(&plain.id).await.unwrap();
+        sm.import_session(&exported, None).await.unwrap();
+        sm.copy_session(&plain.id, "plain copy".to_string())
+            .await
+            .unwrap();
+
+        let ordinary = ExtensionConfig::Builtin {
+            name: "developer".to_string(),
+            description: String::new(),
+            display_name: None,
+            timeout: None,
+            bundled: Some(true),
+            available_tools: Vec::new(),
+        };
+        let mut extension_data = ExtensionData::new();
+        EnabledExtensionsState::new(vec![ordinary])
+            .to_extension_data(&mut extension_data)
+            .unwrap();
+        assert!(sm
+            .update(&plain.id)
+            .trusted_extension_data(extension_data.clone())
+            .apply()
+            .await
+            .is_err());
+        sm.storage
+            .apply_update(sm.update(&plain.id).trusted_extension_data(extension_data))
+            .await
+            .unwrap();
+        let extension_json =
+            serde_json::to_string(&sm.get_session(&plain.id, true).await.unwrap()).unwrap();
+        assert!(sm.export_session(&plain.id).await.is_err());
+        assert!(sm.import_session(&extension_json, None).await.is_err());
+        assert!(sm
+            .copy_session(&plain.id, "blocked copy".to_string())
+            .await
+            .is_err());
+    }
+
+    #[tokio::test]
+    async fn empty_enabled_extensions_are_plain_but_malformed_state_fails_closed() {
+        let verifier = StaticProvenanceVerifier {
+            provenance: ManagedExtensionProvenance::default(),
+            available: false,
+        };
+        let mut empty = ExtensionData::new();
+        EnabledExtensionsState::new(Vec::new())
+            .to_extension_data(&mut empty)
+            .unwrap();
+        assert!(!extension_data_requires_provenance(&empty));
+        let mut no_recipe = None;
+        sanitize_untrusted_session_extensions(&mut empty, &mut no_recipe, &verifier, None)
+            .await
+            .unwrap();
+
+        let mut malformed = ExtensionData::new();
+        malformed.set_extension_state(
+            EnabledExtensionsState::EXTENSION_NAME,
+            EnabledExtensionsState::VERSION,
+            serde_json::json!({"extensions": "invalid"}),
+        );
+        assert!(extension_data_requires_provenance(&malformed));
+        let mut no_recipe = None;
+        assert!(sanitize_untrusted_session_extensions(
+            &mut malformed,
+            &mut no_recipe,
+            &verifier,
+            None
+        )
+        .await
+        .is_err());
+    }
+
+    #[tokio::test]
+    async fn legacy_import_guard_rejects_managed_name_and_source_alias_but_allows_plain_data() {
+        let managed = ExtensionConfig::Stdio {
+            name: "legacy-managed".to_string(),
+            description: String::new(),
+            cmd: "legacy-managed-command".to_string(),
+            args: Vec::new(),
+            envs: Envs::new(HashMap::new()),
+            env_keys: Vec::new(),
+            timeout: None,
+            cwd: None,
+            bundled: Some(false),
+            available_tools: Vec::new(),
+        };
+        let mut alias = managed.clone();
+        if let ExtensionConfig::Stdio { name, .. } = &mut alias {
+            *name = "legacy-renamed-alias".to_string();
+        }
+        let verifier = StaticProvenanceVerifier {
+            provenance: ManagedExtensionProvenance {
+                names: std::collections::HashSet::from([managed.name()]),
+                source_fingerprints: std::collections::HashSet::from([
+                    extension_source_fingerprint(&managed).unwrap(),
+                ]),
+                ..Default::default()
+            },
+            available: true,
+        };
+        for extension in [managed, alias] {
+            let mut data = ExtensionData::new();
+            EnabledExtensionsState::new(vec![extension])
+                .to_extension_data(&mut data)
+                .unwrap();
+            let mut no_recipe = None;
+            assert!(sanitize_untrusted_session_extensions(
+                &mut data,
+                &mut no_recipe,
+                &verifier,
+                None,
+            )
+            .await
+            .is_err());
+        }
+
+        let mut recipe_alias = ExtensionConfig::Stdio {
+            name: "legacy-recipe-alias".to_string(),
+            description: String::new(),
+            cmd: "legacy-managed-command".to_string(),
+            args: Vec::new(),
+            envs: Envs::new(HashMap::new()),
+            env_keys: Vec::new(),
+            timeout: None,
+            cwd: None,
+            bundled: Some(false),
+            available_tools: Vec::new(),
+        };
+        let mut recipe_data = ExtensionData::new();
+        let mut recipe = Some(test_recipe("legacy recipe"));
+        recipe.as_mut().unwrap().extensions = Some(vec![recipe_alias.clone()]);
+        assert!(sanitize_untrusted_session_extensions(
+            &mut recipe_data,
+            &mut recipe,
+            &verifier,
+            None,
+        )
+        .await
+        .is_err());
+        if let ExtensionConfig::Stdio { name, cmd, .. } = &mut recipe_alias {
+            *name = "ordinary-recipe".to_string();
+            *cmd = "ordinary-command".to_string();
+        }
+        recipe.as_mut().unwrap().extensions = Some(vec![recipe_alias]);
+        sanitize_untrusted_session_extensions(&mut recipe_data, &mut recipe, &verifier, None)
+            .await
+            .unwrap();
+
+        let mut plain = ExtensionData::new();
+        let mut no_recipe = None;
+        sanitize_untrusted_session_extensions(&mut plain, &mut no_recipe, &verifier, None)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn legacy_activation_guard_rejects_aliases_and_handles_database_availability() {
+        let managed = ExtensionConfig::Stdio {
+            name: "activation-managed".to_string(),
+            description: String::new(),
+            cmd: "activation-managed-command".to_string(),
+            args: Vec::new(),
+            envs: Envs::new(HashMap::new()),
+            env_keys: Vec::new(),
+            timeout: None,
+            cwd: None,
+            bundled: Some(false),
+            available_tools: Vec::new(),
+        };
+        let mut alias = managed.clone();
+        if let ExtensionConfig::Stdio { name, .. } = &mut alias {
+            *name = "activation-source-alias".to_string();
+        }
+        let fingerprint = extension_source_fingerprint(&managed).unwrap();
+        let provenance = ManagedExtensionProvenance {
+            names: std::collections::HashSet::from([managed.name()]),
+            source_fingerprints: std::collections::HashSet::from([fingerprint.clone()]),
+            ..Default::default()
+        };
+        let temp_dir = TempDir::new().unwrap();
+        let sm = SessionManager::new_with_provenance_verifier(
+            temp_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: provenance.clone(),
+                available: true,
+            }),
+        );
+        let mut session = sm
+            .create_session(
+                PathBuf::from("/tmp/test"),
+                "legacy activation".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        EnabledExtensionsState::new(vec![alias.clone()])
+            .to_extension_data(&mut session.extension_data)
+            .unwrap();
+        assert!(sm
+            .verify_session_extension_provenance_for_activation(&session)
+            .await
+            .is_err());
+
+        session.extension_data = ExtensionData::new();
+        let mut recipe = test_recipe("legacy recipe activation");
+        recipe.extensions = Some(vec![alias]);
+        session.recipe = Some(recipe);
+        assert!(sm
+            .verify_session_extension_provenance_for_activation(&session)
+            .await
+            .is_err());
+
+        let ordinary = ExtensionConfig::Builtin {
+            name: "developer".to_string(),
+            description: String::new(),
+            display_name: None,
+            timeout: None,
+            bundled: Some(true),
+            available_tools: Vec::new(),
+        };
+        session.recipe.as_mut().unwrap().extensions = Some(vec![ordinary.clone()]);
+        EnabledExtensionsState::new(vec![ordinary])
+            .to_extension_data(&mut session.extension_data)
+            .unwrap();
+        sm.verify_session_extension_provenance_for_activation(&session)
+            .await
+            .unwrap();
+
+        let unavailable = SessionManager::new_with_provenance_verifier(
+            temp_dir.path().join("unavailable"),
+            Arc::new(StaticProvenanceVerifier {
+                provenance,
+                available: false,
+            }),
+        );
+        let mut plain = session;
+        plain.extension_data = ExtensionData::new();
+        plain.recipe = None;
+        unavailable
+            .verify_session_extension_provenance_for_activation(&plain)
+            .await
+            .unwrap();
+        unavailable
+            .validate_extension_bundle_for_activation(&plain, Vec::new())
+            .await
+            .unwrap();
+        assert!(unavailable
+            .validate_extension_bundle_for_activation(&plain, vec![managed.clone()])
+            .await
+            .is_err());
+        EnabledExtensionsState::new(vec![managed])
+            .to_extension_data(&mut plain.extension_data)
+            .unwrap();
+        assert!(unavailable
+            .verify_session_extension_provenance_for_activation(&plain)
+            .await
+            .is_err());
+    }
+
+    #[tokio::test]
+    async fn activation_guard_allows_authenticated_profile_marker_for_safe_hydration() {
+        let managed = ExtensionConfig::Stdio {
+            name: "profile-managed".to_string(),
+            description: String::new(),
+            cmd: "profile-managed-command".to_string(),
+            args: Vec::new(),
+            envs: Envs::new(HashMap::new()),
+            env_keys: Vec::new(),
+            timeout: None,
+            cwd: None,
+            bundled: Some(false),
+            available_tools: Vec::new(),
+        };
+        let managed_fingerprint = extension_source_fingerprint(&managed).unwrap();
+        let managed_binding = crate::mcp_platform::ProfileManagedReference {
+            managed_mcp_id: "managed-profile-mcp".to_string(),
+            extension_name: managed.name(),
+            projection_digest: "profile-projection-digest".to_string(),
+            source_fingerprint: managed_fingerprint.clone(),
+        };
+        let provenance = ManagedExtensionProvenance {
+            names: std::collections::HashSet::from([managed.name()]),
+            source_fingerprints: std::collections::HashSet::from([managed_fingerprint]),
+            bindings: std::collections::HashSet::new(),
+        };
+        let temp_dir = TempDir::new().unwrap();
+        let sm = SessionManager::new_with_provenance_verifier(
+            temp_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance,
+                available: true,
+            }),
+        );
+        let mut session = sm
+            .create_session(
+                PathBuf::from("/tmp/test"),
+                "profile activation".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        EnabledExtensionsState::new(Vec::new())
+            .to_extension_data(&mut session.extension_data)
+            .unwrap();
+        ProfileApplicationMarker {
+            application_id: "application-id".to_string(),
+            profile_id: "profile-id".to_string(),
+            profile_revision: 1,
+            merge_policy: "replace_managed_only".to_string(),
+            original_session_id: session.id.clone(),
+            managed_extension_names: vec![managed.name()],
+        }
+        .to_extension_data(&mut session.extension_data)
+        .unwrap();
+        sm.verify_session_extension_provenance_for_activation(&session)
+            .await
+            .unwrap();
+        assert!(sm
+            .validate_extension_bundle_for_activation(&session, vec![managed.clone()])
+            .await
+            .is_err());
+        let bundle = sm
+            .validate_profile_extension_bundle_for_activation(&session, vec![managed.clone()])
+            .await
+            .unwrap();
+        assert_eq!(bundle.extensions(), &[managed.clone()]);
+
+        let mut alias = managed.clone();
+        if let ExtensionConfig::Stdio { name, .. } = &mut alias {
+            *name = "profile-managed-alias".to_string();
+        }
+        assert!(sm
+            .validate_profile_extension_bundle_for_activation(&session, vec![alias])
+            .await
+            .is_err());
+
+        let mut altered = managed;
+        if let ExtensionConfig::Stdio { args, .. } = &mut altered {
+            args.push("--altered".to_string());
+        }
+        assert!(sm
+            .validate_profile_extension_bundle_for_activation(&session, vec![altered])
+            .await
+            .is_err());
+    }
+
+    #[tokio::test]
+    async fn trusted_profile_marker_survives_reload_and_allows_only_profile_activation() {
+        let managed = ExtensionConfig::Frontend {
+            name: "managed-profile-extension".to_string(),
+            description: String::new(),
+            tools: Vec::new(),
+            instructions: None,
+            bundled: Some(false),
+            available_tools: Vec::new(),
+        };
+        let managed_fingerprint = extension_source_fingerprint(&managed).unwrap();
+        let managed_binding = crate::mcp_platform::ProfileManagedReference {
+            managed_mcp_id: "managed-profile-mcp".to_string(),
+            extension_name: managed.name(),
+            projection_digest: "profile-projection-digest".to_string(),
+            source_fingerprint: managed_fingerprint.clone(),
+        };
+        let provenance = ManagedExtensionProvenance {
+            names: std::collections::HashSet::from([managed.name()]),
+            source_fingerprints: std::collections::HashSet::from([managed_fingerprint.clone()]),
+            bindings: std::collections::HashSet::from([(
+                "managed-profile-mcp".to_string(),
+                managed.name(),
+                "profile-projection-digest".to_string(),
+                managed_fingerprint.clone(),
+            )]),
+        };
+
+        let control_dir = TempDir::new().unwrap();
+        let control_writer = SessionManager::new_with_provenance_verifier(
+            control_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: provenance.clone(),
+                available: true,
+            }),
+        );
+        let control_session = control_writer
+            .create_session(
+                PathBuf::from("/tmp/profile-test"),
+                "profile persistence".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        let mut extension_data = ExtensionData::default();
+        ProfileApplicationMarker {
+            application_id: "application-id".to_string(),
+            profile_id: "profile-id".to_string(),
+            profile_revision: 1,
+            merge_policy: "replace_managed_only".to_string(),
+            original_session_id: control_session.id.clone(),
+            managed_extension_names: vec![managed.name()],
+        }
+        .to_extension_data(&mut extension_data)
+        .unwrap();
+        control_writer
+            .update(&control_session.id)
+            .trusted_extension_data(extension_data)
+            .apply()
+            .await
+            .unwrap();
+
+        let control_activation = Arc::new(SessionManager::new_with_provenance_verifier(
+            control_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance,
+                available: true,
+            }),
+        ));
+        let reloaded = control_activation
+            .get_session(&control_session.id, false)
+            .await
+            .unwrap();
+        assert!(EnabledExtensionsState::from_extension_data(&reloaded.extension_data).is_none());
+        assert_eq!(
+            ProfileApplicationMarker::from_extension_data(&reloaded.extension_data)
+                .unwrap()
+                .managed_extension_names,
+            vec![managed.name()]
+        );
+
+        let mut generic_rejection = reloaded.clone();
+        EnabledExtensionsState::new(vec![managed.clone()])
+            .to_extension_data(&mut generic_rejection.extension_data)
+            .unwrap();
+
+        let permission_dir = TempDir::new().unwrap();
+        let control_agent = Arc::new(Agent::with_config(AgentConfig::new(
+            control_activation.clone(),
+            Arc::new(PermissionManager::new(permission_dir.path().to_path_buf())),
+            None,
+            GooseMode::default(),
+            true,
+            GoosePlatform::GooseCli,
+        )));
+        assert!(control_agent
+            .load_extensions_from_session(&generic_rejection)
+            .await
+            .is_err());
+        let bundle = control_activation
+            .validate_profile_extension_bundle_for_activation_with_bindings(
+                &reloaded,
+                vec![managed.clone()],
+                std::slice::from_ref(&managed_binding),
+            )
+            .await
+            .unwrap();
+        let results = control_agent
+            .load_extensions_from_validated_bundle(&reloaded, bundle)
+            .await;
+        assert_eq!(results.len(), 1);
+        assert_eq!(control_agent.get_extension_configs().await.len(), 1);
+
+        let tampered_dir = TempDir::new().unwrap();
+        let tampered_writer = SessionManager::new_with_provenance_verifier(
+            tampered_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance {
+                    names: std::collections::HashSet::from(["other-name".to_string()]),
+                    source_fingerprints: std::collections::HashSet::from([
+                        managed_fingerprint.clone()
+                    ]),
+                    bindings: std::collections::HashSet::from([(
+                        "managed-profile-mcp".to_string(),
+                        managed.name(),
+                        "profile-projection-digest".to_string(),
+                        managed_fingerprint.clone(),
+                    )]),
+                },
+                available: true,
+            }),
+        );
+        let tampered_session = tampered_writer
+            .create_session(
+                PathBuf::from("/tmp/profile-test"),
+                "profile persistence".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        let mut tampered_data = ExtensionData::default();
+        EnabledExtensionsState::new(vec![managed.clone()])
+            .to_extension_data(&mut tampered_data)
+            .unwrap();
+        ProfileApplicationMarker {
+            application_id: "application-id".to_string(),
+            profile_id: "profile-id".to_string(),
+            profile_revision: 1,
+            merge_policy: "replace_managed_only".to_string(),
+            original_session_id: tampered_session.id.clone(),
+            managed_extension_names: vec!["other-name".to_string()],
+        }
+        .to_extension_data(&mut tampered_data)
+        .unwrap();
+        tampered_writer
+            .update(&tampered_session.id)
+            .trusted_extension_data(tampered_data)
+            .apply()
+            .await
+            .unwrap();
+        let tampered_activation = Arc::new(SessionManager::new_with_provenance_verifier(
+            tampered_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance {
+                    names: std::collections::HashSet::from([managed.name()]),
+                    source_fingerprints: std::collections::HashSet::from([
+                        managed_fingerprint.clone()
+                    ]),
+                    bindings: std::collections::HashSet::from([(
+                        managed_binding.managed_mcp_id.clone(),
+                        managed_binding.extension_name.clone(),
+                        managed_binding.projection_digest.clone(),
+                        managed_binding.source_fingerprint.clone(),
+                    )]),
+                },
+                available: true,
+            }),
+        ));
+        let tampered_reloaded = tampered_activation
+            .get_session(&tampered_session.id, false)
+            .await
+            .unwrap();
+        assert!(
+            EnabledExtensionsState::from_extension_data(&tampered_reloaded.extension_data)
+                .is_some()
+        );
+        assert!(tampered_activation
+            .validate_profile_extension_bundle_for_activation_with_bindings(
+                &tampered_reloaded,
+                vec![managed.clone()],
+                std::slice::from_ref(&managed_binding),
+            )
+            .await
+            .is_err());
+        let tampered_permission_dir = TempDir::new().unwrap();
+        let tampered_agent = Arc::new(Agent::with_config(AgentConfig::new(
+            tampered_activation,
+            Arc::new(PermissionManager::new(
+                tampered_permission_dir.path().to_path_buf(),
+            )),
+            None,
+            GooseMode::default(),
+            true,
+            GoosePlatform::GooseCli,
+        )));
+        assert!(tampered_agent
+            .load_extensions_from_session(&tampered_reloaded)
+            .await
+            .is_err());
+        assert_eq!(tampered_agent.get_extension_configs().await.len(), 0);
+
+        let name_mismatch_dir = TempDir::new().unwrap();
+        let name_mismatch_writer = SessionManager::new_with_provenance_verifier(
+            name_mismatch_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance {
+                    names: std::collections::HashSet::from([managed.name()]),
+                    source_fingerprints: std::collections::HashSet::from([
+                        managed_fingerprint.clone()
+                    ]),
+                    bindings: std::collections::HashSet::from([(
+                        managed_binding.managed_mcp_id.clone(),
+                        managed_binding.extension_name.clone(),
+                        managed_binding.projection_digest.clone(),
+                        managed_binding.source_fingerprint.clone(),
+                    )]),
+                },
+                available: true,
+            }),
+        );
+        let name_mismatch_session = name_mismatch_writer
+            .create_session(
+                PathBuf::from("/tmp/profile-test"),
+                "profile provenance name mismatch".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        let mut name_mismatch_data = ExtensionData::default();
+        EnabledExtensionsState::new(vec![managed.clone()])
+            .to_extension_data(&mut name_mismatch_data)
+            .unwrap();
+        ProfileApplicationMarker {
+            application_id: "application-id".to_string(),
+            profile_id: "profile-id".to_string(),
+            profile_revision: 1,
+            merge_policy: "replace_managed_only".to_string(),
+            original_session_id: name_mismatch_session.id.clone(),
+            managed_extension_names: vec![managed.name()],
+        }
+        .to_extension_data(&mut name_mismatch_data)
+        .unwrap();
+        name_mismatch_writer
+            .update(&name_mismatch_session.id)
+            .trusted_extension_data(name_mismatch_data)
+            .apply()
+            .await
+            .unwrap();
+        let name_mismatch_activation = SessionManager::new_with_provenance_verifier(
+            name_mismatch_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance {
+                    names: std::collections::HashSet::from(["other-name".to_string()]),
+                    source_fingerprints: std::collections::HashSet::from([
+                        managed_fingerprint.clone()
+                    ]),
+                    bindings: std::collections::HashSet::from([(
+                        managed_binding.managed_mcp_id.clone(),
+                        managed_binding.extension_name.clone(),
+                        managed_binding.projection_digest.clone(),
+                        managed_binding.source_fingerprint.clone(),
+                    )]),
+                },
+                available: true,
+            }),
+        );
+        let name_mismatch_reloaded = name_mismatch_activation
+            .get_session(&name_mismatch_session.id, false)
+            .await
+            .unwrap();
+        assert!(name_mismatch_activation
+            .validate_profile_extension_bundle_for_activation_with_bindings(
+                &name_mismatch_reloaded,
+                vec![managed.clone()],
+                std::slice::from_ref(&managed_binding),
+            )
+            .await
+            .is_err());
+
+        let source_drift_dir = TempDir::new().unwrap();
+        let source_drift_writer = SessionManager::new_with_provenance_verifier(
+            source_drift_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance {
+                    names: std::collections::HashSet::from([managed.name()]),
+                    source_fingerprints: std::collections::HashSet::from([
+                        managed_fingerprint.clone()
+                    ]),
+                    bindings: std::collections::HashSet::from([(
+                        "managed-profile-mcp".to_string(),
+                        managed.name(),
+                        "profile-projection-digest".to_string(),
+                        managed_fingerprint.clone(),
+                    )]),
+                },
+                available: true,
+            }),
+        );
+        let source_drift_session = source_drift_writer
+            .create_session(
+                PathBuf::from("/tmp/profile-test"),
+                "profile persistence".to_string(),
+                SessionType::User,
+                GooseMode::default(),
+            )
+            .await
+            .unwrap();
+        let mut source_drift_data = ExtensionData::default();
+        EnabledExtensionsState::new(vec![managed.clone()])
+            .to_extension_data(&mut source_drift_data)
+            .unwrap();
+        ProfileApplicationMarker {
+            application_id: "application-id".to_string(),
+            profile_id: "profile-id".to_string(),
+            profile_revision: 1,
+            merge_policy: "replace_managed_only".to_string(),
+            original_session_id: source_drift_session.id.clone(),
+            managed_extension_names: vec![managed.name()],
+        }
+        .to_extension_data(&mut source_drift_data)
+        .unwrap();
+        source_drift_writer
+            .update(&source_drift_session.id)
+            .trusted_extension_data(source_drift_data)
+            .apply()
+            .await
+            .unwrap();
+
+        let source_drift_activation = Arc::new(SessionManager::new_with_provenance_verifier(
+            source_drift_dir.path().to_path_buf(),
+            Arc::new(StaticProvenanceVerifier {
+                provenance: ManagedExtensionProvenance {
+                    names: std::collections::HashSet::from([managed.name()]),
+                    source_fingerprints: std::collections::HashSet::from([
+                        managed_fingerprint.clone()
+                    ]),
+                    bindings: std::collections::HashSet::from([(
+                        "managed-profile-mcp".to_string(),
+                        managed.name(),
+                        "profile-projection-digest".to_string(),
+                        managed_fingerprint.clone(),
+                    )]),
+                },
+                available: true,
+            }),
+        ));
+        let source_drift_reloaded = source_drift_activation
+            .get_session(&source_drift_session.id, false)
+            .await
+            .unwrap();
+        let mut same_name_source_drift = managed.clone();
+        if let ExtensionConfig::Frontend { instructions, .. } = &mut same_name_source_drift {
+            *instructions = Some("different trusted source".to_string());
+        }
+        assert_ne!(
+            extension_source_fingerprint(&same_name_source_drift).unwrap(),
+            extension_source_fingerprint(&managed).unwrap()
+        );
+        assert!(source_drift_activation
+            .validate_profile_extension_bundle_for_activation_with_bindings(
+                &source_drift_reloaded,
+                vec![same_name_source_drift],
+                std::slice::from_ref(&managed_binding),
+            )
+            .await
+            .is_err());
+
+        let mut managed_mcp_id_drift = managed_binding.clone();
+        managed_mcp_id_drift.managed_mcp_id = "different-managed-profile-mcp".to_string();
+        assert!(source_drift_activation
+            .validate_profile_extension_bundle_for_activation_with_bindings(
+                &source_drift_reloaded,
+                vec![managed.clone()],
+                std::slice::from_ref(&managed_mcp_id_drift),
+            )
+            .await
+            .is_err());
+
+        let mut projection_digest_drift = managed_binding.clone();
+        projection_digest_drift.projection_digest =
+            "different-profile-projection-digest".to_string();
+        assert!(source_drift_activation
+            .validate_profile_extension_bundle_for_activation_with_bindings(
+                &source_drift_reloaded,
+                vec![managed],
+                std::slice::from_ref(&projection_digest_drift),
+            )
+            .await
+            .is_err());
+        let source_drift_permission_dir = TempDir::new().unwrap();
+        let source_drift_agent = Arc::new(Agent::with_config(AgentConfig::new(
+            source_drift_activation,
+            Arc::new(PermissionManager::new(
+                source_drift_permission_dir.path().to_path_buf(),
+            )),
+            None,
+            GooseMode::default(),
+            true,
+            GoosePlatform::GooseCli,
+        )));
+        assert!(source_drift_agent
+            .load_extensions_from_session(&source_drift_reloaded)
+            .await
+            .is_err());
+        assert_eq!(source_drift_agent.get_extension_configs().await.len(), 0);
     }
 
     #[tokio::test]
@@ -4018,6 +6016,415 @@ mod tests {
         Ok(())
     }
 
+    async fn seed_message_row(
+        sm: &SessionManager,
+        session_id: &str,
+        message_id: &str,
+    ) -> Result<()> {
+        let pool = sm.storage().pool().await?;
+        sqlx::query(
+            "INSERT INTO messages(message_id, session_id, role, content_json, created_timestamp, timestamp, tokens, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(message_id)
+        .bind(session_id)
+        .bind("assistant")
+        .bind(r#"[{"type":"text","text":"delete-session regression"}]"#)
+        .bind(1_700_000_000_001_i64)
+        .bind("2026-01-01 00:00:00")
+        .bind(7_i64)
+        .bind(r#"{"seed":"delete-session"}"#)
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    async fn create_legacy_v9_sessions_database(root: &Path) {
+        let db_path = root.join(SESSIONS_FOLDER).join(DB_NAME);
+        if let Some(parent) = db_path.parent() {
+            std::fs::create_dir_all(parent).unwrap();
+        }
+
+        let pool = SqlitePoolOptions::new()
+            .connect_with(
+                SqliteConnectOptions::new()
+                    .filename(&db_path)
+                    .create_if_missing(true),
+            )
+            .await
+            .unwrap();
+
+        sqlx::query(
+            r#"
+            CREATE TABLE schema_version (
+                version INTEGER PRIMARY KEY,
+                applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        sqlx::query("INSERT INTO schema_version(version, applied_at) VALUES (?, ?)")
+            .bind(9_i64)
+            .bind("2026-01-01 00:00:00")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query(
+            r#"
+            CREATE TABLE sessions (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL DEFAULT '',
+                description TEXT NOT NULL DEFAULT '',
+                user_set_name BOOLEAN DEFAULT FALSE,
+                session_type TEXT NOT NULL DEFAULT 'user',
+                working_dir TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                extension_data TEXT DEFAULT '{}',
+                total_tokens INTEGER,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                accumulated_total_tokens INTEGER,
+                accumulated_input_tokens INTEGER,
+                accumulated_output_tokens INTEGER,
+                schedule_id TEXT,
+                recipe_json TEXT,
+                user_recipe_values_json TEXT,
+                provider_name TEXT,
+                model_config_json TEXT,
+                goose_mode TEXT NOT NULL DEFAULT 'auto'
+            )
+        "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        sqlx::query(
+            r#"
+            CREATE TABLE messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL REFERENCES sessions(id),
+                role TEXT NOT NULL,
+                content_json TEXT NOT NULL,
+                created_timestamp INTEGER NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                tokens INTEGER,
+                metadata_json TEXT,
+                message_id TEXT
+            )
+        "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+        for statement in [
+            "CREATE INDEX idx_messages_session ON messages(session_id)",
+            "CREATE INDEX idx_messages_timestamp ON messages(timestamp)",
+            "CREATE INDEX idx_messages_message_id ON messages(message_id)",
+            "CREATE INDEX idx_sessions_updated ON sessions(updated_at DESC)",
+            "CREATE INDEX idx_sessions_type ON sessions(session_type)",
+        ] {
+            sqlx::query(statement).execute(&pool).await.unwrap();
+        }
+
+        pool.close().await;
+    }
+
+    async fn legacy_upgraded_session_manager(temp_dir: &TempDir) -> SessionManager {
+        create_legacy_v9_sessions_database(temp_dir.path()).await;
+        let sm = SessionManager::new(temp_dir.path().to_path_buf());
+        sm.storage().pool().await.unwrap();
+        sm
+    }
+
+    async fn open_test_db_pool(sm: &SessionManager, foreign_keys: bool) -> Pool<Sqlite> {
+        let db_path = sm.storage().session_dir.join(DB_NAME);
+        SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect_with(
+                SqliteConnectOptions::new()
+                    .filename(&db_path)
+                    .create_if_missing(true)
+                    .foreign_keys(foreign_keys),
+            )
+            .await
+            .unwrap()
+    }
+
+    async fn seed_legacy_thread_row(
+        sm: &SessionManager,
+        session_id: &str,
+        thread_id: &str,
+        message_id: &str,
+    ) -> Result<()> {
+        let pool = sm.storage().pool().await?;
+        sqlx::query("UPDATE sessions SET thread_id = ? WHERE id = ?")
+            .bind(thread_id)
+            .bind(session_id)
+            .execute(pool)
+            .await?;
+        sqlx::query(
+            "INSERT OR IGNORE INTO threads(id, name, user_set_name, working_dir, created_at, updated_at, archived_at, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(thread_id)
+        .bind(format!("Legacy thread {thread_id}"))
+        .bind(false)
+        .bind("/tmp")
+        .bind("2026-01-01 00:00:00")
+        .bind("2026-01-01 00:00:00")
+        .bind(Option::<String>::None)
+        .bind(r#"{"seed":"legacy-thread"}"#)
+        .execute(pool)
+        .await?;
+        sqlx::query(
+            "INSERT INTO thread_messages(thread_id, session_id, message_id, role, content_json, created_timestamp, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(thread_id)
+        .bind(session_id)
+        .bind(message_id)
+        .bind("assistant")
+        .bind(r#"[{"type":"text","text":"legacy thread message"}]"#)
+        .bind(1_700_000_000_003_i64)
+        .bind(r#"{"seed":"legacy-thread"}"#)
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
+    async fn seed_dangling_session_thread_reference(
+        sm: &SessionManager,
+        session_id: &str,
+        missing_thread_id: &str,
+    ) -> Result<()> {
+        let pool = open_test_db_pool(sm, false).await;
+        sqlx::query("UPDATE sessions SET thread_id = ? WHERE id = ?")
+            .bind(missing_thread_id)
+            .bind(session_id)
+            .execute(&pool)
+            .await?;
+        pool.close().await;
+        Ok(())
+    }
+
+    async fn seed_orphan_thread_message_thread_reference(
+        sm: &SessionManager,
+        session_id: Option<&str>,
+        missing_thread_id: &str,
+        message_id: &str,
+    ) -> Result<()> {
+        let pool = open_test_db_pool(sm, false).await;
+        sqlx::query(
+            "INSERT INTO thread_messages(thread_id, session_id, message_id, role, content_json, created_timestamp, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(missing_thread_id)
+        .bind(session_id)
+        .bind(message_id)
+        .bind("assistant")
+        .bind(r#"[{"type":"text","text":"orphan legacy thread message"}]"#)
+        .bind(1_700_000_000_004_i64)
+        .bind(r#"{"seed":"orphan-thread-reference"}"#)
+        .execute(&pool)
+        .await?;
+        pool.close().await;
+        Ok(())
+    }
+
+    async fn seed_orphan_thread_message_session_reference(
+        sm: &SessionManager,
+        thread_id: &str,
+        missing_session_id: &str,
+        message_id: &str,
+    ) -> Result<()> {
+        let pool = open_test_db_pool(sm, false).await;
+        sqlx::query(
+            "INSERT INTO thread_messages(thread_id, session_id, message_id, role, content_json, created_timestamp, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(thread_id)
+        .bind(missing_session_id)
+        .bind(message_id)
+        .bind("assistant")
+        .bind(r#"[{"type":"text","text":"orphan legacy session message"}]"#)
+        .bind(1_700_000_000_005_i64)
+        .bind(r#"{"seed":"orphan-session-reference"}"#)
+        .execute(&pool)
+        .await?;
+        pool.close().await;
+        Ok(())
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct DeleteSessionRowsSnapshot {
+        sessions: Vec<(String, Option<String>)>,
+        messages: Vec<(i64, String, Option<String>)>,
+        usage_ledger: Vec<(i64, String, Option<String>)>,
+        threads: Option<Vec<String>>,
+        thread_messages: Option<Vec<(i64, String, Option<String>, Option<String>)>>,
+    }
+
+    async fn delete_session_rows_snapshot(
+        sm: &SessionManager,
+    ) -> Result<DeleteSessionRowsSnapshot> {
+        let pool = sm.storage().pool().await?;
+        let has_session_thread_id = sqlx::query_scalar::<_, i32>(
+            "SELECT COUNT(*) FROM pragma_table_info('sessions') WHERE name = 'thread_id'",
+        )
+        .fetch_one(pool)
+        .await?
+            > 0;
+        let has_threads = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='threads')",
+        )
+        .fetch_one(pool)
+        .await?;
+        let has_thread_messages = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='thread_messages')",
+        )
+        .fetch_one(pool)
+        .await?;
+
+        let sessions = if has_session_thread_id {
+            sqlx::query_as::<_, (String, Option<String>)>(
+                "SELECT id, thread_id FROM sessions ORDER BY id",
+            )
+            .fetch_all(pool)
+            .await?
+        } else {
+            sqlx::query_as::<_, (String, Option<String>)>(
+                "SELECT id, NULL AS thread_id FROM sessions ORDER BY id",
+            )
+            .fetch_all(pool)
+            .await?
+        };
+
+        let messages = sqlx::query_as::<_, (i64, String, Option<String>)>(
+            "SELECT id, session_id, message_id FROM messages ORDER BY id",
+        )
+        .fetch_all(pool)
+        .await?;
+        let usage_ledger = sqlx::query_as::<_, (i64, String, Option<String>)>(
+            "SELECT id, session_id, model FROM usage_ledger ORDER BY id",
+        )
+        .fetch_all(pool)
+        .await?;
+        let threads = if has_threads {
+            Some(
+                sqlx::query_scalar::<_, String>("SELECT id FROM threads ORDER BY id")
+                    .fetch_all(pool)
+                    .await?,
+            )
+        } else {
+            None
+        };
+        let thread_messages = if has_thread_messages {
+            Some(
+                sqlx::query_as::<_, (i64, String, Option<String>, Option<String>)>(
+                    "SELECT id, thread_id, session_id, message_id FROM thread_messages ORDER BY id",
+                )
+                .fetch_all(pool)
+                .await?,
+            )
+        } else {
+            None
+        };
+
+        Ok(DeleteSessionRowsSnapshot {
+            sessions,
+            messages,
+            usage_ledger,
+            threads,
+            thread_messages,
+        })
+    }
+
+    async fn seed_incomplete_legacy_schema(
+        sm: &SessionManager,
+        session_id: &str,
+        has_session_thread_id: bool,
+        has_threads: bool,
+        has_thread_messages: bool,
+    ) -> Result<()> {
+        let pool = sm.storage().pool().await?;
+        let thread_id = format!("partial-thread-{session_id}");
+
+        if has_session_thread_id {
+            sqlx::query("ALTER TABLE sessions ADD COLUMN thread_id TEXT")
+                .execute(pool)
+                .await?;
+            sqlx::query("UPDATE sessions SET thread_id = ? WHERE id = ?")
+                .bind(&thread_id)
+                .bind(session_id)
+                .execute(pool)
+                .await?;
+        }
+
+        if has_threads {
+            sqlx::query(
+                "CREATE TABLE threads (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL DEFAULT 'New Chat',
+                    user_set_name BOOLEAN DEFAULT FALSE,
+                    working_dir TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    archived_at TIMESTAMP,
+                    metadata_json TEXT DEFAULT '{}'
+                )",
+            )
+            .execute(pool)
+            .await?;
+            sqlx::query(
+                "INSERT INTO threads(id, name, user_set_name, working_dir, created_at, updated_at, archived_at, metadata_json)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            )
+            .bind(&thread_id)
+            .bind(format!("Partial thread {session_id}"))
+            .bind(false)
+            .bind("/tmp")
+            .bind("2026-01-01 00:00:00")
+            .bind("2026-01-01 00:00:00")
+            .bind(Option::<String>::None)
+            .bind(r#"{"seed":"partial-thread"}"#)
+            .execute(pool)
+            .await?;
+        }
+
+        if has_thread_messages {
+            sqlx::query(
+                "CREATE TABLE thread_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    thread_id TEXT NOT NULL REFERENCES threads(id),
+                    session_id TEXT,
+                    message_id TEXT,
+                    role TEXT NOT NULL,
+                    content_json TEXT NOT NULL,
+                    created_timestamp INTEGER NOT NULL,
+                    metadata_json TEXT DEFAULT '{}'
+                )",
+            )
+            .execute(pool)
+            .await?;
+
+            if has_threads {
+                sqlx::query(
+                    "INSERT INTO thread_messages(thread_id, session_id, message_id, role, content_json, created_timestamp, metadata_json)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)",
+                )
+                .bind(&thread_id)
+                .bind(session_id)
+                .bind(format!("partial-thread-message-{session_id}"))
+                .bind("assistant")
+                .bind(r#"[{"type":"text","text":"partial legacy thread message"}]"#)
+                .bind(1_700_000_000_101_i64)
+                .bind(r#"{"seed":"partial-thread"}"#)
+                .execute(pool)
+                .await?;
+            }
+        }
+
+        Ok(())
+    }
+
     #[tokio::test]
     async fn test_usage_totals_include_subagent_tree() {
         let temp_dir = TempDir::new().unwrap();
@@ -4210,12 +6617,447 @@ mod tests {
         let sm = SessionManager::new(temp_dir.path().to_path_buf());
         let id = new_session(&sm).await;
 
+        seed_message_row(&sm, &id, "fresh-delete-message")
+            .await
+            .unwrap();
         seed_ledger(&sm, &id, &message_usage(100, 20, 0.10, false))
             .await
             .unwrap();
 
         sm.delete_session(&id).await.unwrap();
         assert!(sm.get_session(&id, false).await.is_err());
+
+        let pool = sm.storage().pool().await.unwrap();
+        let remaining_messages: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE session_id = ?")
+                .bind(&id)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let remaining_ledger: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM usage_ledger WHERE session_id = ?")
+                .bind(&id)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        assert_eq!(remaining_messages, 0);
+        assert_eq!(remaining_ledger, 0);
+    }
+
+    #[test_case(true, false, false; "session_thread_id_only")]
+    #[test_case(false, true, false; "threads_only")]
+    #[test_case(false, false, true; "thread_messages_only")]
+    #[test_case(true, true, false; "session_thread_id_and_threads_only")]
+    #[test_case(true, false, true; "session_thread_id_and_thread_messages_only")]
+    #[test_case(false, true, true; "threads_and_thread_messages_only")]
+    #[tokio::test]
+    async fn test_delete_session_fails_closed_for_incomplete_legacy_schema(
+        has_session_thread_id: bool,
+        has_threads: bool,
+        has_thread_messages: bool,
+    ) {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = SessionManager::new(temp_dir.path().to_path_buf());
+        let id = new_session(&sm).await;
+
+        seed_message_row(&sm, &id, "partial-delete-message")
+            .await
+            .unwrap();
+        seed_ledger(&sm, &id, &message_usage(100, 20, 0.10, false))
+            .await
+            .unwrap();
+        seed_incomplete_legacy_schema(
+            &sm,
+            &id,
+            has_session_thread_id,
+            has_threads,
+            has_thread_messages,
+        )
+        .await
+        .unwrap();
+
+        let before = delete_session_rows_snapshot(&sm).await.unwrap();
+        let err = sm.delete_session(&id).await.unwrap_err();
+        let after = delete_session_rows_snapshot(&sm).await.unwrap();
+
+        assert_eq!(before, after);
+        assert_eq!(
+            err.to_string(),
+            format!(
+                "session delete blocked by incomplete legacy schema: sessions.thread_id={}, threads={}, thread_messages={}",
+                has_session_thread_id, has_threads, has_thread_messages
+            )
+        );
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_removes_legacy_thread_rows_when_unreferenced() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let id = new_session(&sm).await;
+
+        seed_message_row(&sm, &id, "legacy-delete-message")
+            .await
+            .unwrap();
+        seed_ledger(&sm, &id, &message_usage(100, 20, 0.10, false))
+            .await
+            .unwrap();
+        seed_legacy_thread_row(
+            &sm,
+            &id,
+            "legacy-thread-delete",
+            "legacy-thread-message-delete",
+        )
+        .await
+        .unwrap();
+
+        sm.delete_session(&id).await.unwrap();
+
+        let pool = sm.storage().pool().await.unwrap();
+        let remaining_messages: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE session_id = ?")
+                .bind(&id)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let remaining_ledger: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM usage_ledger WHERE session_id = ?")
+                .bind(&id)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let remaining_thread_messages: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM thread_messages WHERE session_id = ?")
+                .bind(&id)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let remaining_threads: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM threads WHERE id = ?")
+                .bind("legacy-thread-delete")
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        assert_eq!(remaining_messages, 0);
+        assert_eq!(remaining_ledger, 0);
+        assert_eq!(remaining_thread_messages, 0);
+        assert_eq!(remaining_threads, 0);
+    }
+
+    async fn assert_delete_session_integrity_failure(
+        sm: &SessionManager,
+        session_id: &str,
+        expected_error_fragment: &str,
+    ) {
+        let before = delete_session_rows_snapshot(sm).await.unwrap();
+        let err = sm.delete_session(session_id).await.unwrap_err();
+        let after = delete_session_rows_snapshot(sm).await.unwrap();
+
+        assert_eq!(before, after);
+        assert!(err.to_string().contains(expected_error_fragment));
+        assert!(!err.to_string().contains("Session not found"));
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_fails_closed_for_dangling_target_session_thread_reference() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let id = new_session(&sm).await;
+
+        seed_message_row(&sm, &id, "legacy-dangling-session-thread-message")
+            .await
+            .unwrap();
+        seed_ledger(&sm, &id, &message_usage(100, 20, 0.10, false))
+            .await
+            .unwrap();
+        seed_dangling_session_thread_reference(&sm, &id, "missing-target-thread")
+            .await
+            .unwrap();
+
+        assert_delete_session_integrity_failure(
+            &sm,
+            &id,
+            "sessions.thread_id -> threads.id; sample_row=",
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_reports_deterministic_sample_for_multiple_same_kind_violations() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let delete_target = new_session(&sm).await;
+        let later_sorted_session = new_session(&sm).await;
+        let earlier_sorted_session = new_session(&sm).await;
+
+        let pool = sm.storage().pool().await.unwrap();
+        sqlx::query("UPDATE sessions SET id = ?, thread_id = ? WHERE id = ?")
+            .bind("zzz-dangling-session")
+            .bind("missing-thread-z")
+            .bind(&later_sorted_session)
+            .execute(pool)
+            .await
+            .unwrap();
+        sqlx::query("UPDATE sessions SET id = ?, thread_id = ? WHERE id = ?")
+            .bind("aaa-dangling-session")
+            .bind("missing-thread-a")
+            .bind(&earlier_sorted_session)
+            .execute(pool)
+            .await
+            .unwrap();
+
+        let before = delete_session_rows_snapshot(&sm).await.unwrap();
+        let err = sm.delete_session(&delete_target).await.unwrap_err();
+        let after = delete_session_rows_snapshot(&sm).await.unwrap();
+
+        assert_eq!(before, after);
+        assert_eq!(
+            err.to_string(),
+            "session delete blocked by dangling legacy reference: sessions.thread_id -> threads.id; sample_row=aaa-dangling-session; missing_reference=missing-thread-a; total_violations=2"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_fails_closed_for_unrelated_orphan_thread_message_thread_reference()
+    {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let deleted_session = new_session(&sm).await;
+        let unrelated_session = new_session(&sm).await;
+
+        seed_message_row(&sm, &deleted_session, "legacy-delete-message")
+            .await
+            .unwrap();
+        seed_ledger(&sm, &deleted_session, &message_usage(100, 20, 0.10, false))
+            .await
+            .unwrap();
+        seed_legacy_thread_row(
+            &sm,
+            &deleted_session,
+            "legacy-delete-thread",
+            "legacy-delete-thread-message",
+        )
+        .await
+        .unwrap();
+        seed_message_row(&sm, &unrelated_session, "legacy-unrelated-message")
+            .await
+            .unwrap();
+        seed_orphan_thread_message_thread_reference(
+            &sm,
+            Some(&unrelated_session),
+            "missing-unrelated-thread",
+            "orphan-thread-message",
+        )
+        .await
+        .unwrap();
+
+        assert_delete_session_integrity_failure(
+            &sm,
+            &deleted_session,
+            "thread_messages.thread_id -> threads.id; sample_row=",
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_fails_closed_for_orphan_thread_message_session_reference() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let id = new_session(&sm).await;
+        let thread_id = "legacy-thread-with-orphan-session-message";
+
+        seed_message_row(&sm, &id, "legacy-dangling-session-message")
+            .await
+            .unwrap();
+        seed_ledger(&sm, &id, &message_usage(100, 20, 0.10, false))
+            .await
+            .unwrap();
+        seed_legacy_thread_row(&sm, &id, thread_id, "legacy-valid-thread-message")
+            .await
+            .unwrap();
+        seed_orphan_thread_message_session_reference(
+            &sm,
+            thread_id,
+            "missing-session-for-thread-message",
+            "orphan-session-message",
+        )
+        .await
+        .unwrap();
+
+        assert_delete_session_integrity_failure(
+            &sm,
+            &id,
+            "thread_messages.session_id -> sessions.id; sample_row=",
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_prioritizes_legacy_integrity_before_not_found_in_complete_schema()
+    {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let existing_session = new_session(&sm).await;
+
+        seed_dangling_session_thread_reference(&sm, &existing_session, "missing-target-thread")
+            .await
+            .unwrap();
+
+        let before = delete_session_rows_snapshot(&sm).await.unwrap();
+        let err = sm.delete_session("missing-session-id").await.unwrap_err();
+        let after = delete_session_rows_snapshot(&sm).await.unwrap();
+
+        assert_eq!(before, after);
+        assert_eq!(
+            err.to_string(),
+            format!(
+                "session delete blocked by dangling legacy reference: sessions.thread_id -> threads.id; sample_row={existing_session}; missing_reference=missing-target-thread; total_violations=1"
+            )
+        );
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_missing_target_still_returns_not_found_for_fresh_schema() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = SessionManager::new(temp_dir.path().to_path_buf());
+
+        let err = sm.delete_session("missing-session-id").await.unwrap_err();
+
+        assert_eq!(err.to_string(), "Session not found");
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_preserves_shared_legacy_thread_rows() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let deleted_session = new_session(&sm).await;
+        let surviving_session = new_session(&sm).await;
+        let thread_id = "legacy-thread-shared";
+
+        seed_message_row(&sm, &deleted_session, "legacy-shared-delete-message")
+            .await
+            .unwrap();
+        seed_message_row(&sm, &surviving_session, "legacy-shared-keep-message")
+            .await
+            .unwrap();
+        seed_ledger(&sm, &deleted_session, &message_usage(100, 20, 0.10, false))
+            .await
+            .unwrap();
+        seed_ledger(&sm, &surviving_session, &message_usage(40, 8, 0.04, false))
+            .await
+            .unwrap();
+        seed_legacy_thread_row(
+            &sm,
+            &deleted_session,
+            thread_id,
+            "legacy-shared-thread-message-delete",
+        )
+        .await
+        .unwrap();
+        seed_legacy_thread_row(
+            &sm,
+            &surviving_session,
+            thread_id,
+            "legacy-shared-thread-message-keep",
+        )
+        .await
+        .unwrap();
+
+        sm.delete_session(&deleted_session).await.unwrap();
+
+        let pool = sm.storage().pool().await.unwrap();
+        let deleted_exists: bool =
+            sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM sessions WHERE id = ?)")
+                .bind(&deleted_session)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let surviving_exists: bool =
+            sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM sessions WHERE id = ?)")
+                .bind(&surviving_session)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let deleted_thread_messages: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM thread_messages WHERE session_id = ?")
+                .bind(&deleted_session)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let surviving_thread_messages: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM thread_messages WHERE session_id = ?")
+                .bind(&surviving_session)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let remaining_threads: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM threads WHERE id = ?")
+                .bind(thread_id)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let surviving_messages: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM messages WHERE session_id = ?")
+                .bind(&surviving_session)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let surviving_ledger: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM usage_ledger WHERE session_id = ?")
+                .bind(&surviving_session)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        let surviving_thread_ref: Option<String> =
+            sqlx::query_scalar("SELECT thread_id FROM sessions WHERE id = ?")
+                .bind(&surviving_session)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        assert!(!deleted_exists);
+        assert!(surviving_exists);
+        assert_eq!(deleted_thread_messages, 0);
+        assert_eq!(surviving_thread_messages, 1);
+        assert_eq!(remaining_threads, 1);
+        assert_eq!(surviving_messages, 1);
+        assert_eq!(surviving_ledger, 1);
+        assert_eq!(surviving_thread_ref.as_deref(), Some(thread_id));
+    }
+
+    #[tokio::test]
+    async fn test_delete_session_rolls_back_when_sqlite_abort_interrupts_delete() {
+        let temp_dir = TempDir::new().unwrap();
+        let sm = legacy_upgraded_session_manager(&temp_dir).await;
+        let id = new_session(&sm).await;
+
+        seed_message_row(&sm, &id, "rollback-delete-message")
+            .await
+            .unwrap();
+        seed_ledger(&sm, &id, &message_usage(100, 20, 0.10, false))
+            .await
+            .unwrap();
+        seed_legacy_thread_row(&sm, &id, "rollback-thread", "rollback-thread-message")
+            .await
+            .unwrap();
+
+        let pool = sm.storage().pool().await.unwrap();
+        sqlx::query(
+            "CREATE TRIGGER delete_session_abort_usage_ledger
+             BEFORE DELETE ON usage_ledger
+             BEGIN
+                 SELECT RAISE(ABORT, 'delete_session injected abort');
+             END",
+        )
+        .execute(pool)
+        .await
+        .unwrap();
+
+        let before = delete_session_rows_snapshot(&sm).await.unwrap();
+        let err = sm.delete_session(&id).await.unwrap_err();
+        let after = delete_session_rows_snapshot(&sm).await.unwrap();
+
+        assert_eq!(before, after);
+        assert!(err.to_string().contains("delete_session injected abort"));
     }
 
     #[tokio::test]

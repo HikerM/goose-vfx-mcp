@@ -3,7 +3,9 @@ use serde::Serialize;
 use sqlx::{Pool, Row, Sqlite, Transaction};
 
 use crate::mcp_platform::error::{McpPlatformError, McpPlatformErrorCode, McpPlatformResult};
-use crate::mcp_platform::manifest::{digest_serializable, parse_manifest, ManifestProof};
+use crate::mcp_platform::manifest::{
+    digest_serializable, parse_manifest, ManifestProof, ManifestSourceMetadata, SourceImportKind,
+};
 use crate::mcp_platform::policy::{PlanOperation, PolicyDecision};
 use crate::mcp_platform::repository::{
     AuditEventRecord, AuditEventType, AuditPayload, ConfirmationEvidence, ManagedMcpRecord,
@@ -11,6 +13,7 @@ use crate::mcp_platform::repository::{
     TaskStepRecord,
 };
 use crate::mcp_platform::task::{RecoveryDecision, RedactedError, TaskStatus, TaskStepStatus};
+use crate::mcp_platform::TrustTier;
 
 pub(super) async fn schema_objects(
     pool: &Pool<Sqlite>,
@@ -59,13 +62,19 @@ pub(super) fn decode_manifest_row(
     }
     let proof: ManifestProof = decode(&row.try_get::<String, _>("proof_json").map_err(map_sqlx)?)?;
     validate_manifest_proof(&proof, verified.digest()).map_err(|_| integrity_error())?;
+    let trust_tier: TrustTier = decode(
+        &row.try_get::<String, _>("trust_tier_json")
+            .map_err(map_sqlx)?,
+    )?;
+    let source_metadata = decode_manifest_source_metadata_row(row)?;
+    source_metadata
+        .validate_trust_tier(trust_tier)
+        .map_err(|_| integrity_error())?;
     Ok(ManifestRecord {
         verified,
         proof,
-        trust_tier: decode(
-            &row.try_get::<String, _>("trust_tier_json")
-                .map_err(map_sqlx)?,
-        )?,
+        trust_tier,
+        source_metadata,
         created_at_ms: row.try_get("created_at_ms").map_err(map_sqlx)?,
     })
 }
@@ -114,7 +123,9 @@ pub(super) async fn validate_plan_manifest(
 ) -> McpPlatformResult<()> {
     let row = sqlx::query(
         r#"SELECT manifest_digest, mcp_id, version, canonical_bytes, proof_json,
-            trust_tier_json, created_at_ms FROM manifest_blobs WHERE manifest_digest = ?"#,
+            trust_tier_json, source_ref_json, import_kind, release_id,
+            origin_provenance_json, update_channel_json, created_at_ms
+            FROM manifest_blobs WHERE manifest_digest = ?"#,
     )
     .bind(plan.manifest_digest())
     .fetch_optional(&mut **tx)
@@ -222,12 +233,16 @@ pub(super) fn decode_plan_row(row: &sqlx::sqlite::SqliteRow) -> McpPlatformResul
     {
         return Err(integrity_error());
     }
+    let target: PlanTarget = decode(&row.try_get::<String, _>("target_json").map_err(map_sqlx)?)?;
+    if target.source_context != plan.source_context().cloned() {
+        return Err(integrity_error());
+    }
     let record = PlanRecord {
         plan_id: row.try_get("plan_id").map_err(map_sqlx)?,
         idempotency_key: row.try_get("idempotency_key").map_err(map_sqlx)?,
         envelope_digest: row.try_get("envelope_digest").map_err(map_sqlx)?,
         plan,
-        target: decode(&row.try_get::<String, _>("target_json").map_err(map_sqlx)?)?,
+        target,
         policy_evidence,
         confirmation_evidence: decode(
             &row.try_get::<String, _>("confirmation_evidence_json")
@@ -243,6 +258,12 @@ pub(super) fn decode_plan_row(row: &sqlx::sqlite::SqliteRow) -> McpPlatformResul
         record.created_at_ms,
         record.expires_at_ms,
     )?;
+    if matches!(
+        &record.confirmation_evidence,
+        ConfirmationEvidence::Confirmed { actor, .. } if actor != &record.actor
+    ) {
+        return Err(integrity_error());
+    }
     if plan_envelope_digest_for_record(&record)? != record.envelope_digest {
         return Err(integrity_error());
     }
@@ -328,6 +349,7 @@ pub(super) fn decode_task_row(row: &sqlx::sqlite::SqliteRow) -> McpPlatformResul
 
 pub(super) async fn fetch_task_step(
     tx: &mut Transaction<'_, Sqlite>,
+    signer: &dyn super::integrity::IntegritySigner,
     task_id: &str,
     ordinal: i64,
 ) -> McpPlatformResult<TaskStepRecord> {
@@ -338,7 +360,164 @@ pub(super) async fn fetch_task_step(
         .await
         .map_err(map_sqlx)?
         .ok_or_else(not_found)?;
-    decode_task_step_row(&row)
+    let step = decode_task_step_row(&row)?;
+    verify_task_step_compensation_binding(tx, signer, &step, &row).await?;
+    Ok(step)
+}
+
+pub(super) fn task_step_compensation_payload(
+    task: &TaskRecord,
+    step: &TaskStepRecord,
+    compensation_json: &str,
+    evidence_json: Option<&str>,
+) -> Vec<u8> {
+    super::integrity::canonical_fields(&[
+        b"task-step-state-v2",
+        step.task_id.as_bytes(),
+        step.ordinal.to_string().as_bytes(),
+        step.idempotency_token.as_bytes(),
+        step.adapter_id.as_bytes(),
+        step.adapter_version.as_bytes(),
+        task.plan_id.as_bytes(),
+        task.plan_digest.as_bytes(),
+        task.operation.as_str().as_bytes(),
+        compensation_json.as_bytes(),
+        step.status.as_str().as_bytes(),
+        if evidence_json.is_some() { b"1" } else { b"0" },
+        evidence_json.unwrap_or_default().as_bytes(),
+        step.started_at_ms
+            .unwrap_or_default()
+            .to_string()
+            .as_bytes(),
+        step.committed_at_ms
+            .unwrap_or_default()
+            .to_string()
+            .as_bytes(),
+        step.compensation_status.as_str().as_bytes(),
+        step.compensation_started_at_ms
+            .unwrap_or_default()
+            .to_string()
+            .as_bytes(),
+        step.compensation_committed_at_ms
+            .unwrap_or_default()
+            .to_string()
+            .as_bytes(),
+    ])
+}
+
+pub(super) fn task_step_history_compensation_payload(
+    task: &TaskRecord,
+    attempt: i64,
+    step: &TaskStepRecord,
+    compensation_json: &str,
+) -> Vec<u8> {
+    let step_payload = task_step_compensation_payload(
+        task,
+        step,
+        compensation_json,
+        encode_optional(step.evidence.as_ref())
+            .ok()
+            .flatten()
+            .as_deref(),
+    );
+    super::integrity::canonical_fields(&[
+        b"task-step-compensation-history-v1",
+        attempt.to_string().as_bytes(),
+        &step_payload,
+    ])
+}
+
+pub(super) async fn verify_task_step_compensation_binding(
+    tx: &mut Transaction<'_, Sqlite>,
+    signer: &dyn super::integrity::IntegritySigner,
+    step: &TaskStepRecord,
+    row: &sqlx::sqlite::SqliteRow,
+) -> McpPlatformResult<()> {
+    let compensation_json = row
+        .try_get::<String, _>("compensation_json")
+        .map_err(map_sqlx)?;
+    let evidence_json = row
+        .try_get::<Option<String>, _>("evidence_json")
+        .map_err(map_sqlx)?;
+    let task = fetch_task(tx, &step.task_id).await?;
+    let payload =
+        task_step_compensation_payload(&task, step, &compensation_json, evidence_json.as_deref());
+    let actual = sqlx::query_scalar::<_, String>(
+        "SELECT mac FROM task_step_compensation_bindings WHERE task_id = ? AND ordinal = ?",
+    )
+    .bind(&step.task_id)
+    .bind(step.ordinal)
+    .fetch_optional(&mut **tx)
+    .await
+    .map_err(map_sqlx)?
+    .ok_or_else(integrity_error)?;
+    if signer
+        .verify("task-step-compensation", &payload, &actual)
+        .is_ok()
+    {
+        return Ok(());
+    }
+    Err(integrity_error())
+}
+
+pub(super) fn managed_projection_integrity_payload(
+    managed_mcp_id: &str,
+    link_key: &str,
+    projection_digest: &str,
+    revision: i64,
+    plan_id: Option<&str>,
+    manifest_digest: Option<&str>,
+    owner_task_id: Option<&str>,
+) -> Vec<u8> {
+    super::integrity::canonical_fields(&[
+        b"managed-projection-v1",
+        managed_mcp_id.as_bytes(),
+        link_key.as_bytes(),
+        projection_digest.as_bytes(),
+        revision.to_string().as_bytes(),
+        if plan_id.is_some() { b"1" } else { b"0" },
+        plan_id.unwrap_or_default().as_bytes(),
+        if manifest_digest.is_some() {
+            b"1"
+        } else {
+            b"0"
+        },
+        manifest_digest.unwrap_or_default().as_bytes(),
+        if owner_task_id.is_some() { b"1" } else { b"0" },
+        owner_task_id.unwrap_or_default().as_bytes(),
+    ])
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(super) fn projection_writer_payload(
+    managed_mcp_id: &str,
+    task_id: &str,
+    plan_id: &str,
+    plan_digest: &str,
+    link_key: &str,
+    manifest_digest: &str,
+    projection_digest: &str,
+    lifecycle_acquired_at_ms: i64,
+    worker_owner_id: &str,
+    worker_lease_expires_at_ms: i64,
+    step_ordinal: i64,
+    step_token: &str,
+) -> Vec<u8> {
+    super::integrity::canonical_fields(&[
+        b"projection-writer-authorization-v1",
+        managed_mcp_id.as_bytes(),
+        task_id.as_bytes(),
+        plan_id.as_bytes(),
+        plan_digest.as_bytes(),
+        link_key.as_bytes(),
+        manifest_digest.as_bytes(),
+        projection_digest.as_bytes(),
+        lifecycle_acquired_at_ms.to_string().as_bytes(),
+        worker_owner_id.as_bytes(),
+        worker_lease_expires_at_ms.to_string().as_bytes(),
+        step_ordinal.to_string().as_bytes(),
+        step_token.as_bytes(),
+    ])
 }
 
 pub(super) fn decode_task_step_row(
@@ -484,6 +663,43 @@ pub(super) fn validate_manifest_proof(
     Ok(())
 }
 
+pub(super) fn decode_manifest_source_metadata_row(
+    row: &sqlx::sqlite::SqliteRow,
+) -> McpPlatformResult<ManifestSourceMetadata> {
+    let source_ref_json = row
+        .try_get::<Option<String>, _>("source_ref_json")
+        .map_err(map_sqlx)?;
+    let import_kind = row
+        .try_get::<Option<String>, _>("import_kind")
+        .map_err(map_sqlx)?;
+    let release_id: Option<String> = row.try_get("release_id").map_err(map_sqlx)?;
+    let origin_provenance_json = row
+        .try_get::<Option<String>, _>("origin_provenance_json")
+        .map_err(map_sqlx)?;
+    let update_channel_json = row
+        .try_get::<Option<String>, _>("update_channel_json")
+        .map_err(map_sqlx)?;
+    if source_ref_json.is_none()
+        && import_kind.is_none()
+        && release_id.is_none()
+        && origin_provenance_json.is_none()
+        && update_channel_json.is_none()
+    {
+        return Ok(ManifestSourceMetadata::local_persistence());
+    }
+    let source_ref = decode(source_ref_json.as_deref().ok_or_else(integrity_error)?)?;
+    let import_kind = decode_database_enum::<SourceImportKind>(
+        import_kind.as_deref().ok_or_else(integrity_error)?,
+    )?;
+    Ok(ManifestSourceMetadata {
+        source_ref,
+        import_kind,
+        release_id,
+        origin_provenance: decode_optional(origin_provenance_json)?.unwrap_or_default(),
+        update_channel: decode_optional(update_channel_json)?.unwrap_or_default(),
+    })
+}
+
 pub(super) fn encode<T: Serialize + ?Sized>(value: &T) -> McpPlatformResult<String> {
     serde_json::to_string(value).map_err(|_| integrity_error())
 }
@@ -508,8 +724,24 @@ pub(super) fn decode_database_enum<T: DeserializeOwned>(value: &str) -> McpPlatf
     decode(&serde_json::to_string(value).map_err(|_| integrity_error())?)
 }
 
-pub(super) fn map_sqlx(_: sqlx::Error) -> McpPlatformError {
-    repository_unavailable()
+pub(super) trait IntoRepositoryError {
+    fn into_repository_error(self) -> McpPlatformError;
+}
+
+impl IntoRepositoryError for sqlx::Error {
+    fn into_repository_error(self) -> McpPlatformError {
+        repository_unavailable()
+    }
+}
+
+impl IntoRepositoryError for McpPlatformError {
+    fn into_repository_error(self) -> McpPlatformError {
+        self
+    }
+}
+
+pub(super) fn map_sqlx(error: impl IntoRepositoryError) -> McpPlatformError {
+    error.into_repository_error()
 }
 
 pub(super) const fn repository_unavailable() -> McpPlatformError {

@@ -374,6 +374,34 @@ pub struct ManagedInstallOutcome {
     pub supply_chain_evidence: Option<SupplyChainEvidence>,
 }
 
+/// Configuration from one root-bound verification of the active managed
+/// runtime. It contains no storage path or handle and must be reacquired for
+/// every operation that can start or contact the managed runtime.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct VerifiedManagedRuntimeActivation {
+    projection: ConnectionProjection,
+}
+
+impl VerifiedManagedRuntimeActivation {
+    fn new(projection: ConnectionProjection) -> Self {
+        Self { projection }
+    }
+
+    pub(crate) fn projection(&self) -> &ConnectionProjection {
+        &self.projection
+    }
+}
+
+/// A path-free capacity observation for the production managed root.
+///
+/// The required value is produced by the trusted plan-capacity contract. The
+/// adapter does not accept a caller-selected path, volume, or reserve amount.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ManagedStorageCapacity {
+    pub required_peak_bytes: u64,
+    pub available_bytes: u64,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ActiveRuntimeDescriptor {
@@ -388,9 +416,29 @@ struct InstallationMarker {
     artifact_digest: String,
 }
 
+/// Written into the sealed version tree before promotion.  This is not active
+/// state: it binds the committed descriptor to the exact regular-file tree
+/// that DirectoryWriter sealed and promoted.
+#[cfg(windows)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WindowsCommittedVersionEvidence {
+    descriptor_sha256: String,
+    tree_sha256: String,
+}
+
 #[async_trait]
 pub trait DistributionEffectAdapter: Send + Sync {
     fn adapter_version(&self) -> &'static str;
+    async fn check_managed_storage_capacity(
+        &self,
+        _required_peak_bytes: u64,
+    ) -> McpPlatformResult<ManagedStorageCapacity> {
+        Err(McpPlatformError::new(
+            McpPlatformErrorCode::IntegrityUnavailable,
+            "managed storage capacity preflight is unavailable",
+        ))
+    }
     async fn install(
         &self,
         effect: &ManagedInstallEffect,
@@ -416,6 +464,15 @@ pub trait DistributionEffectAdapter: Send + Sync {
         task_id: &str,
     ) -> McpPlatformResult<()>;
     async fn active_version(&self, managed_mcp_id: &str) -> McpPlatformResult<Option<String>>;
+    async fn acquire_verified_runtime_activation(
+        &self,
+        _managed_mcp_id: &str,
+    ) -> McpPlatformResult<VerifiedManagedRuntimeActivation> {
+        Err(McpPlatformError::new(
+            McpPlatformErrorCode::RuntimeControlUnavailable,
+            "managed runtime activation verification is unavailable",
+        ))
+    }
     async fn remove_version(
         &self,
         managed_mcp_id: &str,
@@ -548,9 +605,13 @@ impl ProductionDistributionEffectAdapter {
     fn version_root(&self, managed_mcp_id: &str, version: &str) -> McpPlatformResult<PathBuf> {
         validate_storage_segment(managed_mcp_id)?;
         validate_storage_segment(version)?;
+        #[cfg(windows)]
+        let installations = "platform.installations";
+        #[cfg(not(windows))]
+        let installations = "installations";
         Ok(self
             .root
-            .join("installations")
+            .join(installations)
             .join(managed_mcp_id)
             .join("versions")
             .join(version))
@@ -558,11 +619,34 @@ impl ProductionDistributionEffectAdapter {
 
     fn active_descriptor_path(&self, managed_mcp_id: &str) -> McpPlatformResult<PathBuf> {
         validate_storage_segment(managed_mcp_id)?;
+        #[cfg(windows)]
+        let installations = "platform.installations";
+        #[cfg(not(windows))]
+        let installations = "installations";
         Ok(self
             .root
-            .join("installations")
+            .join(installations)
             .join(managed_mcp_id)
             .join("active.json"))
+    }
+
+    #[cfg(windows)]
+    fn read_version_metadata(
+        &self,
+        managed_mcp_id: &str,
+        version: &str,
+        leaf: &str,
+    ) -> McpPlatformResult<Vec<u8>> {
+        validate_storage_segment(managed_mcp_id)?;
+        validate_storage_segment(version)?;
+        crate::mcp_platform::storage_domain::read_anchored_managed_installation_metadata(
+            &self.root,
+            managed_mcp_id,
+            version,
+            leaf,
+            MAX_METADATA_BYTES,
+        )?
+        .ok_or_else(repository_error)
     }
 
     async fn verify_materialized_outcome(
@@ -573,11 +657,24 @@ impl ProductionDistributionEffectAdapter {
         let (adapter_id, _, _, entrypoint, timeout) =
             distribution_materialization(&effect.manifest)?;
         let root = self.version_root(&effect.managed_mcp_id, effect.manifest.version.as_str())?;
-        prepare_owned_directory(&self.root, &root, false)?;
-        let evidence_path = root.join(".goose-artifact-evidence.json");
-        let bytes = read_limited(&evidence_path, MAX_METADATA_BYTES)
-            .await
+        #[cfg(windows)]
+        let bytes = self
+            .read_version_metadata(
+                &effect.managed_mcp_id,
+                effect.manifest.version.as_str(),
+                ".goose-artifact-evidence.json",
+            )
             .map_err(|_| verification_error())?;
+        #[cfg(not(windows))]
+        let bytes = {
+            verify_owned_read_path(&self.root, &root)?;
+            read_limited(
+                &root.join(".goose-artifact-evidence.json"),
+                MAX_METADATA_BYTES,
+            )
+            .await
+            .map_err(|_| verification_error())?
+        };
         let evidence: ArtifactVerificationEvidence =
             serde_json::from_slice(&bytes).map_err(|_| verification_error())?;
         if evidence.source_origin != source_origin(&effect.source_url)?
@@ -613,6 +710,18 @@ impl ProductionDistributionEffectAdapter {
             entrypoint,
             timeout,
         )?;
+        #[cfg(windows)]
+        let descriptor = serde_json::from_slice::<ActiveRuntimeDescriptor>(
+            &self
+                .read_version_metadata(
+                    &effect.managed_mcp_id,
+                    effect.manifest.version.as_str(),
+                    ".goose-runtime-descriptor.json",
+                )
+                .map_err(|_| verification_error())?,
+        )
+        .map_err(|_| verification_error())?;
+        #[cfg(not(windows))]
         let descriptor = read_runtime_descriptor(&root).await?;
         if descriptor.version != effect.manifest.version.as_str()
             || descriptor.projection != expected_projection
@@ -638,6 +747,150 @@ impl ProductionDistributionEffectAdapter {
             materialized_tree_digest,
             owned_relative_paths: vec![".".to_string()],
             replaced_quarantine_token,
+            supply_chain_evidence: None,
+        })
+    }
+
+    #[cfg(windows)]
+    async fn install_windows_via_directory_writer(
+        &self,
+        effect: &ManagedInstallEffect,
+        cancellation: &CancellationToken,
+    ) -> McpPlatformResult<ManagedInstallOutcome> {
+        revalidate_windows_managed_distribution_root(&self.root)?;
+        if cancellation.is_cancelled() {
+            return Err(cancelled());
+        }
+        if effect.external_acquisition.is_some() {
+            return Err(windows_managed_distribution_mutation_unavailable());
+        }
+
+        let (adapter_id, format, strip, entrypoint, timeout) =
+            distribution_materialization(&effect.manifest)?;
+        let version = effect.manifest.version.as_str();
+        validate_storage_segment(&effect.managed_mcp_id)?;
+        validate_storage_segment(version)?;
+        validate_storage_segment(&effect.task_id)?;
+        if self.version_exists(&effect.managed_mcp_id, version).await? {
+            return Err(verification_error());
+        }
+
+        let fetch = ArtifactFetchEffect {
+            operation_id: effect.task_id.clone(),
+            source_url: effect.source_url.clone(),
+            redirect_policy: RedirectPolicy::DenyAll,
+            expected_sha256: effect.expected_sha256.clone(),
+            expected_size_bytes: effect.expected_size_bytes,
+            maximum_size_bytes: DEFAULT_MAX_DOWNLOAD_BYTES,
+            timeout_seconds: 120,
+        };
+        let artifact = self.fetcher.fetch(&fetch, cancellation).await?;
+        self.verifier.verify(&fetch, &artifact)?;
+        if artifact.digest != effect.expected_sha256
+            || effect
+                .expected_size_bytes
+                .is_some_and(|size| size != artifact.size_bytes)
+        {
+            return Err(verification_error());
+        }
+
+        let scratch = tempfile::Builder::new()
+            .prefix("goose-verified-materialization-")
+            .tempdir()
+            .map_err(|_| repository_error())?;
+        let staging_root = scratch.path().join("payload");
+        ArchiveInstaller {
+            format,
+            strip_components: strip,
+            limits: ArchiveLimits::default(),
+        }
+        .materialize(&artifact, &staging_root, cancellation)
+        .await?;
+
+        let staged_entrypoint = resolve_verified_entrypoint(
+            adapter_id,
+            &effect.manifest,
+            &staging_root,
+            &self.runtime,
+            &effect.platform_selector,
+            true,
+        )
+        .await?;
+        verify_regular_contained(&staging_root, &staged_entrypoint).await?;
+        set_minimum_entrypoint_permissions(adapter_id, &staged_entrypoint).await?;
+
+        let version_root = self.version_root(&effect.managed_mcp_id, version)?;
+        let installed_entrypoint = version_root.join(
+            staged_entrypoint
+                .strip_prefix(&staging_root)
+                .map_err(|_| verification_error())?,
+        );
+        let projection = runtime_projection(
+            &self.runtime,
+            adapter_id,
+            &effect.manifest,
+            &version_root,
+            &installed_entrypoint,
+            entrypoint,
+            timeout,
+        )?;
+        let evidence = ArtifactVerificationEvidence {
+            source_origin: source_origin(&effect.source_url)?,
+            artifact_digest: artifact.digest,
+            size_bytes: artifact.size_bytes,
+            adapter_id: adapter_id.to_string(),
+            adapter_version: MANAGED_DISTRIBUTION_ADAPTER_VERSION.to_string(),
+            platform_selector: effect.platform_selector.clone(),
+            verification_result: VerificationResult::Verified,
+            installed_at_ms: effect.now_ms,
+            artifact_signature: ArtifactSignatureStatus::NotDeclaredByManifestV1,
+        };
+        let descriptor = ActiveRuntimeDescriptor {
+            version: version.to_string(),
+            projection: projection.clone(),
+        };
+        write_windows_materialization_metadata(
+            &staging_root,
+            &descriptor,
+            &evidence,
+            &InstallationMarker {
+                task_id: effect.task_id.clone(),
+                artifact_digest: effect.expected_sha256.clone(),
+            },
+        )?;
+
+        let materialized_tree_digest = compute_materialized_tree_digest(&staging_root).await?;
+        if effect
+            .expected_tree_digest
+            .as_ref()
+            .is_some_and(|expected| expected != &materialized_tree_digest)
+        {
+            return Err(verification_error());
+        }
+        let (manifest, payloads) =
+            windows_directory_writer_payloads(&staging_root, &effect.managed_mcp_id, version)?;
+        let payload_refs = payloads
+            .iter()
+            .map(
+                |payload| crate::mcp_platform::storage_domain::DirectoryPayload {
+                    relative_segments: payload.relative_segments.clone(),
+                    bytes: &payload.bytes,
+                },
+            )
+            .collect::<Vec<_>>();
+        crate::mcp_platform::storage_domain::promote_verified_managed_installations(
+            &self.root,
+            &manifest,
+            &payload_refs,
+        )?;
+
+        Ok(ManagedInstallOutcome {
+            installation_root: version_root,
+            projection,
+            evidence,
+            materialized_tree_digest,
+            owned_relative_paths: vec![".".to_string()],
+            replaced_quarantine_token: None,
             supply_chain_evidence: None,
         })
     }
@@ -781,24 +1034,59 @@ impl ProductionDistributionEffectAdapter {
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome> {
         let root = self.version_root(&effect.managed_mcp_id, effect.manifest.version.as_str())?;
-        prepare_owned_directory(&self.root, &root, false)?;
-        let evidence: ArtifactVerificationEvidence = serde_json::from_slice(
-            &read_limited(
-                &root.join(".goose-artifact-evidence.json"),
-                MAX_METADATA_BYTES,
+        #[cfg(not(windows))]
+        verify_owned_read_path(&self.root, &root)?;
+        #[cfg(windows)]
+        let evidence_bytes = self
+            .read_version_metadata(
+                &effect.managed_mcp_id,
+                effect.manifest.version.as_str(),
+                ".goose-artifact-evidence.json",
             )
-            .await?,
+            .map_err(|_| verification_error())?;
+        #[cfg(not(windows))]
+        let evidence_bytes = read_limited(
+            &root.join(".goose-artifact-evidence.json"),
+            MAX_METADATA_BYTES,
         )
-        .map_err(|_| verification_error())?;
-        let external_evidence: ExternalEvidenceFile = serde_json::from_slice(
-            &read_limited(
-                &root.join(".goose-external-evidence.json"),
-                MAX_METADATA_BYTES,
+        .await?;
+        let evidence: ArtifactVerificationEvidence =
+            serde_json::from_slice(&evidence_bytes).map_err(|_| verification_error())?;
+        #[cfg(windows)]
+        let external_evidence_bytes = self
+            .read_version_metadata(
+                &effect.managed_mcp_id,
+                effect.manifest.version.as_str(),
+                ".goose-external-evidence.json",
             )
-            .await?,
+            .map_err(|_| verification_error())?;
+        #[cfg(not(windows))]
+        let external_evidence_bytes = read_limited(
+            &root.join(".goose-external-evidence.json"),
+            MAX_METADATA_BYTES,
         )
-        .map_err(|_| verification_error())?;
+        .await?;
+        let external_evidence: ExternalEvidenceFile =
+            serde_json::from_slice(&external_evidence_bytes).map_err(|_| verification_error())?;
         external_evidence.verify_authority(effect)?;
+        #[cfg(windows)]
+        {
+            let marker: InstallationMarker = serde_json::from_slice(
+                &self
+                    .read_version_metadata(
+                        &effect.managed_mcp_id,
+                        effect.manifest.version.as_str(),
+                        ".goose-installation-owner.json",
+                    )
+                    .map_err(|_| verification_error())?,
+            )
+            .map_err(|_| verification_error())?;
+            if marker.task_id != effect.task_id || marker.artifact_digest != effect.expected_sha256
+            {
+                return Err(verification_error());
+            }
+        }
+        #[cfg(not(windows))]
         verify_installation_marker(&root, &effect.task_id, &effect.expected_sha256).await?;
         let materialized_tree_digest = compute_materialized_tree_digest(&root).await?;
         if effect
@@ -868,7 +1156,7 @@ impl ProductionDistributionEffectAdapter {
                     GitDevAdapter::Npm => resolve_git_npm_entrypoint(&root, entrypoint).await?,
                     GitDevAdapter::BinaryArchive => resolve_entrypoint(&root, entrypoint)?,
                     GitDevAdapter::PythonWheel | GitDevAdapter::Docker => {
-                        return Err(verification_error())
+                        return Err(verification_error());
                     }
                 };
                 verify_regular_contained(&root, &entrypoint_path).await?;
@@ -882,6 +1170,18 @@ impl ProductionDistributionEffectAdapter {
             }
             _ => return Err(verification_error()),
         };
+        #[cfg(windows)]
+        let descriptor: ActiveRuntimeDescriptor = serde_json::from_slice(
+            &self
+                .read_version_metadata(
+                    &effect.managed_mcp_id,
+                    effect.manifest.version.as_str(),
+                    ".goose-runtime-descriptor.json",
+                )
+                .map_err(|_| verification_error())?,
+        )
+        .map_err(|_| verification_error())?;
+        #[cfg(not(windows))]
         let descriptor = read_runtime_descriptor(&root).await?;
         if descriptor.version != effect.manifest.version.as_str()
             || descriptor.projection != expected_projection
@@ -1193,16 +1493,24 @@ impl ProductionDistributionEffectAdapter {
     }
 
     fn docker_environment(&self) -> McpPlatformResult<std::collections::BTreeMap<String, String>> {
-        let home = self.root.join("docker-runtime").join("home");
-        let config = self.root.join("docker-runtime").join("config");
-        std::fs::create_dir_all(&home).map_err(|_| repository_error())?;
-        std::fs::create_dir_all(&config).map_err(|_| repository_error())?;
-        let home = home.to_str().ok_or_else(repository_error)?.to_string();
-        let config = config.to_str().ok_or_else(repository_error)?.to_string();
-        Ok(std::collections::BTreeMap::from([
-            ("HOME".to_string(), home),
-            ("DOCKER_CONFIG".to_string(), config),
-        ]))
+        #[cfg(windows)]
+        {
+            return Err(windows_managed_docker_inspection_unavailable());
+        }
+
+        #[cfg(not(windows))]
+        {
+            let home = self.root.join("docker-runtime").join("home");
+            let config = self.root.join("docker-runtime").join("config");
+            std::fs::create_dir_all(&home).map_err(|_| repository_error())?;
+            std::fs::create_dir_all(&config).map_err(|_| repository_error())?;
+            let home = home.to_str().ok_or_else(repository_error)?.to_string();
+            let config = config.to_str().ok_or_else(repository_error)?.to_string();
+            Ok(std::collections::BTreeMap::from([
+                ("HOME".to_string(), home),
+                ("DOCKER_CONFIG".to_string(), config),
+            ]))
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1433,13 +1741,13 @@ impl ProductionDistributionEffectAdapter {
                 return Err(McpPlatformError::new(
                     McpPlatformErrorCode::OperationNotSupported,
                     "git development Python wheel lacks a closed wheel identity in manifest v1",
-                ))
+                ));
             }
             GitDevAdapter::Docker => {
                 return Err(McpPlatformError::new(
                     McpPlatformErrorCode::OperationNotSupported,
                     "git development Docker builds are forbidden",
-                ))
+                ));
             }
         };
         verify_regular_contained(staging_root, &entrypoint_path).await?;
@@ -1808,7 +2116,7 @@ async fn resolve_git_npm_entrypoint(
                 return Err(McpPlatformError::new(
                     McpPlatformErrorCode::PolicyDenied,
                     "git development npm input contains scripts or dependencies",
-                ))
+                ));
             }
         }
     }
@@ -1851,7 +2159,7 @@ fn git_runtime_projection(
             return Err(McpPlatformError::new(
                 McpPlatformErrorCode::OperationNotSupported,
                 "git development underlying adapter is not safely expressible",
-            ))
+            ));
         }
     };
     args.extend(entrypoint.args.clone());
@@ -1901,12 +2209,54 @@ const fn unsafe_repository_tree() -> McpPlatformError {
 }
 
 fn prepare_distribution_root(root: PathBuf) -> McpPlatformResult<(PathBuf, PathBuf)> {
-    std::fs::create_dir_all(&root).map_err(|_| repository_error())?;
-    verify_normal_directory(&root)?;
-    let root = std::fs::canonicalize(root).map_err(|_| repository_error())?;
-    let cache_root = root.join("cache");
-    prepare_owned_directory(&root, &cache_root, true)?;
-    Ok((root, cache_root))
+    #[cfg(windows)]
+    {
+        // The Windows authority owns root creation and every mutation below it.
+        // Do not turn a successful read-only preflight into a path-based bootstrap.
+        crate::mcp_platform::storage_domain::validate_managed_storage_root(&root)?;
+        verify_normal_directory(&root)?;
+        let root = std::fs::canonicalize(root).map_err(|_| repository_error())?;
+        return Ok((root.clone(), root.join("cache")));
+    }
+
+    #[cfg(not(windows))]
+    {
+        std::fs::create_dir_all(&root).map_err(|_| repository_error())?;
+        verify_normal_directory(&root)?;
+        let root = std::fs::canonicalize(root).map_err(|_| repository_error())?;
+        let cache_root = root.join("cache");
+        prepare_owned_directory(&root, &cache_root, true)?;
+        Ok((root, cache_root))
+    }
+}
+
+#[cfg(windows)]
+fn revalidate_windows_managed_distribution_root(root: &Path) -> McpPlatformResult<()> {
+    crate::mcp_platform::storage_domain::validate_managed_storage_root(root)
+}
+
+#[cfg(windows)]
+fn windows_managed_distribution_mutation_unavailable() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::RuntimeControlUnavailable,
+        "windows managed distribution mutation requires the handle-relative installation protocol",
+    )
+}
+
+#[cfg(windows)]
+fn windows_managed_docker_inspection_unavailable() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::RuntimeControlUnavailable,
+        "windows Docker managed distribution inspection requires a read-only daemon capability",
+    )
+}
+
+#[cfg(windows)]
+fn windows_managed_read_inspection_unavailable() -> McpPlatformError {
+    McpPlatformError::new(
+        McpPlatformErrorCode::RuntimeControlUnavailable,
+        "windows managed distribution inspection requires a handle-relative directory reader",
+    )
 }
 
 #[async_trait]
@@ -1915,163 +2265,197 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         MANAGED_DISTRIBUTION_ADAPTER_VERSION
     }
 
+    async fn check_managed_storage_capacity(
+        &self,
+        required_peak_bytes: u64,
+    ) -> McpPlatformResult<ManagedStorageCapacity> {
+        #[cfg(windows)]
+        {
+            revalidate_windows_managed_distribution_root(&self.root)?;
+            let available_bytes =
+                crate::mcp_platform::storage_domain::managed_storage_available_bytes(&self.root)?;
+            return checked_managed_storage_capacity(required_peak_bytes, available_bytes);
+        }
+
+        #[cfg(not(windows))]
+        {
+            let _ = required_peak_bytes;
+            Err(McpPlatformError::new(
+                McpPlatformErrorCode::IntegrityUnavailable,
+                "managed storage capacity preflight is unavailable",
+            ))
+        }
+    }
+
     async fn install(
         &self,
         effect: &ManagedInstallEffect,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome> {
-        if effect.external_acquisition.is_some() {
-            return self.install_external(effect, cancellation).await;
-        }
-        let (adapter_id, format, strip, entrypoint, timeout) =
-            distribution_materialization(&effect.manifest)?;
-        let fetch = ArtifactFetchEffect {
-            operation_id: effect.task_id.clone(),
-            source_url: effect.source_url.clone(),
-            redirect_policy: RedirectPolicy::DenyAll,
-            expected_sha256: effect.expected_sha256.clone(),
-            expected_size_bytes: effect.expected_size_bytes,
-            maximum_size_bytes: DEFAULT_MAX_DOWNLOAD_BYTES,
-            timeout_seconds: 120,
-        };
-        let artifact = self.fetcher.fetch(&fetch, cancellation).await?;
-        self.verifier.verify(&fetch, &artifact)?;
-        let evidence = ArtifactVerificationEvidence {
-            source_origin: source_origin(&effect.source_url)?,
-            artifact_digest: artifact.digest.clone(),
-            size_bytes: artifact.size_bytes,
-            adapter_id: adapter_id.to_string(),
-            adapter_version: MANAGED_DISTRIBUTION_ADAPTER_VERSION.to_string(),
-            platform_selector: effect.platform_selector.clone(),
-            verification_result: VerificationResult::Verified,
-            installed_at_ms: effect.now_ms,
-            artifact_signature: ArtifactSignatureStatus::NotDeclaredByManifestV1,
-        };
-        let version = effect.manifest.version.as_str();
-        let version_root = self.version_root(&effect.managed_mcp_id, version)?;
-        let staging_root = self
-            .root
-            .join("staging")
-            .join(format!("{}-{}", effect.managed_mcp_id, effect.task_id));
-        prepare_owned_directory(&self.root, &version_root, false)?;
-        prepare_owned_directory(&self.root, &staging_root, false)?;
-        let repair_token = repair_token(effect);
-        if effect.operation == TaskOperation::Repair {
-            let token = repair_token.as_deref().ok_or_else(integrity_error)?;
-            let quarantine_root = self.root.join("quarantine").join(token);
-            let version_exists = owned_directory_exists(&self.root, &version_root).await?;
-            let quarantine_exists = owned_directory_exists(&self.root, &quarantine_root).await?;
-            match (version_exists, quarantine_exists) {
-                (true, false) => {
-                    let actual = self
-                        .quarantine_version(
-                            &effect.managed_mcp_id,
-                            version,
-                            &format!("{}-repair", effect.task_id),
-                            cancellation,
-                        )
-                        .await?;
-                    if actual != token {
-                        return Err(integrity_error());
-                    }
-                }
-                (true, true) => {
-                    remove_owned_tree(&self.root, &version_root).await?;
-                }
-                (false, true) => {}
-                (false, false) => {}
-            }
-        }
-        if tokio::fs::symlink_metadata(&version_root).await.is_ok()
-            && effect.operation != TaskOperation::Repair
-            && effect.expected_tree_digest.is_none()
+        #[cfg(windows)]
         {
-            if !effect.rebuild_uncommitted_version {
-                return Err(verification_error());
-            }
-            remove_owned_tree(&self.root, &version_root).await?;
+            return self
+                .install_windows_via_directory_writer(effect, cancellation)
+                .await;
         }
-        let mut materialized_tree_digest = effect.expected_tree_digest.clone();
-        if tokio::fs::symlink_metadata(&version_root).await.is_err() {
-            if tokio::fs::metadata(&staging_root).await.is_ok() {
-                tokio::fs::remove_dir_all(&staging_root)
-                    .await
-                    .map_err(|_| repository_error())?;
+
+        #[cfg(not(windows))]
+        {
+            if effect.external_acquisition.is_some() {
+                return self.install_external(effect, cancellation).await;
             }
-            ArchiveInstaller {
-                format,
-                strip_components: strip,
-                limits: ArchiveLimits::default(),
-            }
-            .materialize(&artifact, &staging_root, cancellation)
-            .await?;
-            let staged_entrypoint = resolve_verified_entrypoint(
-                adapter_id,
-                &effect.manifest,
-                &staging_root,
-                &self.runtime,
-                &effect.platform_selector,
-                true,
-            )
-            .await?;
-            verify_regular_contained(&staging_root, &staged_entrypoint).await?;
-            set_minimum_entrypoint_permissions(adapter_id, &staged_entrypoint).await?;
-            let relative_entrypoint = staged_entrypoint
-                .strip_prefix(&staging_root)
-                .map_err(|_| unsafe_archive())?;
-            let installed_entrypoint = version_root.join(relative_entrypoint);
-            let projection = runtime_projection(
-                &self.runtime,
-                adapter_id,
-                &effect.manifest,
-                &version_root,
-                &installed_entrypoint,
-                entrypoint,
-                timeout,
-            )?;
-            let runtime_descriptor = ActiveRuntimeDescriptor {
-                version: version.to_string(),
-                projection,
+            let (adapter_id, format, strip, entrypoint, timeout) =
+                distribution_materialization(&effect.manifest)?;
+            let fetch = ArtifactFetchEffect {
+                operation_id: effect.task_id.clone(),
+                source_url: effect.source_url.clone(),
+                redirect_policy: RedirectPolicy::DenyAll,
+                expected_sha256: effect.expected_sha256.clone(),
+                expected_size_bytes: effect.expected_size_bytes,
+                maximum_size_bytes: DEFAULT_MAX_DOWNLOAD_BYTES,
+                timeout_seconds: 120,
             };
-            tokio::fs::write(
-                staging_root.join(".goose-runtime-descriptor.json"),
-                serde_json::to_vec(&runtime_descriptor).map_err(|_| repository_error())?,
-            )
-            .await
-            .map_err(|_| repository_error())?;
-            let evidence_path = staging_root.join(".goose-artifact-evidence.json");
-            if tokio::fs::metadata(&evidence_path).await.is_ok() {
-                return Err(unsafe_archive());
-            }
-            tokio::fs::write(
-                &evidence_path,
-                serde_json::to_vec(&evidence).map_err(|_| repository_error())?,
-            )
-            .await
-            .map_err(|_| repository_error())?;
-            let marker = InstallationMarker {
-                task_id: effect.task_id.clone(),
-                artifact_digest: effect.expected_sha256.clone(),
+            let artifact = self.fetcher.fetch(&fetch, cancellation).await?;
+            self.verifier.verify(&fetch, &artifact)?;
+            let evidence = ArtifactVerificationEvidence {
+                source_origin: source_origin(&effect.source_url)?,
+                artifact_digest: artifact.digest.clone(),
+                size_bytes: artifact.size_bytes,
+                adapter_id: adapter_id.to_string(),
+                adapter_version: MANAGED_DISTRIBUTION_ADAPTER_VERSION.to_string(),
+                platform_selector: effect.platform_selector.clone(),
+                verification_result: VerificationResult::Verified,
+                installed_at_ms: effect.now_ms,
+                artifact_signature: ArtifactSignatureStatus::NotDeclaredByManifestV1,
             };
-            tokio::fs::write(
-                staging_root.join(".goose-installation-owner.json"),
-                serde_json::to_vec(&marker).map_err(|_| repository_error())?,
-            )
-            .await
-            .map_err(|_| repository_error())?;
-            materialized_tree_digest = Some(compute_materialized_tree_digest(&staging_root).await?);
-            if let Some(parent) = version_root.parent() {
-                tokio::fs::create_dir_all(parent)
-                    .await
-                    .map_err(|_| repository_error())?;
+            let version = effect.manifest.version.as_str();
+            let version_root = self.version_root(&effect.managed_mcp_id, version)?;
+            let staging_root = self
+                .root
+                .join("staging")
+                .join(format!("{}-{}", effect.managed_mcp_id, effect.task_id));
+            prepare_owned_directory(&self.root, &version_root, false)?;
+            prepare_owned_directory(&self.root, &staging_root, false)?;
+            let repair_token = repair_token(effect);
+            if effect.operation == TaskOperation::Repair {
+                let token = repair_token.as_deref().ok_or_else(integrity_error)?;
+                let quarantine_root = self.root.join("quarantine").join(token);
+                let version_exists = owned_directory_exists(&self.root, &version_root).await?;
+                let quarantine_exists =
+                    owned_directory_exists(&self.root, &quarantine_root).await?;
+                match (version_exists, quarantine_exists) {
+                    (true, false) => {
+                        let actual = self
+                            .quarantine_version(
+                                &effect.managed_mcp_id,
+                                version,
+                                &format!("{}-repair", effect.task_id),
+                                cancellation,
+                            )
+                            .await?;
+                        if actual != token {
+                            return Err(integrity_error());
+                        }
+                    }
+                    (true, true) => {
+                        remove_owned_tree(&self.root, &version_root).await?;
+                    }
+                    (false, true) => {}
+                    (false, false) => {}
+                }
             }
-            tokio::fs::rename(&staging_root, &version_root)
+            if tokio::fs::symlink_metadata(&version_root).await.is_ok()
+                && effect.operation != TaskOperation::Repair
+                && effect.expected_tree_digest.is_none()
+            {
+                if !effect.rebuild_uncommitted_version {
+                    return Err(verification_error());
+                }
+                remove_owned_tree(&self.root, &version_root).await?;
+            }
+            let mut materialized_tree_digest = effect.expected_tree_digest.clone();
+            if tokio::fs::symlink_metadata(&version_root).await.is_err() {
+                if tokio::fs::metadata(&staging_root).await.is_ok() {
+                    tokio::fs::remove_dir_all(&staging_root)
+                        .await
+                        .map_err(|_| repository_error())?;
+                }
+                ArchiveInstaller {
+                    format,
+                    strip_components: strip,
+                    limits: ArchiveLimits::default(),
+                }
+                .materialize(&artifact, &staging_root, cancellation)
+                .await?;
+                let staged_entrypoint = resolve_verified_entrypoint(
+                    adapter_id,
+                    &effect.manifest,
+                    &staging_root,
+                    &self.runtime,
+                    &effect.platform_selector,
+                    true,
+                )
+                .await?;
+                verify_regular_contained(&staging_root, &staged_entrypoint).await?;
+                set_minimum_entrypoint_permissions(adapter_id, &staged_entrypoint).await?;
+                let relative_entrypoint = staged_entrypoint
+                    .strip_prefix(&staging_root)
+                    .map_err(|_| unsafe_archive())?;
+                let installed_entrypoint = version_root.join(relative_entrypoint);
+                let projection = runtime_projection(
+                    &self.runtime,
+                    adapter_id,
+                    &effect.manifest,
+                    &version_root,
+                    &installed_entrypoint,
+                    entrypoint,
+                    timeout,
+                )?;
+                let runtime_descriptor = ActiveRuntimeDescriptor {
+                    version: version.to_string(),
+                    projection,
+                };
+                tokio::fs::write(
+                    staging_root.join(".goose-runtime-descriptor.json"),
+                    serde_json::to_vec(&runtime_descriptor).map_err(|_| repository_error())?,
+                )
                 .await
                 .map_err(|_| repository_error())?;
+                let evidence_path = staging_root.join(".goose-artifact-evidence.json");
+                if tokio::fs::metadata(&evidence_path).await.is_ok() {
+                    return Err(unsafe_archive());
+                }
+                tokio::fs::write(
+                    &evidence_path,
+                    serde_json::to_vec(&evidence).map_err(|_| repository_error())?,
+                )
+                .await
+                .map_err(|_| repository_error())?;
+                let marker = InstallationMarker {
+                    task_id: effect.task_id.clone(),
+                    artifact_digest: effect.expected_sha256.clone(),
+                };
+                tokio::fs::write(
+                    staging_root.join(".goose-installation-owner.json"),
+                    serde_json::to_vec(&marker).map_err(|_| repository_error())?,
+                )
+                .await
+                .map_err(|_| repository_error())?;
+                materialized_tree_digest =
+                    Some(compute_materialized_tree_digest(&staging_root).await?);
+                if let Some(parent) = version_root.parent() {
+                    tokio::fs::create_dir_all(parent)
+                        .await
+                        .map_err(|_| repository_error())?;
+                }
+                tokio::fs::rename(&staging_root, &version_root)
+                    .await
+                    .map_err(|_| repository_error())?;
+            }
+            let materialized_tree_digest = materialized_tree_digest.ok_or_else(integrity_error)?;
+            self.verify_materialized_outcome(effect, &materialized_tree_digest)
+                .await
         }
-        let materialized_tree_digest = materialized_tree_digest.ok_or_else(integrity_error)?;
-        self.verify_materialized_outcome(effect, &materialized_tree_digest)
-            .await
     }
 
     async fn inspect_installed(
@@ -2079,6 +2463,18 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         effect: &ManagedInstallEffect,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<ManagedInstallOutcome> {
+        #[cfg(windows)]
+        {
+            revalidate_windows_managed_distribution_root(&self.root)?;
+            if matches!(
+                effect.external_acquisition.as_ref(),
+                Some(ExternalManagedAcquisition::Docker { .. })
+            ) {
+                return Err(windows_managed_docker_inspection_unavailable());
+            }
+            return Err(windows_managed_read_inspection_unavailable());
+        }
+
         if effect.external_acquisition.is_some() {
             return self.inspect_external(effect, cancellation).await;
         }
@@ -2090,19 +2486,33 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
     }
 
     async fn version_exists(&self, managed_mcp_id: &str, version: &str) -> McpPlatformResult<bool> {
-        let root = self.version_root(managed_mcp_id, version)?;
-        prepare_owned_directory(&self.root, &root, false)?;
-        match tokio::fs::symlink_metadata(root).await {
-            Ok(metadata)
-                if metadata.is_dir()
-                    && !metadata.file_type().is_symlink()
-                    && !is_reparse(&metadata) =>
-            {
-                Ok(true)
+        #[cfg(windows)]
+        {
+            validate_storage_segment(managed_mcp_id)?;
+            validate_storage_segment(version)?;
+            return crate::mcp_platform::storage_domain::managed_storage_verified_version_exists(
+                &self.root,
+                managed_mcp_id,
+                version,
+            );
+        }
+
+        #[cfg(not(windows))]
+        {
+            let root = self.version_root(managed_mcp_id, version)?;
+            verify_owned_read_path(&self.root, &root)?;
+            match tokio::fs::symlink_metadata(root).await {
+                Ok(metadata)
+                    if metadata.is_dir()
+                        && !metadata.file_type().is_symlink()
+                        && !is_reparse(&metadata) =>
+                {
+                    Ok(true)
+                }
+                Ok(_) => Err(unsafe_archive()),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+                Err(_) => Err(repository_error()),
             }
-            Ok(_) => Err(unsafe_archive()),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
-            Err(_) => Err(repository_error()),
         }
     }
 
@@ -2113,6 +2523,34 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         task_id: &str,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<()> {
+        #[cfg(windows)]
+        {
+            revalidate_windows_managed_distribution_root(&self.root)?;
+            if cancellation.is_cancelled() {
+                return Err(cancelled());
+            }
+            validate_storage_segment(managed_mcp_id)?;
+            validate_storage_segment(version)?;
+            validate_storage_segment(task_id)?;
+            let descriptor = self.read_version_metadata(
+                managed_mcp_id,
+                version,
+                ".goose-runtime-descriptor.json",
+            )?;
+            let parsed: ActiveRuntimeDescriptor =
+                serde_json::from_slice(&descriptor).map_err(|_| integrity_error())?;
+            if parsed.version != version {
+                return Err(integrity_error());
+            }
+            return crate::mcp_platform::storage_domain::activate_verified_managed_installation(
+                &self.root,
+                managed_mcp_id,
+                version,
+                &descriptor,
+                &hex_digest(&descriptor),
+            );
+        }
+
         if cancellation.is_cancelled() {
             return Err(cancelled());
         }
@@ -2162,6 +2600,29 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         previous_version: Option<&str>,
         task_id: &str,
     ) -> McpPlatformResult<()> {
+        #[cfg(windows)]
+        {
+            return match previous_version {
+                Some(version) => {
+                    self.activate_version(
+                        managed_mcp_id,
+                        version,
+                        task_id,
+                        &CancellationToken::new(),
+                    )
+                    .await
+                }
+                None => {
+                    validate_storage_segment(managed_mcp_id)?;
+                    validate_storage_segment(task_id)?;
+                    crate::mcp_platform::storage_domain::clear_managed_installation_activation(
+                        &self.root,
+                        managed_mcp_id,
+                    )
+                }
+            };
+        }
+
         match previous_version {
             Some(version) => {
                 self.activate_version(managed_mcp_id, version, task_id, &CancellationToken::new())
@@ -2182,23 +2643,74 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         }
     }
 
-    async fn active_version(&self, managed_mcp_id: &str) -> McpPlatformResult<Option<String>> {
-        let path = self.active_descriptor_path(managed_mcp_id)?;
-        if let Some(parent) = path.parent() {
-            prepare_owned_directory(&self.root, parent, false)?;
+    async fn acquire_verified_runtime_activation(
+        &self,
+        managed_mcp_id: &str,
+    ) -> McpPlatformResult<VerifiedManagedRuntimeActivation> {
+        #[cfg(windows)]
+        {
+            let bytes =
+                crate::mcp_platform::storage_domain::read_verified_managed_installation_activation(
+                    &self.root,
+                    managed_mcp_id,
+                )?
+                .ok_or_else(|| {
+                    McpPlatformError::new(
+                        McpPlatformErrorCode::RuntimeControlUnavailable,
+                        "managed runtime has no verified active installation",
+                    )
+                })?;
+            let descriptor = serde_json::from_slice::<ActiveRuntimeDescriptor>(&bytes)
+                .map_err(|_| integrity_error())?;
+            return Ok(VerifiedManagedRuntimeActivation::new(descriptor.projection));
         }
-        verify_normal_file_or_absent(&path)?;
-        match tokio::fs::metadata(&path).await {
-            Ok(_) => {
-                let bytes = read_limited(&path, MAX_METADATA_BYTES).await?;
-                Ok(Some(
+
+        #[cfg(not(windows))]
+        {
+            let _ = managed_mcp_id;
+            Err(McpPlatformError::new(
+                McpPlatformErrorCode::RuntimeControlUnavailable,
+                "managed runtime activation verification is unavailable",
+            ))
+        }
+    }
+
+    async fn active_version(&self, managed_mcp_id: &str) -> McpPlatformResult<Option<String>> {
+        #[cfg(windows)]
+        {
+            let bytes =
+                crate::mcp_platform::storage_domain::read_verified_managed_installation_activation(
+                    &self.root,
+                    managed_mcp_id,
+                )?;
+            return bytes
+                .map(|bytes| {
                     serde_json::from_slice::<ActiveRuntimeDescriptor>(&bytes)
-                        .map_err(|_| integrity_error())?
-                        .version,
-                ))
+                        .map(|descriptor| descriptor.version)
+                        .map_err(|_| integrity_error())
+                })
+                .transpose();
+        }
+
+        #[cfg(not(windows))]
+        {
+            let path = self.active_descriptor_path(managed_mcp_id)?;
+            if let Some(parent) = path.parent() {
+                verify_owned_read_path(&self.root, parent)?;
             }
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
-            Err(_) => Err(repository_error()),
+            verify_normal_file_or_absent(&path)?;
+            match tokio::fs::metadata(&path).await {
+                Ok(_) => {
+                    let bytes = read_limited(&path, MAX_METADATA_BYTES).await?;
+                    Ok(Some(
+                        serde_json::from_slice::<ActiveRuntimeDescriptor>(&bytes)
+                            .map_err(|_| integrity_error())?
+                            .version,
+                    ))
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+                Err(_) => Err(repository_error()),
+            }
         }
     }
 
@@ -2208,6 +2720,13 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         version: &str,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<()> {
+        #[cfg(windows)]
+        {
+            let _ = (managed_mcp_id, version, cancellation);
+            revalidate_windows_managed_distribution_root(&self.root)?;
+            return Err(windows_managed_distribution_mutation_unavailable());
+        }
+
         if cancellation.is_cancelled() {
             return Err(cancelled());
         }
@@ -2227,6 +2746,13 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         task_id: &str,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<String> {
+        #[cfg(windows)]
+        {
+            let _ = (managed_mcp_id, version, task_id, cancellation);
+            revalidate_windows_managed_distribution_root(&self.root)?;
+            return Err(windows_managed_distribution_mutation_unavailable());
+        }
+
         if cancellation.is_cancelled() {
             return Err(cancelled());
         }
@@ -2257,6 +2783,13 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         version: &str,
         token: &str,
     ) -> McpPlatformResult<()> {
+        #[cfg(windows)]
+        {
+            let _ = (managed_mcp_id, version, token);
+            revalidate_windows_managed_distribution_root(&self.root)?;
+            return Err(windows_managed_distribution_mutation_unavailable());
+        }
+
         validate_storage_segment(token)?;
         let source = self.root.join("quarantine").join(token);
         let target = self.version_root(managed_mcp_id, version)?;
@@ -2281,6 +2814,13 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
         token: &str,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<()> {
+        #[cfg(windows)]
+        {
+            let _ = (token, cancellation);
+            revalidate_windows_managed_distribution_root(&self.root)?;
+            return Err(windows_managed_distribution_mutation_unavailable());
+        }
+
         if cancellation.is_cancelled() {
             return Err(cancelled());
         }
@@ -2291,6 +2831,85 @@ impl DistributionEffectAdapter for ProductionDistributionEffectAdapter {
             Ok(()) => Ok(()),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
             Err(_) => Err(repository_error()),
+        }
+    }
+}
+
+fn checked_managed_storage_capacity(
+    required_peak_bytes: u64,
+    available_bytes: u64,
+) -> McpPlatformResult<ManagedStorageCapacity> {
+    if available_bytes < required_peak_bytes {
+        return Err(McpPlatformError::new(
+            McpPlatformErrorCode::IntegrityUnavailable,
+            "managed storage capacity is insufficient",
+        ));
+    }
+    Ok(ManagedStorageCapacity {
+        required_peak_bytes,
+        available_bytes,
+    })
+}
+
+#[cfg(test)]
+mod capacity_contract_tests {
+    use super::*;
+
+    #[test]
+    fn capacity_math_accepts_zero_requirement_and_exact_boundary_but_rejects_shortfall() {
+        assert_eq!(
+            checked_managed_storage_capacity(0, 0).unwrap(),
+            ManagedStorageCapacity {
+                required_peak_bytes: 0,
+                available_bytes: 0,
+            }
+        );
+        assert_eq!(
+            checked_managed_storage_capacity(u64::MAX, u64::MAX).unwrap(),
+            ManagedStorageCapacity {
+                required_peak_bytes: u64::MAX,
+                available_bytes: u64::MAX,
+            }
+        );
+        assert_eq!(
+            checked_managed_storage_capacity(11, 10).unwrap_err().code(),
+            McpPlatformErrorCode::IntegrityUnavailable
+        );
+    }
+
+    #[test]
+    fn distribution_trait_default_capacity_hook_is_an_explicit_rejecting_fake_guard() {
+        let source = include_str!("managed_distribution.rs");
+        let start = source.find("pub trait DistributionEffectAdapter").unwrap();
+        let end = source[start..].find("async fn install(").unwrap() + start;
+        let default_hook = &source[start..end];
+        assert!(default_hook.contains("managed storage capacity preflight is unavailable"));
+        assert!(!default_hook.contains("ManagedStorageCapacity {"));
+    }
+
+    #[test]
+    fn windows_managed_install_routes_the_verified_tree_only_through_directory_writer() {
+        let source = include_str!("managed_distribution.rs");
+        let start = source
+            .find("async fn install_windows_via_directory_writer")
+            .unwrap();
+        let end = source[start..].find("async fn install_external").unwrap() + start;
+        let implementation = &source[start..end];
+
+        assert!(implementation.contains("self.verifier.verify"));
+        assert!(implementation.contains("windows_directory_writer_payloads"));
+        assert!(implementation.contains("promote_verified_managed_installations"));
+        assert!(implementation.contains("expected_tree_digest"));
+        for direct_root_mutation in [
+            "tokio::fs::rename",
+            "tokio::fs::create_dir_all",
+            "tokio::fs::remove_dir_all",
+            "prepare_owned_directory(&self.root",
+        ] {
+            assert!(
+                !implementation.contains(direct_root_mutation),
+                "Windows managed installation must not bypass DirectoryWriter: {direct_root_mutation}"
+            );
         }
     }
 }
@@ -2306,7 +2925,7 @@ fn distribution_materialization(
             return Err(McpPlatformError::new(
                 McpPlatformErrorCode::TransportMismatch,
                 "managed distribution requires stdio transport",
-            ))
+            ));
         }
     };
     match &manifest.distribution {
@@ -2668,7 +3287,7 @@ async fn verify_regular_contained(root: &Path, path: &Path) -> McpPlatformResult
         return Err(unsafe_archive());
     }
     if let Some(parent) = path.parent() {
-        prepare_owned_directory(root, parent, false)?;
+        verify_owned_read_path(root, parent)?;
     }
     let metadata = tokio::fs::symlink_metadata(path)
         .await
@@ -2697,7 +3316,16 @@ async fn set_minimum_entrypoint_permissions(
 }
 
 fn validate_storage_segment(value: &str) -> McpPlatformResult<()> {
-    if value.is_empty() || value.contains(['/', '\\', ':']) || value == "." || value == ".." {
+    // A storage segment is passed to Win32 as one component. Reject every
+    // spelling that can be normalized or resolved as a distinct DOS alias.
+    if value.is_empty()
+        || value.contains(['/', '\\', ':', '\0'])
+        || value == "."
+        || value == ".."
+        || value.ends_with(['.', ' '])
+        || value.contains('~')
+        || unsafe_windows_component(value)
+    {
         return Err(unsafe_archive());
     }
     Ok(())
@@ -2732,6 +3360,31 @@ fn prepare_owned_directory(
                 verify_normal_directory(&current)?;
             }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(_) => return Err(repository_error()),
+        }
+    }
+    Ok(())
+}
+
+fn verify_owned_read_path(owner_root: &Path, target: &Path) -> McpPlatformResult<()> {
+    let relative = target
+        .strip_prefix(owner_root)
+        .map_err(|_| unsafe_archive())?;
+    verify_normal_directory(owner_root)?;
+    let mut current = owner_root.to_path_buf();
+    for component in relative.components() {
+        if !matches!(component, Component::Normal(_)) {
+            return Err(unsafe_archive());
+        }
+        current.push(component.as_os_str());
+        match std::fs::symlink_metadata(&current) {
+            Ok(metadata) => {
+                if !metadata.is_dir() || metadata.file_type().is_symlink() || is_reparse(&metadata)
+                {
+                    return Err(unsafe_archive());
+                }
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
             Err(_) => return Err(repository_error()),
         }
     }
@@ -3007,6 +3660,163 @@ async fn compute_materialized_tree_digest(root: &Path) -> McpPlatformResult<Stri
         }
     }
     Ok(hex_digest(tree_hasher.finalize().as_slice()))
+}
+
+#[cfg(windows)]
+struct WindowsDirectoryWriterPayload {
+    relative_segments: Vec<String>,
+    bytes: Vec<u8>,
+}
+
+/// The extraction scratch directory is outside the managed root.  It is
+/// converted into an immutable byte manifest before the writer lease is
+/// acquired, so no path from the scratch tree is ever handed to the Windows
+/// managed-root writer.
+#[cfg(windows)]
+fn windows_directory_writer_payloads(
+    root: &Path,
+    managed_mcp_id: &str,
+    version: &str,
+) -> McpPlatformResult<(
+    crate::mcp_platform::storage_domain::DirectoryPayloadManifest,
+    Vec<WindowsDirectoryWriterPayload>,
+)> {
+    let mut pending = vec![root.to_path_buf()];
+    let mut payloads = Vec::new();
+    while let Some(directory) = pending.pop() {
+        verify_normal_directory(&directory)?;
+        let entries = std::fs::read_dir(&directory).map_err(|_| verification_error())?;
+        for entry in entries {
+            let entry = entry.map_err(|_| verification_error())?;
+            let path = entry.path();
+            let metadata = std::fs::symlink_metadata(&path).map_err(|_| verification_error())?;
+            if metadata.file_type().is_symlink() || is_reparse(&metadata) {
+                return Err(verification_error());
+            }
+            if metadata.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            if !metadata.is_file() || payloads.len() >= 256 {
+                return Err(verification_error());
+            }
+            let relative = path.strip_prefix(root).map_err(|_| verification_error())?;
+            let mut relative_segments = vec![
+                managed_mcp_id.to_string(),
+                "versions".to_string(),
+                version.to_string(),
+            ];
+            for component in relative.components() {
+                let Component::Normal(component) = component else {
+                    return Err(verification_error());
+                };
+                let component = component.to_str().ok_or_else(verification_error)?;
+                if component.len() > 64 {
+                    return Err(verification_error());
+                }
+                validate_storage_segment(component)?;
+                relative_segments.push(component.to_string());
+            }
+            if relative_segments.len() > 8 {
+                return Err(verification_error());
+            }
+            let bytes = std::fs::read(&path).map_err(|_| verification_error())?;
+            if bytes.len() as u64 != metadata.len() {
+                return Err(verification_error());
+            }
+            payloads.push(WindowsDirectoryWriterPayload {
+                relative_segments,
+                bytes,
+            });
+        }
+    }
+    payloads.sort_by(|left, right| left.relative_segments.cmp(&right.relative_segments));
+    if payloads.is_empty() {
+        return Err(verification_error());
+    }
+    let descriptor = payloads
+        .iter()
+        .find(|payload| {
+            payload.relative_segments.len() == 4
+                && payload.relative_segments[0] == managed_mcp_id
+                && payload.relative_segments[1] == "versions"
+                && payload.relative_segments[2] == version
+                && payload.relative_segments[3] == ".goose-runtime-descriptor.json"
+        })
+        .ok_or_else(verification_error)?;
+    let evidence = WindowsCommittedVersionEvidence {
+        descriptor_sha256: hex_digest(&descriptor.bytes),
+        tree_sha256: windows_directory_tree_digest(&payloads),
+    };
+    let commitment = serde_json::to_vec(&evidence).map_err(|_| verification_error())?;
+    payloads.push(WindowsDirectoryWriterPayload {
+        relative_segments: vec![
+            managed_mcp_id.to_string(),
+            "versions".to_string(),
+            version.to_string(),
+            ".goose-committed-version.json".to_string(),
+        ],
+        bytes: commitment,
+    });
+    payloads.sort_by(|left, right| left.relative_segments.cmp(&right.relative_segments));
+    let entries = payloads
+        .iter()
+        .map(
+            |payload| crate::mcp_platform::storage_domain::DirectoryPayloadManifestEntry {
+                relative_segments: payload.relative_segments.clone(),
+                size: payload.bytes.len() as u64,
+                sha256: hex_digest(Sha256::digest(&payload.bytes).as_slice()),
+            },
+        )
+        .collect();
+    Ok((
+        crate::mcp_platform::storage_domain::DirectoryPayloadManifest { entries },
+        payloads,
+    ))
+}
+
+#[cfg(windows)]
+fn windows_directory_tree_digest(payloads: &[WindowsDirectoryWriterPayload]) -> String {
+    let mut digest = Sha256::new();
+    for payload in payloads {
+        for segment in payload.relative_segments.iter().skip(3) {
+            digest.update(segment.as_bytes());
+            digest.update([0]);
+        }
+        digest.update((payload.bytes.len() as u64).to_le_bytes());
+        digest.update(hex_digest(&payload.bytes).as_bytes());
+    }
+    hex_digest(&digest.finalize())
+}
+
+#[cfg(windows)]
+fn write_windows_materialization_metadata(
+    root: &Path,
+    descriptor: &ActiveRuntimeDescriptor,
+    evidence: &ArtifactVerificationEvidence,
+    marker: &InstallationMarker,
+) -> McpPlatformResult<()> {
+    for (name, bytes) in [
+        (
+            ".goose-runtime-descriptor.json",
+            serde_json::to_vec(descriptor).map_err(|_| repository_error())?,
+        ),
+        (
+            ".goose-artifact-evidence.json",
+            serde_json::to_vec(evidence).map_err(|_| repository_error())?,
+        ),
+        (
+            ".goose-installation-owner.json",
+            serde_json::to_vec(marker).map_err(|_| repository_error())?,
+        ),
+    ] {
+        let path = root.join(name);
+        if path.exists() {
+            return Err(verification_error());
+        }
+        std::fs::write(path, bytes).map_err(|_| repository_error())?;
+    }
+    Ok(())
 }
 
 fn is_task_local_installation_metadata(relative: &str) -> bool {
@@ -3467,53 +4277,64 @@ impl ArtifactFetcher for ProductionArtifactFetcher {
         effect: &ArtifactFetchEffect,
         cancellation: &CancellationToken,
     ) -> McpPlatformResult<FetchedArtifact> {
-        validate_fetch_effect(effect)?;
-        let digest_lock = self.lock_for(&effect.expected_sha256);
-        let _guard = tokio::select! {
-            _ = cancellation.cancelled() => return Err(cancelled()),
-            guard = digest_lock.lock() => guard,
-        };
-        tokio::fs::create_dir_all(&self.cache_root)
-            .await
-            .map_err(|_| repository_error())?;
-        verify_normal_directory(&self.cache_root)?;
-        let destination = self.cache_root.join(&effect.expected_sha256);
-        if let Ok(metadata) = tokio::fs::symlink_metadata(&destination).await {
-            if !metadata.file_type().is_file()
-                || metadata.file_type().is_symlink()
-                || is_reparse(&metadata)
-            {
-                return Err(unsafe_fetch());
-            }
-            let validation: McpPlatformResult<FetchedArtifact> = async {
-                enforce_size(effect, metadata.len())?;
-                let artifact = hash_file(
-                    destination.clone(),
-                    metadata.len(),
-                    effect.maximum_size_bytes,
-                    cancellation,
-                )
-                .await?;
-                Sha256Verifier.verify(effect, &artifact)?;
-                Ok(artifact)
-            }
-            .await;
-            match validation {
-                Ok(artifact) => return Ok(artifact),
-                Err(error) if error.code() == McpPlatformErrorCode::TaskNotCancellable => {
-                    return Err(error)
-                }
-                Err(_) => tokio::fs::remove_file(&destination)
-                    .await
-                    .map_err(|_| repository_error())?,
-            }
+        #[cfg(windows)]
+        {
+            let _ = (effect, cancellation);
+            return Err(McpPlatformError::new(
+                McpPlatformErrorCode::RuntimeControlUnavailable,
+                "windows managed artifact cache requires a handle-relative cache capability",
+            ));
         }
-        let temporary = self.cache_root.join(format!(
-            ".{}-{}.partial",
-            effect.expected_sha256, effect.operation_id
-        ));
-        let partial_created = AtomicBool::new(false);
-        let result = async {
+
+        #[cfg(not(windows))]
+        {
+            validate_fetch_effect(effect)?;
+            let digest_lock = self.lock_for(&effect.expected_sha256);
+            let _guard = tokio::select! {
+                _ = cancellation.cancelled() => return Err(cancelled()),
+                guard = digest_lock.lock() => guard,
+            };
+            tokio::fs::create_dir_all(&self.cache_root)
+                .await
+                .map_err(|_| repository_error())?;
+            verify_normal_directory(&self.cache_root)?;
+            let destination = self.cache_root.join(&effect.expected_sha256);
+            if let Ok(metadata) = tokio::fs::symlink_metadata(&destination).await {
+                if !metadata.file_type().is_file()
+                    || metadata.file_type().is_symlink()
+                    || is_reparse(&metadata)
+                {
+                    return Err(unsafe_fetch());
+                }
+                let validation: McpPlatformResult<FetchedArtifact> = async {
+                    enforce_size(effect, metadata.len())?;
+                    let artifact = hash_file(
+                        destination.clone(),
+                        metadata.len(),
+                        effect.maximum_size_bytes,
+                        cancellation,
+                    )
+                    .await?;
+                    Sha256Verifier.verify(effect, &artifact)?;
+                    Ok(artifact)
+                }
+                .await;
+                match validation {
+                    Ok(artifact) => return Ok(artifact),
+                    Err(error) if error.code() == McpPlatformErrorCode::TaskNotCancellable => {
+                        return Err(error);
+                    }
+                    Err(_) => tokio::fs::remove_file(&destination)
+                        .await
+                        .map_err(|_| repository_error())?,
+                }
+            }
+            let temporary = self.cache_root.join(format!(
+                ".{}-{}.partial",
+                effect.expected_sha256, effect.operation_id
+            ));
+            let partial_created = AtomicBool::new(false);
+            let result = async {
             match tokio::fs::symlink_metadata(&temporary).await {
                 Ok(metadata) if metadata.file_type().is_file() && !metadata.file_type().is_symlink() && !is_reparse(&metadata) => tokio::fs::remove_file(&temporary).await.map_err(|_| repository_error())?,
                 Ok(_) => return Err(unsafe_fetch()),
@@ -3540,13 +4361,14 @@ impl ArtifactFetcher for ProductionArtifactFetcher {
             tokio::fs::rename(&temporary, &destination).await.map_err(|_| repository_error())?;
             Ok(FetchedArtifact { path: destination, digest: effect.expected_sha256.clone(), size_bytes: size })
         }.await;
-        if result.is_err()
-            && partial_created.load(Ordering::SeqCst)
-            && verify_normal_file_or_absent(&temporary).is_ok()
-        {
-            let _ = tokio::fs::remove_file(&temporary).await;
+            if result.is_err()
+                && partial_created.load(Ordering::SeqCst)
+                && verify_normal_file_or_absent(&temporary).is_ok()
+            {
+                let _ = tokio::fs::remove_file(&temporary).await;
+            }
+            result
         }
-        result
     }
 }
 
@@ -3974,11 +4796,334 @@ mod external_adapter_tests {
         }
     }
 
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn windows_production_cache_fetcher_fails_closed_before_path_io() {
+        let fetcher = ProductionArtifactFetcher::new(PathBuf::from(r"D:\\untrusted-cache"))
+            .expect("constructing the fetcher is inert");
+        let error = fetcher
+            .fetch(
+                &ArtifactFetchEffect {
+                    operation_id: "operation_000001".to_string(),
+                    source_url: "https://example.invalid/artifact".to_string(),
+                    redirect_policy: RedirectPolicy::DenyAll,
+                    expected_sha256: "0".repeat(64),
+                    expected_size_bytes: None,
+                    maximum_size_bytes: 1,
+                    timeout_seconds: 1,
+                },
+                &CancellationToken::new(),
+            )
+            .await
+            .expect_err("Windows cache writes require a handle-relative capability");
+        assert_eq!(
+            error.code(),
+            McpPlatformErrorCode::RuntimeControlUnavailable
+        );
+    }
+
     fn docker_adapter(
         root: PathBuf,
         process: Arc<RecordingProcess>,
     ) -> ProductionDistributionEffectAdapter {
         docker_adapter_with_policy(root, process, true)
+    }
+
+    #[cfg(windows)]
+    fn recursive_root_snapshot(root: &Path) -> Vec<(PathBuf, bool, Vec<u8>)> {
+        fn visit(root: &Path, directory: &Path, snapshot: &mut Vec<(PathBuf, bool, Vec<u8>)>) {
+            let mut entries = std::fs::read_dir(directory)
+                .expect("read managed storage directory")
+                .map(|entry| entry.expect("managed storage entry"))
+                .collect::<Vec<_>>();
+            entries.sort_by_key(|entry| entry.file_name());
+            for entry in entries {
+                let path = entry.path();
+                let relative = path
+                    .strip_prefix(root)
+                    .expect("managed storage entry remains below root")
+                    .to_path_buf();
+                if entry
+                    .file_type()
+                    .expect("managed storage entry type")
+                    .is_dir()
+                {
+                    snapshot.push((relative, true, Vec::new()));
+                    visit(root, &path, snapshot);
+                } else {
+                    snapshot.push((
+                        relative,
+                        false,
+                        std::fs::read(path).expect("managed storage file"),
+                    ));
+                }
+            }
+        }
+
+        let mut snapshot = Vec::new();
+        visit(root, root, &mut snapshot);
+        snapshot
+    }
+
+    #[cfg(windows)]
+    fn write_committed_windows_version(
+        version_root: &Path,
+        descriptor: &ActiveRuntimeDescriptor,
+        payload: (&str, &[u8]),
+    ) {
+        let descriptor_bytes = serde_json::to_vec(descriptor).expect("runtime descriptor");
+        let payloads = vec![
+            WindowsDirectoryWriterPayload {
+                relative_segments: vec![
+                    "managed_000001".to_string(),
+                    "versions".to_string(),
+                    "1.0.0".to_string(),
+                    ".goose-runtime-descriptor.json".to_string(),
+                ],
+                bytes: descriptor_bytes.clone(),
+            },
+            WindowsDirectoryWriterPayload {
+                relative_segments: vec![
+                    "managed_000001".to_string(),
+                    "versions".to_string(),
+                    "1.0.0".to_string(),
+                    payload.0.to_string(),
+                ],
+                bytes: payload.1.to_vec(),
+            },
+        ];
+        let evidence = WindowsCommittedVersionEvidence {
+            descriptor_sha256: hex_digest(&descriptor_bytes),
+            tree_sha256: windows_directory_tree_digest(&payloads),
+        };
+        std::fs::write(
+            version_root.join(".goose-runtime-descriptor.json"),
+            descriptor_bytes,
+        )
+        .expect("committed runtime descriptor");
+        std::fs::write(
+            version_root.join(".goose-committed-version.json"),
+            serde_json::to_vec(&evidence).expect("committed version evidence"),
+        )
+        .expect("committed version evidence");
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    #[ignore = "requires a writable D: volume; run manually with --ignored on a supported Windows host"]
+    async fn windows_read_paths_leave_an_initialized_root_unchanged() {
+        let temporary = match tempfile::Builder::new()
+            .prefix("goose-managed-read-only-")
+            .tempdir_in(std::path::Path::new(r"D:\"))
+        {
+            Ok(temporary) => temporary,
+            Err(error) => panic!("create D managed root: {error}"),
+        };
+        for artifact in [
+            "platform.db",
+            "platform.provider-binding",
+            "platform.keyring-reference",
+            "platform.anchor",
+        ] {
+            std::fs::write(temporary.path().join(artifact), b"committed")
+                .expect("committed platform artifact");
+        }
+        let version_root = temporary
+            .path()
+            .join("platform.installations")
+            .join("managed_000001")
+            .join("versions")
+            .join("1.0.0");
+        std::fs::create_dir_all(version_root.join("nested")).expect("nested managed version");
+        std::fs::write(version_root.join("nested").join("server.exe"), b"committed")
+            .expect("committed nested payload");
+        let active = ActiveRuntimeDescriptor {
+            version: "1.0.0".to_string(),
+            projection: ConnectionProjection::ManagedDockerStdio {
+                name: "managed-test".to_string(),
+                description: "managed test".to_string(),
+                executable: "docker".to_string(),
+                args: Vec::new(),
+                cwd: None,
+                timeout_seconds: None,
+            },
+        };
+        write_committed_windows_version(
+            &version_root,
+            &active,
+            ("nested/server.exe", b"committed"),
+        );
+        std::fs::write(
+            temporary
+                .path()
+                .join("platform.installations")
+                .join("managed_000001")
+                .join("active.json"),
+            serde_json::to_vec(&active).expect("active descriptor"),
+        )
+        .expect("committed active descriptor");
+
+        let process = Arc::new(RecordingProcess::default());
+        let adapter = docker_adapter(temporary.path().to_path_buf(), Arc::clone(&process));
+        let before = recursive_root_snapshot(temporary.path());
+
+        assert!(adapter
+            .version_exists("managed_000001", "1.0.0")
+            .await
+            .expect("existing version is installed"));
+        assert!(!adapter
+            .version_exists("managed_000001", "2.0.0")
+            .await
+            .expect("missing version is not installed"));
+        assert_eq!(
+            adapter
+                .active_version("managed_000001")
+                .await
+                .expect("active metadata is readable"),
+            Some("1.0.0".to_string())
+        );
+        let docker_inspection = adapter
+            .inspect_installed(&docker_effect(), &CancellationToken::new())
+            .await
+            .expect_err("Windows Docker inspection must fail before a daemon call");
+        assert_eq!(
+            docker_inspection.code(),
+            McpPlatformErrorCode::RuntimeControlUnavailable
+        );
+        assert_eq!(
+            docker_inspection.message(),
+            "windows Docker managed distribution inspection requires a read-only daemon capability"
+        );
+
+        let mut non_external = docker_effect();
+        non_external.external_acquisition = None;
+        non_external.expected_tree_digest = Some("0".repeat(64));
+        assert!(adapter
+            .inspect_installed(&non_external, &CancellationToken::new())
+            .await
+            .is_err());
+
+        assert_eq!(recursive_root_snapshot(temporary.path()), before);
+        assert!(process.requests.lock().expect("requests").is_empty());
+        for artifact in ["cache", "staging", "goose-staging", "docker-runtime"] {
+            assert!(!temporary.path().join(artifact).exists(), "{artifact}");
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    #[ignore = "requires a writable D: volume; run manually with --ignored on a supported Windows host"]
+    async fn windows_production_install_fails_closed_before_cache_or_legacy_staging_writes() {
+        let temporary = match tempfile::Builder::new()
+            .prefix("goose-managed-distribution-")
+            .tempdir_in(std::path::Path::new(r"D:\"))
+        {
+            Ok(temporary) => temporary,
+            Err(error) => panic!("create D managed root: {error}"),
+        };
+        for artifact in [
+            "platform.db",
+            "platform.provider-binding",
+            "platform.keyring-reference",
+            "platform.anchor",
+        ] {
+            std::fs::write(temporary.path().join(artifact), b"committed")
+                .expect("committed platform artifact");
+        }
+        let version_root = temporary
+            .path()
+            .join("platform.installations")
+            .join("managed_000001")
+            .join("versions")
+            .join("1.0.0");
+        std::fs::create_dir_all(&version_root).expect("committed installation version");
+        std::fs::write(version_root.join("server.exe"), b"committed")
+            .expect("committed installation payload");
+        let descriptor = ActiveRuntimeDescriptor {
+            version: "1.0.0".to_string(),
+            projection: ConnectionProjection::ManagedDockerStdio {
+                name: "managed-test".to_string(),
+                description: "managed test".to_string(),
+                executable: "docker".to_string(),
+                args: Vec::new(),
+                cwd: None,
+                timeout_seconds: None,
+            },
+        };
+        write_committed_windows_version(&version_root, &descriptor, ("server.exe", b"committed"));
+
+        let process = Arc::new(RecordingProcess::default());
+        let adapter = docker_adapter(temporary.path().to_path_buf(), Arc::clone(&process));
+        assert!(adapter
+            .version_exists("managed_000001", "1.0.0")
+            .await
+            .expect("committed runtime discovery"));
+        assert_eq!(
+            adapter
+                .active_version("managed_000001")
+                .await
+                .expect("committed runtime activation discovery"),
+            None
+        );
+        let error = adapter
+            .install(&docker_effect(), &CancellationToken::new())
+            .await
+            .expect_err("legacy path-based installation must be unavailable on Windows");
+
+        assert_eq!(
+            error.code(),
+            McpPlatformErrorCode::RuntimeControlUnavailable
+        );
+        assert_eq!(
+            error.message(),
+            "windows managed distribution mutation requires the handle-relative installation protocol"
+        );
+        for error in [
+            adapter
+                .activate_version(
+                    "managed_000001",
+                    "1.0.0",
+                    "task_000001",
+                    &CancellationToken::new(),
+                )
+                .await
+                .expect_err("activation must not regain path-based mutation"),
+            adapter
+                .restore_activation("managed_000001", None, "task_000001")
+                .await
+                .expect_err("activation rollback must not regain path-based mutation"),
+            adapter
+                .remove_version("managed_000001", "1.0.0", &CancellationToken::new())
+                .await
+                .expect_err("uninstall must not regain path-based mutation"),
+            adapter
+                .quarantine_version(
+                    "managed_000001",
+                    "1.0.0",
+                    "task_000001",
+                    &CancellationToken::new(),
+                )
+                .await
+                .expect_err("repair must not regain path-based mutation"),
+            adapter
+                .restore_quarantined("managed_000001", "1.0.0", "task_000001")
+                .await
+                .expect_err("repair rollback must not regain path-based mutation"),
+            adapter
+                .purge_quarantined("task_000001", &CancellationToken::new())
+                .await
+                .expect_err("quarantine cleanup must not regain path-based mutation"),
+        ] {
+            assert_eq!(
+                error.code(),
+                McpPlatformErrorCode::RuntimeControlUnavailable
+            );
+        }
+        assert!(process.requests.lock().expect("requests").is_empty());
+        assert!(!temporary.path().join("cache").exists());
+        assert!(!temporary.path().join("staging").exists());
+        assert!(!temporary.path().join("goose-staging").exists());
+        assert!(version_root.is_dir());
     }
 
     fn docker_adapter_with_policy(
@@ -4139,6 +5284,7 @@ mod external_adapter_tests {
                 verified,
                 proof: ManifestProof::LocalBytes,
                 trust_tier,
+                source_metadata: Default::default(),
                 created_at_ms: 1_000,
             })
             .await
@@ -4643,6 +5789,32 @@ mod external_adapter_tests {
                     .code(),
                 McpPlatformErrorCode::UnsafeRepositoryTree
             );
+        }
+    }
+
+    #[test]
+    fn storage_segments_reject_windows_normalization_and_short_name_aliases() {
+        for segment in [
+            "",
+            ".",
+            "..",
+            "foo.",
+            "foo ",
+            "MANAGE~1",
+            "a/b",
+            "a\\b",
+            "a:b",
+            "NUL",
+            "CON.txt",
+            "PRN.log",
+            "COM1",
+            "COM1.log",
+            "LPT9.data",
+        ] {
+            assert!(validate_storage_segment(segment).is_err(), "{segment:?}");
+        }
+        for segment in ["managed_000001", "1.0.0", "release-2026_07"] {
+            assert!(validate_storage_segment(segment).is_ok(), "{segment:?}");
         }
     }
 }

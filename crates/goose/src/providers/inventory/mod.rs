@@ -191,6 +191,8 @@ impl RefreshJobPlan {
 pub struct ProviderInventoryService {
     storage: Arc<SessionStorage>,
     refreshing_keys: Arc<RwLock<HashSet<String>>>,
+    #[cfg(test)]
+    configured_provider_overrides: Arc<RwLock<HashSet<String>>>,
 }
 
 pub(crate) struct RefreshGuard {
@@ -274,7 +276,17 @@ impl ProviderInventoryService {
         ProviderInventoryService {
             storage,
             refreshing_keys: Arc::new(RwLock::new(HashSet::new())),
+            #[cfg(test)]
+            configured_provider_overrides: Arc::new(RwLock::new(HashSet::new())),
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_configured_provider_override(&self, provider_id: impl Into<String>) {
+        self.configured_provider_overrides
+            .write()
+            .expect("configured provider overrides lock should not be poisoned")
+            .insert(provider_id.into());
     }
 
     pub async fn entry_for_provider(
@@ -703,10 +715,22 @@ impl ProviderInventoryService {
             Err(_) => return Ok(None),
         };
         let metadata = entry.metadata().clone();
-        let identity = crate::providers::inventory_identity(provider_id)
-            .await
-            .unwrap_or_else(|_| fallback_inventory_identity(provider_id))
-            .into_identity()?;
+        #[cfg(test)]
+        let configured_override = self
+            .configured_provider_overrides
+            .read()
+            .expect("configured provider overrides lock should not be poisoned")
+            .contains(provider_id);
+        #[cfg(not(test))]
+        let configured_override = false;
+        let identity = if configured_override {
+            fallback_inventory_identity(provider_id).into_identity()?
+        } else {
+            crate::providers::inventory_identity(provider_id)
+                .await
+                .unwrap_or_else(|_| fallback_inventory_identity(provider_id))
+                .into_identity()?
+        };
 
         Ok(Some(ProviderDescriptor {
             provider_id: metadata.name.clone(),
@@ -714,7 +738,7 @@ impl ProviderInventoryService {
             description: metadata.description.clone(),
             default_model: metadata.default_model.clone(),
             identity,
-            configured: entry.inventory_configured(),
+            configured: configured_override || entry.inventory_configured(),
             provider_type: entry.provider_type(),
             category: crate::providers::catalog::get_provider_setup_category(&metadata.name)
                 .unwrap_or(ProviderSetupCategory::Model),
@@ -1260,6 +1284,31 @@ mod tests {
         service.clear_refreshing_many(&[left, right]);
 
         assert!(service.refreshing_keys.read().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn configured_override_keeps_unknown_providers_out_and_static_models_intact() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let service = ProviderInventoryService::new(Arc::new(SessionStorage::new(
+            temp_dir.path().to_path_buf(),
+        )));
+        service.set_configured_provider_override("anthropic");
+
+        let anthropic = service
+            .entry_for_provider("anthropic")
+            .await
+            .unwrap()
+            .expect("anthropic is a registered provider");
+        assert!(anthropic.configured);
+        assert!(anthropic
+            .models
+            .iter()
+            .any(|model| model.id == "claude-sonnet-4-5"));
+        assert!(service
+            .entry_for_provider("provider-that-is-not-registered")
+            .await
+            .unwrap()
+            .is_none());
     }
 
     #[tokio::test]

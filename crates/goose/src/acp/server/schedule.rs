@@ -1,3 +1,8 @@
+use super::{build_session_info, GooseAcpAgent, ResultExt};
+use crate::recipe::validate_recipe::validate_recipe_template_from_content;
+use crate::recipe::Recipe;
+use crate::scheduler::{ScheduledJob, SchedulerError};
+use crate::session::session_manager::ExtensionProvenanceError;
 use goose_sdk_types::custom_requests::{
     CreateScheduleRequest, CreateScheduleResponse, DeleteScheduleRequest, EmptyResponse,
     InspectRunningJobRequest, InspectRunningJobResponse, KillRunningJobRequest,
@@ -6,12 +11,31 @@ use goose_sdk_types::custom_requests::{
     RunScheduleNowResponse, RunScheduleNowStatus, ScheduledJobDto, UnpauseScheduleRequest,
     UpdateScheduleRequest, UpdateScheduleResponse,
 };
-use tokio::fs;
 
-use super::{build_session_info, GooseAcpAgent, ResultExt};
-use crate::recipe::validate_recipe::validate_recipe_template_from_content;
-use crate::recipe::Recipe;
-use crate::scheduler::{get_default_scheduled_recipes_dir, ScheduledJob, SchedulerError};
+fn provenance_error(error: ExtensionProvenanceError) -> agent_client_protocol::Error {
+    match error {
+        ExtensionProvenanceError::SecurityRejected => {
+            agent_client_protocol::Error::invalid_params().data("schedule security rejected")
+        }
+        ExtensionProvenanceError::RepositoryUnavailable => {
+            agent_client_protocol::Error::internal_error()
+                .data("schedule provenance service unavailable")
+        }
+    }
+}
+
+fn scheduler_provenance_error(error: &SchedulerError) -> Option<agent_client_protocol::Error> {
+    match error {
+        SchedulerError::SecurityRejected => {
+            Some(agent_client_protocol::Error::invalid_params().data("schedule security rejected"))
+        }
+        SchedulerError::RepositoryUnavailable => Some(
+            agent_client_protocol::Error::internal_error()
+                .data("schedule provenance service unavailable"),
+        ),
+        _ => None,
+    }
+}
 
 fn validate_schedule_id(id: &str) -> Result<(), agent_client_protocol::Error> {
     let is_valid = !id.is_empty()
@@ -49,6 +73,9 @@ fn schedule_not_found_or_internal(error: SchedulerError) -> agent_client_protoco
 }
 
 fn create_schedule_error(error: SchedulerError) -> agent_client_protocol::Error {
+    if let Some(mapped) = scheduler_provenance_error(&error) {
+        return mapped;
+    }
     match error {
         SchedulerError::CronParseError(message) => agent_client_protocol::Error::invalid_params()
             .data(format!("Invalid cron expression: {message}")),
@@ -74,6 +101,9 @@ fn schedule_state_error(error: SchedulerError) -> agent_client_protocol::Error {
 }
 
 fn update_schedule_error(error: SchedulerError) -> agent_client_protocol::Error {
+    if let Some(mapped) = scheduler_provenance_error(&error) {
+        return mapped;
+    }
     match error {
         SchedulerError::JobNotFound(id) => {
             agent_client_protocol::Error::resource_not_found(Some(id))
@@ -90,6 +120,9 @@ fn update_schedule_error(error: SchedulerError) -> agent_client_protocol::Error 
 fn run_schedule_now_error(
     error: SchedulerError,
 ) -> Result<RunScheduleNowResponse, agent_client_protocol::Error> {
+    if let Some(mapped) = scheduler_provenance_error(&error) {
+        return Err(mapped);
+    }
     match error {
         SchedulerError::JobNotFound(id) => {
             Err(agent_client_protocol::Error::resource_not_found(Some(id)))
@@ -171,25 +204,19 @@ impl GooseAcpAgent {
             ));
         }
         validate_schedule_recipe(&recipe)?;
+        self.session_manager
+            .verify_recipe_extension_provenance(recipe.extensions.as_deref())
+            .await
+            .map_err(provenance_error)?;
 
-        let scheduled_recipes_dir = get_default_scheduled_recipes_dir().map_err(|e| {
-            agent_client_protocol::Error::internal_error()
-                .data(format!("Failed to get scheduled recipes directory: {e}"))
-        })?;
-
-        let recipe_path = scheduled_recipes_dir.join(format!("{id}.yaml"));
         let yaml_content = recipe.to_yaml().map_err(|e| {
             agent_client_protocol::Error::internal_error()
                 .data(format!("Failed to convert recipe to YAML: {e}"))
         })?;
-        fs::write(&recipe_path, yaml_content).await.map_err(|e| {
-            agent_client_protocol::Error::internal_error()
-                .data(format!("Failed to save recipe file: {e}"))
-        })?;
 
         let job = ScheduledJob {
             id,
-            source: recipe_path.to_string_lossy().into_owned(),
+            source: String::new(),
             cron: req.cron,
             last_run: None,
             currently_running: false,
@@ -200,9 +227,10 @@ impl GooseAcpAgent {
             recipe_base_dir: None,
         };
 
-        self.agent_manager
+        let job = self
+            .agent_manager
             .scheduler()
-            .add_scheduled_job(job.clone(), false)
+            .add_scheduled_job_from_content(job, yaml_content.as_bytes())
             .await
             .map_err(create_schedule_error)?;
 

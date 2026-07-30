@@ -1,9 +1,7 @@
 use anyhow::Result;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use dotenvy::dotenv;
-use goose::conversation::message::Message;
 use goose::providers::anthropic::ANTHROPIC_DEFAULT_MODEL;
-use goose::providers::create_with_named_model;
 use goose::providers::openai::OPEN_AI_DEFAULT_MODEL;
 use goose_providers::databricks::DATABRICKS_DEFAULT_MODEL;
 use rmcp::model::{CallToolRequestParams, Content, Tool};
@@ -22,18 +20,18 @@ async fn main() -> Result<()> {
         goose_providers::model::ModelConfig,
     )> = vec![
         (
-            create_with_named_model("databricks", Vec::new()).await?,
+            goose::providers::create_with_named_model("databricks", Vec::new()).await?,
             goose::model_config::model_config_from_user_config(
                 "databricks",
                 DATABRICKS_DEFAULT_MODEL,
             )?,
         ),
         (
-            create_with_named_model("openai", Vec::new()).await?,
+            goose::providers::create_with_named_model("openai", Vec::new()).await?,
             goose::model_config::model_config_from_user_config("openai", OPEN_AI_DEFAULT_MODEL)?,
         ),
         (
-            create_with_named_model("anthropic", Vec::new()).await?,
+            goose::providers::create_with_named_model("anthropic", Vec::new()).await?,
             goose::model_config::model_config_from_user_config(
                 "anthropic",
                 ANTHROPIC_DEFAULT_MODEL,
@@ -47,13 +45,14 @@ async fn main() -> Result<()> {
 
         // Create a message sequence that includes a tool response with both text and image
         let messages = vec![
-            Message::user().with_text("Read the image at ./test_image.png please"),
-            Message::assistant().with_tool_request(
+            goose::conversation::message::Message::user()
+                .with_text("Read the image at ./test_image.png please"),
+            goose::conversation::message::Message::assistant().with_tool_request(
                 "000",
                 Ok(CallToolRequestParams::new("view_image")
                     .with_arguments(object!({"path": "./test_image.png"}))),
             ),
-            Message::user().with_tool_response(
+            goose::conversation::message::Message::user().with_tool_response(
                 "000",
                 Ok(rmcp::model::CallToolResult::success(vec![Content::image(
                     base64_image,

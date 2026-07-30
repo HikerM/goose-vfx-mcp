@@ -238,6 +238,28 @@ pub(crate) fn try_replace_managed_extension_at_key_with_config(
     }
 }
 
+pub(crate) fn try_confirm_managed_extension_at_key_with_config(
+    config: &Config,
+    key: &str,
+    expected: Option<&ExtensionEntry>,
+) -> Result<(), String> {
+    if !key.starts_with("managed_mcp_") {
+        return Err("invalid managed MCP extension key".to_string());
+    }
+    let mut confirmed = false;
+    try_with_raw_extensions_mapping(config, |extensions| {
+        if extensions.get(key) == expected {
+            confirmed = true;
+        }
+        ExtensionMutation::Noop
+    })?;
+    if confirmed {
+        Ok(())
+    } else {
+        Err("managed MCP extension changed before confirmation".to_string())
+    }
+}
+
 fn try_set_extension_at_key_with_config(
     config: &Config,
     key: &str,

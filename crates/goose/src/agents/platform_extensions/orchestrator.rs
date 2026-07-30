@@ -21,21 +21,34 @@ use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Arc;
+#[cfg(test)]
+use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 pub static EXTENSION_NAME: &str = "orchestrator";
 
+#[cfg(test)]
+const TEST_GATE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
+
+#[cfg(test)]
+pub(crate) struct CompletionTestGate {
+    pub entered: tokio::sync::oneshot::Sender<()>,
+    pub release: tokio::sync::oneshot::Receiver<()>,
+}
+
 struct CancelTokenGuard {
     manager: Arc<AgentManager>,
     session_id: String,
+    token_id: u64,
     disarmed: bool,
 }
 
 impl CancelTokenGuard {
-    fn new(manager: Arc<AgentManager>, session_id: String) -> Self {
+    fn new(manager: Arc<AgentManager>, session_id: String, token_id: u64) -> Self {
         Self {
             manager,
             session_id,
+            token_id,
             disarmed: false,
         }
     }
@@ -50,8 +63,9 @@ impl Drop for CancelTokenGuard {
         if !self.disarmed {
             let manager = self.manager.clone();
             let session_id = self.session_id.clone();
+            let token_id = self.token_id;
             tokio::spawn(async move {
-                manager.unregister_cancel_token(&session_id).await;
+                manager.unregister_cancel_token(&session_id, token_id).await;
             });
         }
     }
@@ -105,6 +119,10 @@ struct InterruptAgentParams {
 pub struct OrchestratorClient {
     info: InitializeResult,
     context: PlatformExtensionContext,
+    #[cfg(test)]
+    test_agent_manager: Option<Arc<AgentManager>>,
+    #[cfg(test)]
+    completion_test_gate: Arc<Mutex<Option<CompletionTestGate>>>,
 }
 
 impl OrchestratorClient {
@@ -117,13 +135,47 @@ impl OrchestratorClient {
                 "Manage agent sessions: list, view, start, send messages, and interrupt agents.",
             );
 
-        Ok(Self { info, context })
+        Ok(Self {
+            info,
+            context,
+            #[cfg(test)]
+            test_agent_manager: None,
+            #[cfg(test)]
+            completion_test_gate: Arc::new(Mutex::new(None)),
+        })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn new_for_test(
+        context: PlatformExtensionContext,
+        agent_manager: Arc<AgentManager>,
+        completion_test_gate: Option<CompletionTestGate>,
+    ) -> Result<Self> {
+        let mut client = Self::new(context)?;
+        client.test_agent_manager = Some(agent_manager);
+        client.completion_test_gate = Arc::new(Mutex::new(completion_test_gate));
+        Ok(client)
     }
 
     async fn get_agent_manager(&self) -> Result<Arc<AgentManager>, String> {
+        #[cfg(test)]
+        if let Some(agent_manager) = &self.test_agent_manager {
+            return Ok(agent_manager.clone());
+        }
         AgentManager::instance()
             .await
             .map_err(|e| format!("Failed to get agent manager: {}", e))
+    }
+
+    #[cfg(test)]
+    async fn wait_for_completion_test_gate(&self) {
+        let gate = self.completion_test_gate.lock().await.take();
+        if let Some(gate) = gate {
+            let _ = gate.entered.send(());
+            let _ = tokio::time::timeout(TEST_GATE_TIMEOUT, gate.release)
+                .await
+                .expect("orchestrator completion test gate release timed out");
+        }
     }
 
     async fn get_provider(&self) -> Result<Arc<dyn Provider>, String> {
@@ -159,6 +211,20 @@ impl OrchestratorClient {
     fn parent_extensions(&self) -> Vec<ExtensionConfig> {
         let extension_data = self.context.session.as_ref().map(|s| &s.extension_data);
         EnabledExtensionsState::extensions_or_default(extension_data, Config::global())
+    }
+
+    async fn validated_parent_extensions(&self) -> Result<Vec<ExtensionConfig>, String> {
+        let session = self
+            .context
+            .session
+            .as_ref()
+            .ok_or_else(|| "Parent session is unavailable".to_string())?;
+        self.context
+            .session_manager
+            .validate_extension_bundle_for_activation(session, self.parent_extensions())
+            .await
+            .map(|bundle| bundle.into_extensions())
+            .map_err(|_| "Parent extension configuration failed provenance validation".to_string())
     }
 
     async fn handle_list_sessions(
@@ -427,7 +493,7 @@ impl OrchestratorClient {
             .map_err(|e| format!("Failed to create agent: {}", e))?;
 
         let parent_provider = self.get_provider().await?;
-        let extensions = self.parent_extensions();
+        let extensions = self.validated_parent_extensions().await?;
         let model_config = self.parent_model_config(parent_provider.get_name()).await?;
         let provider = providers::create(parent_provider.get_name(), extensions)
             .await
@@ -466,7 +532,7 @@ impl OrchestratorClient {
 
         if agent.provider().await.is_err() {
             if let Ok(parent_provider) = self.get_provider().await {
-                let extensions = self.parent_extensions();
+                let extensions = self.validated_parent_extensions().await?;
                 let model_config = self.parent_model_config(parent_provider.get_name()).await?;
                 if let Ok(provider) =
                     providers::create(parent_provider.get_name(), extensions).await
@@ -480,8 +546,8 @@ impl OrchestratorClient {
         }
 
         let cancel_token = CancellationToken::new();
-        manager
-            .try_register_cancel_token(&session_id, cancel_token.clone())
+        let token_id = manager
+            .try_register_cancel_token(&session_id, agent.clone(), cancel_token.clone())
             .await
             .map_err(|_| {
                 format!(
@@ -490,7 +556,7 @@ impl OrchestratorClient {
                 )
             })?;
 
-        let mut guard = CancelTokenGuard::new(manager.clone(), session_id.clone());
+        let mut guard = CancelTokenGuard::new(manager.clone(), session_id.clone(), token_id);
 
         let user_message = Message::user().with_text(&message_text);
         let session_config = SessionConfig {
@@ -535,8 +601,10 @@ impl OrchestratorClient {
         }
 
         drop(stream);
+        #[cfg(test)]
+        self.wait_for_completion_test_gate().await;
         guard.disarm();
-        manager.unregister_cancel_token(&session_id).await;
+        manager.unregister_cancel_token(&session_id, token_id).await;
 
         if cancelled {
             return Err("Cancelled by parent session".into());

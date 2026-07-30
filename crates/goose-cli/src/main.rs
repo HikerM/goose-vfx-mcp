@@ -17,6 +17,8 @@ fn enable_windows_vt_processing() {
 }
 
 async fn run() -> Result<()> {
+    goose::config::paths::Paths::ensure_windows_governed_root()?;
+
     if let Err(e) = goose_cli::logging::setup_logging(None) {
         eprintln!("Warning: Failed to initialize logging: {}", e);
     }

@@ -38,6 +38,7 @@ use crate::conversation::message::{
     SystemNotificationType, ToolRequest,
 };
 use crate::conversation::{debug_conversation_fix, fix_conversation, Conversation};
+use crate::mcp_platform::ProfileApplicationMarker;
 use crate::mcp_utils::ToolResult;
 use crate::permission::permission_inspector::PermissionInspector;
 use crate::permission::permission_judge::PermissionCheckResult;
@@ -49,6 +50,7 @@ use crate::security::adversary_inspector::AdversaryInspector;
 use crate::security::egress_inspector::EgressInspector;
 use crate::security::security_inspector::SecurityInspector;
 use crate::session::extension_data::{EnabledExtensionsState, ExtensionState};
+use crate::session::session_manager::ValidatedExtensionBundle;
 use crate::session::{Session, SessionManager, SessionNameUpdate};
 use crate::tool_inspection::ToolInspectionManager;
 use crate::tool_monitor::RepetitionInspector;
@@ -258,6 +260,8 @@ pub struct Agent {
     pub(super) hook_manager: crate::hooks::HookManager,
     #[cfg(test)]
     stop_hook_block_cap_override: Option<u32>,
+    #[cfg(test)]
+    fail_next_managed_runtime_start: std::sync::atomic::AtomicBool,
     container: Mutex<Option<Container>>,
     goal: Mutex<Option<String>>,
     grind: Mutex<Option<String>>,
@@ -408,6 +412,8 @@ impl Agent {
             ),
             #[cfg(test)]
             stop_hook_block_cap_override: None,
+            #[cfg(test)]
+            fail_next_managed_runtime_start: std::sync::atomic::AtomicBool::new(false),
             container: Mutex::new(None),
             goal: Mutex::new(None),
             grind: Mutex::new(None),
@@ -1190,11 +1196,15 @@ impl Agent {
     /// Save current extension state to session metadata
     /// Should be called after any extension add/remove operation
     pub async fn save_extension_state(&self, session: &SessionConfig) -> Result<()> {
-        let extensions_state =
-            EnabledExtensionsState::new(self.extension_configs_for_persistence().await);
-
         let session_manager = self.config.session_manager.clone();
         let mut session_data = session_manager.get_session(&session.id, false).await?;
+        let mut extensions = self.extension_configs_for_persistence().await;
+        if let Some(marker) =
+            ProfileApplicationMarker::from_extension_data(&session_data.extension_data)
+        {
+            marker.strip_managed_extensions(&mut extensions);
+        }
+        let extensions_state = EnabledExtensionsState::new(extensions);
 
         if let Err(e) = extensions_state.to_extension_data(&mut session_data.extension_data) {
             warn!("Failed to serialize extension state: {}", e);
@@ -1203,7 +1213,7 @@ impl Agent {
 
         session_manager
             .update(&session.id)
-            .extension_data(session_data.extension_data)
+            .trusted_extension_data(session_data.extension_data)
             .apply()
             .await?;
 
@@ -1212,12 +1222,14 @@ impl Agent {
 
     /// Save current extension state to session by session_id
     pub async fn persist_extension_state(&self, session_id: &str) -> Result<()> {
-        let extensions_state =
-            EnabledExtensionsState::new(self.extension_configs_for_persistence().await);
-
         let session_manager = self.config.session_manager.clone();
         let session = session_manager.get_session(session_id, false).await?;
         let mut extension_data = session.extension_data.clone();
+        let mut extensions = self.extension_configs_for_persistence().await;
+        if let Some(marker) = ProfileApplicationMarker::from_extension_data(&extension_data) {
+            marker.strip_managed_extensions(&mut extensions);
+        }
+        let extensions_state = EnabledExtensionsState::new(extensions);
 
         extensions_state
             .to_extension_data(&mut extension_data)
@@ -1225,7 +1237,7 @@ impl Agent {
 
         session_manager
             .update(session_id)
-            .extension_data(extension_data)
+            .trusted_extension_data(extension_data)
             .apply()
             .await?;
 
@@ -1238,19 +1250,23 @@ impl Agent {
     pub async fn load_extensions_from_session(
         self: &Arc<Self>,
         session: &Session,
+    ) -> Result<Vec<ExtensionLoadResult>> {
+        let bundle = self
+            .config
+            .session_manager
+            .validate_persisted_extensions_for_activation(session)
+            .await?;
+        Ok(self
+            .load_extensions_from_validated_bundle(session, bundle)
+            .await)
+    }
+
+    pub(crate) async fn load_extensions_from_validated_bundle(
+        self: &Arc<Self>,
+        session: &Session,
+        bundle: ValidatedExtensionBundle,
     ) -> Vec<ExtensionLoadResult> {
-        let session_extensions =
-            EnabledExtensionsState::from_extension_data(&session.extension_data);
-        let enabled_configs = match session_extensions {
-            Some(state) => state.extensions,
-            None => {
-                tracing::warn!(
-                    "No extensions found in session {}. This is unexpected.",
-                    session.id
-                );
-                return vec![];
-            }
-        };
+        let enabled_configs = bundle.into_extensions();
 
         let session_id = session.id.clone();
 
@@ -1317,6 +1333,26 @@ impl Agent {
         extension: ExtensionConfig,
         session_id: &str,
     ) -> ExtensionResult<()> {
+        let session = self
+            .config
+            .session_manager
+            .get_session(session_id, false)
+            .await
+            .map_err(|e| {
+                crate::agents::extension::ExtensionError::SetupError(format!(
+                    "Failed to get session '{}': {}",
+                    session_id, e
+                ))
+            })?;
+        self.config
+            .session_manager
+            .validate_extension_bundle_for_activation(&session, vec![extension.clone()])
+            .await
+            .map_err(|_| {
+                crate::agents::extension::ExtensionError::SetupError(
+                    "Extension configuration rejected by provenance policy".to_string(),
+                )
+            })?;
         self.add_extension_inner(extension, session_id).await?;
 
         // Persist extension state after successful add
@@ -1342,21 +1378,21 @@ impl Agent {
         extensions: Vec<ExtensionConfig>,
         session_id: &str,
     ) -> anyhow::Result<Vec<ExtensionLoadResult>> {
-        let working_dir = match self
+        let session = self
             .config
             .session_manager
             .get_session(session_id, false)
-            .await
-        {
-            Ok(session) => Some(session.working_dir),
-            Err(e) => {
-                warn!("Failed to get session for bulk load: {}", e);
-                None
-            }
-        };
+            .await?;
+        let bundle = self
+            .config
+            .session_manager
+            .validate_extension_bundle_for_activation(&session, extensions)
+            .await?;
+        let working_dir = Some(session.working_dir);
         let container = self.container.lock().await.clone();
 
-        let extension_futures = extensions
+        let extension_futures = bundle
+            .into_extensions()
             .into_iter()
             .map(|config| {
                 let ext_manager = Arc::clone(&self.extension_manager);
@@ -1434,6 +1470,29 @@ impl Agent {
         }
 
         Ok(())
+    }
+
+    pub(crate) async fn start_managed_runtime_extension(
+        &self,
+        extension: ExtensionConfig,
+        session_id: &str,
+    ) -> ExtensionResult<()> {
+        #[cfg(test)]
+        if self
+            .fail_next_managed_runtime_start
+            .swap(false, std::sync::atomic::Ordering::SeqCst)
+        {
+            return Err(crate::agents::extension::ExtensionError::SetupError(
+                "managed runtime start failed by test injection".to_string(),
+            ));
+        }
+        self.add_extension_inner(extension, session_id).await
+    }
+
+    #[cfg(test)]
+    pub(crate) fn fail_next_managed_runtime_start_for_test(&self) {
+        self.fail_next_managed_runtime_start
+            .store(true, std::sync::atomic::Ordering::SeqCst);
     }
 
     pub async fn list_tools(&self, session_id: &str, extension_name: Option<String>) -> Vec<Tool> {
@@ -2969,15 +3028,15 @@ impl Agent {
             .get_session(session_id, false)
             .await
             .context("Failed to get session")?;
-
-        let extensions = EnabledExtensionsState::extensions_or_default(
-            Some(&session.extension_data),
-            Config::global(),
-        );
+        let bundle = self
+            .config
+            .session_manager
+            .validate_persisted_extensions_for_activation(&session)
+            .await?;
 
         let provider = crate::providers::create_with_working_dir(
             provider_name,
-            extensions,
+            bundle.into_extensions(),
             session.working_dir.clone(),
         )
         .await
@@ -3010,6 +3069,20 @@ impl Agent {
     /// This is used when resuming a session to restore the provider state
     /// Returns true if the session's provider was replaced with a fallback.
     pub async fn restore_provider_from_session(&self, session: &Session) -> Result<bool> {
+        let bundle = self
+            .config
+            .session_manager
+            .validate_persisted_extensions_for_activation(session)
+            .await?;
+        self.restore_provider_from_validated_bundle(session, bundle)
+            .await
+    }
+
+    pub(crate) async fn restore_provider_from_validated_bundle(
+        &self,
+        session: &Session,
+        bundle: ValidatedExtensionBundle,
+    ) -> Result<bool> {
         let config = Config::global();
 
         let provider_name = session
@@ -3044,8 +3117,7 @@ impl Agent {
             }
         }
 
-        let extensions =
-            EnabledExtensionsState::extensions_or_default(Some(&session.extension_data), config);
+        let extensions = bundle.into_extensions();
 
         let (provider, active_model_config, provider_changed) =
             if crate::providers::get_from_registry(&provider_name)

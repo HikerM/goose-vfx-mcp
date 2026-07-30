@@ -1,20 +1,24 @@
 use anyhow::Result;
-#[cfg(unix)]
 use axum::http::HeaderValue;
 use axum::http::{HeaderMap, HeaderName};
 use chrono::{DateTime, Utc};
-use futures::stream::{FuturesUnordered, StreamExt};
+use futures::stream::{BoxStream, FuturesUnordered, StreamExt};
 use futures::Stream;
 use futures::{future, FutureExt};
 use once_cell::sync::Lazy;
 use rmcp::service::{ClientInitializeError, ServiceError};
 use rmcp::transport::streamable_http_client::{
-    StreamableHttpClientTransportConfig, StreamableHttpError,
+    SseError, StreamableHttpClient, StreamableHttpClientTransportConfig, StreamableHttpError,
+    StreamableHttpPostResponse,
 };
 use rmcp::transport::{
     ConfigureCommandExt, DynamicTransportError, StreamableHttpClientTransport, TokioChildProcess,
 };
+use sse_stream::Sse;
+use sse_stream::SseStream;
 use std::collections::HashMap;
+use std::error::Error as StdError;
+use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::process::Stdio;
@@ -59,7 +63,464 @@ use rmcp::transport::auth::{AuthClient, CredentialStore};
 use schemars::_private::NoSerialize;
 use serde_json::Value;
 
-type McpClientBox = Arc<dyn McpClientTrait>;
+pub(crate) type McpClientBox = Arc<dyn McpClientTrait>;
+
+const MANAGED_MCP_MAX_RESPONSE_BYTES: usize = 128 * 1024;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ManagedHttpContentType {
+    Json,
+    Sse,
+}
+
+fn managed_http_content_type(content_type: &str) -> Option<ManagedHttpContentType> {
+    let mut parser = HttpMediaTypeParser::new(content_type);
+    parser.consume_ows();
+    let type_ = parser.consume_token()?.to_owned();
+    if !parser.consume_byte(b'/') {
+        return None;
+    }
+    let subtype = parser.consume_token()?.to_owned();
+    loop {
+        parser.consume_ows();
+        if parser.is_finished() {
+            break;
+        }
+        if !parser.consume_byte(b';') {
+            return None;
+        }
+        parser.consume_ows();
+        parser.consume_token()?;
+        if !parser.consume_byte(b'=') {
+            return None;
+        }
+        if parser.consume_token().is_none() && !parser.consume_quoted_string() {
+            return None;
+        }
+    }
+
+    if type_.eq_ignore_ascii_case("application") && subtype.eq_ignore_ascii_case("json") {
+        Some(ManagedHttpContentType::Json)
+    } else if type_.eq_ignore_ascii_case("text") && subtype.eq_ignore_ascii_case("event-stream") {
+        Some(ManagedHttpContentType::Sse)
+    } else {
+        None
+    }
+}
+
+struct HttpMediaTypeParser<'a> {
+    value: &'a [u8],
+    position: usize,
+}
+
+impl<'a> HttpMediaTypeParser<'a> {
+    fn new(value: &'a str) -> Self {
+        Self {
+            value: value.as_bytes(),
+            position: 0,
+        }
+    }
+
+    fn consume_ows(&mut self) {
+        while matches!(self.value.get(self.position), Some(b' ' | b'\t')) {
+            self.position += 1;
+        }
+    }
+
+    fn consume_byte(&mut self, expected: u8) -> bool {
+        if self.value.get(self.position) == Some(&expected) {
+            self.position += 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    fn consume_token(&mut self) -> Option<&'a str> {
+        let start = self.position;
+        while self
+            .value
+            .get(self.position)
+            .is_some_and(|byte| is_http_token_byte(*byte))
+        {
+            self.position += 1;
+        }
+        if self.position == start {
+            return None;
+        }
+        std::str::from_utf8(&self.value[start..self.position]).ok()
+    }
+
+    fn consume_quoted_string(&mut self) -> bool {
+        if !self.consume_byte(b'\"') {
+            return false;
+        }
+        while let Some(&byte) = self.value.get(self.position) {
+            self.position += 1;
+            match byte {
+                b'\"' => return true,
+                b'\\' => match self.value.get(self.position) {
+                    Some(b'\t' | b' ') | Some(0x21..=0x7e) => self.position += 1,
+                    _ => return false,
+                },
+                b'\t' | b' ' | b'!' | b'#'..=b'[' | b']'..=b'~' => {}
+                _ => return false,
+            }
+        }
+        false
+    }
+
+    fn is_finished(&self) -> bool {
+        self.position == self.value.len()
+    }
+}
+
+fn managed_http_response_content_type(
+    headers: &reqwest::header::HeaderMap,
+) -> Result<ManagedHttpContentType, Option<String>> {
+    let mut values = headers.get_all(reqwest::header::CONTENT_TYPE).iter();
+    let Some(value) = values.next() else {
+        return Err(None);
+    };
+    let content_type = String::from_utf8_lossy(value.as_bytes()).into_owned();
+    if values.next().is_some() {
+        return Err(Some(content_type));
+    }
+    value
+        .to_str()
+        .ok()
+        .and_then(managed_http_content_type)
+        .ok_or(Some(content_type))
+}
+
+fn is_http_token_byte(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric()
+        || matches!(
+            byte,
+            b'!' | b'#'
+                | b'$'
+                | b'%'
+                | b'&'
+                | b'\''
+                | b'*'
+                | b'+'
+                | b'-'
+                | b'.'
+                | b'^'
+                | b'_'
+                | b'`'
+                | b'|'
+                | b'~'
+        )
+}
+
+#[derive(Debug)]
+enum ManagedStreamBodyError {
+    ByteLimitExceeded,
+    Transport(reqwest::Error),
+}
+impl std::fmt::Display for ManagedStreamBodyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ByteLimitExceeded => write!(f, "managed MCP SSE payload exceeds byte limit"),
+            Self::Transport(error) => write!(f, "managed MCP SSE transport error: {error}"),
+        }
+    }
+}
+
+impl StdError for ManagedStreamBodyError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Self::ByteLimitExceeded => None,
+            Self::Transport(error) => Some(error),
+        }
+    }
+}
+
+fn is_managed_stream_body_error(error: &(dyn StdError + Send + Sync + 'static)) -> bool {
+    matches!(
+        error.downcast_ref::<ManagedStreamBodyError>(),
+        Some(ManagedStreamBodyError::ByteLimitExceeded)
+    )
+}
+
+#[derive(Clone)]
+struct BoundedManagedHttpClient {
+    client: reqwest::Client,
+    max_response_bytes: usize,
+}
+
+impl BoundedManagedHttpClient {
+    fn new(client: reqwest::Client, max_response_bytes: usize) -> Self {
+        Self {
+            client,
+            max_response_bytes,
+        }
+    }
+}
+
+fn managed_http_error(message: &'static str) -> StreamableHttpError<reqwest::Error> {
+    StreamableHttpError::UnexpectedServerResponse(message.into())
+}
+
+async fn read_managed_http_response(
+    response: reqwest::Response,
+    max_response_bytes: usize,
+) -> Result<(Vec<u8>, Option<String>), StreamableHttpError<reqwest::Error>> {
+    if response
+        .content_length()
+        .is_some_and(|length| length > max_response_bytes as u64)
+    {
+        return Err(managed_http_error(
+            "managed MCP response exceeds the configured byte limit",
+        ));
+    }
+    let session_id = response
+        .headers()
+        .get("mcp-session-id")
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_owned);
+    let mut body = Vec::new();
+    let mut stream = response.bytes_stream();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(StreamableHttpError::Client)?;
+        let next_len = body.len().checked_add(chunk.len()).ok_or_else(|| {
+            managed_http_error("managed MCP response exceeds the configured byte limit")
+        })?;
+        if next_len > max_response_bytes {
+            return Err(managed_http_error(
+                "managed MCP response exceeds the configured byte limit",
+            ));
+        }
+        body.extend_from_slice(&chunk);
+    }
+    Ok((body, session_id))
+}
+
+impl StreamableHttpClient for BoundedManagedHttpClient {
+    type Error = reqwest::Error;
+
+    async fn post_message(
+        &self,
+        uri: Arc<str>,
+        message: rmcp::model::ClientJsonRpcMessage,
+        session_id: Option<Arc<str>>,
+        auth_header: Option<String>,
+        custom_headers: HashMap<HeaderName, HeaderValue>,
+    ) -> Result<StreamableHttpPostResponse, StreamableHttpError<Self::Error>> {
+        let mut request = self
+            .client
+            .post(uri.as_ref())
+            .header(
+                reqwest::header::ACCEPT,
+                ["text/event-stream", "application/json"].join(", "),
+            )
+            .json(&message);
+        if let Some(session_id) = session_id {
+            request = request.header("mcp-session-id", session_id.as_ref());
+        }
+        if let Some(auth_header) = auth_header {
+            request = request.bearer_auth(auth_header);
+        }
+        for (name, value) in custom_headers {
+            request = request.header(name, value);
+        }
+        let response = request.send().await.map_err(StreamableHttpError::Client)?;
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Err(StreamableHttpError::SessionExpired);
+        }
+        if !response.status().is_success() {
+            return Err(managed_http_error(
+                "managed MCP returned an unsuccessful HTTP response",
+            ));
+        }
+        if matches!(
+            response.status(),
+            reqwest::StatusCode::ACCEPTED | reqwest::StatusCode::NO_CONTENT
+        ) {
+            return Ok(StreamableHttpPostResponse::Accepted);
+        }
+        let content_type = managed_http_response_content_type(response.headers());
+        let session_id = response
+            .headers()
+            .get("mcp-session-id")
+            .and_then(|value| value.to_str().ok())
+            .map(str::to_owned);
+        match content_type {
+            Ok(ManagedHttpContentType::Json) => {
+                let (body, _) =
+                    read_managed_http_response(response, self.max_response_bytes).await?;
+                let message =
+                    serde_json::from_slice(&body).map_err(StreamableHttpError::Deserialize)?;
+                Ok(StreamableHttpPostResponse::Json(message, session_id))
+            }
+            Ok(ManagedHttpContentType::Sse) => {
+                let max_response_bytes = self.max_response_bytes;
+                if response
+                    .content_length()
+                    .is_some_and(|length| length > max_response_bytes as u64)
+                {
+                    return Err(managed_http_error(
+                        "managed MCP stream exceeds the configured byte limit",
+                    ));
+                }
+                let total_bytes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+                let bounded = response.bytes_stream().map(move |chunk| match chunk {
+                    Ok(chunk) => {
+                        let current = total_bytes.load(std::sync::atomic::Ordering::Acquire);
+                        match current.checked_add(chunk.len()) {
+                            Some(updated) if updated <= max_response_bytes => {
+                                total_bytes.store(updated, std::sync::atomic::Ordering::Release);
+                                Ok(chunk)
+                            }
+                            Some(_) | None => Err(ManagedStreamBodyError::ByteLimitExceeded),
+                        }
+                    }
+                    Err(error) => Err(ManagedStreamBodyError::Transport(error)),
+                });
+                let bounded = SseStream::from_bytes_stream(bounded).map(|event| match event {
+                    Ok(sse) => Ok(sse),
+                    Err(SseError::Body(error)) if is_managed_stream_body_error(error.as_ref()) => {
+                        Err(SseError::Body(Box::new(
+                            ManagedStreamBodyError::ByteLimitExceeded,
+                        )))
+                    }
+                    Err(error) => Err(error),
+                });
+                Ok(StreamableHttpPostResponse::Sse(bounded.boxed(), session_id))
+            }
+            Err(content_type) => Err(StreamableHttpError::UnexpectedContentType(content_type)),
+        }
+    }
+
+    async fn delete_session(
+        &self,
+        uri: Arc<str>,
+        session_id: Arc<str>,
+        auth_header: Option<String>,
+        custom_headers: HashMap<HeaderName, HeaderValue>,
+    ) -> Result<(), StreamableHttpError<Self::Error>> {
+        let mut request = self
+            .client
+            .delete(uri.as_ref())
+            .header("mcp-session-id", session_id.as_ref());
+        if let Some(auth_header) = auth_header {
+            request = request.bearer_auth(auth_header);
+        }
+        for (name, value) in custom_headers {
+            request = request.header(name, value);
+        }
+        let response = request.send().await.map_err(StreamableHttpError::Client)?;
+        if response.status() != reqwest::StatusCode::METHOD_NOT_ALLOWED {
+            response
+                .error_for_status()
+                .map_err(StreamableHttpError::Client)?;
+        }
+        Ok(())
+    }
+
+    fn get_stream(
+        &self,
+        uri: Arc<str>,
+        session_id: Arc<str>,
+        last_event_id: Option<String>,
+        auth_header: Option<String>,
+        custom_headers: HashMap<HeaderName, HeaderValue>,
+    ) -> impl Future<
+        Output = Result<
+            BoxStream<'static, Result<Sse, SseError>>,
+            StreamableHttpError<Self::Error>,
+        >,
+    > + Send
+           + '_ {
+        let max_response_bytes = self.max_response_bytes;
+        let total_bytes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let total_bytes_for_stream = total_bytes.clone();
+
+        async move {
+            let mut request_builder = self
+                .client
+                .get(uri.as_ref())
+                .header(
+                    reqwest::header::ACCEPT,
+                    ["text/event-stream", "application/json"].join(", "),
+                )
+                .header("mcp-session-id", session_id.as_ref());
+            if let Some(last_event_id) = last_event_id {
+                request_builder = request_builder.header("last-event-id", last_event_id);
+            }
+            if let Some(auth_header) = auth_header {
+                request_builder = request_builder.bearer_auth(auth_header);
+            }
+            for (name, value) in custom_headers {
+                request_builder = request_builder.header(name, value);
+            }
+            let response = request_builder.send().await?;
+            if response.status() == reqwest::StatusCode::METHOD_NOT_ALLOWED {
+                return Err(StreamableHttpError::ServerDoesNotSupportSse);
+            }
+            let response = response.error_for_status()?;
+            let content_type = managed_http_response_content_type(response.headers());
+            if !matches!(&content_type, Ok(ManagedHttpContentType::Sse)) {
+                return Err(StreamableHttpError::UnexpectedContentType(
+                    content_type.err().flatten(),
+                ));
+            }
+            if response
+                .content_length()
+                .is_some_and(|length| length > max_response_bytes as u64)
+            {
+                return Err(managed_http_error(
+                    "managed MCP stream exceeds the configured byte limit",
+                ));
+            }
+
+            let bounded = response.bytes_stream().map(move |chunk| match chunk {
+                Ok(chunk) => {
+                    let current = total_bytes_for_stream.load(std::sync::atomic::Ordering::Acquire);
+                    match current.checked_add(chunk.len()) {
+                        Some(updated) if updated <= max_response_bytes => {
+                            total_bytes_for_stream
+                                .store(updated, std::sync::atomic::Ordering::Release);
+                            Ok(chunk)
+                        }
+                        Some(_) | None => Err(ManagedStreamBodyError::ByteLimitExceeded),
+                    }
+                }
+                Err(error) => Err(ManagedStreamBodyError::Transport(error)),
+            });
+
+            let bounded = SseStream::from_bytes_stream(bounded).map(|event| match event {
+                Ok(sse) => Ok(sse),
+                Err(error) => match error {
+                    SseError::Body(error) if is_managed_stream_body_error(error.as_ref()) => Err(
+                        SseError::Body(Box::new(ManagedStreamBodyError::ByteLimitExceeded)),
+                    ),
+                    _ => Err(error),
+                },
+            });
+
+            Ok::<BoxStream<'static, Result<Sse, SseError>>, StreamableHttpError<Self::Error>>(
+                bounded.boxed(),
+            )
+        }
+    }
+}
+
+/// Limits applied while consuming a single MCP `tools/list` result stream.
+///
+/// This deliberately measures each tool before retaining it, so a peer cannot
+/// force callers that only need a bounded inventory to first build an
+/// unbounded `Vec<Tool>`.
+#[derive(Debug, Clone, Copy)]
+pub struct ToolDiscoveryLimits {
+    pub max_tools: usize,
+    pub max_tool_bytes: usize,
+    pub max_total_bytes: usize,
+    pub max_pages: usize,
+    pub max_cursors: usize,
+    pub max_cursor_bytes: usize,
+}
 
 struct ActionRequiredStream {
     inner: ReceiverStream<crate::conversation::message::Message>,
@@ -1089,7 +1550,7 @@ impl ExtensionManager {
                         )
                     })?;
                 let transport = StreamableHttpClientTransport::with_client(
-                    managed.client(),
+                    BoundedManagedHttpClient::new(managed.client(), MANAGED_MCP_MAX_RESPONSE_BYTES),
                     StreamableHttpClientTransportConfig::with_uri(managed.endpoint().as_str()),
                 );
                 let client = McpClient::connect(
@@ -1345,16 +1806,45 @@ impl ExtensionManager {
     /// Get aggregated usage statistics
     pub async fn remove_extension(&self, name: &str) -> ExtensionResult<()> {
         let sanitized_name = name_to_key(name);
-        let extension = self.extensions.lock().await.remove(&sanitized_name);
-        if let Some(extension) = extension {
-            extension
-                .client
+        let client = self
+            .extensions
+            .lock()
+            .await
+            .get(&sanitized_name)
+            .map(|extension| extension.client.clone());
+        if let Some(client) = client {
+            client
                 .close()
                 .await
                 .map_err(|error| ExtensionError::SetupError(error.to_string()))?;
+
+            let mut extensions = self.extensions.lock().await;
+            if extensions
+                .get(&sanitized_name)
+                .is_some_and(|extension| Arc::ptr_eq(&extension.client, &client))
+            {
+                extensions.remove(&sanitized_name);
+            }
         }
         self.invalidate_tools_cache_and_bump_version().await;
         Ok(())
+    }
+
+    /// Remove a connection that could not complete graceful shutdown.
+    ///
+    /// Callers must first attempt `remove_extension`; this is the terminal
+    /// containment operation used by a supervised owner after bounded retries.
+    /// Dropping the final client handle tears down the transport and any child
+    /// process owned by it, but is intentionally not reported as a successful
+    /// graceful close.
+    pub async fn abort_extension(&self, name: &str) -> bool {
+        let removed = self.extensions.lock().await.remove(&name_to_key(name));
+        if removed.is_some() {
+            self.invalidate_tools_cache_and_bump_version().await;
+            true
+        } else {
+            false
+        }
     }
 
     pub async fn update_working_dir(&self, new_dir: &std::path::Path) {
@@ -1396,6 +1886,14 @@ impl ExtensionManager {
             .collect()
     }
 
+    pub async fn get_extension_config(&self, name: &str) -> Option<ExtensionConfig> {
+        self.extensions
+            .lock()
+            .await
+            .get(&name_to_key(name))
+            .map(|extension| extension.config.clone())
+    }
+
     /// Get all tools from all clients with proper prefixing
     pub async fn get_prefixed_tools(
         &self,
@@ -1404,6 +1902,133 @@ impl ExtensionManager {
     ) -> ExtensionResult<Vec<Tool>> {
         let all_tools = self.get_all_tools_cached(session_id).await?;
         Ok(self.filter_tools(&all_tools, extension_name.as_deref(), None))
+    }
+
+    /// Fetch tools for one extension without using the aggregate tool cache.
+    ///
+    /// The limits are enforced as each page is consumed. This is intended for
+    /// security-sensitive probes that must not turn untrusted MCP pagination
+    /// into an unbounded allocation.
+    pub async fn get_prefixed_tools_bounded(
+        &self,
+        session_id: &str,
+        extension_name: &str,
+        limits: ToolDiscoveryLimits,
+        cancellation_token: CancellationToken,
+    ) -> ExtensionResult<Vec<Tool>> {
+        if limits.max_tools == 0
+            || limits.max_tool_bytes == 0
+            || limits.max_total_bytes == 0
+            || limits.max_pages == 0
+            || limits.max_cursors == 0
+            || limits.max_cursor_bytes == 0
+        {
+            return Err(ExtensionError::ConfigError(
+                "bounded tool discovery requires non-zero limits".to_string(),
+            ));
+        }
+
+        let extension_name = name_to_key(extension_name);
+        let (config, client) = self
+            .extensions
+            .lock()
+            .await
+            .get(&extension_name)
+            .map(|extension| (extension.config.clone(), extension.get_client()))
+            .ok_or_else(|| {
+                ExtensionError::ConfigError(
+                    "extension is unavailable for tool discovery".to_string(),
+                )
+            })?;
+        let expose_unprefixed = is_unprefixed_extension(&config);
+        let mut tools = Vec::new();
+        let mut total_bytes = 0usize;
+        let mut pages = 0usize;
+        let mut cursors = std::collections::HashSet::new();
+        let mut cursor = None;
+
+        loop {
+            if cancellation_token.is_cancelled() {
+                return Err(ExtensionError::SetupError(
+                    "bounded tool discovery was cancelled".to_string(),
+                ));
+            }
+            pages = pages.checked_add(1).ok_or_else(|| {
+                ExtensionError::ConfigError(
+                    "bounded tool discovery page limit exceeded".to_string(),
+                )
+            })?;
+            if pages > limits.max_pages {
+                return Err(ExtensionError::ConfigError(
+                    "bounded tool discovery page limit exceeded".to_string(),
+                ));
+            }
+            let page = client
+                .list_tools(session_id, cursor, cancellation_token.clone())
+                .await?;
+
+            for mut tool in page.tools {
+                if !config.is_tool_available(&tool.name) {
+                    continue;
+                }
+                if tools.len() >= limits.max_tools {
+                    return Err(ExtensionError::ConfigError(
+                        "bounded tool discovery tool limit exceeded".to_string(),
+                    ));
+                }
+                let public_name = if expose_unprefixed {
+                    tool.name.to_string()
+                } else {
+                    format!("{}__{}", extension_name, tool.name)
+                };
+                let mut meta_map = tool
+                    .meta
+                    .as_ref()
+                    .map(|meta| meta.0.clone())
+                    .unwrap_or_default();
+                meta_map.insert(
+                    TOOL_EXTENSION_META_KEY.to_string(),
+                    serde_json::Value::String(extension_name.clone()),
+                );
+                tool.name = public_name.into();
+                tool.meta = Some(rmcp::model::Meta(meta_map));
+
+                let tool_bytes = serde_json::to_vec(&tool)
+                    .map_err(|error| ExtensionError::SetupError(error.to_string()))?
+                    .len();
+                if tool_bytes > limits.max_tool_bytes {
+                    return Err(ExtensionError::ConfigError(
+                        "bounded tool discovery item-size limit exceeded".to_string(),
+                    ));
+                }
+                total_bytes = total_bytes.checked_add(tool_bytes).ok_or_else(|| {
+                    ExtensionError::ConfigError(
+                        "bounded tool discovery total-size limit exceeded".to_string(),
+                    )
+                })?;
+                if total_bytes > limits.max_total_bytes {
+                    return Err(ExtensionError::ConfigError(
+                        "bounded tool discovery total-size limit exceeded".to_string(),
+                    ));
+                }
+                tools.push(tool);
+            }
+
+            let Some(next_cursor) = page.next_cursor else {
+                return Ok(tools);
+            };
+            if next_cursor.len() > limits.max_cursor_bytes {
+                return Err(ExtensionError::ConfigError(
+                    "bounded tool discovery cursor-size limit exceeded".to_string(),
+                ));
+            }
+            if !cursors.insert(next_cursor.clone()) || cursors.len() > limits.max_cursors {
+                return Err(ExtensionError::ConfigError(
+                    "bounded tool discovery cursor limit exceeded".to_string(),
+                ));
+            }
+            cursor = Some(next_cursor);
+        }
     }
 
     pub async fn get_prefixed_tools_excluding(
@@ -2234,7 +2859,7 @@ impl ExtensionManager {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use rmcp::model::CallToolResult;
     use rmcp::model::{InitializeResult, JsonObject};
@@ -2294,9 +2919,17 @@ mod tests {
     }
 
     impl ExtensionManager {
-        async fn add_mock_extension(&self, name: String, client: McpClientBox) {
+        pub(crate) async fn add_mock_extension(&self, name: String, client: McpClientBox) {
             self.add_mock_extension_with_tools(name, client, vec![])
                 .await;
+        }
+
+        pub(crate) async fn add_mock_extension_config_for_test(&self, config: ExtensionConfig) {
+            let key = config.key();
+            let extension =
+                Extension::new(config.clone(), config, Arc::new(MockClient {}), None, None);
+            self.extensions.lock().await.insert(key, extension);
+            self.invalidate_tools_cache_and_bump_version().await;
         }
 
         async fn add_mock_extension_with_tools(
@@ -2411,6 +3044,174 @@ mod tests {
                 }
                 _ => Err(Error::TransportClosed),
             }
+        }
+
+        async fn list_prompts(
+            &self,
+            _session_id: &str,
+            _next_cursor: Option<String>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ListPromptsResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn get_prompt(
+            &self,
+            _session_id: &str,
+            _name: &str,
+            _arguments: Value,
+            _cancellation_token: CancellationToken,
+        ) -> Result<GetPromptResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn subscribe(&self) -> mpsc::Receiver<ServerNotification> {
+            mpsc::channel(1).1
+        }
+    }
+
+    struct EndlessPaginationClient {
+        calls: std::sync::atomic::AtomicUsize,
+        payload_bytes: usize,
+    }
+
+    #[async_trait::async_trait]
+    impl McpClientTrait for EndlessPaginationClient {
+        async fn close(&self) -> Result<(), Error> {
+            Ok(())
+        }
+
+        fn get_info(&self) -> Option<&InitializeResult> {
+            None
+        }
+
+        async fn list_resources(
+            &self,
+            _session_id: &str,
+            _next_cursor: Option<String>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ListResourcesResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn read_resource(
+            &self,
+            _session_id: &str,
+            _uri: &str,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ReadResourceResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn list_tools(
+            &self,
+            _session_id: &str,
+            _next_cursor: Option<String>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ListToolsResult, Error> {
+            let page = self.calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            let schema = serde_json::json!({"payload": "x".repeat(self.payload_bytes)});
+            Ok(ListToolsResult {
+                tools: vec![Tool::new(
+                    format!("tool_{page}"),
+                    "bounded discovery test tool".to_string(),
+                    Arc::new(schema.as_object().unwrap().clone()),
+                )],
+                next_cursor: Some(format!("cursor_{page}")),
+                meta: None,
+            })
+        }
+
+        async fn call_tool(
+            &self,
+            _ctx: &ToolCallContext,
+            _name: &str,
+            _arguments: Option<JsonObject>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<CallToolResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn list_prompts(
+            &self,
+            _session_id: &str,
+            _next_cursor: Option<String>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ListPromptsResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn get_prompt(
+            &self,
+            _session_id: &str,
+            _name: &str,
+            _arguments: Value,
+            _cancellation_token: CancellationToken,
+        ) -> Result<GetPromptResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn subscribe(&self) -> mpsc::Receiver<ServerNotification> {
+            mpsc::channel(1).1
+        }
+    }
+
+    pub(crate) struct RetryableCloseClient {
+        pub(crate) fail_next_close: std::sync::atomic::AtomicBool,
+    }
+
+    #[async_trait::async_trait]
+    impl McpClientTrait for RetryableCloseClient {
+        async fn close(&self) -> Result<(), Error> {
+            if self
+                .fail_next_close
+                .swap(false, std::sync::atomic::Ordering::SeqCst)
+            {
+                Err(Error::TransportClosed)
+            } else {
+                Ok(())
+            }
+        }
+
+        fn get_info(&self) -> Option<&InitializeResult> {
+            None
+        }
+
+        async fn list_resources(
+            &self,
+            _session_id: &str,
+            _next_cursor: Option<String>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ListResourcesResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn read_resource(
+            &self,
+            _session_id: &str,
+            _uri: &str,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ReadResourceResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn list_tools(
+            &self,
+            _session_id: &str,
+            _next_cursor: Option<String>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<ListToolsResult, Error> {
+            Err(Error::TransportClosed)
+        }
+
+        async fn call_tool(
+            &self,
+            _ctx: &ToolCallContext,
+            _name: &str,
+            _arguments: Option<JsonObject>,
+            _cancellation_token: CancellationToken,
+        ) -> Result<CallToolResult, Error> {
+            Err(Error::TransportClosed)
         }
 
         async fn list_prompts(
@@ -2757,6 +3558,694 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn remove_extension_keeps_client_when_close_can_be_retried() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let extension_manager =
+            ExtensionManager::new_without_provider(temp_dir.path().to_path_buf());
+        extension_manager
+            .add_mock_extension(
+                "retryable".to_string(),
+                Arc::new(RetryableCloseClient {
+                    fail_next_close: std::sync::atomic::AtomicBool::new(true),
+                }),
+            )
+            .await;
+
+        assert!(extension_manager
+            .remove_extension("retryable")
+            .await
+            .is_err());
+        assert!(extension_manager
+            .get_extension_config("retryable")
+            .await
+            .is_some());
+
+        extension_manager
+            .remove_extension("retryable")
+            .await
+            .unwrap();
+        assert!(extension_manager
+            .get_extension_config("retryable")
+            .await
+            .is_none());
+    }
+
+    #[tokio::test]
+    async fn bounded_tool_discovery_stops_at_page_and_item_limits() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let extension_manager =
+            ExtensionManager::new_without_provider(temp_dir.path().to_path_buf());
+        let client = Arc::new(EndlessPaginationClient {
+            calls: std::sync::atomic::AtomicUsize::new(0),
+            payload_bytes: 0,
+        });
+        extension_manager
+            .add_mock_extension("bounded".to_string(), client.clone())
+            .await;
+
+        let page_error = extension_manager
+            .get_prefixed_tools_bounded(
+                "test-session-id",
+                "bounded",
+                ToolDiscoveryLimits {
+                    max_tools: 10,
+                    max_tool_bytes: 4096,
+                    max_total_bytes: 4096,
+                    max_pages: 2,
+                    max_cursors: 2,
+                    max_cursor_bytes: 128,
+                },
+                CancellationToken::new(),
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(page_error, ExtensionError::ConfigError(_)));
+        assert_eq!(
+            client.calls.load(std::sync::atomic::Ordering::SeqCst),
+            2,
+            "the third page must not be requested"
+        );
+
+        let oversized = Arc::new(EndlessPaginationClient {
+            calls: std::sync::atomic::AtomicUsize::new(0),
+            payload_bytes: 4096,
+        });
+        extension_manager
+            .add_mock_extension("oversized".to_string(), oversized.clone())
+            .await;
+        let item_error = extension_manager
+            .get_prefixed_tools_bounded(
+                "test-session-id",
+                "oversized",
+                ToolDiscoveryLimits {
+                    max_tools: 10,
+                    max_tool_bytes: 128,
+                    max_total_bytes: 8192,
+                    max_pages: 10,
+                    max_cursors: 10,
+                    max_cursor_bytes: 128,
+                },
+                CancellationToken::new(),
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(item_error, ExtensionError::ConfigError(_)));
+        assert_eq!(
+            oversized.calls.load(std::sync::atomic::Ordering::SeqCst),
+            1,
+            "oversized items must be rejected on their first decoded page"
+        );
+    }
+
+    #[tokio::test]
+    async fn managed_http_response_limit_rejects_a_chunked_frame_before_json_decode() {
+        use axum::body::{Body, Bytes};
+        use axum::response::Response;
+        use axum::routing::post;
+        use axum::Router;
+        use std::convert::Infallible;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let app = Router::new().route(
+            "/",
+            post(|| async {
+                let chunks = vec![
+                    Ok::<_, Infallible>(Bytes::from(vec![b'x'; 80])),
+                    Ok::<_, Infallible>(Bytes::from(vec![b'x'; 80])),
+                ];
+                Response::builder()
+                    .header("content-type", "application/json")
+                    .body(Body::from_stream(futures::stream::iter(chunks)))
+                    .unwrap()
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+
+        let response = reqwest::Client::new()
+            .post(format!("http://{address}/"))
+            .send()
+            .await
+            .unwrap();
+        let error = read_managed_http_response(response, 128).await.unwrap_err();
+        assert!(error.to_string().contains("byte limit"));
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn managed_http_stream_limit_rejects_single_oversized_sse_event_before_json_decode() {
+        use axum::body::{Body, Bytes};
+        use axum::response::Response;
+        use axum::routing::get;
+        use axum::Router;
+        use std::convert::Infallible;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+
+        let oversized = "x".repeat(MANAGED_MCP_MAX_RESPONSE_BYTES);
+        let event_payload =
+            format!(r#"{{"jsonrpc":"2.0","id":0,"result":{{"value":"{oversized}"}}}}"#);
+        let event = format!("data: {event_payload}\\n\\n");
+
+        let app = Router::new().route(
+            "/",
+            get(|| async {
+                Response::builder()
+                    .header("content-type", "text/event-stream")
+                    .body(Body::from_stream(futures::stream::once(async move {
+                        Ok::<_, Infallible>(Bytes::from(event.clone()))
+                    })))
+                    .unwrap()
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+
+        let client =
+            BoundedManagedHttpClient::new(reqwest::Client::new(), MANAGED_MCP_MAX_RESPONSE_BYTES);
+        let mut stream = client
+            .get_stream(
+                Arc::from(format!("http://{address}/")),
+                Arc::from("managed-stream-test"),
+                None,
+                None,
+                HashMap::new(),
+            )
+            .await
+            .unwrap();
+
+        let first = stream.next().await.expect("stream should yield first item");
+        assert!(
+            first.is_err(),
+            "oversized SSE must be rejected before JSON decode"
+        );
+        assert!(first.unwrap_err().to_string().contains("byte limit"));
+
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn managed_http_response_limit_accepts_chunked_json_within_limit() {
+        use axum::body::{Body, Bytes};
+        use axum::response::Response;
+        use axum::routing::post;
+        use axum::Router;
+        use std::convert::Infallible;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let payload =
+            serde_json::json!({ "jsonrpc": "2.0", "result": { "status": "ok" } }).to_string();
+
+        let app = Router::new().route(
+            "/",
+            post(|| async move {
+                Response::builder()
+                    .header("content-type", "application/json")
+                    .body(Body::from_stream(futures::stream::once(async move {
+                        Ok::<_, Infallible>(Bytes::from(payload))
+                    })))
+                    .unwrap()
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+
+        let response = reqwest::Client::new()
+            .post(format!("http://{address}/"))
+            .send()
+            .await
+            .unwrap();
+        let (body, _session_id) =
+            read_managed_http_response(response, MANAGED_MCP_MAX_RESPONSE_BYTES)
+                .await
+                .expect("managed HTTP JSON response within limit should decode");
+        assert!(!body.is_empty(), "non-empty payload should be preserved");
+
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn managed_http_post_supports_json_sse_and_accepted_responses() {
+        use axum::body::Body;
+        use axum::http::StatusCode;
+        use axum::response::Response;
+        use axum::routing::post;
+        use axum::Router;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let requests = Arc::new(AtomicUsize::new(0));
+        let app = Router::new().route(
+            "/",
+            post({
+                let requests = requests.clone();
+                move |headers: axum::http::HeaderMap| {
+                    let request_number = requests.fetch_add(1, Ordering::SeqCst);
+                    async move {
+                        assert_eq!(
+                            headers.get("accept").unwrap().to_str().unwrap(),
+                            "text/event-stream, application/json"
+                        );
+                        match request_number {
+                            0 => Response::builder()
+                                .header("content-type", "text/event-stream")
+                                .header("mcp-session-id", "sse-session")
+                                .body(Body::from(
+                                    "data: {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}\n\n",
+                                ))
+                                .unwrap(),
+                            1 => Response::builder()
+                                .header("content-type", "application/json")
+                                .header("mcp-session-id", "json-session")
+                                .body(Body::from("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}"))
+                                .unwrap(),
+                            2 => Response::builder()
+                                .status(StatusCode::ACCEPTED)
+                                .body(Body::empty())
+                                .unwrap(),
+                            _ => Response::builder()
+                                .status(StatusCode::NO_CONTENT)
+                                .body(Body::empty())
+                                .unwrap(),
+                        }
+                    }
+                }
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let client = BoundedManagedHttpClient::new(reqwest::Client::new(), 1024);
+        let message = || {
+            serde_json::from_str(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+                .unwrap()
+        };
+        let uri: Arc<str> = Arc::from(format!("http://{address}/"));
+
+        let response = client
+            .post_message(uri.clone(), message(), None, None, HashMap::new())
+            .await
+            .unwrap();
+        let StreamableHttpPostResponse::Sse(mut stream, session_id) = response else {
+            panic!("expected SSE response");
+        };
+        assert_eq!(session_id.as_deref(), Some("sse-session"));
+        assert!(stream.next().await.unwrap().is_ok());
+
+        let response = client
+            .post_message(uri.clone(), message(), None, None, HashMap::new())
+            .await
+            .unwrap();
+        let StreamableHttpPostResponse::Json(_, session_id) = response else {
+            panic!("expected JSON response");
+        };
+        assert_eq!(session_id.as_deref(), Some("json-session"));
+
+        assert!(matches!(
+            client
+                .post_message(uri.clone(), message(), None, None, HashMap::new())
+                .await
+                .unwrap(),
+            StreamableHttpPostResponse::Accepted
+        ));
+        assert!(matches!(
+            client
+                .post_message(uri, message(), None, None, HashMap::new())
+                .await
+                .unwrap(),
+            StreamableHttpPostResponse::Accepted
+        ));
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn managed_http_post_rejects_invalid_content_types_and_bounds_sse() {
+        use axum::body::{Body, Bytes};
+        use axum::response::Response;
+        use axum::routing::post;
+        use axum::Router;
+        use std::convert::Infallible;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let requests = Arc::new(AtomicUsize::new(0));
+        let app = Router::new().route(
+            "/",
+            post({
+                let requests = requests.clone();
+                move || {
+                    let request_number = requests.fetch_add(1, Ordering::SeqCst);
+                    async move {
+                        if request_number == 0 {
+                            Response::builder()
+                                .header("content-type", "text/plain")
+                                .body(Body::from("not MCP"))
+                                .unwrap()
+                        } else {
+                            Response::builder()
+                                .header("content-type", "text/event-stream")
+                                .body(Body::from_stream(futures::stream::once(async {
+                                    Ok::<_, Infallible>(Bytes::from(
+                                        "data: {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}\n\n",
+                                    ))
+                                })))
+                                .unwrap()
+                        }
+                    }
+                }
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let client = BoundedManagedHttpClient::new(reqwest::Client::new(), 16);
+        let message = || {
+            serde_json::from_str(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+                .unwrap()
+        };
+        let uri: Arc<str> = Arc::from(format!("http://{address}/"));
+
+        let error = client
+            .post_message(uri.clone(), message(), None, None, HashMap::new())
+            .await
+            .unwrap_err();
+        assert!(matches!(
+            error,
+            StreamableHttpError::UnexpectedContentType(_)
+        ));
+
+        let response = client
+            .post_message(uri, message(), None, None, HashMap::new())
+            .await
+            .unwrap();
+        let StreamableHttpPostResponse::Sse(mut stream, _) = response else {
+            panic!("expected SSE response");
+        };
+        assert!(stream.next().await.unwrap().is_err());
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn managed_http_post_validates_content_type_parameters() {
+        use axum::body::Body;
+        use axum::response::Response;
+        use axum::routing::post;
+        use axum::Router;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let requests = Arc::new(AtomicUsize::new(0));
+        let app = Router::new().route(
+            "/",
+            post({
+                let requests = requests.clone();
+                move || {
+                    let request_number = requests.fetch_add(1, Ordering::SeqCst);
+                    async move {
+                        let content_type = match request_number {
+                            0 => "application/jsonp",
+                            1 => "text/event-streamx",
+                            2 => "Application/Json; title=\"semi;colon\"",
+                            3 => "Application/Json; title=\"escaped \\\"quote\\\"\"",
+                            4 => "Application/Json; title=\"unterminated",
+                            5 => "Application/Json; title=\"value\"extra",
+                            _ => "Application/Json; charset=utf-8",
+                        };
+                        Response::builder()
+                            .header("content-type", content_type)
+                            .body(Body::from("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}"))
+                            .unwrap()
+                    }
+                }
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let client = BoundedManagedHttpClient::new(reqwest::Client::new(), 1024);
+        let message = || {
+            serde_json::from_str(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+                .unwrap()
+        };
+        let uri: Arc<str> = Arc::from(format!("http://{address}/"));
+
+        for _ in 0..2 {
+            assert!(matches!(
+                client
+                    .post_message(uri.clone(), message(), None, None, HashMap::new())
+                    .await,
+                Err(StreamableHttpError::UnexpectedContentType(_))
+            ));
+        }
+        assert!(matches!(
+            client
+                .post_message(uri.clone(), message(), None, None, HashMap::new())
+                .await,
+            Ok(StreamableHttpPostResponse::Json(_, _))
+        ));
+        assert!(matches!(
+            client
+                .post_message(uri.clone(), message(), None, None, HashMap::new())
+                .await,
+            Ok(StreamableHttpPostResponse::Json(_, _))
+        ));
+        assert!(matches!(
+            client
+                .post_message(uri.clone(), message(), None, None, HashMap::new())
+                .await,
+            Err(StreamableHttpError::UnexpectedContentType(_))
+        ));
+        assert!(matches!(
+            client
+                .post_message(uri.clone(), message(), None, None, HashMap::new())
+                .await,
+            Err(StreamableHttpError::UnexpectedContentType(_))
+        ));
+        assert!(matches!(
+            client
+                .post_message(uri, message(), None, None, HashMap::new())
+                .await,
+            Ok(StreamableHttpPostResponse::Json(_, _))
+        ));
+
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn managed_http_rejects_duplicate_content_type_headers() {
+        use axum::body::Body;
+        use axum::response::Response;
+        use axum::routing::{get, post};
+        use axum::Router;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let get_requests = Arc::new(AtomicUsize::new(0));
+        let app = Router::new()
+            .route(
+                "/",
+                post(|| async {
+                    Response::builder()
+                        .header("content-type", "application/json")
+                        .header("content-type", "text/event-stream")
+                        .body(Body::from("{}"))
+                        .unwrap()
+                }),
+            )
+            .route(
+                "/",
+                get({
+                    let get_requests = get_requests.clone();
+                    move || {
+                        let request_number = get_requests.fetch_add(1, Ordering::SeqCst);
+                        async move {
+                            let response = match request_number {
+                                0 => {
+                                    Response::builder().header("content-type", "text/event-streamx")
+                                }
+                                1 => Response::builder().header("content-type", "application/json"),
+                                2 => Response::builder()
+                                    .header("content-type", "text/event-stream; charset=utf-8"),
+                                _ => Response::builder()
+                                    .header("content-type", "text/event-stream")
+                                    .header("content-type", "application/json"),
+                            }
+                            .body(Body::from("data: {}\n\n"))
+                            .unwrap();
+                            response
+                        }
+                    }
+                }),
+            );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let client = BoundedManagedHttpClient::new(reqwest::Client::new(), 1024);
+        let uri: Arc<str> = Arc::from(format!("http://{address}/"));
+        let message =
+            serde_json::from_str(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+                .unwrap();
+
+        assert!(matches!(
+            client
+                .post_message(uri.clone(), message, None, None, HashMap::new())
+                .await,
+            Err(StreamableHttpError::UnexpectedContentType(_))
+        ));
+        assert!(matches!(
+            client
+                .get_stream(
+                    uri.clone(),
+                    Arc::from("session-id"),
+                    None,
+                    None,
+                    HashMap::new()
+                )
+                .await,
+            Err(StreamableHttpError::UnexpectedContentType(_))
+        ));
+        assert!(matches!(
+            client
+                .get_stream(
+                    uri.clone(),
+                    Arc::from("session-id"),
+                    None,
+                    None,
+                    HashMap::new()
+                )
+                .await,
+            Err(StreamableHttpError::UnexpectedContentType(_))
+        ));
+        assert!(client
+            .get_stream(
+                uri.clone(),
+                Arc::from("session-id"),
+                None,
+                None,
+                HashMap::new()
+            )
+            .await
+            .is_ok());
+        assert!(matches!(
+            client
+                .get_stream(uri, Arc::from("session-id"), None, None, HashMap::new())
+                .await,
+            Err(StreamableHttpError::UnexpectedContentType(_))
+        ));
+
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn non_managed_streamable_http_stream_is_not_subject_to_managed_limit() {
+        use axum::body::{Body, Bytes};
+        use axum::response::Response;
+        use axum::routing::get;
+        use axum::Router;
+        use std::convert::Infallible;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let payload = "x".repeat(MANAGED_MCP_MAX_RESPONSE_BYTES + 1);
+        let event = format!("data: {payload}\n\n");
+
+        let app = Router::new().route(
+            "/",
+            get(|| async move {
+                Response::builder()
+                    .header("content-type", "text/event-stream")
+                    .body(Body::from_stream(futures::stream::once(async move {
+                        Ok::<_, Infallible>(Bytes::from(event))
+                    })))
+                    .unwrap()
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+
+        let mut stream = reqwest::Client::new()
+            .get_stream(
+                Arc::from(format!("http://{address}/")),
+                Arc::from("session-id"),
+                None,
+                None,
+                HashMap::new(),
+            )
+            .await
+            .unwrap();
+
+        let first = stream
+            .next()
+            .await
+            .expect("sse request should yield at least one frame");
+        assert!(
+            first.is_ok(),
+            "non-managed streamable HTTP should remain unbounded"
+        );
+
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn managed_http_stream_limit_rejects_on_cumulative_multi_event_bytes() {
+        use axum::body::{Body, Bytes};
+        use axum::response::Response;
+        use axum::routing::get;
+        use axum::Router;
+        use std::convert::Infallible;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+
+        let overflow_payload = "x".repeat(MANAGED_MCP_MAX_RESPONSE_BYTES);
+        let chunks = vec![
+            Ok::<_, Infallible>(Bytes::from("data: \n\n")),
+            Ok::<_, Infallible>(Bytes::from(format!(
+                "data: {}\n\n",
+                format!(r#"{{"jsonrpc":"2.0","id":1,"result":{{"value":"{overflow_payload}"}}}}"#)
+            ))),
+        ];
+
+        let app = Router::new().route(
+            "/",
+            get(|| async {
+                Response::builder()
+                    .header("content-type", "text/event-stream")
+                    .body(Body::from_stream(futures::stream::iter(chunks)))
+                    .unwrap()
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+
+        let client =
+            BoundedManagedHttpClient::new(reqwest::Client::new(), MANAGED_MCP_MAX_RESPONSE_BYTES);
+        let mut stream = client
+            .get_stream(
+                Arc::from(format!("http://{address}/")),
+                Arc::from("managed-stream-test"),
+                None,
+                None,
+                HashMap::new(),
+            )
+            .await
+            .unwrap();
+
+        let first = stream
+            .next()
+            .await
+            .expect("first SSE event should be delivered");
+        assert!(
+            first.is_ok(),
+            "empty SSE event should be allowed if within limit"
+        );
+
+        let second = stream
+            .next()
+            .await
+            .expect("second SSE event should be delivered");
+        assert!(
+            second.is_err(),
+            "cumulative SSE payload limit must be enforced"
+        );
+        assert!(second.unwrap_err().to_string().contains("byte limit"));
+
+        server.abort();
+    }
     async fn test_get_prefixed_tools_excluding() {
         let temp_dir = tempfile::tempdir().unwrap();
         let extension_manager =

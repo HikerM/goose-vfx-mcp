@@ -1417,17 +1417,20 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
         builtins
     };
 
-    let additional_source_roots = Config::global()
-        .get_param::<String>("ADDITIONAL_AGENT_SOURCE_ROOTS")
-        .ok()
-        .map(|paths| std::env::split_paths(&paths).collect::<Vec<_>>())
-        .unwrap_or_default()
-        .into_iter()
-        .map(|path| {
-            let path = path.canonicalize().unwrap_or(path);
-            SourceRoot::read_only(path)
-        })
-        .collect();
+    let additional_source_roots =
+        load_serve_additional_source_roots(Paths::ensure_windows_governed_root, || {
+            Config::global()
+                .get_param::<String>("ADDITIONAL_AGENT_SOURCE_ROOTS")
+                .ok()
+                .map(|paths| std::env::split_paths(&paths).collect::<Vec<_>>())
+                .unwrap_or_default()
+                .into_iter()
+                .map(|path| {
+                    let path = path.canonicalize().unwrap_or(path);
+                    SourceRoot::read_only(path)
+                })
+                .collect()
+        })?;
 
     let server = Arc::new(AcpServer::new(AcpServerFactoryConfig {
         builtins,
@@ -1524,6 +1527,14 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
         Ok(())
     };
     await_serve_then_shutdown(serve, server.shutdown()).await
+}
+
+fn load_serve_additional_source_roots(
+    ensure_root: impl FnOnce() -> Result<()>,
+    load_roots: impl FnOnce() -> Vec<SourceRoot>,
+) -> Result<Vec<SourceRoot>> {
+    ensure_root()?;
+    Ok(load_roots())
 }
 
 async fn await_serve_then_shutdown<T, E>(
@@ -2218,9 +2229,9 @@ pub async fn cli() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
 
-    if let Err(e) = crate::project_tracker::update_project_tracker(None, None) {
-        warn!("Warning: Failed to update project tracker: {}", e);
-    }
+    initialize_cli_entry(Paths::ensure_windows_governed_root, || {
+        crate::project_tracker::update_project_tracker(None, None)
+    })?;
 
     let command_name = get_command_name(&cli.command);
     tracing::info!(
@@ -2390,9 +2401,21 @@ pub async fn cli() -> anyhow::Result<()> {
     }
 }
 
+fn initialize_cli_entry(
+    ensure_root: impl FnOnce() -> Result<()>,
+    update_project_tracker: impl FnOnce() -> anyhow::Result<()>,
+) -> Result<()> {
+    ensure_root()?;
+    if let Err(error) = update_project_tracker() {
+        warn!("Warning: Failed to update project tracker: {}", error);
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::cell::RefCell;
     use std::sync::atomic::{AtomicBool, Ordering};
 
     #[tokio::test]
@@ -2510,6 +2533,43 @@ mod tests {
             }
             _ => panic!("expected serve command"),
         }
+    }
+
+    #[test]
+    fn cli_entry_initializes_governed_root_before_project_tracker() {
+        let calls = RefCell::new(Vec::new());
+
+        initialize_cli_entry(
+            || {
+                calls.borrow_mut().push("gate");
+                Ok(())
+            },
+            || {
+                calls.borrow_mut().push("tracker");
+                Ok(())
+            },
+        )
+        .unwrap();
+
+        assert_eq!(*calls.borrow(), vec!["gate", "tracker"]);
+    }
+
+    #[test]
+    fn serve_additional_source_roots_do_not_load_before_gate() {
+        let calls = RefCell::new(Vec::new());
+
+        let _ = load_serve_additional_source_roots(
+            || {
+                calls.borrow_mut().push("gate");
+                Err(anyhow::anyhow!("blocked"))
+            },
+            || {
+                calls.borrow_mut().push("config");
+                Vec::new()
+            },
+        );
+
+        assert_eq!(*calls.borrow(), vec!["gate"]);
     }
 
     #[test]
