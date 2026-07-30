@@ -72,14 +72,38 @@ interface SaveDialogResponse {
   filePath?: string;
 }
 
-interface FileResponse {
+export interface ProjectHintsResponse {
   file: string;
-  filePath: string;
   error: string | null;
   found: boolean;
 }
 
+export interface ProjectFileItem {
+  name: string;
+  relativePath: string;
+  itemType: 'Directory' | 'File';
+}
+
 const config = JSON.parse(process.argv.find((arg) => arg.startsWith('{')) || '{}');
+
+const allowedRendererEvents = new Set([
+  'system-resume',
+  'open-shared-session',
+  'fatal-error',
+  'set-view',
+  'new-chat',
+  'focus-input',
+  'set-initial-message',
+  'theme-changed',
+  'find-command',
+  'find-next',
+  'find-previous',
+  'use-selection-find',
+  'add-extension',
+  'toggle-navigation',
+  'fullscreen-change',
+  'mouse-back-button-clicked',
+]);
 
 interface UpdaterEvent {
   event: string;
@@ -118,10 +142,16 @@ type ElectronAPI = {
     error?: string;
   } | null>;
   getBinaryPath: (binaryName: string) => Promise<string>;
-  readFile: (directory: string) => Promise<FileResponse>;
-  writeFile: (directory: string, content: string) => Promise<boolean>;
-  ensureDirectory: (dirPath: string) => Promise<boolean>;
-  listFiles: (dirPath: string, extension?: string) => Promise<string[]>;
+  requestProjectDirectoryAccess: (directory: string) => Promise<boolean>;
+  getProjectDirectoryAccess: () => Promise<{ authorized: boolean; directory: string | null; token: string | null }>;
+  listProjectFiles: (token: string, workingDir: string) => Promise<ProjectFileItem[]>;
+  readProjectGoosehints: (token: string, workingDir: string) => Promise<ProjectHintsResponse>;
+  writeProjectGoosehints: (content: string, token: string, workingDir: string) => Promise<boolean>;
+  selectRecipeFile: () => Promise<{ filePath: string; contents: string; error?: string } | null>;
+  saveRecipeFile: (content: string, defaultPath?: string) => Promise<{
+    status: 'saved' | 'cancelled' | 'failed';
+    fileName?: string;
+  }>;
   getAllowedExtensions: () => Promise<string[]>;
   getPathForFile: (file: File) => string;
   setMenuBarIcon: (show: boolean) => Promise<boolean>;
@@ -149,7 +179,6 @@ type ElectronAPI = {
     channel: string,
     callback: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void
   ) => void;
-  emit: (channel: string, ...args: unknown[]) => void;
   broadcastThemeChange: (themeData: {
     mode: string;
     useSystemTheme: boolean;
@@ -177,7 +206,7 @@ type ElectronAPI = {
   closeApp: (appName: string) => Promise<void>;
   addRecentDir: (dir: string) => Promise<boolean>;
   listRecentDirs: () => Promise<string[]>;
-  listGitWorktreeDirs: (dir: string) => Promise<string[]>;
+  listGitWorktreeDirs: (token: string, workingDir?: string) => Promise<string[]>;
 };
 
 type AppConfigAPI = {
@@ -213,12 +242,18 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.invoke('select-file-or-directory', defaultPath),
   selectImportSessionFile: () => ipcRenderer.invoke('select-import-session-file'),
   getBinaryPath: (binaryName: string) => ipcRenderer.invoke('get-binary-path', binaryName),
-  readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
-  writeFile: (filePath: string, content: string) =>
-    ipcRenderer.invoke('write-file', filePath, content),
-  ensureDirectory: (dirPath: string) => ipcRenderer.invoke('ensure-directory', dirPath),
-  listFiles: (dirPath: string, extension?: string) =>
-    ipcRenderer.invoke('list-files', dirPath, extension),
+  requestProjectDirectoryAccess: (directory: string) =>
+    ipcRenderer.invoke('request-project-directory-access', directory),
+  getProjectDirectoryAccess: () => ipcRenderer.invoke('get-project-directory-access'),
+  listProjectFiles: (token: string, workingDir: string) =>
+    ipcRenderer.invoke('list-project-files', token, workingDir),
+  readProjectGoosehints: (token: string, workingDir: string) =>
+    ipcRenderer.invoke('read-project-goosehints', token, workingDir),
+  writeProjectGoosehints: (content: string, token: string, workingDir: string) =>
+    ipcRenderer.invoke('write-project-goosehints', content, token, workingDir),
+  selectRecipeFile: () => ipcRenderer.invoke('select-recipe-file'),
+  saveRecipeFile: (content: string, defaultPath?: string) =>
+    ipcRenderer.invoke('save-recipe-file', content, defaultPath),
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
   getAllowedExtensions: () => ipcRenderer.invoke('get-allowed-extensions'),
   setMenuBarIcon: (show: boolean) => ipcRenderer.invoke('set-menu-bar-icon', show),
@@ -274,16 +309,15 @@ const electronAPI: ElectronAPI = {
     channel: string,
     callback: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void
   ) => {
+    if (!allowedRendererEvents.has(channel)) return;
     ipcRenderer.on(channel, callback);
   },
   off: (
     channel: string,
     callback: (event: Electron.IpcRendererEvent, ...args: unknown[]) => void
   ) => {
+    if (!allowedRendererEvents.has(channel)) return;
     ipcRenderer.off(channel, callback);
-  },
-  emit: (channel: string, ...args: unknown[]) => {
-    ipcRenderer.emit(channel, ...args);
   },
   broadcastThemeChange: (themeData: {
     mode: string;
@@ -334,7 +368,10 @@ const electronAPI: ElectronAPI = {
   closeApp: (appName: string) => ipcRenderer.invoke('close-app', appName),
   addRecentDir: (dir: string) => ipcRenderer.invoke('add-recent-dir', dir),
   listRecentDirs: () => ipcRenderer.invoke('list-recent-dirs'),
-  listGitWorktreeDirs: (dir: string) => ipcRenderer.invoke('list-git-worktree-dirs', dir),
+  listGitWorktreeDirs: (token: string, workingDir?: string) =>
+    typeof workingDir === 'string'
+      ? ipcRenderer.invoke('list-git-worktree-dirs', token, workingDir)
+      : Promise.resolve([]),
 };
 
 function getAppLocale(): unknown {

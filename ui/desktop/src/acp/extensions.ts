@@ -1,6 +1,54 @@
 import type { ExtensionConfig, ExtensionEntry } from '../types/extensions';
-import type { GooseExtension, GooseExtensionEntry } from '@aaif/goose-sdk';
+import type { EnvVariable, GooseExtension, GooseExtensionEntry } from '@aaif/goose-sdk';
 import { getAcpClient } from './acpConnection';
+
+let windowsMcpEnvironment: NodeJS.ProcessEnv | undefined;
+
+export function setWindowsMcpEnvironment(environment: NodeJS.ProcessEnv | undefined): void {
+  windowsMcpEnvironment = environment ? { ...environment } : undefined;
+}
+
+function mcpEnvironmentEntries(): EnvVariable[] {
+  if (!windowsMcpEnvironment) return [];
+  const names = ['PATH', 'GOOSE_NODE_DIR', 'npm_config_cache', 'NPM_CONFIG_CACHE', 'TMP', 'TEMP'];
+  return names.flatMap((name) => {
+    const value = windowsMcpEnvironment?.[name];
+    return value === undefined ? [] : [{ name, value }];
+  });
+}
+
+const controlledWindowsEnvironmentNames = new Set([
+  'PATH',
+  'GOOSE_NODE_DIR',
+  'NPM_CONFIG_CACHE',
+  'NPM_CONFIG_USERCONFIG',
+  'NPM_CONFIG_PREFIX',
+  'NPM_CONFIG_TMP',
+  'npm_config_cache',
+  'npm_config_userconfig',
+  'npm_config_prefix',
+  'npm_config_tmp',
+  'TMP',
+  'TEMP',
+]);
+
+function mergeStdioEnvironment(existing: EnvVariable[]): EnvVariable[] {
+  const controlled = new Set(controlledWindowsEnvironmentNames);
+  return existing.filter(({ name }) => !controlled.has(name) && !controlled.has(name.toUpperCase()));
+}
+
+export function applyWindowsMcpEnvironment(extension: GooseExtension): GooseExtension {
+  if (extension.type !== 'mcp' || !('command' in extension.server) || !windowsMcpEnvironment) {
+    return extension;
+  }
+  return {
+    ...extension,
+    server: {
+      ...extension.server,
+      env: [...mergeStdioEnvironment(extension.server.env ?? []), ...mcpEnvironmentEntries()],
+    },
+  };
+}
 
 export type ConfiguredExtensionEntry = ExtensionEntry & { configKey?: string };
 
@@ -77,7 +125,10 @@ function gooseExtensionEntryToExtensionEntry(
 export async function getConfiguredGooseExtensions(): Promise<GooseExtensionEntry[]> {
   const client = await getAcpClient();
   const response = await client.goose.configExtensionsList_unstable({});
-  return response.extensions;
+  return response.extensions.map((entry) => ({
+    ...entry,
+    extension: applyWindowsMcpEnvironment(entry.extension),
+  }));
 }
 
 export async function getConfiguredExtensions(): Promise<ConfiguredExtensionsResponse> {

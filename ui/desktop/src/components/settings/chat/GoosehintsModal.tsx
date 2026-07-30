@@ -148,7 +148,19 @@ const FileInfo = ({ filePath, found }: { filePath: string; found: boolean }) => 
   );
 };
 
-const getGoosehintsFile = async (filePath: string) => await window.electron.readFile(filePath);
+const getGoosehintsFile = async (directory: string) => {
+  const access = await window.electron.getProjectDirectoryAccess();
+  const sameDirectory =
+    access.directory?.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase() ===
+    directory.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
+  if ((!access.authorized || !sameDirectory) && !(await window.electron.requestProjectDirectoryAccess(directory))) {
+    return { file: '', error: 'Project directory access is not authorized', found: false };
+  }
+  const currentAccess = await window.electron.getProjectDirectoryAccess();
+  return currentAccess.token
+    ? window.electron.readProjectGoosehints(currentAccess.token, directory)
+    : { file: '', error: 'Project directory access is not authorized', found: false };
+};
 
 interface GoosehintsModalProps {
   directory: string;
@@ -167,7 +179,7 @@ export const GoosehintsModal = ({ directory, setIsGoosehintsModalOpen }: Goosehi
   useEffect(() => {
     const fetchGoosehintsFile = async () => {
       try {
-        const { file, error, found } = await getGoosehintsFile(goosehintsFilePath);
+        const { file, error, found } = await getGoosehintsFile(directory);
         setGoosehintsFile(file);
         setGoosehintsFileFound(found);
         setGoosehintsFileReadError(found && error ? error : '');
@@ -183,7 +195,17 @@ export const GoosehintsModal = ({ directory, setIsGoosehintsModalOpen }: Goosehi
     setIsSaving(true);
     setSaveSuccess(false);
     try {
-      await window.electron.writeFile(goosehintsFilePath, goosehintsFile);
+      const access = await window.electron.getProjectDirectoryAccess();
+      const sameDirectory =
+        access.directory?.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase() ===
+        directory.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
+      if ((!access.authorized || !sameDirectory) && !(await window.electron.requestProjectDirectoryAccess(directory))) {
+        throw new Error('Project directory access is not authorized');
+      }
+      const currentAccess = await window.electron.getProjectDirectoryAccess();
+      if (!currentAccess.token || !(await window.electron.writeProjectGoosehints(goosehintsFile, currentAccess.token, directory))) {
+        throw new Error('Unable to write project hints');
+      }
       setSaveSuccess(true);
       setGoosehintsFileFound(true);
       setTimeout(() => setSaveSuccess(false), 3000);

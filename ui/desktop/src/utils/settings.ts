@@ -5,6 +5,8 @@ export interface ExternalBackendConfig {
   certFingerprint?: string;
 }
 
+export type ExternalBackendUpdate = Partial<ExternalBackendConfig> & { clearSecret?: boolean };
+
 export interface KeyboardShortcuts {
   focusWindow: string | null;
   quickLauncher: string | null;
@@ -89,6 +91,28 @@ export const defaultSettings: Settings = {
   showPricing: true,
   seenAnnouncementIds: [],
 };
+
+export function redactExternalBackendSecret(settings: Settings): Settings {
+  return {
+    ...settings,
+    externalGoosed: { ...settings.externalGoosed, secret: '' },
+  };
+}
+
+export function mergeExternalBackendConfig(
+  current: ExternalBackendConfig,
+  incoming: ExternalBackendUpdate
+): ExternalBackendConfig {
+  return {
+    ...current,
+    ...incoming,
+    secret: incoming.clearSecret
+      ? ''
+      : typeof incoming.secret === 'string' && incoming.secret.length > 0
+        ? incoming.secret
+        : current.secret,
+  };
+}
 
 export function getKeyboardShortcuts(settings: Settings): KeyboardShortcuts {
   if (!settings.keyboardShortcuts && settings.globalShortcut !== undefined) {

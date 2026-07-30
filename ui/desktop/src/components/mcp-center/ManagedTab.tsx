@@ -7,22 +7,26 @@ import type {
   McpPlanReview,
   McpTaskRef,
 } from '@aaif/goose-sdk';
-import { Activity, RotateCcw, Trash2, Wrench } from 'lucide-react';
+import { Activity, Play, RotateCcw, Square, Trash2, Wrench } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import {
   cancelMcpTask,
+  controlMcpRuntime,
   createMcpPlan,
   getManagedMcp,
   getMcpHealth,
   listManagedMcps,
   retryMcpTask,
   runMcpHealth,
+  sanitizeMcpUserMessage,
   setMcpDefaultEnabled,
   toMcpRecoveryViewModel,
   type McpPlatformRecoveryViewModel,
 } from '../../acp/mcp-platform';
 import {
+  CredentialAttentionPanel,
+  CredentialStatusBadge,
   DefinitionList,
   formatMcpValue,
   RecoveryPanel,
@@ -30,6 +34,14 @@ import {
   StatusBadge,
 } from './McpCenterCommon';
 import { PlanReviewDialog } from './PlanReviewDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 import { useMcpTaskMonitor } from './useMcpTaskMonitor';
 import { mcpCenterMessages as messages } from './messages';
 import { useIntl } from '../../i18n';
@@ -60,6 +72,163 @@ const terminalTaskStatuses = new Set<McpTaskRef['status']>([
   'recovery_required',
 ]);
 
+type SafeMcpTaskEvent = {
+  eventId: number;
+  occurredAtMs: number;
+  payload: {
+    type: string;
+    [key: string]: unknown;
+  };
+};
+
+type TaskTimelineEntry = {
+  id: string;
+  occurredAtMs: number;
+  title: string;
+  detail?: string;
+  tone: 'neutral' | 'success' | 'warning' | 'danger' | 'info';
+};
+
+function formatTaskTimestamp(intl: ReturnType<typeof useIntl>, updatedAtMs: number): string {
+  return `${intl.formatDate(updatedAtMs, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })} ${intl.formatTime(updatedAtMs, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`;
+}
+
+function hasUnsupportedRecoveryAction(action: McpTaskRef['outcome']['nextAction']): boolean {
+  return action === 'resume' || action === 'resolve_recovery' || action === 'recreate_plan';
+}
+
+function planIntentOperation(intent: McpPlanIntent): McpTaskRef['operation'] {
+  if (intent.type === 'register_catalog') {
+    return 'register';
+  }
+  if (intent.type === 'install_catalog') {
+    return 'install';
+  }
+  return intent.type;
+}
+
+function buildTaskRecoveryViewModel(
+  intl: ReturnType<typeof useIntl>,
+  selectedTask: McpTaskRef
+): McpPlatformRecoveryViewModel | null {
+  if (
+    !selectedTask.outcome.error &&
+    !['failed', 'interrupted', 'recovery_required'].includes(selectedTask.status)
+  ) {
+    return null;
+  }
+  return {
+    title: intl.formatMessage(messages.taskRecoveryTitle, { status: selectedTask.status }),
+    message:
+      sanitizeMcpUserMessage(selectedTask.outcome.error?.message) ||
+      intl.formatMessage(messages.taskErrorMessageByCode, {
+        code: selectedTask.outcome.error?.code ?? 'unknown',
+      }),
+    nextStep: intl.formatMessage(messages.taskNextActionDescription, {
+      action: selectedTask.outcome.nextAction,
+    }),
+    retryable: selectedTask.outcome.error?.retryable ?? false,
+    correlationId: selectedTask.outcome.error?.correlationId,
+    kind: 'service',
+  };
+}
+
+function buildTaskTimelineEntries(
+  intl: ReturnType<typeof useIntl>,
+  events: SafeMcpTaskEvent[]
+): TaskTimelineEntry[] {
+  return [...events]
+    .sort((left, right) => right.eventId - left.eventId)
+    .map((event) => {
+      const payload = event.payload;
+      switch (payload.type) {
+        case 'task_created':
+          return {
+            id: String(event.eventId),
+            occurredAtMs: event.occurredAtMs,
+            title: intl.formatMessage(messages.taskTimelineCreated),
+            detail:
+              typeof payload.status === 'string' ? formatMcpValue(intl, payload.status) : undefined,
+            tone: 'info',
+          };
+        case 'task_status_changed':
+          return {
+            id: String(event.eventId),
+            occurredAtMs: event.occurredAtMs,
+            title: intl.formatMessage(messages.taskTimelineStatusChanged, {
+              from:
+                typeof payload.from === 'string' ? formatMcpValue(intl, payload.from) : 'Unknown',
+              to: typeof payload.to === 'string' ? formatMcpValue(intl, payload.to) : 'Unknown',
+            }),
+            tone:
+              payload.to === 'failed' || payload.to === 'interrupted'
+                ? 'danger'
+                : payload.to === 'recovery_required'
+                  ? 'warning'
+                  : payload.to === 'succeeded'
+                    ? 'success'
+                    : 'info',
+          };
+        case 'confirmation_recorded':
+          return {
+            id: String(event.eventId),
+            occurredAtMs: event.occurredAtMs,
+            title: intl.formatMessage(messages.taskTimelineConfirmation),
+            detail:
+              typeof payload.to === 'string' ? formatMcpValue(intl, payload.to) : undefined,
+            tone: 'info',
+          };
+        case 'cancellation_requested':
+          return {
+            id: String(event.eventId),
+            occurredAtMs: event.occurredAtMs,
+            title: intl.formatMessage(messages.taskTimelineCancellation),
+            detail:
+              typeof payload.to === 'string' ? formatMcpValue(intl, payload.to) : undefined,
+            tone: 'warning',
+          };
+        case 'step_status_changed':
+          return {
+            id: String(event.eventId),
+            occurredAtMs: event.occurredAtMs,
+            title: intl.formatMessage(messages.taskTimelineCheckpoint, {
+              ordinal: typeof payload.ordinal === 'number' ? payload.ordinal : '?',
+              status: typeof payload.to === 'string' ? payload.to : 'other',
+            }),
+            tone: payload.to === 'committed' ? 'success' : 'info',
+          };
+        case 'recovery_decision': {
+          const decision = payload.decision as
+            | { type?: string; ordinal?: number }
+            | undefined;
+          return {
+            id: String(event.eventId),
+            occurredAtMs: event.occurredAtMs,
+            title: intl.formatMessage(messages.taskTimelineRecoveryDecision, {
+              decision: decision?.type ?? 'other',
+              ordinal: decision?.ordinal ?? '?',
+            }),
+            tone: decision?.type === 'requires_manual_recovery' ? 'warning' : 'info',
+          };
+        }
+        default:
+          return {
+            id: String(event.eventId),
+            occurredAtMs: event.occurredAtMs,
+            title: formatMcpValue(intl, payload.type),
+            tone: 'neutral',
+          };
+      }
+    });
+}
+
 type PendingManagedPlan = {
   plan: McpPlanReview;
   operation: McpTaskRef['operation'];
@@ -88,6 +257,7 @@ export function ManagedTab({
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<McpPlatformRecoveryViewModel | null>(null);
   const [pendingPlan, setPendingPlan] = useState<PendingManagedPlan | null>(null);
+  const [stopConfirmation, setStopConfirmation] = useState<McpManagedSummary | null>(null);
   const [task, setTask] = useState<ManagedTask | null>(null);
   const [monitorRetryKey, setMonitorRetryKey] = useState(0);
   const selectionSequence = useRef(0);
@@ -174,7 +344,7 @@ export function ManagedTab({
       const page = await listManagedMcps(cursor);
       if (listSequence.current !== sequence) return;
       setItems((current) => (cursor ? [...current, ...page.items] : page.items));
-      setNextCursor(page.nextCursor);
+      setNextCursor(page.nextCursor ?? undefined);
     } catch (cause) {
       if (listSequence.current !== sequence) return;
       setError(toMcpRecoveryViewModel(cause));
@@ -294,7 +464,7 @@ export function ManagedTab({
           return;
         }
         const currentTask =
-          ownerTask.generation === undefined ? ownerTask.task : taskRef.current?.task;
+          ownerTask.generation === undefined ? ownerTask.task : (taskRef.current?.task ?? null);
         const refreshedTask = nextDetail.summary.currentTask;
         const canApplyRefreshedTask = refreshedTask
           ? refreshedTask.taskId === ownerTask.task.taskId &&
@@ -385,7 +555,7 @@ export function ManagedTab({
     },
     [refreshManagedMcp, task, taskSnapshot]
   );
-  useMcpTaskMonitor(
+  const taskMonitor = useMcpTaskMonitor(
     task?.task ?? null,
     handleMonitorUpdate,
     handleMonitorError,
@@ -463,6 +633,35 @@ export function ManagedTab({
     }
   };
 
+  const controlRuntime = async (action: 'start' | 'stop') => {
+    if (!selected) return;
+    const owner = selected.managedMcpId;
+    const ownerRevision = selected.revision;
+    const ownerSelectionSequence = selectionSequence.current;
+    const actionRequest = ++actionSequence.current;
+    setActionLoading(`runtime-${action}`);
+    setActionError(null);
+    try {
+      const next = await controlMcpRuntime(selected, action);
+      if (
+        actionSequence.current !== actionRequest ||
+        !ownsSelection(owner, ownerRevision, ownerSelectionSequence) ||
+        next.managedMcpId !== owner
+      )
+        return;
+      updateSummary(next);
+    } catch (cause) {
+      if (
+        actionSequence.current === actionRequest &&
+        ownsSelection(owner, ownerRevision, ownerSelectionSequence)
+      ) {
+        setActionError(toMcpRecoveryViewModel(cause));
+      }
+    } finally {
+      if (actionSequence.current === actionRequest) setActionLoading(null);
+    }
+  };
+
   const openPlan = async (intent: McpPlanIntent, action: string) => {
     if (!selected) return;
     const owner = selected.managedMcpId;
@@ -477,7 +676,7 @@ export function ManagedTab({
       if (planSequence.current !== planRequest) return;
       setPendingPlan({
         plan: nextPlan,
-        operation: intent.type,
+        operation: planIntentOperation(intent),
         managedMcpId: owner,
         ownerRevision,
         selectionSequence: ownerSelectionSequence,
@@ -565,6 +764,37 @@ export function ManagedTab({
   };
 
   const selectedTask = task && task.managedMcpId === selected?.managedMcpId ? task.task : null;
+  const selectedTaskRecovery = selectedTask ? buildTaskRecoveryViewModel(intl, selectedTask) : null;
+  const selectedTaskTimeline = selectedTask
+    ? buildTaskTimelineEntries(intl, taskMonitor.events as SafeMcpTaskEvent[])
+    : [];
+  const canRetryTask =
+    !!selectedTask?.outcome.error?.retryable && selectedTask.outcome.nextAction === 'retry';
+  const taskActionNotes = selectedTask
+    ? [
+        selectedTask.cancellable ? intl.formatMessage(messages.taskCancelImpact) : null,
+        canRetryTask ? intl.formatMessage(messages.taskRetryImpact) : null,
+        hasUnsupportedRecoveryAction(selectedTask.outcome.nextAction)
+          ? intl.formatMessage(messages.taskUnsupportedRecoveryAction, {
+              action: formatMcpValue(intl, selectedTask.outcome.nextAction),
+            })
+          : null,
+      ].filter((note): note is string => !!note)
+    : [];
+  const taskTimelineFallbackMessage = selectedTask
+    ? !taskMonitor.eventsLoaded
+      ? intl.formatMessage(messages.taskTimelineWaiting)
+      : selectedTaskTimeline.length === 0
+        ? intl.formatMessage(
+            terminalTaskStatuses.has(selectedTask.status)
+              ? messages.taskTimelineUnavailableDone
+              : messages.taskTimelineUnavailableActive
+          )
+        : null
+    : null;
+  const selectedAvailableVersion = selected?.availableVersion ?? null;
+  const selectedCredentialStatus =
+    health?.credentialStatus ?? detail?.summary.credentialStatus ?? selected?.credentialStatus;
 
   return (
     <div className="grid min-h-0 gap-5 xl:grid-cols-[minmax(300px,0.42fr)_minmax(0,1fr)]">
@@ -610,6 +840,7 @@ export function ManagedTab({
                   <StatusBadge>{formatMcpValue(intl, item.registration)}</StatusBadge>
                   <StatusBadge>{formatMcpValue(intl, item.installation)}</StatusBadge>
                   <StatusBadge>{formatMcpValue(intl, item.runtime)}</StatusBadge>
+                  <CredentialStatusBadge status={item.credentialStatus} />
                   {item.recoveryRequired && (
                     <StatusBadge tone="danger">
                       {intl.formatMessage(messages.recoveryRequired)}
@@ -667,7 +898,13 @@ export function ManagedTab({
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-medium text-text-primary">{selected.mcpId}</h2>
-                <p className="mt-1 text-sm text-text-secondary">{selected.managedMcpId}</p>
+                <p
+                  className="mt-1 truncate text-sm text-text-secondary"
+                  title={selected.managedMcpId}
+                  aria-label={selected.managedMcpId}
+                >
+                  {selected.managedMcpId}
+                </p>
               </div>
               <label className="flex items-center gap-2 text-sm text-text-primary">
                 {intl.formatMessage(messages.defaultEnabled)}
@@ -697,6 +934,10 @@ export function ManagedTab({
                   formatMcpValue(intl, health?.state ?? selected.health),
                 ],
                 [
+                  intl.formatMessage(messages.credentialStatusLabel),
+                  <CredentialStatusBadge status={selectedCredentialStatus} />,
+                ],
+                [
                   intl.formatMessage(messages.activeVersion),
                   selected.activeVersion ?? intl.formatMessage(messages.noValue),
                 ],
@@ -712,6 +953,17 @@ export function ManagedTab({
               ]}
             />
 
+            <CredentialAttentionPanel
+              status={selectedCredentialStatus}
+              actions={[
+                {
+                  label: intl.formatMessage(messages.credentialRefresh),
+                  disabled: !!actionLoading,
+                  onClick: () => void selectItem(selected),
+                },
+              ]}
+            />
+
             {health?.latest && (
               <div className="rounded-lg bg-background-secondary p-3 text-sm text-text-secondary">
                 {intl.formatMessage(messages.lastHealthCheck, {
@@ -723,13 +975,52 @@ export function ManagedTab({
             )}
 
             <div className="flex flex-wrap gap-2">
+              <div
+                aria-busy={
+                  actionLoading === 'runtime-start' || actionLoading === 'runtime-stop'
+                }
+                aria-live="polite"
+                className="sr-only"
+                role="status"
+              >
+                {actionLoading === 'runtime-start' &&
+                  intl.formatMessage(messages.startingRuntime)}
+                {actionLoading === 'runtime-stop' &&
+                  intl.formatMessage(messages.stoppingRuntime)}
+              </div>
+              {selected.runtimeControl?.canStart && (
+                <Button
+                  variant="outline"
+                  disabled={!!actionLoading}
+                  aria-busy={actionLoading === 'runtime-start'}
+                  onClick={() => void controlRuntime('start')}
+                >
+                  <Play />{' '}
+                  {intl.formatMessage(
+                    actionLoading === 'runtime-start' ? messages.startingRuntime : messages.startRuntime
+                  )}
+                </Button>
+              )}
+              {selected.runtimeControl?.canStop && (
+                <Button
+                  variant="outline"
+                  disabled={!!actionLoading}
+                  aria-busy={actionLoading === 'runtime-stop'}
+                  onClick={() => setStopConfirmation(selected)}
+                >
+                  <Square />{' '}
+                  {intl.formatMessage(
+                    actionLoading === 'runtime-stop' ? messages.stoppingRuntime : messages.stopRuntime
+                  )}
+                </Button>
+              )}
               <Button variant="outline" disabled={!!actionLoading} onClick={() => void runHealth()}>
                 <Activity />{' '}
                 {intl.formatMessage(
                   actionLoading === 'health' ? messages.checking : messages.runHealth
                 )}
               </Button>
-              {selected.eligibility.update && selected.availableVersion && (
+              {selected.eligibility.update && selectedAvailableVersion && (
                 <Button
                   variant="outline"
                   disabled={!!actionLoading}
@@ -738,7 +1029,7 @@ export function ManagedTab({
                       {
                         type: 'update',
                         managed_mcp_id: selected.managedMcpId,
-                        target_version: selected.availableVersion!,
+                        target_version: selectedAvailableVersion,
                       },
                       'update'
                     )
@@ -783,57 +1074,153 @@ export function ManagedTab({
 
             {selectedTask && (
               <section className="rounded-xl border border-border-primary p-4" aria-live="polite">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="font-medium text-text-primary">
                       {intl.formatMessage(messages.currentTask)}
                     </h3>
                     <p className="mt-1 text-sm text-text-secondary">
-                      {formatMcpValue(intl, selectedTask.operation)} · {selectedTask.progress}%
+                      {intl.formatMessage(messages.taskStatusTitle, {
+                        status: selectedTask.status,
+                        operation: formatMcpValue(intl, selectedTask.operation),
+                      })}
                     </p>
                   </div>
                   <StatusBadge tone={taskTone(selectedTask.status)}>
                     {formatMcpValue(intl, selectedTask.status)}
                   </StatusBadge>
                 </div>
+                <p className="mt-3 text-sm text-text-secondary">
+                  {intl.formatMessage(messages.taskStatusDescription, {
+                    status: selectedTask.status,
+                  })}
+                </p>
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-background-secondary">
                   <div
                     className="h-full bg-background-info transition-all"
                     style={{ width: `${selectedTask.progress}%` }}
                   />
                 </div>
-                {selectedTask.outcome.error && (
-                  <div role="alert" className="mt-3 text-sm text-text-danger">
-                    <p>{intl.formatMessage(messages.requestFailedMessage)}</p>
-                    <p className="mt-1 text-text-secondary">
-                      {intl.formatMessage(messages.taskErrorNext, {
-                        action: formatMcpValue(intl, selectedTask.outcome.nextAction),
-                        reference: selectedTask.outcome.error.correlationId,
-                      })}
-                    </p>
+                <p className="mt-2 text-xs text-text-tertiary">
+                  {formatMcpValue(intl, selectedTask.operation)} · {selectedTask.progress}% ·{' '}
+                  {intl.formatMessage(messages.latestUpdate)}:{' '}
+                  {formatTaskTimestamp(intl, selectedTask.updatedAtMs)}
+                </p>
+
+                <div className="mt-4 rounded-lg bg-background-secondary/40 p-3">
+                  <DefinitionList
+                    items={[
+                      [
+                        intl.formatMessage(messages.currentPhase),
+                        formatMcpValue(intl, selectedTask.status),
+                      ],
+                      [
+                        intl.formatMessage(messages.outcomeState),
+                        formatMcpValue(intl, selectedTask.outcome.state),
+                      ],
+                      [
+                        intl.formatMessage(messages.finalizationState),
+                        formatMcpValue(intl, selectedTask.outcome.finalization),
+                      ],
+                      [
+                        intl.formatMessage(messages.rollbackState),
+                        formatMcpValue(intl, selectedTask.outcome.rollback),
+                      ],
+                      [
+                        intl.formatMessage(messages.recommendation),
+                        intl.formatMessage(messages.taskNextActionDescription, {
+                          action: selectedTask.outcome.nextAction,
+                        }),
+                      ],
+                      [
+                        intl.formatMessage(messages.remainingEffects),
+                        selectedTask.outcome.remainingEffects.length === 0 ? (
+                          intl.formatMessage(messages.taskNoRemainingEffects)
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedTask.outcome.remainingEffects.map((effect) => (
+                              <StatusBadge key={effect}>{formatMcpValue(intl, effect)}</StatusBadge>
+                            ))}
+                          </div>
+                        ),
+                      ],
+                    ]}
+                  />
+                </div>
+
+                {selectedTaskRecovery && (
+                  <div className="mt-4">
+                    <RecoveryPanel recovery={selectedTaskRecovery} />
                   </div>
                 )}
-                <div className="mt-3 flex gap-2">
-                  {selectedTask.cancellable && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!!actionLoading}
-                      onClick={() => void cancelTask()}
-                    >
-                      {intl.formatMessage(
-                        actionLoading === 'cancel-task' ? messages.cancelling : messages.cancelTask
-                      )}
-                    </Button>
+
+                <div className="mt-4 rounded-lg border border-border-primary p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="font-medium text-text-primary">
+                      {intl.formatMessage(messages.recentActivity)}
+                    </h4>
+                    <span className="text-xs text-text-tertiary">
+                      {taskMonitor.eventsLoaded
+                        ? `${selectedTaskTimeline.length}`
+                        : intl.formatMessage(messages.loading)}
+                    </span>
+                  </div>
+                  {taskTimelineFallbackMessage ? (
+                    <p className="mt-2 text-sm text-text-secondary">{taskTimelineFallbackMessage}</p>
+                  ) : (
+                    <ol className="mt-3 space-y-3">
+                      {selectedTaskTimeline.map((entry) => (
+                        <li key={entry.id} className="rounded-lg bg-background-secondary/50 p-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <StatusBadge tone={entry.tone}>{entry.title}</StatusBadge>
+                            <span className="text-xs text-text-tertiary">
+                              {formatTaskTimestamp(intl, entry.occurredAtMs)}
+                            </span>
+                          </div>
+                          {entry.detail && (
+                            <p className="mt-2 text-sm text-text-secondary">{entry.detail}</p>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
                   )}
-                  {selectedTask.outcome.error?.retryable &&
-                    selectedTask.outcome.nextAction === 'retry' && (
+                </div>
+
+                <div className="mt-4 rounded-lg border border-border-primary p-3">
+                  <h4 className="font-medium text-text-primary">
+                    {intl.formatMessage(messages.taskActionContext)}
+                  </h4>
+                  <p className="mt-2 text-sm text-text-secondary">
+                    {intl.formatMessage(messages.taskSafetyBoundary)}
+                  </p>
+                  {taskActionNotes.length > 0 && (
+                    <div className="mt-3 space-y-2 text-sm text-text-secondary">
+                      {taskActionNotes.map((note) => (
+                        <p key={note}>{note}</p>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedTask.cancellable && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!!actionLoading}
+                        onClick={() => void cancelTask()}
+                      >
+                        {intl.formatMessage(
+                          actionLoading === 'cancel-task' ? messages.cancelling : messages.cancelTask
+                        )}
+                      </Button>
+                    )}
+                    {canRetryTask && (
                       <Button size="sm" disabled={!!actionLoading} onClick={() => void retryTask()}>
                         {intl.formatMessage(
                           actionLoading === 'retry-task' ? messages.retrying : messages.retryTask
                         )}
                       </Button>
                     )}
+                  </div>
                 </div>
               </section>
             )}
@@ -869,6 +1256,43 @@ export function ManagedTab({
           );
         }}
       />
+      <Dialog
+        open={!!stopConfirmation}
+        onOpenChange={(open) => !open && !actionLoading && setStopConfirmation(null)}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{intl.formatMessage(messages.stopRuntimeTitle)}</DialogTitle>
+            <DialogDescription>
+              {intl.formatMessage(messages.stopRuntimeDescription)}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-text-secondary">
+            {intl.formatMessage(messages.stopRuntimeImpact)}
+          </p>
+          <DialogFooter>
+            <Button variant="outline" disabled={!!actionLoading} onClick={() => setStopConfirmation(null)}>
+              {intl.formatMessage(messages.cancel)}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!!actionLoading}
+              aria-busy={actionLoading === 'runtime-stop'}
+              onClick={() => {
+                setStopConfirmation(null);
+                void controlRuntime('stop');
+              }}
+            >
+              <Square />{' '}
+              {intl.formatMessage(
+                actionLoading === 'runtime-stop'
+                  ? messages.stoppingRuntime
+                  : messages.stopRuntimeConfirm
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

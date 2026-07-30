@@ -93,7 +93,18 @@ export const DirSwitcher: React.FC<DirSwitcherProps> = ({
 
     const [recent, worktrees] = await Promise.all([
       window.electron.listRecentDirs().catch(() => []),
-      window.electron.listGitWorktreeDirs(workingDir).catch(() => []),
+      (async () => {
+        const access = await window.electron.getProjectDirectoryAccess().catch(() => ({
+          authorized: false,
+          directory: null,
+          token: null,
+        }));
+        const sameDirectory =
+          access.directory?.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase() ===
+          workingDir.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
+        if (!access.token || !sameDirectory) return [];
+        return window.electron.listGitWorktreeDirs(access.token, workingDir).catch(() => []);
+      })(),
     ]);
 
     if (version !== refreshVersionRef.current) return;

@@ -17,6 +17,7 @@ import {
   shell,
   Tray,
 } from 'electron';
+import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import { pathToFileURL, format as formatUrl, URLSearchParams } from 'node:url';
 import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
@@ -24,7 +25,7 @@ import fsSync from 'node:fs';
 import started from 'electron-squirrel-startup';
 import path from 'node:path';
 import os from 'node:os';
-import { execFileSync, spawn, execFile } from 'child_process';
+import { execFileSync, spawn } from 'child_process';
 import 'dotenv/config';
 import { checkBackendStatus } from './backendStatus';
 import { startGooseServe } from './gooseServe';
@@ -33,11 +34,27 @@ import { acpWebSocketUrlFromHttpBase, normalizeAcpHttpBaseUrl } from './acp/url'
 import { expandTilde } from './utils/pathUtils';
 import log from './utils/logger';
 import { ensureWinShims } from './utils/winShims';
+import { setWindowsMcpEnvironment } from './acp/extensions';
 import { addRecentDir, loadRecentDirs } from './utils/recentDirs';
 import { formatAppName, errorMessage, formatErrorForLogging } from './utils/conversionUtils';
+import {
+  deriveDesktopUserDataPath,
+  deriveWindowsShimsPath,
+  preflightWindowsStorageDirectory,
+  preflightWindowsStorageRoot,
+  resolveDesktopGoosePathRoot,
+  createStorageReadyGate,
+  isAllowedRecipeDefaultName,
+  isTrustedAppUrl,
+} from './utils/storageRootPolicy';
 import { isRetiredGooseChatApp } from './utils/retiredApps';
 import type { Settings, SettingKey } from './utils/settings';
-import { defaultSettings, getKeyboardShortcuts } from './utils/settings';
+import {
+  defaultSettings,
+  getKeyboardShortcuts,
+  mergeExternalBackendConfig,
+  redactExternalBackendSecret,
+} from './utils/settings';
 import * as crypto from 'crypto';
 import * as yaml from 'yaml';
 import windowStateKeeper from 'electron-window-state';
@@ -168,8 +185,32 @@ function translateMenuLabels(items: MenuItem[]): void {
 }
 
 // Settings management
-const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json');
-const STARTUP_LOGS_DIR = path.join(app.getPath('userData'), 'logs', 'startup');
+let desktopGoosePathRoot: string | undefined;
+
+async function configureDesktopStorageRoot(): Promise<void> {
+  desktopGoosePathRoot = resolveDesktopGoosePathRoot();
+  if (process.platform === 'win32') {
+    if (!desktopGoosePathRoot) {
+      throw new Error('GOOSE_PATH_ROOT is required for Windows desktop storage');
+    }
+    await preflightWindowsStorageRoot(desktopGoosePathRoot);
+    await preflightWindowsStorageDirectory(
+      deriveDesktopUserDataPath(desktopGoosePathRoot, process.platform)
+    );
+    await preflightWindowsStorageDirectory(
+      deriveWindowsShimsPath(desktopGoosePathRoot, process.platform)
+    );
+    app.setPath('userData', deriveDesktopUserDataPath(desktopGoosePathRoot, process.platform));
+  }
+}
+
+function settingsFilePath(): string {
+  return path.join(app.getPath('userData'), 'settings.json');
+}
+
+function startupLogsDirectory(): string {
+  return path.join(app.getPath('userData'), 'logs', 'startup');
+}
 const validLanguageSettings = new Set<Settings['language']>([
   'system',
   'en',
@@ -195,10 +236,11 @@ function isValidLanguageSetting(value: unknown): value is Settings['language'] {
 }
 
 function getSettings(): Settings {
-  if (fsSync.existsSync(SETTINGS_FILE)) {
+  const settingsFile = settingsFilePath();
+  if (fsSync.existsSync(settingsFile)) {
     let stored: Partial<Settings>;
     try {
-      const data = fsSync.readFileSync(SETTINGS_FILE, 'utf8');
+      const data = fsSync.readFileSync(settingsFile, 'utf8');
       stored = JSON.parse(data) as Partial<Settings>;
     } catch (err) {
       console.error('Failed to read settings.json, using defaults:', err);
@@ -223,7 +265,7 @@ function getSettings(): Settings {
 function updateSettings(modifier: (settings: Settings) => void): void {
   const settings = getSettings();
   modifier(settings);
-  fsSync.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+  fsSync.writeFileSync(settingsFilePath(), JSON.stringify(settings, null, 2));
 }
 
 function getConfiguredGooseLocale(): string | undefined {
@@ -241,36 +283,6 @@ function getConfiguredGooseLocale(): string | undefined {
   } catch {
     return undefined;
   }
-}
-
-function listGitWorktreeDirs(dir: string): Promise<string[]> {
-  return new Promise((resolve) => {
-    if (!dir?.trim()) {
-      resolve([]);
-      return;
-    }
-
-    execFile(
-      'git',
-      ['-C', dir, 'worktree', 'list', '--porcelain'],
-      { timeout: 3000 },
-      (error, stdout) => {
-        if (error) {
-          resolve([]);
-          return;
-        }
-
-        const dirs = stdout
-          .split('\n')
-          .filter((line) => line.startsWith('worktree '))
-          .map((line) => line.slice('worktree '.length).trim())
-          .filter(Boolean)
-          .filter((worktreeDir, index, allDirs) => allDirs.indexOf(worktreeDir) === index);
-
-        resolve(dirs);
-      }
-    );
-  });
 }
 
 async function configureProxy() {
@@ -382,12 +394,28 @@ app.on('certificate-error', (event, _webContents, url, _error, certificate, call
   callback(verifyBackendCertificate(parsed.hostname, certificate.fingerprint));
 });
 
-app.whenReady().then(() => {
+const desktopStorageReady = app.whenReady().then(async () => {
+  await configureDesktopStorageRoot();
+});
+
+const runWhenStorageReady = createStorageReadyGate(desktopStorageReady, (error) => {
+  log.error('[Main] Desktop storage preflight failed:', formatErrorForLogging(error));
+  try {
+    dialog.showErrorBox(
+      'Goose storage unavailable',
+      'Goose could not prepare its managed storage on the D drive. The application will now exit.'
+    );
+  } finally {
+    app.quit();
+  }
+});
+
+void runWhenStorageReady(() => {
   appConfig.GOOSE_LOCALE = getConfiguredGooseLocale();
 });
 
 // Main-process net.fetch: pin to the exact cert once known.
-app.whenReady().then(() => {
+void runWhenStorageReady(() => {
   session.defaultSession.setCertificateVerifyProc((request, callback) => {
     if (!isTrustedHost(request.hostname)) {
       callback(-3);
@@ -439,12 +467,12 @@ if (process.platform !== 'darwin') {
     app.quit();
   } else {
     app.on('second-instance', (_event, commandLine) => {
-      const protocolUrl = commandLine.find((arg) => arg.startsWith('goose://'));
-      if (protocolUrl) {
-        const parsedUrl = new URL(protocolUrl);
-        // If it's a bot/recipe URL, handle it directly by creating a new window
-        if (parsedUrl.hostname === 'bot' || parsedUrl.hostname === 'recipe') {
-          app.whenReady().then(async () => {
+      void runWhenStorageReady(async () => {
+        const protocolUrl = commandLine.find((arg) => arg.startsWith('goose://'));
+        if (protocolUrl) {
+          const parsedUrl = new URL(protocolUrl);
+          // If it's a bot/recipe URL, handle it directly by creating a new window
+          if (parsedUrl.hostname === 'bot' || parsedUrl.hostname === 'recipe') {
             const recentDirs = loadRecentDirs();
             const openDir = recentDirs.length > 0 ? recentDirs[0] : null;
 
@@ -457,13 +485,11 @@ if (process.platform !== 'darwin') {
               scheduledJobId: scheduledJobId || undefined,
               recipeParameters: deeplinkData?.parameters,
             });
-          });
-          return; // Skip the rest of the handler
-        }
+            return; // Skip the rest of the handler
+          }
 
-        // Handle new-session URL by creating a fresh chat window
-        if (parsedUrl.hostname === 'new-session') {
-          app.whenReady().then(async () => {
+          // Handle new-session URL by creating a fresh chat window
+          if (parsedUrl.hostname === 'new-session') {
             const recentDirs = loadRecentDirs();
             const openDir = recentDirs.length > 0 ? recentDirs[0] : null;
             const prompt = parsedUrl.searchParams.get('prompt') || undefined;
@@ -472,39 +498,39 @@ if (process.platform !== 'darwin') {
               initialMessage: prompt,
               initialMessageNoAutoSubmit: prompt !== undefined,
             });
-          });
-          return;
-        }
+            return;
+          }
 
-        if (parsedUrl.hostname === 'resume') {
-          app.whenReady().then(async () => {
+          if (parsedUrl.hostname === 'resume') {
             const recentDirs = loadRecentDirs();
             const openDir = recentDirs.length > 0 ? recentDirs[0] : null;
             await createResumeChatWindow(parsedUrl, openDir || undefined);
-          });
-          return;
+            return;
+          }
+
+          // For non-bot URLs, continue with normal handling
+          await handleProtocolUrl(protocolUrl, parsedUrl);
         }
 
-        // For non-bot URLs, continue with normal handling
-        handleProtocolUrl(protocolUrl, parsedUrl);
-      }
-
-      // Only focus existing windows for non-bot/recipe URLs
-      const existingWindows = BrowserWindow.getAllWindows();
-      if (existingWindows.length > 0) {
-        const mainWindow = existingWindows[0];
-        if (mainWindow.isMinimized()) {
-          mainWindow.restore();
+        // Only focus existing windows for non-bot/recipe URLs
+        const existingWindows = BrowserWindow.getAllWindows();
+        if (existingWindows.length > 0) {
+          const mainWindow = existingWindows[0];
+          if (mainWindow.isMinimized()) {
+            mainWindow.restore();
+          }
+          mainWindow.focus();
         }
-        mainWindow.focus();
-      }
+      }).catch((error) => {
+        log.error('[Main] Failed to handle second-instance event:', errorMessage(error));
+      });
     });
   }
 
   // Handle protocol URLs on Windows and Linux startup
   const protocolUrl = process.argv.find((arg) => arg.startsWith('goose://'));
   if (protocolUrl) {
-    app.whenReady().then(async () => {
+    void runWhenStorageReady(async () => {
       let parsedUrl: URL;
       try {
         parsedUrl = new URL(protocolUrl);
@@ -523,6 +549,8 @@ if (process.platform !== 'darwin') {
           await createNewWindow(app, dirPath);
         }
       }
+    }).catch((error) => {
+      log.error('[Main] Failed to handle startup protocol URL:', errorMessage(error));
     });
   }
 }
@@ -609,6 +637,7 @@ async function createResumeChatWindow(parsedUrl: URL, dir?: string): Promise<boo
 }
 
 async function handleProtocolUrl(url: string, parsedUrl: URL) {
+  if (!(await runWhenStorageReady(() => true))) return;
   if (!url) return;
 
   const recentDirs = loadRecentDirs();
@@ -681,14 +710,15 @@ let windowDeeplinkURL: string | null = null;
 
 app.on('open-url', async (_event, url) => {
   if (process.platform !== 'win32') {
-    const parsedUrl = new URL(url);
+    try {
+      const parsedUrl = new URL(url);
 
-    log.info(
-      '[Main] Received open-url event:',
-      url.includes('key=') ? url.replace(/key=[^&]+/, 'key=REDACTED') : url
-    );
+      log.info(
+        '[Main] Received open-url event:',
+        url.includes('key=') ? url.replace(/key=[^&]+/, 'key=REDACTED') : url
+      );
 
-    await app.whenReady();
+      if (!(await runWhenStorageReady(() => true))) return;
 
     const recentDirs = loadRecentDirs();
     const openDir = recentDirs.length > 0 ? recentDirs[0] : null;
@@ -746,6 +776,9 @@ app.on('open-url', async (_event, url) => {
       const newWindow = await createChat(app, { dir: openDir || undefined });
       if (!newWindow) return;
       queuePendingDeepLink(newWindow.id, url);
+      }
+    } catch (error) {
+      log.error('[Main] Failed to handle open-url event:', errorMessage(error));
     }
   }
 });
@@ -763,7 +796,7 @@ app.on('will-finish-launching', () => {
 // Handle drag-and-drop onto dock icon
 app.on('open-file', async (event, filePath) => {
   event.preventDefault();
-  await handleFileOpen(filePath);
+  await runWhenStorageReady(() => handleFileOpen(filePath));
 });
 
 // Handle multiple files/folders (macOS only)
@@ -772,14 +805,17 @@ if (process.platform === 'darwin') {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.on('open-files' as any, async (event: any, filePaths: string[]) => {
     event.preventDefault();
-    for (const filePath of filePaths) {
-      await handleFileOpen(filePath);
-    }
+    await runWhenStorageReady(async () => {
+      for (const filePath of filePaths) {
+        await handleFileOpen(filePath);
+      }
+    });
   });
 }
 
 async function handleFileOpen(filePath: string) {
   try {
+    if (!(await runWhenStorageReady(() => true))) return;
     if (!filePath || typeof filePath !== 'string') {
       return;
     }
@@ -860,14 +896,6 @@ const getBundledConfig = (): BundledConfig => {
 };
 
 const { defaultProvider, defaultModel, predefinedModels, version } = getBundledConfig();
-
-const resolveGoosePathRoot = (): string | undefined => {
-  const pathRoot = process.env.GOOSE_PATH_ROOT?.trim();
-  if (pathRoot) {
-    return expandTilde(pathRoot);
-  }
-  return undefined;
-};
 
 const GENERATED_SECRET = crypto.randomBytes(32).toString('hex');
 
@@ -954,7 +982,7 @@ let appConfig = {
   GOOSE_DEFAULT_PROVIDER: defaultProvider,
   GOOSE_DEFAULT_MODEL: defaultModel,
   GOOSE_PREDEFINED_MODELS: predefinedModels,
-  GOOSE_PATH_ROOT: resolveGoosePathRoot(),
+  GOOSE_PATH_ROOT: undefined as string | undefined,
   GOOSE_WORKING_DIR: '',
   // Start with the env-var override; the OS region locale is filled in after app.ready
   // (see updateLocaleFromSystem below) since getSystemLocale() cannot be called earlier.
@@ -990,6 +1018,9 @@ const createChat = async (
   app: App,
   options: CreateChatOptions = {}
 ): Promise<BrowserWindow | undefined> => {
+  if (!(await runWhenStorageReady(() => true))) return undefined;
+  appConfig.GOOSE_PATH_ROOT = desktopGoosePathRoot;
+
   const {
     initialMessage,
     initialMessageNoAutoSubmit,
@@ -1154,7 +1185,7 @@ const createChat = async (
         isPackaged: app.isPackaged,
         resourcesPath: app.isPackaged ? process.resourcesPath : undefined,
         logger: log,
-        diagnosticsDir: STARTUP_LOGS_DIR,
+        diagnosticsDir: startupLogsDirectory(),
         readinessFetch: net.fetch as unknown as typeof globalThis.fetch,
       });
       if (!gooseServeResult.certFingerprint) {
@@ -1354,6 +1385,20 @@ const createChat = async (
   });
 
   // Handle new window creation for links (fallback for any links not handled by onClick)
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    try {
+      const actual = new URL(navigationUrl);
+      const expected = getAppUrl();
+      const sameApp =
+        actual.protocol === expected.protocol &&
+        actual.host === expected.host &&
+        (actual.protocol !== 'file:' || actual.pathname === expected.pathname);
+      if (!sameApp) event.preventDefault();
+    } catch {
+      event.preventDefault();
+    }
+  });
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     try {
       const protocol = new URL(url).protocol;
@@ -1477,6 +1522,12 @@ const createChat = async (
 
   windowMap.set(windowId, mainWindow);
 
+  mainWindow.webContents.on('did-start-navigation', (_event, _url, isInPlace, isMainFrame) => {
+    if (!isMainFrame || isInPlace) return;
+    reactReadyWindows.delete(windowId);
+    projectDirectoryAccess.delete(windowId);
+  });
+
   // Handle window closure
   mainWindow.on('closed', () => {
     windowMap.delete(windowId);
@@ -1484,6 +1535,7 @@ const createChat = async (
     pendingInitialMessages.delete(windowId);
     pendingDeepLinks.delete(windowId);
     reactReadyWindows.delete(windowId);
+    projectDirectoryAccess.delete(windowId);
 
     if (windowPowerSaveBlockers.has(windowId)) {
       const blockerId = windowPowerSaveBlockers.get(windowId)!;
@@ -1840,6 +1892,16 @@ process.on('unhandledRejection', (error) => {
 ipcMain.on('react-ready', (event) => {
   log.info('React ready event received');
 
+  const readyWindow = BrowserWindow.fromWebContents(event.sender);
+  if (
+    !readyWindow ||
+    readyWindow.isDestroyed() ||
+    event.senderFrame !== event.sender.mainFrame ||
+    !isTrustedAppUrl(event.sender.getURL(), getAppUrl().toString())
+  ) {
+    return;
+  }
+
   // Get the window that sent the react-ready event
   const window = BrowserWindow.fromWebContents(event.sender);
   const windowId = window?.id;
@@ -1876,6 +1938,7 @@ ipcMain.on('react-ready', (event) => {
 });
 
 ipcMain.handle('open-external', async (_event, url: string) => {
+  if (!isTrustedRendererSender(_event)) return;
   const parsedUrl = new URL(url);
 
   if (BLOCKED_PROTOCOLS.includes(parsedUrl.protocol)) {
@@ -1886,11 +1949,62 @@ ipcMain.handle('open-external', async (_event, url: string) => {
   await shell.openExternal(url);
 });
 
-ipcMain.handle('directory-chooser', async () => {
-  return dialog.showOpenDialog({
+type ProjectDirectoryAccess = { root: string; token: string };
+const projectDirectoryAccess = new Map<number, ProjectDirectoryAccess>();
+const WINDOWS_PROJECT_ACCESS_ERROR = 'Project directory access is unavailable in Windows safe mode';
+
+function sameFilesystemPath(left: string, right: string): boolean {
+  return process.platform === 'win32' ? left.toLowerCase() === right.toLowerCase() : left === right;
+}
+
+async function canonicalProjectDirectory(directory: string): Promise<string | null> {
+  if (typeof directory !== 'string' || directory.length === 0 || directory.length > 4096) return null;
+  try {
+    const candidate = path.resolve(directory);
+    const stats = await fs.lstat(candidate);
+    if (!stats.isDirectory() || stats.isSymbolicLink()) return null;
+    const canonical = await fs.realpath(candidate);
+    if (!sameFilesystemPath(canonical, candidate)) return null;
+    const parsed = path.parse(canonical);
+    if (parsed.root === canonical) return null;
+    const normalized = canonical.replace(/[\\/]+$/, '').toLowerCase();
+    const managedRoot = managedStorageRoot().replace(/[\\/]+$/, '').toLowerCase();
+    if (normalized === managedRoot || normalized.startsWith(`${managedRoot}${path.sep}`.toLowerCase())) return null;
+    if (/^[a-z]:\\(?:windows|program files(?: \(x86\))?|programdata)(?:\\|$)/i.test(canonical)) return null;
+    return canonical;
+  } catch {
+    return null;
+  }
+}
+
+async function authorizedProjectDirectory(
+  event: IpcMainInvokeEvent,
+  token?: unknown,
+  workingDir?: unknown
+): Promise<string | null> {
+  if (!isTrustedRendererSender(event)) return null;
+  const access = projectDirectoryAccess.get(BrowserWindow.fromWebContents(event.sender)?.id ?? -1);
+  if (!access || access.token !== token || typeof workingDir !== 'string') return null;
+  if (!sameFilesystemPath(path.resolve(workingDir), access.root)) return null;
+  if (process.platform === 'win32') return null;
+  const canonical = await canonicalProjectDirectory(access.root);
+  return canonical && sameFilesystemPath(canonical, access.root) ? access.root : null;
+}
+
+ipcMain.handle('directory-chooser', async (event) => {
+  if (!isTrustedRendererSender(event)) return { canceled: true, filePaths: [] };
+  const result = await dialog.showOpenDialog({
     properties: ['openDirectory', 'createDirectory'],
     defaultPath: os.homedir(),
   });
+  if (!result.canceled && result.filePaths[0]) {
+    const canonical = await canonicalProjectDirectory(result.filePaths[0]);
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (canonical && window) {
+      projectDirectoryAccess.set(window.id, { root: canonical, token: crypto.randomBytes(32).toString('hex') });
+    }
+  }
+  return result;
 });
 
 ipcMain.handle('add-recent-dir', (_event, dir: string) => {
@@ -1903,13 +2017,18 @@ ipcMain.handle('list-recent-dirs', () => {
   return loadRecentDirs();
 });
 
-ipcMain.handle('list-git-worktree-dirs', async (_event, dir: string) => {
-  return await listGitWorktreeDirs(dir);
+ipcMain.handle('list-git-worktree-dirs', async (_event, _token: unknown, _workingDir: unknown) => {
+  return [];
 });
 
-ipcMain.handle('get-setting', (_event, key: SettingKey) => {
+function rendererSettings(settings: Settings): Settings {
+  return redactExternalBackendSecret(settings);
+}
+
+ipcMain.handle('get-setting', (event, key: SettingKey) => {
+  if (!isTrustedRendererSender(event)) return undefined;
   const settings = getSettings();
-  return settings[key];
+  return rendererSettings(settings)[key];
 });
 
 // Valid setting keys for runtime validation
@@ -1931,7 +2050,8 @@ const validSettingKeys: Set<string> = new Set([
   'disableAutoDownload',
 ]);
 
-ipcMain.handle('set-setting', (_event, key: SettingKey, value: unknown) => {
+ipcMain.handle('set-setting', (event, key: SettingKey, value: unknown) => {
+  if (!isTrustedRendererSender(event)) return;
   // Validate key at runtime to prevent prototype pollution
   if (!validSettingKeys.has(key)) {
     console.error(`Invalid setting key rejected: ${key}`);
@@ -1944,9 +2064,14 @@ ipcMain.handle('set-setting', (_event, key: SettingKey, value: unknown) => {
   }
 
   const settings = getSettings();
+  if (key === 'externalGoosed' && typeof value === 'object' && value !== null) {
+    const incoming = value as Partial<Settings['externalGoosed']> & { clearSecret?: boolean };
+    value = mergeExternalBackendConfig(settings.externalGoosed, incoming);
+    delete (value as { clearSecret?: boolean }).clearSecret;
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (settings as any)[key] = value;
-  fsSync.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+  fsSync.writeFileSync(settingsFilePath(), JSON.stringify(settings, null, 2));
 
   if (key === 'language') {
     appConfig.GOOSE_LOCALE = getConfiguredGooseLocale();
@@ -1963,6 +2088,7 @@ ipcMain.handle('set-setting', (_event, key: SettingKey, value: unknown) => {
 });
 
 ipcMain.handle('get-secret-key', (event) => {
+  if (!isTrustedRendererSender(event)) return null;
   const windowId = BrowserWindow.fromWebContents(event.sender)?.id;
   if (!windowId) {
     return null;
@@ -1971,6 +2097,7 @@ ipcMain.handle('get-secret-key', (event) => {
 });
 
 ipcMain.handle('get-acp-url', async (event) => {
+  if (!isTrustedRendererSender(event)) return null;
   const windowId = BrowserWindow.fromWebContents(event.sender)?.id;
   if (!windowId) {
     return null;
@@ -1979,7 +2106,8 @@ ipcMain.handle('get-acp-url', async (event) => {
 });
 
 // Handle menu bar icon visibility
-ipcMain.handle('set-menu-bar-icon', async (_event, show: boolean) => {
+ipcMain.handle('set-menu-bar-icon', async (event, show: boolean) => {
+  if (!isTrustedRendererSender(event) || typeof show !== 'boolean') return false;
   updateSettings((s) => {
     s.showMenuBarIcon = show;
   });
@@ -1992,7 +2120,8 @@ ipcMain.handle('set-menu-bar-icon', async (_event, show: boolean) => {
   return true;
 });
 
-ipcMain.handle('get-menu-bar-icon-state', () => {
+ipcMain.handle('get-menu-bar-icon-state', (event) => {
+  if (!isTrustedRendererSender(event)) return false;
   try {
     const settings = getSettings();
     return settings.showMenuBarIcon ?? true;
@@ -2037,7 +2166,8 @@ ipcMain.handle('get-dock-icon-state', () => {
 });
 
 // Handle opening system notifications preferences
-ipcMain.handle('open-notifications-settings', async () => {
+ipcMain.handle('open-notifications-settings', async (event) => {
+  if (!isTrustedRendererSender(event)) return false;
   try {
     if (process.platform === 'darwin') {
       spawn('open', ['x-apple.systempreferences:com.apple.preference.notifications']);
@@ -2090,7 +2220,8 @@ ipcMain.handle('open-notifications-settings', async () => {
 });
 
 // Handle wakelock setting
-ipcMain.handle('set-wakelock', async (_event, enable: boolean) => {
+ipcMain.handle('set-wakelock', async (event, enable: boolean) => {
+  if (!isTrustedRendererSender(event) || typeof enable !== 'boolean') return false;
   updateSettings((s) => {
     s.enableWakelock = enable;
   });
@@ -2116,7 +2247,8 @@ ipcMain.handle('set-wakelock', async (_event, enable: boolean) => {
   return true;
 });
 
-ipcMain.handle('get-wakelock-state', () => {
+ipcMain.handle('get-wakelock-state', (event) => {
+  if (!isTrustedRendererSender(event)) return false;
   try {
     const settings = getSettings();
     return settings.enableWakelock ?? false;
@@ -2269,85 +2401,199 @@ ipcMain.handle('check-ollama', async () => {
   }
 });
 
-ipcMain.handle('read-file', async (_event, filePath) => {
+function isTrustedRendererSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (!window || window.isDestroyed() || event.sender.isDestroyed()) return false;
+  if (event.sender !== window.webContents || event.senderFrame !== event.sender.mainFrame) return false;
+  if (event.sender.isLoadingMainFrame() || !reactReadyWindows.has(window.id)) return false;
+
   try {
-    const expandedPath = expandTilde(filePath);
-    if (process.platform === 'win32') {
-      const buffer = await fs.readFile(expandedPath);
-      return { file: buffer.toString('utf8'), filePath: expandedPath, error: null, found: true };
+    return isTrustedAppUrl(event.sender.getURL(), getAppUrl().toString());
+  } catch {
+    return false;
+  }
+}
+
+function managedStorageRoot(): string {
+  return desktopGoosePathRoot ?? app.getPath('userData');
+}
+
+async function assertProjectRootStillSafe(root: string): Promise<void> {
+  const stats = await fs.lstat(root);
+  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error('Project root is not a regular directory');
+  const canonical = await fs.realpath(root);
+  if (!sameFilesystemPath(canonical, root)) throw new Error('Project root changed or is a reparse point');
+}
+
+type FileIdentity = { dev: number; ino: number; nlink: number; size: number };
+
+function fileIdentity(stats: fsSync.Stats): FileIdentity {
+  return { dev: stats.dev, ino: stats.ino, nlink: stats.nlink, size: stats.size };
+}
+
+function sameFileIdentity(left: FileIdentity, right: FileIdentity): boolean {
+  return left.dev === right.dev && left.ino === right.ino && left.nlink === right.nlink;
+}
+
+async function openAuthorizedHints(root: string, flags: string): Promise<fs.FileHandle | null> {
+  await assertProjectRootStillSafe(root);
+  const rootBeforeStats = await fs.lstat(root);
+  if (!rootBeforeStats.isDirectory() || rootBeforeStats.isSymbolicLink() || rootBeforeStats.nlink !== 1) {
+    throw new Error('Project root identity is invalid');
+  }
+  const rootBefore = fileIdentity(rootBeforeStats);
+  const rootHandle = await fs.open(root, 'r');
+  try {
+    const rootIdentity = fileIdentity(await rootHandle.stat());
+    if (rootIdentity.nlink !== 1 || !sameFileIdentity(rootBefore, rootIdentity)) {
+      throw new Error('Project root identity changed');
     }
-    // Non-Windows: keep previous behavior via cat for parity
-    return await new Promise((resolve) => {
-      const cat = spawn('cat', [expandedPath]);
-      let output = '';
-      let errorOutput = '';
+    const target = path.join(root, '.goosehints');
+    let before: FileIdentity;
+    try {
+      const stats = await fs.lstat(target);
+      if (!stats.isFile() || stats.isSymbolicLink() || stats.nlink !== 1) {
+        throw new Error('Project hints identity is invalid');
+      }
+      before = fileIdentity(stats);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+      throw error;
+    }
 
-      cat.stdout.on('data', (data) => {
-        output += data.toString();
-      });
+    const handle = await fs.open(target, flags);
+    try {
+      const opened = fileIdentity(await handle.stat());
+      const after = fileIdentity(await fs.lstat(target));
+      const rootAfter = fileIdentity(await rootHandle.stat());
+      if (
+        opened.nlink !== 1 ||
+        !sameFileIdentity(before, opened) ||
+        !sameFileIdentity(opened, after) ||
+        !sameFileIdentity(rootIdentity, rootAfter)
+      ) {
+        await handle.close();
+        throw new Error('Project hints identity changed');
+      }
+      return handle;
+    } catch (error) {
+      await handle.close().catch(() => undefined);
+      throw error;
+    }
+  } finally {
+    await rootHandle.close();
+  }
+}
 
-      cat.stderr.on('data', (data) => {
-        errorOutput += data.toString();
-      });
+async function readAuthorizedProjectHints(root: string): Promise<string | null> {
+  const handle = await openAuthorizedHints(root, 'r');
+  if (!handle) return null;
+  try {
+    if ((await handle.stat()).nlink !== 1) throw new Error('Project hints identity changed');
+    return await handle.readFile({ encoding: 'utf8' });
+  } finally {
+    await handle.close();
+  }
+}
 
-      cat.on('close', (code) => {
-        if (code !== 0) {
-          resolve({ file: '', filePath: expandedPath, error: errorOutput || null, found: false });
-          return;
-        }
-        resolve({ file: output, filePath: expandedPath, error: null, found: true });
-      });
+async function writeAuthorizedProjectHints(root: string, content: string): Promise<boolean> {
+  const handle = await openAuthorizedHints(root, 'r+');
+  if (!handle) {
+    throw new Error(
+      process.platform === 'win32'
+        ? 'A new .goosehints file must be created explicitly outside Goose before it can be edited.'
+        : 'Project hints file does not exist'
+    );
+  }
+  try {
+    if ((await handle.stat()).nlink !== 1) throw new Error('Project hints identity changed');
+    await handle.truncate(0);
+    if ((await handle.stat()).nlink !== 1) throw new Error('Project hints identity changed');
+    await handle.writeFile(content, { encoding: 'utf8' });
+    return true;
+  } finally {
+    await handle.close();
+  }
+}
 
-      cat.on('error', (error) => {
-        console.error('Error reading file:', error);
-        resolve({ file: '', filePath: expandedPath, error, found: false });
-      });
-    });
+ipcMain.handle('request-project-directory-access', async (event, directory: string) => {
+  if (process.platform === 'win32') throw new Error(WINDOWS_PROJECT_ACCESS_ERROR);
+  if (!isTrustedRendererSender(event)) return false;
+  const canonical = await canonicalProjectDirectory(directory);
+  if (!canonical) return false;
+  const result = await dialog.showMessageBox(BrowserWindow.fromWebContents(event.sender)!, {
+    type: 'question',
+    buttons: ['Allow', 'Cancel'],
+    defaultId: 1,
+    cancelId: 1,
+    title: 'Allow project file access?',
+    message: `Allow Goose to list files and read/write ${path.join(canonical, '.goosehints')}?`,
+  });
+  if (result.response !== 0) return false;
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (!window) return false;
+  projectDirectoryAccess.set(window.id, { root: canonical, token: crypto.randomBytes(32).toString('hex') });
+  return true;
+});
+
+ipcMain.handle('get-project-directory-access', (event) => {
+  if (!isTrustedRendererSender(event)) return { authorized: false, directory: null, token: null };
+  const access = projectDirectoryAccess.get(BrowserWindow.fromWebContents(event.sender)?.id ?? -1);
+  return { authorized: access !== undefined, directory: access?.root ?? null, token: access?.token ?? null };
+});
+
+ipcMain.handle('list-project-files', async (_event, _token: unknown, _workingDir: unknown) => {
+  return [];
+});
+
+ipcMain.handle('read-project-goosehints', async (event, token: unknown, workingDir: unknown) => {
+  const root = await authorizedProjectDirectory(event, token, workingDir);
+  if (!root) return { file: '', error: 'Project directory access is not authorized', found: false };
+  try {
+    const file = await readAuthorizedProjectHints(root);
+    if (file === null) return { file: '', error: null, found: false };
+    if (file.length > 1024 * 1024) throw new Error('Project hints is too large');
+    return { file, error: null, found: true };
   } catch (error) {
-    console.error('Error reading file:', error);
-    return { file: '', filePath: expandTilde(filePath), error, found: false };
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { file: '', error: null, found: false };
+    return { file: '', error: 'Unable to read project hints', found: false };
   }
 });
 
-ipcMain.handle('write-file', async (_event, filePath, content) => {
+ipcMain.handle('write-project-goosehints', async (event, content: string, token: unknown, workingDir: unknown) => {
+  const root = await authorizedProjectDirectory(event, token, workingDir);
+  if (!root || typeof content !== 'string' || content.length > 1024 * 1024) return false;
   try {
-    // Expand tilde to home directory
-    const expandedPath = expandTilde(filePath);
-    await fs.writeFile(expandedPath, content, { encoding: 'utf8' });
-    return true;
+    return await writeAuthorizedProjectHints(root, content);
   } catch (error) {
-    console.error('Error writing to file:', error);
+    console.error('Error writing project hints:', formatErrorForLogging(error));
     return false;
   }
 });
 
-// Enhanced file operations
-ipcMain.handle('ensure-directory', async (_event, dirPath) => {
+ipcMain.handle('select-recipe-file', async (event) => {
+  if (!isTrustedRendererSender(event)) return null;
+  const result = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'Recipe files', extensions: ['yaml', 'yml'] }] });
+  if (result.canceled || !result.filePaths[0]) return null;
   try {
-    // Expand tilde to home directory
-    const expandedPath = expandTilde(dirPath);
-
-    await fs.mkdir(expandedPath, { recursive: true });
-    return true;
-  } catch (error) {
-    console.error('Error creating directory:', error);
-    return false;
+    return { filePath: path.basename(result.filePaths[0]), contents: await fs.readFile(result.filePaths[0], 'utf8') };
+  } catch {
+    return { filePath: path.basename(result.filePaths[0]), contents: '', error: 'Unable to read selected recipe' };
   }
 });
 
-ipcMain.handle('list-files', async (_event, dirPath, extension) => {
+ipcMain.handle('save-recipe-file', async (event, content: string, defaultPath?: string) => {
+  if (!isTrustedRendererSender(event)) return { status: 'failed' as const };
+  const safeDefaultPath = isAllowedRecipeDefaultName(defaultPath) ? path.basename(defaultPath) : 'recipe.yaml';
+  if (typeof content !== 'string' || content.length > 2 * 1024 * 1024) return { status: 'failed' as const };
+  const result = await dialog.showSaveDialog({ defaultPath: safeDefaultPath, filters: [{ name: 'Recipe files', extensions: ['yaml', 'yml'] }] });
+  if (result.canceled || !result.filePath) return { status: 'cancelled' as const };
   try {
-    // Expand tilde to home directory
-    const expandedPath = expandTilde(dirPath);
-
-    const files = await fs.readdir(expandedPath);
-    if (extension) {
-      return files.filter((file) => file.endsWith(extension));
-    }
-    return files;
-  } catch (error) {
-    console.error('Error listing files:', error);
-    return [];
+    if (!isAllowedRecipeDefaultName(path.basename(result.filePath))) return { status: 'failed' as const };
+    await fs.writeFile(result.filePath, content, 'utf8');
+    return { status: 'saved' as const, fileName: path.basename(result.filePath) };
+  } catch {
+    return { status: 'failed' as const };
   }
 });
 
@@ -2409,6 +2655,8 @@ const registerGlobalShortcuts = () => {
 };
 
 async function appMain() {
+  if (!(await runWhenStorageReady(() => true))) return;
+
   powerMonitor.on('resume', () => {
     for (const window of BrowserWindow.getAllWindows()) {
       if (!window.isDestroyed()) {
@@ -2420,7 +2668,10 @@ async function appMain() {
   await configureProxy();
 
   // Ensure Windows shims are available before any MCP processes are spawned
-  await ensureWinShims();
+  if (process.platform === 'win32' && desktopGoosePathRoot) {
+    const windowsMcpEnvironment = await ensureWinShims(desktopGoosePathRoot);
+    setWindowsMcpEnvironment(windowsMcpEnvironment?.env);
+  }
 
   registerUpdateIpcHandlers();
 
@@ -2960,9 +3211,11 @@ async function appMain() {
     event.returnValue = getConfiguredGooseLocale();
   });
 
-  ipcMain.handle('open-directory-in-explorer', async (_event, path: string) => {
+  ipcMain.handle('open-directory-in-explorer', async (event, directoryPath: string) => {
+    if (!isTrustedRendererSender(event) || typeof directoryPath !== 'string') return false;
     try {
-      return !!(await shell.openPath(path));
+      const canonical = await canonicalProjectDirectory(directoryPath);
+      return canonical ? !(await shell.openPath(canonical)) : false;
     } catch (error) {
       console.error('Error opening directory in explorer:', error);
       return false;
@@ -3077,7 +3330,7 @@ async function appMain() {
   });
 }
 
-app.whenReady().then(async () => {
+void runWhenStorageReady(async () => {
   try {
     await appMain();
   } catch (error) {

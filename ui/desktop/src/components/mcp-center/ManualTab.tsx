@@ -17,8 +17,6 @@ import { useIntl } from '../../i18n';
 export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef) => void }) {
   const intl = useIntl();
   const [endpoint, setEndpoint] = useState('');
-  const [authMode, setAuthMode] = useState<'none' | 'bearer_reference'>('none');
-  const [authReference, setAuthReference] = useState('');
   const [stdio, setStdio] = useState<McpManualStdioSourcesPage | null>(null);
   const [selectedSource, setSelectedSource] = useState('');
   const [loadingStdio, setLoadingStdio] = useState(true);
@@ -52,10 +50,7 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
         await createManualMcpPlan({
           type: 'remote_http',
           endpoint: endpoint.trim(),
-          auth:
-            authMode === 'none'
-              ? { type: 'none' }
-              : { type: 'bearer_reference', authReference: authReference.trim() },
+          auth: { type: 'none' },
         })
       );
     } catch (cause) {
@@ -114,33 +109,14 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
               />
             </label>
             <label className="block space-y-1.5 text-sm text-text-primary">
-              {intl.formatMessage(messages.authentication)}
-              <select
-                className="h-9 w-full rounded-md border border-border-primary bg-background-primary px-3 text-sm"
-                value={authMode}
-                onChange={(event) => setAuthMode(event.target.value as typeof authMode)}
-              >
-                <option value="none">{intl.formatMessage(messages.noAuthentication)}</option>
-                <option value="bearer_reference">
-                  {intl.formatMessage(messages.bearerReference)}
-                </option>
-              </select>
+              {intl.formatMessage(messages.remoteHttpAuthSupport)}
+              <div className="rounded-lg bg-background-secondary p-3 text-sm text-text-secondary">
+                <p>{intl.formatMessage(messages.remoteHttpNoAuthOnly)}</p>
+                <p className="mt-1">
+                  {intl.formatMessage(messages.remoteHttpCredentialUnavailable)}
+                </p>
+              </div>
             </label>
-            {authMode === 'bearer_reference' && (
-              <label className="block space-y-1.5 text-sm text-text-primary">
-                {intl.formatMessage(messages.credentialReference)}
-                <Input
-                  required
-                  value={authReference}
-                  onChange={(event) => setAuthReference(event.target.value)}
-                  placeholder={intl.formatMessage(messages.existingCredentialReference)}
-                  autoComplete="off"
-                />
-                <span className="block text-xs text-text-secondary">
-                  {intl.formatMessage(messages.credentialReferenceHelp)}
-                </span>
-              </label>
-            )}
             <Button disabled={submitting || !endpoint.trim()} type="submit">
               {intl.formatMessage(
                 submitting ? messages.creatingPlan : messages.createConnectionPlan

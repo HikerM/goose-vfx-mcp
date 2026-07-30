@@ -33,6 +33,10 @@ const i18n = defineMessages({
     id: 'mentionPopover.noCommandsFound',
     defaultMessage: 'No commands found matching "{query}"',
   },
+  projectFilesUnavailable: {
+    id: 'mentionPopover.projectFilesUnavailable',
+    defaultMessage: 'File listing is unavailable in safe mode. You can still enter a file reference manually.',
+  },
 });
 
 type CommandItemType = 'Builtin' | 'Recipe' | 'Skill' | 'Agent';
@@ -160,239 +164,14 @@ const MentionPopover = forwardRef<
     const intl = useIntl();
     const [items, setItems] = useState<DisplayItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [projectFilesUnavailable, setProjectFilesUnavailable] = useState(false);
     const popoverRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const currentWorkingDir = workingDir ?? getInitialWorkingDir();
-
-    const scanDirectoryFromRoot = useCallback(
-      async (dirPath: string, relativePath = '', depth = 0): Promise<DisplayItem[]> => {
-        // Increase depth limit for better file discovery
-        if (depth > 5) return [];
-
-        try {
-          const items = await window.electron.listFiles(dirPath);
-          const results: DisplayItem[] = [];
-
-          // Common directories to prioritize or skip
-          const priorityDirs = [
-            'Desktop',
-            'Documents',
-            'Downloads',
-            'Projects',
-            'Development',
-            'Code',
-            'src',
-            'components',
-            'icons',
-          ];
-          const skipDirs = [
-            '.git',
-            '.svn',
-            '.hg',
-            'node_modules',
-            '__pycache__',
-            'target',
-            'dist',
-            'build',
-            '.cache',
-            '.npm',
-            '.yarn',
-            'Library',
-            'System',
-            'Applications',
-            '.Trash',
-          ];
-
-          const allowedHiddenDirs = [
-            '.github',
-            '.vscode',
-            '.idea',
-            '.config',
-            '.gitlab',
-            '.circleci',
-            '.azure',
-            '.jenkins',
-          ];
-
-          // Don't skip as many directories at deeper levels to find more items
-          const skipDirsAtDepth =
-            depth > 2 ? ['.git', '.svn', '.hg', 'node_modules', '__pycache__'] : skipDirs;
-
-          // Sort items to prioritize certain directories
-          const sortedItems = items.sort((a, b) => {
-            const aPriority = priorityDirs.includes(a);
-            const bPriority = priorityDirs.includes(b);
-            if (aPriority && !bPriority) return -1;
-            if (!aPriority && bPriority) return 1;
-            return a.localeCompare(b);
-          });
-
-          // Increase item limit per directory for better coverage
-          const itemLimit = depth === 0 ? 50 : depth === 1 ? 40 : 30;
-
-          for (const item of sortedItems.slice(0, itemLimit)) {
-            const fullPath = `${dirPath}/${item}`;
-            const itemRelativePath = relativePath ? `${relativePath}/${item}` : item;
-
-            // Skip items in the skip list
-            if (skipDirsAtDepth.includes(item)) {
-              continue;
-            }
-
-            // Skip hidden items except for allowed hidden directories
-            if (item.startsWith('.') && !allowedHiddenDirs.includes(item)) {
-              continue;
-            }
-
-            // First, check if this looks like a file based on extension
-            const hasExtension = item.includes('.');
-            const ext = item.split('.').pop()?.toLowerCase();
-            const commonExtensions = [
-              // Code items
-              'txt',
-              'md',
-              'js',
-              'ts',
-              'jsx',
-              'tsx',
-              'py',
-              'java',
-              'cpp',
-              'c',
-              'h',
-              'css',
-              'html',
-              'json',
-              'xml',
-              'yaml',
-              'yml',
-              'toml',
-              'ini',
-              'cfg',
-              'sh',
-              'bat',
-              'ps1',
-              'rb',
-              'go',
-              'rs',
-              'php',
-              'sql',
-              'r',
-              'scala',
-              'swift',
-              'kt',
-              'dart',
-              'vue',
-              'svelte',
-              'astro',
-              'scss',
-              'less',
-              // Documentation
-              'readme',
-              'license',
-              'changelog',
-              'contributing',
-              // Config items
-              'gitignore',
-              'dockerignore',
-              'editorconfig',
-              'prettierrc',
-              'eslintrc',
-              // Images and assets
-              'png',
-              'jpg',
-              'jpeg',
-              'gif',
-              'svg',
-              'ico',
-              'webp',
-              'bmp',
-              'tiff',
-              'tif',
-              // Vector and design items
-              'ai',
-              'eps',
-              'sketch',
-              'fig',
-              'xd',
-              'psd',
-              // Other common items
-              'pdf',
-              'doc',
-              'docx',
-              'xls',
-              'xlsx',
-              'ppt',
-              'pptx',
-            ];
-
-            // If it has a known file extension, treat it as a file
-            if (hasExtension && ext && commonExtensions.includes(ext)) {
-              results.push({
-                extra: fullPath,
-                name: item,
-                itemType: 'File',
-                relativePath: itemRelativePath,
-              });
-              continue;
-            }
-
-            // If it's a known file without extension (README, LICENSE, etc.)
-            const knownFiles = [
-              'readme',
-              'license',
-              'changelog',
-              'contributing',
-              'dockerfile',
-              'makefile',
-            ];
-            if (!hasExtension && knownFiles.includes(item.toLowerCase())) {
-              results.push({
-                extra: fullPath,
-                name: item,
-                itemType: 'File',
-                relativePath: itemRelativePath,
-              });
-              continue;
-            }
-
-            // Otherwise, try to determine if it's a directory
-            try {
-              await window.electron.listFiles(fullPath);
-
-              results.push({
-                name: item,
-                extra: fullPath,
-                itemType: 'Directory',
-                relativePath: itemRelativePath,
-              });
-
-              // Recursively scan directories more aggressively
-              if (depth < 4 || priorityDirs.includes(item)) {
-                const subFiles = await scanDirectoryFromRoot(fullPath, itemRelativePath, depth + 1);
-                results.push(...subFiles);
-              }
-            } catch {
-              // If we can't list it and it doesn't have a known extension, skip it
-              // This could be a file with an unknown extension or a permission issue
-            }
-          }
-
-          return results;
-        } catch (error) {
-          console.error(`Error scanning directory ${dirPath}:`, error);
-          return [];
-        }
-      },
-      []
-    );
-
-    const getDefaultStartPath = (): string => {
-      if (window.electron.platform === 'win32') return 'C:\\Users';
-      if (window.electron.platform === 'linux') return '/home';
-      return '/Users';
-    };
-
+    const scanDirectoryFromRoot = useCallback(async (): Promise<DisplayItem[]> => {
+      setProjectFilesUnavailable(true);
+      return [];
+    }, []);
     const compareByType = (a: DisplayItemWithMatch, b: DisplayItemWithMatch) => {
       const orderA = typeOrder[a.itemType] ?? Number.MAX_SAFE_INTEGER;
       const orderB = typeOrder[b.itemType] ?? Number.MAX_SAFE_INTEGER;
@@ -495,10 +274,9 @@ const MentionPopover = forwardRef<
             if (cancelled) return;
             setItems(commandItems);
           } else {
-            // Fetch agents from server and scan files in parallel
             const [agentItems, scannedFiles] = await Promise.all([
               listAgentMentionItems(currentWorkingDir, sessionId ?? undefined).catch(() => []),
-              scanDirectoryFromRoot(currentWorkingDir || getDefaultStartPath()),
+              scanDirectoryFromRoot(),
             ]);
             if (cancelled) return;
             setItems([...agentItems, ...scannedFiles]);
@@ -507,6 +285,7 @@ const MentionPopover = forwardRef<
           if (!cancelled) {
             console.error('Error loading popover items:', error);
             setItems([]);
+            setProjectFilesUnavailable(false);
           }
         } finally {
           if (!cancelled) {
@@ -612,7 +391,11 @@ const MentionPopover = forwardRef<
                   </div>
                 ))}
 
-                {!isLoading && displayItems.length === 0 && query && (
+                {!isLoading && displayItems.length === 0 && query && projectFilesUnavailable ? (
+                  <div className="p-4 text-center text-text-secondary text-sm">
+                    {intl.formatMessage(i18n.projectFilesUnavailable)}
+                  </div>
+                ) : !isLoading && displayItems.length === 0 && query && (
                   <div className="p-4 text-center text-text-secondary text-sm">
                     {intl.formatMessage(isSlashCommand ? i18n.noCommandsFound : i18n.noItemsFound, {
                       query,

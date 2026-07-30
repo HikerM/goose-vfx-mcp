@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { McpSourcesPolicyState, McpTaskRef } from '@aaif/goose-sdk';
-import { Boxes, Compass, ListChecks, Plus, ShieldCheck } from 'lucide-react';
+import { Boxes, Compass, FileStack, ListChecks, Plus, ShieldCheck } from 'lucide-react';
 import { MainPanelLayout } from '../Layout/MainPanelLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { DiscoverTab } from './DiscoverTab';
 import { ManagedTab } from './ManagedTab';
 import { ManualTab } from './ManualTab';
+import { ProfilesTab } from './ProfilesTab';
 import { SourcesPolicyTab } from './SourcesPolicyTab';
 import {
   getMcpSourcesPolicy,
@@ -22,6 +23,7 @@ export default function McpCenterView() {
   const [policyError, setPolicyError] = useState<McpPlatformRecoveryViewModel | null>(null);
   const [task, setTask] = useState<McpTaskRef | null>(null);
   const [tab, setTab] = useState('discover');
+  const [discoverRefreshNonce, setDiscoverRefreshNonce] = useState(0);
 
   const loadPolicy = useCallback(async () => {
     setPolicyError(null);
@@ -40,6 +42,11 @@ export default function McpCenterView() {
     setTask(nextTask);
     setTab('managed');
   };
+
+  const handleGovernedImportCompleted = useCallback(async () => {
+    await loadPolicy();
+    setDiscoverRefreshNonce((current) => current + 1);
+  }, [loadPolicy]);
 
   return (
     <MainPanelLayout>
@@ -90,6 +97,9 @@ export default function McpCenterView() {
                 <TabsTrigger value="managed">
                   <ListChecks /> {intl.formatMessage(messages.myMcps)}
                 </TabsTrigger>
+                <TabsTrigger value="profiles">
+                  <FileStack /> {intl.formatMessage(messages.profileTab)}
+                </TabsTrigger>
                 <TabsTrigger value="manual">
                   <Plus /> {intl.formatMessage(messages.manual)}
                 </TabsTrigger>
@@ -98,16 +108,27 @@ export default function McpCenterView() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="discover">
-                <DiscoverTab sourcesPolicy={sourcesPolicy} onTaskCreated={handleTaskCreated} />
+                <DiscoverTab
+                  sourcesPolicy={sourcesPolicy}
+                  refreshNonce={discoverRefreshNonce}
+                  onTaskCreated={handleTaskCreated}
+                />
               </TabsContent>
               <TabsContent value="managed">
                 <ManagedTab externalTask={task} onTaskChange={setTask} />
+              </TabsContent>
+              <TabsContent value="profiles">
+                <ProfilesTab />
               </TabsContent>
               <TabsContent value="manual">
                 <ManualTab onTaskCreated={handleTaskCreated} />
               </TabsContent>
               <TabsContent value="policy">
-                <SourcesPolicyTab state={sourcesPolicy} />
+                <SourcesPolicyTab
+                  state={sourcesPolicy}
+                  onImported={handleGovernedImportCompleted}
+                  onOpenDiscover={() => setTab('discover')}
+                />
               </TabsContent>
             </Tabs>
           </div>

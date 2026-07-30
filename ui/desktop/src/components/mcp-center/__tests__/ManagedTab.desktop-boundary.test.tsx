@@ -141,12 +141,15 @@ function summary(
     runtime: 'stopped',
     health: 'healthy',
     defaultEnabled: false,
-    revision,
-    updatedAtMs: revision,
-    distributionAdapter: 'archive',
-    activeVersion: '1.0.0',
-    recoveryRequired: false,
-    eligibility: {
+  revision,
+  updatedAtMs: revision,
+  distributionAdapter: 'archive',
+  activeVersion: '1.0.0',
+  availableVersion: null,
+  availableManifestDigest: null,
+  currentTask: null,
+  recoveryRequired: false,
+  eligibility: {
       update: false,
       repair: false,
       uninstall: false,
@@ -174,11 +177,13 @@ function detail(item: McpManagedSummary): McpManagedDetail {
     activeVersion: item.activeVersion ?? '',
     extensionConfigKey: `extension-${item.managedMcpId}`,
     projectionDigest: `projection-${item.managedMcpId}`,
+    latestHealth: null,
+    registrationTask: null,
   };
 }
 
 function health(managedMcpId: string): McpHealthStatus {
-  return { managedMcpId, state: 'healthy' };
+  return { managedMcpId, state: 'healthy', latest: null };
 }
 
 function plan(managedMcpId: string): McpPlanReview {
@@ -248,7 +253,9 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const planCreation = deferred<RpcResult>();
     const confirmedTask = task({ taskId: 'task-confirm-a' });
     let confirmed = false;
-    transport.handlers.set('goose.mcpList_unstable', () => success({ items: [itemA, itemB] }));
+    transport.handlers.set('goose.mcpList_unstable', () =>
+      success({ items: [itemA, itemB], nextCursor: null })
+    );
     transport.handlers.set('goose.mcpGet_unstable', ({ managedMcpId }) => {
       if (managedMcpId === 'managed-b') return success(detail(itemB));
       return success(
@@ -323,7 +330,9 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const itemB = summary('managed-b', 4);
     const delayedDetail = deferred<RpcResult>();
     const delayedHealth = deferred<RpcResult>();
-    transport.handlers.set('goose.mcpList_unstable', () => success({ items: [itemA, itemB] }));
+    transport.handlers.set('goose.mcpList_unstable', () =>
+      success({ items: [itemA, itemB], nextCursor: null })
+    );
     transport.handlers.set('goose.mcpGet_unstable', ({ managedMcpId }) =>
       managedMcpId === 'managed-a' ? delayedDetail.promise : success(detail(itemB))
     );
@@ -356,7 +365,9 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const monitorTask = deferred<RpcResult>();
     const cancelResponse = deferred<RpcResult>();
     let taskGetCalls = 0;
-    transport.handlers.set('goose.mcpList_unstable', () => success({ items: [initial] }));
+    transport.handlers.set('goose.mcpList_unstable', () =>
+      success({ items: [initial], nextCursor: null })
+    );
     transport.handlers.set('goose.mcpGet_unstable', () => success(detail(initial)));
     transport.handlers.set('goose.mcpHealthGet_unstable', () => success(health('managed-a')));
     transport.handlers.set('goose.mcpTaskGet_unstable', () => {
@@ -399,7 +410,9 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const terminalRefresh = deferred<RpcResult>();
     const retryResponse = deferred<RpcResult>();
     let detailCalls = 0;
-    transport.handlers.set('goose.mcpList_unstable', () => success({ items: [initial] }));
+    transport.handlers.set('goose.mcpList_unstable', () =>
+      success({ items: [initial], nextCursor: null })
+    );
     transport.handlers.set('goose.mcpGet_unstable', () => {
       detailCalls += 1;
       return detailCalls === 1 ? success(detail(initial)) : terminalRefresh.promise;
@@ -449,7 +462,9 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     });
     const terminalRefresh = deferred<RpcResult>();
     let detailCalls = 0;
-    transport.handlers.set('goose.mcpList_unstable', () => success({ items: [initial] }));
+    transport.handlers.set('goose.mcpList_unstable', () =>
+      success({ items: [initial], nextCursor: null })
+    );
     transport.handlers.set('goose.mcpGet_unstable', () => {
       detailCalls += 1;
       return detailCalls === 1 ? success(detail(initial)) : terminalRefresh.promise;
@@ -469,10 +484,10 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     await user.click(await screen.findByRole('button', { name: /MCP A/i }));
     await user.click(await screen.findByRole('button', { name: 'Retry task' }));
     await act(async () => terminalRefresh.resolve(success(detail(summary('managed-a', 3)))));
-    expect(await screen.findByText('Queued')).toBeInTheDocument();
+    expect((await screen.findAllByText('Queued')).length).toBeGreaterThan(0);
     await user.click(screen.getByRole('button', { name: 'Cancel task' }));
 
-    expect(await screen.findByText('Cancelling')).toBeInTheDocument();
+    expect((await screen.findAllByText('Cancelling')).length).toBeGreaterThan(0);
     expect(onTaskChange).toHaveBeenLastCalledWith(cancelling);
     expect(transport.calls).toEqual(
       expect.arrayContaining([

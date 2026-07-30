@@ -520,23 +520,14 @@ export default function RecipesView() {
 
       const filename = `${sanitizedTitle}.yaml`;
 
-      const result = await window.electron.showSaveDialog({
-        title: intl.formatMessage(i18n.exportRecipeDialogTitle),
-        defaultPath: filename,
-        filters: [
-          { name: intl.formatMessage(i18n.yamlFiles), extensions: ['yaml', 'yml'] },
-          { name: intl.formatMessage(i18n.allFiles), extensions: ['*'] },
-        ],
+      const saveResult = await window.electron.saveRecipeFile(yaml, filename);
+      if (saveResult.status === 'cancelled') return;
+      if (saveResult.status !== 'saved' || !saveResult.fileName) throw new Error('Recipe export failed');
+      trackRecipeExportedToFile(true);
+      toastSuccess({
+        title: intl.formatMessage(i18n.recipeExportedTitle),
+        msg: intl.formatMessage(i18n.recipeExportedMsg, { filePath: saveResult.fileName }),
       });
-
-      if (!result.canceled && result.filePath) {
-        await window.electron.writeFile(result.filePath, yaml);
-        trackRecipeExportedToFile(true);
-        toastSuccess({
-          title: intl.formatMessage(i18n.recipeExportedTitle),
-          msg: intl.formatMessage(i18n.recipeExportedMsg, { filePath: result.filePath }),
-        });
-      }
     } catch (error) {
       console.error('Failed to export recipe:', error);
       trackRecipeExportedToFile(false, getErrorType(error));

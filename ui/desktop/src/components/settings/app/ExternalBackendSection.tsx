@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Switch } from '../../ui/switch';
 import { Input } from '../../ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
+import { Button } from '../../ui/button';
 import { AlertCircle } from 'lucide-react';
 import { ExternalBackendConfig, defaultSettings } from '../../../utils/settings';
 import { defineMessages, useIntl } from '../../../i18n';
@@ -45,6 +46,10 @@ const i18n = defineMessages({
   secretKeyHelp: {
     id: 'externalBackendSection.secretKeyHelp',
     defaultMessage: 'The secret key configured on the external backend (GOOSE_SERVER__SECRET_KEY).',
+  },
+  clearSecret: {
+    id: 'externalBackendSection.clearSecret',
+    defaultMessage: 'Clear saved secret',
   },
   certFingerprint: {
     id: 'externalBackendSection.certFingerprint',
@@ -235,6 +240,15 @@ export default function ExternalBackendSection() {
                   onBlur={() => saveConfig(config)}
                   disabled={isSaving}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => saveConfig({ ...config, secret: '', clearSecret: true } as ExternalBackendConfig & { clearSecret: boolean })}
+                  disabled={isSaving}
+                >
+                  {intl.formatMessage(i18n.clearSecret)}
+                </Button>
                 <p className="text-xs text-text-secondary">
                   {intl.formatMessage(i18n.secretKeyHelp)}
                 </p>

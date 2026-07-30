@@ -1,7 +1,12 @@
 import type { SessionInfo } from '@agentclientprotocol/sdk';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getAcpClient } from '../acpConnection';
-import { acpGetSessionListItem, acpLoadSession, sessionInfoToSession } from '../sessions';
+import {
+  acpGetSessionListItem,
+  acpLoadSession,
+  acpNewSession,
+  sessionInfoToSession,
+} from '../sessions';
 
 vi.mock('../acpConnection', () => ({
   getAcpClient: vi.fn(),
@@ -103,6 +108,31 @@ describe('ACP sessions', () => {
       lastMessageAt: '2026-01-01T00:01:00Z',
       providerId: 'anthropic',
       modelId: 'claude-sonnet-4-5',
+    });
+  });
+
+  it('passes a profile application token only in new session metadata', async () => {
+    const client = {
+      newSession: vi.fn().mockResolvedValue({ sessionId: 'session-1', _meta: {} }),
+      goose: {
+        sessionInfo_unstable: vi.fn().mockResolvedValue({ session: sessionInfo() }),
+      },
+    };
+    vi.mocked(getAcpClient).mockResolvedValue(
+      client as unknown as Awaited<ReturnType<typeof getAcpClient>>
+    );
+
+    await acpNewSession('/tmp', [], {
+      profileApplicationToken: 'profile-application-token',
+    });
+
+    expect(client.newSession).toHaveBeenCalledWith({
+      cwd: '/tmp',
+      mcpServers: [],
+      _meta: {
+        client: 'goose-desktop',
+        profileApplicationToken: 'profile-application-token',
+      },
     });
   });
 });

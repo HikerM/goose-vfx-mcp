@@ -45,6 +45,7 @@ export function resumeSession(session: Session, setView: setViewType) {
 interface CreateSessionOptions {
   recipeDeeplink?: string;
   recipeId?: string;
+  profileApplicationToken?: string;
   extensionConfigs?: ExtensionConfig[];
   allExtensions?: FixedExtensionEntry[];
 }
@@ -78,6 +79,7 @@ async function createAcpSession(
   return acpChatSessionController.createSession(workingDir, gooseExtensions, {
     recipeId: options?.recipeId,
     recipeDeeplink: options?.recipeDeeplink,
+    profileApplicationToken: options?.profileApplicationToken,
   });
 }
 

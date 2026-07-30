@@ -74,6 +74,7 @@ describe('createSession ACP session extensions', () => {
 
     expect(mockedGetConfiguredGooseExtensions).toHaveBeenCalledOnce();
     expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [gooseExtension('developer')], {
+      profileApplicationToken: undefined,
       recipeDeeplink: undefined,
       recipeId: undefined,
     });
@@ -87,6 +88,7 @@ describe('createSession ACP session extensions', () => {
 
     expect(mockedGetConfiguredGooseExtensions).toHaveBeenCalledOnce();
     expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [gooseExtension('developer')], {
+      profileApplicationToken: undefined,
       recipeDeeplink: undefined,
       recipeId: undefined,
     });
@@ -99,6 +101,19 @@ describe('createSession ACP session extensions', () => {
 
     expect(mockedGetConfiguredGooseExtensions).not.toHaveBeenCalled();
     expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [], {
+      profileApplicationToken: undefined,
+      recipeDeeplink: undefined,
+      recipeId: undefined,
+    });
+  });
+
+  it('passes a profile application token only through session creation metadata', async () => {
+    await createSession('/tmp', {
+      profileApplicationToken: 'profile-application-token',
+    });
+
+    expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [], {
+      profileApplicationToken: 'profile-application-token',
       recipeDeeplink: undefined,
       recipeId: undefined,
     });

@@ -6,7 +6,7 @@
  */
 
 import { test } from 'vitest';
-import { execSync, spawn, type ChildProcess } from 'node:child_process';
+import { execFileSync, execSync, spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -216,13 +216,31 @@ function shouldSkipProvider(provider: string): boolean {
 export function buildGoose(): string {
   if (!process.env.SKIP_BUILD) {
     console.error('Building goose...');
-    execSync('cargo build --bin goose', { stdio: 'inherit' });
+    if (process.platform === 'win32') {
+      const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
+      execFileSync('powershell.exe', [
+        '-NoLogo',
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        path.join(repoRoot, 'bin', 'cargo.ps1'),
+        'build',
+        '--bin',
+        'goose',
+      ], {
+        stdio: 'inherit',
+      });
+    } else {
+      execSync('cargo build --bin goose', { stdio: 'inherit' });
+    }
     console.error('');
   } else {
     console.error('Skipping build (SKIP_BUILD is set)...');
     console.error('');
   }
-  return path.resolve(process.cwd(), '..', '..', 'target/debug/goose');
+  const binaryName = process.platform === 'win32' ? 'goose.exe' : 'goose';
+  return path.resolve(process.cwd(), '..', '..', 'target', 'debug', binaryName);
 }
 
 // ---------------------------------------------------------------------------
