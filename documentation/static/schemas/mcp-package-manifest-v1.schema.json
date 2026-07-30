@@ -143,6 +143,7 @@
         "arch": { "$ref": "#/$defs/arch" },
         "url": { "$ref": "#/$defs/https_uri" },
         "digest": { "$ref": "#/$defs/digest" },
+        "capacity": { "$ref": "#/$defs/artifact_capacity" },
         "size_bytes": { "type": "integer", "minimum": 1 },
         "media_type": { "type": "string", "minLength": 1, "maxLength": 100 }
       }
@@ -151,6 +152,22 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/artifact" }
+    },
+    "artifact_capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "download_size_bytes",
+        "materialized_size_bytes",
+        "workspace_size_bytes",
+        "rollback_extra_bytes"
+      ],
+      "properties": {
+        "download_size_bytes": { "type": "integer", "minimum": 1 },
+        "materialized_size_bytes": { "type": "integer", "minimum": 1 },
+        "workspace_size_bytes": { "type": "integer", "minimum": 1 },
+        "rollback_extra_bytes": { "type": "integer", "minimum": 1 }
+      }
     },
     "entrypoint": {
       "type": "object",

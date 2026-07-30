@@ -11,12 +11,20 @@ use agent_client_protocol::schema::v1::{
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use fs_err as fs;
+#[cfg(feature = "integration-test-support")]
+use goose::acp::server::serve_trusted_in_process;
 use goose::acp::server::{serve, AcpProviderFactory, GooseAcpAgent, GooseAcpAgentOptions};
 pub use goose::acp::{map_permission_response, PermissionDecision};
 use goose::agents::GoosePlatform;
 use goose::builtin_extension::register_builtin_extensions;
 use goose::config::paths::Paths;
 use goose::config::{GooseMode, PermissionManager};
+use goose::mcp_platform::McpPlatformService;
+#[cfg(all(feature = "integration-test-support", feature = "rustls-tls"))]
+use goose::mcp_platform::{
+    new_integration_https_manifest_fetcher, Clock, IdGenerator, McpPlatformServiceOptions,
+    RemoteHttpNetworkPolicy, SqliteMcpPlatformRepository,
+};
 use goose::providers::api_client::{ApiClient, AuthMethod as ApiAuthMethod};
 use goose::providers::base::Provider;
 use goose::providers::openai::OpenAiProvider;
@@ -29,6 +37,7 @@ use std::collections::VecDeque;
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock, Mutex};
+use tokio::sync::OnceCell;
 use tokio::task::JoinHandle;
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use wiremock::matchers::{method, path};
@@ -76,6 +85,15 @@ impl SchedulerTrait for FixtureScheduler {
         }
         jobs.push(job);
         Ok(())
+    }
+
+    async fn add_scheduled_job_from_content(
+        &self,
+        job: ScheduledJob,
+        _recipe_content: &[u8],
+    ) -> Result<ScheduledJob, SchedulerError> {
+        self.add_scheduled_job(job.clone(), false).await?;
+        Ok(job)
     }
 
     async fn schedule_recipe(
@@ -193,6 +211,10 @@ fn write_global_test_config(config_path: &Path, openai_base_url: &str) {
         serde_yaml::Value::String("OPENAI_HOST".to_string()),
         serde_yaml::Value::String(openai_base_url.to_string()),
     );
+    config.insert(
+        serde_yaml::Value::String("OPENAI_API_KEY".to_string()),
+        serde_yaml::Value::String("test-key".to_string()),
+    );
 
     let global_config_dir = Paths::config_dir();
     fs::create_dir_all(&global_config_dir).unwrap();
@@ -204,6 +226,11 @@ pub struct OpenAiFixture {
     _server: MockServer,
     base_url: String,
     exchanges: Vec<(String, &'static str)>,
+    queue: Arc<Mutex<VecDeque<(String, &'static str)>>>,
+}
+
+#[derive(Clone)]
+pub struct OpenAiFixtureObserver {
     queue: Arc<Mutex<VecDeque<(String, &'static str)>>>,
 }
 
@@ -289,9 +316,30 @@ impl OpenAiFixture {
         &self.base_url
     }
 
+    pub fn observer(&self) -> OpenAiFixtureObserver {
+        OpenAiFixtureObserver {
+            queue: self.queue.clone(),
+        }
+    }
+
+    pub fn assert_exhausted(&self) {
+        self.observer().assert_exhausted();
+    }
+
     pub fn reset(&self) {
         let mut queue = self.queue.lock().unwrap();
         *queue = VecDeque::from(self.exchanges.clone());
+    }
+}
+
+impl OpenAiFixtureObserver {
+    pub fn assert_exhausted(&self) {
+        let queue = self.queue.lock().unwrap();
+        assert!(
+            queue.is_empty(),
+            "OpenAI fixture has {} unconsumed exchanges",
+            queue.len()
+        );
     }
 }
 
@@ -330,6 +378,32 @@ pub async fn spawn_acp_server_in_process(
     current_model: &str,
     disable_session_naming: bool,
 ) -> (DuplexTransport, JoinHandle<()>, Arc<PermissionManager>) {
+    spawn_acp_server_in_process_with_mcp_service(
+        openai_base_url,
+        builtins,
+        data_root,
+        goose_mode,
+        provider_factory,
+        current_model,
+        disable_session_naming,
+        false,
+        None,
+    )
+    .await
+}
+
+#[allow(dead_code)]
+pub async fn spawn_acp_server_in_process_with_mcp_service(
+    openai_base_url: &str,
+    builtins: &[String],
+    data_root: &std::path::Path,
+    goose_mode: GooseMode,
+    provider_factory: Option<AcpProviderFactory>,
+    current_model: &str,
+    disable_session_naming: bool,
+    trusted_transport: bool,
+    mcp_platform_service_cell: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
+) -> (DuplexTransport, JoinHandle<()>, Arc<PermissionManager>) {
     fs::create_dir_all(data_root).unwrap();
     // TODO: Paths::in_state_dir is global, ignoring per-test data_root
     fs::create_dir_all(Paths::in_state_dir("logs")).unwrap();
@@ -362,7 +436,8 @@ pub async fn spawn_acp_server_in_process(
         })
     });
 
-    let agent = GooseAcpAgent::new(GooseAcpAgentOptions {
+    let service_cell = mcp_platform_service_cell;
+    let options = GooseAcpAgentOptions {
         provider_factory,
         builtins: builtins.to_vec(),
         data_dir: data_root.to_path_buf(),
@@ -372,15 +447,65 @@ pub async fn spawn_acp_server_in_process(
         additional_source_roots: Vec::new(),
         scheduler: Arc::new(FixtureScheduler::new()),
         mcp_platform_service: None,
-        mcp_platform_service_cell: None,
-    })
-    .await
-    .unwrap();
+        mcp_platform_service_cell: service_cell.clone(),
+    };
+    let (agent, trusted) = if trusted_transport {
+        #[cfg(feature = "integration-test-support")]
+        {
+            let service_cell = service_cell
+                .expect("trusted in-process ACP transport requires mcp_platform_service_cell");
+            (
+                GooseAcpAgent::new_for_trusted_in_process(options, service_cell)
+                    .await
+                    .unwrap(),
+                true,
+            )
+        }
+        #[cfg(not(feature = "integration-test-support"))]
+        {
+            panic!(
+                "trusted in-process ACP transport requires the integration-test-support feature"
+            );
+        }
+    } else {
+        (GooseAcpAgent::new(options).await.unwrap(), false)
+    };
     let agent = Arc::new(agent);
     let permission_manager = agent.permission_manager();
-    let (transport, handle) = serve_agent_in_process(agent).await;
+    let (transport, handle) = if trusted {
+        #[cfg(feature = "integration-test-support")]
+        {
+            serve_trusted_agent_in_process(agent).await
+        }
+        #[cfg(not(feature = "integration-test-support"))]
+        {
+            unreachable!("trusted transport cannot be enabled without its feature")
+        }
+    } else {
+        serve_agent_in_process(agent).await
+    };
 
     (transport, handle, permission_manager)
+}
+
+#[cfg(feature = "integration-test-support")]
+async fn serve_trusted_agent_in_process(
+    agent: Arc<GooseAcpAgent>,
+) -> (DuplexTransport, JoinHandle<()>) {
+    let (client_read, server_write) = tokio::io::duplex(64 * 1024);
+    let (server_read, client_write) = tokio::io::duplex(64 * 1024);
+
+    let handle = tokio::spawn(async move {
+        if let Err(e) =
+            serve_trusted_in_process(agent, server_read.compat(), server_write.compat_write()).await
+        {
+            tracing::error!("ACP server error: {e}");
+        }
+    });
+
+    let transport =
+        agent_client_protocol::ByteStreams::new(client_write.compat_write(), client_read.compat());
+    (transport, handle)
 }
 
 #[derive(Debug)]
@@ -693,6 +818,8 @@ pub struct TestConnectionConfig {
     // The model the server-side provider starts with. Defaults to TEST_MODEL.
     pub current_model: String,
     pub disable_session_naming: bool,
+    pub trusted_transport: bool,
+    pub mcp_platform_service_cell: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
 }
 
 impl Default for TestConnectionConfig {
@@ -709,6 +836,8 @@ impl Default for TestConnectionConfig {
             terminal: None,
             current_model: TEST_MODEL.to_string(),
             disable_session_naming: true,
+            trusted_transport: false,
+            mcp_platform_service_cell: None,
         }
     }
 }
@@ -803,4 +932,30 @@ pub async fn send_custom(
 }
 
 pub mod provider;
+pub mod remote_https;
+
+#[cfg(all(feature = "integration-test-support", feature = "rustls-tls"))]
+pub fn https_fixture_mcp_platform_service(
+    repository: Arc<SqliteMcpPlatformRepository>,
+    clock: Arc<dyn Clock>,
+    ids: Arc<dyn IdGenerator>,
+    options: McpPlatformServiceOptions,
+    fixture: &remote_https::RemoteHttpsFixture,
+) -> anyhow::Result<McpPlatformService> {
+    let policy = Arc::new(remote_https::FixtureRemoteHttpNetworkPolicy::new(fixture));
+    let manifest_fetcher = new_integration_https_manifest_fetcher(
+        fixture.manifest_url.clone(),
+        fixture.socket_addr,
+        fixture.ca_der.clone(),
+    )
+    .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+    Ok(McpPlatformService::new_with_remote_http_network_policy(
+        repository,
+        clock,
+        ids,
+        options,
+        policy as Arc<dyn RemoteHttpNetworkPolicy>,
+    )
+    .with_https_manifest_fetcher(manifest_fetcher))
+}
 pub mod server;

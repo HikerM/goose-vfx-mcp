@@ -10,8 +10,6 @@
 //! Run with a specific model:
 //!   TEST_MODEL="bartowski/Qwen_Qwen3-32B-GGUF:Q4_K_M" cargo test -p goose --test local_inference_perf -- --ignored --nocapture
 
-use goose::conversation::message::Message;
-use goose::providers::create;
 use goose_providers::model::ModelConfig;
 use std::time::Instant;
 
@@ -25,12 +23,12 @@ fn test_model() -> String {
 #[ignore]
 async fn test_local_inference_cold_vs_warm() {
     let model_config = ModelConfig::new(test_model()).with_max_tokens(Some(20));
-    let provider = create("local", Vec::new())
+    let provider = goose::providers::create("local", Vec::new())
         .await
         .expect("provider creation should succeed");
 
     // Cold start — includes model loading from disk.
-    let messages = vec![Message::user().with_text("What is 2+2?")];
+    let messages = vec![goose::conversation::message::Message::user().with_text("What is 2+2?")];
     let start = Instant::now();
     let (response, _) = provider
         .complete(&model_config, "", &messages, &[])
@@ -43,7 +41,7 @@ async fn test_local_inference_cold_vs_warm() {
     println!("Cold start: {cold_elapsed:.2?}, response: {}", text.len());
 
     // Warm run — model already loaded, only inference.
-    let messages2 = vec![Message::user().with_text("What is 3+3?")];
+    let messages2 = vec![goose::conversation::message::Message::user().with_text("What is 3+3?")];
     let start2 = Instant::now();
     let (response2, _) = provider
         .complete(&model_config, "", &messages2, &[])

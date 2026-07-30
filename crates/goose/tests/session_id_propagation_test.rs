@@ -1,8 +1,3 @@
-use goose::conversation::message::Message;
-use goose::providers::api_client::{ApiClient, AuthMethod};
-use goose::providers::base::Provider;
-use goose::providers::openai::OpenAiProvider;
-use goose::session_context::{session_id_request_builder, SESSION_ID_HEADER};
 use goose_providers::model::ModelConfig;
 use serde_json::json;
 use std::sync::Arc;
@@ -25,7 +20,7 @@ impl HeaderCapture {
     fn capture_session_header(&self, req: &Request) {
         let session_id = req
             .headers
-            .get(SESSION_ID_HEADER)
+            .get(goose::session_context::SESSION_ID_HEADER)
             .map(|v| v.to_str().unwrap().to_string());
         self.captured_headers.lock().unwrap().push(session_id);
     }
@@ -35,18 +30,22 @@ impl HeaderCapture {
     }
 }
 
-fn create_test_provider(mock_server_url: &str) -> Box<dyn Provider> {
-    let api_client = ApiClient::new_with_tls(
+fn create_test_provider(mock_server_url: &str) -> Box<dyn goose::providers::base::Provider> {
+    let api_client = goose::providers::api_client::ApiClient::new_with_tls(
         mock_server_url.to_string(),
-        AuthMethod::BearerToken("test-key".to_string()),
+        goose::providers::api_client::AuthMethod::BearerToken("test-key".to_string()),
         None,
     )
     .unwrap()
-    .with_request_builder(session_id_request_builder());
-    Box::new(OpenAiProvider::new(api_client))
+    .with_request_builder(goose::session_context::session_id_request_builder());
+    Box::new(goose::providers::openai::OpenAiProvider::new(api_client))
 }
 
-async fn setup_mock_server() -> (MockServer, HeaderCapture, Box<dyn Provider>) {
+async fn setup_mock_server() -> (
+    MockServer,
+    HeaderCapture,
+    Box<dyn goose::providers::base::Provider>,
+) {
     let mock_server = MockServer::start().await;
     let capture = HeaderCapture::new();
     let chat_capture = capture.clone();
@@ -142,8 +141,8 @@ async fn setup_mock_server() -> (MockServer, HeaderCapture, Box<dyn Provider>) {
     (mock_server, capture, provider)
 }
 
-async fn make_request(provider: &dyn Provider, session_id: &str) {
-    let message = Message::user().with_text("test message");
+async fn make_request(provider: &dyn goose::providers::base::Provider, session_id: &str) {
+    let message = goose::conversation::message::Message::user().with_text("test message");
     let model_config = ModelConfig::new("gpt-5-nano");
     let _ = goose::session_context::with_session_id(
         Some(session_id.to_string()),

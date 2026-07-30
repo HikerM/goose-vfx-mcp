@@ -25,7 +25,12 @@ use common_tests::{
 };
 use goose::config::GooseMode;
 use goose::conversation::message::{Message, MessageMetadata};
-use goose::custom_requests::{GetSessionInfoRequest, GetSessionInfoResponse};
+#[cfg(not(feature = "nostr"))]
+use goose::custom_requests::ShareSessionNostrRequest;
+use goose::custom_requests::{
+    ExportSessionRequest, GetSessionInfoRequest, GetSessionInfoResponse, ImportSessionRequest,
+    SessionImportSource,
+};
 use goose::recipe::{Recipe, Settings};
 use goose::recipe_deeplink;
 use goose::session::{SessionManager, SessionType};
@@ -677,6 +682,67 @@ fn test_new_session_cleans_up_when_config_fails() {
             .await
             .unwrap();
         assert!(sessions.is_empty());
+    });
+}
+
+#[test]
+fn test_plain_new_session_does_not_require_platform_database() {
+    run_test(async {
+        let data_root = tempfile::tempdir().unwrap();
+        std::fs::write(data_root.path().join("mcp-platform"), b"not a directory").unwrap();
+        let conn = new_connection(data_root.path()).await;
+        let work_dir = tempfile::tempdir().unwrap();
+
+        let response = conn
+            .cx()
+            .send_request(NewSessionRequest::new(work_dir.path()))
+            .block_task()
+            .await
+            .unwrap();
+
+        assert!(!response.session_id.0.is_empty());
+        let exported = conn
+            .cx()
+            .send_request(ExportSessionRequest {
+                session_id: response.session_id.0.to_string(),
+            })
+            .block_task()
+            .await
+            .unwrap();
+        conn.cx()
+            .send_request(ImportSessionRequest {
+                input: exported.data,
+                source: SessionImportSource::Json,
+            })
+            .block_task()
+            .await
+            .unwrap();
+        #[cfg(not(feature = "nostr"))]
+        {
+            let error: anyhow::Error = conn
+                .cx()
+                .send_request(ShareSessionNostrRequest {
+                    session_id: response.session_id.0.to_string(),
+                    relays: Vec::new(),
+                })
+                .block_task()
+                .await
+                .unwrap_err()
+                .into();
+            assert!(!error.to_string().contains("provenance"));
+        }
+
+        let mut meta = serde_json::Map::new();
+        meta.insert(
+            "enabledExtensions".to_string(),
+            serde_json::json!([{"type": "builtin", "name": "developer"}]),
+        );
+        assert!(conn
+            .cx()
+            .send_request(NewSessionRequest::new(work_dir.path()).meta(meta))
+            .block_task()
+            .await
+            .is_err());
     });
 }
 

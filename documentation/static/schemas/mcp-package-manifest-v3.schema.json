@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goose.ai/schemas/mcp-package-manifest-v3.schema.json",
+  "title": "Untrusted non-executable MCP package manifest v3",
+  "description": "Structural prefilter for an untrusted, non-executable manifest. A schema match grants no trust or authorization and is not complete semantic validation; JSON Schema cannot inspect duplicate lexical JSON keys, and consumers must use the fail-closed Rust parser before relying on this document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["document_type", "schema_version", "package", "adapter", "transport", "entrypoint", "platform_variants", "closure", "permissions", "config_schema", "owned_resource_ids"],
+  "properties": {
+    "document_type": {"const": "goose.mcp.package-manifest"},
+    "schema_version": {"const": 3},
+    "package": {"$ref": "#/$defs/package"},
+    "adapter": {"$ref": "#/$defs/adapter"},
+    "transport": {"$ref": "#/$defs/transport"},
+    "entrypoint": {"$ref": "#/$defs/entrypoint"},
+    "platform_variants": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/variant"}, "description": "uniqueItems compares complete JSON values only. The Rust parser additionally requires selectors to be unique and every node_id to exist, have the matching selector, and collectively own every closure node."},
+    "closure": {"$ref": "#/$defs/closure"},
+    "permissions": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "config_schema": {"$ref": "#/$defs/config"},
+    "owned_resource_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
+    "digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "semver_version": {"type": "string", "minLength": 5, "maxLength": 128, "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"},
+    "semver_range": {"type": "string", "minLength": 1, "maxLength": 128, "description": "The Rust parser validates the complete semver::VersionReq grammar, including numeric bounds and comparator count; Draft JSON Schema is not the authoritative range parser."},
+    "package": {"type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": {"id": {"$ref": "#/$defs/id"}, "version": {"$ref": "#/$defs/semver_version"}}},
+    "adapter": {"type": "object", "additionalProperties": false, "required": ["id", "version_range"], "properties": {"id": {"$ref": "#/$defs/id"}, "version_range": {"$ref": "#/$defs/semver_range"}}},
+    "transport": {"type": "object", "additionalProperties": false, "required": ["transport", "protocol"], "properties": {"transport": {"$ref": "#/$defs/id"}, "protocol": {"$ref": "#/$defs/id"}}},
+    "entrypoint": {"type": "object", "additionalProperties": false, "required": ["kind", "immutable_reference"], "properties": {"kind": {"enum": ["module", "library", "descriptor"]}, "immutable_reference": {"type": "string", "pattern": "^[A-Za-z0-9._:-]+(?:/[A-Za-z0-9._:-]+)*$", "maxLength": 256}}},
+    "variant": {"type": "object", "additionalProperties": false, "required": ["selector", "node_ids"], "properties": {"selector": {"$ref": "#/$defs/id"}, "node_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}}},
+    "node": {"type": "object", "additionalProperties": false, "required": ["id", "role", "sha256", "length_bytes", "origin_identity", "selector"], "properties": {"id": {"$ref": "#/$defs/id"}, "role": {"$ref": "#/$defs/id"}, "sha256": {"$ref": "#/$defs/digest"}, "length_bytes": {"type": "integer", "minimum": 1, "maximum": 18446744073709551615}, "origin_identity": {"$ref": "#/$defs/id"}, "selector": {"$ref": "#/$defs/id"}}},
+    "edge": {"type": "object", "additionalProperties": false, "required": ["from", "to"], "properties": {"from": {"$ref": "#/$defs/id"}, "to": {"$ref": "#/$defs/id"}}},
+    "closure": {"type": "object", "additionalProperties": false, "required": ["nodes", "edges"], "properties": {"nodes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/node"}}, "edges": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/edge"}}}, "description": "uniqueItems compares complete JSON values only. The Rust parser additionally requires node IDs and edge from/to pairs to be unique, all edge endpoints to exist, and the graph to be acyclic."},
+    "config": {"type": "object", "additionalProperties": false, "required": ["kind", "schema_digest"], "properties": {"kind": {"$ref": "#/$defs/id"}, "schema_digest": {"$ref": "#/$defs/digest"}}}
+  }
+}

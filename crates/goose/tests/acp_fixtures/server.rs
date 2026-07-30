@@ -1,16 +1,16 @@
 use super::{
-    map_permission_response, spawn_acp_server_in_process, Connection, ModelStateFixture,
-    PermissionDecision, Session, SessionData, TestConnectionConfig, TestOutput,
+    map_permission_response, spawn_acp_server_in_process_with_mcp_service, Connection,
+    ModelStateFixture, PermissionDecision, Session, SessionData, TestConnectionConfig, TestOutput,
 };
 use agent_client_protocol::schema::v1::{
     ClientCapabilities, CloseSessionRequest, ContentBlock, CreateTerminalRequest,
     FileSystemCapabilities, ImageContent, InitializeRequest, KillTerminalRequest,
-    ListSessionsRequest, ListSessionsResponse, LoadSessionRequest, McpServer, NewSessionRequest,
-    PromptRequest, ReadTextFileRequest, ReleaseTerminalRequest, RequestPermissionRequest,
-    SessionConfigKind, SessionConfigOptionCategory, SessionConfigOptionValue, SessionId,
-    SessionModeId, SessionNotification, SessionUpdate, SetSessionConfigOptionRequest,
-    SetSessionModeRequest, StopReason, TerminalOutputRequest, TextContent, ToolCallStatus,
-    WaitForTerminalExitRequest, WriteTextFileRequest,
+    ListSessionsRequest, ListSessionsResponse, LoadSessionRequest, McpServer, Meta,
+    NewSessionRequest, PromptRequest, ReadTextFileRequest, ReleaseTerminalRequest,
+    RequestPermissionRequest, SessionConfigKind, SessionConfigOptionCategory,
+    SessionConfigOptionValue, SessionId, SessionModeId, SessionNotification, SessionUpdate,
+    SetSessionConfigOptionRequest, SetSessionModeRequest, StopReason, TerminalOutputRequest,
+    TextContent, ToolCallStatus, WaitForTerminalExitRequest, WriteTextFileRequest,
 };
 use agent_client_protocol::schema::ProtocolVersion;
 use agent_client_protocol::{Agent, Client, ConnectionTo};
@@ -101,6 +101,47 @@ impl AcpServerConnection {
     pub fn cx(&self) -> &ConnectionTo<Agent> {
         &self.cx
     }
+
+    #[cfg(feature = "integration-test-support")]
+    pub async fn new_session_with_profile_application_token(
+        &mut self,
+        profile_application_token: &str,
+    ) -> anyhow::Result<SessionData<AcpServerSession>> {
+        let work_dir = self
+            .cwd
+            .take()
+            .unwrap_or_else(|| tempfile::tempdir().unwrap());
+        let mcp_servers = std::mem::take(&mut self.pending_mcp_servers);
+        let mut meta = Meta::new();
+        meta.insert(
+            "profileApplicationToken".to_string(),
+            serde_json::Value::String(profile_application_token.to_string()),
+        );
+        let response = self
+            .cx
+            .send_request(
+                NewSessionRequest::new(work_dir.path())
+                    .mcp_servers(mcp_servers)
+                    .meta(meta),
+            )
+            .block_task()
+            .await?;
+        let session = AcpServerSession {
+            cx: self.cx.clone(),
+            session_id: response.session_id.clone(),
+            updates: self.updates.clone(),
+            permission: self.permission.clone(),
+            notify: self.notify.clone(),
+            _work_dir: work_dir,
+        };
+        let models = extract_model_state_from_config_options(response.config_options.as_deref());
+        self.updates.lock().unwrap().clear();
+        Ok(SessionData {
+            session,
+            models,
+            modes: response.modes,
+        })
+    }
 }
 
 #[async_trait]
@@ -123,16 +164,19 @@ impl Connection for AcpServerConnection {
             false => (config.data_root.clone(), None),
         };
 
-        let (transport, _handle, permission_manager) = spawn_acp_server_in_process(
-            openai.uri(),
-            &config.builtins,
-            data_root.as_path(),
-            config.goose_mode,
-            config.provider_factory,
-            &config.current_model,
-            config.disable_session_naming,
-        )
-        .await;
+        let (transport, _handle, permission_manager) =
+            spawn_acp_server_in_process_with_mcp_service(
+                openai.uri(),
+                &config.builtins,
+                data_root.as_path(),
+                config.goose_mode,
+                config.provider_factory,
+                &config.current_model,
+                config.disable_session_naming,
+                config.trusted_transport,
+                config.mcp_platform_service_cell,
+            )
+            .await;
 
         let updates = Arc::new(Mutex::new(Vec::new()));
         let notify = Arc::new(Notify::new());

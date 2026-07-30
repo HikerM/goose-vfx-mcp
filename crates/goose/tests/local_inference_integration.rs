@@ -15,8 +15,6 @@
 
 use base64::prelude::*;
 use futures::StreamExt;
-use goose::conversation::message::Message;
-use goose::providers::create;
 use goose_providers::model::ModelConfig;
 
 const DEFAULT_TEST_MODEL: &str = "bartowski/Llama-3.2-1B-Instruct-GGUF:Q4_K_M";
@@ -29,12 +27,12 @@ fn test_model() -> String {
 #[ignore]
 async fn test_local_inference_stream_produces_output() {
     let model_config = ModelConfig::new(test_model());
-    let provider = create("local", Vec::new())
+    let provider = goose::providers::create("local", Vec::new())
         .await
         .expect("provider creation should succeed");
 
     let system = "You are a helpful assistant. Be brief.";
-    let messages = vec![Message::user().with_text("Say hello.")];
+    let messages = vec![goose::conversation::message::Message::user().with_text("Say hello.")];
 
     let mut stream = provider
         .stream(&model_config, system, &messages, &[])
@@ -71,14 +69,14 @@ async fn test_local_inference_stream_produces_output() {
 #[ignore]
 async fn test_local_inference_large_prompt() {
     let model_config = ModelConfig::new(test_model()).with_max_tokens(Some(20));
-    let provider = create("local", Vec::new())
+    let provider = goose::providers::create("local", Vec::new())
         .await
         .expect("provider creation should succeed");
 
     // Build a large prompt (~3500 tokens) to exercise prefill performance
     let padding = "You are Goose, a highly capable AI assistant.\n".repeat(80);
     let prompt = format!("{padding}\nNow answer this: what is the capital of Moldova?");
-    let messages = vec![Message::user().with_text(&prompt)];
+    let messages = vec![goose::conversation::message::Message::user().with_text(&prompt)];
 
     let start = std::time::Instant::now();
     let (response, _usage) = provider
@@ -136,7 +134,7 @@ async fn test_local_inference_vision_produces_output() {
     };
 
     let model_config = ModelConfig::new(&model_id);
-    let provider = create("local", Vec::new())
+    let provider = goose::providers::create("local", Vec::new())
         .await
         .expect("provider creation should succeed");
 
@@ -144,7 +142,7 @@ async fn test_local_inference_vision_produces_output() {
     let image_b64 = BASE64_STANDARD.encode(&image_bytes);
 
     let system = "You are a helpful assistant. Describe images briefly.";
-    let messages = vec![Message::user()
+    let messages = vec![goose::conversation::message::Message::user()
         .with_text("What color is this image?")
         .with_image(image_b64, "image/png")];
 
@@ -181,7 +179,7 @@ async fn test_local_inference_vision_produces_output() {
 #[ignore]
 async fn test_local_inference_vision_text_only_model_graceful() {
     let model_config = ModelConfig::new(test_model());
-    let provider = create("local", Vec::new())
+    let provider = goose::providers::create("local", Vec::new())
         .await
         .expect("provider creation should succeed");
 
@@ -189,7 +187,7 @@ async fn test_local_inference_vision_text_only_model_graceful() {
     let image_b64 = BASE64_STANDARD.encode(&image_bytes);
 
     let system = "You are a helpful assistant.";
-    let messages = vec![Message::user()
+    let messages = vec![goose::conversation::message::Message::user()
         .with_text("What is this?")
         .with_image(image_b64, "image/png")];
 

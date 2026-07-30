@@ -49,6 +49,14 @@ mod tests {
                 Ok(())
             }
 
+            async fn add_scheduled_job_from_content(
+                &self,
+                job: ScheduledJob,
+                _recipe_content: &[u8],
+            ) -> Result<ScheduledJob, SchedulerError> {
+                Ok(job)
+            }
+
             async fn schedule_recipe(
                 &self,
                 _recipe_path: PathBuf,
@@ -127,6 +135,15 @@ mod tests {
                 let mut jobs = self.jobs.lock().await;
                 jobs.push(job);
                 Ok(())
+            }
+
+            async fn add_scheduled_job_from_content(
+                &self,
+                job: ScheduledJob,
+                _recipe_content: &[u8],
+            ) -> Result<ScheduledJob, SchedulerError> {
+                self.add_scheduled_job(job.clone(), false).await?;
+                Ok(job)
             }
 
             async fn schedule_recipe(
@@ -2763,7 +2780,7 @@ mod tests {
                 .get_session(&session.id, false)
                 .await
                 .unwrap();
-            let load_results = agent.load_extensions_from_session(&session).await;
+            let load_results = agent.load_extensions_from_session(&session).await.unwrap();
             assert!(
                 load_results.iter().all(|result| result.success),
                 "failed to load frontend extensions: {load_results:?}",
