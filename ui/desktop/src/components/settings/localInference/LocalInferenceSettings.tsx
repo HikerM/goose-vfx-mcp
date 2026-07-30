@@ -28,7 +28,6 @@ import {
 import { HuggingFaceModelSearch } from './HuggingFaceModelSearch';
 import { ModelSettingsPanel } from './ModelSettingsPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
-import HuggingFaceSignInPrompt from '../auth/HuggingFaceSignInPrompt';
 import { acpSaveDefaults } from '../../../acp/providers';
 
 const i18n = defineMessages({
@@ -39,7 +38,7 @@ const i18n = defineMessages({
   description: {
     id: 'localInferenceSettings.description',
     defaultMessage:
-      'Download and manage local LLM models for inference without API keys. Search HuggingFace for GGUF or MLX models, or use the featured picks below.',
+      'Download and manage local GGUF models for inference without API keys. Search ModelScope or use the featured picks below.',
   },
   downloading: {
     id: 'localInferenceSettings.downloading',
@@ -93,6 +92,15 @@ const i18n = defineMessages({
     id: 'localInferenceSettings.downloadCancelled',
     defaultMessage: 'Download cancelled',
   },
+  automaticSetup: {
+    id: 'localInferenceSettings.automaticSetup',
+    defaultMessage:
+      'Source: ModelScope · connection failures retry automatically · local GPU or CPU settings are applied when the download finishes.',
+  },
+  retryingConnection: {
+    id: 'localInferenceSettings.retryingConnection',
+    defaultMessage: 'Connection interrupted — retrying automatically ({attempt}/{maximum})',
+  },
   retry: {
     id: 'localInferenceSettings.retry',
     defaultMessage: 'Retry',
@@ -129,10 +137,10 @@ const i18n = defineMessages({
     id: 'localInferenceSettings.visionEncoderNotDownloaded',
     defaultMessage: 'Vision encoder not downloaded',
   },
-  huggingFaceSignInNote: {
-    id: 'localInferenceSettings.huggingFaceSignInNote',
+  modelScopeSourceNote: {
+    id: 'localInferenceSettings.modelScopeSourceNote',
     defaultMessage:
-      'Sign in to increase rate limits when searching and downloading models, and to access private or gated Hugging Face repositories.',
+      'Models are searched and downloaded from ModelScope. Public models do not require login; private or gated models require a ModelScope access token.',
   },
 });
 
@@ -435,7 +443,9 @@ export const LocalInferenceSettings = () => {
         </p>
       </div>
 
-      <HuggingFaceSignInPrompt description={intl.formatMessage(i18n.huggingFaceSignInNote)} />
+      <p className="rounded-lg border border-border-subtle bg-background-default px-3 py-2 text-xs text-text-muted">
+        {intl.formatMessage(i18n.modelScopeSourceNote)}
+      </p>
 
       {/* Active Downloads */}
       {downloads.size > 0 && (
@@ -466,6 +476,9 @@ export const LocalInferenceSettings = () => {
                       </Button>
                     )}
                   </div>
+                  <p className="mb-2 text-xs text-text-muted">
+                    {intl.formatMessage(i18n.automaticSetup)}
+                  </p>
                   {progress.status === 'downloading' && (
                     <div className="space-y-1">
                       <div className="w-full bg-gray-700 rounded-full h-2">
@@ -498,6 +511,14 @@ export const LocalInferenceSettings = () => {
                           )}
                         </span>
                       </div>
+                      {progress.retryAttempt > 0 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          {intl.formatMessage(i18n.retryingConnection, {
+                            attempt: progress.retryAttempt,
+                            maximum: progress.maxRetries,
+                          })}
+                        </p>
+                      )}
                     </div>
                   )}
                   {progress.status === 'failed' && (
@@ -688,7 +709,7 @@ export const LocalInferenceSettings = () => {
         </div>
       )}
 
-      {/* HuggingFace Search */}
+      {/* ModelScope search */}
       <div className="border-t border-border-subtle pt-4">
         <HuggingFaceModelSearch
           onDownloadStarted={handleHfDownloadStarted}

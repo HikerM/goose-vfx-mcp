@@ -40,17 +40,16 @@ struct LocalModelSelection {
 }
 
 pub async fn list_models() -> Result<LocalInferenceModelsListResponse> {
-    ensure_featured_models_current().await?;
-
     let runtime = management_runtime()?;
     let recommended_id = recommend_local_model(&runtime);
 
     let loaded_model_ids = crate::loaded_model_ids()
         .await
         .map_err(|error| anyhow!(error.to_string()))?;
-    let registry = get_registry()
+    let mut registry = get_registry()
         .lock()
         .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+    registry.apply_safe_runtime_defaults()?;
     let mut models: Vec<LocalInferenceModelDto> = registry
         .list_models()
         .iter()
@@ -135,18 +134,7 @@ pub async fn download_model(
     let selection = explicit_model_selection(&req)?;
     let model_id = local_model_id_from_request(&req, selection.as_ref()).await?;
     let download_id = format!("{}-model", model_id);
-    let download_reserved = get_download_manager().reserve_download(DownloadProgress {
-        model_id: download_id,
-        status: DownloadStatus::Downloading,
-        bytes_downloaded: 0,
-        total_bytes: 0,
-        progress_percent: 0.0,
-        speed_bps: None,
-        eta_seconds: None,
-        error: None,
-        task_exited: false,
-    })?;
-    if !download_reserved {
+    if get_download_manager().is_downloading(&download_id) {
         return Ok(LocalInferenceModelDownloadResponse { model_id });
     }
 
@@ -492,6 +480,8 @@ fn download_progress_to_dto(progress: DownloadProgress) -> LocalInferenceDownloa
         speed_bps: progress.speed_bps,
         eta_seconds: progress.eta_seconds,
         error: progress.error,
+        retry_attempt: progress.retry_attempt,
+        max_retries: progress.max_retries,
         task_exited: progress.task_exited,
     }
 }
@@ -754,6 +744,8 @@ fn mark_download_failed(model_id: &str, error: impl std::fmt::Display) {
             speed_bps: None,
             eta_seconds: None,
             error: Some(error.to_string()),
+            retry_attempt: 0,
+            max_retries: 10,
             task_exited: true,
         });
         return;

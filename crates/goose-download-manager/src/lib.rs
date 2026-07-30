@@ -69,6 +69,10 @@ pub struct DownloadProgress {
     pub eta_seconds: Option<u64>,
     /// Error message if failed
     pub error: Option<String>,
+    /// Current automatic retry attempt, if the connection is being retried.
+    pub retry_attempt: u32,
+    /// Maximum number of automatic retry attempts.
+    pub max_retries: u32,
     /// Whether the background download task has exited
     #[serde(skip)]
     pub task_exited: bool,
@@ -247,6 +251,8 @@ impl DownloadManager {
                     speed_bps: None,
                     eta_seconds: None,
                     error: None,
+                    retry_attempt: 0,
+                    max_retries: Self::MAX_RETRIES,
                     task_exited: false,
                 },
             );
@@ -339,6 +345,15 @@ impl DownloadManager {
             }
         }
         false
+    }
+
+    fn set_retry_progress(downloads: &DownloadMap, model_id: &str, retry_attempt: u32) {
+        if let Ok(mut downloads) = downloads.lock() {
+            if let Some(progress) = downloads.get_mut(model_id) {
+                progress.retry_attempt = retry_attempt;
+                progress.max_retries = Self::MAX_RETRIES;
+            }
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -484,6 +499,7 @@ impl DownloadManager {
                         anyhow::bail!("Download failed after {} retries: {}", retries, e);
                     }
                     retries += 1;
+                    Self::set_retry_progress(downloads, model_id, retries);
                     let delay = std::cmp::min(
                         Self::RETRY_BASE_DELAY * 2u32.saturating_pow(retries - 1),
                         Self::RETRY_MAX_DELAY,
@@ -514,6 +530,7 @@ impl DownloadManager {
                     anyhow::bail!("Failed to download: HTTP {}", status);
                 }
                 retries += 1;
+                Self::set_retry_progress(downloads, model_id, retries);
                 let delay = std::cmp::min(
                     Self::RETRY_BASE_DELAY * 2u32.saturating_pow(retries - 1),
                     Self::RETRY_MAX_DELAY,
@@ -619,6 +636,7 @@ impl DownloadManager {
                                 };
                                 progress.speed_bps = speed_bps;
                                 progress.eta_seconds = eta_seconds;
+                                progress.retry_attempt = 0;
                             }
                         }
                     }
@@ -642,6 +660,7 @@ impl DownloadManager {
                     );
                 }
                 retries += 1;
+                Self::set_retry_progress(downloads, model_id, retries);
                 let delay = std::cmp::min(
                     Self::RETRY_BASE_DELAY * 2u32.saturating_pow(retries - 1),
                     Self::RETRY_MAX_DELAY,

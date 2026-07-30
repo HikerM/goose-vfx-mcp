@@ -8,12 +8,15 @@ use super::local_model_registry::{get_registry, model_id_from_repo, LocalModelSt
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
+use crate::download_manager::{get_download_manager, DownloadStatus};
 use crate::huggingface_auth;
+use crate::paths::Paths;
 
 use utoipa::ToSchema;
 
 const HF_API_BASE: &str = "https://huggingface.co/api/models";
-const HF_DOWNLOAD_BASE: &str = "https://huggingface.co";
+const MODELSCOPE_API_BASE: &str = "https://modelscope.cn/api/v1/models";
+const MODELSCOPE_OPENAPI_BASE: &str = "https://modelscope.cn/openapi/v1/models";
 const LLAMACPP_BACKEND_ID: &str = "llamacpp";
 const MLX_BACKEND_ID: &str = "mlx";
 const GGUF_FORMAT: &str = "gguf";
@@ -188,6 +191,51 @@ struct HfApiSibling {
     rfilename: String,
     #[serde(default)]
     size: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelScopeSearchResponse {
+    success: bool,
+    data: Option<ModelScopeSearchData>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelScopeSearchData {
+    #[serde(default)]
+    models: Vec<ModelScopeSearchModel>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelScopeSearchModel {
+    id: String,
+    #[serde(default)]
+    downloads: u64,
+    #[serde(default)]
+    private: bool,
+    #[serde(default)]
+    gated: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelScopeFilesResponse {
+    #[serde(rename = "Code")]
+    code: u16,
+    #[serde(rename = "Data")]
+    data: Option<ModelScopeFilesData>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelScopeFilesData {
+    #[serde(rename = "Files", default)]
+    files: Vec<ModelScopeFile>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelScopeFile {
+    #[serde(rename = "Path")]
+    path: String,
+    #[serde(rename = "Size", default)]
+    size: u64,
 }
 
 struct QuantInfo {
@@ -372,13 +420,75 @@ fn parse_shard_total(filename: &str) -> Option<u32> {
 }
 
 fn build_download_url(repo_id: &str, filename: &str) -> String {
-    format!("{}/{}/resolve/main/{}", HF_DOWNLOAD_BASE, repo_id, filename)
+    let mut url = reqwest::Url::parse(&format!("{MODELSCOPE_API_BASE}/{repo_id}/repo"))
+        .expect("ModelScope endpoint must be a valid URL");
+    url.query_pairs_mut()
+        .append_pair("Revision", "master")
+        .append_pair("FilePath", filename);
+    url.into()
 }
 
-pub fn hf_authorization_header(token: Option<&str>) -> Option<String> {
-    token
-        .filter(|token| !token.is_empty())
-        .map(|token| format!("Bearer {}", token))
+async fn modelscope_repo_files(repo_id: &str) -> Result<Vec<HfApiSibling>> {
+    if !repo_id.contains('/') {
+        bail!(
+            "Invalid ModelScope model ID '{}': expected owner/model",
+            repo_id
+        );
+    }
+
+    let mut url = reqwest::Url::parse(&format!("{MODELSCOPE_API_BASE}/{repo_id}/repo/files"))
+        .expect("ModelScope endpoint must be a valid URL");
+    url.query_pairs_mut().append_pair("Revision", "master");
+
+    let response = reqwest::Client::new()
+        .get(url)
+        .header("User-Agent", "goose-ai-agent")
+        .send()
+        .await?;
+    if !response.status().is_success() {
+        bail!(
+            "ModelScope returned HTTP {} while reading files for {}. Private or gated models require a ModelScope access token.",
+            response.status(),
+            repo_id
+        );
+    }
+
+    let payload: ModelScopeFilesResponse = response.json().await?;
+    if payload.code != 200 {
+        bail!(
+            "ModelScope could not read files for {} (code {})",
+            repo_id,
+            payload.code
+        );
+    }
+
+    Ok(payload
+        .data
+        .map(|data| {
+            data.files
+                .into_iter()
+                .map(|file| HfApiSibling {
+                    rfilename: file.path,
+                    size: Some(file.size),
+                })
+                .collect()
+        })
+        .unwrap_or_default())
+}
+
+fn safe_model_path(root: &std::path::Path, filename: &str) -> Result<std::path::PathBuf> {
+    let relative = std::path::Path::new(filename);
+    if relative.components().any(|component| {
+        matches!(
+            component,
+            std::path::Component::ParentDir
+                | std::path::Component::RootDir
+                | std::path::Component::Prefix(_)
+        )
+    }) {
+        bail!("ModelScope returned an unsafe file path '{}'.", filename);
+    }
+    Ok(root.join(relative))
 }
 
 fn apply_hf_auth(request: reqwest::RequestBuilder, token: Option<&str>) -> reqwest::RequestBuilder {
@@ -389,10 +499,17 @@ fn apply_hf_auth(request: reqwest::RequestBuilder, token: Option<&str>) -> reqwe
     }
 }
 
-async fn optional_hf_token(
-    token: impl std::future::Future<Output = Result<Option<String>>>,
-) -> Option<String> {
-    token.await.ok().flatten()
+fn hf_authorization_header(token: Option<&str>) -> Option<String> {
+    token
+        .filter(|token| !token.is_empty())
+        .map(|token| format!("Bearer {token}"))
+}
+
+async fn optional_hf_token<F>(token_future: F) -> Option<String>
+where
+    F: std::future::Future<Output = Result<Option<String>>>,
+{
+    token_future.await.ok().flatten()
 }
 
 fn parent_components(filename: &str) -> Vec<&str> {
@@ -554,15 +671,6 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
 
 pub async fn search_local_models(query: &str, limit: usize) -> Result<Vec<HfModelInfo>> {
     let mut results = Vec::new();
-
-    if looks_like_repo_id(query) {
-        if let Some(model) = get_local_model_info_for_repo(query).await? {
-            results.push(model);
-        }
-    } else if let Some(model) = get_exact_name_local_model_info(query).await? {
-        results.push(model);
-    }
-
     let mut gguf_results = search_gguf_models(query, limit).await?;
     for model in &mut gguf_results {
         let gguf_variants = get_repo_gguf_variants(&model.repo_id)
@@ -574,8 +682,7 @@ pub async fn search_local_models(query: &str, limit: usize) -> Result<Vec<HfMode
             .collect();
     }
 
-    results.extend(gguf_results);
-    append_optional_mlx_results(&mut results, search_mlx_models(query, limit).await, query);
+    results.append(&mut gguf_results);
     dedupe_models(&mut results);
     results.sort_by(|a, b| {
         model_search_rank(query, a)
@@ -602,64 +709,50 @@ fn append_optional_mlx_results(
 }
 
 pub async fn search_gguf_models(query: &str, limit: usize) -> Result<Vec<HfModelInfo>> {
-    let client = reqwest::Client::new();
-    let token = optional_hf_token(huggingface_auth::resolve_token_async()).await;
-    let url = format!(
-        "{}?search={}&filter=gguf&sort=downloads&direction=-1&limit={}",
-        HF_API_BASE, query, limit
-    );
+    let mut url = reqwest::Url::parse(MODELSCOPE_OPENAPI_BASE)
+        .expect("ModelScope endpoint must be a valid URL");
+    url.query_pairs_mut()
+        .append_pair("search", query)
+        .append_pair("sort", "downloads")
+        .append_pair("page_size", &limit.min(50).to_string());
 
-    let response = apply_hf_auth(client.get(&url), token.as_deref())
+    let response = reqwest::Client::new()
+        .get(url)
         .header("User-Agent", "goose-ai-agent")
         .send()
         .await?;
 
     if !response.status().is_success() {
-        bail!("HuggingFace API returned status {}", response.status());
+        bail!("ModelScope search returned HTTP {}", response.status());
     }
 
-    let models: Vec<HfApiModel> = response.json().await?;
+    let payload: ModelScopeSearchResponse = response.json().await?;
+    if !payload.success {
+        bail!("ModelScope search did not complete successfully");
+    }
 
-    let results = models
+    let results = payload
+        .data
+        .map(|data| data.models)
+        .unwrap_or_default()
         .into_iter()
-        .filter_map(|m| {
-            let repo_id = m.id?;
-            let siblings = m.siblings.unwrap_or_default();
-
-            // The search endpoint may not include `siblings`; parse whatever
-            // is available. Files are fetched on-demand via `get_repo_gguf_variants`.
-            let gguf_files: Vec<HfGgufFile> = siblings
-                .into_iter()
-                .filter(|s| s.rfilename.ends_with(".gguf"))
-                .map(|s| {
-                    let quantization = parse_quantization(&s.rfilename);
-                    let download_url = build_download_url(&repo_id, &s.rfilename);
-                    HfGgufFile {
-                        filename: s.rfilename,
-                        size_bytes: s.size.unwrap_or(0),
-                        quantization,
-                        download_url,
-                    }
-                })
-                .collect();
-
-            let author = m
-                .author
-                .unwrap_or_else(|| repo_id.split('/').next().unwrap_or_default().to_string());
-            let model_name = repo_id
+        .filter(|model| !model.private && !model.gated)
+        .map(|model| {
+            let author = model.id.split('/').next().unwrap_or_default().to_string();
+            let model_name = model
+                .id
                 .split('/')
                 .next_back()
-                .unwrap_or(&repo_id)
+                .unwrap_or(&model.id)
                 .to_string();
-
-            Some(HfModelInfo {
-                repo_id,
+            HfModelInfo {
+                repo_id: model.id,
                 author,
                 model_name,
-                downloads: m.downloads.unwrap_or(0),
-                gguf_files,
+                downloads: model.downloads,
+                gguf_files: Vec::new(),
                 variants: Vec::new(),
-            })
+            }
         })
         .collect();
 
@@ -668,50 +761,15 @@ pub async fn search_gguf_models(query: &str, limit: usize) -> Result<Vec<HfModel
 
 /// Fetch GGUF files for a repo and return them grouped by quantization.
 pub async fn get_repo_gguf_variants(repo_id: &str) -> Result<Vec<HfQuantVariant>> {
-    let client = reqwest::Client::new();
-    let token = optional_hf_token(huggingface_auth::resolve_token_async()).await;
-    let url = format!("{}/{}?blobs=true", HF_API_BASE, repo_id);
-
-    let response = apply_hf_auth(client.get(&url), token.as_deref())
-        .header("User-Agent", "goose-ai-agent")
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        bail!(
-            "HuggingFace API returned status {} for repo {}",
-            response.status(),
-            repo_id
-        );
-    }
-
-    let model: HfApiModel = response.json().await?;
-    let siblings = model.siblings.unwrap_or_default();
-
-    Ok(group_into_variants(repo_id, siblings))
+    Ok(group_into_variants(
+        repo_id,
+        modelscope_repo_files(repo_id).await?,
+    ))
 }
 
 /// Fetch raw GGUF files (kept for resolve_model_spec).
 pub async fn get_repo_gguf_files(repo_id: &str) -> Result<Vec<HfGgufFile>> {
-    let client = reqwest::Client::new();
-    let token = optional_hf_token(huggingface_auth::resolve_token_async()).await;
-    let url = format!("{}/{}?blobs=true", HF_API_BASE, repo_id);
-
-    let response = apply_hf_auth(client.get(&url), token.as_deref())
-        .header("User-Agent", "goose-ai-agent")
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        bail!(
-            "HuggingFace API returned status {} for repo {}",
-            response.status(),
-            repo_id
-        );
-    }
-
-    let model: HfApiModel = response.json().await?;
-    let siblings = model.siblings.unwrap_or_default();
+    let siblings = modelscope_repo_files(repo_id).await?;
 
     let stem = model_stem_from_repo(repo_id);
 
@@ -761,25 +819,7 @@ pub fn parse_model_spec(spec: &str) -> Result<(String, String)> {
 /// Resolve a model spec to all GGUF files for that quantization (handles shards).
 pub async fn resolve_model_spec_full(spec: &str) -> Result<(String, ResolvedModel)> {
     let (repo_id, quant) = parse_model_spec(spec)?;
-
-    let client = reqwest::Client::new();
-    let token = optional_hf_token(huggingface_auth::resolve_token_async()).await;
-    let url = format!("{}/{}?blobs=true", HF_API_BASE, repo_id);
-    let response = apply_hf_auth(client.get(&url), token.as_deref())
-        .header("User-Agent", "goose-ai-agent")
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        bail!(
-            "HuggingFace API returned status {} for repo {}",
-            response.status(),
-            repo_id
-        );
-    }
-
-    let model: HfApiModel = response.json().await?;
-    let siblings = model.siblings.unwrap_or_default();
+    let siblings = modelscope_repo_files(&repo_id).await?;
     let stem = model_stem_from_repo(&repo_id);
 
     // Collect all GGUF files matching the quantization
@@ -936,6 +976,20 @@ pub fn recommend_variant(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn modelscope_download_url_uses_revision_and_file_path() {
+        let url = build_download_url("Qwen/Qwen3-4B-GGUF", "Q4_K_M/model.gguf");
+        assert_eq!(
+            url,
+            "https://modelscope.cn/api/v1/models/Qwen/Qwen3-4B-GGUF/repo?Revision=master&FilePath=Q4_K_M%2Fmodel.gguf"
+        );
+    }
+
+    #[test]
+    fn modelscope_download_path_rejects_parent_directory() {
+        assert!(safe_model_path(std::path::Path::new("models"), "../model.gguf").is_err());
+    }
 
     #[test]
     fn test_parse_quantization() {
@@ -1293,6 +1347,8 @@ mod tests {
             speed_bps: None,
             eta_seconds: None,
             error: None,
+            retry_attempt: 0,
+            max_retries: 10,
             task_exited: false,
         });
 
@@ -1676,7 +1732,6 @@ pub async fn get_repo_local_variants(repo_id: &str) -> Result<Vec<HfModelVariant
         .iter()
         .map(|variant| variant.to_model_variant(repo_id))
         .collect();
-    variants.extend(get_repo_mlx_variants(repo_id).await.unwrap_or_default());
     variants.sort_by(|a, b| {
         a.backend_id
             .cmp(&b.backend_id)
@@ -2010,77 +2065,78 @@ async fn resolve_gguf_model(repo_id: &str, quantization: &str) -> Result<Resolve
     let spec = format!("{}:{}", repo_id, quantization);
     let (_repo, resolved) = resolve_model_spec_full(&spec).await?;
     let (local_paths, mmproj_path) =
-        download_gguf_to_hf_cache(repo_id, quantization, &resolved).await?;
+        download_gguf_to_modelscope_cache(repo_id, quantization, &resolved).await?;
     Ok(ResolvedLocalModel::Gguf {
         repo_id: repo_id.to_string(),
         quantization: quantization.to_string(),
         resolved,
         local_paths,
         mmproj_path,
-        storage: LocalModelStorage::HuggingFaceCache,
+        storage: LocalModelStorage::GooseManaged,
     })
 }
 
-async fn download_gguf_to_hf_cache(
+async fn download_gguf_to_modelscope_cache(
     repo_id: &str,
     quantization: &str,
     resolved: &ResolvedModel,
 ) -> Result<(Vec<std::path::PathBuf>, Option<std::path::PathBuf>)> {
-    let (owner, name) = split_repo_id(repo_id)?;
     let model_id = model_id_from_repo(repo_id, quantization);
+    let root = Paths::in_data_dir("models")
+        .join("modelscope")
+        .join(repo_id.replace('/', "__"));
+    let mut downloads =
+        Vec::with_capacity(resolved.files.len() + usize::from(resolved.mmproj.is_some()));
+    let mut paths = Vec::with_capacity(resolved.files.len());
+
+    for file in &resolved.files {
+        let path = safe_model_path(&root, &file.filename)?;
+        downloads.push((file.download_url.clone(), path.clone()));
+        paths.push(path);
+    }
+
+    let mmproj_path = resolved
+        .mmproj
+        .as_ref()
+        .map(|file| safe_model_path(&root, &file.filename))
+        .transpose()?;
+    if let Some(mmproj) = &resolved.mmproj {
+        downloads.push((
+            mmproj.download_url.clone(),
+            mmproj_path.clone().expect("mmproj path must be present"),
+        ));
+    }
+
     let total_size = resolved
         .files
         .iter()
         .chain(resolved.mmproj.iter())
         .map(|file| file.size_bytes)
         .sum();
-    let progress = HfDownloadProgress::new(model_id, total_size);
-    progress.init();
-    let client = hf_client().await?;
-    let repo = client.model(owner.to_string(), name.to_string());
-    let mut paths = Vec::with_capacity(resolved.files.len());
-    for file in &resolved.files {
-        let path = match repo
-            .download_file()
-            .filename(file.filename.clone())
-            .progress(progress.clone())
-            .send()
-            .await
-            .map_err(anyhow::Error::from)
-        {
-            Ok(path) => path,
-            Err(error) => {
-                progress.fail(&error);
-                return Err(error);
-            }
+    let download_id = format!("{}-model", model_id);
+    let manager = get_download_manager();
+    manager
+        .download_model_sharded(download_id.clone(), downloads, total_size, None)
+        .await?;
+
+    loop {
+        let Some(progress) = manager.get_progress(&download_id) else {
+            bail!("ModelScope download disappeared before completion");
         };
-        progress.finish_file(file.size_bytes);
-        paths.push(path);
+        match progress.status {
+            DownloadStatus::Completed => return Ok((paths, mmproj_path)),
+            DownloadStatus::Failed => bail!(
+                "ModelScope download failed: {}",
+                progress
+                    .error
+                    .unwrap_or_else(|| "unknown error".to_string())
+            ),
+            DownloadStatus::Cancelled => bail!("ModelScope download was cancelled"),
+            DownloadStatus::Downloading => {
+                tokio::time::sleep(std::time::Duration::from_millis(250)).await
+            }
+        }
     }
-
-    let mmproj_path = if let Some(mmproj) = &resolved.mmproj {
-        let path = match repo
-            .download_file()
-            .filename(mmproj.filename.clone())
-            .progress(progress.clone())
-            .send()
-            .await
-            .map_err(anyhow::Error::from)
-        {
-            Ok(path) => path,
-            Err(error) => {
-                progress.fail(&error);
-                return Err(error);
-            }
-        };
-        progress.finish_file(mmproj.size_bytes);
-        Some(path)
-    } else {
-        None
-    };
-
-    progress.complete();
-    Ok((paths, mmproj_path))
 }
 
 pub async fn resolve_local_model_spec(spec: &str) -> Result<ResolvedLocalModel> {
@@ -2091,24 +2147,16 @@ pub async fn resolve_local_model_spec(spec: &str) -> Result<ResolvedLocalModel> 
     }
 
     if looks_like_repo_id(spec) {
-        let variants = get_repo_local_variants(spec).await?;
-        let mlx_variants: Vec<_> = variants
-            .iter()
-            .filter(|variant| variant.backend_id == MLX_BACKEND_ID)
-            .collect();
-        if mlx_variants.len() == 1
-            && !variants
-                .iter()
-                .any(|variant| variant.backend_id == LLAMACPP_BACKEND_ID)
-        {
-            return resolve_mlx_model(spec, &mlx_variants[0].variant_id).await;
-        }
+        let variants = get_repo_gguf_variants(spec).await?;
         bail!(
             "Model spec '{}' is ambiguous; choose one of: {}",
             spec,
             variants
                 .iter()
-                .map(|variant| variant.download_id.as_str())
+                .map(|variant| model_id_from_repo(spec, &variant.quantization))
+                .collect::<Vec<_>>()
+                .iter()
+                .map(String::as_str)
                 .collect::<Vec<_>>()
                 .join(", ")
         );
@@ -2232,6 +2280,8 @@ impl HfDownloadProgress {
                 speed_bps: None,
                 eta_seconds: None,
                 error: None,
+                retry_attempt: 0,
+                max_retries: 10,
                 task_exited: false,
             });
         }

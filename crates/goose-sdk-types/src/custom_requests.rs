@@ -1912,6 +1912,8 @@ pub struct LocalInferenceDownloadProgressDto {
     pub eta_seconds: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+    pub retry_attempt: u32,
+    pub max_retries: u32,
     pub task_exited: bool,
 }
 

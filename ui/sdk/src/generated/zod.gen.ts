@@ -2565,6 +2565,8 @@ export const zLocalInferenceDownloadProgressDto = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    retryAttempt: z.number().int().gte(0),
+    maxRetries: z.number().int().gte(0),
     taskExited: z.boolean()
 });
 
