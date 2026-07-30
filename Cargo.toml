@@ -114,6 +114,9 @@ icu_locale = { version = "=2.1.1", default-features = false }
 [patch.crates-io]
 v8 = { path = "vendor/v8" }
 cudaforge = { git = "https://github.com/jbg/cudaforge", rev = "e7c1967340e40673db98dc9e17da0f04834a456f" }
+agent-client-protocol-http = { path = "vendor/agent-client-protocol-http" }
+agent-client-protocol = { path = "vendor/agent-client-protocol" }
+agent-client-protocol-derive = { path = "vendor/agent-client-protocol-derive" }
 
 # Dependencies don't need debug info. You rarely step-debug into third-party
 # crates, but their DWARF dominates `target/debug` — roughly 50-70% of each

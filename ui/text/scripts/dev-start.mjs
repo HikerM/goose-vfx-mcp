@@ -19,12 +19,35 @@ const hasServerFlag = args.some(
     arg.startsWith("-s="),
 );
 
+function getCargoCommand(cargoArgs) {
+  if (process.platform !== "win32") {
+    return {
+      command: "cargo",
+      args: cargoArgs,
+    };
+  }
+
+  return {
+    command: "powershell.exe",
+    args: [
+      "-NoLogo",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      join(repoRoot, "bin", "cargo.ps1"),
+      ...cargoArgs,
+    ],
+  };
+}
+
 if (!hasServerFlag && !process.env.GOOSE_BINARY) {
   const binName = process.platform === "win32" ? "goose.exe" : "goose";
   const binaryPath = join(repoRoot, "target", "debug", binName);
+  const cargoCommand = getCargoCommand(["build", "-p", "goose-cli"]);
 
   console.log("Building goose (debug)…");
-  execFileSync("cargo", ["build", "-p", "goose-cli"], {
+  execFileSync(cargoCommand.command, cargoCommand.args, {
     cwd: repoRoot,
     stdio: "inherit",
   });

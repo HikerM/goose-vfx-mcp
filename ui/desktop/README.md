@@ -5,6 +5,8 @@ Native desktop app for goose built with [Electron](https://www.electronjs.org/) 
 # Building and running
 goose uses [Hermit](https://github.com/cashapp/hermit) to manage dependencies, so you will need to have it installed and activated.
 
+### Linux/macOS quick start
+
 ```
 git clone git@github.com:aaif-goose/goose.git
 cd goose
@@ -87,19 +89,57 @@ The built application will be available in:
 - Executable: `out/goose-linux-x64/goose`
 
 ### Windows
-Use the existing Windows build process as documented.
+From PowerShell, use the repository Windows wrapper. It resolves Rust from
+`D:\DevTools\Rust` and reports the exact paths it checked if the toolchain is
+missing:
+
+```powershell
+. .\bin\activate-goose-rust.ps1
+& .\bin\cargo.cmd build --release -p goose-cli --bin goose
+cd ui\desktop
+pnpm install
+pnpm run start-gui
+```
+
+Do not run `bin\cargo` without an extension on Windows; it is the POSIX
+placeholder and can trigger the Windows file-association dialog. If the D:
+drive toolchain is missing, install Rust with `rustup-init.exe` configured for
+`D:\DevTools\Rust` before retrying. These wrappers do not use a C: drive Rust
+installation or modify PATH permanently.
 
 
 # Running with an external ACP backend
 
 From the project root, start the ACP backend:
 
+### Linux/macOS
+
 ```bash
 GOOSE_SERVER__SECRET_KEY=test cargo run -p goose-cli --bin goose -- serve --platform desktop --host 127.0.0.1 --port 3000
 ```
+
+### Windows PowerShell
+
+```powershell
+. .\bin\activate-goose-rust.ps1
+if ([string]::IsNullOrEmpty($env:GOOSE_SERVER__SECRET_KEY)) { $env:GOOSE_SERVER__SECRET_KEY = "test" }
+& .\bin\cargo.cmd run -p goose-cli --bin goose -- serve --platform desktop --host 127.0.0.1 --port 3000
+```
+
+### Linux/macOS desktop app
 
 Then start the desktop app from `ui/desktop`:
 
 ```bash
 GOOSE_EXTERNAL_BACKEND=true GOOSE_EXTERNAL_BACKEND_URL=http://127.0.0.1:3000 GOOSE_SERVER__SECRET_KEY=test pnpm run start-gui
+```
+
+On Windows PowerShell, run the same app command after changing to
+`ui\desktop`:
+
+```powershell
+$env:GOOSE_EXTERNAL_BACKEND = "true"
+$env:GOOSE_EXTERNAL_BACKEND_URL = "http://127.0.0.1:3000"
+$env:GOOSE_SERVER__SECRET_KEY = "test"
+pnpm run start-gui
 ```

@@ -1,0 +1,213 @@
+Goose 桌面端 + FX Houdini MCP：另一台电脑安装与测试说明
+
+适用系统：Windows 10 / Windows 11 64 位
+
+这份说明使用的是“可自定义 MCP”的 Goose 安装包。不要使用旧版标准安装包。
+
+================================================================
+一、先从当前电脑复制这一个安装包
+================================================================
+
+文件位置：
+D:\Project\goose-package\ui\desktop\out\make\zip\win32\x64\Goose-custom-mcp-win32-x64-1.43.0.zip
+
+把这个 ZIP 文件复制到 U 盘、网盘或另一台电脑。
+
+在另一台电脑上，建议解压到：
+D:\Goose\
+
+解压后启动：
+D:\Goose\Goose.exe
+
+如果解压出来多了一层文件夹，请在解压后的文件夹中找到 Goose.exe 双击启动即可。
+
+================================================================
+二、另一台电脑需要准备的软件
+================================================================
+
+1. Houdini（必须）
+
+FX Houdini MCP 是给 Houdini 用的。没有安装 Houdini 时，Goose 可以先配置完成，
+但无法真正调用 Houdini 工具。
+
+Houdini 官方下载页面：
+https://www.sidefx.com/products/houdini-apprentice/
+
+个人学习、非商业用途可选择 Houdini Apprentice。安装完成后，至少启动 Houdini 一次，
+再关闭它。
+
+2. Python 3.10 或更高版本（建议 Python 3.12 64 位）
+
+官方下载页面：
+https://www.python.org/downloads/windows/
+
+安装 Python 时务必勾选：
+Add Python to PATH
+
+安装完成后，重新打开 PowerShell，执行：
+py -3.12 --version
+
+看到 Python 3.12.x 即表示安装成功。
+
+如果你安装的是其他版本，例如 Python 3.13，请把下面命令中的 -3.12 改成 -3.13。
+如果 py -3.12 不可用，也可以先执行 py -0p 查看本机已有的 Python 路径和版本。
+
+================================================================
+三、安装 FX Houdini MCP
+================================================================
+
+1. 在另一台电脑按 Win + X，选择“终端”或“Windows PowerShell”。
+
+2. 依次复制并执行下面四条命令：
+
+py -3.12 -m venv D:\MCP\fxhoudinimcp
+D:\MCP\fxhoudinimcp\Scripts\python.exe -m pip install --upgrade pip
+D:\MCP\fxhoudinimcp\Scripts\python.exe -m pip install fxhoudinimcp
+D:\MCP\fxhoudinimcp\Scripts\python.exe -m fxhoudinimcp install --dry-run
+
+说明：最后一条只是检查，不会修改 Houdini。
+
+3. 若检查结果正常，执行实际安装：
+
+D:\MCP\fxhoudinimcp\Scripts\python.exe -m fxhoudinimcp install --client none
+
+安装程序会自动搜索本机 Houdini 的 packages 目录，并要求选择一个目录。
+请选择你实际安装并准备使用的 Houdini 版本对应目录。
+
+不需要手工猜 Houdini 的安装路径；程序会优先自动发现。
+若没有找到任何 Houdini 目录：
+
+- 确认 Houdini 已安装；
+- 先完整启动 Houdini 一次，再关闭；
+- 再重新执行上面的 install --client none 命令；
+- 如果电脑上有多个 Houdini 版本，选择你要使用的那个版本。
+
+4. 安装完成后，完全退出并重新启动 Houdini。
+
+FX Houdini MCP 会在本机 Houdini 中启动本地服务。默认只绑定到本机 127.0.0.1，
+不要把它改成外网可访问地址。
+
+================================================================
+四、启动 Goose，并配置模型
+================================================================
+
+1. 双击启动：
+D:\Goose\Goose.exe
+
+2. 打开设置中的 Providers（模型提供商）或模型配置页面。
+
+3. 按你的模型供应商填写以下内容：
+
+- Provider：选择实际使用的供应商，或选择 OpenAI Compatible；
+- Base URL：填写供应商提供的 API 地址；
+- API Key：填写你的密钥；
+- Model：填写要调用的模型名；
+- 保存后，在新对话中选择该模型。
+
+如果暂时没有模型 API Key，也可以先完成下一节 MCP 配置；但无法进行 AI 调用测试。
+
+================================================================
+五、在 Goose 中添加自定义 FX Houdini MCP
+================================================================
+
+注意：必须使用本说明第一节中的 Goose-custom-mcp-win32-x64-1.43.0.zip。
+正确版本在 MCP 页面会显示“Custom stdio”标签。
+
+1. 在 Goose 中进入 MCP Center（MCP 中心）。
+
+2. 选择：手动 / Manual。
+
+3. 选择：Custom stdio。
+
+4. 点击“添加自定义扩展”或“Add custom extension”。
+
+5. 按下面内容填写：
+
+名称：
+FX Houdini MCP
+
+类型：
+stdio
+
+命令（Command）：
+D:\MCP\fxhoudinimcp\Scripts\python.exe
+
+参数（Arguments）：
+-m fxhoudinimcp
+
+工作目录、环境变量：
+可以留空。
+
+如果界面只有一个“命令行”输入框，则完整填写：
+D:\MCP\fxhoudinimcp\Scripts\python.exe -m fxhoudinimcp
+
+6. 保存，并确保该 MCP 处于已启用状态。
+
+不要在“远程 HTTP”中填写这个 MCP，也不要选择“已批准的 stdio 提供程序”。
+本机自定义安装应使用“Custom stdio”。
+
+================================================================
+六、第一次测试
+================================================================
+
+测试前必须保持 Houdini 已打开。
+
+1. 在 Goose 中新建一个对话，选择已配置的模型。
+
+2. 确认 FX Houdini MCP 已启用后，输入：
+
+列出可用的 Houdini MCP 工具，并调用 get_houdini_connection_status 检查是否已连接 Houdini。
+
+3. 如果连接正常，再输入一个低风险测试：
+
+请读取当前 Houdini 场景信息，不要修改或保存文件。
+
+首次不要直接让模型批量删除节点、覆盖场景或保存到原项目文件。确认工具可用后，
+再让它执行具体 Houdini 操作。
+
+================================================================
+七、常见问题
+================================================================
+
+问题 1：看不到“Custom stdio”标签
+
+原因：启动的是旧版 Goose，或解压后没有运行新安装包里的 Goose.exe。
+处理：重新确认使用的是：
+Goose-custom-mcp-win32-x64-1.43.0.zip
+
+问题 2：提示 py 不是命令，或找不到 Python
+
+处理：重新安装 Python，勾选 Add Python to PATH；安装结束后关闭并重新打开终端。
+然后执行：
+py -0p
+
+问题 3：安装 fxhoudinimcp 时找不到 Houdini
+
+处理：确认 Houdini 已安装并至少启动过一次；重新执行：
+D:\MCP\fxhoudinimcp\Scripts\python.exe -m fxhoudinimcp install --client none
+
+问题 4：Goose 里 MCP 已启用，但提示无法连接 Houdini / connection refused
+
+处理：
+- 先启动 Houdini；
+- 完全退出后重新启动 Houdini，等待其插件加载；
+- 检查是否完成了 fxhoudinimcp install --client none；
+- 在 Goose 中禁用再启用 FX Houdini MCP，或重启 Goose。
+
+问题 5：模型能聊天，但没有调用 MCP 工具
+
+处理：确认当前对话使用的是已配置的模型，并确认 FX Houdini MCP 是启用状态；
+然后直接要求“列出可用的 Houdini MCP 工具”。
+
+================================================================
+八、官方资料
+================================================================
+
+fxhoudinimcp 安装说明：
+https://pypi.org/project/fxhoudinimcp/#user-content-installation
+
+Houdini Apprentice：
+https://www.sidefx.com/products/houdini-apprentice/
+
+Python for Windows：
+https://www.python.org/downloads/windows/

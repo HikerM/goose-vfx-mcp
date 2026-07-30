@@ -15,7 +15,7 @@
     "clean-vite-cache": "node scripts/clean-vite-cache.js",
     "start-gui": "pnpm run build-goose-sdk && pnpm run i18n:compile && electron-forge start",
     "start-gui-debug": "pnpm run build-goose-sdk && pnpm run i18n:compile && electron-forge start -- --inspect=9229",
-    "start": "cd ../.. && just run-ui",
+    "start": "node scripts/start-dev.js",
     "start:test-error": "GOOSE_TEST_ERROR=true electron-forge start",
     "package": "pnpm run build-goose-sdk && pnpm run i18n:compile && electron-forge package",
     "make": "pnpm run build-goose-sdk && pnpm run i18n:compile && electron-forge make",

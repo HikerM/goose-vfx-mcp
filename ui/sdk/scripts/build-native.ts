@@ -12,7 +12,7 @@
  *   - Rust cross-compilation toolchains installed for each target
  */
 
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { mkdirSync, copyFileSync, chmodSync, existsSync } from "fs";
@@ -45,6 +45,31 @@ function getCurrentPlatform(): string | null {
   return PLATFORM_MAP[key] || null;
 }
 
+function getCargoCommand(cargoArgs: string[]): {
+  command: string;
+  args: string[];
+} {
+  if (process.platform !== "win32") {
+    return {
+      command: "cargo",
+      args: cargoArgs,
+    };
+  }
+
+  return {
+    command: "powershell.exe",
+    args: [
+      "-NoLogo",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      resolve(ROOT, "bin", "cargo.ps1"),
+      ...cargoArgs,
+    ],
+  };
+}
+
 function buildTarget(platform: string): void {
   const rustTarget = RUST_TARGETS[platform];
   if (!rustTarget) {
@@ -57,16 +82,16 @@ function buildTarget(platform: string): void {
   console.log(`==> Building goose for ${platform} (${rustTarget})`);
 
   try {
-    const featureArgs = platform.startsWith("linux-")
-      ? " --features vulkan"
-      : "";
-    execSync(
-      `cargo build --release --target ${rustTarget} --bin goose${featureArgs}`,
-      {
-        cwd: ROOT,
-        stdio: "inherit",
-      },
-    );
+    const cargoArgs = ["build", "--release", "--target", rustTarget, "--bin", "goose"];
+    if (platform.startsWith("linux-")) {
+      cargoArgs.push("--features", "vulkan");
+    }
+
+    const cargoCommand = getCargoCommand(cargoArgs);
+    execFileSync(cargoCommand.command, cargoCommand.args, {
+      cwd: ROOT,
+      stdio: "inherit",
+    });
   } catch (err) {
     console.error(`Failed to build for ${platform}`);
     throw err;

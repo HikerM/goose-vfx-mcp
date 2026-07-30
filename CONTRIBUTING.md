@@ -109,6 +109,17 @@ Or add [shell hook auto-activation](https://cashapp.github.io/hermit/usage/shell
 
 We provide a shortcut to standard commands using [just][just] in our `justfile`.
 
+### Windows PowerShell
+
+On Windows, do not run the repository's extensionless `bin\cargo` or `bin\rustup` files and do not `source bin/activate-hermit`.
+Use the Windows entrypoint instead:
+
+```powershell
+& .\bin\activate-goose-rust.ps1
+```
+
+If you prefer Explorer, double-click `bin\activate-goose-rust.cmd` to open a PowerShell window with the correct Rust toolchain at the front of `PATH`.
+
 ### Windows Subsystem for Linux
 
 For WSL users, you might need to install `build-essential` and `libxcb` otherwise you might run into `cc` linking errors (cc stands for C Compiler).
@@ -124,13 +135,21 @@ sudo apt install libxcb1-dev      # libxcb1-dev is the development package for t
 
 ### Rust
 
-First let's compile goose and try it out
-Since goose requires Hermit for managing dependencies, let's activate hermit.
+First let's compile goose and try it out.
+On macOS/Linux, goose requires Hermit for managing dependencies, so activate Hermit first:
 
 ```
 cd goose
 source ./bin/activate-hermit
 cargo build
+```
+
+On Windows PowerShell, use the Rust activation script instead:
+
+```powershell
+cd goose
+& .\bin\activate-goose-rust.ps1
+& .\bin\cargo.ps1 build
 ```
 
 When that completes, debug builds of the binaries are available, including the goose CLI:

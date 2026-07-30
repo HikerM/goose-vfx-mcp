@@ -13,6 +13,15 @@
 #   .\scripts\build-windows.ps1
 
 $ErrorActionPreference = "Stop"
+$repoRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $repoRoot "bin\goose-rust-tools.ps1")
+
+try {
+    $rustTools = Initialize-GooseRustEnvironment
+} catch {
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    exit 1
+}
 
 Write-Host "=== Goose Windows Build Script ===" -ForegroundColor Cyan
 Write-Host ""
@@ -21,7 +30,6 @@ Write-Host ""
 Write-Host "[1/7] Checking prerequisites..." -ForegroundColor Yellow
 
 $missing = @()
-if (-not (Get-Command "cargo" -ErrorAction SilentlyContinue)) { $missing += "Rust (install from https://rustup.rs)" }
 if (-not (Get-Command "node" -ErrorAction SilentlyContinue)) { $missing += "Node.js v24+ (install from https://nodejs.org)" }
 if (-not (Get-Command "pnpm" -ErrorAction SilentlyContinue)) { $missing += "pnpm (run: npm install -g pnpm)" }
 if (-not (Get-Command "git" -ErrorAction SilentlyContinue)) { $missing += "Git (install from https://git-scm.com)" }
@@ -34,7 +42,8 @@ if ($missing.Count -gt 0) {
     exit 1
 }
 
-Write-Host "  cargo: $(cargo --version)" -ForegroundColor Green
+Write-Host "  cargo.exe: $($rustTools.CargoExe)" -ForegroundColor Green
+Write-Host "  rustup.exe: $($rustTools.RustupExe)" -ForegroundColor Green
 Write-Host "  node:  $(node --version)" -ForegroundColor Green
 Write-Host "  pnpm:  $(pnpm --version)" -ForegroundColor Green
 Write-Host ""
@@ -42,7 +51,7 @@ Write-Host ""
 # Step 1: Clone or update repo
 Write-Host "[2/7] Building Rust backend (release)..." -ForegroundColor Yellow
 Write-Host "  This may take 5-15 minutes on first build..."
-cargo build --release -p goose-cli --bin goose
+& $rustTools.CargoExe build --release -p goose-cli --bin goose
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Rust build failed!" -ForegroundColor Red
     exit 1

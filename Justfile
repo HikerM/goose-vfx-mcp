@@ -1,5 +1,8 @@
 # Justfile
 
+rust_cargo := if os() == "windows" { "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"" + justfile_directory() + "\\bin\\cargo.ps1\"" } else { "cargo" }
+goose_record_mcp := if os() == "windows" { "$env:GOOSE_RECORD_MCP=1; " } else { "GOOSE_RECORD_MCP=1 " }
+
 # list all tasks
 default:
   @just --list
@@ -8,19 +11,25 @@ default:
 check-everything:
     @echo "🔧 RUNNING ALL STYLE CHECKS..."
     @echo "  → Formatting Rust code..."
-    cargo fmt --all
+    {{rust_cargo}} fmt --all
     @echo "  → Running clippy linting..."
-    cargo clippy --all-targets -- -D warnings
+    {{rust_cargo}} clippy --all-targets -- -D warnings
     @echo "  → Checking UI code formatting..."
     cd ui/desktop && pnpm run lint:check
     @echo ""
     @echo "✅ All style checks passed!"
 
 # Default release command
+[unix]
 release-binary:
     @echo "Building release version..."
-    cargo build --release -p goose-cli --bin goose
+    {{rust_cargo}} build --release -p goose-cli --bin goose
     @just copy-binary
+
+[windows]
+release-binary:
+    @just release-windows
+    @just copy-binary-windows
 
 # Build Windows executable on a Windows host
 [unix]
@@ -30,12 +39,12 @@ release-windows:
 
 [windows]
 release-windows:
-    @powershell.exe -NoProfile -ExecutionPolicy Bypass -Command 'rustup target add x86_64-pc-windows-msvc; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo build --release --target x86_64-pc-windows-msvc -p goose-cli --bin goose; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Write-Host "Windows executable created at ./target/x86_64-pc-windows-msvc/release/goose.exe"'
+    @powershell.exe -NoProfile -ExecutionPolicy Bypass -Command '& ".\bin\rustup.ps1" target add x86_64-pc-windows-msvc; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & ".\bin\cargo.ps1" build --release --target x86_64-pc-windows-msvc -p goose-cli --bin goose; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Write-Host "Windows executable created at ./target/x86_64-pc-windows-msvc/release/goose.exe"'
 
 # Build for Intel Mac
 release-intel:
     @echo "Building release version for Intel Mac..."
-    cargo build --release --target x86_64-apple-darwin
+    {{rust_cargo}} build --release --target x86_64-apple-darwin
     @just copy-binary-intel
 
 copy-binary BUILD_MODE="release":
@@ -80,10 +89,15 @@ copy-binary-windows:
     }'
 
 # Run UI with latest
+[unix]
 run-ui:
     @just release-binary
     @echo "Running UI..."
     cd ui/desktop && pnpm install && pnpm run start-gui
+
+[windows]
+run-ui:
+    @just run-ui-windows
 
 run-ui-playwright:
     #!/usr/bin/env sh
@@ -143,9 +157,15 @@ run-docs:
     cd documentation && yarn && yarn start
 
 # Run server
+[unix]
 run-server:
     @echo "Running external ACP backend..."
-    GOOSE_SERVER__SECRET_KEY="${GOOSE_SERVER__SECRET_KEY:-test}" cargo run -p goose-cli --bin goose -- serve --platform desktop --host 127.0.0.1 --port 3000
+    GOOSE_SERVER__SECRET_KEY="${GOOSE_SERVER__SECRET_KEY:-test}" {{rust_cargo}} run -p goose-cli --bin goose -- serve --platform desktop --host 127.0.0.1 --port 3000
+
+[windows]
+run-server:
+    @echo "Running external ACP backend..."
+    @powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$env:GOOSE_SERVER__SECRET_KEY = if ([string]::IsNullOrEmpty($env:GOOSE_SERVER__SECRET_KEY)) { 'test' } else { $env:GOOSE_SERVER__SECRET_KEY }; $cargo = Join-Path (Get-Location) 'bin\cargo.ps1'; & $cargo @('run', '-p', 'goose-cli', '--bin', 'goose', '--', 'serve', '--platform', 'desktop', '--host', '127.0.0.1', '--port', '3000')"
 
 # Check if generated ACP schema and TypeScript types are up-to-date
 check-acp-schema: generate-acp-types
@@ -164,7 +184,7 @@ check-acp-schema: generate-acp-types
 # Generate ACP JSON schema from Rust types
 generate-acp-schema:
     @echo "Generating ACP schema..."
-    cd crates/goose && cargo run --features code-mode,local-inference,aws-providers,telemetry,otel,rustls-tls,system-keyring --bin generate-acp-schema
+    {{rust_cargo}} run --manifest-path crates/goose/Cargo.toml --features code-mode,local-inference,aws-providers,telemetry,otel,rustls-tls,system-keyring --bin generate-acp-schema
     @echo "ACP schema generated: crates/goose/acp-schema.json, crates/goose/acp-meta.json"
 
 # Generate ACP TypeScript types from JSON schema (requires generate-acp-schema first)
@@ -182,7 +202,7 @@ build-sdk: generate-acp-types
 # Generate manpages for the CLI
 generate-manpages:
     @echo "Generating manpages..."
-    cargo run -p goose-cli --bin generate_manpages
+    {{rust_cargo}} run -p goose-cli --bin generate_manpages
     @echo "Manpages generated at target/man/"
 
 # make GUI with latest binary
@@ -190,6 +210,7 @@ lint-ui:
     cd ui/desktop && pnpm run lint:check
 
 # make GUI with latest binary
+[unix]
 make-ui:
     @just release-binary
     cd ui/desktop && pnpm run bundle:default
@@ -216,7 +237,7 @@ make-ui-intel:
 # Run UI with debug build
 run-dev:
     @echo "Building development version..."
-    cargo build
+    {{rust_cargo}} build
     @just copy-binary debug
     @echo "Running UI..."
     cd ui/desktop && pnpm run start-gui
@@ -289,11 +310,11 @@ bump-version version:
     @uvx --from=toml-cli toml set --toml-path=Cargo.toml "workspace.package.version" {{ version }}
     @cd ui/desktop && npm pkg set "version={{ version }}"
     # update Cargo.lock after bumping versions in Cargo.toml
-    @cargo update --workspace
+    @{{rust_cargo}} update --workspace
 
 # rebuild canonical model registry and mapping report from models.dev
 build-canonical-models:
-    @cargo run --bin build_canonical_models
+    @{{rust_cargo}} run --bin build_canonical_models
 
 # bump version, rebuild canonical models, and commit
 prepare-release version:
@@ -342,7 +363,7 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 ### profile = --release or "" for debug
 ### allparam = OR/AND/ANY/NONE --workspace --all-features --all-targets
 win-bld profile allparam:
-  cargo build {{profile}} {{allparam}}
+  & ".\bin\cargo.ps1" build {{profile}} {{allparam}}
 
 ### Build just debug
 win-bld-dbg:
@@ -414,8 +435,8 @@ win-total-rls *allparam:
   just win-run-rls
 
 build-test-tools:
-  cargo build -p goose-test
+  {{rust_cargo}} build -p goose-test
 
 record-mcp-tests: build-test-tools
-  GOOSE_RECORD_MCP=1 cargo test --package goose --test mcp_integration_test
+  {{goose_record_mcp}}{{rust_cargo}} test --package goose --test mcp_integration_test
   git add crates/goose/tests/mcp_replays/

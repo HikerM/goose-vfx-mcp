@@ -2,7 +2,34 @@
 
 goose is an AI agent framework in Rust with CLI and Electron desktop interfaces.
 
+## Windows Rust Entry
+For this Windows Codex workspace, use only these Rust entry points:
+
+```powershell
+. .\bin\activate-goose-rust.ps1
+& .\bin\cargo.cmd +1.94.1 --version
+& 'D:\DevTools\Rust\cargo\bin\cargo.exe' -V
+```
+
+- On Windows PowerShell, use exactly one of these flows:
+- Dot-source `. .\bin\activate-goose-rust.ps1` in the current shell, then run `cargo ...`.
+- Or run `& .\bin\cargo.cmd <args>` each time without changing the current shell.
+- Never run `source bin/activate-hermit` on Windows.
+- Never run `bin\cargo`, `.\bin\cargo`, or any extensionless `cargo` placeholder from this repository on Windows. `D:\Project\goose\bin\cargo` is a Unix-only placeholder, not an executable.
+- All Rust, rustup, and LLVM tools used on Windows must resolve from `D:\DevTools\...`, not from `D:\Project\goose\bin`.
+- If Codex or PowerShell was started before the PATH was fixed, fully exit and reopen Codex before relying on bare `cargo` after activation.
+- Ignore the macOS/Linux-only POSIX setup below unless the user explicitly asks for Linux or macOS instructions.
+
 ## Setup
+### Windows PowerShell
+```powershell
+. .\bin\activate-goose-rust.ps1
+cargo build
+# or, without activating the shell:
+& .\bin\cargo.cmd build
+```
+
+### macOS/Linux only (POSIX)
 ```bash
 source bin/activate-hermit
 cargo build
@@ -11,24 +38,34 @@ cargo build
 ## Commands
 
 ### Build
-```bash
-cargo build                   # debug
-cargo build --release         # release  
+```powershell
+cargo build
+cargo build --release
+# if the shell is not activated:
+& .\bin\cargo.cmd build
+& .\bin\cargo.cmd build --release
 just release-binary           # release binary
 ```
 
 ### Test
-```bash
-cargo test                   # all tests
-cargo test -p goose          # specific crate
+```powershell
+cargo test
+cargo test -p goose
 cargo test --package goose --test mcp_integration_test
+# if the shell is not activated:
+& .\bin\cargo.cmd test
+& .\bin\cargo.cmd test -p goose
+& .\bin\cargo.cmd test --package goose --test mcp_integration_test
 just record-mcp-tests        # record MCP
 ```
 
 ### Lint/Format
-```bash
+```powershell
 cargo fmt
 cargo clippy --all-targets -- -D warnings
+# if the shell is not activated:
+& .\bin\cargo.cmd fmt
+& .\bin\cargo.cmd clippy --all-targets -- -D warnings
 ```
 
 ### UI
@@ -52,8 +89,8 @@ ui/desktop/            # Electron app
 ```
 
 ## Development Loop
-```bash
-# 1. source bin/activate-hermit
+```powershell
+# 1. . .\bin\activate-goose-rust.ps1
 # 2. Make changes
 # 3. cargo fmt
 ```
@@ -105,10 +142,10 @@ remaining space for dynamic text.
 ## Never
 
 - Never: Recreate `ui/desktop/src/api` or add `@hey-api/openapi-ts` to `ui/desktop`
-- Cargo.toml: For human-authored dependency changes, use `cargo add` instead of manually editing dependency entries unless there is a specific reason not to.
+- Cargo.toml: For human-authored dependency changes on Windows, use the `D:\DevTools\Rust\cargo\bin\cargo.exe add ...` entry pattern instead of manually editing dependency entries unless there is a specific reason not to.
 - Cargo.toml: Automated dependency bump PRs are exempt; when manual edits are necessary, keep `Cargo.lock` consistent.
-- Never: Skip cargo fmt
-- Never: Merge without running clippy
+- Never: Skip the required Windows formatting step from the Commands section.
+- Never: Merge without running the required Windows clippy step from the Commands section.
 - Never: Comment self-evident operations (`// Initialize`, `// Return result`), getters/setters, constructors, or standard Rust idioms
 
 ## Entry Points
