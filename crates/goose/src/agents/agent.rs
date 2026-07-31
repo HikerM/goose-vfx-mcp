@@ -405,6 +405,8 @@ impl Agent {
                 policy,
             )
         });
+        #[cfg(not(feature = "integration-test-support"))]
+        let extension_manager: Option<ExtensionManager> = None;
         Self {
             provider: provider.clone(),
             config,
