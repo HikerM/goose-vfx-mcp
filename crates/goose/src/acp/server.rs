@@ -1096,6 +1096,13 @@ impl GooseAcpAgent {
             options.disable_session_naming,
             options.goose_platform.clone(),
         );
+        #[cfg(feature = "integration-test-support")]
+        let agent_config = if let Some(service) = trusted_mcp_platform_service.get() {
+            agent_config
+                .with_managed_remote_http_policy(service.managed_remote_http_network_policy())
+        } else {
+            agent_config
+        };
         let agent_manager = Arc::new(AgentManager::new(agent_config, None).await?);
 
         Ok(Self {
@@ -1559,8 +1566,6 @@ impl GooseAcpAgent {
         let agent_result = self
             .get_or_create_session_agent_with_results(cx, session.id.clone(), extension_bundle)
             .await?;
-        #[cfg(feature = "integration-test-support")]
-        eprintln!("PROFILE_EXT_RESULTS {:?}", agent_result.extension_results);
         let agent = agent_result.agent.clone();
         self.apply_acp_extension_overrides(cx, &agent, session)
             .await;

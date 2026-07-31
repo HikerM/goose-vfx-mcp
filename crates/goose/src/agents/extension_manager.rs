@@ -625,6 +625,7 @@ impl Extension {
     }
 }
 
+#[derive(Clone)]
 pub struct ExtensionManagerCapabilities {
     pub mcpui: bool,
     pub host_info: Option<GooseMcpHostInfo>,

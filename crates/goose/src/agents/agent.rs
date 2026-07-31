@@ -188,6 +188,8 @@ pub struct AgentConfig {
     pub mcp_host_info: Option<GooseMcpHostInfo>,
     pub session_name_update_tx: Option<mpsc::UnboundedSender<SessionNameUpdate>>,
     pub use_login_shell_path: Option<bool>,
+    #[cfg(feature = "integration-test-support")]
+    pub managed_remote_http_policy: Option<Arc<dyn crate::mcp_platform::RemoteHttpNetworkPolicy>>,
 }
 
 impl AgentConfig {
@@ -209,11 +211,22 @@ impl AgentConfig {
             mcp_host_info: None,
             session_name_update_tx: None,
             use_login_shell_path: None,
+            #[cfg(feature = "integration-test-support")]
+            managed_remote_http_policy: None,
         }
     }
 
     pub fn with_mcp_host_info(mut self, mcp_host_info: Option<GooseMcpHostInfo>) -> Self {
         self.mcp_host_info = mcp_host_info;
+        self
+    }
+
+    #[cfg(feature = "integration-test-support")]
+    pub fn with_managed_remote_http_policy(
+        mut self,
+        policy: Arc<dyn crate::mcp_platform::RemoteHttpNetworkPolicy>,
+    ) -> Self {
+        self.managed_remote_http_policy = Some(policy);
         self
     }
 
@@ -381,17 +394,30 @@ impl Agent {
         let inspection_session_manager = Arc::clone(&config.session_manager);
         let permission_manager = Arc::clone(&config.permission_manager);
         let use_login_shell_path = config.resolve_use_login_shell_path();
+        #[cfg(feature = "integration-test-support")]
+        let extension_manager = config.managed_remote_http_policy.clone().map(|policy| {
+            ExtensionManager::new_with_managed_remote_http_policy(
+                provider.clone(),
+                Arc::clone(&session_manager),
+                client_name.clone(),
+                capabilities.clone(),
+                use_login_shell_path,
+                policy,
+            )
+        });
         Self {
             provider: provider.clone(),
             config,
             current_goose_mode: Mutex::new(initial_mode),
-            extension_manager: Arc::new(ExtensionManager::new(
-                provider.clone(),
-                session_manager,
-                client_name,
-                capabilities,
-                use_login_shell_path,
-            )),
+            extension_manager: Arc::new(extension_manager.unwrap_or_else(|| {
+                ExtensionManager::new(
+                    provider.clone(),
+                    session_manager,
+                    client_name,
+                    capabilities,
+                    use_login_shell_path,
+                )
+            })),
             final_output_tool: Arc::new(Mutex::new(None)),
             frontend_extensions: Mutex::new(HashMap::new()),
             frontend_tools: Mutex::new(HashMap::new()),
