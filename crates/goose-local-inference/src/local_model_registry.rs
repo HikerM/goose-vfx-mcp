@@ -146,7 +146,7 @@ impl Default for ModelSettings {
     }
 }
 
-/// HuggingFace repo + filename for multimodal projection weights (vision encoder).
+/// ModelScope repo + filename for multimodal projection weights (vision encoder).
 pub struct MmprojSpec {
     pub repo: &'static str,
     pub filename: &'static str,
@@ -164,7 +164,7 @@ impl MmprojSpec {
 }
 
 pub struct FeaturedModel {
-    /// HuggingFace spec in "author/repo-GGUF:quantization" format.
+    /// ModelScope spec in "author/repo-GGUF:quantization" format.
     pub spec: &'static str,
     /// Whether this model's GGUF template supports native tool calling via llama.cpp.
     pub native_tool_calling: bool,
@@ -348,9 +348,9 @@ impl LocalModelEntry {
                 self.mmproj_path = Some(path.clone());
             }
             if !preserve_existing_path || self.mmproj_source_url.is_none() {
-                self.mmproj_source_url = Some(format!(
-                    "https://huggingface.co/{}/resolve/main/{}",
-                    mmproj.repo, mmproj.filename
+                self.mmproj_source_url = Some(super::hf_models::modelscope_download_url(
+                    mmproj.repo,
+                    mmproj.filename,
                 ));
             }
             self.mmproj_size_bytes = path_size(&path);

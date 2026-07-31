@@ -9,6 +9,7 @@ import {
   Eye,
   RefreshCw,
   Cpu,
+  KeyRound,
   PowerOff,
 } from 'lucide-react';
 import { Button } from '../../ui/button';
@@ -29,6 +30,9 @@ import { HuggingFaceModelSearch } from './HuggingFaceModelSearch';
 import { ModelSettingsPanel } from './ModelSettingsPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
 import { acpSaveDefaults } from '../../../acp/providers';
+import { acpReadConfig, acpRemoveConfig, acpUpsertConfig } from '../../../acp/config';
+
+const MODELSCOPE_TOKEN_SECRET_KEY = 'MODELSCOPE_TOKEN';
 
 const i18n = defineMessages({
   title: {
@@ -142,6 +146,31 @@ const i18n = defineMessages({
     defaultMessage:
       'Models are searched and downloaded from ModelScope. Public models do not require login; private or gated models require a ModelScope access token.',
   },
+  modelScopeTokenTitle: {
+    id: 'localInferenceSettings.modelScopeTokenTitle',
+    defaultMessage: 'ModelScope access token',
+  },
+  modelScopeTokenDescription: {
+    id: 'localInferenceSettings.modelScopeTokenDescription',
+    defaultMessage:
+      'Only needed for private or gated models. Saved in your operating system credential store and never added to Goose configuration files.',
+  },
+  modelScopeTokenPlaceholder: {
+    id: 'localInferenceSettings.modelScopeTokenPlaceholder',
+    defaultMessage: 'Paste a new token to save or replace the current one',
+  },
+  saveToken: {
+    id: 'localInferenceSettings.saveToken',
+    defaultMessage: 'Save token',
+  },
+  clearToken: {
+    id: 'localInferenceSettings.clearToken',
+    defaultMessage: 'Clear token',
+  },
+  tokenConfigured: {
+    id: 'localInferenceSettings.tokenConfigured',
+    defaultMessage: 'A token is configured',
+  },
 });
 
 const VisionBadge = ({
@@ -203,6 +232,9 @@ export const LocalInferenceSettings = () => {
   const [evictingModelId, setEvictingModelId] = useState<string | null>(null);
   const [showAllFeatured, setShowAllFeatured] = useState(false);
   const [settingsOpenFor, setSettingsOpenFor] = useState<string | null>(null);
+  const [modelScopeToken, setModelScopeToken] = useState('');
+  const [modelScopeTokenConfigured, setModelScopeTokenConfigured] = useState(false);
+  const [savingModelScopeToken, setSavingModelScopeToken] = useState(false);
   const { currentModel, currentProvider, refreshCurrentModelAndProvider } = useModelAndProvider();
   const downloadSectionRef = useRef<HTMLDivElement>(null);
   const activePolls = useRef(new Set<string>());
@@ -249,6 +281,46 @@ export const LocalInferenceSettings = () => {
     loadModels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const loadModelScopeTokenStatus = async () => {
+      try {
+        const value = await acpReadConfig(MODELSCOPE_TOKEN_SECRET_KEY, true);
+        setModelScopeTokenConfigured(value != null);
+      } catch (error) {
+        console.error('Failed to read ModelScope token status:', error);
+      }
+    };
+    void loadModelScopeTokenStatus();
+  }, []);
+
+  const saveModelScopeToken = async () => {
+    const token = modelScopeToken.trim();
+    if (!token) return;
+    setSavingModelScopeToken(true);
+    try {
+      await acpUpsertConfig(MODELSCOPE_TOKEN_SECRET_KEY, token, true);
+      setModelScopeToken('');
+      setModelScopeTokenConfigured(true);
+    } catch (error) {
+      console.error('Failed to save ModelScope token:', error);
+    } finally {
+      setSavingModelScopeToken(false);
+    }
+  };
+
+  const clearModelScopeToken = async () => {
+    setSavingModelScopeToken(true);
+    try {
+      await acpRemoveConfig(MODELSCOPE_TOKEN_SECRET_KEY, true);
+      setModelScopeToken('');
+      setModelScopeTokenConfigured(false);
+    } catch (error) {
+      console.error('Failed to clear ModelScope token:', error);
+    } finally {
+      setSavingModelScopeToken(false);
+    }
+  };
 
   // Poll model list while any vision encoder is downloading
   useEffect(() => {
@@ -711,6 +783,54 @@ export const LocalInferenceSettings = () => {
 
       {/* ModelScope search */}
       <div className="border-t border-border-subtle pt-4">
+        <div className="mb-4 rounded-lg border border-border-subtle bg-background-default p-3">
+          <div className="flex items-start gap-2">
+            <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-text-muted" />
+            <div className="min-w-0 flex-1">
+              <h4 className="text-sm font-medium text-text-default">
+                {intl.formatMessage(i18n.modelScopeTokenTitle)}
+              </h4>
+              <p className="mt-1 text-xs text-text-muted">
+                {intl.formatMessage(i18n.modelScopeTokenDescription)}
+              </p>
+              {modelScopeTokenConfigured && (
+                <p className="mt-2 text-xs text-green-500">
+                  {intl.formatMessage(i18n.tokenConfigured)}
+                </p>
+              )}
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="password"
+                  autoComplete="off"
+                  value={modelScopeToken}
+                  onChange={(event) => setModelScopeToken(event.target.value)}
+                  placeholder={intl.formatMessage(i18n.modelScopeTokenPlaceholder)}
+                  className="min-w-0 flex-1 rounded-lg border border-border-subtle bg-background-subtle px-3 py-2 text-sm text-text-default placeholder:text-text-muted focus:outline-none focus:border-accent-primary"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!modelScopeToken.trim() || savingModelScopeToken}
+                    onClick={() => void saveModelScopeToken()}
+                  >
+                    {intl.formatMessage(i18n.saveToken)}
+                  </Button>
+                  {modelScopeTokenConfigured && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={savingModelScopeToken}
+                      onClick={() => void clearModelScopeToken()}
+                    >
+                      {intl.formatMessage(i18n.clearToken)}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <HuggingFaceModelSearch
           onDownloadStarted={handleHfDownloadStarted}
           activeDownloadIds={activeDownloadIds}

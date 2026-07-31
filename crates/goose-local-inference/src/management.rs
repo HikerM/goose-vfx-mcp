@@ -12,7 +12,6 @@ use super::{
     InferenceRuntime,
 };
 use crate::download_manager::{get_download_manager, DownloadProgress, DownloadStatus};
-use crate::huggingface_auth;
 use crate::paths::Paths;
 use anyhow::{anyhow, Result};
 use futures::future::join_all;
@@ -289,10 +288,7 @@ pub async fn ensure_featured_models_current() -> Result<()> {
                 if needs_download {
                     if let Some(mmproj) = featured.mmproj.as_ref() {
                         let path = mmproj.local_path();
-                        let url = format!(
-                            "https://huggingface.co/{}/resolve/main/{}",
-                            mmproj.repo, mmproj.filename
-                        );
+                        let url = hf_models::modelscope_download_url(mmproj.repo, mmproj.filename);
                         mmproj_downloads_needed.push((model_id.clone(), url, path));
                     }
                 }
@@ -325,9 +321,9 @@ pub async fn ensure_featured_models_current() -> Result<()> {
                         filename: filename.clone(),
                         size_bytes: 0,
                         quantization: pending.quantization.to_string(),
-                        download_url: format!(
-                            "https://huggingface.co/{}/resolve/main/{}",
-                            pending.repo_id, filename
+                        download_url: hf_models::modelscope_download_url(
+                            &pending.repo_id,
+                            &filename,
                         ),
                     }
                 }
@@ -376,10 +372,7 @@ pub async fn ensure_featured_models_current() -> Result<()> {
                 if let Some(mmproj) = featured_mmproj_spec(&model.id) {
                     let path = mmproj.local_path();
                     if !path.exists() {
-                        let url = format!(
-                            "https://huggingface.co/{}/resolve/main/{}",
-                            mmproj.repo, mmproj.filename
-                        );
+                        let url = hf_models::modelscope_download_url(mmproj.repo, mmproj.filename);
                         mmproj_downloads_needed.push((model.id.clone(), url, path));
                     }
                 }
@@ -389,7 +382,7 @@ pub async fn ensure_featured_models_current() -> Result<()> {
     }
 
     let dm = get_download_manager();
-    let hf_token = huggingface_auth::resolve_token_async().await.ok().flatten();
+    let modelscope_token = hf_models::modelscope_token()?;
     let mut started_paths = std::collections::HashSet::new();
     for (model_id, url, path) in mmproj_downloads_needed {
         if !path.exists() && started_paths.insert(path.clone()) {
@@ -404,7 +397,7 @@ pub async fn ensure_featured_models_current() -> Result<()> {
                         download_id,
                         url,
                         path,
-                        hf_token.clone(),
+                        modelscope_token.clone(),
                         None,
                     )
                     .await

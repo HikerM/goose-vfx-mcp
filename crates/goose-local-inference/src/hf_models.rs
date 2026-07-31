@@ -9,14 +9,15 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 use crate::download_manager::{get_download_manager, DownloadStatus};
-use crate::huggingface_auth;
 use crate::paths::Paths;
+use crate::{config_resolver, huggingface_auth};
 
 use utoipa::ToSchema;
 
 const HF_API_BASE: &str = "https://huggingface.co/api/models";
 const MODELSCOPE_API_BASE: &str = "https://modelscope.cn/api/v1/models";
 const MODELSCOPE_OPENAPI_BASE: &str = "https://modelscope.cn/openapi/v1/models";
+pub const MODELSCOPE_TOKEN_SECRET_KEY: &str = "MODELSCOPE_TOKEN";
 const LLAMACPP_BACKEND_ID: &str = "llamacpp";
 const MLX_BACKEND_ID: &str = "mlx";
 const GGUF_FORMAT: &str = "gguf";
@@ -419,7 +420,7 @@ fn parse_shard_total(filename: &str) -> Option<u32> {
     total_str.parse().ok()
 }
 
-fn build_download_url(repo_id: &str, filename: &str) -> String {
+pub fn modelscope_download_url(repo_id: &str, filename: &str) -> String {
     let mut url = reqwest::Url::parse(&format!("{MODELSCOPE_API_BASE}/{repo_id}/repo"))
         .expect("ModelScope endpoint must be a valid URL");
     url.query_pairs_mut()
@@ -440,11 +441,15 @@ async fn modelscope_repo_files(repo_id: &str) -> Result<Vec<HfApiSibling>> {
         .expect("ModelScope endpoint must be a valid URL");
     url.query_pairs_mut().append_pair("Revision", "master");
 
-    let response = reqwest::Client::new()
-        .get(url)
-        .header("User-Agent", "goose-ai-agent")
-        .send()
-        .await?;
+    let token = modelscope_token()?;
+    let response = apply_modelscope_auth(
+        reqwest::Client::new()
+            .get(url)
+            .header("User-Agent", "goose-ai-agent"),
+        token.as_deref(),
+    )
+    .send()
+    .await?;
     if !response.status().is_success() {
         bail!(
             "ModelScope returned HTTP {} while reading files for {}. Private or gated models require a ModelScope access token.",
@@ -491,18 +496,31 @@ fn safe_model_path(root: &std::path::Path, filename: &str) -> Result<std::path::
     Ok(root.join(relative))
 }
 
-fn apply_hf_auth(request: reqwest::RequestBuilder, token: Option<&str>) -> reqwest::RequestBuilder {
-    if let Some(header) = hf_authorization_header(token) {
+fn apply_modelscope_auth(
+    request: reqwest::RequestBuilder,
+    token: Option<&str>,
+) -> reqwest::RequestBuilder {
+    if let Some(header) = bearer_authorization_header(token) {
         request.header("Authorization", header)
     } else {
         request
     }
 }
 
-fn hf_authorization_header(token: Option<&str>) -> Option<String> {
+fn apply_hf_auth(request: reqwest::RequestBuilder, token: Option<&str>) -> reqwest::RequestBuilder {
+    apply_modelscope_auth(request, token)
+}
+
+fn bearer_authorization_header(token: Option<&str>) -> Option<String> {
     token
+        .map(str::trim)
         .filter(|token| !token.is_empty())
         .map(|token| format!("Bearer {token}"))
+}
+
+pub fn modelscope_token() -> Result<Option<String>> {
+    Ok(config_resolver::string_param(MODELSCOPE_TOKEN_SECRET_KEY)?
+        .filter(|token| !token.trim().is_empty()))
 }
 
 async fn optional_hf_token<F>(token_future: F) -> Option<String>
@@ -566,7 +584,7 @@ fn select_best_mmproj(
             filename: sibling.rfilename.clone(),
             size_bytes: sibling.size.unwrap_or(0),
             quantization,
-            download_url: build_download_url(repo_id, &sibling.rfilename),
+            download_url: modelscope_download_url(repo_id, &sibling.rfilename),
         })
 }
 
@@ -627,7 +645,7 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
         let quant = parse_quantization(&s.rfilename);
         seen_quants.insert(quant.clone());
         let info = quant_info(&quant);
-        let download_url = build_download_url(repo_id, &s.rfilename);
+        let download_url = modelscope_download_url(repo_id, &s.rfilename);
         variants.push(HfQuantVariant {
             quantization: quant,
             size_bytes: s.size.unwrap_or(0),
@@ -648,7 +666,7 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
         let total_size: u64 = shards.iter().map(|s| s.size.unwrap_or(0)).sum();
         let info = quant_info(&quant);
         let first_filename = &shards[0].rfilename;
-        let download_url = build_download_url(repo_id, first_filename);
+        let download_url = modelscope_download_url(repo_id, first_filename);
         variants.push(HfQuantVariant {
             quantization: quant,
             size_bytes: total_size,
@@ -716,11 +734,15 @@ pub async fn search_gguf_models(query: &str, limit: usize) -> Result<Vec<HfModel
         .append_pair("sort", "downloads")
         .append_pair("page_size", &limit.min(50).to_string());
 
-    let response = reqwest::Client::new()
-        .get(url)
-        .header("User-Agent", "goose-ai-agent")
-        .send()
-        .await?;
+    let token = modelscope_token()?;
+    let response = apply_modelscope_auth(
+        reqwest::Client::new()
+            .get(url)
+            .header("User-Agent", "goose-ai-agent"),
+        token.as_deref(),
+    )
+    .send()
+    .await?;
 
     if !response.status().is_success() {
         bail!("ModelScope search returned HTTP {}", response.status());
@@ -780,7 +802,7 @@ pub async fn get_repo_gguf_files(repo_id: &str) -> Result<Vec<HfGgufFile>> {
         .filter(|s| is_model_file(&s.rfilename, &stem))
         .map(|s| {
             let quantization = parse_quantization(&s.rfilename);
-            let download_url = build_download_url(repo_id, &s.rfilename);
+            let download_url = modelscope_download_url(repo_id, &s.rfilename);
             HfGgufFile {
                 filename: s.rfilename,
                 size_bytes: s.size.unwrap_or(0),
@@ -858,7 +880,7 @@ pub async fn resolve_model_spec_full(spec: &str) -> Result<(String, ResolvedMode
             filename: single.rfilename.clone(),
             size_bytes: single.size.unwrap_or(0),
             quantization: quant,
-            download_url: build_download_url(&repo_id, &single.rfilename),
+            download_url: modelscope_download_url(&repo_id, &single.rfilename),
         };
         let total_size = file.size_bytes;
         return Ok((
@@ -921,7 +943,7 @@ pub async fn resolve_model_spec_full(spec: &str) -> Result<(String, ResolvedMode
             filename: s.rfilename.clone(),
             size_bytes: s.size.unwrap_or(0),
             quantization: quant.clone(),
-            download_url: build_download_url(&repo_id, &s.rfilename),
+            download_url: modelscope_download_url(&repo_id, &s.rfilename),
         })
         .collect();
     let total_size: u64 = files.iter().map(|f| f.size_bytes).sum();
@@ -979,7 +1001,7 @@ mod tests {
 
     #[test]
     fn modelscope_download_url_uses_revision_and_file_path() {
-        let url = build_download_url("Qwen/Qwen3-4B-GGUF", "Q4_K_M/model.gguf");
+        let url = modelscope_download_url("Qwen/Qwen3-4B-GGUF", "Q4_K_M/model.gguf");
         assert_eq!(
             url,
             "https://modelscope.cn/api/v1/models/Qwen/Qwen3-4B-GGUF/repo?Revision=master&FilePath=Q4_K_M%2Fmodel.gguf"
@@ -1001,13 +1023,13 @@ mod tests {
     }
 
     #[test]
-    fn test_hf_authorization_header() {
+    fn bearer_authorization_header_trims_tokens() {
         assert_eq!(
-            hf_authorization_header(Some("hf_test")).as_deref(),
-            Some("Bearer hf_test")
+            bearer_authorization_header(Some(" ms_test ")).as_deref(),
+            Some("Bearer ms_test")
         );
-        assert_eq!(hf_authorization_header(Some("")), None);
-        assert_eq!(hf_authorization_header(None), None);
+        assert_eq!(bearer_authorization_header(Some("")), None);
+        assert_eq!(bearer_authorization_header(None), None);
     }
 
     #[test]
@@ -2116,7 +2138,13 @@ async fn download_gguf_to_modelscope_cache(
     let download_id = format!("{}-model", model_id);
     let manager = get_download_manager();
     manager
-        .download_model_sharded(download_id.clone(), downloads, total_size, None)
+        .download_model_sharded_with_bearer_token(
+            download_id.clone(),
+            downloads,
+            total_size,
+            modelscope_token()?,
+            None,
+        )
         .await?;
 
     loop {

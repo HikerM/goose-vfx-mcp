@@ -11,9 +11,11 @@ fn resolve_huggingface_token() -> BoxFuture<'static, Result<Option<String>>> {
 }
 
 fn resolve_string_param(key: &'static str) -> Result<Option<String>> {
-    Ok(crate::config::Config::global()
-        .get_param::<String>(key)
-        .ok())
+    let config = crate::config::Config::global();
+    if let Ok(value) = config.get_param::<String>(key) {
+        return Ok(Some(value));
+    }
+    Ok(config.get_secret::<String>(key).ok())
 }
 
 fn resolve_bool_param(key: &'static str) -> Result<Option<bool>> {
