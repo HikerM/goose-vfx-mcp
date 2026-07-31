@@ -17,7 +17,8 @@ const i18n = defineMessages({
   },
   localModelDescription: {
     id: 'providerSelector.localModelDescription',
-    defaultMessage: 'Download a model and run it on this device. No API key or account needed.',
+    defaultMessage:
+      'Download public GGUF models from ModelScope and run them on this device. No API key or account needed.',
   },
   connectProvider: {
     id: 'providerSelector.connectProvider',

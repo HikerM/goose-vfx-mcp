@@ -112,6 +112,7 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showAllModels, setShowAllModels] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressWaitStartedAtRef = useRef<number | null>(null);
 
   const cleanup = useCallback(() => {
     if (pollRef.current) {
@@ -163,6 +164,7 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
     setPhase('downloading');
     setDownloadProgress(null);
     setErrorMessage(null);
+    progressWaitStartedAtRef.current = Date.now();
 
     const model = models.find((m) => m.id === modelId);
     if (!model) {
@@ -185,6 +187,10 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
       try {
         const progress = await getLocalModelDownloadProgress(modelId);
         if (!progress) {
+          const waitStartedAt = progressWaitStartedAtRef.current ?? Date.now();
+          progressWaitStartedAtRef.current = waitStartedAt;
+          if (Date.now() - waitStartedAt < 60_000) return;
+
           cleanup();
           setErrorMessage(intl.formatMessage(i18n.lostConnection));
           trackOnboardingSetupFailed(LOCAL_PROVIDER, 'progress_missing');
@@ -192,6 +198,7 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
           return;
         }
 
+        progressWaitStartedAtRef.current = null;
         setDownloadProgress(progress);
         if (progress.status === 'completed') {
           cleanup();
@@ -324,6 +331,9 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
                     <p className="text-text-muted text-xs mt-1">
                       {formatSize(recommended.sizeBytes)}
                     </p>
+                    <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
+                      ModelScope · 魔搭社区
+                    </p>
                   </div>
                 </div>
               </div>
@@ -386,6 +396,9 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
                                 </span>
                               )}
                             </div>
+                            <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
+                              ModelScope · 魔搭社区
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -417,6 +430,9 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
             <div className="border border-border-subtle rounded-lg p-4 bg-background-default">
               <p className="font-medium text-text-default text-sm mb-3">
                 {intl.formatMessage(i18n.downloading, { modelId: selectedModel.id })}
+              </p>
+              <p className="text-blue-600 dark:text-blue-400 text-xs -mt-2 mb-3">
+                ModelScope · 魔搭社区
               </p>
 
               {downloadProgress ? (
