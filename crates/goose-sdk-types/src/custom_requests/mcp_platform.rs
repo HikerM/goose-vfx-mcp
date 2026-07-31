@@ -938,6 +938,7 @@ fn is_known_source_adapter_kind_id(value: &str) -> bool {
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn validate_source_adapter_descriptor(
     display_name: &str,
     source_kind: &McpSourceAdapterSourceKind,
@@ -1015,7 +1016,7 @@ fn validate_source_adapter_descriptor(
     }
 
     let has_host_dependency_risk = risks.contains(&McpSourceAdapterRisk::HostDependency);
-    if has_host_dependency_risk != !required_host_dependencies.is_empty() {
+    if has_host_dependency_risk == required_host_dependencies.is_empty() {
         return Err("host dependencies must match the host dependency risk");
     }
 
@@ -1195,6 +1196,7 @@ fn require_exact_discovery_matrix(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn require_discovery_matrix(
     trust_mode: McpSourceAdapterTrustMode,
     risks: &[McpSourceAdapterRisk],
@@ -1281,15 +1283,6 @@ fn source_adapters_list_result_schema(generator: &mut SchemaGenerator) -> Schema
         "additionalProperties": false,
         "required": ["adapters"],
         "properties": {"adapters": source_adapter_map_schema(generator)}
-    })
-}
-
-fn source_adapter_input_field_map_schema(generator: &mut SchemaGenerator) -> Schema {
-    schemars::json_schema!({
-        "type": "object",
-        "maxProperties": 32,
-        "propertyNames": source_adapter_id_schema(generator),
-        "additionalProperties": generator.subschema_for::<McpSourceAdapterInputField>()
     })
 }
 
@@ -3307,19 +3300,14 @@ pub enum McpSourceRef {
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum McpSourceImportKind {
+    #[default]
     LocalPersistence,
     VerifiedSourceCatalog,
     HttpsManifestUrl,
     EnterpriseDirectory,
-}
-
-impl Default for McpSourceImportKind {
-    fn default() -> Self {
-        Self::LocalPersistence
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

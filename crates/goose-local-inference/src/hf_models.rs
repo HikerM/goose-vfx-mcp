@@ -14,6 +14,7 @@ use crate::{config_resolver, huggingface_auth};
 
 use utoipa::ToSchema;
 
+#[allow(dead_code)]
 const HF_API_BASE: &str = "https://huggingface.co/api/models";
 const MODELSCOPE_API_BASE: &str = "https://modelscope.cn/api/v1/models";
 const MODELSCOPE_OPENAPI_BASE: &str = "https://modelscope.cn/openapi/v1/models";
@@ -180,6 +181,7 @@ impl ResolvedLocalModel {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct HfApiModel {
     id: Option<String>,
     author: Option<String>,
@@ -507,6 +509,7 @@ fn apply_modelscope_auth(
     }
 }
 
+#[allow(dead_code)]
 fn apply_hf_auth(request: reqwest::RequestBuilder, token: Option<&str>) -> reqwest::RequestBuilder {
     apply_modelscope_auth(request, token)
 }
@@ -711,6 +714,7 @@ pub async fn search_local_models(query: &str, limit: usize) -> Result<Vec<HfMode
     Ok(results)
 }
 
+#[allow(dead_code)]
 fn append_optional_mlx_results(
     results: &mut Vec<HfModelInfo>,
     mlx_results: Result<Vec<HfModelInfo>>,
@@ -1590,6 +1594,7 @@ fn split_repo_id(repo_id: &str) -> Result<(&str, &str)> {
         .ok_or_else(|| anyhow::anyhow!("Invalid repo id '{}': expected owner/name", repo_id))
 }
 
+#[allow(dead_code)]
 async fn search_mlx_models(query: &str, limit: usize) -> Result<Vec<HfModelInfo>> {
     let mut results = search_mlx_models_with_query(query, limit).await?;
     if !query.contains('/') {
@@ -1602,6 +1607,7 @@ async fn search_mlx_models(query: &str, limit: usize) -> Result<Vec<HfModelInfo>
     Ok(results)
 }
 
+#[allow(dead_code)]
 async fn search_mlx_models_with_query(query: &str, limit: usize) -> Result<Vec<HfModelInfo>> {
     let client = hf_client().await?;
     let stream = client
@@ -1632,11 +1638,13 @@ async fn search_mlx_models_with_query(query: &str, limit: usize) -> Result<Vec<H
     Ok(results)
 }
 
+#[allow(dead_code)]
 async fn get_local_model_info_for_repo(repo_id: &str) -> Result<Option<HfModelInfo>> {
     let client = hf_client().await?;
     get_local_model_info_for_repo_with_client(&client, repo_id).await
 }
 
+#[allow(dead_code)]
 async fn get_local_model_info_for_repo_with_client(
     client: &HFClient,
     repo_id: &str,
@@ -1644,6 +1652,7 @@ async fn get_local_model_info_for_repo_with_client(
     get_local_model_info_for_repo_with_client_and_downloads(client, repo_id, None).await
 }
 
+#[allow(dead_code)]
 async fn get_local_model_info_for_repo_with_client_and_downloads(
     client: &HFClient,
     repo_id: &str,
@@ -1662,6 +1671,7 @@ async fn get_local_model_info_for_repo_with_client_and_downloads(
     model_info_to_local_model_info(&repo, info, downloads_hint).await
 }
 
+#[allow(dead_code)]
 async fn get_exact_name_local_model_info(model_name: &str) -> Result<Option<HfModelInfo>> {
     for owner in ["google", "mlx-community"] {
         let repo_id = format!("{owner}/{model_name}");
@@ -1672,6 +1682,7 @@ async fn get_exact_name_local_model_info(model_name: &str) -> Result<Option<HfMo
     Ok(None)
 }
 
+#[allow(dead_code)]
 async fn model_info_to_local_model_info(
     repo: &HFRepository<RepoTypeModel>,
     info: ModelInfo,
@@ -1719,12 +1730,14 @@ async fn model_info_to_local_model_info(
     }))
 }
 
+#[allow(dead_code)]
 fn best_download_count(primary: Option<u64>, hint: Option<u64>) -> Option<u64> {
     primary
         .filter(|downloads| *downloads > 0)
         .or_else(|| hint.filter(|downloads| *downloads > 0))
 }
 
+#[allow(dead_code)]
 async fn get_repo_downloads(repo_id: &str) -> Result<Option<u64>> {
     let client = reqwest::Client::new();
     let token = optional_hf_token(huggingface_auth::resolve_token_async()).await;
