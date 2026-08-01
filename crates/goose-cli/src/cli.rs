@@ -4,6 +4,7 @@ use clap_complete::{generate, Shell as ClapShell};
 use clap_complete_nushell::Nushell as ClapNushell;
 use goose::agents::GoosePlatform;
 use goose::builtin_extension::register_builtin_extensions;
+use goose::config::paths::Paths;
 use goose::config::{Config, GooseMode};
 #[cfg(feature = "telemetry")]
 use goose::posthog::get_telemetry_choice;
@@ -1394,7 +1395,6 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
     use axum::http::HeaderValue;
     use goose::acp::server_factory::{AcpServer, AcpServerFactoryConfig};
     use goose::acp::transport::create_router;
-    use goose::config::paths::Paths;
     use std::net::SocketAddr;
     use std::sync::Arc;
     use tracing::{info, warn};
@@ -1417,8 +1417,9 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
         builtins
     };
 
-    let additional_source_roots =
-        load_serve_additional_source_roots(Paths::ensure_windows_governed_root, || {
+    let additional_source_roots = load_serve_additional_source_roots(
+        || Paths::ensure_windows_governed_root().map_err(Into::into),
+        || {
             Config::global()
                 .get_param::<String>("ADDITIONAL_AGENT_SOURCE_ROOTS")
                 .ok()
@@ -1430,7 +1431,8 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
                     SourceRoot::read_only(path)
                 })
                 .collect()
-        })?;
+        },
+    )?;
 
     let server = Arc::new(AcpServer::new(AcpServerFactoryConfig {
         builtins,
@@ -2229,9 +2231,10 @@ pub async fn cli() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
 
-    initialize_cli_entry(Paths::ensure_windows_governed_root, || {
-        crate::project_tracker::update_project_tracker(None, None)
-    })?;
+    initialize_cli_entry(
+        || Paths::ensure_windows_governed_root().map_err(Into::into),
+        || crate::project_tracker::update_project_tracker(None, None),
+    )?;
 
     let command_name = get_command_name(&cli.command);
     tracing::info!(

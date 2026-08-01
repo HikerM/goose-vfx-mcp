@@ -42,6 +42,10 @@ impl MockClient {
 
 #[async_trait::async_trait]
 impl McpClientTrait for MockClient {
+    async fn close(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
     async fn list_resources(
         &self,
         _session_id: &str,
