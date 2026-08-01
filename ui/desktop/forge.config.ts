@@ -6,7 +6,7 @@ const isLinuxVulkanBuild = process.env.GOOSE_DESKTOP_LINUX_VARIANT === 'vulkan';
 
 let cfg = {
   asar: true,
-  extraResource: ['src/bin', 'src/images', 'src/app-update.yml'],
+  extraResource: ['src/bin', 'src/images', 'src/app-update.yml', 'src/custom-distribution.json'],
   icon: 'src/images/icon',
   // Windows specific configuration
   win32: {
@@ -65,8 +65,8 @@ module.exports = {
       name: '@electron-forge/publisher-github',
       config: {
         repository: {
-          owner: process.env.GITHUB_OWNER || 'aaif-goose',
-          name: process.env.GITHUB_REPO || 'goose',
+          owner: 'HikerM',
+          name: 'goose-vfx-mcp',
         },
         prerelease: false,
         draft: true,

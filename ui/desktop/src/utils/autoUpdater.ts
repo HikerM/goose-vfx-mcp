@@ -25,6 +25,7 @@ import {
   trackUpdateDownloadCompleted,
   trackUpdateInstallInitiated,
 } from './analytics';
+import { PRIMARY_GITHUB_OWNER, PRIMARY_GITHUB_REPO } from '../distribution-config';
 
 let updateAvailable = false;
 let trayRef: Tray | null = null;
@@ -371,8 +372,8 @@ export function setupAutoUpdater(tray?: Tray) {
   // Set the feed URL for GitHub releases
   const feedConfig = {
     provider: 'github' as const,
-    owner: 'aaif-goose',
-    repo: 'goose',
+    owner: PRIMARY_GITHUB_OWNER,
+    repo: PRIMARY_GITHUB_REPO,
     releaseType: 'release' as const,
   };
 
@@ -515,7 +516,11 @@ export function setupAutoUpdater(tray?: Tray) {
 
                 if (!autoDownloadDisabled) {
                   log.info('Auto-downloading update via GitHub fallback on startup...');
-                  await githubAutoDownload(result.downloadUrl!, result.latestVersion!, 'on startup');
+                  await githubAutoDownload(
+                    result.downloadUrl!,
+                    result.latestVersion!,
+                    'on startup'
+                  );
                 } else {
                   log.info('Auto-download disabled — skipping GitHub fallback download on startup');
                 }

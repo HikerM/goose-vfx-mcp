@@ -8,7 +8,7 @@ goose uses [Hermit](https://github.com/cashapp/hermit) to manage dependencies, s
 ### Linux/macOS quick start
 
 ```
-git clone git@github.com:aaif-goose/goose.git
+git clone git@github.com:HikerM/goose-vfx-mcp.git
 cd goose
 source ./bin/activate-hermit
 cd ui/desktop

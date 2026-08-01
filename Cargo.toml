@@ -8,11 +8,11 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "1.43.0"
+version = "1.43.0-mcp.8"
 rust-version = "1.94.1"
 authors = ["AAIF <ai-oss-tools@block.xyz>"]
 license = "Apache-2.0"
-repository = "https://github.com/aaif-goose/goose"
+repository = "https://github.com/HikerM/goose-vfx-mcp"
 description = "An AI agent"
 
 [workspace.lints.clippy]

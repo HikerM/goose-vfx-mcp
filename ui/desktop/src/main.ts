@@ -67,6 +67,7 @@ import {
   updateTrayMenu,
 } from './utils/autoUpdater';
 import { UPDATES_ENABLED } from './updates';
+import { getDistributionInfo } from './distribution';
 import './utils/recipeHash';
 import type { GooseApp } from './types/apps';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
@@ -75,7 +76,10 @@ import { buildCSP } from './utils/csp';
 
 function shouldSetupUpdater(): boolean {
   // Setup updater if either the flag is enabled OR dev updates are enabled
-  return UPDATES_ENABLED || process.env.ENABLE_DEV_UPDATES === 'true';
+  return (
+    getDistributionInfo().mode !== 'portable' &&
+    (UPDATES_ENABLED || process.env.ENABLE_DEV_UPDATES === 'true')
+  );
 }
 
 // =======================================================================
@@ -720,62 +724,62 @@ app.on('open-url', async (_event, url) => {
 
       if (!(await runWhenStorageReady(() => true))) return;
 
-    const recentDirs = loadRecentDirs();
-    const openDir = recentDirs.length > 0 ? recentDirs[0] : null;
+      const recentDirs = loadRecentDirs();
+      const openDir = recentDirs.length > 0 ? recentDirs[0] : null;
 
-    // Handle new-session URL by creating a fresh chat window
-    if (parsedUrl.hostname === 'new-session') {
-      log.info('[Main] Detected new-session URL, creating new chat window');
-      openUrlHandledLaunch = true;
-      const prompt = parsedUrl.searchParams.get('prompt') || undefined;
-      await createChat(app, {
-        dir: openDir || undefined,
-        initialMessage: prompt,
-        initialMessageNoAutoSubmit: prompt !== undefined,
-      });
-      return;
-    }
-
-    if (parsedUrl.hostname === 'resume') {
-      log.info('[Main] Detected resume URL, creating session resume window');
-      openUrlHandledLaunch = await createResumeChatWindow(parsedUrl, openDir || undefined);
-      return;
-    }
-
-    // Handle bot/recipe URLs by directly creating a new window
-    if (parsedUrl.hostname === 'bot' || parsedUrl.hostname === 'recipe') {
-      log.info('[Main] Detected bot/recipe URL, creating new chat window');
-      openUrlHandledLaunch = true;
-      const deeplinkData = parseRecipeDeeplink(url);
-      if (deeplinkData) {
-        windowDeeplinkURL = url;
+      // Handle new-session URL by creating a fresh chat window
+      if (parsedUrl.hostname === 'new-session') {
+        log.info('[Main] Detected new-session URL, creating new chat window');
+        openUrlHandledLaunch = true;
+        const prompt = parsedUrl.searchParams.get('prompt') || undefined;
+        await createChat(app, {
+          dir: openDir || undefined,
+          initialMessage: prompt,
+          initialMessageNoAutoSubmit: prompt !== undefined,
+        });
+        return;
       }
-      const scheduledJobId = parsedUrl.searchParams.get('scheduledJob');
 
-      await createChat(app, {
-        dir: openDir || undefined,
-        recipeDeeplink: deeplinkData?.config,
-        scheduledJobId: scheduledJobId || undefined,
-        recipeParameters: deeplinkData?.parameters,
-      });
-      windowDeeplinkURL = null;
-      return;
-    }
-
-    // For extension/session URLs, send to existing window or store pending for new one
-    const existingWindows = BrowserWindow.getAllWindows();
-    if (existingWindows.length > 0) {
-      const targetWindow = existingWindows[0];
-      if (targetWindow.isMinimized()) targetWindow.restore();
-      targetWindow.focus();
-      if (parsedUrl.hostname === 'extension' || parsedUrl.hostname === 'sessions') {
-        deliverExtensionOrSessionDeepLink(url, parsedUrl, targetWindow);
+      if (parsedUrl.hostname === 'resume') {
+        log.info('[Main] Detected resume URL, creating session resume window');
+        openUrlHandledLaunch = await createResumeChatWindow(parsedUrl, openDir || undefined);
+        return;
       }
-    } else {
-      openUrlHandledLaunch = true;
-      const newWindow = await createChat(app, { dir: openDir || undefined });
-      if (!newWindow) return;
-      queuePendingDeepLink(newWindow.id, url);
+
+      // Handle bot/recipe URLs by directly creating a new window
+      if (parsedUrl.hostname === 'bot' || parsedUrl.hostname === 'recipe') {
+        log.info('[Main] Detected bot/recipe URL, creating new chat window');
+        openUrlHandledLaunch = true;
+        const deeplinkData = parseRecipeDeeplink(url);
+        if (deeplinkData) {
+          windowDeeplinkURL = url;
+        }
+        const scheduledJobId = parsedUrl.searchParams.get('scheduledJob');
+
+        await createChat(app, {
+          dir: openDir || undefined,
+          recipeDeeplink: deeplinkData?.config,
+          scheduledJobId: scheduledJobId || undefined,
+          recipeParameters: deeplinkData?.parameters,
+        });
+        windowDeeplinkURL = null;
+        return;
+      }
+
+      // For extension/session URLs, send to existing window or store pending for new one
+      const existingWindows = BrowserWindow.getAllWindows();
+      if (existingWindows.length > 0) {
+        const targetWindow = existingWindows[0];
+        if (targetWindow.isMinimized()) targetWindow.restore();
+        targetWindow.focus();
+        if (parsedUrl.hostname === 'extension' || parsedUrl.hostname === 'sessions') {
+          deliverExtensionOrSessionDeepLink(url, parsedUrl, targetWindow);
+        }
+      } else {
+        openUrlHandledLaunch = true;
+        const newWindow = await createChat(app, { dir: openDir || undefined });
+        if (!newWindow) return;
+        queuePendingDeepLink(newWindow.id, url);
       }
     } catch (error) {
       log.error('[Main] Failed to handle open-url event:', errorMessage(error));
@@ -881,6 +885,7 @@ interface BundledConfig {
   defaultModel?: string;
   predefinedModels?: string;
   version?: string;
+  distributionMode: 'github' | 'portable';
 }
 
 const getBundledConfig = (): BundledConfig => {
@@ -892,10 +897,12 @@ const getBundledConfig = (): BundledConfig => {
     defaultModel: process.env.GOOSE_DEFAULT_MODEL,
     predefinedModels: process.env.GOOSE_PREDEFINED_MODELS,
     version: process.env.GOOSE_VERSION,
+    distributionMode: getDistributionInfo().mode,
   };
 };
 
-const { defaultProvider, defaultModel, predefinedModels, version } = getBundledConfig();
+const { defaultProvider, defaultModel, predefinedModels, version, distributionMode } =
+  getBundledConfig();
 
 const GENERATED_SECRET = crypto.randomBytes(32).toString('hex');
 
@@ -1283,6 +1290,7 @@ const createChat = async (
             GOOSE_WORKING_DIR: workingDir,
             REQUEST_DIR: dir,
             GOOSE_VERSION: version,
+            GOOSE_DISTRIBUTION_MODE: distributionMode,
             recipeDeeplink: recipeDeeplink,
             recipeId: recipeId,
             recipeParameters: recipeParameters,
@@ -1958,7 +1966,8 @@ function sameFilesystemPath(left: string, right: string): boolean {
 }
 
 async function canonicalProjectDirectory(directory: string): Promise<string | null> {
-  if (typeof directory !== 'string' || directory.length === 0 || directory.length > 4096) return null;
+  if (typeof directory !== 'string' || directory.length === 0 || directory.length > 4096)
+    return null;
   try {
     const candidate = path.resolve(directory);
     const stats = await fs.lstat(candidate);
@@ -1968,9 +1977,16 @@ async function canonicalProjectDirectory(directory: string): Promise<string | nu
     const parsed = path.parse(canonical);
     if (parsed.root === canonical) return null;
     const normalized = canonical.replace(/[\\/]+$/, '').toLowerCase();
-    const managedRoot = managedStorageRoot().replace(/[\\/]+$/, '').toLowerCase();
-    if (normalized === managedRoot || normalized.startsWith(`${managedRoot}${path.sep}`.toLowerCase())) return null;
-    if (/^[a-z]:\\(?:windows|program files(?: \(x86\))?|programdata)(?:\\|$)/i.test(canonical)) return null;
+    const managedRoot = managedStorageRoot()
+      .replace(/[\\/]+$/, '')
+      .toLowerCase();
+    if (
+      normalized === managedRoot ||
+      normalized.startsWith(`${managedRoot}${path.sep}`.toLowerCase())
+    )
+      return null;
+    if (/^[a-z]:\\(?:windows|program files(?: \(x86\))?|programdata)(?:\\|$)/i.test(canonical))
+      return null;
     return canonical;
   } catch {
     return null;
@@ -2001,7 +2017,10 @@ ipcMain.handle('directory-chooser', async (event) => {
     const canonical = await canonicalProjectDirectory(result.filePaths[0]);
     const window = BrowserWindow.fromWebContents(event.sender);
     if (canonical && window) {
-      projectDirectoryAccess.set(window.id, { root: canonical, token: crypto.randomBytes(32).toString('hex') });
+      projectDirectoryAccess.set(window.id, {
+        root: canonical,
+        token: crypto.randomBytes(32).toString('hex'),
+      });
     }
   }
   return result;
@@ -2404,7 +2423,8 @@ ipcMain.handle('check-ollama', async () => {
 function isTrustedRendererSender(event: IpcMainInvokeEvent | IpcMainEvent): boolean {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (!window || window.isDestroyed() || event.sender.isDestroyed()) return false;
-  if (event.sender !== window.webContents || event.senderFrame !== event.sender.mainFrame) return false;
+  if (event.sender !== window.webContents || event.senderFrame !== event.sender.mainFrame)
+    return false;
   if (event.sender.isLoadingMainFrame() || !reactReadyWindows.has(window.id)) return false;
 
   try {
@@ -2420,9 +2440,11 @@ function managedStorageRoot(): string {
 
 async function assertProjectRootStillSafe(root: string): Promise<void> {
   const stats = await fs.lstat(root);
-  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error('Project root is not a regular directory');
+  if (!stats.isDirectory() || stats.isSymbolicLink())
+    throw new Error('Project root is not a regular directory');
   const canonical = await fs.realpath(root);
-  if (!sameFilesystemPath(canonical, root)) throw new Error('Project root changed or is a reparse point');
+  if (!sameFilesystemPath(canonical, root))
+    throw new Error('Project root changed or is a reparse point');
 }
 
 type FileIdentity = { dev: number; ino: number; nlink: number; size: number };
@@ -2438,7 +2460,11 @@ function sameFileIdentity(left: FileIdentity, right: FileIdentity): boolean {
 async function openAuthorizedHints(root: string, flags: string): Promise<fs.FileHandle | null> {
   await assertProjectRootStillSafe(root);
   const rootBeforeStats = await fs.lstat(root);
-  if (!rootBeforeStats.isDirectory() || rootBeforeStats.isSymbolicLink() || rootBeforeStats.nlink !== 1) {
+  if (
+    !rootBeforeStats.isDirectory() ||
+    rootBeforeStats.isSymbolicLink() ||
+    rootBeforeStats.nlink !== 1
+  ) {
     throw new Error('Project root identity is invalid');
   }
   const rootBefore = fileIdentity(rootBeforeStats);
@@ -2457,7 +2483,7 @@ async function openAuthorizedHints(root: string, flags: string): Promise<fs.File
       }
       before = fileIdentity(stats);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+      if ((error as { code?: string }).code === 'ENOENT') return null;
       throw error;
     }
 
@@ -2532,14 +2558,21 @@ ipcMain.handle('request-project-directory-access', async (event, directory: stri
   if (result.response !== 0) return false;
   const window = BrowserWindow.fromWebContents(event.sender);
   if (!window) return false;
-  projectDirectoryAccess.set(window.id, { root: canonical, token: crypto.randomBytes(32).toString('hex') });
+  projectDirectoryAccess.set(window.id, {
+    root: canonical,
+    token: crypto.randomBytes(32).toString('hex'),
+  });
   return true;
 });
 
 ipcMain.handle('get-project-directory-access', (event) => {
   if (!isTrustedRendererSender(event)) return { authorized: false, directory: null, token: null };
   const access = projectDirectoryAccess.get(BrowserWindow.fromWebContents(event.sender)?.id ?? -1);
-  return { authorized: access !== undefined, directory: access?.root ?? null, token: access?.token ?? null };
+  return {
+    authorized: access !== undefined,
+    directory: access?.root ?? null,
+    token: access?.token ?? null,
+  };
 });
 
 ipcMain.handle('list-project-files', async (_event, _token: unknown, _workingDir: unknown) => {
@@ -2555,41 +2588,62 @@ ipcMain.handle('read-project-goosehints', async (event, token: unknown, workingD
     if (file.length > 1024 * 1024) throw new Error('Project hints is too large');
     return { file, error: null, found: true };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return { file: '', error: null, found: false };
+    if ((error as { code?: string }).code === 'ENOENT')
+      return { file: '', error: null, found: false };
     return { file: '', error: 'Unable to read project hints', found: false };
   }
 });
 
-ipcMain.handle('write-project-goosehints', async (event, content: string, token: unknown, workingDir: unknown) => {
-  const root = await authorizedProjectDirectory(event, token, workingDir);
-  if (!root || typeof content !== 'string' || content.length > 1024 * 1024) return false;
-  try {
-    return await writeAuthorizedProjectHints(root, content);
-  } catch (error) {
-    console.error('Error writing project hints:', formatErrorForLogging(error));
-    return false;
+ipcMain.handle(
+  'write-project-goosehints',
+  async (event, content: string, token: unknown, workingDir: unknown) => {
+    const root = await authorizedProjectDirectory(event, token, workingDir);
+    if (!root || typeof content !== 'string' || content.length > 1024 * 1024) return false;
+    try {
+      return await writeAuthorizedProjectHints(root, content);
+    } catch (error) {
+      console.error('Error writing project hints:', formatErrorForLogging(error));
+      return false;
+    }
   }
-});
+);
 
 ipcMain.handle('select-recipe-file', async (event) => {
   if (!isTrustedRendererSender(event)) return null;
-  const result = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'Recipe files', extensions: ['yaml', 'yml'] }] });
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{ name: 'Recipe files', extensions: ['yaml', 'yml'] }],
+  });
   if (result.canceled || !result.filePaths[0]) return null;
   try {
-    return { filePath: path.basename(result.filePaths[0]), contents: await fs.readFile(result.filePaths[0], 'utf8') };
+    return {
+      filePath: path.basename(result.filePaths[0]),
+      contents: await fs.readFile(result.filePaths[0], 'utf8'),
+    };
   } catch {
-    return { filePath: path.basename(result.filePaths[0]), contents: '', error: 'Unable to read selected recipe' };
+    return {
+      filePath: path.basename(result.filePaths[0]),
+      contents: '',
+      error: 'Unable to read selected recipe',
+    };
   }
 });
 
 ipcMain.handle('save-recipe-file', async (event, content: string, defaultPath?: string) => {
   if (!isTrustedRendererSender(event)) return { status: 'failed' as const };
-  const safeDefaultPath = isAllowedRecipeDefaultName(defaultPath) ? path.basename(defaultPath) : 'recipe.yaml';
-  if (typeof content !== 'string' || content.length > 2 * 1024 * 1024) return { status: 'failed' as const };
-  const result = await dialog.showSaveDialog({ defaultPath: safeDefaultPath, filters: [{ name: 'Recipe files', extensions: ['yaml', 'yml'] }] });
+  const safeDefaultPath = isAllowedRecipeDefaultName(defaultPath)
+    ? path.basename(defaultPath)
+    : 'recipe.yaml';
+  if (typeof content !== 'string' || content.length > 2 * 1024 * 1024)
+    return { status: 'failed' as const };
+  const result = await dialog.showSaveDialog({
+    defaultPath: safeDefaultPath,
+    filters: [{ name: 'Recipe files', extensions: ['yaml', 'yml'] }],
+  });
   if (result.canceled || !result.filePath) return { status: 'cancelled' as const };
   try {
-    if (!isAllowedRecipeDefaultName(path.basename(result.filePath))) return { status: 'failed' as const };
+    if (!isAllowedRecipeDefaultName(path.basename(result.filePath)))
+      return { status: 'failed' as const };
     await fs.writeFile(result.filePath, content, 'utf8');
     return { status: 'saved' as const, fileName: path.basename(result.filePath) };
   } catch {
@@ -3257,6 +3311,7 @@ async function appMain() {
               GOOSE_LOCALE: getConfiguredGooseLocale(),
               GOOSE_WORKING_DIR: workingDir,
               GOOSE_VERSION: version,
+              GOOSE_DISTRIBUTION_MODE: distributionMode,
             }),
           ],
           partition: 'persist:goose',

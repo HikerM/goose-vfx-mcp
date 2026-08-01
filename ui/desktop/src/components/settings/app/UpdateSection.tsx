@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../ui/button';
-import { Loader2, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Download, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { defineMessages, useIntl } from '../../../i18n';
+import { PRIMARY_RELEASES_URL } from '../../../distribution-config';
 
 const i18n = defineMessages({
   disableAutoDownload: {
@@ -109,6 +110,24 @@ const i18n = defineMessages({
     id: 'updateSection.installNowHint',
     defaultMessage: 'Click "Install & Restart" to update now.',
   },
+  portableUpdateTitle: {
+    id: 'updateSection.portableUpdateTitle',
+    defaultMessage: 'Portable custom build',
+  },
+  portableUpdateDescription: {
+    id: 'updateSection.portableUpdateDescription',
+    defaultMessage:
+      'This custom build only uses the HikerM distribution channel. To update, download the newer custom package, close Goose, and replace the extracted application folder. Your MCP and model settings are stored separately from the application folder.',
+  },
+  portableUpdateModelNote: {
+    id: 'updateSection.portableUpdateModelNote',
+    defaultMessage:
+      'Downloaded models are not copied by an application update. Keep the existing local model data, or download the selected model again on the new computer.',
+  },
+  openCustomReleases: {
+    id: 'updateSection.openCustomReleases',
+    defaultMessage: 'Open HikerM releases',
+  },
 });
 
 type UpdateStatus =
@@ -134,6 +153,7 @@ interface UpdateEventData {
 
 export default function UpdateSection() {
   const intl = useIntl();
+  const isPortableDistribution = window.appConfig.get('GOOSE_DISTRIBUTION_MODE') === 'portable';
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo>({
     currentVersion: '',
@@ -146,6 +166,8 @@ export default function UpdateSection() {
   const lastProgressRef = React.useRef<number>(0); // Track last progress to prevent backward jumps
 
   useEffect(() => {
+    if (isPortableDistribution) return;
+
     // Get current version on mount
     const currentVersion = window.electron.getVersion();
     setUpdateInfo((prev) => ({ ...prev, currentVersion }));
@@ -249,7 +271,37 @@ export default function UpdateSection() {
         clearTimeout(progressTimeoutRef.current);
       }
     };
-  }, []);
+  }, [isPortableDistribution]);
+
+  if (isPortableDistribution) {
+    return (
+      <div
+        className="space-y-3"
+        role="region"
+        aria-label={intl.formatMessage(i18n.portableUpdateTitle)}
+      >
+        <p className="text-sm font-medium text-text-primary">
+          {intl.formatMessage(i18n.portableUpdateTitle)}
+        </p>
+        <p className="max-w-3xl text-sm leading-6 text-text-secondary">
+          {intl.formatMessage(i18n.portableUpdateDescription)}
+        </p>
+        <p className="max-w-3xl text-xs leading-5 text-text-secondary">
+          {intl.formatMessage(i18n.portableUpdateModelNote)}
+        </p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="w-full sm:w-auto"
+          onClick={() => window.open(PRIMARY_RELEASES_URL, '_blank', 'noopener,noreferrer')}
+        >
+          <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
+          {intl.formatMessage(i18n.openCustomReleases)}
+        </Button>
+      </div>
+    );
+  }
 
   const checkForUpdates = async () => {
     setUpdateStatus('checking');

@@ -4,6 +4,7 @@ import { Button } from './button';
 import { toastError } from '../../toasts';
 import { defineMessages, useIntl } from '../../i18n';
 import { getDiagnosticsReport } from '../../acp/diagnostics';
+import { PRIMARY_ISSUES_URL } from '../../distribution-config';
 
 const i18n = defineMessages({
   reportProblem: {
@@ -188,7 +189,11 @@ Add any other context about the problem here.
         labels: 'bug',
       });
 
-      window.open(`https://github.com/aaif-goose/goose/issues/new?${params.toString()}`, '_blank');
+      window.open(
+        `${PRIMARY_ISSUES_URL}/new?${params.toString()}`,
+        '_blank',
+        'noopener,noreferrer'
+      );
       onClose();
     } catch {
       toastError({
@@ -208,7 +213,9 @@ Add any other context about the problem here.
         <div className="flex items-start gap-3 mb-4">
           <AlertTriangle className="text-orange-500 flex-shrink-0 mt-1" size={20} />
           <div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">{intl.formatMessage(i18n.reportProblem)}</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">
+              {intl.formatMessage(i18n.reportProblem)}
+            </h3>
             <p className="text-sm text-text-secondary mb-3">
               {intl.formatMessage(i18n.description)}
             </p>
@@ -221,9 +228,7 @@ Add any other context about the problem here.
             <p className="text-sm text-text-secondary">
               <strong>Warning:</strong> {intl.formatMessage(i18n.sensitiveWarning)}
             </p>
-            <p className="text-sm text-text-secondary">
-              {intl.formatMessage(i18n.attachHint)}
-            </p>
+            <p className="text-sm text-text-secondary">{intl.formatMessage(i18n.attachHint)}</p>
           </div>
         </div>
         <div className="flex gap-2 justify-end">
@@ -242,7 +247,9 @@ Add any other context about the problem here.
             disabled={isDownloading || isFilingBug}
           >
             <Download size={16} className="mr-1" />
-            {isDownloading ? intl.formatMessage(i18n.downloading) : intl.formatMessage(i18n.download)}
+            {isDownloading
+              ? intl.formatMessage(i18n.downloading)
+              : intl.formatMessage(i18n.download)}
           </Button>
           <Button
             onClick={handleFileGitHubIssue}

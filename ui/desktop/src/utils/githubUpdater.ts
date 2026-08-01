@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as os from 'os';
 import log from './logger';
 import { safeJsonParse, errorMessage } from './conversionUtils';
+import { PRIMARY_GITHUB_OWNER, PRIMARY_GITHUB_REPO } from '../distribution-config';
 
 interface GitHubRelease {
   tag_name: string;
@@ -27,8 +28,8 @@ interface UpdateCheckResult {
 }
 
 export class GitHubUpdater {
-  private readonly owner = process.env.GITHUB_OWNER || 'aaif-goose';
-  private readonly repo = process.env.GITHUB_REPO || 'goose';
+  private readonly owner = PRIMARY_GITHUB_OWNER;
+  private readonly repo = PRIMARY_GITHUB_REPO;
   private readonly bundleName = process.env.GOOSE_BUNDLE_NAME || 'Goose';
   private readonly apiUrl = `https://api.github.com/repos/${this.owner}/${this.repo}/releases/latest`;
 

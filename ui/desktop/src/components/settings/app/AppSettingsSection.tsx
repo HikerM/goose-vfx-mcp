@@ -21,6 +21,7 @@ import BlockLogoWhite from './icons/block-lockup_white.png';
 import TelemetrySettings from './TelemetrySettings';
 import { trackSettingToggled } from '../../../utils/analytics';
 import type { LanguageSetting } from '../../../utils/settings';
+import { PRIMARY_ISSUES_URL } from '../../../distribution-config';
 
 const i18n = defineMessages({
   appearanceTitle: { id: 'settings.appearance.title', defaultMessage: 'Appearance' },
@@ -190,7 +191,8 @@ export default function AppSettingsSection({ scrollToSection }: AppSettingsSecti
   const [language, setLanguage] = useState<LanguageSetting>('system');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const updateSectionRef = useRef<HTMLDivElement>(null);
-  const shouldShowUpdates = !window.appConfig.get('GOOSE_VERSION');
+  const isPortableDistribution = window.appConfig.get('GOOSE_DISTRIBUTION_MODE') === 'portable';
+  const shouldShowUpdates = !window.appConfig.get('GOOSE_VERSION') || isPortableDistribution;
 
   useEffect(() => {
     setIsMacOS(window.electron.platform === 'darwin');
@@ -511,8 +513,9 @@ export default function AppSettingsSection({ scrollToSection }: AppSettingsSecti
             <Button
               onClick={() => {
                 window.open(
-                  'https://github.com/aaif-goose/goose/issues/new?template=bug_report.md',
-                  '_blank'
+                  `${PRIMARY_ISSUES_URL}/new?template=bug_report.md`,
+                  '_blank',
+                  'noopener,noreferrer'
                 );
               }}
               variant="secondary"
@@ -523,8 +526,9 @@ export default function AppSettingsSection({ scrollToSection }: AppSettingsSecti
             <Button
               onClick={() => {
                 window.open(
-                  'https://github.com/aaif-goose/goose/issues/new?template=feature_request.md',
-                  '_blank'
+                  `${PRIMARY_ISSUES_URL}/new?template=feature_request.md`,
+                  '_blank',
+                  'noopener,noreferrer'
                 );
               }}
               variant="secondary"
@@ -558,7 +562,7 @@ export default function AppSettingsSection({ scrollToSection }: AppSettingsSecti
       )}
 
       {/* Update Section - only show if GOOSE_VERSION is NOT set */}
-      {UPDATES_ENABLED && shouldShowUpdates && (
+      {(UPDATES_ENABLED || isPortableDistribution) && shouldShowUpdates && (
         <div ref={updateSectionRef}>
           <Card className="rounded-lg">
             <CardHeader className="pb-0">

@@ -21,9 +21,9 @@ if (!fs.existsSync(updateConfigPath)) {
 const updateConfig = fs.readFileSync(updateConfigPath, 'utf8');
 const requiredLines = [
   'provider: github',
-  'owner: aaif-goose',
-  'repo: goose',
-  'updaterCacheDirName: goose-updater',
+  'owner: HikerM',
+  'repo: goose-vfx-mcp',
+  'updaterCacheDirName: goose-vfx-mcp-updater',
 ];
 
 for (const line of requiredLines) {
