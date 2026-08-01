@@ -1003,6 +1003,49 @@ pub fn recommend_variant(
 mod tests {
     use super::*;
 
+    fn resolved_test_model(size_bytes: u64) -> ResolvedModel {
+        ResolvedModel {
+            files: vec![HfGgufFile {
+                filename: "model.gguf".to_string(),
+                size_bytes,
+                quantization: "Q4_K_M".to_string(),
+                download_url: "https://example.test/model.gguf".to_string(),
+            }],
+            total_size: size_bytes,
+            mmproj: None,
+        }
+    }
+
+    #[test]
+    fn verifies_downloaded_gguf_artifact() {
+        let temp = tempfile::tempdir().unwrap();
+        let model_path = temp.path().join("model.gguf");
+        std::fs::write(&model_path, b"GGUFdata").unwrap();
+
+        verify_downloaded_gguf_artifacts(
+            &resolved_test_model(8),
+            std::slice::from_ref(&model_path),
+            None,
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn rejects_downloaded_artifact_with_invalid_gguf_header() {
+        let temp = tempfile::tempdir().unwrap();
+        let model_path = temp.path().join("model.gguf");
+        std::fs::write(&model_path, b"BAD!data").unwrap();
+
+        let error = verify_downloaded_gguf_artifacts(
+            &resolved_test_model(8),
+            std::slice::from_ref(&model_path),
+            None,
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains("not a GGUF artifact"));
+    }
+
     #[test]
     fn modelscope_download_url_uses_revision_and_file_path() {
         let url = modelscope_download_url("Qwen/Qwen3-4B-GGUF", "Q4_K_M/model.gguf");
@@ -2165,7 +2208,10 @@ async fn download_gguf_to_modelscope_cache(
             bail!("ModelScope download disappeared before completion");
         };
         match progress.status {
-            DownloadStatus::Completed => return Ok((paths, mmproj_path)),
+            DownloadStatus::Completed => {
+                verify_downloaded_gguf_artifacts(resolved, &paths, mmproj_path.as_deref())?;
+                return Ok((paths, mmproj_path));
+            }
             DownloadStatus::Failed => bail!(
                 "ModelScope download failed: {}",
                 progress
@@ -2178,6 +2224,86 @@ async fn download_gguf_to_modelscope_cache(
             }
         }
     }
+}
+
+fn verify_downloaded_gguf_artifacts(
+    resolved: &ResolvedModel,
+    paths: &[std::path::PathBuf],
+    mmproj_path: Option<&std::path::Path>,
+) -> Result<()> {
+    if resolved.files.len() != paths.len() {
+        bail!(
+            "Model download verification failed: expected {} model files, found {}",
+            resolved.files.len(),
+            paths.len()
+        );
+    }
+
+    for (file, path) in resolved.files.iter().zip(paths) {
+        let metadata = std::fs::metadata(path).map_err(|error| {
+            anyhow::anyhow!(
+                "Model download verification failed: '{}' is unavailable: {error}",
+                file.filename
+            )
+        })?;
+        if !metadata.is_file() || metadata.len() == 0 {
+            bail!(
+                "Model download verification failed: '{}' is empty or not a file",
+                file.filename
+            );
+        }
+        if file.size_bytes > 0 && metadata.len() != file.size_bytes {
+            bail!(
+                "Model download verification failed: '{}' has {} bytes, expected {} bytes",
+                file.filename,
+                metadata.len(),
+                file.size_bytes
+            );
+        }
+    }
+
+    let primary_path = paths.first().ok_or_else(|| {
+        anyhow::anyhow!("Model download verification failed: no GGUF file was downloaded")
+    })?;
+    verify_gguf_header(primary_path, "model")?;
+
+    if let (Some(mmproj), Some(path)) = (&resolved.mmproj, mmproj_path) {
+        let metadata = std::fs::metadata(path).map_err(|error| {
+            anyhow::anyhow!(
+                "Model download verification failed: vision file '{}' is unavailable: {error}",
+                mmproj.filename
+            )
+        })?;
+        if !metadata.is_file() || metadata.len() == 0 {
+            bail!(
+                "Model download verification failed: vision file '{}' is empty or not a file",
+                mmproj.filename
+            );
+        }
+        if mmproj.size_bytes > 0 && metadata.len() != mmproj.size_bytes {
+            bail!(
+                "Model download verification failed: vision file '{}' has {} bytes, expected {} bytes",
+                mmproj.filename,
+                metadata.len(),
+                mmproj.size_bytes
+            );
+        }
+        verify_gguf_header(path, "vision")?;
+    }
+
+    Ok(())
+}
+
+fn verify_gguf_header(path: &std::path::Path, label: &str) -> Result<()> {
+    use std::io::Read;
+
+    let mut file = std::fs::File::open(path)?;
+    let mut header = [0_u8; 4];
+    file.read_exact(&mut header)?;
+    if &header != b"GGUF" {
+        bail!("Model download verification failed: {label} file is not a GGUF artifact");
+    }
+    Ok(())
 }
 
 pub async fn resolve_local_model_spec(spec: &str) -> Result<ResolvedLocalModel> {
