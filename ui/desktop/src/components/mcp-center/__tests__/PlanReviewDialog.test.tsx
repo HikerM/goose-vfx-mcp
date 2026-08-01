@@ -65,11 +65,18 @@ const task: McpTaskRef = {
 };
 
 const httpsPlan: McpHttpsProvisionPlanReview = {
-  planId: 'https-plan-safe', planDigest: 'https-plan-digest-secret', expiresAtMs: Date.now() + 60_000,
-  operation: 'provision', mcp: { mcpId: 'https-mcp', name: 'HTTPS MCP', version: '2.0.0' },
+  planId: 'https-plan-safe',
+  planDigest: 'https-plan-digest-secret',
+  expiresAtMs: Date.now() + 60_000,
+  operation: 'provision',
+  mcp: { mcpId: 'https-mcp', name: 'HTTPS MCP', version: '2.0.0' },
   permissions: [{ kind: 'network', required: true }],
-  effects: { file: { writesFiles: true, removesFiles: false, ownedItems: 1 }, process: { processRequiredForConnection: true, startsDuringConfirmation: false } },
-  confirmation: { required: ['policy'], defaultDisabled: true }, policy: { outcome: 'allow', reasonCount: 0 },
+  effects: {
+    file: { writesFiles: true, removesFiles: false, ownedItems: 1 },
+    process: { processRequiredForConnection: true, startsDuringConfirmation: false },
+  },
+  confirmation: { required: ['policy'], defaultDisabled: true },
+  policy: { outcome: 'allow', reasonCount: 0 },
   warnings: ['allowlist-safe-fixture'],
 };
 
@@ -94,19 +101,42 @@ function renderDialog(review: McpPlanReview, operation: McpTaskRef['operation'] 
 function renderHttpsDialog() {
   const onClose = vi.fn();
   const onTaskCreated = vi.fn();
-  render(<IntlProvider locale="en"><PlanReviewDialog plan={null} httpsPlan={httpsPlan} operation="provision" onClose={onClose} onTaskCreated={onTaskCreated} /></IntlProvider>);
+  render(
+    <IntlProvider locale="en">
+      <PlanReviewDialog
+        plan={null}
+        httpsPlan={httpsPlan}
+        operation="provision"
+        onClose={onClose}
+        onTaskCreated={onTaskCreated}
+      />
+    </IntlProvider>
+  );
   return { onClose, onTaskCreated };
 }
 
 function renderHttpsPlanDialog(review: McpHttpsProvisionPlanReview) {
   const onClose = vi.fn();
   const onTaskCreated = vi.fn();
-  render(<IntlProvider locale="en"><PlanReviewDialog plan={null} httpsPlan={review} operation="provision" onClose={onClose} onTaskCreated={onTaskCreated} /></IntlProvider>);
+  render(
+    <IntlProvider locale="en">
+      <PlanReviewDialog
+        plan={null}
+        httpsPlan={review}
+        operation="provision"
+        onClose={onClose}
+        onTaskCreated={onTaskCreated}
+      />
+    </IntlProvider>
+  );
   return { onClose, onTaskCreated };
 }
 
 describe('PlanReviewDialog', () => {
-  beforeEach(() => { cleanup(); vi.mocked(confirmMcpPlan).mockReset(); });
+  beforeEach(() => {
+    cleanup();
+    vi.mocked(confirmMcpPlan).mockReset();
+  });
 
   it('blocks confirmation when policy denies the plan', () => {
     renderDialog(plan('deny'));
@@ -195,7 +225,16 @@ describe('PlanReviewDialog', () => {
     const { onClose, onTaskCreated } = renderHttpsDialog();
     expect(screen.getByText('allowlist-safe-fixture')).toBeInTheDocument();
     const body = document.body.textContent ?? '';
-    for (const hidden of ['https-plan-digest-secret', 'https://secret.example.test/path?query=private', 'publisher-unique', 'proof-unique', 'internal-sentinel', 'catalog', 'remote_http', 'manual']) {
+    for (const hidden of [
+      'https-plan-digest-secret',
+      'https://secret.example.test/path?query=private',
+      'publisher-unique',
+      'proof-unique',
+      'internal-sentinel',
+      'catalog',
+      'remote_http',
+      'manual',
+    ]) {
       expect(body).not.toContain(hidden);
     }
     const user = userEvent.setup();
@@ -220,15 +259,18 @@ describe('PlanReviewDialog', () => {
     expect(confirmMcpPlan).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
 
-    onClose.mockReset();
-    renderHttpsDialog();
+    cleanup();
+    const { onClose: escapeOnClose } = renderHttpsDialog();
     await user.keyboard('{Escape}');
     expect(confirmMcpPlan).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalled();
+    expect(escapeOnClose).toHaveBeenCalled();
   });
 
   it('shows a safe error and allows retry for HTTPS confirmation', async () => {
-    vi.mocked(confirmMcpPlan).mockRejectedValueOnce(new Error('internal-sentinel https://secret.example.test?token=private'))
+    vi.mocked(confirmMcpPlan)
+      .mockRejectedValueOnce(
+        new Error('internal-sentinel https://secret.example.test?token=private')
+      )
       .mockResolvedValueOnce(task);
     const user = userEvent.setup();
     const { onTaskCreated } = renderHttpsDialog();
@@ -244,19 +286,44 @@ describe('PlanReviewDialog', () => {
 
   it('does not leak sensitive HTTPS values in DOM or retry error, and closes once after success', async () => {
     const freshToken = 'fresh-token-only-in-request';
-    vi.mocked(confirmMcpPlan).mockRejectedValueOnce(new Error('token=old-token url=https://internal.test/?q=secret digest=old-digest provenance=private publisher=private proof=private internal-sentinel'))
+    vi.mocked(confirmMcpPlan)
+      .mockRejectedValueOnce(
+        new Error(
+          'token=old-token url=https://internal.test/?q=secret digest=old-digest provenance=private publisher=private proof=private internal-sentinel'
+        )
+      )
       .mockResolvedValueOnce(task);
     const user = userEvent.setup();
-    const { onClose, onTaskCreated } = renderHttpsPlanDialog({ ...httpsPlan, planDigest: freshToken });
+    const { onClose, onTaskCreated } = renderHttpsPlanDialog({
+      ...httpsPlan,
+      planDigest: freshToken,
+    });
     await user.click(screen.getByRole('button', { name: 'Confirm and start' }));
     const alert = await screen.findByRole('alert');
-    for (const value of ['old-token', 'internal.test', 'secret', 'old-digest', 'provenance=private', 'publisher=private', 'proof=private', 'internal-sentinel']) {
+    for (const value of [
+      'old-token',
+      'internal.test',
+      'secret',
+      'old-digest',
+      'provenance=private',
+      'publisher=private',
+      'proof=private',
+      'internal-sentinel',
+    ]) {
       expect(alert).not.toHaveTextContent(value);
     }
     await user.click(screen.getByRole('button', { name: 'Confirm and start' }));
     await waitFor(() => expect(onTaskCreated).toHaveBeenCalledTimes(1));
-    expect(confirmMcpPlan).toHaveBeenNthCalledWith(1, expect.objectContaining({ planDigest: freshToken }), 'confirm');
-    expect(confirmMcpPlan).toHaveBeenNthCalledWith(2, expect.objectContaining({ planDigest: freshToken }), 'confirm');
+    expect(confirmMcpPlan).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ planDigest: freshToken }),
+      'confirm'
+    );
+    expect(confirmMcpPlan).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ planDigest: freshToken }),
+      'confirm'
+    );
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

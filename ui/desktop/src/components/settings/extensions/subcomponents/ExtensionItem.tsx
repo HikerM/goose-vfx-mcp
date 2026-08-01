@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import kebabCase from 'lodash/kebabCase';
+import { CircleAlert, CircleCheck, LoaderCircle, Stethoscope } from 'lucide-react';
 import { Switch } from '../../../ui/switch';
 import { Gear } from '../../../icons';
+import { Button } from '../../../ui/button';
 import { FixedExtensionEntry } from '../../../ConfigContext';
 import { getSubtitle, getFriendlyTitle } from './ExtensionList';
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from '../../../ui/card';
@@ -16,13 +18,41 @@ const i18n = defineMessages({
     id: 'extensionItem.toggleExtension',
     defaultMessage: 'Toggle {name} extension On or Off',
   },
+  checkExtension: {
+    id: 'extensionItem.checkExtension',
+    defaultMessage: 'Check {name} MCP connection',
+  },
+  checking: {
+    id: 'extensionItem.checking',
+    defaultMessage: 'Checking MCP tools…',
+  },
+  healthy: {
+    id: 'extensionItem.healthy',
+    defaultMessage: 'MCP ready · {count} tools found',
+  },
+  noTools: {
+    id: 'extensionItem.noTools',
+    defaultMessage: 'MCP connected, but no tools were found',
+  },
+  healthError: {
+    id: 'extensionItem.healthError',
+    defaultMessage: 'MCP check failed: {message}',
+  },
 });
+
+export type ExtensionHealthCheckState =
+  | { status: 'checking' }
+  | { status: 'healthy'; toolCount: number }
+  | { status: 'empty' }
+  | { status: 'error'; message: string };
 
 interface ExtensionItemProps {
   extension: FixedExtensionEntry;
   onToggle: (extension: FixedExtensionEntry) => Promise<boolean | void> | void;
   onConfigure?: (extension: FixedExtensionEntry) => void;
   isStatic?: boolean; // to not allow users to edit configuration
+  healthCheck?: ExtensionHealthCheckState;
+  onHealthCheck?: (extension: FixedExtensionEntry) => void;
 }
 
 export default function ExtensionItem({
@@ -30,6 +60,8 @@ export default function ExtensionItem({
   onToggle,
   onConfigure,
   isStatic,
+  healthCheck,
+  onHealthCheck,
 }: ExtensionItemProps) {
   const intl = useIntl();
   // Add local state to track the visual toggle state
@@ -105,6 +137,28 @@ export default function ExtensionItem({
                 <Gear className="w-4 h-4" />
               </button>
             )}
+            {onHealthCheck && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7"
+                disabled={!extension.enabled || healthCheck?.status === 'checking'}
+                aria-label={intl.formatMessage(i18n.checkExtension, {
+                  name: getFriendlyTitle(extension),
+                })}
+                title={intl.formatMessage(i18n.checkExtension, {
+                  name: getFriendlyTitle(extension),
+                })}
+                onClick={() => onHealthCheck(extension)}
+              >
+                {healthCheck?.status === 'checking' ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Stethoscope className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             <Switch
               checked={visuallyEnabled}
               onCheckedChange={() => handleToggle(extension)}
@@ -119,6 +173,36 @@ export default function ExtensionItem({
       </CardHeader>
       <CardContent className="px-4 overflow-hidden text-sm break-words text-text-secondary">
         {renderSubtitle()}
+        {healthCheck && (
+          <div
+            role="status"
+            className={`mt-3 flex items-start gap-1.5 text-xs ${
+              healthCheck.status === 'healthy'
+                ? 'text-green-600 dark:text-green-400'
+                : healthCheck.status === 'error'
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-text-secondary'
+            }`}
+          >
+            {healthCheck.status === 'healthy' && (
+              <CircleCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            )}
+            {healthCheck.status === 'empty' && (
+              <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            )}
+            {healthCheck.status === 'error' && (
+              <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            )}
+            <span>
+              {healthCheck.status === 'checking' && intl.formatMessage(i18n.checking)}
+              {healthCheck.status === 'healthy' &&
+                intl.formatMessage(i18n.healthy, { count: healthCheck.toolCount })}
+              {healthCheck.status === 'empty' && intl.formatMessage(i18n.noTools)}
+              {healthCheck.status === 'error' &&
+                intl.formatMessage(i18n.healthError, { message: healthCheck.message })}
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

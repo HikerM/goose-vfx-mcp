@@ -14,7 +14,10 @@ function isMissingPath(error: unknown): boolean {
 }
 
 function normalizeWindowsPath(value: string): string {
-  return path.win32.normalize(value).replace(/[\\]+$/, '').toLowerCase();
+  return path.win32
+    .normalize(value)
+    .replace(/[\\]+$/, '')
+    .toLowerCase();
 }
 
 async function verifyShimDestination(
@@ -33,8 +36,14 @@ async function verifyShimDestination(
   }
 }
 
-async function removeOwnedDirectory(target: string, ownerRoot: string, token: string): Promise<void> {
-  const item = await fs.promises.lstat(target).catch((error: unknown) => (isMissingPath(error) ? undefined : Promise.reject(error)));
+async function removeOwnedDirectory(
+  target: string,
+  ownerRoot: string,
+  token: string
+): Promise<void> {
+  const item = await fs.promises
+    .lstat(target)
+    .catch((error: unknown) => (isMissingPath(error) ? undefined : Promise.reject(error)));
   if (!item || !item.isDirectory() || item.isSymbolicLink()) return;
   const resolved = normalizeWindowsPath(await fs.promises.realpath(target));
   const root = normalizeWindowsPath(ownerRoot);
@@ -56,16 +65,22 @@ async function acquireDeploymentLock(lockPath: string): Promise<fs.promises.File
       await handle.writeFile(token, 'utf8');
       const stat = await fs.promises.lstat(lockPath);
       const resolved = await fs.promises.realpath(lockPath);
-      if (stat.isSymbolicLink() || normalizeWindowsPath(resolved) !== normalizeWindowsPath(lockPath)) {
+      if (
+        stat.isSymbolicLink() ||
+        normalizeWindowsPath(resolved) !== normalizeWindowsPath(lockPath)
+      ) {
         await handle.close();
         throw new Error('unsafe deployment lock');
       }
       const observed = await fs.promises.readFile(lockPath, 'utf8');
-      if (observed !== token) { await handle.close(); throw new Error('deployment lock owner mismatch'); }
+      if (observed !== token) {
+        await handle.close();
+        throw new Error('deployment lock owner mismatch');
+      }
       (handle as fs.promises.FileHandle & { ownerToken?: string }).ownerToken = token;
       return handle;
     } catch (error: unknown) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST' || Date.now() >= deadline) {
+      if ((error as { code?: string }).code !== 'EEXIST' || Date.now() >= deadline) {
         throw new Error('Windows shim deployment lock is unavailable');
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -78,11 +93,13 @@ async function acquireDeploymentLock(lockPath: string): Promise<fs.promises.File
  * This allows the bundled executables to be found via PATH regardless of where Goose is installed
  */
 export interface WindowsMcpSpawnEnvironment {
-  env: NodeJS.ProcessEnv;
+  env: typeof process.env;
   shimDirectory: string;
 }
 
-export async function ensureWinShims(root: string): Promise<WindowsMcpSpawnEnvironment | undefined> {
+export async function ensureWinShims(
+  root: string
+): Promise<WindowsMcpSpawnEnvironment | undefined> {
   if (process.platform !== 'win32') return undefined;
 
   const governedRoot = resolveDesktopGoosePathRoot(root, 'win32');
@@ -102,38 +119,42 @@ export async function ensureWinShims(root: string): Promise<WindowsMcpSpawnEnvir
     const optionalShims = ['uvx.exe', 'uv.exe'];
     const shims = [
       ...requiredShims,
-      ...(await Promise.all(
-        optionalShims.map(async (shim) => {
-          try {
-            await fs.promises.access(path.join(srcDir, shim));
-            return shim;
-          } catch {
-            return undefined;
-          }
-        })
-      )).filter((shim): shim is string => shim !== undefined),
+      ...(
+        await Promise.all(
+          optionalShims.map(async (shim) => {
+            try {
+              await fs.promises.access(path.join(srcDir, shim));
+              return shim;
+            } catch {
+              return undefined;
+            }
+          })
+        )
+      ).filter((shim): shim is string => shim !== undefined),
     ];
 
     try {
-      await preflightWindowsStorageDirectory(lockPath);
       await fs.promises.mkdir(stagingDir, { recursive: true });
       await verifyShimDestination(stagingDir, fs.promises);
-      await fs.promises.writeFile(path.join(stagingDir, '.owner-token'), suffix, { encoding: 'utf8', flag: 'wx' });
+      await fs.promises.writeFile(path.join(stagingDir, '.owner-token'), suffix, {
+        encoding: 'utf8',
+        flag: 'wx',
+      });
 
-    await Promise.all(
-      shims.map(async (shim) => {
-        const src = path.join(srcDir, shim);
-        const dst = path.join(stagingDir, shim);
-        await fs.promises.access(src);
-        await fs.promises.copyFile(src, dst);
-        await verifyShimDestination(dst, fs.promises);
-        log.info(`Copied Windows shim: ${shim}`);
-      })
-    );
+      await Promise.all(
+        shims.map(async (shim) => {
+          const src = path.join(srcDir, shim);
+          const dst = path.join(stagingDir, shim);
+          await fs.promises.access(src);
+          await fs.promises.copyFile(src, dst);
+          await verifyShimDestination(dst, fs.promises);
+          log.info(`Copied Windows shim: ${shim}`);
+        })
+      );
 
       await fs.promises.rename(tgtDir, previousDir).catch((error: unknown) => {
-      if (!isMissingPath(error)) throw error;
-    });
+        if (!isMissingPath(error)) throw error;
+      });
       try {
         await fs.promises.rename(stagingDir, tgtDir);
       } catch (error) {
@@ -150,7 +171,8 @@ export async function ensureWinShims(root: string): Promise<WindowsMcpSpawnEnvir
       if (token) {
         const lockStat = await fs.promises.lstat(lockPath).catch(() => undefined);
         const lockOwner = await fs.promises.readFile(lockPath, 'utf8').catch(() => undefined);
-        if (lockStat && !lockStat.isSymbolicLink() && lockOwner === token) await fs.promises.rm(lockPath, { force: false });
+        if (lockStat && !lockStat.isSymbolicLink() && lockOwner === token)
+          await fs.promises.rm(lockPath, { force: false });
       }
     }
   } catch (error) {
@@ -162,12 +184,15 @@ export async function ensureWinShims(root: string): Promise<WindowsMcpSpawnEnvir
 }
 
 export function windowsMcpSpawnEnvironment(
-  baseEnvironment: NodeJS.ProcessEnv = process.env,
+  baseEnvironment: typeof process.env = process.env,
   shimDirectory: string
-): NodeJS.ProcessEnv {
+): typeof process.env {
   const currentPath = baseEnvironment.PATH ?? '';
-  const parts = currentPath.split(path.delimiter).filter(
-    (part) => normalizeWindowsPath(part) !== normalizeWindowsPath(shimDirectory)
-  );
-  return { ...baseEnvironment, PATH: `${shimDirectory}${path.delimiter}${parts.join(path.delimiter)}` };
+  const parts = currentPath
+    .split(path.delimiter)
+    .filter((part) => normalizeWindowsPath(part) !== normalizeWindowsPath(shimDirectory));
+  return {
+    ...baseEnvironment,
+    PATH: `${shimDirectory}${path.delimiter}${parts.join(path.delimiter)}`,
+  };
 }

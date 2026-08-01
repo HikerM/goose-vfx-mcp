@@ -17,7 +17,10 @@ function pathModuleFor(root: string, candidate: string) {
 export function isPathWithinRoot(root: string, candidate: string): boolean {
   const pathApi = pathModuleFor(root, candidate);
   const relative = pathApi.relative(pathApi.resolve(root), pathApi.resolve(candidate));
-  return relative === '' || (relative !== '..' && !relative.startsWith(`..${pathApi.sep}`) && !pathApi.isAbsolute(relative));
+  return (
+    relative === '' ||
+    (relative !== '..' && !relative.startsWith(`..${pathApi.sep}`) && !pathApi.isAbsolute(relative))
+  );
 }
 
 export function resolveManagedPath(root: string, relativePath: string): string {
@@ -108,7 +111,7 @@ export async function assertManagedPath(root: string, candidate: string): Promis
         throw new Error('Managed paths cannot leave the Goose storage root');
       }
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') break;
+      if ((error as { code?: string }).code === 'ENOENT') break;
       throw error;
     }
   }
@@ -119,7 +122,7 @@ const WINDOWS_STORAGE_ROOT_ERROR =
 
 export function resolveDesktopGoosePathRoot(
   envPathRoot: string | undefined = process.env.GOOSE_PATH_ROOT,
-  platform: NodeJS.Platform = process.platform
+  platform: typeof process.platform = process.platform
 ): string | undefined {
   const trimmed = envPathRoot?.trim();
   if (platform !== 'win32') {
@@ -184,7 +187,11 @@ function isMissingPath(error: unknown): boolean {
 }
 
 function normalizeWindowsPath(value: string): string {
-  return value.replace(/\//g, '\\').replace(/[\\]+$/, '').toLowerCase();
+  return value
+    .replace(/^\\\\\?\\/, '')
+    .replace(/\//g, '\\')
+    .replace(/[\\]+$/, '')
+    .toLowerCase();
 }
 
 async function verifyWindowsStorageDirectoryChain(
@@ -279,7 +286,7 @@ export async function preflightWindowsStorageRoot(
 
 export function deriveDesktopUserDataPath(
   root: string,
-  platform: NodeJS.Platform = process.platform
+  platform: typeof process.platform = process.platform
 ): string {
   if (platform !== 'win32') {
     return `${root}/${WINDOWS_DESKTOP_DATA_DIRECTORY}`;
@@ -289,7 +296,7 @@ export function deriveDesktopUserDataPath(
 
 export function deriveWindowsShimsPath(
   root: string,
-  platform: NodeJS.Platform = process.platform
+  platform: typeof process.platform = process.platform
 ): string {
   if (platform !== 'win32') {
     return `${root}/${WINDOWS_SHIMS_DIRECTORY}`;

@@ -181,8 +181,7 @@ function buildTaskTimelineEntries(
             id: String(event.eventId),
             occurredAtMs: event.occurredAtMs,
             title: intl.formatMessage(messages.taskTimelineConfirmation),
-            detail:
-              typeof payload.to === 'string' ? formatMcpValue(intl, payload.to) : undefined,
+            detail: typeof payload.to === 'string' ? formatMcpValue(intl, payload.to) : undefined,
             tone: 'info',
           };
         case 'cancellation_requested':
@@ -190,8 +189,7 @@ function buildTaskTimelineEntries(
             id: String(event.eventId),
             occurredAtMs: event.occurredAtMs,
             title: intl.formatMessage(messages.taskTimelineCancellation),
-            detail:
-              typeof payload.to === 'string' ? formatMcpValue(intl, payload.to) : undefined,
+            detail: typeof payload.to === 'string' ? formatMcpValue(intl, payload.to) : undefined,
             tone: 'warning',
           };
         case 'step_status_changed':
@@ -205,9 +203,7 @@ function buildTaskTimelineEntries(
             tone: payload.to === 'committed' ? 'success' : 'info',
           };
         case 'recovery_decision': {
-          const decision = payload.decision as
-            | { type?: string; ordinal?: number }
-            | undefined;
+          const decision = payload.decision as { type?: string; ordinal?: number } | undefined;
           return {
             id: String(event.eventId),
             occurredAtMs: event.occurredAtMs,
@@ -935,7 +931,10 @@ export function ManagedTab({
                 ],
                 [
                   intl.formatMessage(messages.credentialStatusLabel),
-                  <CredentialStatusBadge status={selectedCredentialStatus} />,
+                  <CredentialStatusBadge
+                    key="managed-credential-status"
+                    status={selectedCredentialStatus}
+                  />,
                 ],
                 [
                   intl.formatMessage(messages.activeVersion),
@@ -976,17 +975,13 @@ export function ManagedTab({
 
             <div className="flex flex-wrap gap-2">
               <div
-                aria-busy={
-                  actionLoading === 'runtime-start' || actionLoading === 'runtime-stop'
-                }
+                aria-busy={actionLoading === 'runtime-start' || actionLoading === 'runtime-stop'}
                 aria-live="polite"
                 className="sr-only"
                 role="status"
               >
-                {actionLoading === 'runtime-start' &&
-                  intl.formatMessage(messages.startingRuntime)}
-                {actionLoading === 'runtime-stop' &&
-                  intl.formatMessage(messages.stoppingRuntime)}
+                {actionLoading === 'runtime-start' && intl.formatMessage(messages.startingRuntime)}
+                {actionLoading === 'runtime-stop' && intl.formatMessage(messages.stoppingRuntime)}
               </div>
               {selected.runtimeControl?.canStart && (
                 <Button
@@ -997,7 +992,9 @@ export function ManagedTab({
                 >
                   <Play />{' '}
                   {intl.formatMessage(
-                    actionLoading === 'runtime-start' ? messages.startingRuntime : messages.startRuntime
+                    actionLoading === 'runtime-start'
+                      ? messages.startingRuntime
+                      : messages.startRuntime
                   )}
                 </Button>
               )}
@@ -1010,7 +1007,9 @@ export function ManagedTab({
                 >
                   <Square />{' '}
                   {intl.formatMessage(
-                    actionLoading === 'runtime-stop' ? messages.stoppingRuntime : messages.stopRuntime
+                    actionLoading === 'runtime-stop'
+                      ? messages.stoppingRuntime
+                      : messages.stopRuntime
                   )}
                 </Button>
               )}
@@ -1166,7 +1165,9 @@ export function ManagedTab({
                     </span>
                   </div>
                   {taskTimelineFallbackMessage ? (
-                    <p className="mt-2 text-sm text-text-secondary">{taskTimelineFallbackMessage}</p>
+                    <p className="mt-2 text-sm text-text-secondary">
+                      {taskTimelineFallbackMessage}
+                    </p>
                   ) : (
                     <ol className="mt-3 space-y-3">
                       {selectedTaskTimeline.map((entry) => (
@@ -1209,7 +1210,9 @@ export function ManagedTab({
                         onClick={() => void cancelTask()}
                       >
                         {intl.formatMessage(
-                          actionLoading === 'cancel-task' ? messages.cancelling : messages.cancelTask
+                          actionLoading === 'cancel-task'
+                            ? messages.cancelling
+                            : messages.cancelTask
                         )}
                       </Button>
                     )}
@@ -1271,7 +1274,11 @@ export function ManagedTab({
             {intl.formatMessage(messages.stopRuntimeImpact)}
           </p>
           <DialogFooter>
-            <Button variant="outline" disabled={!!actionLoading} onClick={() => setStopConfirmation(null)}>
+            <Button
+              variant="outline"
+              disabled={!!actionLoading}
+              onClick={() => setStopConfirmation(null)}
+            >
               {intl.formatMessage(messages.cancel)}
             </Button>
             <Button

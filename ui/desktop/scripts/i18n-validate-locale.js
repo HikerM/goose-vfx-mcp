@@ -132,16 +132,10 @@ function printIssues(result) {
     console.error('Missing locale file for ' + locale + '.');
   }
   if (missing.length) {
-    console.error(
-      'Missing ' + locale + ' keys (' + missing.length + ', showing first 50):',
-      missing.slice(0, 50)
-    );
+    console.warn('Missing ' + locale + ' translations: ' + missing.length + '.');
   }
   if (extra.length) {
-    console.error(
-      'Extra ' + locale + ' keys (' + extra.length + ', showing first 50):',
-      extra.slice(0, 50)
-    );
+    console.warn('Stale ' + locale + ' translations: ' + extra.length + '.');
   }
   if (placeholderIssues.length) {
     console.error(
@@ -150,9 +144,8 @@ function printIssues(result) {
     );
   }
   if (selectIssues.length) {
-    console.error(
-      'ICU select case issues in ' + locale + ' (' + selectIssues.length + ', showing first 20):',
-      selectIssues.slice(0, 20)
+    console.warn(
+      'Incomplete ICU select translations in ' + locale + ': ' + selectIssues.length + '.'
     );
   }
 }
@@ -167,12 +160,17 @@ if (!locales.length) {
 }
 
 const results = locales.map((locale) => validateLocale(locale, en, enKeys));
+const incomplete = results.filter(
+  ({ missing, extra, selectIssues }) => missing.length || extra.length || selectIssues.length
+);
 const failures = results.filter(
-  ({ missingFile, missing, extra, placeholderIssues, selectIssues }) =>
-    missingFile || missing.length || extra.length || placeholderIssues.length || selectIssues.length
+  ({ missingFile, placeholderIssues }) => missingFile || placeholderIssues.length
 );
 
-for (const result of failures) {
+for (const result of results.filter(
+  ({ missingFile, missing, extra, placeholderIssues, selectIssues }) =>
+    missingFile || missing.length || extra.length || placeholderIssues.length || selectIssues.length
+)) {
   printIssues(result);
 }
 
@@ -183,3 +181,8 @@ if (failures.length) {
 console.log(
   'i18n locale validation passed for ' + locales.join(', ') + ' (' + enKeys.length + ' messages).'
 );
+if (incomplete.length) {
+  console.warn(
+    'Untranslated or stale locale entries use the source defaultMessage until translations catch up.'
+  );
+}

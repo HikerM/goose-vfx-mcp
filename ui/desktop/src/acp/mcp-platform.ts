@@ -506,7 +506,12 @@ export function toMcpRecoveryViewModel(error: unknown): McpPlatformRecoveryViewM
 function createMcpConfirmTransportError(): McpPlatformServiceError {
   const message = 'Unable to complete MCP operation';
   return new McpPlatformServiceError(
-    { code: 'repository_unavailable', message, retryable: true, correlationId: 'mcp-confirm-transport' },
+    {
+      code: 'repository_unavailable',
+      message,
+      retryable: true,
+      correlationId: 'mcp-confirm-transport',
+    },
     {
       title: 'MCP operation could not be completed',
       message,
@@ -1157,12 +1162,21 @@ const invalidMcpWireValue = Symbol('invalidMcpWireValue');
 
 const profileResponseKeys = new Set(['outcome']);
 const httpsManifestPrepareResultKeys = new Set([
-  'provisionId', 'confirmationToken', 'expiresAtMs', 'preview',
+  'provisionId',
+  'confirmationToken',
+  'expiresAtMs',
+  'preview',
 ]);
 const httpsManifestConfirmResultKeys = new Set(['manifestDigest', 'preview']);
 const httpsManifestPreviewKeys = new Set([
-  'manifestId', 'version', 'redactedOrigin', 'rawDigest', 'parsedDigest',
-  'redirectChainDigest', 'dnsEvidenceDigest', 'warnings',
+  'manifestId',
+  'version',
+  'redactedOrigin',
+  'rawDigest',
+  'parsedDigest',
+  'redirectChainDigest',
+  'dnsEvidenceDigest',
+  'warnings',
 ]);
 const outcomeKeys = new Set(['status', 'value', 'error']);
 const successOutcomeKeys = new Set(['status', 'value']);
@@ -1625,9 +1639,23 @@ function createMalformedMcpPlatformResponseError(): Error {
 }
 
 const httpsProvisionReviewKeys = new Set([
-  'planId', 'planDigest', 'expiresAtMs', 'trustTier', 'mcpId', 'name', 'version',
-  'selectedManifestDigest', 'permissions', 'fileEffects', 'processEffects',
-  'reversibility', 'policy', 'warnings', 'requiredConfirmations', 'defaultDisabled', 'recovery',
+  'planId',
+  'planDigest',
+  'expiresAtMs',
+  'trustTier',
+  'mcpId',
+  'name',
+  'version',
+  'selectedManifestDigest',
+  'permissions',
+  'fileEffects',
+  'processEffects',
+  'reversibility',
+  'policy',
+  'warnings',
+  'requiredConfirmations',
+  'defaultDisabled',
+  'recovery',
 ]);
 
 function readHttpsProvisionRecord(value: unknown, keys: ReadonlySet<string>): McpObject | null {
@@ -1636,11 +1664,13 @@ function readHttpsProvisionRecord(value: unknown, keys: ReadonlySet<string>): Mc
 }
 
 function requiredHttpsString(record: McpObject, key: string): string | null {
-  return typeof record[key] === 'string' && record[key].trim() ? record[key] as string : null;
+  return typeof record[key] === 'string' && record[key].trim() ? (record[key] as string) : null;
 }
 
 function requiredHttpsNumber(record: McpObject, key: string): number | null {
-  return typeof record[key] === 'number' && Number.isFinite(record[key]) ? record[key] as number : null;
+  return typeof record[key] === 'number' && Number.isFinite(record[key])
+    ? (record[key] as number)
+    : null;
 }
 
 function requiredHttpsNonnegativeNumber(record: McpObject, key: string): number | null {
@@ -1658,12 +1688,18 @@ export function projectHttpsProvisionPlanReviewRequest(
   if (!input || typeof input !== 'object') throw createMalformedMcpPlatformResponseError();
   const record = input as unknown as Record<string, unknown>;
   const keys = new Set(Object.keys(record));
-  if (keys.size !== 3 || !keys.has('provisionId') || !keys.has('expectedManifestDigest') || !keys.has('idempotencyKey')) {
+  if (
+    keys.size !== 3 ||
+    !keys.has('provisionId') ||
+    !keys.has('expectedManifestDigest') ||
+    !keys.has('idempotencyKey')
+  ) {
     throw createMalformedMcpPlatformResponseError();
   }
-  for (const key of keys) if (typeof record[key] !== 'string' || !(record[key] as string).trim()) {
-    throw createMalformedMcpPlatformResponseError();
-  }
+  for (const key of keys)
+    if (typeof record[key] !== 'string' || !(record[key] as string).trim()) {
+      throw createMalformedMcpPlatformResponseError();
+    }
   return {
     provisionId: record.provisionId as string,
     expectedManifestDigest: record.expectedManifestDigest as string,
@@ -1680,43 +1716,105 @@ export function parseHttpsProvisionPlanReview(value: unknown): McpHttpsProvision
   const planId = requiredHttpsString(root, 'planId');
   const planDigest = requiredHttpsString(root, 'planDigest');
   const expiresAtMs = requiredHttpsNumber(root, 'expiresAtMs');
-  const permissions = Array.isArray(root.permissions) ? root.permissions.map((item) => {
-    const permission = readHttpsProvisionRecord(item, new Set(['kind', 'required']));
-    const kind = permission ? requiredHttpsString(permission, 'kind') : null;
-    const required = permission ? requiredHttpsBoolean(permission, 'required') : null;
-    return kind !== null && required !== null ? { kind, required } : null;
-  }).filter((item): item is { kind: string; required: boolean } => item !== null) : null;
-  const file = readHttpsProvisionRecord(root.fileEffects, new Set(['writesFiles', 'removesFiles', 'ownedItems']));
-  const process = readHttpsProvisionRecord(root.processEffects, new Set(['processRequiredForConnection', 'startsDuringConfirmation']));
+  const permissions = Array.isArray(root.permissions)
+    ? root.permissions
+        .map((item) => {
+          const permission = readHttpsProvisionRecord(item, new Set(['kind', 'required']));
+          const kind = permission ? requiredHttpsString(permission, 'kind') : null;
+          const required = permission ? requiredHttpsBoolean(permission, 'required') : null;
+          return kind !== null && required !== null ? { kind, required } : null;
+        })
+        .filter((item): item is { kind: string; required: boolean } => item !== null)
+    : null;
+  const permissionCount = Array.isArray(root.permissions) ? root.permissions.length : null;
+  const file = readHttpsProvisionRecord(
+    root.fileEffects,
+    new Set(['writesFiles', 'removesFiles', 'ownedItems'])
+  );
+  const process = readHttpsProvisionRecord(
+    root.processEffects,
+    new Set(['processRequiredForConnection', 'startsDuringConfirmation'])
+  );
   const policy = readHttpsProvisionRecord(root.policy, new Set(['outcome', 'reasonCount']));
-  const fileEffects = file ? {
-    writesFiles: requiredHttpsBoolean(file, 'writesFiles'),
-    removesFiles: requiredHttpsBoolean(file, 'removesFiles'),
-    ownedItems: requiredHttpsNonnegativeNumber(file, 'ownedItems'),
-  } : null;
-  const processEffects = process ? {
-    processRequiredForConnection: requiredHttpsBoolean(process, 'processRequiredForConnection'),
-    startsDuringConfirmation: requiredHttpsBoolean(process, 'startsDuringConfirmation'),
-  } : null;
+  const fileEffects = file
+    ? {
+        writesFiles: requiredHttpsBoolean(file, 'writesFiles'),
+        removesFiles: requiredHttpsBoolean(file, 'removesFiles'),
+        ownedItems: requiredHttpsNonnegativeNumber(file, 'ownedItems'),
+      }
+    : null;
+  const processEffects = process
+    ? {
+        processRequiredForConnection: requiredHttpsBoolean(process, 'processRequiredForConnection'),
+        startsDuringConfirmation: requiredHttpsBoolean(process, 'startsDuringConfirmation'),
+      }
+    : null;
   const policyOutcome = policy ? requiredHttpsString(policy, 'outcome') : null;
   const reasonCount = policy ? requiredHttpsNonnegativeNumber(policy, 'reasonCount') : null;
-  const confirmations = Array.isArray(root.requiredConfirmations) ? root.requiredConfirmations.map((item) => {
-    const confirmation = readHttpsProvisionRecord(item, new Set(['type']));
-    return confirmation && (confirmation.type === 'policy' || confirmation.type === 'permission') ? confirmation.type : null;
-  }).filter((item): item is 'policy' | 'permission' => item !== null) : null;
-  const warnings = Array.isArray(root.warnings) && root.warnings.every((item): item is string => typeof item === 'string') ? root.warnings : null;
-  if (!mcpId || !name || !version || !planId || !planDigest || expiresAtMs === null || !permissions || permissions.some((item) => !item) ||
-      fileEffects === null || fileEffects.writesFiles === null || fileEffects.removesFiles === null || fileEffects.ownedItems === null ||
-      processEffects === null || processEffects.processRequiredForConnection === null || processEffects.startsDuringConfirmation === null ||
-      policyOutcome === null || reasonCount === null || !confirmations || confirmations.some((item) => !item) ||
-      typeof root.defaultDisabled !== 'boolean' || !warnings) return null;
+  const confirmations = Array.isArray(root.requiredConfirmations)
+    ? root.requiredConfirmations
+        .map((item) => {
+          const confirmation = readHttpsProvisionRecord(item, new Set(['type']));
+          return confirmation &&
+            (confirmation.type === 'policy' || confirmation.type === 'permission')
+            ? confirmation.type
+            : null;
+        })
+        .filter((item): item is 'policy' | 'permission' => item !== null)
+    : null;
+  const confirmationCount = Array.isArray(root.requiredConfirmations)
+    ? root.requiredConfirmations.length
+    : null;
+  const warnings =
+    Array.isArray(root.warnings) &&
+    root.warnings.every((item): item is string => typeof item === 'string')
+      ? root.warnings
+      : null;
+  if (
+    !mcpId ||
+    !name ||
+    !version ||
+    !planId ||
+    !planDigest ||
+    expiresAtMs === null ||
+    !permissions ||
+    permissions.length !== permissionCount ||
+    fileEffects === null ||
+    fileEffects.writesFiles === null ||
+    fileEffects.removesFiles === null ||
+    fileEffects.ownedItems === null ||
+    processEffects === null ||
+    processEffects.processRequiredForConnection === null ||
+    processEffects.startsDuringConfirmation === null ||
+    policyOutcome === null ||
+    reasonCount === null ||
+    !confirmations ||
+    confirmations.length !== confirmationCount ||
+    typeof root.defaultDisabled !== 'boolean' ||
+    !warnings
+  )
+    return null;
   return {
-    planId, planDigest, expiresAtMs, operation: 'provision', mcp: { mcpId, name, version },
+    planId,
+    planDigest,
+    expiresAtMs,
+    operation: 'provision',
+    mcp: { mcpId, name, version },
     permissions,
-    effects: { file: { writesFiles: fileEffects.writesFiles, removesFiles: fileEffects.removesFiles, ownedItems: fileEffects.ownedItems },
-      process: { processRequiredForConnection: processEffects.processRequiredForConnection, startsDuringConfirmation: processEffects.startsDuringConfirmation } },
+    effects: {
+      file: {
+        writesFiles: fileEffects.writesFiles,
+        removesFiles: fileEffects.removesFiles,
+        ownedItems: fileEffects.ownedItems,
+      },
+      process: {
+        processRequiredForConnection: processEffects.processRequiredForConnection,
+        startsDuringConfirmation: processEffects.startsDuringConfirmation,
+      },
+    },
     confirmation: { required: confirmations, defaultDisabled: root.defaultDisabled },
-    policy: { outcome: policyOutcome, reasonCount }, warnings,
+    policy: { outcome: policyOutcome, reasonCount },
+    warnings,
   };
 }
 
@@ -3395,8 +3493,12 @@ function parseMcpSourceProvisionConfirmResultValue(
 const httpsManifestDigestPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/;
 
 function parseHttpsManifestSafeString(value: unknown): string | null {
-  return typeof value === 'string' && value.length > 0 && value.length <= 256 &&
-    !/[\u0000-\u001f\u007f\u0080-\u009f]/.test(value) ? value : null;
+  if (typeof value !== 'string' || value.length === 0 || value.length > 256) return null;
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    if (codeUnit <= 0x1f || (codeUnit >= 0x7f && codeUnit <= 0x9f)) return null;
+  }
+  return value;
 }
 
 function parseHttpsManifestDigest(value: unknown): string | null {
@@ -3410,24 +3512,39 @@ function parseMcpHttpsManifestPreviewValue(value: unknown): McpHttpsManifestPrev
   const version = parseHttpsManifestSafeString(record.version);
   const redactedOrigin = parseHttpsManifestSafeString(record.redactedOrigin);
   const digests = [
-    record.rawDigest, record.parsedDigest, record.redirectChainDigest, record.dnsEvidenceDigest,
+    record.rawDigest,
+    record.parsedDigest,
+    record.redirectChainDigest,
+    record.dnsEvidenceDigest,
   ].map(parseHttpsManifestDigest);
-  const warnings = record.warnings === undefined ? [] : parseMcpArray(
-    record.warnings,
-    (warning) => parseHttpsManifestSafeString(warning),
-    32
-  );
-  if (manifestId === null || version === null || redactedOrigin === null ||
-      digests.some((digest) => digest === null) || warnings === null) return null;
+  const warnings =
+    record.warnings === undefined
+      ? []
+      : parseMcpArray(record.warnings, (warning) => parseHttpsManifestSafeString(warning), 32);
+  if (
+    manifestId === null ||
+    version === null ||
+    redactedOrigin === null ||
+    digests.some((digest) => digest === null) ||
+    warnings === null
+  )
+    return null;
   if (!/^https:\/\/[^/?#]+$/i.test(redactedOrigin)) return null;
   return {
-    manifestId, version, redactedOrigin,
-    rawDigest: digests[0]!, parsedDigest: digests[1]!,
-    redirectChainDigest: digests[2]!, dnsEvidenceDigest: digests[3]!, warnings,
+    manifestId,
+    version,
+    redactedOrigin,
+    rawDigest: digests[0]!,
+    parsedDigest: digests[1]!,
+    redirectChainDigest: digests[2]!,
+    dnsEvidenceDigest: digests[3]!,
+    warnings,
   };
 }
 
-function parseMcpHttpsManifestPrepareResultValue(value: unknown): McpHttpsManifestPrepareResult | null {
+function parseMcpHttpsManifestPrepareResultValue(
+  value: unknown
+): McpHttpsManifestPrepareResult | null {
   const record = readMcpObject(value, httpsManifestPrepareResultKeys);
   if (!record) return null;
   const provisionId = parseHttpsManifestSafeString(record.provisionId);
@@ -3435,10 +3552,13 @@ function parseMcpHttpsManifestPrepareResultValue(value: unknown): McpHttpsManife
   const expiresAtMs = parseMcpInteger(record.expiresAtMs);
   const preview = parseMcpHttpsManifestPreviewValue(record.preview);
   return provisionId && confirmationToken && expiresAtMs !== null && preview
-    ? { provisionId, confirmationToken, expiresAtMs, preview } : null;
+    ? { provisionId, confirmationToken, expiresAtMs, preview }
+    : null;
 }
 
-function parseMcpHttpsManifestConfirmResultValue(value: unknown): McpHttpsManifestConfirmResult | null {
+function parseMcpHttpsManifestConfirmResultValue(
+  value: unknown
+): McpHttpsManifestConfirmResult | null {
   const record = readMcpObject(value, httpsManifestConfirmResultKeys);
   if (!record) return null;
   const manifestDigest = parseHttpsManifestDigest(record.manifestDigest);
@@ -3790,8 +3910,6 @@ export async function listMcpCatalog(params: McpCatalogListRequest): Promise<Mcp
   });
 }
 
-export async function getMcpCatalogDetail(locator: McpCatalogRef): Promise<McpCatalogDetail>;
-export async function getMcpCatalogDetail(manifestDigest: string): Promise<McpCatalogDetail>;
 export async function getMcpCatalogDetail(
   locator: McpCatalogRef | string
 ): Promise<McpCatalogDetail> {
@@ -4129,9 +4247,7 @@ export async function prepareMcpSourceProvision(
   );
 }
 
-export async function prepareHttpsMcpManifest(
-  url: string
-): Promise<McpHttpsManifestPrepareResult> {
+export async function prepareHttpsMcpManifest(url: string): Promise<McpHttpsManifestPrepareResult> {
   if (typeof url !== 'string' || !/^https:\/\/[^\s]+$/i.test(url)) {
     throw createMalformedMcpPlatformResponseError();
   }
@@ -4171,8 +4287,12 @@ export async function confirmHttpsMcpManifest(input: {
   confirmationToken: string;
   confirm: boolean;
 }): Promise<McpHttpsManifestConfirmResult> {
-  if (!input || typeof input.provisionId !== 'string' ||
-      typeof input.confirmationToken !== 'string' || typeof input.confirm !== 'boolean') {
+  if (
+    !input ||
+    typeof input.provisionId !== 'string' ||
+    typeof input.confirmationToken !== 'string' ||
+    typeof input.confirm !== 'boolean'
+  ) {
     throw createMalformedMcpPlatformResponseError();
   }
   try {

@@ -165,13 +165,14 @@ const policy = (overrides: Partial<McpSourcesPolicyState> = {}): McpSourcesPolic
   ...overrides,
 });
 
-function renderDiscover(
-  sourcesPolicy: McpSourcesPolicyState | null = null,
-  refreshNonce = 0
-) {
+function renderDiscover(sourcesPolicy: McpSourcesPolicyState | null = null, refreshNonce = 0) {
   render(
     <IntlProvider locale="en">
-      <DiscoverTab sourcesPolicy={sourcesPolicy} refreshNonce={refreshNonce} onTaskCreated={vi.fn()} />
+      <DiscoverTab
+        sourcesPolicy={sourcesPolicy}
+        refreshNonce={refreshNonce}
+        onTaskCreated={vi.fn()}
+      />
     </IntlProvider>
   );
 }
@@ -385,7 +386,9 @@ describe('DiscoverTab', () => {
 
     await user.click(itemButton);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('refresh failed');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The MCP Platform request could not be completed.'
+    );
     expect(screen.getByRole('heading', { level: 2, name: 'MCP A' })).toBeInTheDocument();
   });
 
@@ -405,7 +408,9 @@ describe('DiscoverTab', () => {
 
     await user.click(screen.getByRole('button', { name: /catalog-b/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('selection failed');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The MCP Platform request could not be completed.'
+    );
     expect(screen.queryByRole('heading', { level: 2, name: 'MCP A' })).not.toBeInTheDocument();
   });
 

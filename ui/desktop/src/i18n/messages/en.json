@@ -1007,6 +1007,15 @@
   "extensionConfigFields.endpointRequired": {
     "defaultMessage": "Endpoint URL is required"
   },
+  "extensionConfigFields.workingDirectoryDescription": {
+    "defaultMessage": "Use this when the MCP command expects to start from a specific project or installation folder."
+  },
+  "extensionConfigFields.workingDirectoryLabel": {
+    "defaultMessage": "Working directory (optional)"
+  },
+  "extensionConfigFields.workingDirectoryPlaceholder": {
+    "defaultMessage": "e.g. D:\\Tools\\my-mcp"
+  },
   "extensionInfoFields.descriptionLabel": {
     "defaultMessage": "Description"
   },
@@ -1091,8 +1100,23 @@
   "extensionInstallModal.yes": {
     "defaultMessage": "Yes"
   },
+  "extensionItem.checkExtension": {
+    "defaultMessage": "Check {name} MCP connection"
+  },
+  "extensionItem.checking": {
+    "defaultMessage": "Checking MCP tools…"
+  },
   "extensionItem.configureExtension": {
     "defaultMessage": "Configure {name} Extension"
+  },
+  "extensionItem.healthError": {
+    "defaultMessage": "MCP check failed: {message}"
+  },
+  "extensionItem.healthy": {
+    "defaultMessage": "MCP ready · {count} tools found"
+  },
+  "extensionItem.noTools": {
+    "defaultMessage": "MCP connected, but no tools were found"
   },
   "extensionItem.toggleExtension": {
     "defaultMessage": "Toggle {name} extension On or Off"
@@ -1148,8 +1172,26 @@
   "extensionsSection.browseExtensions": {
     "defaultMessage": "Browse extensions"
   },
+  "extensionsSection.exportMcpConfigs": {
+    "defaultMessage": "Export custom MCPs"
+  },
+  "extensionsSection.importMcpConfigs": {
+    "defaultMessage": "Import custom MCPs"
+  },
   "extensionsSection.saveChanges": {
     "defaultMessage": "Save Changes"
+  },
+  "extensionsSection.transferDescription": {
+    "defaultMessage": "Exports connection details only. Environment values and HTTP header values are excluded for security and must be entered on the new computer."
+  },
+  "extensionsSection.transferError": {
+    "defaultMessage": "MCP configuration transfer failed: {message}"
+  },
+  "extensionsSection.transferSuccess": {
+    "defaultMessage": "Imported {count} custom MCP configuration(s)."
+  },
+  "extensionsSection.transferSuccessWithSecrets": {
+    "defaultMessage": "Imported {count} custom MCP configuration(s). {secretCount} remain disabled until their required secrets are entered."
   },
   "extensionsSection.updateExtension": {
     "defaultMessage": "Update Extension"
@@ -1183,6 +1225,9 @@
   },
   "externalBackendSection.certFingerprintPlaceholder": {
     "defaultMessage": "AA:BB:CC:... or sha256/base64"
+  },
+  "externalBackendSection.clearSecret": {
+    "defaultMessage": "Clear saved secret"
   },
   "externalBackendSection.description": {
     "defaultMessage": "By default Goose starts a local backend. Use this to connect to an external ACP-compatible backend."
@@ -1380,7 +1425,7 @@
     "defaultMessage": "Search failed. Please try again."
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "Search HuggingFace"
+    "defaultMessage": "Search ModelScope"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "Search returned no data."
@@ -1721,11 +1766,17 @@
   "loadingGoose.waiting": {
     "defaultMessage": "goose is waiting…"
   },
+  "localInferenceSettings.automaticSetup": {
+    "defaultMessage": "Source: ModelScope · connection failures retry automatically · local GPU or CPU settings are applied when the download finishes."
+  },
+  "localInferenceSettings.clearToken": {
+    "defaultMessage": "Clear token"
+  },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "Delete this model? You can re-download it later."
   },
   "localInferenceSettings.description": {
-    "defaultMessage": "Download and manage local LLM models for inference without API keys. Search HuggingFace for GGUF or MLX models, or use the featured picks below."
+    "defaultMessage": "Download and manage local GGUF models for inference without API keys. Search ModelScope or use the featured picks below."
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "Dismiss"
@@ -1754,11 +1805,20 @@
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "Featured Models"
   },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "Sign in to increase rate limits when searching and downloading models, and to access private or gated Hugging Face repositories."
-  },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
+  },
+  "localInferenceSettings.modelScopeSourceNote": {
+    "defaultMessage": "Models are searched and downloaded from ModelScope. Public models do not require login; private or gated models require a ModelScope access token."
+  },
+  "localInferenceSettings.modelScopeTokenDescription": {
+    "defaultMessage": "Only needed for private or gated models. Saved in your operating system credential store and never added to Goose configuration files."
+  },
+  "localInferenceSettings.modelScopeTokenPlaceholder": {
+    "defaultMessage": "Paste a new token to save or replace the current one"
+  },
+  "localInferenceSettings.modelScopeTokenTitle": {
+    "defaultMessage": "ModelScope access token"
   },
   "localInferenceSettings.modelSettings": {
     "defaultMessage": "Model Settings"
@@ -1778,6 +1838,12 @@
   "localInferenceSettings.retry": {
     "defaultMessage": "Retry"
   },
+  "localInferenceSettings.retryingConnection": {
+    "defaultMessage": "Connection interrupted — retrying automatically ({attempt}/{maximum})"
+  },
+  "localInferenceSettings.saveToken": {
+    "defaultMessage": "Save token"
+  },
   "localInferenceSettings.showAllFeatured": {
     "defaultMessage": "Show all featured ({count} more)"
   },
@@ -1786,6 +1852,9 @@
   },
   "localInferenceSettings.title": {
     "defaultMessage": "Local Inference Models"
+  },
+  "localInferenceSettings.tokenConfigured": {
+    "defaultMessage": "A token is configured"
   },
   "localInferenceSettings.vision": {
     "defaultMessage": "Vision"
@@ -2138,6 +2207,9 @@
   "mcpCenter.confirmingTrustedSource": {
     "defaultMessage": "Confirming trusted source…"
   },
+  "mcpCenter.continue": {
+    "defaultMessage": "Continue"
+  },
   "mcpCenter.createConnectionPlan": {
     "defaultMessage": "Create connection plan"
   },
@@ -2261,6 +2333,21 @@
   "mcpCenter.currentUser": {
     "defaultMessage": "Current user"
   },
+  "mcpCenter.customStdio": {
+    "defaultMessage": "Custom MCP"
+  },
+  "mcpCenter.customStdioDescription": {
+    "defaultMessage": "Add local stdio commands or Streamable HTTP endpoints. Configure arguments, working directories, environment variables, or HTTP headers as needed."
+  },
+  "mcpCenter.customStdioHealthAvailable": {
+    "defaultMessage": "After enabling an MCP, check its tool discovery from the card. Export a diagnostic report if the check fails."
+  },
+  "mcpCenter.customStdioHealthUnavailable": {
+    "defaultMessage": "Open a chat first to check MCP tool discovery or export a diagnostic report."
+  },
+  "mcpCenter.customStdioTitle": {
+    "defaultMessage": "Custom MCP connections"
+  },
   "mcpCenter.defaultEnabled": {
     "defaultMessage": "Enabled by default for new sessions"
   },
@@ -2333,6 +2420,9 @@
   "mcpCenter.expiresAt": {
     "defaultMessage": "Preview expires at"
   },
+  "mcpCenter.exportMcpDiagnostics": {
+    "defaultMessage": "Export MCP diagnostic report"
+  },
   "mcpCenter.finalizationState": {
     "defaultMessage": "Finalization"
   },
@@ -2354,6 +2444,24 @@
   "mcpCenter.httpsImportUnavailableTitle": {
     "defaultMessage": "HTTPS source import is not available in this phase"
   },
+  "mcpCenter.httpsManifestDescription": {
+    "defaultMessage": "Enter an HTTPS manifest URL to inspect its safe preview before continuing."
+  },
+  "mcpCenter.httpsManifestError": {
+    "defaultMessage": "The HTTPS manifest could not be imported."
+  },
+  "mcpCenter.httpsManifestHelp": {
+    "defaultMessage": "Only HTTPS URLs are accepted. The URL is checked by Goose before any plan is created."
+  },
+  "mcpCenter.httpsManifestInvalidUrl": {
+    "defaultMessage": "Enter a valid HTTPS URL."
+  },
+  "mcpCenter.httpsManifestPreview": {
+    "defaultMessage": "HTTPS manifest safety preview"
+  },
+  "mcpCenter.httpsManifestUrlLabel": {
+    "defaultMessage": "HTTPS manifest URL"
+  },
   "mcpCenter.image": {
     "defaultMessage": "Image"
   },
@@ -2365,6 +2473,9 @@
   },
   "mcpCenter.importAnotherSource": {
     "defaultMessage": "Import another source"
+  },
+  "mcpCenter.importHttpsManifest": {
+    "defaultMessage": "Import HTTPS manifest"
   },
   "mcpCenter.importKind": {
     "defaultMessage": "Import kind"
@@ -2480,6 +2591,9 @@
   "mcpCenter.manifestDigest": {
     "defaultMessage": "Manifest digest"
   },
+  "mcpCenter.manifestId": {
+    "defaultMessage": "Manifest"
+  },
   "mcpCenter.manifests": {
     "defaultMessage": "Manifests"
   },
@@ -2491,6 +2605,9 @@
   },
   "mcpCenter.materializedDigest": {
     "defaultMessage": "Materialized digest"
+  },
+  "mcpCenter.mcp": {
+    "defaultMessage": "MCP"
   },
   "mcpCenter.monitorFailedNext": {
     "defaultMessage": "Retry task monitoring. The task itself continues independently."
@@ -2585,6 +2702,9 @@
   "mcpCenter.operation": {
     "defaultMessage": "Operation"
   },
+  "mcpCenter.origin": {
+    "defaultMessage": "Origin"
+  },
   "mcpCenter.outcomeState": {
     "defaultMessage": "Outcome state"
   },
@@ -2623,6 +2743,9 @@
   },
   "mcpCenter.policyStatus": {
     "defaultMessage": "Source recovery state"
+  },
+  "mcpCenter.preview": {
+    "defaultMessage": "Preview"
   },
   "mcpCenter.previewTrustedSource": {
     "defaultMessage": "Preview source"
@@ -2763,13 +2886,13 @@
     "defaultMessage": "Test connection to model"
   },
   "mcpCenter.profileConnectionTestBoundary": {
-    "defaultMessage": "Only saved profile entries and configured provider models are used. Endpoints, commands, credentials, prompts, and tool arguments are not accepted or shown."
+    "defaultMessage": "Only saved profile entries and configured provider models are used. Tool definitions are discovered but withheld from the model; endpoints, commands, credentials, prompts, and tool arguments are not accepted or shown."
   },
   "mcpCenter.profileConnectionTestCode": {
     "defaultMessage": "Code: {code}"
   },
   "mcpCenter.profileConnectionTestDescription": {
-    "defaultMessage": "Checks the saved profile against an already configured provider and model. This test never executes MCP tools."
+    "defaultMessage": "Initializes MCP, discovers its tools, and verifies connectivity to the selected provider and model. For safe isolation, discovered tool definitions are not sent to the model. This is not a tool capability or execution test."
   },
   "mcpCenter.profileConnectionTestFailed": {
     "defaultMessage": "Connection test did not complete"
@@ -2813,6 +2936,12 @@
   "mcpCenter.profileConnectionTestSafeFailure": {
     "defaultMessage": "Goose could not complete the connection test. No diagnostic details, configuration, or credentials are shown."
   },
+  "mcpCenter.profileConnectionTestSkipped": {
+    "defaultMessage": "Skipped"
+  },
+  "mcpCenter.profileConnectionTestStageCleanup": {
+    "defaultMessage": "Connection cleanup"
+  },
   "mcpCenter.profileConnectionTestStageEligibility": {
     "defaultMessage": "Eligibility check"
   },
@@ -2820,16 +2949,13 @@
     "defaultMessage": "MCP initialization"
   },
   "mcpCenter.profileConnectionTestStageModelRequest": {
-    "defaultMessage": "Model connection"
+    "defaultMessage": "Provider/model connectivity"
   },
   "mcpCenter.profileConnectionTestStageToolDiscovery": {
-    "defaultMessage": "Tool discovery"
-  },
-  "mcpCenter.profileConnectionTestStageCleanup": {
-    "defaultMessage": "Connection cleanup"
+    "defaultMessage": "MCP tools discovered"
   },
   "mcpCenter.profileConnectionTestStageToolVisibility": {
-    "defaultMessage": "Tool definition visibility"
+    "defaultMessage": "Tool definitions withheld from model (safe isolation)"
   },
   "mcpCenter.profileConnectionTestTitle": {
     "defaultMessage": "Test connection to model"
@@ -3077,6 +3203,9 @@
   "mcpCenter.providerSource": {
     "defaultMessage": "Provider source"
   },
+  "mcpCenter.provision": {
+    "defaultMessage": "Provision"
+  },
   "mcpCenter.provisionAnotherSource": {
     "defaultMessage": "Review another source"
   },
@@ -3273,7 +3402,7 @@
     "defaultMessage": "Authentication support"
   },
   "mcpCenter.remoteHttpCredentialUnavailable": {
-    "defaultMessage": "Endpoints that require stored credentials are not available from this page yet."
+    "defaultMessage": "For endpoints that require credentials, open the Custom MCP tab and add a Streamable HTTP connection with environment variables or headers."
   },
   "mcpCenter.remoteHttpNoAuthOnly": {
     "defaultMessage": "This page currently adds only no-auth Remote HTTP endpoints."
@@ -3580,6 +3709,9 @@
   },
   "mentionPopover.noItemsFound": {
     "defaultMessage": "No items found matching \"{query}\""
+  },
+  "mentionPopover.projectFilesUnavailable": {
+    "defaultMessage": "File listing is unavailable in safe mode. You can still enter a file reference manually."
   },
   "mentionPopover.scanningFiles": {
     "defaultMessage": "Scanning files..."
@@ -4461,7 +4593,7 @@
     "defaultMessage": "Connect OpenAI, Anthropic, Google, etc"
   },
   "providerSelector.localModelDescription": {
-    "defaultMessage": "Download a model and run it on this device. No API key or account needed."
+    "defaultMessage": "Download public GGUF models from ModelScope and run them on this device. No API key or account needed."
   },
   "providerSelector.selectProvider": {
     "defaultMessage": "Select a provider"
@@ -6154,6 +6286,18 @@
   },
   "updateSection.manualInstallRequired": {
     "defaultMessage": "Manual installation required for this update method."
+  },
+  "updateSection.openCustomReleases": {
+    "defaultMessage": "Open HikerM releases"
+  },
+  "updateSection.portableUpdateDescription": {
+    "defaultMessage": "This custom build only uses the HikerM distribution channel. To update, download the newer custom package, close Goose, and replace the extracted application folder. Your MCP and model settings are stored separately from the application folder."
+  },
+  "updateSection.portableUpdateModelNote": {
+    "defaultMessage": "Downloaded models are not copied by an application update. Keep the existing local model data, or download the selected model again on the new computer."
+  },
+  "updateSection.portableUpdateTitle": {
+    "defaultMessage": "Portable custom build"
   },
   "updateSection.readyInstallAuto": {
     "defaultMessage": "✓ Update is ready. Restart Goose to finish installing it, or quit when you're done."

@@ -14,9 +14,13 @@ import { PlanReviewDialog } from './PlanReviewDialog';
 import { mcpCenterMessages as messages } from './messages';
 import { useIntl } from '../../i18n';
 import ExtensionsSection from '../settings/extensions/ExtensionsSection';
+import { useChatContext } from '../../contexts/ChatContext';
+import { DiagnosticsModal } from '../ui/Diagnostics';
 
 export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef) => void }) {
   const intl = useIntl();
+  const chatContext = useChatContext();
+  const activeSessionId = chatContext?.chat.sessionId ?? '';
   const [endpoint, setEndpoint] = useState('');
   const [stdio, setStdio] = useState<McpManualStdioSourcesPage | null>(null);
   const [selectedSource, setSelectedSource] = useState('');
@@ -24,6 +28,7 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<McpPlatformRecoveryViewModel | null>(null);
   const [plan, setPlan] = useState<McpPlanReview | null>(null);
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
 
   const loadStdio = async () => {
     setLoadingStdio(true);
@@ -81,9 +86,7 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
         <TabsList aria-label={intl.formatMessage(messages.manualTypeLabel)}>
           <TabsTrigger value="remote">{intl.formatMessage(messages.remoteHttp)}</TabsTrigger>
           <TabsTrigger value="stdio">{intl.formatMessage(messages.approvedStdio)}</TabsTrigger>
-          <TabsTrigger value="custom-stdio">
-            {intl.formatMessage(messages.customStdio)}
-          </TabsTrigger>
+          <TabsTrigger value="custom-stdio">{intl.formatMessage(messages.customStdio)}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="remote">
@@ -215,7 +218,27 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
                 {intl.formatMessage(messages.customStdioDescription)}
               </p>
             </div>
-            <ExtensionsSection />
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-primary bg-background-secondary p-3">
+              <p className="text-sm text-text-secondary">
+                {intl.formatMessage(
+                  activeSessionId
+                    ? messages.customStdioHealthAvailable
+                    : messages.customStdioHealthUnavailable
+                )}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!activeSessionId}
+                onClick={() => setDiagnosticsOpen(true)}
+              >
+                {intl.formatMessage(messages.exportMcpDiagnostics)}
+              </Button>
+            </div>
+            <ExtensionsSection
+              healthCheckSessionId={activeSessionId || undefined}
+              showTransferControls
+            />
           </div>
         </TabsContent>
       </Tabs>
@@ -226,6 +249,13 @@ export function ManualTab({ onTaskCreated }: { onTaskCreated: (task: McpTaskRef)
         onClose={() => setPlan(null)}
         onTaskCreated={onTaskCreated}
       />
+      {activeSessionId && (
+        <DiagnosticsModal
+          isOpen={diagnosticsOpen}
+          onClose={() => setDiagnosticsOpen(false)}
+          sessionId={activeSessionId}
+        />
+      )}
     </div>
   );
 }

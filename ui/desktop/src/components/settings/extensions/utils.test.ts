@@ -38,6 +38,7 @@ describe('Extension Utils', () => {
         description: '',
         type: 'stdio',
         cmd: '',
+        cwd: '',
         endpoint: '',
         enabled: true,
         timeout: 300,

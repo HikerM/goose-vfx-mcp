@@ -123,7 +123,7 @@ describe('ACP MCP app helpers', () => {
     });
   });
 
-  it('maps and filters ACP tools for app host context', async () => {
+  it('requests tools for the selected MCP extension', async () => {
     client.goose.toolsList_unstable.mockResolvedValue({
       tools: [
         {
@@ -137,18 +137,15 @@ describe('ACP MCP app helpers', () => {
             },
           },
         },
-        {
-          name: 'calendar__refresh',
-          description: 'Refresh calendar',
-          parameters: [],
-          inputSchema: { type: 'object' },
-        },
       ],
     });
 
     const tools = await listMcpAppTools('session-1', 'weather');
 
-    expect(client.goose.toolsList_unstable).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(client.goose.toolsList_unstable).toHaveBeenCalledWith({
+      sessionId: 'session-1',
+      extensionName: 'weather',
+    });
     expect(tools).toEqual([
       {
         name: 'weather__refresh',

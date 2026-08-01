@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { McpPlatformOutcome } from '@aaif/goose-sdk';
+import { performance } from 'node:perf_hooks';
 const { getAcpClient } = vi.hoisted(() => ({
   getAcpClient: vi.fn(),
 }));
@@ -30,15 +31,13 @@ function hasIsolatedSurrogate(value: string): boolean {
   return false;
 }
 
-function phaseUnavailableServiceError(
-  {
-    code = 'not_implemented_for_phase',
-    details,
-  }: {
-    code?: 'not_implemented_for_phase' | 'operation_not_supported';
-    details?: unknown;
-  } = {}
-) {
+function phaseUnavailableServiceError({
+  code = 'not_implemented_for_phase',
+  details,
+}: {
+  code?: 'not_implemented_for_phase' | 'operation_not_supported';
+  details?: unknown;
+} = {}) {
   return new McpPlatformServiceError(
     {
       code,
@@ -68,14 +67,15 @@ describe('MCP Platform outcome adapter', () => {
       },
     });
 
-    await expect(confirmMcpPlan({ planId: 'plan', planDigest: 'digest' }, 'confirm'))
-      .rejects.toMatchObject({
+    await expect(
+      confirmMcpPlan({ planId: 'plan', planDigest: 'digest' }, 'confirm')
+    ).rejects.toMatchObject({
+      message: 'Unable to complete MCP operation',
+      recovery: {
         message: 'Unable to complete MCP operation',
-        recovery: {
-          message: 'Unable to complete MCP operation',
-          retryable: true,
-        },
-      });
+        retryable: true,
+      },
+    });
     try {
       await confirmMcpPlan({ planId: 'plan', planDigest: 'digest' }, 'confirm');
     } catch (error) {
@@ -107,32 +107,53 @@ describe('MCP Platform outcome adapter', () => {
       },
     });
 
-    await expect(confirmMcpPlan({ planId: 'plan', planDigest: 'digest' }, 'confirm'))
-      .rejects.toBe(serviceError);
+    await expect(confirmMcpPlan({ planId: 'plan', planDigest: 'digest' }, 'confirm')).rejects.toBe(
+      serviceError
+    );
   });
 
   it('projects only the three HTTPS provision plan request fields', () => {
-    expect(projectHttpsProvisionPlanReviewRequest({
-      provisionId: 'p', expectedManifestDigest: 'd', idempotencyKey: 'i',
-    })).toEqual({ provisionId: 'p', expectedManifestDigest: 'd', idempotencyKey: 'i' });
-    expect(() => projectHttpsProvisionPlanReviewRequest({
-      provisionId: 'p', expectedManifestDigest: 'd', idempotencyKey: 'i', url: 'https://secret',
-    } as never)).toThrow();
+    expect(
+      projectHttpsProvisionPlanReviewRequest({
+        provisionId: 'p',
+        expectedManifestDigest: 'd',
+        idempotencyKey: 'i',
+      })
+    ).toEqual({ provisionId: 'p', expectedManifestDigest: 'd', idempotencyKey: 'i' });
+    expect(() =>
+      projectHttpsProvisionPlanReviewRequest({
+        provisionId: 'p',
+        expectedManifestDigest: 'd',
+        idempotencyKey: 'i',
+        url: 'https://secret',
+      } as never)
+    ).toThrow();
   });
 
   it('parses a safe HTTPS provision review and rejects sensitive extensions', () => {
     const review = {
-      planId: 'plan', planDigest: 'digest', expiresAtMs: 1, trustTier: 'trusted', mcpId: 'mcp',
-      name: 'Name', version: '1', selectedManifestDigest: 'manifest',
+      planId: 'plan',
+      planDigest: 'digest',
+      expiresAtMs: 1,
+      trustTier: 'trusted',
+      mcpId: 'mcp',
+      name: 'Name',
+      version: '1',
+      selectedManifestDigest: 'manifest',
       permissions: [{ kind: 'network', required: true }],
       fileEffects: { writesFiles: false, removesFiles: false, ownedItems: 0 },
       processEffects: { processRequiredForConnection: false, startsDuringConfirmation: false },
       reversibility: { reversible: true, strategy: 'available' },
-      policy: { outcome: 'allowed', reasonCount: 0 }, warnings: [],
-      requiredConfirmations: [{ type: 'permission' }], defaultDisabled: false,
+      policy: { outcome: 'allowed', reasonCount: 0 },
+      warnings: [],
+      requiredConfirmations: [{ type: 'permission' }],
+      defaultDisabled: false,
       recovery: { code: 'none', retryable: false },
     };
-    expect(parseHttpsProvisionPlanReview(review)).toMatchObject({ planId: 'plan', operation: 'provision' });
+    expect(parseHttpsProvisionPlanReview(review)).toMatchObject({
+      planId: 'plan',
+      operation: 'provision',
+    });
     expect(parseHttpsProvisionPlanReview({ ...review, token: 'secret' })).toBeNull();
   });
 
@@ -147,14 +168,22 @@ describe('MCP Platform outcome adapter', () => {
     ['non-string permission kind', { permissions: [{ kind: 1, required: true }] }],
   ])('rejects invalid HTTPS provision review field: %s', (_label, change) => {
     const review = {
-      planId: 'plan', planDigest: 'digest', expiresAtMs: 1, trustTier: 'trusted', mcpId: 'mcp',
-      name: 'Name', version: '1', selectedManifestDigest: 'manifest',
+      planId: 'plan',
+      planDigest: 'digest',
+      expiresAtMs: 1,
+      trustTier: 'trusted',
+      mcpId: 'mcp',
+      name: 'Name',
+      version: '1',
+      selectedManifestDigest: 'manifest',
       permissions: [{ kind: 'network', required: true }],
       fileEffects: { writesFiles: false, removesFiles: false, ownedItems: 0 },
       processEffects: { processRequiredForConnection: false, startsDuringConfirmation: false },
       reversibility: { reversible: true, strategy: 'available' },
-      policy: { outcome: 'allowed', reasonCount: 0 }, warnings: [],
-      requiredConfirmations: [{ type: 'permission' }], defaultDisabled: false,
+      policy: { outcome: 'allowed', reasonCount: 0 },
+      warnings: [],
+      requiredConfirmations: [{ type: 'permission' }],
+      defaultDisabled: false,
       recovery: { code: 'none', retryable: false },
     };
     const merged = { ...review, ...change };
@@ -247,10 +276,7 @@ describe('MCP Platform outcome adapter', () => {
   it('requires a fully validated envelope before degrading profiles as unavailable', () => {
     expect(isMcpPhaseUnavailableError(phaseUnavailableServiceError(), 'profiles')).toBe(false);
     expect(
-      isMcpPhaseUnavailableError(
-        phaseUnavailableServiceError({ details: null }),
-        'profiles'
-      )
+      isMcpPhaseUnavailableError(phaseUnavailableServiceError({ details: null }), 'profiles')
     ).toBe(false);
     expect(
       isMcpPhaseUnavailableError(
@@ -350,12 +376,16 @@ describe('MCP Platform outcome adapter', () => {
     expect(recovery.message).toContain('Authorization: Basic [redacted]');
     expect(recovery.message).toContain('Proxy-Authorization: Negotiate [redacted]');
     expect(recovery.message).not.toContain('status=401');
-    expect(recovery.message).toContain('{"Authorization":"Bearer [redacted]","X-Api-Key":"[redacted]"}');
+    expect(recovery.message).toContain(
+      '{"Authorization":"Bearer [redacted]","X-Api-Key":"[redacted]"}'
+    );
     expect(recovery.message).toContain('[environment removed]');
     expect(recovery.message).toContain('[argv removed]');
     expect(recovery.message).toContain('[command removed]');
     expect(recovery.message).toContain('path=[path removed]');
-    expect(recovery.message).toContain('Failure while reading [path removed], then ([address removed]).');
+    expect(recovery.message).toContain(
+      'Failure while reading [path removed], then ([address removed]).'
+    );
   });
 
   it('falls back to the generic failure message when only sensitive fragments remain', () => {
@@ -363,7 +393,7 @@ describe('MCP Platform outcome adapter', () => {
       code: 'invalid_request',
       message:
         'Authorization: Bearer super-secret https://private.example.test ' +
-        'command=/bin/sh argv=[\"C:\\\\secret\\\\tool.exe\"] env={\"TOKEN\":\"abc\"}',
+        'command=/bin/sh argv=["C:\\\\secret\\\\tool.exe"] env={"TOKEN":"abc"}',
       retryable: true,
       correlationId: 'correlation-5',
     });
@@ -388,7 +418,9 @@ describe('MCP Platform outcome adapter', () => {
     } catch (error) {
       const serviceError = error as McpPlatformServiceError;
       expect(serviceError.message).toBe('The MCP Platform request could not be completed.');
-      expect(serviceError.envelope.message).toBe('The MCP Platform request could not be completed.');
+      expect(serviceError.envelope.message).toBe(
+        'The MCP Platform request could not be completed.'
+      );
       expect(JSON.stringify(serviceError)).not.toContain('dXNlcjpwYXNz');
       expect(JSON.stringify(serviceError)).not.toContain('private.example.test');
     }
@@ -439,9 +471,7 @@ describe('MCP Platform outcome adapter', () => {
         'prefix Authorization: Bearer prefix-secret status=401 ' +
           'label: Proxy-Authorization: Negotiate token=opaque nonce=qwerty correlationId=req-7'
       )
-    ).toBe(
-      'prefix Authorization: Bearer [redacted] Proxy-Authorization: Negotiate [redacted]'
-    );
+    ).toBe('prefix Authorization: Bearer [redacted] Proxy-Authorization: Negotiate [redacted]');
   });
 
   it('treats plain-text authorization metadata as untrusted until the next line', () => {
@@ -509,10 +539,7 @@ describe('MCP Platform outcome adapter', () => {
   it('redacts control, format, and combining-character bypasses inside credential keys', () => {
     expect(
       sanitizeMcpUserMessage(
-        '{"A\\tuthorization":"Bearer tab-secret","status":"400"}\n'.replace(
-          '\\t',
-          '\t'
-        ) +
+        '{"A\\tuthorization":"Bearer tab-secret","status":"400"}\n'.replace('\\t', '\t') +
           '{"A\\u000Buthorization":"Bearer vt-secret","status":"401"}\n'.replace(
             '\\u000B',
             '\u000B'
@@ -654,9 +681,7 @@ describe('MCP Platform outcome adapter', () => {
     const sanitized = sanitizeMcpUserMessage(denseInput);
     const elapsedMs = performance.now() - startedAt;
 
-    expect(sanitized).toContain(
-      'prefix-0: Authorization: Bearer [redacted]'
-    );
+    expect(sanitized).toContain('prefix-0: Authorization: Bearer [redacted]');
     expect(sanitized).toContain('[message truncated]');
     expect(sanitized).not.toContain('secret-0');
     expect(sanitized).not.toContain('secret-1199');
@@ -677,8 +702,12 @@ describe('MCP Platform outcome adapter', () => {
     );
     const boundaryCases = [
       sanitizeMcpUserMessage('A'.repeat(limit - 1) + '💥Authorization: Bearer emoji-secret'),
-      sanitizeMcpUserMessage('A'.repeat(limit - 1) + 'e\u0301Authorization: Bearer combining-secret'),
-      sanitizeMcpUserMessage('A'.repeat(limit - 1) + '✈\uFE0FAuthorization: Bearer variation-secret'),
+      sanitizeMcpUserMessage(
+        'A'.repeat(limit - 1) + 'e\u0301Authorization: Bearer combining-secret'
+      ),
+      sanitizeMcpUserMessage(
+        'A'.repeat(limit - 1) + '✈\uFE0FAuthorization: Bearer variation-secret'
+      ),
       sanitizeMcpUserMessage('A'.repeat(limit - 1) + '\u200BAuthorization: Bearer format-secret'),
     ];
 
@@ -696,7 +725,9 @@ describe('MCP Platform outcome adapter', () => {
       expect(sanitized).not.toContain('variation-secret');
       expect(sanitized).not.toContain('format-secret');
       expect(hasIsolatedSurrogate(sanitized ?? '')).toBe(false);
-      expect(sanitized).not.toMatch(/[\u0300-\u036f\u200b\ufe00-\ufe0f]\n\[message truncated\]$/u);
+      expect(sanitized).not.toMatch(/[\u0300-\u036f]\n\[message truncated\]$/u);
+      expect(sanitized).not.toMatch(/\u200b\n\[message truncated\]$/u);
+      expect(sanitized).not.toMatch(/[\ufe00-\ufe0f]\n\[message truncated\]$/u);
     }
   });
 

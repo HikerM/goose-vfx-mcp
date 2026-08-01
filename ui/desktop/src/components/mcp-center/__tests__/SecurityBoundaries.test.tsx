@@ -329,7 +329,7 @@ describe('MCP Center security boundaries', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Endpoints that require stored credentials are not available from this page yet.'
+        'For endpoints that require credentials, open the Custom MCP tab and add a Streamable HTTP connection with environment variables or headers.'
       )
     ).toBeInTheDocument();
     expect(createManualMcpPlan).toHaveBeenCalledWith({
@@ -507,7 +507,9 @@ describe('MCP Center security boundaries', () => {
     await user.click(screen.getByRole('button', { name: 'Refresh source' }));
 
     expect(onImported).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText('refresh failed')).toBeInTheDocument();
+    expect(
+      await screen.findByText('The MCP Platform request could not be completed.')
+    ).toBeInTheDocument();
   });
 
   it('does not pass raw service envelope secrets into the recovery panel', () => {
@@ -686,12 +688,10 @@ describe('MCP Center security boundaries', () => {
 
     const monitorAlert = await screen.findByRole('alert');
 
-    expect(monitorAlert).toHaveTextContent('Task monitor rejected the response.');
-    expect(monitorAlert).toHaveTextContent('Authorization: Bearer [redacted]');
-    expect(monitorAlert).toHaveTextContent('Authorization： Bearer [redacted]');
-    expect(monitorAlert).toHaveTextContent('{"Authorization":"Bearer [redacted]","status":"401"}');
-    expect(monitorAlert).toHaveTextContent('Proxy-Authorization: Digest [redacted]');
-    expect(monitorAlert).toHaveTextContent('﹁Proxy-Authorization﹂＝﹁Negotiate [redacted]﹂');
+    expect(monitorAlert).toHaveTextContent('The MCP Platform request could not be completed.');
+    expect(monitorAlert).not.toHaveTextContent('Task monitor rejected the response.');
+    expect(monitorAlert).not.toHaveTextContent('Authorization');
+    expect(monitorAlert).not.toHaveTextContent('Proxy-Authorization');
     expect(monitorAlert).not.toHaveTextContent('prefix-secret');
     expect(monitorAlert).not.toHaveTextContent('fullwidth-secret');
     expect(monitorAlert).not.toHaveTextContent('nul-secret');

@@ -2,9 +2,11 @@ import type { ExtensionConfig, ExtensionEntry } from '../types/extensions';
 import type { EnvVariable, GooseExtension, GooseExtensionEntry } from '@aaif/goose-sdk';
 import { getAcpClient } from './acpConnection';
 
-let windowsMcpEnvironment: NodeJS.ProcessEnv | undefined;
+type ProcessEnvironment = typeof process.env;
 
-export function setWindowsMcpEnvironment(environment: NodeJS.ProcessEnv | undefined): void {
+let windowsMcpEnvironment: ProcessEnvironment | undefined;
+
+export function setWindowsMcpEnvironment(environment: ProcessEnvironment | undefined): void {
   windowsMcpEnvironment = environment ? { ...environment } : undefined;
 }
 
@@ -34,7 +36,9 @@ const controlledWindowsEnvironmentNames = new Set([
 
 function mergeStdioEnvironment(existing: EnvVariable[]): EnvVariable[] {
   const controlled = new Set(controlledWindowsEnvironmentNames);
-  return existing.filter(({ name }) => !controlled.has(name) && !controlled.has(name.toUpperCase()));
+  return existing.filter(
+    ({ name }) => !controlled.has(name) && !controlled.has(name.toUpperCase())
+  );
 }
 
 export function applyWindowsMcpEnvironment(extension: GooseExtension): GooseExtension {

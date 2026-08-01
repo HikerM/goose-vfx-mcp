@@ -92,7 +92,9 @@ describe('useMcpTaskMonitor', () => {
       .mockResolvedValueOnce(task(4))
       .mockRejectedValueOnce(new Error('private endpoint detail'));
     vi.mocked(resumeMcpEvents).mockResolvedValue(events([], [task(3)]));
-    const { result } = renderHook(() => useMcpTaskMonitor(task(5), onUpdate, onError, onTerminal, 0));
+    const { result } = renderHook(() =>
+      useMcpTaskMonitor(task(5), onUpdate, onError, onTerminal, 0)
+    );
 
     await flushMonitor();
     expect(onUpdate).not.toHaveBeenCalled();
@@ -142,7 +144,7 @@ describe('useMcpTaskMonitor', () => {
     const onError = vi.fn();
     const onTerminal = vi.fn();
     vi.mocked(getMcpTask)
-      .mockRejectedValueOnce(new Error('env={\"TOKEN\":\"abc\"}'))
+      .mockRejectedValueOnce(new Error('env={"TOKEN":"abc"}'))
       .mockResolvedValueOnce(task(2, 'running', 'task-2'));
     vi.mocked(resumeMcpEvents).mockResolvedValue(events([], [task(2, 'running', 'task-2')]));
 
@@ -206,7 +208,9 @@ describe('useMcpTaskMonitor', () => {
     const onUpdate = vi.fn();
     const onError = vi.fn();
     const onTerminal = vi.fn();
-    const { result } = renderHook(() => useMcpTaskMonitor(task(1), onUpdate, onError, onTerminal, 0));
+    const { result } = renderHook(() =>
+      useMcpTaskMonitor(task(1), onUpdate, onError, onTerminal, 0)
+    );
 
     await flushMonitor();
     expect(result.current.events.map((event) => event.eventId)).toEqual([7, 8]);

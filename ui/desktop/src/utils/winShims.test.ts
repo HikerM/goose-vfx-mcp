@@ -2,18 +2,25 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const fsMock = vi.hoisted(() => {
   let lockContents = '';
-  return ({
-  access: vi.fn(async () => undefined),
-  copyFile: vi.fn(async () => undefined),
-  lstat: vi.fn(async () => ({ isSymbolicLink: () => false })),
-  realpath: vi.fn(async (value: string) => value),
-  mkdir: vi.fn(async () => undefined),
-  rename: vi.fn(async () => undefined),
-  rm: vi.fn(async () => undefined),
-  open: vi.fn(async () => ({ close: vi.fn(async () => undefined), writeFile: vi.fn(async (data: string) => { lockContents = data; }) })),
-  writeFile: vi.fn(async (_path: string, data: string) => { lockContents = data; }),
-  readFile: vi.fn(async () => lockContents),
-  });
+  return {
+    access: vi.fn(async () => undefined),
+    copyFile: vi.fn(async () => undefined),
+    lstat: vi.fn(async () => ({ isSymbolicLink: () => false })),
+    realpath: vi.fn(async (value: string) => value),
+    mkdir: vi.fn(async () => undefined),
+    rename: vi.fn(async () => undefined),
+    rm: vi.fn(async () => undefined),
+    open: vi.fn(async () => ({
+      close: vi.fn(async () => undefined),
+      writeFile: vi.fn(async (data: string) => {
+        lockContents = data;
+      }),
+    })),
+    writeFile: vi.fn(async (_path: string, data: string) => {
+      lockContents = data;
+    }),
+    readFile: vi.fn(async () => lockContents),
+  };
 });
 
 vi.mock('node:fs', () => ({ default: { promises: fsMock } }));
@@ -68,13 +75,15 @@ describe('ensureWinShims', () => {
     expect(process.env.PATH).toBe('C:\\Windows\\System32');
   });
 
-  it.each(['C:\\Goose', '\\\\server\\share\\Goose', 'D:\\Other\\..\\Goose'])
-    ('rejects a non-governed root: %s', async (root) => {
+  it.each(['C:\\Goose', '\\\\server\\share\\Goose', 'D:\\Other\\..\\Goose'])(
+    'rejects a non-governed root: %s',
+    async (root) => {
       vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
 
       await expect(ensureWinShims(root)).rejects.toThrow('local D drive');
       expect(fsMock.copyFile).not.toHaveBeenCalled();
-    });
+    }
+  );
 
   it('inserts the target when PATH contains only a similar directory', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
@@ -135,7 +144,9 @@ describe('ensureWinShims', () => {
     await ensureWinShims('D:\\Goose');
 
     expect(fsMock.open).toHaveBeenCalledWith('D:\\Goose\\bin.deploy.lock', 'wx');
-    const copiedDestinations = fsMock.copyFile.mock.calls.map((call) => (call as unknown as [string, string])[1]);
+    const copiedDestinations = fsMock.copyFile.mock.calls.map(
+      (call) => (call as unknown as [string, string])[1]
+    );
     expect(copiedDestinations.every((value) => /\.staging-[0-9a-f]{24}\\/.test(value))).toBe(true);
   });
 

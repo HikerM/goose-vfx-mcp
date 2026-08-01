@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Button } from '../../ui/button';
-import { Plus } from 'lucide-react';
+import { Download, Plus, Upload } from 'lucide-react';
 import { GPSIcon } from '../../ui/icons';
 import { useConfig, FixedExtensionEntry } from '../../ConfigContext';
 import { defineMessages, useIntl } from '../../../i18n';
@@ -16,6 +16,13 @@ import {
 
 import { activateExtensionDefault, deleteExtension, toggleExtensionDefault } from './index';
 import type { ExtensionConfig } from '../../../types/extensions';
+import { listMcpAppTools } from '../../../acp/mcp-apps';
+import type { ExtensionHealthCheckState } from './subcomponents/ExtensionItem';
+import {
+  createMcpConfigExport,
+  mcpConfigNeedsSecrets,
+  parseMcpConfigExport,
+} from './mcp-config-transfer';
 
 const i18n = defineMessages({
   addCustomExtension: {
@@ -38,6 +45,32 @@ const i18n = defineMessages({
     id: 'extensionsSection.addExtension',
     defaultMessage: 'Add Extension',
   },
+  exportMcpConfigs: {
+    id: 'extensionsSection.exportMcpConfigs',
+    defaultMessage: 'Export custom MCPs',
+  },
+  importMcpConfigs: {
+    id: 'extensionsSection.importMcpConfigs',
+    defaultMessage: 'Import custom MCPs',
+  },
+  transferDescription: {
+    id: 'extensionsSection.transferDescription',
+    defaultMessage:
+      'Exports connection details only. Environment values and HTTP header values are excluded for security and must be entered on the new computer.',
+  },
+  transferSuccess: {
+    id: 'extensionsSection.transferSuccess',
+    defaultMessage: 'Imported {count} custom MCP configuration(s).',
+  },
+  transferSuccessWithSecrets: {
+    id: 'extensionsSection.transferSuccessWithSecrets',
+    defaultMessage:
+      'Imported {count} custom MCP configuration(s). {secretCount} remain disabled until their required secrets are entered.',
+  },
+  transferError: {
+    id: 'extensionsSection.transferError',
+    defaultMessage: 'MCP configuration transfer failed: {message}',
+  },
 });
 
 interface ExtensionSectionProps {
@@ -49,6 +82,8 @@ interface ExtensionSectionProps {
   selectedExtensions?: string[]; // Add controlled state
   onModalClose?: (extensionName: string) => void;
   searchTerm?: string;
+  healthCheckSessionId?: string;
+  showTransferControls?: boolean;
 }
 
 export default function ExtensionsSection({
@@ -60,6 +95,8 @@ export default function ExtensionsSection({
   selectedExtensions = [],
   onModalClose,
   searchTerm = '',
+  healthCheckSessionId,
+  showTransferControls,
 }: ExtensionSectionProps) {
   const intl = useIntl();
   const { getExtensions, addExtension, removeExtension, setExtensionEnabled, extensionsList } =
@@ -73,6 +110,11 @@ export default function ExtensionsSection({
   const [showEnvVarsStateVar, setShowEnvVarsStateVar] = useState<boolean | undefined | null>(
     showEnvVars
   );
+  const [healthChecks, setHealthChecks] = useState<Record<string, ExtensionHealthCheckState>>({});
+  const [transferStatus, setTransferStatus] = useState<
+    { kind: 'success' | 'error'; message: string } | undefined
+  >();
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDeepLinkConfigStateVar(deepLinkConfig);
@@ -130,6 +172,83 @@ export default function ExtensionsSection({
   const handleConfigureClick = (extension: FixedExtensionEntry) => {
     setSelectedExtension(extension);
     setIsModalOpen(true);
+  };
+
+  const handleHealthCheck = useCallback(
+    async (extension: FixedExtensionEntry) => {
+      if (!healthCheckSessionId) return;
+
+      const key = extension.configKey ?? nameToKey(extension.name);
+      if (!extension.enabled) {
+        setHealthChecks((current) => ({
+          ...current,
+          [key]: { status: 'error', message: 'Enable this MCP before checking it.' },
+        }));
+        return;
+      }
+
+      setHealthChecks((current) => ({ ...current, [key]: { status: 'checking' } }));
+      try {
+        const tools = await listMcpAppTools(healthCheckSessionId, extension.name);
+        setHealthChecks((current) => ({
+          ...current,
+          [key]:
+            tools.length > 0 ? { status: 'healthy', toolCount: tools.length } : { status: 'empty' },
+        }));
+      } catch (error) {
+        setHealthChecks((current) => ({
+          ...current,
+          [key]: {
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Unable to list MCP tools.',
+          },
+        }));
+      }
+    },
+    [healthCheckSessionId]
+  );
+
+  const handleExportMcpConfigs = () => {
+    const payload = createMcpConfigExport(extensions);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'goose-custom-mcps.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setTransferStatus(undefined);
+  };
+
+  const handleImportMcpConfigs = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const payload = parseMcpConfigExport(await file.text());
+      for (const { config, enabled } of payload.extensions) {
+        await addExtension(config.name, config, enabled);
+      }
+      await fetchExtensions();
+      const secretCount = payload.extensions.filter(({ config }) =>
+        mcpConfigNeedsSecrets(config)
+      ).length;
+      setTransferStatus({
+        kind: 'success',
+        message: intl.formatMessage(
+          secretCount > 0 ? i18n.transferSuccessWithSecrets : i18n.transferSuccess,
+          { count: payload.extensions.length, secretCount }
+        ),
+      });
+    } catch (error) {
+      setTransferStatus({
+        kind: 'error',
+        message: intl.formatMessage(i18n.transferError, {
+          message: error instanceof Error ? error.message : 'Unknown error',
+        }),
+      });
+    }
   };
 
   const handleAddExtension = async (formData: ExtensionFormData) => {
@@ -216,7 +335,46 @@ export default function ExtensionsSection({
           onConfigure={handleConfigureClick}
           disableConfiguration={disableConfiguration}
           searchTerm={searchTerm}
+          healthChecks={healthChecks}
+          onHealthCheck={healthCheckSessionId ? handleHealthCheck : undefined}
         />
+
+        {showTransferControls && (
+          <div className="mt-4 rounded-lg border border-border-primary bg-background-secondary p-3">
+            <p className="text-xs text-text-secondary">
+              {intl.formatMessage(i18n.transferDescription)}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={handleExportMcpConfigs}>
+                <Download className="mr-1 h-3.5 w-3.5" />
+                {intl.formatMessage(i18n.exportMcpConfigs)}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()}>
+                <Upload className="mr-1 h-3.5 w-3.5" />
+                {intl.formatMessage(i18n.importMcpConfigs)}
+              </Button>
+              <input
+                ref={importInputRef}
+                className="hidden"
+                type="file"
+                accept="application/json,.json"
+                onChange={(event) => void handleImportMcpConfigs(event)}
+              />
+            </div>
+            {transferStatus && (
+              <p
+                role="status"
+                className={`mt-3 text-xs ${
+                  transferStatus.kind === 'success'
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                }`}
+              >
+                {transferStatus.message}
+              </p>
+            )}
+          </div>
+        )}
 
         {!hideButtons && (
           <div className="flex gap-4 pt-4 w-full">

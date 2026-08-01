@@ -1845,7 +1845,10 @@ export function ProfilesTab() {
           ],
           [
             intl.formatMessage(messages.credentialStatusLabel),
-            <CredentialStatusBadge status={detailCredentialStatus} />,
+            <CredentialStatusBadge
+              key="profile-credential-status"
+              status={detailCredentialStatus}
+            />,
           ],
         ]}
       />

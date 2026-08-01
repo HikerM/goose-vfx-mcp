@@ -24,6 +24,7 @@ export interface ExtensionFormData {
   description: string;
   type: 'stdio' | 'sse' | 'streamable_http' | 'builtin';
   cmd?: string;
+  cwd?: string;
   endpoint?: string;
   enabled: boolean;
   timeout?: number;
@@ -47,6 +48,7 @@ export function getDefaultFormData(): ExtensionFormData {
     description: '',
     type: 'stdio',
     cmd: '',
+    cwd: '',
     endpoint: '',
     enabled: true,
     timeout: 300,
@@ -110,7 +112,11 @@ export function extensionToFormData(extension: FixedExtensionEntry): ExtensionFo
       extension.type === 'platform'
         ? 'stdio'
         : extension.type,
-    cmd: extension.type === 'stdio' ? combineCmdAndArgs(extension.cmd, extension.args ?? []) : undefined,
+    cmd:
+      extension.type === 'stdio'
+        ? combineCmdAndArgs(extension.cmd, extension.args ?? [])
+        : undefined,
+    cwd: extension.type === 'stdio' ? (extension.cwd ?? undefined) : undefined,
     endpoint:
       extension.type === 'streamable_http' || extension.type === 'sse'
         ? (extension.uri ?? undefined)
@@ -149,6 +155,7 @@ export function createExtensionConfig(formData: ExtensionFormData): ExtensionCon
       description: formData.description,
       cmd: cmd,
       args: args,
+      ...(formData.cwd?.trim() ? { cwd: formData.cwd.trim() } : {}),
       timeout: formData.timeout,
       ...(env_keys.length > 0 ? { env_keys } : {}),
       ...availableToolsConfig(formData.available_tools),

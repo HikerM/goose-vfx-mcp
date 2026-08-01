@@ -44,4 +44,18 @@ describe('ExtensionItem', () => {
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
     });
   });
+
+  it('shows a successful MCP tool discovery result', () => {
+    renderWithIntl(
+      <ExtensionItem
+        extension={makeExtension(true)}
+        onToggle={vi.fn()}
+        onHealthCheck={vi.fn()}
+        healthCheck={{ status: 'healthy', toolCount: 3 }}
+      />
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('MCP ready · 3 tools found');
+    expect(screen.getByRole('button', { name: 'Check developer MCP connection' })).toBeEnabled();
+  });
 });

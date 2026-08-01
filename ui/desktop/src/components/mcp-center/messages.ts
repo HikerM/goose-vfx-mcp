@@ -221,15 +221,28 @@ export const mcpCenterMessages = defineMessages({
   },
   remoteHttp: { id: 'mcpCenter.remoteHttp', defaultMessage: 'Remote HTTP' },
   approvedStdio: { id: 'mcpCenter.approvedStdio', defaultMessage: 'Approved stdio provider' },
-  customStdio: { id: 'mcpCenter.customStdio', defaultMessage: 'Custom stdio' },
+  customStdio: { id: 'mcpCenter.customStdio', defaultMessage: 'Custom MCP' },
   customStdioTitle: {
     id: 'mcpCenter.customStdioTitle',
-    defaultMessage: 'Custom local stdio MCP',
+    defaultMessage: 'Custom MCP connections',
   },
   customStdioDescription: {
     id: 'mcpCenter.customStdioDescription',
     defaultMessage:
-      'Add an MCP command, arguments, environment variables, and working directory for this machine.',
+      'Add local stdio commands or Streamable HTTP endpoints. Configure arguments, working directories, environment variables, or HTTP headers as needed.',
+  },
+  customStdioHealthAvailable: {
+    id: 'mcpCenter.customStdioHealthAvailable',
+    defaultMessage:
+      'After enabling an MCP, check its tool discovery from the card. Export a diagnostic report if the check fails.',
+  },
+  customStdioHealthUnavailable: {
+    id: 'mcpCenter.customStdioHealthUnavailable',
+    defaultMessage: 'Open a chat first to check MCP tool discovery or export a diagnostic report.',
+  },
+  exportMcpDiagnostics: {
+    id: 'mcpCenter.exportMcpDiagnostics',
+    defaultMessage: 'Export MCP diagnostic report',
   },
   remoteConnection: { id: 'mcpCenter.remoteConnection', defaultMessage: 'Remote HTTP connection' },
   remoteConnectionDescription: {
@@ -255,7 +268,7 @@ export const mcpCenterMessages = defineMessages({
   remoteHttpCredentialUnavailable: {
     id: 'mcpCenter.remoteHttpCredentialUnavailable',
     defaultMessage:
-      'Endpoints that require stored credentials are not available from this page yet.',
+      'For endpoints that require credentials, open the Custom MCP tab and add a Streamable HTTP connection with environment variables or headers.',
   },
   bearerReference: {
     id: 'mcpCenter.bearerReference',
@@ -1694,13 +1707,35 @@ export const mcpCenterMessages = defineMessages({
     id: 'mcpCenter.profileDiscardConfirm',
     defaultMessage: 'Discard changes',
   },
-  importHttpsManifest: { id: 'mcpCenter.importHttpsManifest', defaultMessage: 'Import HTTPS manifest' },
-  httpsManifestDescription: { id: 'mcpCenter.httpsManifestDescription', defaultMessage: 'Enter an HTTPS manifest URL to inspect its safe preview before continuing.' },
-  httpsManifestUrlLabel: { id: 'mcpCenter.httpsManifestUrlLabel', defaultMessage: 'HTTPS manifest URL' },
-  httpsManifestHelp: { id: 'mcpCenter.httpsManifestHelp', defaultMessage: 'Only HTTPS URLs are accepted. The URL is checked by Goose before any plan is created.' },
-  httpsManifestInvalidUrl: { id: 'mcpCenter.httpsManifestInvalidUrl', defaultMessage: 'Enter a valid HTTPS URL.' },
-  httpsManifestError: { id: 'mcpCenter.httpsManifestError', defaultMessage: 'The HTTPS manifest could not be imported.' },
-  httpsManifestPreview: { id: 'mcpCenter.httpsManifestPreview', defaultMessage: 'HTTPS manifest safety preview' },
+  importHttpsManifest: {
+    id: 'mcpCenter.importHttpsManifest',
+    defaultMessage: 'Import HTTPS manifest',
+  },
+  httpsManifestDescription: {
+    id: 'mcpCenter.httpsManifestDescription',
+    defaultMessage: 'Enter an HTTPS manifest URL to inspect its safe preview before continuing.',
+  },
+  httpsManifestUrlLabel: {
+    id: 'mcpCenter.httpsManifestUrlLabel',
+    defaultMessage: 'HTTPS manifest URL',
+  },
+  httpsManifestHelp: {
+    id: 'mcpCenter.httpsManifestHelp',
+    defaultMessage:
+      'Only HTTPS URLs are accepted. The URL is checked by Goose before any plan is created.',
+  },
+  httpsManifestInvalidUrl: {
+    id: 'mcpCenter.httpsManifestInvalidUrl',
+    defaultMessage: 'Enter a valid HTTPS URL.',
+  },
+  httpsManifestError: {
+    id: 'mcpCenter.httpsManifestError',
+    defaultMessage: 'The HTTPS manifest could not be imported.',
+  },
+  httpsManifestPreview: {
+    id: 'mcpCenter.httpsManifestPreview',
+    defaultMessage: 'HTTPS manifest safety preview',
+  },
   manifestId: { id: 'mcpCenter.manifestId', defaultMessage: 'Manifest' },
   origin: { id: 'mcpCenter.origin', defaultMessage: 'Origin' },
   preview: { id: 'mcpCenter.preview', defaultMessage: 'Preview' },

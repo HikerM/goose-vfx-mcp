@@ -2283,22 +2283,51 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     setBoundaryClient(async (method, params) => {
       calls.push({ method, params });
       const preview = {
-        manifestId: 'manifest-1', version: '1', redactedOrigin: 'https://example.test',
-        rawDigest: 'raw-1', parsedDigest: 'parsed-1', redirectChainDigest: 'redirect-1',
-        dnsEvidenceDigest: 'dns-1', warnings: [],
+        manifestId: 'manifest-1',
+        version: '1',
+        redactedOrigin: 'https://example.test',
+        rawDigest: 'raw-1',
+        parsedDigest: 'parsed-1',
+        redirectChainDigest: 'redirect-1',
+        dnsEvidenceDigest: 'dns-1',
+        warnings: [],
       };
       return method === 'goose.mcpHttpsManifestPrepare_unstable'
-        ? { outcome: { status: 'success', value: { provisionId: 'provision-1', confirmationToken: token, expiresAtMs: 10, preview } } }
-        : { outcome: { status: 'success', value: { manifestDigest: 'manifest-digest-1', preview } } };
+        ? {
+            outcome: {
+              status: 'success',
+              value: {
+                provisionId: 'provision-1',
+                confirmationToken: token,
+                expiresAtMs: 10,
+                preview,
+              },
+            },
+          }
+        : {
+            outcome: { status: 'success', value: { manifestDigest: 'manifest-digest-1', preview } },
+          };
     });
 
     await expect(prepareHttpsMcpManifest('https://example.test/manifest')).resolves.toMatchObject({
-      provisionId: 'provision-1', confirmationToken: token,
+      provisionId: 'provision-1',
+      confirmationToken: token,
     });
-    await expect(confirmHttpsMcpManifest({ provisionId: 'provision-1', confirmationToken: token, confirm: true }))
-      .resolves.toMatchObject({ manifestDigest: 'manifest-digest-1' });
-    expect(calls[0]).toEqual({ method: 'goose.mcpHttpsManifestPrepare_unstable', params: { url: 'https://example.test/manifest' } });
-    expect(calls[1]).toEqual({ method: 'goose.mcpHttpsManifestConfirm_unstable', params: { provisionId: 'provision-1', confirmationToken: token, confirm: true } });
+    await expect(
+      confirmHttpsMcpManifest({
+        provisionId: 'provision-1',
+        confirmationToken: token,
+        confirm: true,
+      })
+    ).resolves.toMatchObject({ manifestDigest: 'manifest-digest-1' });
+    expect(calls[0]).toEqual({
+      method: 'goose.mcpHttpsManifestPrepare_unstable',
+      params: { url: 'https://example.test/manifest' },
+    });
+    expect(calls[1]).toEqual({
+      method: 'goose.mcpHttpsManifestConfirm_unstable',
+      params: { provisionId: 'provision-1', confirmationToken: token, confirm: true },
+    });
   });
 
   it('strips runtime extension fields before sending HTTPS manifest confirm params', async () => {
@@ -2311,8 +2340,12 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
           value: {
             manifestDigest: 'manifest-digest-1',
             preview: {
-              manifestId: 'manifest-1', version: '1', redactedOrigin: 'https://example.test',
-              rawDigest: 'raw-1', parsedDigest: 'parsed-1', redirectChainDigest: 'redirect-1',
+              manifestId: 'manifest-1',
+              version: '1',
+              redactedOrigin: 'https://example.test',
+              rawDigest: 'raw-1',
+              parsedDigest: 'parsed-1',
+              redirectChainDigest: 'redirect-1',
               dnsEvidenceDigest: 'dns-1',
             },
           },
@@ -2327,14 +2360,19 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       idempotencyKey: 'must-not-cross-boundary',
       endpoint: 'https://attacker.example.test',
       secret: 'must-not-cross-boundary',
-    } as any;
+    };
 
     await expect(confirmHttpsMcpManifest(input)).resolves.toEqual({
       manifestDigest: 'manifest-digest-1',
       preview: {
-        manifestId: 'manifest-1', version: '1', redactedOrigin: 'https://example.test',
-        rawDigest: 'raw-1', parsedDigest: 'parsed-1', redirectChainDigest: 'redirect-1',
-        dnsEvidenceDigest: 'dns-1', warnings: [],
+        manifestId: 'manifest-1',
+        version: '1',
+        redactedOrigin: 'https://example.test',
+        rawDigest: 'raw-1',
+        parsedDigest: 'parsed-1',
+        redirectChainDigest: 'redirect-1',
+        dnsEvidenceDigest: 'dns-1',
+        warnings: [],
       },
     });
     expect(calls[0]).toEqual({
@@ -2349,16 +2387,33 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     const token = 'token-that-must-not-leak';
     for (const value of [
       { manifestDigest: '', preview: {} },
-      { manifestDigest: 'digest-1', preview: { manifestId: 'm', version: '1', redactedOrigin: 'https://e.test', rawDigest: 'r', parsedDigest: 'p', redirectChainDigest: 'c', dnsEvidenceDigest: 'd', sensitive: token } },
+      {
+        manifestDigest: 'digest-1',
+        preview: {
+          manifestId: 'm',
+          version: '1',
+          redactedOrigin: 'https://e.test',
+          rawDigest: 'r',
+          parsedDigest: 'p',
+          redirectChainDigest: 'c',
+          dnsEvidenceDigest: 'd',
+          sensitive: token,
+        },
+      },
     ]) {
       setBoundaryClient(async () => ({ outcome: { status: 'success', value } }));
-      await expect(confirmHttpsMcpManifest({ provisionId: 'p', confirmationToken: token, confirm: true })).rejects.toThrow(
-        'The MCP Platform request could not be completed.'
-      );
+      await expect(
+        confirmHttpsMcpManifest({ provisionId: 'p', confirmationToken: token, confirm: true })
+      ).rejects.toThrow('The MCP Platform request could not be completed.');
     }
-    setBoundaryClient(async () => ({ outcome: { status: 'error', error: { code: 'invalid_request', message: token, retryable: false } } }));
-    await expect(confirmHttpsMcpManifest({ provisionId: 'p', confirmationToken: token, confirm: false })).rejects.toThrow(
-      'The MCP Platform request could not be completed.'
-    );
+    setBoundaryClient(async () => ({
+      outcome: {
+        status: 'error',
+        error: { code: 'invalid_request', message: token, retryable: false },
+      },
+    }));
+    await expect(
+      confirmHttpsMcpManifest({ provisionId: 'p', confirmationToken: token, confirm: false })
+    ).rejects.toThrow('The MCP Platform request could not be completed.');
   });
 });

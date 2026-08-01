@@ -50,7 +50,8 @@ const i18n = defineMessages({
   },
   unsavedChangesMessage: {
     id: 'extensionModal.unsavedChangesMessage',
-    defaultMessage: 'You have unsaved changes to the extension configuration. Are you sure you want to close without saving?',
+    defaultMessage:
+      'You have unsaved changes to the extension configuration. Are you sure you want to close without saving?',
   },
   closeWithoutSaving: {
     id: 'extensionModal.closeWithoutSaving',
@@ -94,6 +95,7 @@ export default function ExtensionModal({
     const descriptionChanged = formData.description !== initialData.description;
     const typeChanged = formData.type !== initialData.type;
     const timeoutChanged = formData.timeout !== initialData.timeout;
+    const workingDirectoryChanged = formData.cwd !== initialData.cwd;
 
     // Check if command/endpoint has changed
     const commandChanged =
@@ -119,6 +121,7 @@ export default function ExtensionModal({
       descriptionChanged ||
       typeChanged ||
       timeoutChanged ||
+      workingDirectoryChanged ||
       commandChanged ||
       headersEdited ||
       headersAdded ||
@@ -373,7 +376,9 @@ export default function ExtensionModal({
   };
 
   // Update title based on current state
-  const modalTitle = showDeleteConfirmation ? intl.formatMessage(i18n.deleteExtensionTitle, { name: formData.name }) : title;
+  const modalTitle = showDeleteConfirmation
+    ? intl.formatMessage(i18n.deleteExtensionTitle, { name: formData.name })
+    : title;
 
   return (
     <>
@@ -385,17 +390,13 @@ export default function ExtensionModal({
               {modalTitle}
             </DialogTitle>
             {showDeleteConfirmation && (
-              <DialogDescription>
-                {intl.formatMessage(i18n.deleteDescription)}
-              </DialogDescription>
+              <DialogDescription>{intl.formatMessage(i18n.deleteDescription)}</DialogDescription>
             )}
           </DialogHeader>
 
           {showDeleteConfirmation ? (
             <div className="py-4">
-              <p className="text-text-primary">
-                {intl.formatMessage(i18n.deleteDescription)}
-              </p>
+              <p className="text-text-primary">{intl.formatMessage(i18n.deleteDescription)}</p>
             </div>
           ) : (
             <div className="py-4 space-y-6">
@@ -430,6 +431,7 @@ export default function ExtensionModal({
                 <ExtensionConfigFields
                   type={formData.type}
                   full_cmd={formData.cmd || ''}
+                  cwd={formData.cwd || ''}
                   endpoint={formData.endpoint || ''}
                   onChange={(key, value) => setFormData({ ...formData, [key]: value })}
                   submitAttempted={submitAttempted}

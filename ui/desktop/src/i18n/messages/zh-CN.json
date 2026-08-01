@@ -1007,6 +1007,15 @@
   "extensionConfigFields.endpointRequired": {
     "defaultMessage": "端点 URL 为必填项"
   },
+  "extensionConfigFields.workingDirectoryDescription": {
+    "defaultMessage": "当 MCP 命令必须从指定项目目录或安装目录启动时填写。"
+  },
+  "extensionConfigFields.workingDirectoryLabel": {
+    "defaultMessage": "工作目录（可选）"
+  },
+  "extensionConfigFields.workingDirectoryPlaceholder": {
+    "defaultMessage": "例如 D:\\Tools\\my-mcp"
+  },
   "extensionInfoFields.descriptionLabel": {
     "defaultMessage": "描述"
   },
@@ -1094,8 +1103,41 @@
   "extensionItem.configureExtension": {
     "defaultMessage": "配置 {name} 扩展"
   },
+  "extensionItem.checkExtension": {
+    "defaultMessage": "检查 {name} MCP 连接"
+  },
+  "extensionItem.checking": {
+    "defaultMessage": "正在检查 MCP 工具…"
+  },
+  "extensionItem.healthy": {
+    "defaultMessage": "MCP 正常 · 已发现 {count} 个工具"
+  },
+  "extensionItem.noTools": {
+    "defaultMessage": "MCP 已连接，但未发现工具"
+  },
+  "extensionItem.healthError": {
+    "defaultMessage": "MCP 检查失败：{message}"
+  },
   "extensionItem.toggleExtension": {
     "defaultMessage": "启用或禁用 {name} 扩展"
+  },
+  "extensionsSection.exportMcpConfigs": {
+    "defaultMessage": "导出自定义 MCP"
+  },
+  "extensionsSection.importMcpConfigs": {
+    "defaultMessage": "导入自定义 MCP"
+  },
+  "extensionsSection.transferDescription": {
+    "defaultMessage": "仅导出连接配置。为保护安全，环境变量实际值和 HTTP 请求头实际值不会导出，需要在新电脑上重新填写。"
+  },
+  "extensionsSection.transferSuccess": {
+    "defaultMessage": "已导入 {count} 个自定义 MCP 配置。"
+  },
+  "extensionsSection.transferSuccessWithSecrets": {
+    "defaultMessage": "已导入 {count} 个自定义 MCP 配置，其中 {secretCount} 个会保持停用，直到补充所需密钥。"
+  },
+  "extensionsSection.transferError": {
+    "defaultMessage": "MCP 配置传输失败：{message}"
   },
   "extensionList.availableExtensions": {
     "defaultMessage": "可用扩展（{count}）"
@@ -4532,6 +4574,18 @@
   "updateSection.manualInstallRequired": {
     "defaultMessage": "此更新方式需要手动安装。"
   },
+  "updateSection.openCustomReleases": {
+    "defaultMessage": "打开 HikerM 版本下载页"
+  },
+  "updateSection.portableUpdateDescription": {
+    "defaultMessage": "此自定义版本只使用 HikerM 分发通道。更新时请下载新版自定义安装包、关闭 Goose，再用新版解压后的整个应用文件夹替换旧文件夹。MCP 和模型设置存放在应用文件夹外。"
+  },
+  "updateSection.portableUpdateModelNote": {
+    "defaultMessage": "应用更新不会复制已下载模型。请保留原本地模型数据，或在新电脑重新下载所选模型。"
+  },
+  "updateSection.portableUpdateTitle": {
+    "defaultMessage": "便携自定义版本"
+  },
   "updateSection.readyInstallAuto": {
     "defaultMessage": "✓ 更新已就绪！退出 Goose 时将自动安装。"
   },
@@ -4669,6 +4723,21 @@
   },
   "mcpCenter.confirming": {
     "defaultMessage": "确认中……"
+  },
+  "mcpCenter.customStdio": {
+    "defaultMessage": "自定义 MCP"
+  },
+  "mcpCenter.customStdioDescription": {
+    "defaultMessage": "添加本地 stdio 命令或 Streamable HTTP 端点，并按需配置参数、工作目录、环境变量或 HTTP 请求头。"
+  },
+  "mcpCenter.customStdioHealthAvailable": {
+    "defaultMessage": "启用 MCP 后，可在卡片上检查工具发现；检查失败时可导出诊断报告。"
+  },
+  "mcpCenter.customStdioHealthUnavailable": {
+    "defaultMessage": "请先打开一个聊天，再检查 MCP 工具发现或导出诊断报告。"
+  },
+  "mcpCenter.customStdioTitle": {
+    "defaultMessage": "自定义 MCP 连接"
   },
   "mcpCenter.confirmStart": {
     "defaultMessage": "确认并开始"
@@ -5033,6 +5102,15 @@
   "mcpCenter.remoteHttp": {
     "defaultMessage": "远程HTTP"
   },
+  "mcpCenter.remoteHttpAuthSupport": {
+    "defaultMessage": "身份验证支持"
+  },
+  "mcpCenter.remoteHttpCredentialUnavailable": {
+    "defaultMessage": "需要凭据的端点，请打开“自定义 MCP”标签页，添加 Streamable HTTP 连接并配置环境变量或请求头。"
+  },
+  "mcpCenter.remoteHttpNoAuthOnly": {
+    "defaultMessage": "此处只添加无需身份验证的远程 HTTP 端点。"
+  },
   "mcpCenter.removesFiles": {
     "defaultMessage": "删除文件"
   },
@@ -5170,6 +5248,15 @@
   },
   "mcpCenter.yes": {
     "defaultMessage": "是"
+  },
+  "mcpCenter.customStdioHealthAvailable": {
+    "defaultMessage": "启用 MCP 后，可从卡片检查工具发现；检查失败时请导出诊断报告。"
+  },
+  "mcpCenter.customStdioHealthUnavailable": {
+    "defaultMessage": "请先打开一个聊天，再检查 MCP 工具发现或导出诊断报告。"
+  },
+  "mcpCenter.exportMcpDiagnostics": {
+    "defaultMessage": "导出 MCP 诊断报告"
   },
   "navigation.itemMcpCenter": {
     "defaultMessage": "MCP 中心"

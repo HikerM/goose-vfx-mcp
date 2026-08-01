@@ -1,4 +1,4 @@
-import ExtensionItem from './ExtensionItem';
+import ExtensionItem, { type ExtensionHealthCheckState } from './ExtensionItem';
 import builtInExtensionsData from '../../../../built-in-extensions.json';
 import type { ExtensionConfig } from '../../../../types/extensions';
 import { FixedExtensionEntry } from '../../../ConfigContext';
@@ -31,6 +31,8 @@ interface ExtensionListProps {
   isStatic?: boolean;
   disableConfiguration?: boolean;
   searchTerm?: string;
+  healthChecks?: Record<string, ExtensionHealthCheckState>;
+  onHealthCheck?: (extension: FixedExtensionEntry) => void;
 }
 
 export default function ExtensionList({
@@ -40,6 +42,8 @@ export default function ExtensionList({
   isStatic,
   disableConfiguration: _disableConfiguration,
   searchTerm = '',
+  healthChecks,
+  onHealthCheck,
 }: ExtensionListProps) {
   const matchesSearch = (extension: FixedExtensionEntry): boolean => {
     if (!searchTerm) return true;
@@ -85,6 +89,8 @@ export default function ExtensionList({
                 onToggle={onToggle}
                 onConfigure={onConfigure}
                 isStatic={isStatic}
+                healthCheck={healthChecks?.[extension.configKey ?? extension.name]}
+                onHealthCheck={onHealthCheck}
               />
             ))}
           </div>
@@ -107,6 +113,8 @@ export default function ExtensionList({
                 onToggle={onToggle}
                 onConfigure={onConfigure}
                 isStatic={isStatic}
+                healthCheck={healthChecks?.[extension.configKey ?? extension.name]}
+                onHealthCheck={onHealthCheck}
               />
             ))}
           </div>
