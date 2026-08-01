@@ -136,7 +136,7 @@ impl TaskRunner {
         ports: LifecyclePorts,
         owner_id: String,
     ) -> Self {
-        let projection_authority = super::projection_runtime::bootstrap_debug_runner_authority(
+        let projection_authority = super::projection_runtime::bootstrap_trusted_runtime_authority(
             repository.as_ref(),
             &ports,
         );

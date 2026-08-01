@@ -369,14 +369,6 @@ pub(super) fn bootstrap_debug_runtime_authority(
 }
 
 #[cfg(debug_assertions)]
-pub(super) fn bootstrap_debug_runner_authority(
-    repository: &SqliteMcpPlatformRepository,
-    ports: &LifecyclePorts,
-) -> RuntimeProjectionAuthority {
-    RuntimeProjectionAuthority::new(repository, ports)
-}
-
-#[cfg(debug_assertions)]
 pub(super) fn bootstrap_debug_repository_authority(
     repository: &SqliteMcpPlatformRepository,
     ports: &LifecyclePorts,

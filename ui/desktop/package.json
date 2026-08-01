@@ -1,7 +1,7 @@
 {
   "name": "goose-app",
   "productName": "Goose",
-  "version": "1.43.0-mcp.9",
+  "version": "1.43.0-mcp.10",
   "description": "Goose App",
   "engines": {
     "node": "^24.10.0",
