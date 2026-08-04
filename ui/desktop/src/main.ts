@@ -2435,7 +2435,6 @@ function isTrustedRendererSender(event: IpcMainInvokeEvent | IpcMainEvent): bool
   if (!window || window.isDestroyed() || event.sender.isDestroyed()) return false;
   if (event.sender !== window.webContents || event.senderFrame !== event.sender.mainFrame)
     return false;
-  if (event.sender.isLoadingMainFrame() || !reactReadyWindows.has(window.id)) return false;
 
   try {
     return isTrustedAppUrl(event.sender.getURL(), getAppUrl().toString());
