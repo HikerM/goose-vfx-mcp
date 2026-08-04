@@ -1513,7 +1513,7 @@ describe('ProfilesTab', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Current session folder unavailable');
     expect(alert).toHaveTextContent(
-      'Goose could not verify the current session folder, so this reviewed profile application was not confirmed.'
+      'Lumina could not verify the current session folder, so this reviewed profile application was not confirmed.'
     );
     expect(screen.getByRole('button', { name: 'Create a new review' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confirm and create new session' })).toBeDisabled();

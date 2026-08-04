@@ -1201,8 +1201,8 @@ enum Command {
 #[cfg(feature = "local-inference")]
 #[derive(Subcommand)]
 enum LocalModelsCommand {
-    /// Search HuggingFace for local models
-    #[command(about = "Search HuggingFace for local GGUF and MLX models")]
+    /// Search ModelScope for local models
+    #[command(about = "Search ModelScope for local GGUF models")]
     Search {
         /// Search query
         query: String,
@@ -2067,7 +2067,7 @@ async fn handle_local_models_command(command: LocalModelsCommand) -> Result<()> 
 
     match command {
         LocalModelsCommand::Search { query, limit } => {
-            println!("Searching HuggingFace for '{}'...", query);
+            println!("Searching ModelScope for '{}'...", query);
             let results = hf_models::search_local_models(&query, limit).await?;
 
             if results.is_empty() {
@@ -2106,7 +2106,7 @@ async fn handle_local_models_command(command: LocalModelsCommand) -> Result<()> 
                     );
                     if variant.supported {
                         println!(
-                            "    Download: goose local-models download '{}'",
+                            "    Download: Lumina local-models download '{}'",
                             variant.download_id
                         );
                     }

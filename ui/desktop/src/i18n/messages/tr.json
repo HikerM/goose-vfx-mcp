@@ -1380,7 +1380,7 @@
     "defaultMessage": "Arama başarısız oldu. Lütfen tekrar deneyin."
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "Arama HuggingFace"
+    "defaultMessage": "ModelScope'ta ara"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "Arama hiçbir veri döndürmedi."

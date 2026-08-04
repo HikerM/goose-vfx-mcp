@@ -1380,7 +1380,7 @@
     "defaultMessage": "検索に失敗しました。もう一度お試しください。"
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "Hugging Faceを検索"
+    "defaultMessage": "ModelScopeを検索"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "検索結果にデータがありません。"

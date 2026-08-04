@@ -1380,7 +1380,7 @@
     "defaultMessage": "खोज विफल रही. कृपया पुन: प्रयास करें।"
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "हगिंगफेस खोजें"
+    "defaultMessage": "ModelScope खोजें"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "खोज से कोई डेटा नहीं मिला."

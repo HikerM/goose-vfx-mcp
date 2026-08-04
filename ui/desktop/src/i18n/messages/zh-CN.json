@@ -1422,7 +1422,7 @@
     "defaultMessage": "搜索失败，请重试。"
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "搜索 HuggingFace"
+    "defaultMessage": "搜索 ModelScope"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "搜索未返回数据。"

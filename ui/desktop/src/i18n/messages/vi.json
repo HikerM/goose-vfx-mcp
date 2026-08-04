@@ -1380,7 +1380,7 @@
     "defaultMessage": "Tìm kiếm thất bại. Vui lòng thử lại."
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "Tìm kiếm HuggingFace"
+    "defaultMessage": "Tìm kiếm ModelScope"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "Tìm kiếm không trả về dữ liệu nào."

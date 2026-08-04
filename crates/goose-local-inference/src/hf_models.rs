@@ -447,7 +447,7 @@ async fn modelscope_repo_files(repo_id: &str) -> Result<Vec<HfApiSibling>> {
     let response = apply_modelscope_auth(
         reqwest::Client::new()
             .get(url)
-            .header("User-Agent", "goose-ai-agent"),
+            .header("User-Agent", "lumina-ai-agent"),
         token.as_deref(),
     )
     .send()
@@ -742,7 +742,7 @@ pub async fn search_gguf_models(query: &str, limit: usize) -> Result<Vec<HfModel
     let response = apply_modelscope_auth(
         reqwest::Client::new()
             .get(url)
-            .header("User-Agent", "goose-ai-agent"),
+            .header("User-Agent", "lumina-ai-agent"),
         token.as_deref(),
     )
     .send()
@@ -1619,7 +1619,7 @@ mod tests {
 }
 
 async fn hf_client() -> Result<HFClient> {
-    let mut builder = HFClient::builder().user_agent("goose-ai-agent");
+    let mut builder = HFClient::builder().user_agent("lumina-ai-agent");
     if let Some(token) = optional_hf_token(huggingface_auth::resolve_token_async()).await {
         builder = builder.token(token);
     }
@@ -1787,7 +1787,7 @@ async fn get_repo_downloads(repo_id: &str) -> Result<Option<u64>> {
     let url = format!("{}/{}", HF_API_BASE, repo_id);
 
     let response = apply_hf_auth(client.get(&url), token.as_deref())
-        .header("User-Agent", "goose-ai-agent")
+        .header("User-Agent", "lumina-ai-agent")
         .send()
         .await?;
 

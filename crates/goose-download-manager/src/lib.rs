@@ -7,6 +7,16 @@ use tokio::io::AsyncWriteExt;
 use tracing::info;
 use utoipa::ToSchema;
 
+const DOWNLOAD_USER_AGENT: &str = "lumina-ai-agent";
+
+fn download_client() -> reqwest::Result<reqwest::Client> {
+    reqwest::Client::builder()
+        .user_agent(DOWNLOAD_USER_AGENT)
+        .connect_timeout(std::time::Duration::from_secs(30))
+        .read_timeout(std::time::Duration::from_secs(120))
+        .build()
+}
+
 fn partial_path_for(destination: &Path) -> PathBuf {
     destination.with_extension(
         destination
@@ -364,10 +374,16 @@ impl DownloadManager {
         model_id: &str,
         bearer_token: Option<&str>,
     ) -> Result<(), anyhow::Error> {
-        let client = reqwest::Client::builder()
-            .connect_timeout(std::time::Duration::from_secs(30))
-            .read_timeout(std::time::Duration::from_secs(120))
-            .build()?;
+        let client = download_client()?;
+        let total_size_was_provided = downloads
+            .lock()
+            .ok()
+            .and_then(|downloads| {
+                downloads
+                    .get(model_id)
+                    .map(|progress| progress.total_bytes > 0)
+            })
+            .unwrap_or(false);
 
         // HEAD each file to get accurate total size. Only replace the hint if
         // every file returned a size; partial results would underestimate.
@@ -430,6 +446,7 @@ impl DownloadManager {
                 start_time,
                 bytes_at_start,
                 bearer_token,
+                !total_size_was_provided && !all_resolved,
             )
             .await?;
         }
@@ -448,6 +465,7 @@ impl DownloadManager {
         start_time: std::time::Instant,
         bytes_at_start: u64,
         bearer_token: Option<&str>,
+        add_discovered_size_to_total: bool,
     ) -> Result<(), anyhow::Error> {
         let partial_path = partial_path_for(destination);
         let mut retries = 0u32;
@@ -465,6 +483,14 @@ impl DownloadManager {
             .ok()
             .and_then(|r| r.content_length())
             .unwrap_or(0);
+        if file_total > 0 {
+            Self::account_discovered_file_size(
+                downloads,
+                model_id,
+                file_total,
+                add_discovered_size_to_total,
+            );
+        }
 
         // If partial matches expected size exactly, promote it
         if file_total > 0 && file_bytes == file_total {
@@ -566,11 +592,12 @@ impl DownloadManager {
                 };
                 if let Some(t) = new_file_total {
                     file_total = t;
-                    if let Ok(mut dl) = downloads.lock() {
-                        if let Some(progress) = dl.get_mut(model_id) {
-                            progress.total_bytes = progress.total_bytes.saturating_add(t);
-                        }
-                    }
+                    Self::account_discovered_file_size(
+                        downloads,
+                        model_id,
+                        t,
+                        add_discovered_size_to_total,
+                    );
                 }
             }
 
@@ -700,6 +727,22 @@ impl DownloadManager {
             request
         }
     }
+
+    fn account_discovered_file_size(
+        downloads: &DownloadMap,
+        model_id: &str,
+        size: u64,
+        should_add: bool,
+    ) {
+        if !should_add {
+            return;
+        }
+        if let Ok(mut downloads) = downloads.lock() {
+            if let Some(progress) = downloads.get_mut(model_id) {
+                progress.total_bytes = progress.total_bytes.saturating_add(size);
+            }
+        }
+    }
 }
 
 static DOWNLOAD_MANAGER: once_cell::sync::Lazy<DownloadManager> =
@@ -707,4 +750,63 @@ static DOWNLOAD_MANAGER: once_cell::sync::Lazy<DownloadManager> =
 
 pub fn get_download_manager() -> &'static DownloadManager {
     &DOWNLOAD_MANAGER
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::{Read, Write};
+
+    #[test]
+    fn modelscope_downloads_send_a_user_agent() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buffer = [0; 4096];
+            let bytes_read = stream.read(&mut buffer).unwrap();
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+                .unwrap();
+            String::from_utf8_lossy(&buffer[..bytes_read]).to_string()
+        });
+
+        let client = download_client().unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async {
+            client
+                .get(format!("http://{address}/model.gguf"))
+                .send()
+                .await
+                .unwrap();
+        });
+        let request = server.join().unwrap().to_ascii_lowercase();
+
+        assert!(request.contains(&format!("user-agent: {DOWNLOAD_USER_AGENT}")));
+    }
+
+    #[test]
+    fn provided_total_is_not_double_counted() {
+        let manager = DownloadManager::new();
+        manager.set_progress(DownloadProgress {
+            model_id: "model".to_string(),
+            status: DownloadStatus::Downloading,
+            bytes_downloaded: 0,
+            total_bytes: 101,
+            progress_percent: 0.0,
+            speed_bps: None,
+            eta_seconds: None,
+            error: None,
+            retry_attempt: 0,
+            max_retries: DownloadManager::MAX_RETRIES,
+            task_exited: false,
+        });
+
+        DownloadManager::account_discovered_file_size(&manager.downloads, "model", 101, false);
+
+        assert_eq!(manager.get_progress("model").unwrap().total_bytes, 101);
+    }
 }

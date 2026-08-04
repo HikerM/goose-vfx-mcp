@@ -1380,7 +1380,7 @@
     "defaultMessage": "Pencarian gagal. Silakan coba lagi."
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "Cari HuggingFace"
+    "defaultMessage": "Cari ModelScope"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "Pencarian tidak mengembalikan data."

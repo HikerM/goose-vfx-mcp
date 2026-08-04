@@ -7,6 +7,7 @@ import {
   type DownloadProgress,
   type LocalModelResponse,
 } from '../../acp/local-inference';
+import { HuggingFaceModelSearch } from '../settings/localInference/HuggingFaceModelSearch';
 import { trackOnboardingSetupFailed } from '../../utils/analytics';
 import { defineMessages, useIntl } from '../../i18n';
 import { errorMessage as formatErrorMessage } from '../../utils/conversionUtils';
@@ -133,9 +134,6 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
           const alreadyDownloaded = models.find((m) => m.status.state === 'Downloaded');
           if (alreadyDownloaded) {
             setSelectedModelId(alreadyDownloaded.id);
-          } else {
-            const recommended = models.find((m: LocalModelResponse) => m.recommended);
-            if (recommended) setSelectedModelId(recommended.id);
           }
         }
       } catch (error) {
@@ -162,6 +160,7 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
 
   const startDownload = async (modelId: string) => {
     setPhase('downloading');
+    setSelectedModelId(modelId);
     setDownloadProgress(null);
     setErrorMessage(null);
     progressWaitStartedAtRef.current = Date.now();
@@ -183,6 +182,12 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
       return;
     }
 
+    pollDownloadProgress(modelId);
+  };
+
+  const pollDownloadProgress = (modelId: string) => {
+    cleanup();
+    progressWaitStartedAtRef.current = Date.now();
     pollRef.current = setInterval(async () => {
       try {
         const progress = await getLocalModelDownloadProgress(modelId);
@@ -237,6 +242,14 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
     }, 500);
   };
 
+  const handleModelScopeDownloadStarted = (modelId: string) => {
+    setSelectedModelId(modelId);
+    setPhase('downloading');
+    setDownloadProgress(null);
+    setErrorMessage(null);
+    pollDownloadProgress(modelId);
+  };
+
   const handleCancelDownload = async () => {
     if (phase === 'downloading' && selectedModelId) {
       cleanup();
@@ -261,9 +274,15 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
     }
   };
 
-  const recommended = models.find((m) => m.recommended);
-  const otherModels = models.filter((m) => m.id !== recommended?.id);
+  const downloadedModels = models.filter((model) => model.status.state === 'Downloaded');
+  const recommended = downloadedModels.find((model) => model.recommended) ?? downloadedModels[0];
+  const otherModels = downloadedModels.filter((model) => model.id !== recommended?.id);
   const selectedModel = models.find((m) => m.id === selectedModelId);
+  const activeDownloadIds = new Set(
+    models.filter((model) => model.status.state === 'Downloading').map((model) => model.id)
+  );
+  if (phase === 'downloading' && selectedModelId) activeDownloadIds.add(selectedModelId);
+  const downloadedModelIds = new Set(downloadedModels.map((model) => model.id));
 
   if (phase === 'loading') {
     return (
@@ -408,28 +427,35 @@ export default function LocalModelPicker({ onConfigured }: LocalModelPickerProps
               </div>
             )}
 
-            <button
-              onClick={handlePrimaryAction}
-              disabled={!selectedModelId}
-              className="w-full px-4 py-2.5 bg-blue-600 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700 cursor-pointer"
-            >
-              {selectedModel?.status.state === 'Downloaded'
-                ? intl.formatMessage(i18n.useModel, { modelId: selectedModel.id })
-                : selectedModel
-                  ? intl.formatMessage(i18n.downloadModel, {
-                      modelId: selectedModel.id,
-                      size: formatSize(selectedModel.sizeBytes),
-                    })
+            {downloadedModels.length > 0 && (
+              <button
+                onClick={handlePrimaryAction}
+                disabled={!selectedModelId}
+                className="w-full px-4 py-2.5 bg-blue-600 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700 cursor-pointer"
+              >
+                {selectedModel?.status.state === 'Downloaded'
+                  ? intl.formatMessage(i18n.useModel, { modelId: selectedModel.id })
                   : intl.formatMessage(i18n.selectModel)}
-            </button>
+              </button>
+            )}
+
+            <div
+              className={downloadedModels.length > 0 ? 'border-t border-border-subtle pt-4' : ''}
+            >
+              <HuggingFaceModelSearch
+                onDownloadStarted={handleModelScopeDownloadStarted}
+                activeDownloadIds={activeDownloadIds}
+                downloadedModelIds={downloadedModelIds}
+              />
+            </div>
           </div>
         )}
 
-        {phase === 'downloading' && selectedModel && (
+        {phase === 'downloading' && selectedModelId && (
           <div className="space-y-3">
             <div className="border border-border-subtle rounded-lg p-4 bg-background-default">
               <p className="font-medium text-text-default text-sm mb-3">
-                {intl.formatMessage(i18n.downloading, { modelId: selectedModel.id })}
+                {intl.formatMessage(i18n.downloading, { modelId: selectedModelId })}
               </p>
               <p className="text-blue-600 dark:text-blue-400 text-xs -mt-2 mb-3">
                 ModelScope · 魔搭社区

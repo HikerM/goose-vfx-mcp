@@ -70,6 +70,10 @@ const i18n = defineMessages({
     id: 'huggingFaceModelSearch.searchFailed',
     defaultMessage: 'Search failed. Please try again.',
   },
+  downloadStartFailed: {
+    id: 'localModelPicker.failedToStartDownload',
+    defaultMessage: 'Failed to start download. Please try again.',
+  },
 });
 
 const formatBytes = (bytes: number): string => {
@@ -222,12 +226,14 @@ export const HuggingFaceModelSearch = ({
       backendId: variant.backendId,
       variantId: variant.variantId,
     };
+    setError(null);
     setDownloading((prev) => new Set(prev).add(downloadKey));
     try {
       const modelId = await downloadHfModel(request);
       onDownloadStarted(modelId, request);
     } catch (e) {
       console.error('Download failed:', e);
+      setError(intl.formatMessage(i18n.downloadStartFailed));
     } finally {
       setDownloading((prev) => {
         const next = new Set(prev);

@@ -1380,7 +1380,7 @@
     "defaultMessage": "Carian gagal. Sila cuba lagi."
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "Cari HuggingFace"
+    "defaultMessage": "Cari ModelScope"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "Carian tidak mengembalikan sebarang data."

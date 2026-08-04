@@ -1380,7 +1380,7 @@
     "defaultMessage": "La búsqueda falló. Inténtalo de nuevo."
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "Buscar en HuggingFace"
+    "defaultMessage": "Buscar en ModelScope"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "La búsqueda no devolvió datos."

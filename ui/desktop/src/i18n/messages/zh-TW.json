@@ -1380,7 +1380,7 @@
     "defaultMessage": "搜尋失敗。請再試一次。"
   },
   "huggingFaceModelSearch.searchHuggingFace": {
-    "defaultMessage": "搜尋 HuggingFace"
+    "defaultMessage": "搜尋 ModelScope"
   },
   "huggingFaceModelSearch.searchNoData": {
     "defaultMessage": "搜尋未傳回任何資料。"
