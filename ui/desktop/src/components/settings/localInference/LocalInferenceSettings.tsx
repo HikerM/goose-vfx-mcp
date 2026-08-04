@@ -153,7 +153,7 @@ const i18n = defineMessages({
   modelScopeTokenDescription: {
     id: 'localInferenceSettings.modelScopeTokenDescription',
     defaultMessage:
-      'Only needed for private or gated models. Saved in your operating system credential store and never added to Goose configuration files.',
+      'Only needed for private or gated models. Saved in your operating system credential store and never added to Lumina configuration files.',
   },
   modelScopeTokenPlaceholder: {
     id: 'localInferenceSettings.modelScopeTokenPlaceholder',

@@ -32,7 +32,7 @@ const i18n = defineMessages({
   },
   askGoose: {
     id: 'groupedExtensionLoadingToast.askGoose',
-    defaultMessage: 'Ask goose',
+    defaultMessage: 'Ask Lumina',
   },
   copied: {
     id: 'groupedExtensionLoadingToast.copied',

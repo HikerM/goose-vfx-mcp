@@ -16,7 +16,7 @@ const i18n = defineMessages({
   description: {
     id: 'externalBackendSection.description',
     defaultMessage:
-      'By default Goose starts a local backend. Use this to connect to an external ACP-compatible backend.',
+      'By default Lumina starts a local backend. Use this to connect to an external ACP-compatible backend.',
   },
   useExternalServer: {
     id: 'externalBackendSection.useExternalServer',
@@ -33,7 +33,7 @@ const i18n = defineMessages({
   serverUrlHelp: {
     id: 'externalBackendSection.serverUrlHelp',
     defaultMessage:
-      'Enter the HTTP(S) base URL. Goose checks /status and connects to /acp under this base.',
+      'Enter the HTTP(S) base URL. Lumina checks /status and connects to /acp under this base.',
   },
   secretKey: {
     id: 'externalBackendSection.secretKey',
@@ -66,7 +66,7 @@ const i18n = defineMessages({
   },
   restartNote: {
     id: 'externalBackendSection.restartNote',
-    defaultMessage: 'Changes apply to new chat windows. Restart Goose to update existing windows.',
+    defaultMessage: 'Changes apply to new chat windows. Restart Lumina to update existing windows.',
   },
   urlProtocolError: {
     id: 'externalBackendSection.urlProtocolError',

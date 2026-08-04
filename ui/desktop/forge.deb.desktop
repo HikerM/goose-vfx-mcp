@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=Goose
-Exec=/usr/lib/goose/Goose %U
-Icon=/usr/share/pixmaps/goose.png
+Name=Lumina
+Exec=/usr/lib/lumina/Lumina %U
+Icon=/usr/share/pixmaps/lumina.png
 Terminal=false
 Type=Application
 Categories=Development;

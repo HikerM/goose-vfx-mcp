@@ -1,7 +1,7 @@
 import type { GooseServeExitSignal, GooseServeResult, Logger } from './gooseServe';
 
 export const GOOSE_SERVE_EXITED_USER_MESSAGE =
-  "This window's Goose backend stopped. Close this window and open a new chat to start a new backend. If this keeps happening, restart Goose Desktop.";
+  "This window's Lumina backend stopped. Close this window and open a new chat to start a new backend. If this keeps happening, restart Lumina Desktop.";
 
 export interface GooseServeLease {
   acpUrl: string;

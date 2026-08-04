@@ -27,7 +27,7 @@
     "defaultMessage": "Delete \"{name}\"? This cannot be undone."
   },
   "appsView.description": {
-    "defaultMessage": "Aplicaciones de tus servidores MCP y Apps creadas por goose. Puedes pedirle que cree nuevas apps desde la interfaz de chat y aparecerán aquí."
+    "defaultMessage": "Aplicaciones de tus servidores MCP y Apps creadas por Lumina. Puedes pedirle que cree nuevas apps desde la interfaz de chat y aparecerán aquí."
   },
   "appsView.errorLoading": {
     "defaultMessage": "Error al cargar las apps: {error}"
@@ -45,7 +45,7 @@
     "defaultMessage": "Cargando apps..."
   },
   "appsView.noAppsDescription": {
-    "defaultMessage": "Abre un chat y pídele a goose la app que quieras tener. Puede crearte una y aparecerá aquí. O si alguien compartió una app, puedes importarla con el botón de arriba."
+    "defaultMessage": "Abre un chat y pídele a Lumina la app que quieras tener. Puede crearte una y aparecerá aquí. O si alguien compartió una app, puedes importarla con el botón de arriba."
   },
   "appsView.noAppsTitle": {
     "defaultMessage": "No hay apps disponibles"
@@ -84,7 +84,7 @@
     "defaultMessage": "Credencial eliminada"
   },
   "authSettings.description": {
-    "defaultMessage": "Gestiona las credenciales de proveedores que goose guarda localmente."
+    "defaultMessage": "Gestiona las credenciales de proveedores que Lumina guarda localmente."
   },
   "authSettings.empty": {
     "defaultMessage": "No se encontraron credenciales de proveedores guardadas localmente."
@@ -168,10 +168,10 @@
     "defaultMessage": "Abrir"
   },
   "chat.notification.taskComplete.body": {
-    "defaultMessage": "Haz clic aquí para volver a poner el foco en Goose."
+    "defaultMessage": "Haz clic aquí para volver a poner el foco en Lumina."
   },
   "chat.notification.taskComplete.title": {
-    "defaultMessage": "Goose terminó la tarea."
+    "defaultMessage": "Lumina terminó la tarea."
   },
   "chatInput.contextWindow": {
     "defaultMessage": "Ventana de contexto"
@@ -222,13 +222,13 @@
     "defaultMessage": "Esperando a que se guarden las imágenes..."
   },
   "chatSettings.modeDescription": {
-    "defaultMessage": "Configura cómo interactúa Goose con las herramientas y las extensiones"
+    "defaultMessage": "Configura cómo interactúa Lumina con las herramientas y las extensiones"
   },
   "chatSettings.modeTitle": {
     "defaultMessage": "Modo"
   },
   "chatSettings.responseStylesDescription": {
-    "defaultMessage": "Elige cómo debe formatear y dar estilo Goose a sus respuestas"
+    "defaultMessage": "Elige cómo debe formatear y dar estilo Lumina a sus respuestas"
   },
   "chatSettings.responseStylesTitle": {
     "defaultMessage": "Estilos de respuesta"
@@ -249,10 +249,10 @@
     "defaultMessage": "Editor de configuración"
   },
   "configSettings.description": {
-    "defaultMessage": "Edita los ajustes de configuración de goose"
+    "defaultMessage": "Edita los ajustes de configuración de Lumina"
   },
   "configSettings.descriptionWithProvider": {
-    "defaultMessage": "Edita los ajustes de configuración de goose (ajustes actuales de {provider})"
+    "defaultMessage": "Edita los ajustes de configuración de Lumina (ajustes actuales de {provider})"
   },
   "configSettings.done": {
     "defaultMessage": "Listo"
@@ -324,7 +324,7 @@
     "defaultMessage": "Turnos máximos"
   },
   "conversationLimitsDropdown.maxTurnsDescription": {
-    "defaultMessage": "Turnos máximos del agente antes de que Goose pida la intervención del usuario"
+    "defaultMessage": "Turnos máximos del agente antes de que Lumina pida la intervención del usuario"
   },
   "costTracker.costUnavailable": {
     "defaultMessage": "Datos de costo no disponibles para {model} ({inputTokens} de entrada, {outputTokens} tokens de salida)"
@@ -777,7 +777,7 @@
     "defaultMessage": "Editar los ajustes de {name}"
   },
   "defaultCardButtons.getStarted": {
-    "defaultMessage": "¡Empieza con goose!"
+    "defaultMessage": "¡Empieza con Lumina!"
   },
   "defaultProviderSetupForm.apiHostLabel": {
     "defaultMessage": "Host de la API"
@@ -936,7 +936,7 @@
     "defaultMessage": "La solicitud de información fue cancelada."
   },
   "elicitationRequest.defaultMessage": {
-    "defaultMessage": "Goose necesita algo de información de tu parte."
+    "defaultMessage": "Lumina necesita algo de información de tu parte."
   },
   "elicitationRequest.expired": {
     "defaultMessage": "Esta solicitud ha expirado. La extensión tendrá que preguntar de nuevo."
@@ -981,7 +981,7 @@
     "defaultMessage": "Ocurrió un error."
   },
   "errorBoundary.errorWithVersion": {
-    "defaultMessage": "Ocurrió un error en Goose v{version}."
+    "defaultMessage": "Ocurrió un error en Lumina v{version}."
   },
   "errorBoundary.heading": {
     "defaultMessage": "¡Honk!"
@@ -1167,7 +1167,7 @@
     "defaultMessage": "Las extensiones habilitadas aquí se usan por defecto en los chats nuevos. También puedes activar extensiones durante el chat."
   },
   "extensionsView.description": {
-    "defaultMessage": "Estas extensiones usan el Model Context Protocol (MCP). Pueden ampliar las capacidades de Goose mediante tres componentes principales: Prompts, Recursos y Herramientas. {searchShortcut} para buscar."
+    "defaultMessage": "Estas extensiones usan el Model Context Protocol (MCP). Pueden ampliar las capacidades de Lumina mediante tres componentes principales: Prompts, Recursos y Herramientas. {searchShortcut} para buscar."
   },
   "extensionsView.heading": {
     "defaultMessage": "Extensiones"
@@ -1185,19 +1185,19 @@
     "defaultMessage": "AA:BB:CC:... o sha256/base64"
   },
   "externalBackendSection.description": {
-    "defaultMessage": "Por defecto goose lanza un servidor por ti; usa esto para conectarte a un servidor goose externo"
+    "defaultMessage": "Por defecto Lumina lanza un servidor por ti; usa esto para conectarte a un servidor Lumina externo"
   },
   "externalBackendSection.fingerprintRequiresHttps": {
     "defaultMessage": "Certificate fingerprint requires an https URL"
   },
   "externalBackendSection.restartNote": {
-    "defaultMessage": "Los cambios requieren reiniciar Goose para que surtan efecto. Las nuevas ventanas de chat se conectarán al servidor externo."
+    "defaultMessage": "Los cambios requieren reiniciar Lumina para que surtan efecto. Las nuevas ventanas de chat se conectarán al servidor externo."
   },
   "externalBackendSection.secretKey": {
     "defaultMessage": "Secret Key"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "La clave secreta configurada en el servidor Goose (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "La clave secreta configurada en el servidor Lumina (GOOSE_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "Introduce la secret key del servidor"
@@ -1206,10 +1206,10 @@
     "defaultMessage": "URL del servidor"
   },
   "externalBackendSection.serverUrlHelp": {
-    "defaultMessage": "Enter the HTTP(S) base URL. Goose checks /status and connects to /acp under this base."
+    "defaultMessage": "Enter the HTTP(S) base URL. Lumina checks /status and connects to /acp under this base."
   },
   "externalBackendSection.title": {
-    "defaultMessage": "Goose Server"
+    "defaultMessage": "Lumina Server"
   },
   "externalBackendSection.urlBaseError": {
     "defaultMessage": "URL must be the backend base URL before /acp, without query parameters or fragments"
@@ -1224,7 +1224,7 @@
     "defaultMessage": "Usar servidor externo"
   },
   "externalBackendSection.useExternalServerDescription": {
-    "defaultMessage": "Conéctate a un servidor goose que se ejecuta en otro lugar (requiere reiniciar la app)"
+    "defaultMessage": "Conéctate a un servidor Lumina que se ejecuta en otro lugar (requiere reiniciar la app)"
   },
   "goosehintsModal.close": {
     "defaultMessage": "Cerrar"
@@ -1233,7 +1233,7 @@
     "defaultMessage": "Developer"
   },
   "goosehintsModal.dialogDescription": {
-    "defaultMessage": "Proporciona contexto adicional sobre tu proyecto para mejorar la comunicación con Goose"
+    "defaultMessage": "Proporciona contexto adicional sobre tu proyecto para mejorar la comunicación con Lumina"
   },
   "goosehintsModal.dialogTitle": {
     "defaultMessage": "Configurar pistas del proyecto (.goosehints)"
@@ -1254,7 +1254,7 @@
     "defaultMessage": "Archivo .goosehints encontrado en: {filePath}"
   },
   "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints es un archivo de texto usado para proporcionar contexto adicional sobre tu proyecto y mejorar la comunicación con Goose."
+    "defaultMessage": ".goosehints es un archivo de texto usado para proporcionar contexto adicional sobre tu proyecto y mejorar la comunicación con Lumina."
   },
   "goosehintsModal.helpText2": {
     "defaultMessage": "Asegúrate de que la extensión {bold} esté habilitada en la página de extensiones. Esta extensión es necesaria para usar .goosehints. Tendrás que reiniciar tu sesión para que las actualizaciones de .goosehints surtan efecto."
@@ -1281,13 +1281,13 @@
     "defaultMessage": "Configurar"
   },
   "goosehintsSection.description": {
-    "defaultMessage": "Configura el archivo .goosehints de tu proyecto para proporcionar contexto adicional a Goose"
+    "defaultMessage": "Configura el archivo .goosehints de tu proyecto para proporcionar contexto adicional a Lumina"
   },
   "goosehintsSection.title": {
     "defaultMessage": "Pistas del proyecto (.goosehints)"
   },
   "groupedExtensionLoadingToast.askGoose": {
-    "defaultMessage": "Pregunta a goose"
+    "defaultMessage": "Pregunta a Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
     "defaultMessage": "Contraer detalles"
@@ -1407,7 +1407,7 @@
     "defaultMessage": "Hugging Face"
   },
   "imagePreview.altText": {
-    "defaultMessage": "imagen de goose"
+    "defaultMessage": "imagen de Lumina"
   },
   "imagePreview.clickToCollapse": {
     "defaultMessage": "Haz clic para contraer"
@@ -1455,7 +1455,7 @@
     "defaultMessage": "Archivo de receta"
   },
   "importRecipeForm.reviewWarning": {
-    "defaultMessage": "Asegúrate de revisar el contenido de los archivos de receta antes de añadirlos a tu interfaz de goose."
+    "defaultMessage": "Asegúrate de revisar el contenido de los archivos de receta antes de añadirlos a tu interfaz de Lumina."
   },
   "importRecipeForm.schemaDescription": {
     "defaultMessage": "Tu archivo YAML o JSON debe seguir esta estructura. Los campos obligatorios son: title, description y, o bien instructions, o bien prompt."
@@ -1566,13 +1566,13 @@
     "defaultMessage": "Atajos de la aplicación"
   },
   "keyboardShortcuts.categoryApplicationDescription": {
-    "defaultMessage": "Estos atajos funcionan cuando Goose es la aplicación activa"
+    "defaultMessage": "Estos atajos funcionan cuando Lumina es la aplicación activa"
   },
   "keyboardShortcuts.categoryGlobal": {
     "defaultMessage": "Atajos globales"
   },
   "keyboardShortcuts.categoryGlobalDescription": {
-    "defaultMessage": "Estos atajos funcionan en todo el sistema, incluso cuando Goose no está enfocado"
+    "defaultMessage": "Estos atajos funcionan en todo el sistema, incluso cuando Lumina no está enfocado"
   },
   "keyboardShortcuts.categorySearch": {
     "defaultMessage": "Atajos de búsqueda"
@@ -1614,10 +1614,10 @@
     "defaultMessage": "Buscar anterior"
   },
   "keyboardShortcuts.focusWindowDescription": {
-    "defaultMessage": "Traer al frente la ventana de Goose desde cualquier lugar"
+    "defaultMessage": "Traer al frente la ventana de Lumina desde cualquier lugar"
   },
   "keyboardShortcuts.focusWindowLabel": {
-    "defaultMessage": "Enfocar la ventana de Goose"
+    "defaultMessage": "Enfocar la ventana de Lumina"
   },
   "keyboardShortcuts.loading": {
     "defaultMessage": "Cargando..."
@@ -1629,7 +1629,7 @@
     "defaultMessage": "Nuevo chat"
   },
   "keyboardShortcuts.newChatWindowDescription": {
-    "defaultMessage": "Abrir una nueva ventana de Goose"
+    "defaultMessage": "Abrir una nueva ventana de Lumina"
   },
   "keyboardShortcuts.newChatWindowLabel": {
     "defaultMessage": "Nueva ventana de chat"
@@ -1668,7 +1668,7 @@
     "defaultMessage": "Restablecer a los valores predeterminados"
   },
   "keyboardShortcuts.restartDescription": {
-    "defaultMessage": "Los cambios en los atajos de la aplicación (como Nuevo chat, Ajustes, etc.) requieren reiniciar Goose para que surtan efecto. Los atajos globales (Enfocar ventana, Lanzador rápido) funcionan de inmediato."
+    "defaultMessage": "Los cambios en los atajos de la aplicación (como Nuevo chat, Ajustes, etc.) requieren reiniciar Lumina para que surtan efecto. Los atajos globales (Enfocar ventana, Lanzador rápido) funcionan de inmediato."
   },
   "keyboardShortcuts.restartRequired": {
     "defaultMessage": "Reinicio necesario"
@@ -1698,13 +1698,13 @@
     "defaultMessage": "Alternar navegación"
   },
   "launcher.placeholder": {
-    "defaultMessage": "Pregúntale lo que sea a goose..."
+    "defaultMessage": "Pregúntale lo que sea a Lumina..."
   },
   "loadingGoose.compacting": {
-    "defaultMessage": "goose está compactando la conversación..."
+    "defaultMessage": "Lumina está compactando la conversación..."
   },
   "loadingGoose.idle": {
-    "defaultMessage": "goose está trabajando en ello…"
+    "defaultMessage": "Lumina está trabajando en ello…"
   },
   "loadingGoose.loadingConversation": {
     "defaultMessage": "cargando conversación..."
@@ -1713,13 +1713,13 @@
     "defaultMessage": "reiniciando sesión..."
   },
   "loadingGoose.streaming": {
-    "defaultMessage": "goose está trabajando en ello…"
+    "defaultMessage": "Lumina está trabajando en ello…"
   },
   "loadingGoose.thinking": {
-    "defaultMessage": "goose está pensando…"
+    "defaultMessage": "Lumina está pensando…"
   },
   "loadingGoose.waiting": {
-    "defaultMessage": "goose está esperando…"
+    "defaultMessage": "Lumina está esperando…"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "¿Eliminar este modelo? Podrás volver a descargarlo más tarde."
@@ -2370,7 +2370,7 @@
     "defaultMessage": "Puede que el servidor se esté iniciando o no esté disponible temporalmente."
   },
   "onboardingGuard.checkProviderErrorTitle": {
-    "defaultMessage": "No se pudo conectar con el servidor de Goose"
+    "defaultMessage": "No se pudo conectar con el servidor de Lumina"
   },
   "onboardingGuard.retry": {
     "defaultMessage": "Reintentar"
@@ -2379,10 +2379,10 @@
     "defaultMessage": "Tu agente de IA local. Conecta un proveedor de modelos de IA para empezar."
   },
   "onboardingGuard.welcomeTitle": {
-    "defaultMessage": "Te damos la bienvenida a goose"
+    "defaultMessage": "Te damos la bienvenida a Lumina"
   },
   "onboardingSuccess.allSet": {
-    "defaultMessage": "Todo está listo para que empieces a usar goose."
+    "defaultMessage": "Todo está listo para que empieces a usar Lumina."
   },
   "onboardingSuccess.connectedTo": {
     "defaultMessage": "Conectado a {providerName}"
@@ -2397,7 +2397,7 @@
     "defaultMessage": "Modelo local listo"
   },
   "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "Los datos de uso anónimos ayudan a mejorar goose. Nunca recopilamos tus conversaciones, código ni datos personales."
+    "defaultMessage": "Los datos de uso anónimos ayudan a mejorar Lumina. Nunca recopilamos tus conversaciones, código ni datos personales."
   },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "Privacidad"
@@ -2565,10 +2565,10 @@
     "defaultMessage": "Métricas de sesión (duración, número de interacciones, uso de tokens)"
   },
   "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Versión de goose y método de instalación"
+    "defaultMessage": "Versión de Lumina y método de instalación"
   },
   "privacyInfoModal.description": {
-    "defaultMessage": "Los datos de uso anónimos nos ayudan a entender cómo se usa goose e identificar áreas de mejora."
+    "defaultMessage": "Los datos de uso anónimos nos ayudan a entender cómo se usa Lumina e identificar áreas de mejora."
   },
   "privacyInfoModal.neverCollect": {
     "defaultMessage": "Nunca recopilamos tus conversaciones, código, argumentos de herramientas, mensajes de error ni ningún dato personal. Puedes cambiar este ajuste en cualquier momento en Ajustes."
@@ -2637,7 +2637,7 @@
     "defaultMessage": "No se pudo guardar el prompt"
   },
   "promptsSettings.promptEditingDescription": {
-    "defaultMessage": "Personaliza los prompts que definen el comportamiento de goose en distintos contextos. Estos prompts usan la sintaxis de plantillas Jinja2. Ten cuidado al modificar las variables de plantilla, ya que los cambios incorrectos pueden romper la funcionalidad. Comparte cualquier mejora con la comunidad."
+    "defaultMessage": "Personaliza los prompts que definen el comportamiento de Lumina en distintos contextos. Estos prompts usan la sintaxis de plantillas Jinja2. Ten cuidado al modificar las variables de plantilla, ya que los cambios incorrectos pueden romper la funcionalidad. Comparte cualquier mejora con la comunidad."
   },
   "promptsSettings.promptEditingTitle": {
     "defaultMessage": "Edición de prompts"
@@ -2733,7 +2733,7 @@
     "defaultMessage": "Iniciando sesión..."
   },
   "providerConfigurationModal.addApiKeyDescription": {
-    "defaultMessage": "Añade tu(s) clave(s) de API de este proveedor para integrarlo en goose"
+    "defaultMessage": "Añade tu(s) clave(s) de API de este proveedor para integrarlo en Lumina"
   },
   "providerConfigurationModal.browserWindowHint": {
     "defaultMessage": "Se abrirá una ventana del navegador para que completes el inicio de sesión."
@@ -2769,7 +2769,7 @@
     "defaultMessage": "Error"
   },
   "providerConfigurationModal.externalSetupIntro": {
-    "defaultMessage": "Este proveedor se configura fuera de goose. Sigue estos pasos:"
+    "defaultMessage": "Este proveedor se configura fuera de Lumina. Sigue estos pasos:"
   },
   "providerConfigurationModal.goBack": {
     "defaultMessage": "Volver"
@@ -2853,7 +2853,7 @@
     "defaultMessage": "Cargando proveedores..."
   },
   "providerSettings.onboardingDescription": {
-    "defaultMessage": "Selecciona un proveedor de modelos de IA para empezar con goose. Necesitarás usar claves de API generadas por cada proveedor, que se cifrarán y se almacenarán localmente. Puedes cambiar de proveedor en cualquier momento en los ajustes."
+    "defaultMessage": "Selecciona un proveedor de modelos de IA para empezar con Lumina. Necesitarás usar claves de API generadas por cada proveedor, que se cifrarán y se almacenarán localmente. Puedes cambiar de proveedor en cualquier momento en los ajustes."
   },
   "providerSettings.otherProviders": {
     "defaultMessage": "Otros proveedores"
@@ -3738,7 +3738,7 @@
     "defaultMessage": "Reintentar"
   },
   "sessionViewComponents.role.assistant": {
-    "defaultMessage": "Goose"
+    "defaultMessage": "Lumina"
   },
   "sessionViewComponents.role.user": {
     "defaultMessage": "Tú"
@@ -3768,7 +3768,7 @@
     "defaultMessage": "Historial de chats"
   },
   "sessions.chatHistoryDesc": {
-    "defaultMessage": "Consulta y busca tus conversaciones anteriores con Goose. {shortcut} para buscar."
+    "defaultMessage": "Consulta y busca tus conversaciones anteriores con Lumina. {shortcut} para buscar."
   },
   "sessions.close": {
     "defaultMessage": "Cerrar"
@@ -3804,7 +3804,7 @@
     "defaultMessage": "Importar enlace"
   },
   "sessions.importNostr.description": {
-    "defaultMessage": "Pega un enlace de Goose para compartir por Nostr para obtener, descifrar e importar la sesión."
+    "defaultMessage": "Pega un enlace de Lumina para compartir por Nostr para obtener, descifrar e importar la sesión."
   },
   "sessions.importNostr.placeholder": {
     "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
@@ -3876,7 +3876,7 @@
     "defaultMessage": "Descripción de la sesión actualizada correctamente"
   },
   "settings.appearance.description": {
-    "defaultMessage": "Configura cómo se ve goose en tu sistema"
+    "defaultMessage": "Configura cómo se ve Lumina en tu sistema"
   },
   "settings.appearance.title": {
     "defaultMessage": "Apariencia"
@@ -3891,13 +3891,13 @@
     "defaultMessage": "Seguimiento de costos"
   },
   "settings.dockIcon.description": {
-    "defaultMessage": "Muestra goose en el dock"
+    "defaultMessage": "Muestra Lumina en el dock"
   },
   "settings.dockIcon.title": {
     "defaultMessage": "Icono del dock"
   },
   "settings.help.description": {
-    "defaultMessage": "Ayúdanos a mejorar goose reportando problemas o solicitando nuevas funciones"
+    "defaultMessage": "Ayúdanos a mejorar Lumina reportando problemas o solicitando nuevas funciones"
   },
   "settings.help.reportBug": {
     "defaultMessage": "Reportar un error"
@@ -3909,7 +3909,7 @@
     "defaultMessage": "Ayuda y comentarios"
   },
   "settings.language.description": {
-    "defaultMessage": "Elige el idioma de la interfaz de goose"
+    "defaultMessage": "Elige el idioma de la interfaz de Lumina"
   },
   "settings.language.english": {
     "defaultMessage": "Inglés"
@@ -3966,7 +3966,7 @@
     "defaultMessage": "Chino (tradicional)"
   },
   "settings.menuBarIcon.description": {
-    "defaultMessage": "Muestra goose en la barra de menús"
+    "defaultMessage": "Muestra Lumina en la barra de menús"
   },
   "settings.menuBarIcon.title": {
     "defaultMessage": "Icono de la barra de menús"
@@ -3987,7 +3987,7 @@
     "defaultMessage": "Haz clic en Notificaciones"
   },
   "settings.notifications.modal.macStep3": {
-    "defaultMessage": "Encuentra y selecciona goose en la lista de aplicaciones"
+    "defaultMessage": "Encuentra y selecciona Lumina en la lista de aplicaciones"
   },
   "settings.notifications.modal.macStep4": {
     "defaultMessage": "Activa las notificaciones y ajusta la configuración como prefieras"
@@ -4005,7 +4005,7 @@
     "defaultMessage": "Ve a Sistema > Notificaciones"
   },
   "settings.notifications.modal.winStep3": {
-    "defaultMessage": "Encuentra y selecciona goose en la lista de aplicaciones"
+    "defaultMessage": "Encuentra y selecciona Lumina en la lista de aplicaciones"
   },
   "settings.notifications.modal.winStep4": {
     "defaultMessage": "Activa las notificaciones y ajusta la configuración como prefieras"
@@ -4014,7 +4014,7 @@
     "defaultMessage": "Abrir configuración"
   },
   "settings.notifications.task.description": {
-    "defaultMessage": "Notifica cuando Goose termina una tarea mientras la ventana está en segundo plano"
+    "defaultMessage": "Notifica cuando Lumina termina una tarea mientras la ventana está en segundo plano"
   },
   "settings.notifications.task.title": {
     "defaultMessage": "Notificaciones de tareas completadas"
@@ -4023,19 +4023,19 @@
     "defaultMessage": "Notificaciones"
   },
   "settings.preventSleep.description": {
-    "defaultMessage": "Mantén tu computadora despierta mientras goose ejecuta una tarea (la pantalla aún puede bloquearse)"
+    "defaultMessage": "Mantén tu computadora despierta mientras Lumina ejecuta una tarea (la pantalla aún puede bloquearse)"
   },
   "settings.preventSleep.title": {
     "defaultMessage": "Evitar suspensión"
   },
   "settings.theme.description": {
-    "defaultMessage": "Personaliza la apariencia de goose"
+    "defaultMessage": "Personaliza la apariencia de Lumina"
   },
   "settings.theme.title": {
     "defaultMessage": "Tema"
   },
   "settings.updates.description": {
-    "defaultMessage": "Busca e instala actualizaciones para mantener goose funcionando al máximo"
+    "defaultMessage": "Busca e instala actualizaciones para mantener Lumina funcionando al máximo"
   },
   "settings.updates.title": {
     "defaultMessage": "Actualizaciones"
@@ -4113,7 +4113,7 @@
     "defaultMessage": "Buscar Skills..."
   },
   "skillsView.skillsDescription": {
-    "defaultMessage": "Mira las Skills instaladas que amplían las capacidades de Goose. {shortcut} para buscar."
+    "defaultMessage": "Mira las Skills instaladas que amplían las capacidades de Lumina. {shortcut} para buscar."
   },
   "skillsView.skillsTitle": {
     "defaultMessage": "Skills"
@@ -4365,10 +4365,10 @@
     "defaultMessage": "Usar otro proveedor"
   },
   "telemetryConsentPrompt.description": {
-    "defaultMessage": "¿Te gustaría compartir datos de uso anónimos para ayudar a mejorar goose? Nunca recopilamos tus conversaciones, código ni datos personales."
+    "defaultMessage": "¿Te gustaría compartir datos de uso anónimos para ayudar a mejorar Lumina? Nunca recopilamos tus conversaciones, código ni datos personales."
   },
   "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Ayuda a mejorar goose"
+    "defaultMessage": "Ayuda a mejorar Lumina"
   },
   "telemetryConsentPrompt.learnMore": {
     "defaultMessage": "Más información"
@@ -4395,7 +4395,7 @@
     "defaultMessage": "Privacidad"
   },
   "telemetrySettings.toggleDescription": {
-    "defaultMessage": "Ayuda a mejorar goose compartiendo estadísticas de uso anónimas."
+    "defaultMessage": "Ayuda a mejorar Lumina compartiendo estadísticas de uso anónimas."
   },
   "telemetrySettings.toggleLabel": {
     "defaultMessage": "Datos de uso anónimos"
@@ -4473,7 +4473,7 @@
     "defaultMessage": "¿Permitir {toolName}?"
   },
   "toolConfirmation.gooseWouldLikeToCallWithName": {
-    "defaultMessage": "Goose quiere invocar {toolName}. ¿Permitir?"
+    "defaultMessage": "Lumina quiere invocar {toolName}. ¿Permitir?"
   },
   "updateSection.autoDownload": {
     "defaultMessage": "La actualización se descargará automáticamente en segundo plano."
@@ -4500,7 +4500,7 @@
     "defaultMessage": "Desactivar la descarga automática de actualizaciones"
   },
   "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "Cuando está activado, Goose te avisará de nuevas versiones pero no las descargará automáticamente."
+    "defaultMessage": "Cuando está activado, Lumina te avisará de nuevas versiones pero no las descargará automáticamente."
   },
   "updateSection.downloadNow": {
     "defaultMessage": "Descargar ahora"
@@ -4533,7 +4533,7 @@
     "defaultMessage": "Este método de actualización requiere instalación manual."
   },
   "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ ¡La actualización está lista! Se instalará cuando cierres Goose."
+    "defaultMessage": "✓ ¡La actualización está lista! Se instalará cuando cierres Lumina."
   },
   "updateSection.readyInstallManual": {
     "defaultMessage": "✓ ¡La actualización está lista! Haz clic en \"Instalar y reiniciar\" para ver las instrucciones de instalación."
@@ -4944,7 +4944,7 @@
     "defaultMessage": "Recuperación"
   },
   "mcpCenter.recoveryConnectionNext": {
-    "defaultMessage": "Verifique la conexión Goose e intente de nuevo."
+    "defaultMessage": "Verifique la conexión Lumina e intente de nuevo."
   },
   "mcpCenter.recoveryConnectionTitle": {
     "defaultMessage": "El Centro MCP no está disponible"
@@ -5028,7 +5028,7 @@
     "defaultMessage": "Conexión HTTP remota"
   },
   "mcpCenter.remoteConnectionDescription": {
-    "defaultMessage": "Goose valida la seguridad de la URL y la política de la máquina antes de producir un plan revisable."
+    "defaultMessage": "Lumina valida la seguridad de la URL y la política de la máquina antes de producir un plan revisable."
   },
   "mcpCenter.remoteHttp": {
     "defaultMessage": "HTTP remoto"

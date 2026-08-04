@@ -497,7 +497,7 @@ export function toMcpRecoveryViewModel(error: unknown): McpPlatformRecoveryViewM
   return {
     title: 'MCP Center is unavailable',
     message: 'The MCP Platform request could not be completed.',
-    nextStep: 'Check the Goose connection and retry.',
+    nextStep: 'Check the Lumina connection and retry.',
     retryable: true,
     kind: 'connection',
   };

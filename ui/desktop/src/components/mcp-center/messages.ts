@@ -248,7 +248,7 @@ export const mcpCenterMessages = defineMessages({
   remoteConnectionDescription: {
     id: 'mcpCenter.remoteConnectionDescription',
     defaultMessage:
-      'Add a reviewable plan for a Remote HTTP endpoint that does not require credentials. Goose still validates URL safety and machine policy before showing the plan.',
+      'Add a reviewable plan for a Remote HTTP endpoint that does not require credentials. Lumina still validates URL safety and machine policy before showing the plan.',
   },
   httpsEndpoint: { id: 'mcpCenter.httpsEndpoint', defaultMessage: 'HTTPS endpoint' },
   endpointPlaceholder: {
@@ -519,7 +519,7 @@ export const mcpCenterMessages = defineMessages({
   taskErrorMessageByCode: {
     id: 'mcpCenter.taskErrorMessageByCode',
     defaultMessage:
-      '{code, select, adapter_failed {The managed task could not complete through its adapter.} verification_failed {The reviewed result did not pass verification.} activation_failed {The reviewed result could not be activated safely.} rollback_failed {Goose could not fully restore the previous safe state.} cancelled {The task was cancelled before it finished.} interrupted {The task stopped before it could finish.} unknown {The task could not be completed safely.} other {The task could not be completed safely.}}',
+      '{code, select, adapter_failed {The managed task could not complete through its adapter.} verification_failed {The reviewed result did not pass verification.} activation_failed {The reviewed result could not be activated safely.} rollback_failed {Lumina could not fully restore the previous safe state.} cancelled {The task was cancelled before it finished.} interrupted {The task stopped before it could finish.} unknown {The task could not be completed safely.} other {The task could not be completed safely.}}',
   },
   taskTimelineWaiting: {
     id: 'mcpCenter.taskTimelineWaiting',
@@ -713,7 +713,7 @@ export const mcpCenterMessages = defineMessages({
   },
   recoveryConnectionNext: {
     id: 'mcpCenter.recoveryConnectionNext',
-    defaultMessage: 'Check the Goose connection and retry.',
+    defaultMessage: 'Check the Lumina connection and retry.',
   },
   recoveryCredentialTitle: {
     id: 'mcpCenter.recoveryCredentialTitle',
@@ -914,7 +914,7 @@ export const mcpCenterMessages = defineMessages({
   localManifestImportDescription: {
     id: 'mcpCenter.localManifestImportDescription',
     defaultMessage:
-      'Choose one existing manifest file. Goose validates and stores the local bytes through ACP before Discover can use it.',
+      'Choose one existing manifest file. Lumina validates and stores the local bytes through ACP before Discover can use it.',
   },
   localDirectoryImportTitle: {
     id: 'mcpCenter.localDirectoryImportTitle',
@@ -1049,7 +1049,7 @@ export const mcpCenterMessages = defineMessages({
   },
   stopRuntimeDescription: {
     id: 'mcpCenter.stopRuntimeDescription',
-    defaultMessage: 'Goose will close only its currently owned MCP connection or child process.',
+    defaultMessage: 'Lumina will close only its currently owned MCP connection or child process.',
   },
   stopRuntimeImpact: {
     id: 'mcpCenter.stopRuntimeImpact',
@@ -1077,7 +1077,7 @@ export const mcpCenterMessages = defineMessages({
   profileUnavailableDescription: {
     id: 'mcpCenter.profileUnavailableDescription',
     defaultMessage:
-      'This Goose build does not currently expose the profile workflow from the MCP Platform. When that phase becomes available, this tab will show the real CRUD flow.',
+      'This Lumina build does not currently expose the profile workflow from the MCP Platform. When that phase becomes available, this tab will show the real CRUD flow.',
   },
   profileCapabilityHint: {
     id: 'mcpCenter.profileCapabilityHint',
@@ -1277,7 +1277,7 @@ export const mcpCenterMessages = defineMessages({
   profileConnectionTestSafeFailure: {
     id: 'mcpCenter.profileConnectionTestSafeFailure',
     defaultMessage:
-      'Goose could not complete the connection test. No diagnostic details, configuration, or credentials are shown.',
+      'Lumina could not complete the connection test. No diagnostic details, configuration, or credentials are shown.',
   },
   profileConnectionTestStageEligibility: {
     id: 'mcpCenter.profileConnectionTestStageEligibility',
@@ -1517,7 +1517,7 @@ export const mcpCenterMessages = defineMessages({
   },
   profileApplySessionErrorNextStep: {
     id: 'mcpCenter.profileApplySessionErrorNextStep',
-    defaultMessage: 'Create a new review and try again when the Goose connection is available.',
+    defaultMessage: 'Create a new review and try again when the Lumina connection is available.',
   },
   profileApplyCurrentSessionUnavailableTitle: {
     id: 'mcpCenter.profileApplyCurrentSessionUnavailableTitle',
@@ -1526,7 +1526,7 @@ export const mcpCenterMessages = defineMessages({
   profileApplyCurrentSessionUnavailableMessage: {
     id: 'mcpCenter.profileApplyCurrentSessionUnavailableMessage',
     defaultMessage:
-      'Goose could not verify the current session folder, so this reviewed profile application was not confirmed.',
+      'Lumina could not verify the current session folder, so this reviewed profile application was not confirmed.',
   },
   profileApplyCurrentSessionUnavailableNextStep: {
     id: 'mcpCenter.profileApplyCurrentSessionUnavailableNextStep',
@@ -1722,7 +1722,7 @@ export const mcpCenterMessages = defineMessages({
   httpsManifestHelp: {
     id: 'mcpCenter.httpsManifestHelp',
     defaultMessage:
-      'Only HTTPS URLs are accepted. The URL is checked by Goose before any plan is created.',
+      'Only HTTPS URLs are accepted. The URL is checked by Lumina before any plan is created.',
   },
   httpsManifestInvalidUrl: {
     id: 'mcpCenter.httpsManifestInvalidUrl',

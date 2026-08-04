@@ -20,7 +20,7 @@ const i18n = defineMessages({
   },
   defaultMessage: {
     id: 'elicitationRequest.defaultMessage',
-    defaultMessage: 'Goose needs some information from you.',
+    defaultMessage: 'Lumina needs some information from you.',
   },
   submit: {
     id: 'elicitationRequest.submit',

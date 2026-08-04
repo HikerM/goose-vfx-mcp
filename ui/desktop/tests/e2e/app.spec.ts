@@ -196,7 +196,7 @@ async function selectProvider(mainWindow: any, provider: Provider) {
   await mainWindow.screenshot({ path: `test-results/chat-interface-${provider.name.toLowerCase()}.png` });
 }
 
-test.describe('Goose App', () => {
+test.describe('Lumina App', () => {
   // No need for beforeAll/afterAll - the fixture handles app launch and cleanup!
 
   test.describe('General UI', () => {

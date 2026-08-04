@@ -19,7 +19,7 @@ let cfg = {
   // Protocol registration
   protocols: [
     {
-      name: 'GooseProtocol',
+      name: 'LuminaProtocol',
       schemes: ['goose'],
     },
   ],
@@ -36,9 +36,9 @@ let cfg = {
     ],
     // Usage descriptions for macOS TCC (Transparency, Consent, and Control)
     NSCalendarsUsageDescription:
-      'Goose needs access to your calendars to help manage and query calendar events.',
+      'Lumina needs access to your calendars to help manage and query calendar events.',
     NSRemindersUsageDescription:
-      'Goose needs access to your reminders to help manage and query reminders.',
+      'Lumina needs access to your reminders to help manage and query reminders.',
   },
 };
 
@@ -87,8 +87,8 @@ module.exports = {
     {
       name: '@electron-forge/maker-deb',
       config: {
-        name: 'Goose',
-        bin: 'Goose',
+        name: 'Lumina',
+        bin: 'Lumina',
         maintainer: 'AAIF (Agentic AI Foundation)',
         homepage: 'https://goose-docs.ai/',
         categories: ['Development'],
@@ -103,8 +103,8 @@ module.exports = {
     {
       name: '@electron-forge/maker-rpm',
       config: {
-        name: 'Goose',
-        bin: 'Goose',
+        name: 'Lumina',
+        bin: 'Lumina',
         maintainer: 'AAIF (Agentic AI Foundation)',
         homepage: 'https://goose-docs.ai/',
         categories: ['Development'],
@@ -121,15 +121,15 @@ module.exports = {
       config: {
         options: {
           id: 'io.github.block.Goose', // NOTE: kept for backwards compat with existing installs
+          productName: 'Lumina',
           categories: ['Development'],
           icon: {
-            scalable: 'src/images/icon.svg',
             '512x512': 'src/images/icon-512.png',
           },
           homepage: 'https://goose-docs.ai/',
           runtimeVersion: '25.08',
           baseVersion: '25.08',
-          bin: 'Goose',
+          bin: 'Lumina',
           modules: [
             {
               name: 'libbz2-shim',

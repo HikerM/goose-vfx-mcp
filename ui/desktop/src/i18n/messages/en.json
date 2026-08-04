@@ -27,7 +27,7 @@
     "defaultMessage": "Delete \"{name}\"? This cannot be undone."
   },
   "appsView.description": {
-    "defaultMessage": "Applications from your MCP servers and Apps built by goose itself. You can ask it to create new apps through the chat interface and they will appear here."
+    "defaultMessage": "Applications from your MCP servers and Apps built by Lumina itself. You can ask it to create new apps through the chat interface and they will appear here."
   },
   "appsView.errorLoading": {
     "defaultMessage": "Error loading apps: {error}"
@@ -45,7 +45,7 @@
     "defaultMessage": "Loading apps..."
   },
   "appsView.noAppsDescription": {
-    "defaultMessage": "Open a chat and ask goose for the app you want to have. It can build one for you and that will appear here. Or if somebody shared an app, you can import it using the button above."
+    "defaultMessage": "Open a chat and ask Lumina for the app you want to have. It can build one for you and that will appear here. Or if somebody shared an app, you can import it using the button above."
   },
   "appsView.noAppsTitle": {
     "defaultMessage": "No apps available"
@@ -84,7 +84,7 @@
     "defaultMessage": "Credential deleted"
   },
   "authSettings.description": {
-    "defaultMessage": "Manage provider credentials stored locally by goose."
+    "defaultMessage": "Manage provider credentials stored locally by Lumina."
   },
   "authSettings.empty": {
     "defaultMessage": "No locally stored provider credentials were found."
@@ -168,10 +168,10 @@
     "defaultMessage": "Launch"
   },
   "chat.notification.taskComplete.body": {
-    "defaultMessage": "Click here to bring Goose back into focus."
+    "defaultMessage": "Click here to bring Lumina back into focus."
   },
   "chat.notification.taskComplete.title": {
-    "defaultMessage": "Goose finished the task."
+    "defaultMessage": "Lumina finished the task."
   },
   "chatInput.contextWindow": {
     "defaultMessage": "Context window"
@@ -222,13 +222,13 @@
     "defaultMessage": "Waiting for images to save..."
   },
   "chatSettings.modeDescription": {
-    "defaultMessage": "Choose the default mode Goose uses for new sessions. Existing sessions keep their current mode."
+    "defaultMessage": "Choose the default mode Lumina uses for new sessions. Existing sessions keep their current mode."
   },
   "chatSettings.modeTitle": {
     "defaultMessage": "Default Mode"
   },
   "chatSettings.responseStylesDescription": {
-    "defaultMessage": "Choose how Goose should format and style its responses"
+    "defaultMessage": "Choose how Lumina should format and style its responses"
   },
   "chatSettings.responseStylesTitle": {
     "defaultMessage": "Response Styles"
@@ -249,10 +249,10 @@
     "defaultMessage": "Configuration Editor"
   },
   "configSettings.description": {
-    "defaultMessage": "Edit your goose configuration settings"
+    "defaultMessage": "Edit your Lumina configuration settings"
   },
   "configSettings.descriptionWithProvider": {
-    "defaultMessage": "Edit your goose configuration settings (current settings for {provider})"
+    "defaultMessage": "Edit your Lumina configuration settings (current settings for {provider})"
   },
   "configSettings.done": {
     "defaultMessage": "Done"
@@ -324,7 +324,7 @@
     "defaultMessage": "Max Turns"
   },
   "conversationLimitsDropdown.maxTurnsDescription": {
-    "defaultMessage": "Maximum agent turns before Goose asks for user input"
+    "defaultMessage": "Maximum agent turns before Lumina asks for user input"
   },
   "costTracker.costUnavailable": {
     "defaultMessage": "Cost data not available for {model} ({inputTokens} input, {outputTokens} output tokens)"
@@ -777,7 +777,7 @@
     "defaultMessage": "Edit {name} settings"
   },
   "defaultCardButtons.getStarted": {
-    "defaultMessage": "Get started with goose!"
+    "defaultMessage": "Get started with Lumina!"
   },
   "defaultProviderSetupForm.apiHostLabel": {
     "defaultMessage": "API Host"
@@ -936,7 +936,7 @@
     "defaultMessage": "Information request was cancelled."
   },
   "elicitationRequest.defaultMessage": {
-    "defaultMessage": "Goose needs some information from you."
+    "defaultMessage": "Lumina needs some information from you."
   },
   "elicitationRequest.expired": {
     "defaultMessage": "This request has expired. The extension will need to ask again."
@@ -981,7 +981,7 @@
     "defaultMessage": "An error occurred."
   },
   "errorBoundary.errorWithVersion": {
-    "defaultMessage": "An error occurred in Goose v{version}."
+    "defaultMessage": "An error occurred in Lumina v{version}."
   },
   "errorBoundary.heading": {
     "defaultMessage": "Honk!"
@@ -1209,7 +1209,7 @@
     "defaultMessage": "Extensions enabled here are used as the default for new chats. You can also toggle active extensions during chat."
   },
   "extensionsView.description": {
-    "defaultMessage": "These extensions use the Model Context Protocol (MCP). They can expand Goose's capabilities using three main components: Prompts, Resources, and Tools. {searchShortcut} to search."
+    "defaultMessage": "These extensions use the Model Context Protocol (MCP). They can expand Lumina's capabilities using three main components: Prompts, Resources, and Tools. {searchShortcut} to search."
   },
   "extensionsView.heading": {
     "defaultMessage": "Extensions"
@@ -1230,13 +1230,13 @@
     "defaultMessage": "Clear saved secret"
   },
   "externalBackendSection.description": {
-    "defaultMessage": "By default Goose starts a local backend. Use this to connect to an external ACP-compatible backend."
+    "defaultMessage": "By default Lumina starts a local backend. Use this to connect to an external ACP-compatible backend."
   },
   "externalBackendSection.fingerprintRequiresHttps": {
     "defaultMessage": "Certificate fingerprint requires an https URL"
   },
   "externalBackendSection.restartNote": {
-    "defaultMessage": "Changes apply to new chat windows. Restart Goose to update existing windows."
+    "defaultMessage": "Changes apply to new chat windows. Restart Lumina to update existing windows."
   },
   "externalBackendSection.secretKey": {
     "defaultMessage": "Secret Key"
@@ -1251,7 +1251,7 @@
     "defaultMessage": "Backend Base URL"
   },
   "externalBackendSection.serverUrlHelp": {
-    "defaultMessage": "Enter the HTTP(S) base URL. Goose checks /status and connects to /acp under this base."
+    "defaultMessage": "Enter the HTTP(S) base URL. Lumina checks /status and connects to /acp under this base."
   },
   "externalBackendSection.title": {
     "defaultMessage": "External Backend (ACP)"
@@ -1278,7 +1278,7 @@
     "defaultMessage": "Developer"
   },
   "goosehintsModal.dialogDescription": {
-    "defaultMessage": "Provide additional context about your project to improve communication with Goose"
+    "defaultMessage": "Provide additional context about your project to improve communication with Lumina"
   },
   "goosehintsModal.dialogTitle": {
     "defaultMessage": "Configure Project Hints (.goosehints)"
@@ -1299,7 +1299,7 @@
     "defaultMessage": ".goosehints file found at: {filePath}"
   },
   "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints is a text file used to provide additional context about your project and improve the communication with Goose."
+    "defaultMessage": ".goosehints is a text file used to provide additional context about your project and improve the communication with Lumina."
   },
   "goosehintsModal.helpText2": {
     "defaultMessage": "Please make sure {bold} extension is enabled in the extensions page. This extension is required to use .goosehints. You'll need to restart your session for .goosehints updates to take effect."
@@ -1326,13 +1326,13 @@
     "defaultMessage": "Configure"
   },
   "goosehintsSection.description": {
-    "defaultMessage": "Configure your project's .goosehints file to provide additional context to Goose"
+    "defaultMessage": "Configure your project's .goosehints file to provide additional context to Lumina"
   },
   "goosehintsSection.title": {
     "defaultMessage": "Project Hints (.goosehints)"
   },
   "groupedExtensionLoadingToast.askGoose": {
-    "defaultMessage": "Ask goose"
+    "defaultMessage": "Ask Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
     "defaultMessage": "Collapse details"
@@ -1452,7 +1452,7 @@
     "defaultMessage": "Hugging Face"
   },
   "imagePreview.altText": {
-    "defaultMessage": "goose image"
+    "defaultMessage": "Lumina image"
   },
   "imagePreview.clickToCollapse": {
     "defaultMessage": "Click to collapse"
@@ -1500,7 +1500,7 @@
     "defaultMessage": "Recipe File"
   },
   "importRecipeForm.reviewWarning": {
-    "defaultMessage": "Ensure you review contents of recipe files before adding them to your goose interface."
+    "defaultMessage": "Ensure you review contents of recipe files before adding them to your Lumina interface."
   },
   "importRecipeForm.schemaDescription": {
     "defaultMessage": "Your YAML or JSON file should follow this structure. Required fields are: title, description, and either instructions or prompt."
@@ -1611,13 +1611,13 @@
     "defaultMessage": "Application Shortcuts"
   },
   "keyboardShortcuts.categoryApplicationDescription": {
-    "defaultMessage": "These shortcuts work when Goose is the active application"
+    "defaultMessage": "These shortcuts work when Lumina is the active application"
   },
   "keyboardShortcuts.categoryGlobal": {
     "defaultMessage": "Global Shortcuts"
   },
   "keyboardShortcuts.categoryGlobalDescription": {
-    "defaultMessage": "These shortcuts work system-wide, even when Goose is not focused"
+    "defaultMessage": "These shortcuts work system-wide, even when Lumina is not focused"
   },
   "keyboardShortcuts.categorySearch": {
     "defaultMessage": "Search Shortcuts"
@@ -1659,10 +1659,10 @@
     "defaultMessage": "Find Previous"
   },
   "keyboardShortcuts.focusWindowDescription": {
-    "defaultMessage": "Bring Goose window to front from anywhere"
+    "defaultMessage": "Bring Lumina window to front from anywhere"
   },
   "keyboardShortcuts.focusWindowLabel": {
-    "defaultMessage": "Focus Goose Window"
+    "defaultMessage": "Focus Lumina Window"
   },
   "keyboardShortcuts.loading": {
     "defaultMessage": "Loading..."
@@ -1674,7 +1674,7 @@
     "defaultMessage": "New Chat"
   },
   "keyboardShortcuts.newChatWindowDescription": {
-    "defaultMessage": "Open a new Goose window"
+    "defaultMessage": "Open a new Lumina window"
   },
   "keyboardShortcuts.newChatWindowLabel": {
     "defaultMessage": "New Chat Window"
@@ -1713,7 +1713,7 @@
     "defaultMessage": "Reset to Defaults"
   },
   "keyboardShortcuts.restartDescription": {
-    "defaultMessage": "Changes to application shortcuts (like New Chat, Settings, etc.) require restarting Goose to take effect. Global shortcuts (Focus Window, Quick Launcher) work immediately."
+    "defaultMessage": "Changes to application shortcuts (like New Chat, Settings, etc.) require restarting Lumina to take effect. Global shortcuts (Focus Window, Quick Launcher) work immediately."
   },
   "keyboardShortcuts.restartRequired": {
     "defaultMessage": "Restart Required"
@@ -1743,13 +1743,13 @@
     "defaultMessage": "Toggle Navigation"
   },
   "launcher.placeholder": {
-    "defaultMessage": "Ask goose anything..."
+    "defaultMessage": "Ask Lumina anything..."
   },
   "loadingGoose.compacting": {
-    "defaultMessage": "goose is compacting the conversation..."
+    "defaultMessage": "Lumina is compacting the conversation..."
   },
   "loadingGoose.idle": {
-    "defaultMessage": "goose is working on it…"
+    "defaultMessage": "Lumina is working on it…"
   },
   "loadingGoose.loadingConversation": {
     "defaultMessage": "loading conversation..."
@@ -1758,13 +1758,13 @@
     "defaultMessage": "restarting session..."
   },
   "loadingGoose.streaming": {
-    "defaultMessage": "goose is working on it…"
+    "defaultMessage": "Lumina is working on it…"
   },
   "loadingGoose.thinking": {
-    "defaultMessage": "goose is thinking…"
+    "defaultMessage": "Lumina is thinking…"
   },
   "loadingGoose.waiting": {
-    "defaultMessage": "goose is waiting…"
+    "defaultMessage": "Lumina is waiting…"
   },
   "localInferenceSettings.automaticSetup": {
     "defaultMessage": "Source: ModelScope · connection failures retry automatically · local GPU or CPU settings are applied when the download finishes."
@@ -1812,7 +1812,7 @@
     "defaultMessage": "Models are searched and downloaded from ModelScope. Public models do not require login; private or gated models require a ModelScope access token."
   },
   "localInferenceSettings.modelScopeTokenDescription": {
-    "defaultMessage": "Only needed for private or gated models. Saved in your operating system credential store and never added to Goose configuration files."
+    "defaultMessage": "Only needed for private or gated models. Saved in your operating system credential store and never added to Lumina configuration files."
   },
   "localInferenceSettings.modelScopeTokenPlaceholder": {
     "defaultMessage": "Paste a new token to save or replace the current one"
@@ -2451,7 +2451,7 @@
     "defaultMessage": "The HTTPS manifest could not be imported."
   },
   "mcpCenter.httpsManifestHelp": {
-    "defaultMessage": "Only HTTPS URLs are accepted. The URL is checked by Goose before any plan is created."
+    "defaultMessage": "Only HTTPS URLs are accepted. The URL is checked by Lumina before any plan is created."
   },
   "mcpCenter.httpsManifestInvalidUrl": {
     "defaultMessage": "Enter a valid HTTPS URL."
@@ -2565,7 +2565,7 @@
     "defaultMessage": "Signed source catalog directory"
   },
   "mcpCenter.localManifestImportDescription": {
-    "defaultMessage": "Choose one existing manifest file. Goose validates and stores the local bytes through ACP before Discover can use it."
+    "defaultMessage": "Choose one existing manifest file. Lumina validates and stores the local bytes through ACP before Discover can use it."
   },
   "mcpCenter.localManifestImportTitle": {
     "defaultMessage": "Local manifest file"
@@ -2769,7 +2769,7 @@
     "defaultMessage": "Creating session…"
   },
   "mcpCenter.profileApplyCurrentSessionUnavailableMessage": {
-    "defaultMessage": "Goose could not verify the current session folder, so this reviewed profile application was not confirmed."
+    "defaultMessage": "Lumina could not verify the current session folder, so this reviewed profile application was not confirmed."
   },
   "mcpCenter.profileApplyCurrentSessionUnavailableNextStep": {
     "defaultMessage": "Retry after the current session folder becomes available."
@@ -2853,7 +2853,7 @@
     "defaultMessage": "The request to create a new session did not complete safely."
   },
   "mcpCenter.profileApplySessionErrorNextStep": {
-    "defaultMessage": "Create a new review and try again when the Goose connection is available."
+    "defaultMessage": "Create a new review and try again when the Lumina connection is available."
   },
   "mcpCenter.profileApplySessionErrorTitle": {
     "defaultMessage": "New session could not be created"
@@ -2934,7 +2934,7 @@
     "defaultMessage": "Running"
   },
   "mcpCenter.profileConnectionTestSafeFailure": {
-    "defaultMessage": "Goose could not complete the connection test. No diagnostic details, configuration, or credentials are shown."
+    "defaultMessage": "Lumina could not complete the connection test. No diagnostic details, configuration, or credentials are shown."
   },
   "mcpCenter.profileConnectionTestSkipped": {
     "defaultMessage": "Skipped"
@@ -3189,7 +3189,7 @@
     "defaultMessage": "Save reusable MCP combinations, review them later, and edit or archive them without changing the current session."
   },
   "mcpCenter.profileUnavailableDescription": {
-    "defaultMessage": "This Goose build does not currently expose the profile workflow from the MCP Platform. When that phase becomes available, this tab will show the real CRUD flow."
+    "defaultMessage": "This Lumina build does not currently expose the profile workflow from the MCP Platform. When that phase becomes available, this tab will show the real CRUD flow."
   },
   "mcpCenter.profileUnavailableTitle": {
     "defaultMessage": "Profiles are not available in this phase"
@@ -3276,7 +3276,7 @@
     "defaultMessage": "Recovery"
   },
   "mcpCenter.recoveryConnectionNext": {
-    "defaultMessage": "Check the Goose connection and retry."
+    "defaultMessage": "Check the Lumina connection and retry."
   },
   "mcpCenter.recoveryConnectionTitle": {
     "defaultMessage": "MCP Center is unavailable"
@@ -3393,7 +3393,7 @@
     "defaultMessage": "Remote HTTP connection"
   },
   "mcpCenter.remoteConnectionDescription": {
-    "defaultMessage": "Add a reviewable plan for a Remote HTTP endpoint that does not require credentials. Goose still validates URL safety and machine policy before showing the plan."
+    "defaultMessage": "Add a reviewable plan for a Remote HTTP endpoint that does not require credentials. Lumina still validates URL safety and machine policy before showing the plan."
   },
   "mcpCenter.remoteHttp": {
     "defaultMessage": "Remote HTTP"
@@ -3576,7 +3576,7 @@
     "defaultMessage": "Stop runtime"
   },
   "mcpCenter.stopRuntimeDescription": {
-    "defaultMessage": "Goose will close only its currently owned MCP connection or child process."
+    "defaultMessage": "Lumina will close only its currently owned MCP connection or child process."
   },
   "mcpCenter.stopRuntimeImpact": {
     "defaultMessage": "This does not uninstall the MCP or change “Enabled by default for new sessions”."
@@ -3600,7 +3600,7 @@
     "defaultMessage": "Cancel asks the MCP Platform to stop this reviewed task at the next safe point. It does not grant direct shell or configuration control to the desktop UI."
   },
   "mcpCenter.taskErrorMessageByCode": {
-    "defaultMessage": "{code,select,adapter_failed{The managed task could not complete through its adapter.} verification_failed{The reviewed result did not pass verification.} activation_failed{The reviewed result could not be activated safely.} rollback_failed{Goose could not fully restore the previous safe state.} cancelled{The task was cancelled before it finished.} interrupted{The task stopped before it could finish.} unknown{The task could not be completed safely.} other{The task could not be completed safely.}}"
+    "defaultMessage": "{code,select,adapter_failed{The managed task could not complete through its adapter.} verification_failed{The reviewed result did not pass verification.} activation_failed{The reviewed result could not be activated safely.} rollback_failed{Lumina could not fully restore the previous safe state.} cancelled{The task was cancelled before it finished.} interrupted{The task stopped before it could finish.} unknown{The task could not be completed safely.} other{The task could not be completed safely.}}"
   },
   "mcpCenter.taskErrorNext": {
     "defaultMessage": "Next: {action} · Reference: {reference}"
@@ -4125,7 +4125,7 @@
     "defaultMessage": "The server may be starting up or temporarily unavailable."
   },
   "onboardingGuard.checkProviderErrorTitle": {
-    "defaultMessage": "Unable to connect to Goose server"
+    "defaultMessage": "Unable to connect to Lumina server"
   },
   "onboardingGuard.retry": {
     "defaultMessage": "Retry"
@@ -4134,10 +4134,10 @@
     "defaultMessage": "Your local AI agent. Connect an AI model provider to get started."
   },
   "onboardingGuard.welcomeTitle": {
-    "defaultMessage": "Welcome to goose"
+    "defaultMessage": "Welcome to Lumina"
   },
   "onboardingSuccess.allSet": {
-    "defaultMessage": "You're all set to start using goose."
+    "defaultMessage": "You're all set to start using Lumina."
   },
   "onboardingSuccess.connectedTo": {
     "defaultMessage": "Connected to {providerName}"
@@ -4152,7 +4152,7 @@
     "defaultMessage": "Local model ready"
   },
   "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "Anonymous usage data helps improve goose. We never collect your conversations, code, or personal data."
+    "defaultMessage": "Anonymous usage data helps improve Lumina. We never collect your conversations, code, or personal data."
   },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "Privacy"
@@ -4320,10 +4320,10 @@
     "defaultMessage": "Session metrics (duration, interaction count, token usage)"
   },
   "privacyInfoModal.collectVersion": {
-    "defaultMessage": "goose version and install method"
+    "defaultMessage": "Lumina version and install method"
   },
   "privacyInfoModal.description": {
-    "defaultMessage": "Anonymous usage data helps us understand how goose is used and identify areas for improvement."
+    "defaultMessage": "Anonymous usage data helps us understand how Lumina is used and identify areas for improvement."
   },
   "privacyInfoModal.neverCollect": {
     "defaultMessage": "We never collect your conversations, code, tool arguments, error messages, or any personal data. You can change this setting anytime in Settings."
@@ -4392,7 +4392,7 @@
     "defaultMessage": "Failed to save prompt"
   },
   "promptsSettings.promptEditingDescription": {
-    "defaultMessage": "Customize the prompts that define goose's behavior in different contexts. These prompts use Jinja2 templating syntax. Be careful when modifying template variables, as incorrect changes can break functionality. Please share any improvements with the community."
+    "defaultMessage": "Customize the prompts that define Lumina's behavior in different contexts. These prompts use Jinja2 templating syntax. Be careful when modifying template variables, as incorrect changes can break functionality. Please share any improvements with the community."
   },
   "promptsSettings.promptEditingTitle": {
     "defaultMessage": "Prompt Editing"
@@ -4488,7 +4488,7 @@
     "defaultMessage": "Signing in..."
   },
   "providerConfigurationModal.addApiKeyDescription": {
-    "defaultMessage": "Add your API key(s) for this provider to integrate into goose"
+    "defaultMessage": "Add your API key(s) for this provider to integrate into Lumina"
   },
   "providerConfigurationModal.browserWindowHint": {
     "defaultMessage": "A browser window will open for you to complete the login."
@@ -4524,7 +4524,7 @@
     "defaultMessage": "Error"
   },
   "providerConfigurationModal.externalSetupIntro": {
-    "defaultMessage": "This provider is configured outside of goose. Follow these steps:"
+    "defaultMessage": "This provider is configured outside of Lumina. Follow these steps:"
   },
   "providerConfigurationModal.goBack": {
     "defaultMessage": "Go Back"
@@ -4608,7 +4608,7 @@
     "defaultMessage": "Loading providers..."
   },
   "providerSettings.onboardingDescription": {
-    "defaultMessage": "Select an AI model provider to get started with goose. You'll need to use API keys generated by each provider which will be encrypted and stored locally. You can change your provider at any time in settings."
+    "defaultMessage": "Select an AI model provider to get started with Lumina. You'll need to use API keys generated by each provider which will be encrypted and stored locally. You can change your provider at any time in settings."
   },
   "providerSettings.otherProviders": {
     "defaultMessage": "Other providers"
@@ -5493,7 +5493,7 @@
     "defaultMessage": "Try Again"
   },
   "sessionViewComponents.role.assistant": {
-    "defaultMessage": "Goose"
+    "defaultMessage": "Lumina"
   },
   "sessionViewComponents.role.user": {
     "defaultMessage": "You"
@@ -5523,7 +5523,7 @@
     "defaultMessage": "Chat history"
   },
   "sessions.chatHistoryDesc": {
-    "defaultMessage": "View and search your past conversations with Goose. {shortcut} to search."
+    "defaultMessage": "View and search your past conversations with Lumina. {shortcut} to search."
   },
   "sessions.close": {
     "defaultMessage": "Close"
@@ -5559,7 +5559,7 @@
     "defaultMessage": "Import Link"
   },
   "sessions.importNostr.description": {
-    "defaultMessage": "Paste a Goose Nostr share link to fetch, decrypt, and import the session."
+    "defaultMessage": "Paste a Lumina Nostr share link to fetch, decrypt, and import the session."
   },
   "sessions.importNostr.placeholder": {
     "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
@@ -5631,7 +5631,7 @@
     "defaultMessage": "Session description updated successfully"
   },
   "settings.appearance.description": {
-    "defaultMessage": "Configure how goose appears on your system"
+    "defaultMessage": "Configure how Lumina appears on your system"
   },
   "settings.appearance.title": {
     "defaultMessage": "Appearance"
@@ -5646,13 +5646,13 @@
     "defaultMessage": "Cost Tracking"
   },
   "settings.dockIcon.description": {
-    "defaultMessage": "Show goose in the dock"
+    "defaultMessage": "Show Lumina in the dock"
   },
   "settings.dockIcon.title": {
     "defaultMessage": "Dock icon"
   },
   "settings.help.description": {
-    "defaultMessage": "Help us improve goose by reporting issues or requesting new features"
+    "defaultMessage": "Help us improve Lumina by reporting issues or requesting new features"
   },
   "settings.help.reportBug": {
     "defaultMessage": "Report a Bug"
@@ -5664,7 +5664,7 @@
     "defaultMessage": "Help & feedback"
   },
   "settings.language.description": {
-    "defaultMessage": "Choose the display language for goose"
+    "defaultMessage": "Choose the display language for Lumina"
   },
   "settings.language.english": {
     "defaultMessage": "English"
@@ -5721,7 +5721,7 @@
     "defaultMessage": "Chinese (Traditional)"
   },
   "settings.menuBarIcon.description": {
-    "defaultMessage": "Show goose in the menu bar"
+    "defaultMessage": "Show Lumina in the menu bar"
   },
   "settings.menuBarIcon.title": {
     "defaultMessage": "Menu bar icon"
@@ -5742,7 +5742,7 @@
     "defaultMessage": "Click on Notifications"
   },
   "settings.notifications.modal.macStep3": {
-    "defaultMessage": "Find and select goose in the application list"
+    "defaultMessage": "Find and select Lumina in the application list"
   },
   "settings.notifications.modal.macStep4": {
     "defaultMessage": "Enable notifications and adjust settings as desired"
@@ -5760,7 +5760,7 @@
     "defaultMessage": "Go to System > Notifications"
   },
   "settings.notifications.modal.winStep3": {
-    "defaultMessage": "Find and select goose in the application list"
+    "defaultMessage": "Find and select Lumina in the application list"
   },
   "settings.notifications.modal.winStep4": {
     "defaultMessage": "Toggle notifications on and adjust settings as desired"
@@ -5769,7 +5769,7 @@
     "defaultMessage": "Open Settings"
   },
   "settings.notifications.task.description": {
-    "defaultMessage": "Notify when Goose finishes a task while the window is in the background"
+    "defaultMessage": "Notify when Lumina finishes a task while the window is in the background"
   },
   "settings.notifications.task.title": {
     "defaultMessage": "Task completion notifications"
@@ -5778,19 +5778,19 @@
     "defaultMessage": "Notifications"
   },
   "settings.preventSleep.description": {
-    "defaultMessage": "Keep your computer awake while goose is running a task (screen can still lock)"
+    "defaultMessage": "Keep your computer awake while Lumina is running a task (screen can still lock)"
   },
   "settings.preventSleep.title": {
     "defaultMessage": "Prevent Sleep"
   },
   "settings.theme.description": {
-    "defaultMessage": "Customize the look and feel of goose"
+    "defaultMessage": "Customize the look and feel of Lumina"
   },
   "settings.theme.title": {
     "defaultMessage": "Theme"
   },
   "settings.updates.description": {
-    "defaultMessage": "Check for and install updates to keep goose running at its best"
+    "defaultMessage": "Check for and install updates to keep Lumina running at its best"
   },
   "settings.updates.title": {
     "defaultMessage": "Updates"
@@ -5868,7 +5868,7 @@
     "defaultMessage": "Search skills..."
   },
   "skillsView.skillsDescription": {
-    "defaultMessage": "View installed skills that extend Goose capabilities. {shortcut} to search."
+    "defaultMessage": "View installed skills that extend Lumina capabilities. {shortcut} to search."
   },
   "skillsView.skillsTitle": {
     "defaultMessage": "Skills"
@@ -6120,10 +6120,10 @@
     "defaultMessage": "Use other provider"
   },
   "telemetryConsentPrompt.description": {
-    "defaultMessage": "Would you like to share anonymous usage data to help improve goose? We never collect your conversations, code, or personal data."
+    "defaultMessage": "Would you like to share anonymous usage data to help improve Lumina? We never collect your conversations, code, or personal data."
   },
   "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Help improve goose"
+    "defaultMessage": "Help improve Lumina"
   },
   "telemetryConsentPrompt.learnMore": {
     "defaultMessage": "Learn more"
@@ -6150,7 +6150,7 @@
     "defaultMessage": "Privacy"
   },
   "telemetrySettings.toggleDescription": {
-    "defaultMessage": "Help improve goose by sharing anonymous usage statistics."
+    "defaultMessage": "Help improve Lumina by sharing anonymous usage statistics."
   },
   "telemetrySettings.toggleLabel": {
     "defaultMessage": "Anonymous usage data"
@@ -6228,10 +6228,10 @@
     "defaultMessage": "Allow {toolName}?"
   },
   "toolConfirmation.gooseWouldLikeToCallWithName": {
-    "defaultMessage": "Goose would like to call {toolName}. Allow?"
+    "defaultMessage": "Lumina would like to call {toolName}. Allow?"
   },
   "updateSection.autoDownload": {
-    "defaultMessage": "Goose will download the update in the background and install it the next time you quit or restart."
+    "defaultMessage": "Lumina will download the update in the background and install it the next time you quit or restart."
   },
   "updateSection.autoDownloadDisabledByEnv": {
     "defaultMessage": "Automatic downloads are disabled via the GOOSE_DISABLE_AUTO_DOWNLOAD environment variable."
@@ -6255,7 +6255,7 @@
     "defaultMessage": "Disable automatic update downloads"
   },
   "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "When enabled, Goose will notify you of new versions but will not download them automatically."
+    "defaultMessage": "When enabled, Lumina will notify you of new versions but will not download them automatically."
   },
   "updateSection.downloadNow": {
     "defaultMessage": "Download Now"
@@ -6291,7 +6291,7 @@
     "defaultMessage": "Open HikerM releases"
   },
   "updateSection.portableUpdateDescription": {
-    "defaultMessage": "This custom build only uses the HikerM distribution channel. To update, download the newer custom package, close Goose, and replace the extracted application folder. Your MCP and model settings are stored separately from the application folder."
+    "defaultMessage": "This custom build only uses the HikerM distribution channel. To update, download the newer custom package, close Lumina, and replace the extracted application folder. Your MCP and model settings are stored separately from the application folder."
   },
   "updateSection.portableUpdateModelNote": {
     "defaultMessage": "Downloaded models are not copied by an application update. Keep the existing local model data, or download the selected model again on the new computer."
@@ -6300,7 +6300,7 @@
     "defaultMessage": "Portable custom build"
   },
   "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ Update is ready. Restart Goose to finish installing it, or quit when you're done."
+    "defaultMessage": "✓ Update is ready. Restart Lumina to finish installing it, or quit when you're done."
   },
   "updateSection.readyInstallManual": {
     "defaultMessage": "✓ Update is ready! Click \"Install & Restart\" for installation instructions."

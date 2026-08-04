@@ -26,11 +26,11 @@ export function isPathWithinRoot(root: string, candidate: string): boolean {
 export function resolveManagedPath(root: string, relativePath: string): string {
   const pathApi = pathModuleFor(root, relativePath);
   if (!relativePath || pathApi.isAbsolute(relativePath) || path.win32.isAbsolute(relativePath)) {
-    throw new Error('Managed paths must be relative to the Goose storage root');
+    throw new Error('Managed paths must be relative to the Lumina storage root');
   }
   const candidate = pathApi.resolve(root, relativePath);
   if (!isPathWithinRoot(root, candidate)) {
-    throw new Error('Path is outside the Goose storage root');
+    throw new Error('Path is outside the Lumina storage root');
   }
   return candidate;
 }
@@ -93,7 +93,7 @@ export function isTrustedAppUrl(actualUrl: string, expectedUrl: string): boolean
 
 export async function assertManagedPath(root: string, candidate: string): Promise<void> {
   if (!isPathWithinRoot(root, candidate)) {
-    throw new Error('Path is outside the Goose storage root');
+    throw new Error('Path is outside the Lumina storage root');
   }
 
   const resolvedRoot = await fs.realpath(root);
@@ -108,7 +108,7 @@ export async function assertManagedPath(root: string, candidate: string): Promis
       }
       const resolvedCurrent = await fs.realpath(current);
       if (!isPathWithinRoot(resolvedRoot, resolvedCurrent)) {
-        throw new Error('Managed paths cannot leave the Goose storage root');
+        throw new Error('Managed paths cannot leave the Lumina storage root');
       }
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') break;
@@ -118,7 +118,7 @@ export async function assertManagedPath(root: string, candidate: string): Promis
 }
 
 const WINDOWS_STORAGE_ROOT_ERROR =
-  'Goose can only use a regular folder on the local D drive for managed MCP storage on Windows. Choose a folder on D and restart Goose.';
+  'Lumina can only use a regular folder on the local D drive for managed MCP storage on Windows. Choose a folder on D and restart Lumina.';
 
 export function resolveDesktopGoosePathRoot(
   envPathRoot: string | undefined = process.env.GOOSE_PATH_ROOT,

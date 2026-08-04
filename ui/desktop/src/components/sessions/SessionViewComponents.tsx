@@ -39,7 +39,7 @@ const i18n = defineMessages({
   },
   goose: {
     id: 'sessionViewComponents.role.assistant',
-    defaultMessage: 'Goose',
+    defaultMessage: 'Lumina',
   },
 });
 

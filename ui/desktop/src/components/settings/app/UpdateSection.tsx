@@ -13,7 +13,7 @@ const i18n = defineMessages({
   disableAutoDownloadDesc: {
     id: 'updateSection.disableAutoDownloadDesc',
     defaultMessage:
-      'When enabled, Goose will notify you of new versions but will not download them automatically.',
+      'When enabled, Lumina will notify you of new versions but will not download them automatically.',
   },
   autoDownloadDisabledByEnv: {
     id: 'updateSection.autoDownloadDisabledByEnv',
@@ -83,7 +83,7 @@ const i18n = defineMessages({
   autoDownload: {
     id: 'updateSection.autoDownload',
     defaultMessage:
-      'Goose will download the update in the background and install it the next time you quit or restart.',
+      'Lumina will download the update in the background and install it the next time you quit or restart.',
   },
   manualInstallNote: {
     id: 'updateSection.manualInstallNote',
@@ -104,7 +104,7 @@ const i18n = defineMessages({
   readyInstallAuto: {
     id: 'updateSection.readyInstallAuto',
     defaultMessage:
-      "✓ Update is ready. Restart Goose to finish installing it, or quit when you're done.",
+      "✓ Update is ready. Restart Lumina to finish installing it, or quit when you're done.",
   },
   installNowHint: {
     id: 'updateSection.installNowHint',
@@ -117,7 +117,7 @@ const i18n = defineMessages({
   portableUpdateDescription: {
     id: 'updateSection.portableUpdateDescription',
     defaultMessage:
-      'This custom build only uses the HikerM distribution channel. To update, download the newer custom package, close Goose, and replace the extracted application folder. Your MCP and model settings are stored separately from the application folder.',
+      'This custom build only uses the HikerM distribution channel. To update, download the newer custom package, close Lumina, and replace the extracted application folder. Your MCP and model settings are stored separately from the application folder.',
   },
   portableUpdateModelNote: {
     id: 'updateSection.portableUpdateModelNote',

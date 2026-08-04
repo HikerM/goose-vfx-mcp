@@ -27,7 +27,7 @@
     "defaultMessage": "Delete \"{name}\"? This cannot be undone."
   },
   "appsView.description": {
-    "defaultMessage": "來自您 MCP 伺服器的應用程式，以及由 goose 自行建立的應用程式。您可以透過聊天介面要求它建立新的應用程式，它們便會出現在這裡。"
+    "defaultMessage": "來自您 MCP 伺服器的應用程式，以及由 Lumina 自行建立的應用程式。您可以透過聊天介面要求它建立新的應用程式，它們便會出現在這裡。"
   },
   "appsView.errorLoading": {
     "defaultMessage": "載入應用程式時發生錯誤：{error}"
@@ -45,7 +45,7 @@
     "defaultMessage": "正在載入應用程式…"
   },
   "appsView.noAppsDescription": {
-    "defaultMessage": "開啟聊天並向 goose 索取您想要的應用程式。它可以為您建立一個，並顯示在這裡。或者，如果有人分享了應用程式，您可以使用上方的按鈕匯入。"
+    "defaultMessage": "開啟聊天並向 Lumina 索取您想要的應用程式。它可以為您建立一個，並顯示在這裡。或者，如果有人分享了應用程式，您可以使用上方的按鈕匯入。"
   },
   "appsView.noAppsTitle": {
     "defaultMessage": "沒有可用的應用程式"
@@ -84,7 +84,7 @@
     "defaultMessage": "憑證已刪除"
   },
   "authSettings.description": {
-    "defaultMessage": "管理 goose 在本機儲存的供應商憑證。"
+    "defaultMessage": "管理 Lumina 在本機儲存的供應商憑證。"
   },
   "authSettings.empty": {
     "defaultMessage": "找不到本機儲存的供應商憑證。"
@@ -168,10 +168,10 @@
     "defaultMessage": "啟動"
   },
   "chat.notification.taskComplete.body": {
-    "defaultMessage": "按一下這裡讓 Goose 重新回到焦點。"
+    "defaultMessage": "按一下這裡讓 Lumina 重新回到焦點。"
   },
   "chat.notification.taskComplete.title": {
-    "defaultMessage": "Goose 已完成工作。"
+    "defaultMessage": "Lumina 已完成工作。"
   },
   "chatInput.contextWindow": {
     "defaultMessage": "上下文視窗"
@@ -222,13 +222,13 @@
     "defaultMessage": "正在等待影像儲存…"
   },
   "chatSettings.modeDescription": {
-    "defaultMessage": "選擇 Goose 用於新工作階段的預設模式。現有的工作階段會維持目前的模式。"
+    "defaultMessage": "選擇 Lumina 用於新工作階段的預設模式。現有的工作階段會維持目前的模式。"
   },
   "chatSettings.modeTitle": {
     "defaultMessage": "預設模式"
   },
   "chatSettings.responseStylesDescription": {
-    "defaultMessage": "選擇 Goose 設定回應格式與樣式的方式"
+    "defaultMessage": "選擇 Lumina 設定回應格式與樣式的方式"
   },
   "chatSettings.responseStylesTitle": {
     "defaultMessage": "回應樣式"
@@ -249,10 +249,10 @@
     "defaultMessage": "設定編輯器"
   },
   "configSettings.description": {
-    "defaultMessage": "編輯您的 goose 設定"
+    "defaultMessage": "編輯您的 Lumina 設定"
   },
   "configSettings.descriptionWithProvider": {
-    "defaultMessage": "編輯您的 goose 設定（{provider} 的目前設定）"
+    "defaultMessage": "編輯您的 Lumina 設定（{provider} 的目前設定）"
   },
   "configSettings.done": {
     "defaultMessage": "完成"
@@ -324,7 +324,7 @@
     "defaultMessage": "最大回合數"
   },
   "conversationLimitsDropdown.maxTurnsDescription": {
-    "defaultMessage": "Goose 要求使用者輸入前的最大代理回合數"
+    "defaultMessage": "Lumina 要求使用者輸入前的最大代理回合數"
   },
   "costTracker.costUnavailable": {
     "defaultMessage": "{model} 無可用的費用資料（輸入 {inputTokens} 個權杖，輸出 {outputTokens} 個權杖）"
@@ -777,7 +777,7 @@
     "defaultMessage": "編輯 {name} 設定"
   },
   "defaultCardButtons.getStarted": {
-    "defaultMessage": "開始使用 goose！"
+    "defaultMessage": "開始使用 Lumina！"
   },
   "defaultProviderSetupForm.apiHostLabel": {
     "defaultMessage": "API 主機"
@@ -936,7 +936,7 @@
     "defaultMessage": "資訊要求已取消。"
   },
   "elicitationRequest.defaultMessage": {
-    "defaultMessage": "Goose 需要您提供一些資訊。"
+    "defaultMessage": "Lumina 需要您提供一些資訊。"
   },
   "elicitationRequest.expired": {
     "defaultMessage": "此要求已過期。擴充功能需要重新詢問。"
@@ -981,7 +981,7 @@
     "defaultMessage": "發生錯誤。"
   },
   "errorBoundary.errorWithVersion": {
-    "defaultMessage": "Goose v{version} 發生錯誤。"
+    "defaultMessage": "Lumina v{version} 發生錯誤。"
   },
   "errorBoundary.heading": {
     "defaultMessage": "Honk！"
@@ -1167,7 +1167,7 @@
     "defaultMessage": "在此啟用的擴充功能會作為新聊天的預設值。您也可以在聊天期間切換使用中的擴充功能。"
   },
   "extensionsView.description": {
-    "defaultMessage": "這些擴充功能使用模型內容協定 (MCP)。它們可透過三個主要元件擴充 Goose 的能力：提示、資源與工具。{searchShortcut} 即可搜尋。"
+    "defaultMessage": "這些擴充功能使用模型內容協定 (MCP)。它們可透過三個主要元件擴充 Lumina 的能力：提示、資源與工具。{searchShortcut} 即可搜尋。"
   },
   "extensionsView.heading": {
     "defaultMessage": "擴充功能"
@@ -1185,19 +1185,19 @@
     "defaultMessage": "AA:BB:CC:… 或 sha256/base64"
   },
   "externalBackendSection.description": {
-    "defaultMessage": "goose 預設會為您啟動伺服器，使用此選項以連線至外部 goose 伺服器"
+    "defaultMessage": "Lumina 預設會為您啟動伺服器，使用此選項以連線至外部 Lumina 伺服器"
   },
   "externalBackendSection.fingerprintRequiresHttps": {
     "defaultMessage": "Certificate fingerprint requires an https URL"
   },
   "externalBackendSection.restartNote": {
-    "defaultMessage": "變更需要重新啟動 Goose 才會生效。新的聊天視窗將連線至外部伺服器。"
+    "defaultMessage": "變更需要重新啟動 Lumina 才會生效。新的聊天視窗將連線至外部伺服器。"
   },
   "externalBackendSection.secretKey": {
     "defaultMessage": "密鑰"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "在 Goose 伺服器上設定的密鑰 (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "在 Lumina 伺服器上設定的密鑰 (GOOSE_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "輸入伺服器的密鑰"
@@ -1206,10 +1206,10 @@
     "defaultMessage": "伺服器 URL"
   },
   "externalBackendSection.serverUrlHelp": {
-    "defaultMessage": "Enter the HTTP(S) base URL. Goose checks /status and connects to /acp under this base."
+    "defaultMessage": "Enter the HTTP(S) base URL. Lumina checks /status and connects to /acp under this base."
   },
   "externalBackendSection.title": {
-    "defaultMessage": "Goose 伺服器"
+    "defaultMessage": "Lumina 伺服器"
   },
   "externalBackendSection.urlBaseError": {
     "defaultMessage": "URL must be the backend base URL before /acp, without query parameters or fragments"
@@ -1224,7 +1224,7 @@
     "defaultMessage": "使用外部伺服器"
   },
   "externalBackendSection.useExternalServerDescription": {
-    "defaultMessage": "連線至在其他位置執行的 goose 伺服器（需要重新啟動應用程式）"
+    "defaultMessage": "連線至在其他位置執行的 Lumina 伺服器（需要重新啟動應用程式）"
   },
   "goosehintsModal.close": {
     "defaultMessage": "關閉"
@@ -1233,7 +1233,7 @@
     "defaultMessage": "開發者"
   },
   "goosehintsModal.dialogDescription": {
-    "defaultMessage": "提供有關您專案的額外內容，以改善與 Goose 的溝通"
+    "defaultMessage": "提供有關您專案的額外內容，以改善與 Lumina 的溝通"
   },
   "goosehintsModal.dialogTitle": {
     "defaultMessage": "設定專案提示 (.goosehints)"
@@ -1254,7 +1254,7 @@
     "defaultMessage": "在此處找到 .goosehints 檔案：{filePath}"
   },
   "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints 是一個文字檔，用於提供有關您專案的額外內容，並改善與 Goose 的溝通。"
+    "defaultMessage": ".goosehints 是一個文字檔，用於提供有關您專案的額外內容，並改善與 Lumina 的溝通。"
   },
   "goosehintsModal.helpText2": {
     "defaultMessage": "請確認擴充功能頁面中已啟用 {bold} 擴充功能。使用 .goosehints 需要此擴充功能。您需要重新啟動工作階段，.goosehints 的更新才會生效。"
@@ -1281,13 +1281,13 @@
     "defaultMessage": "設定"
   },
   "goosehintsSection.description": {
-    "defaultMessage": "設定您專案的 .goosehints 檔案，為 Goose 提供額外內容"
+    "defaultMessage": "設定您專案的 .goosehints 檔案，為 Lumina 提供額外內容"
   },
   "goosehintsSection.title": {
     "defaultMessage": "專案提示 (.goosehints)"
   },
   "groupedExtensionLoadingToast.askGoose": {
-    "defaultMessage": "詢問 goose"
+    "defaultMessage": "詢問 Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
     "defaultMessage": "收合詳細資料"
@@ -1407,7 +1407,7 @@
     "defaultMessage": "Hugging Face"
   },
   "imagePreview.altText": {
-    "defaultMessage": "goose 圖片"
+    "defaultMessage": "Lumina 圖片"
   },
   "imagePreview.clickToCollapse": {
     "defaultMessage": "按一下以收合"
@@ -1455,7 +1455,7 @@
     "defaultMessage": "食譜檔案"
   },
   "importRecipeForm.reviewWarning": {
-    "defaultMessage": "在將食譜檔案加入您的 goose 介面之前，請務必檢閱其內容。"
+    "defaultMessage": "在將食譜檔案加入您的 Lumina 介面之前，請務必檢閱其內容。"
   },
   "importRecipeForm.schemaDescription": {
     "defaultMessage": "您的 YAML 或 JSON 檔案應遵循此結構。必填欄位為：title、description，以及 instructions 或 prompt 其中之一。"
@@ -1566,13 +1566,13 @@
     "defaultMessage": "應用程式快速鍵"
   },
   "keyboardShortcuts.categoryApplicationDescription": {
-    "defaultMessage": "這些快速鍵在 Goose 為使用中的應用程式時生效"
+    "defaultMessage": "這些快速鍵在 Lumina 為使用中的應用程式時生效"
   },
   "keyboardShortcuts.categoryGlobal": {
     "defaultMessage": "全域快速鍵"
   },
   "keyboardShortcuts.categoryGlobalDescription": {
-    "defaultMessage": "這些快速鍵在整個系統都可使用，即使 Goose 並非焦點視窗"
+    "defaultMessage": "這些快速鍵在整個系統都可使用，即使 Lumina 並非焦點視窗"
   },
   "keyboardShortcuts.categorySearch": {
     "defaultMessage": "搜尋快速鍵"
@@ -1614,10 +1614,10 @@
     "defaultMessage": "尋找上一個"
   },
   "keyboardShortcuts.focusWindowDescription": {
-    "defaultMessage": "從任何位置將 Goose 視窗帶到前景"
+    "defaultMessage": "從任何位置將 Lumina 視窗帶到前景"
   },
   "keyboardShortcuts.focusWindowLabel": {
-    "defaultMessage": "聚焦 Goose 視窗"
+    "defaultMessage": "聚焦 Lumina 視窗"
   },
   "keyboardShortcuts.loading": {
     "defaultMessage": "載入中…"
@@ -1629,7 +1629,7 @@
     "defaultMessage": "新對話"
   },
   "keyboardShortcuts.newChatWindowDescription": {
-    "defaultMessage": "開啟新的 Goose 視窗"
+    "defaultMessage": "開啟新的 Lumina 視窗"
   },
   "keyboardShortcuts.newChatWindowLabel": {
     "defaultMessage": "新對話視窗"
@@ -1668,7 +1668,7 @@
     "defaultMessage": "重設為預設值"
   },
   "keyboardShortcuts.restartDescription": {
-    "defaultMessage": "變更應用程式快速鍵（例如「新對話」、「設定」等）需要重新啟動 Goose 才會生效。全域快速鍵（聚焦視窗、快速啟動器）則會立即生效。"
+    "defaultMessage": "變更應用程式快速鍵（例如「新對話」、「設定」等）需要重新啟動 Lumina 才會生效。全域快速鍵（聚焦視窗、快速啟動器）則會立即生效。"
   },
   "keyboardShortcuts.restartRequired": {
     "defaultMessage": "需要重新啟動"
@@ -1698,13 +1698,13 @@
     "defaultMessage": "切換導覽"
   },
   "launcher.placeholder": {
-    "defaultMessage": "向 goose 詢問任何問題…"
+    "defaultMessage": "向 Lumina 詢問任何問題…"
   },
   "loadingGoose.compacting": {
-    "defaultMessage": "goose 正在壓縮對話…"
+    "defaultMessage": "Lumina 正在壓縮對話…"
   },
   "loadingGoose.idle": {
-    "defaultMessage": "goose 正在處理…"
+    "defaultMessage": "Lumina 正在處理…"
   },
   "loadingGoose.loadingConversation": {
     "defaultMessage": "正在載入對話…"
@@ -1713,13 +1713,13 @@
     "defaultMessage": "正在重新啟動工作階段…"
   },
   "loadingGoose.streaming": {
-    "defaultMessage": "goose 正在處理…"
+    "defaultMessage": "Lumina 正在處理…"
   },
   "loadingGoose.thinking": {
-    "defaultMessage": "goose 正在思考…"
+    "defaultMessage": "Lumina 正在思考…"
   },
   "loadingGoose.waiting": {
-    "defaultMessage": "goose 正在等待…"
+    "defaultMessage": "Lumina 正在等待…"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "要刪除此模型嗎？您之後可以重新下載。"
@@ -2370,7 +2370,7 @@
     "defaultMessage": "伺服器可能正在啟動或暫時無法使用。"
   },
   "onboardingGuard.checkProviderErrorTitle": {
-    "defaultMessage": "無法連線到 Goose 伺服器"
+    "defaultMessage": "無法連線到 Lumina 伺服器"
   },
   "onboardingGuard.retry": {
     "defaultMessage": "重試"
@@ -2379,10 +2379,10 @@
     "defaultMessage": "您的本機 AI 代理。連線 AI 模型供應商即可開始使用。"
   },
   "onboardingGuard.welcomeTitle": {
-    "defaultMessage": "歡迎使用 goose"
+    "defaultMessage": "歡迎使用 Lumina"
   },
   "onboardingSuccess.allSet": {
-    "defaultMessage": "一切就緒，您可以開始使用 goose 了。"
+    "defaultMessage": "一切就緒，您可以開始使用 Lumina 了。"
   },
   "onboardingSuccess.connectedTo": {
     "defaultMessage": "已連線到 {providerName}"
@@ -2397,7 +2397,7 @@
     "defaultMessage": "本機模型已就緒"
   },
   "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "匿名使用資料有助於改善 goose。我們絕不會收集您的對話、程式碼或個人資料。"
+    "defaultMessage": "匿名使用資料有助於改善 Lumina。我們絕不會收集您的對話、程式碼或個人資料。"
   },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "隱私權"
@@ -2565,10 +2565,10 @@
     "defaultMessage": "工作階段指標（持續時間、互動次數、權杖用量）"
   },
   "privacyInfoModal.collectVersion": {
-    "defaultMessage": "goose 版本與安裝方式"
+    "defaultMessage": "Lumina 版本與安裝方式"
   },
   "privacyInfoModal.description": {
-    "defaultMessage": "匿名使用資料有助於我們瞭解 goose 的使用情況並找出可改善的方面。"
+    "defaultMessage": "匿名使用資料有助於我們瞭解 Lumina 的使用情況並找出可改善的方面。"
   },
   "privacyInfoModal.neverCollect": {
     "defaultMessage": "我們絕不會收集您的對話、程式碼、工具引數、錯誤訊息或任何個人資料。您隨時可以在「設定」中變更此設定。"
@@ -2637,7 +2637,7 @@
     "defaultMessage": "無法儲存提示"
   },
   "promptsSettings.promptEditingDescription": {
-    "defaultMessage": "自訂在不同情境中定義 goose 行為的提示。這些提示使用 Jinja2 範本語法。修改範本變數時請務必小心，因為不正確的變更可能會破壞功能。請與社群分享任何改善內容。"
+    "defaultMessage": "自訂在不同情境中定義 Lumina 行為的提示。這些提示使用 Jinja2 範本語法。修改範本變數時請務必小心，因為不正確的變更可能會破壞功能。請與社群分享任何改善內容。"
   },
   "promptsSettings.promptEditingTitle": {
     "defaultMessage": "提示編輯"
@@ -2733,7 +2733,7 @@
     "defaultMessage": "正在登入..."
   },
   "providerConfigurationModal.addApiKeyDescription": {
-    "defaultMessage": "新增此提供者的 API 金鑰以整合至 goose"
+    "defaultMessage": "新增此提供者的 API 金鑰以整合至 Lumina"
   },
   "providerConfigurationModal.browserWindowHint": {
     "defaultMessage": "將開啟瀏覽器視窗供您完成登入。"
@@ -2769,7 +2769,7 @@
     "defaultMessage": "錯誤"
   },
   "providerConfigurationModal.externalSetupIntro": {
-    "defaultMessage": "此提供者是在 goose 之外設定的。請依照下列步驟操作："
+    "defaultMessage": "此提供者是在 Lumina 之外設定的。請依照下列步驟操作："
   },
   "providerConfigurationModal.goBack": {
     "defaultMessage": "返回"
@@ -2853,7 +2853,7 @@
     "defaultMessage": "正在載入提供者..."
   },
   "providerSettings.onboardingDescription": {
-    "defaultMessage": "選取一個 AI 模型提供者以開始使用 goose。您需要使用各提供者產生的 API 金鑰，這些金鑰將會加密並儲存在本機。您隨時可以在設定中變更提供者。"
+    "defaultMessage": "選取一個 AI 模型提供者以開始使用 Lumina。您需要使用各提供者產生的 API 金鑰，這些金鑰將會加密並儲存在本機。您隨時可以在設定中變更提供者。"
   },
   "providerSettings.otherProviders": {
     "defaultMessage": "其他提供者"
@@ -3738,7 +3738,7 @@
     "defaultMessage": "再試一次"
   },
   "sessionViewComponents.role.assistant": {
-    "defaultMessage": "Goose"
+    "defaultMessage": "Lumina"
   },
   "sessionViewComponents.role.user": {
     "defaultMessage": "您"
@@ -3768,7 +3768,7 @@
     "defaultMessage": "聊天記錄"
   },
   "sessions.chatHistoryDesc": {
-    "defaultMessage": "檢視並搜尋您與 Goose 過去的對話。{shortcut} 即可搜尋。"
+    "defaultMessage": "檢視並搜尋您與 Lumina 過去的對話。{shortcut} 即可搜尋。"
   },
   "sessions.close": {
     "defaultMessage": "關閉"
@@ -3804,7 +3804,7 @@
     "defaultMessage": "匯入連結"
   },
   "sessions.importNostr.description": {
-    "defaultMessage": "貼上 Goose Nostr 分享連結，以擷取、解密並匯入該工作階段。"
+    "defaultMessage": "貼上 Lumina Nostr 分享連結，以擷取、解密並匯入該工作階段。"
   },
   "sessions.importNostr.placeholder": {
     "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
@@ -3876,7 +3876,7 @@
     "defaultMessage": "已成功更新工作階段描述"
   },
   "settings.appearance.description": {
-    "defaultMessage": "設定 goose 在您系統上的顯示方式"
+    "defaultMessage": "設定 Lumina 在您系統上的顯示方式"
   },
   "settings.appearance.title": {
     "defaultMessage": "外觀"
@@ -3891,13 +3891,13 @@
     "defaultMessage": "費用追蹤"
   },
   "settings.dockIcon.description": {
-    "defaultMessage": "在 Dock 中顯示 goose"
+    "defaultMessage": "在 Dock 中顯示 Lumina"
   },
   "settings.dockIcon.title": {
     "defaultMessage": "Dock 圖示"
   },
   "settings.help.description": {
-    "defaultMessage": "回報問題或申請新功能，協助我們改善 goose"
+    "defaultMessage": "回報問題或申請新功能，協助我們改善 Lumina"
   },
   "settings.help.reportBug": {
     "defaultMessage": "回報錯誤"
@@ -3909,7 +3909,7 @@
     "defaultMessage": "說明與意見回饋"
   },
   "settings.language.description": {
-    "defaultMessage": "選擇 goose 的顯示語言"
+    "defaultMessage": "選擇 Lumina 的顯示語言"
   },
   "settings.language.english": {
     "defaultMessage": "English"
@@ -3966,7 +3966,7 @@
     "defaultMessage": "中文（繁體）"
   },
   "settings.menuBarIcon.description": {
-    "defaultMessage": "在選單列中顯示 goose"
+    "defaultMessage": "在選單列中顯示 Lumina"
   },
   "settings.menuBarIcon.title": {
     "defaultMessage": "選單列圖示"
@@ -3987,7 +3987,7 @@
     "defaultMessage": "點選「通知」"
   },
   "settings.notifications.modal.macStep3": {
-    "defaultMessage": "在應用程式清單中找到並選取 goose"
+    "defaultMessage": "在應用程式清單中找到並選取 Lumina"
   },
   "settings.notifications.modal.macStep4": {
     "defaultMessage": "啟用通知並依需求調整設定"
@@ -4005,7 +4005,7 @@
     "defaultMessage": "前往「系統」>「通知」"
   },
   "settings.notifications.modal.winStep3": {
-    "defaultMessage": "在應用程式清單中找到並選取 goose"
+    "defaultMessage": "在應用程式清單中找到並選取 Lumina"
   },
   "settings.notifications.modal.winStep4": {
     "defaultMessage": "開啟通知並依需求調整設定"
@@ -4014,7 +4014,7 @@
     "defaultMessage": "開啟設定"
   },
   "settings.notifications.task.description": {
-    "defaultMessage": "當視窗在背景執行時，Goose 完成工作後發出通知"
+    "defaultMessage": "當視窗在背景執行時，Lumina 完成工作後發出通知"
   },
   "settings.notifications.task.title": {
     "defaultMessage": "工作完成通知"
@@ -4023,19 +4023,19 @@
     "defaultMessage": "通知"
   },
   "settings.preventSleep.description": {
-    "defaultMessage": "在 goose 執行工作時讓電腦保持喚醒狀態（螢幕仍可鎖定）"
+    "defaultMessage": "在 Lumina 執行工作時讓電腦保持喚醒狀態（螢幕仍可鎖定）"
   },
   "settings.preventSleep.title": {
     "defaultMessage": "防止睡眠"
   },
   "settings.theme.description": {
-    "defaultMessage": "自訂 goose 的外觀與風格"
+    "defaultMessage": "自訂 Lumina 的外觀與風格"
   },
   "settings.theme.title": {
     "defaultMessage": "佈景主題"
   },
   "settings.updates.description": {
-    "defaultMessage": "檢查並安裝更新，讓 goose 保持最佳運作狀態"
+    "defaultMessage": "檢查並安裝更新，讓 Lumina 保持最佳運作狀態"
   },
   "settings.updates.title": {
     "defaultMessage": "更新"
@@ -4113,7 +4113,7 @@
     "defaultMessage": "搜尋技能..."
   },
   "skillsView.skillsDescription": {
-    "defaultMessage": "檢視可擴充 Goose 功能的已安裝技能。{shortcut} 即可搜尋。"
+    "defaultMessage": "檢視可擴充 Lumina 功能的已安裝技能。{shortcut} 即可搜尋。"
   },
   "skillsView.skillsTitle": {
     "defaultMessage": "技能"
@@ -4365,10 +4365,10 @@
     "defaultMessage": "使用其他提供者"
   },
   "telemetryConsentPrompt.description": {
-    "defaultMessage": "您願意分享匿名使用資料以協助改善 goose 嗎？我們絕不會收集您的對話、程式碼或個人資料。"
+    "defaultMessage": "您願意分享匿名使用資料以協助改善 Lumina 嗎？我們絕不會收集您的對話、程式碼或個人資料。"
   },
   "telemetryConsentPrompt.heading": {
-    "defaultMessage": "協助改善 goose"
+    "defaultMessage": "協助改善 Lumina"
   },
   "telemetryConsentPrompt.learnMore": {
     "defaultMessage": "瞭解詳情"
@@ -4395,7 +4395,7 @@
     "defaultMessage": "隱私"
   },
   "telemetrySettings.toggleDescription": {
-    "defaultMessage": "分享匿名使用統計資料以協助改善 goose。"
+    "defaultMessage": "分享匿名使用統計資料以協助改善 Lumina。"
   },
   "telemetrySettings.toggleLabel": {
     "defaultMessage": "匿名使用資料"
@@ -4473,10 +4473,10 @@
     "defaultMessage": "允許 {toolName}？"
   },
   "toolConfirmation.gooseWouldLikeToCallWithName": {
-    "defaultMessage": "Goose 想要呼叫 {toolName}。要允許嗎？"
+    "defaultMessage": "Lumina 想要呼叫 {toolName}。要允許嗎？"
   },
   "updateSection.autoDownload": {
-    "defaultMessage": "Goose 會在背景下載更新，並於您下次結束或重新啟動時安裝。"
+    "defaultMessage": "Lumina 會在背景下載更新，並於您下次結束或重新啟動時安裝。"
   },
   "updateSection.autoDownloadDisabledByEnv": {
     "defaultMessage": "已透過 GOOSE_DISABLE_AUTO_DOWNLOAD 環境變數停用自動下載。"
@@ -4500,7 +4500,7 @@
     "defaultMessage": "停用自動下載更新"
   },
   "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "啟用後，Goose 會通知您有新版本，但不會自動下載。"
+    "defaultMessage": "啟用後，Lumina 會通知您有新版本，但不會自動下載。"
   },
   "updateSection.downloadNow": {
     "defaultMessage": "立即下載"
@@ -4533,7 +4533,7 @@
     "defaultMessage": "此更新方式需要手動安裝。"
   },
   "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ 更新已就緒。重新啟動 Goose 即可完成安裝，或在您完成後結束。"
+    "defaultMessage": "✓ 更新已就緒。重新啟動 Lumina 即可完成安裝，或在您完成後結束。"
   },
   "updateSection.readyInstallManual": {
     "defaultMessage": "✓ 更新已就緒！請點選「安裝並重新啟動」以取得安裝指示。"
@@ -4944,7 +4944,7 @@
     "defaultMessage": "恢復"
   },
   "mcpCenter.recoveryConnectionNext": {
-    "defaultMessage": "檢查 Goose 連線並重試。"
+    "defaultMessage": "檢查 Lumina 連線並重試。"
   },
   "mcpCenter.recoveryConnectionTitle": {
     "defaultMessage": "MCP 中心不可用"
@@ -5028,7 +5028,7 @@
     "defaultMessage": "遠端 HTTP 連線"
   },
   "mcpCenter.remoteConnectionDescription": {
-    "defaultMessage": "Goose 在生成可審查的計畫之前會驗證 URL 的安全性及機器政策。"
+    "defaultMessage": "Lumina 在生成可審查的計畫之前會驗證 URL 的安全性及機器政策。"
   },
   "mcpCenter.remoteHttp": {
     "defaultMessage": "遠端 HTTP"
