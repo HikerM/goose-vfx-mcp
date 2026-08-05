@@ -1349,7 +1349,7 @@ pub fn display_session_info(
     println!(
         "  {}  {}",
         style("   L L").white(),
-        style("   goose is ready").white()
+        style("   Lumina is ready").white()
     );
 }
 

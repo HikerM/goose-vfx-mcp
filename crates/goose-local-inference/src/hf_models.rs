@@ -8,7 +8,7 @@ use super::local_model_registry::{get_registry, model_id_from_repo, LocalModelSt
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
-use crate::download_manager::{get_download_manager, DownloadStatus};
+use crate::download_manager::{get_download_manager, DownloadFile, DownloadStatus};
 use crate::paths::Paths;
 use crate::{config_resolver, huggingface_auth};
 
@@ -70,6 +70,8 @@ pub struct HfGgufFile {
     pub size_bytes: u64,
     pub quantization: String,
     pub download_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sha256: Option<String>,
 }
 
 /// A quantization variant — groups sharded files into one logical entry.
@@ -194,6 +196,8 @@ struct HfApiSibling {
     rfilename: String,
     #[serde(default)]
     size: Option<u64>,
+    #[serde(default)]
+    sha256: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -239,6 +243,8 @@ struct ModelScopeFile {
     path: String,
     #[serde(rename = "Size", default)]
     size: u64,
+    #[serde(rename = "Sha256", default)]
+    sha256: Option<String>,
 }
 
 struct QuantInfo {
@@ -477,6 +483,7 @@ async fn modelscope_repo_files(repo_id: &str) -> Result<Vec<HfApiSibling>> {
                 .map(|file| HfApiSibling {
                     rfilename: file.path,
                     size: Some(file.size),
+                    sha256: file.sha256,
                 })
                 .collect()
         })
@@ -588,6 +595,7 @@ fn select_best_mmproj(
             size_bytes: sibling.size.unwrap_or(0),
             quantization,
             download_url: modelscope_download_url(repo_id, &sibling.rfilename),
+            sha256: sibling.sha256.clone(),
         })
 }
 
@@ -812,6 +820,7 @@ pub async fn get_repo_gguf_files(repo_id: &str) -> Result<Vec<HfGgufFile>> {
                 size_bytes: s.size.unwrap_or(0),
                 quantization,
                 download_url,
+                sha256: s.sha256,
             }
         })
         .collect();
@@ -885,6 +894,7 @@ pub async fn resolve_model_spec_full(spec: &str) -> Result<(String, ResolvedMode
             size_bytes: single.size.unwrap_or(0),
             quantization: quant,
             download_url: modelscope_download_url(&repo_id, &single.rfilename),
+            sha256: single.sha256.clone(),
         };
         let total_size = file.size_bytes;
         return Ok((
@@ -948,6 +958,7 @@ pub async fn resolve_model_spec_full(spec: &str) -> Result<(String, ResolvedMode
             size_bytes: s.size.unwrap_or(0),
             quantization: quant.clone(),
             download_url: modelscope_download_url(&repo_id, &s.rfilename),
+            sha256: s.sha256.clone(),
         })
         .collect();
     let total_size: u64 = files.iter().map(|f| f.size_bytes).sum();
@@ -1010,6 +1021,7 @@ mod tests {
                 size_bytes,
                 quantization: "Q4_K_M".to_string(),
                 download_url: "https://example.test/model.gguf".to_string(),
+                sha256: None,
             }],
             total_size: size_bytes,
             mmproj: None,
@@ -1052,6 +1064,27 @@ mod tests {
         assert_eq!(
             url,
             "https://modelscope.cn/api/v1/models/Qwen/Qwen3-4B-GGUF/repo?Revision=master&FilePath=Q4_K_M%2Fmodel.gguf"
+        );
+    }
+
+    #[test]
+    fn modelscope_file_metadata_preserves_sha256() {
+        let payload: ModelScopeFilesResponse = serde_json::from_value(serde_json::json!({
+            "Code": 200,
+            "Data": {
+                "Files": [{
+                    "Path": "model-Q4_K_M.gguf",
+                    "Size": 123,
+                    "Sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785"
+                }]
+            }
+        }))
+        .unwrap();
+        let file = &payload.data.unwrap().files[0];
+
+        assert_eq!(
+            file.sha256.as_deref(),
+            Some("d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785")
         );
     }
 
@@ -1164,6 +1197,7 @@ mod tests {
                     size_bytes: 4,
                     quantization: "Q4_K_M".to_string(),
                     download_url: "https://example.test/model-Q4_K_M.gguf".to_string(),
+                    sha256: None,
                 }],
                 variants: vec![gguf_variant],
             },
@@ -1454,10 +1488,12 @@ mod tests {
             HfApiSibling {
                 rfilename: "gemma-3-27b-it-Q4_K_M.gguf".into(),
                 size: Some(4_000_000_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "mmproj-BF16.gguf".into(),
                 size: Some(800_000_000),
+                sha256: None,
             },
         ];
         let variants = group_into_variants("unsloth/gemma-3-27b-it-GGUF", files);
@@ -1471,14 +1507,17 @@ mod tests {
             HfApiSibling {
                 rfilename: "BF16/gemma-3-27b-it-BF16-00001-of-00002.gguf".into(),
                 size: Some(40_000_000_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "BF16/gemma-3-27b-it-BF16-00002-of-00002.gguf".into(),
                 size: Some(10_000_000_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "gemma-3-27b-it-Q4_K_M.gguf".into(),
                 size: Some(4_000_000_000),
+                sha256: None,
             },
         ];
         let variants = group_into_variants("unsloth/gemma-3-27b-it-GGUF", files);
@@ -1497,14 +1536,17 @@ mod tests {
             HfApiSibling {
                 rfilename: "Model-IQ1_S.gguf".into(),
                 size: Some(500_000_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "Model-Q4_K_M.gguf".into(),
                 size: Some(4_000_000_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "Model-Q8_0.gguf".into(),
                 size: Some(8_000_000_000),
+                sha256: None,
             },
         ];
         let variants = group_into_variants("someone/Model-GGUF", files);
@@ -1520,10 +1562,12 @@ mod tests {
             HfApiSibling {
                 rfilename: "mmproj-F32.gguf".into(),
                 size: Some(3_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "mmproj-BF16.gguf".into(),
                 size: Some(2_000),
+                sha256: None,
             },
         ];
 
@@ -1556,10 +1600,12 @@ mod tests {
             HfApiSibling {
                 rfilename: "mmproj-F16.gguf".into(),
                 size: Some(2_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "mmproj-BF16.gguf".into(),
                 size: Some(2_000),
+                sha256: None,
             },
         ];
 
@@ -1575,10 +1621,12 @@ mod tests {
             HfApiSibling {
                 rfilename: "mmproj-BF16.gguf".into(),
                 size: Some(2_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "Q4_K_M/mmproj-F32.gguf".into(),
                 size: Some(3_000),
+                sha256: None,
             },
         ];
 
@@ -1599,10 +1647,12 @@ mod tests {
             HfApiSibling {
                 rfilename: "Q8_0/mmproj-BF16.gguf".into(),
                 size: Some(2_000),
+                sha256: None,
             },
             HfApiSibling {
                 rfilename: "mmproj-F32.gguf".into(),
                 size: Some(3_000),
+                sha256: None,
             },
         ];
 
@@ -2169,7 +2219,12 @@ async fn download_gguf_to_modelscope_cache(
 
     for file in &resolved.files {
         let path = safe_model_path(&root, &file.filename)?;
-        downloads.push((file.download_url.clone(), path.clone()));
+        downloads.push(DownloadFile::verified(
+            file.download_url.clone(),
+            path.clone(),
+            file.size_bytes,
+            file.sha256.clone(),
+        ));
         paths.push(path);
     }
 
@@ -2179,9 +2234,11 @@ async fn download_gguf_to_modelscope_cache(
         .map(|file| safe_model_path(&root, &file.filename))
         .transpose()?;
     if let Some(mmproj) = &resolved.mmproj {
-        downloads.push((
+        downloads.push(DownloadFile::verified(
             mmproj.download_url.clone(),
             mmproj_path.clone().expect("mmproj path must be present"),
+            mmproj.size_bytes,
+            mmproj.sha256.clone(),
         ));
     }
 
@@ -2194,7 +2251,7 @@ async fn download_gguf_to_modelscope_cache(
     let download_id = format!("{}-model", model_id);
     let manager = get_download_manager();
     manager
-        .download_model_sharded_with_bearer_token(
+        .download_verified_model_sharded_with_bearer_token(
             download_id.clone(),
             downloads,
             total_size,

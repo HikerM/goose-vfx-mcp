@@ -69,7 +69,7 @@ where
             Ok(_) => {
                 writeln!(
                     out,
-                    "{} Opened recipe '{}' in Goose Desktop",
+                    "{} Opened recipe '{}' in Lumina Desktop",
                     style("✓").green().bold(),
                     recipe.title
                 )?;
@@ -78,12 +78,12 @@ where
             Err(err) => {
                 writeln!(
                     out,
-                    "{} Failed to open recipe in Goose Desktop: {}",
+                    "{} Failed to open recipe in Lumina Desktop: {}",
                     style("✗").red().bold(),
                     err
                 )?;
                 writeln!(out, "Generated deeplink: {}", deeplink_url)?;
-                writeln!(out, "You can manually copy and open the URL above, or ensure Goose Desktop is installed.")?;
+                writeln!(out, "You can manually copy and open the URL above, or ensure Lumina Desktop is installed.")?;
                 Err(anyhow::anyhow!("Failed to open recipe: {}", err))
             }
         },
@@ -327,7 +327,7 @@ instructions: "Test instructions"
         let (result, _, output) = run_handle_open(&recipe_path, &[], Err(opener_err));
 
         assert!(result.is_err());
-        assert!(output.contains("Failed to open recipe in Goose Desktop"));
+        assert!(output.contains("Failed to open recipe in Lumina Desktop"));
         assert!(output.contains("desktop not found"));
         assert!(output.contains(&expected_url));
     }

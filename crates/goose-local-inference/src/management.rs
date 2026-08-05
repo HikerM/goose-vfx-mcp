@@ -325,6 +325,7 @@ pub async fn ensure_featured_models_current() -> Result<()> {
                             &pending.repo_id,
                             &filename,
                         ),
+                        sha256: None,
                     }
                 }
             };

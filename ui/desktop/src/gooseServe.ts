@@ -96,7 +96,7 @@ export const findGooseBinaryPath = (options: FindGooseBinaryOptions = {}): strin
   }
 
   throw new Error(
-    `Goose binary not found in any of the possible paths: ${possiblePaths.join(', ')}`
+    `Lumina backend not found in any of the possible paths: ${possiblePaths.join(', ')}`
   );
 };
 

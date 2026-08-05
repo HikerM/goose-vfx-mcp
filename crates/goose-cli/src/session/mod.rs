@@ -803,7 +803,7 @@ impl CliSession {
         };
         self.agent.update_goose_mode(mode, &self.session_id).await?;
         config.set_goose_mode(mode)?;
-        output::goose_mode_message(&format!("Goose mode set to '{mode}'"));
+        output::goose_mode_message(&format!("Lumina mode set to '{mode}'"));
         Ok(())
     }
 
@@ -1884,7 +1884,7 @@ fn prompt_tool_confirmation(security_prompt: &Option<String>) -> Result<Permissi
         println!("\n{}", security_message);
         "Do you allow this tool call?".to_string()
     } else {
-        "Goose would like to call the above tool, do you allow?".to_string()
+        "Lumina would like to call the above tool, do you allow?".to_string()
     };
 
     let permission_result = if security_prompt.is_none() {

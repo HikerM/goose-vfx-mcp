@@ -50,7 +50,7 @@ export class GooseServeLeaseRegistry {
       }
 
       if (logUnexpected && firstExit && !lease.cleanedUp) {
-        this.logger.error('Goose ACP server exited unexpectedly', {
+        this.logger.error('Lumina backend exited unexpectedly', {
           code: lease.exitCode,
           signal: lease.exitSignal,
           windowIds: [...lease.windowIds],

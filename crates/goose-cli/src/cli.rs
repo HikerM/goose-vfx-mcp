@@ -763,8 +763,8 @@ enum RecipeCommand {
         params: Vec<String>,
     },
 
-    /// Open a recipe in Goose Desktop
-    #[command(about = "Open a recipe in Goose Desktop")]
+    /// Open a recipe in Lumina Desktop
+    #[command(about = "Open a recipe in Lumina Desktop")]
     Open {
         /// Recipe name to get recipe file to open
         #[arg(help = "recipe name or full path to the recipe file")]

@@ -29,8 +29,32 @@ use goose_provider_types::formats::openai::format_tools;
 pub(super) const LLAMACPP_BACKEND_ID: &str = "llamacpp";
 
 const CODE_EXECUTION_TOOL: &str = "code_execution__execute_typescript";
+const GPU_MEMORY_RESERVE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 
-fn automatic_gpu_layers(model_path: &Path) -> u32 {
+fn select_gpu_layers(
+    model_bytes: u64,
+    available_accelerator_memory: u64,
+    n_layers: Option<u32>,
+) -> u32 {
+    if model_bytes == 0 || available_accelerator_memory <= GPU_MEMORY_RESERVE_BYTES {
+        return 0;
+    }
+
+    let usable_accelerator_memory =
+        available_accelerator_memory.saturating_sub(GPU_MEMORY_RESERVE_BYTES);
+    if model_bytes <= usable_accelerator_memory {
+        return u32::MAX;
+    }
+
+    let Some(n_layers) = n_layers.filter(|layers| *layers > 0) else {
+        return 0;
+    };
+    let partial_layers = (u128::from(usable_accelerator_memory) * u128::from(n_layers)
+        / u128::from(model_bytes)) as u32;
+    partial_layers.clamp(1, n_layers)
+}
+
+fn automatic_gpu_layers(backend: &LlamaBackend, model_path: &Path) -> u32 {
     let model_bytes = std::fs::metadata(model_path)
         .map(|metadata| metadata.len())
         .unwrap_or(0);
@@ -41,16 +65,16 @@ fn automatic_gpu_layers(model_path: &Path) -> u32 {
         .max()
         .unwrap_or(0) as u64;
 
-    // Leave room for the KV cache and the operating system. A model that cannot fit
-    // comfortably is kept on the CPU instead of failing half way through loading.
-    if available_accelerator_memory > 0
-        && model_bytes > 0
-        && model_bytes <= available_accelerator_memory.saturating_mul(65) / 100
-    {
-        u32::MAX
-    } else {
-        0
+    let full_offload = select_gpu_layers(model_bytes, available_accelerator_memory, None);
+    if full_offload != 0 {
+        return full_offload;
     }
+
+    let metadata_params = LlamaModelParams::default().with_vocab_only(true);
+    let n_layers = LlamaModel::load_from_file(backend, model_path, &metadata_params)
+        .ok()
+        .map(|model| model.n_layer());
+    select_gpu_layers(model_bytes, available_accelerator_memory, n_layers)
 }
 
 pub(super) fn builtin_chat_template_names() -> Vec<String> {
@@ -459,7 +483,7 @@ impl LocalInferenceBackend for LlamaCppBackend {
 
         let selected_gpu_layers = settings
             .n_gpu_layers
-            .unwrap_or_else(|| automatic_gpu_layers(model_path));
+            .unwrap_or_else(|| automatic_gpu_layers(&self.backend, model_path));
         tracing::info!(
             backend = self.id(),
             gpu_layers = selected_gpu_layers,
@@ -705,6 +729,15 @@ fn log_inference_backend_devices() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn automatic_gpu_offload_uses_available_vram_instead_of_falling_back_to_cpu() {
+        let gib = 1024 * 1024 * 1024;
+
+        assert_eq!(select_gpu_layers(8 * gib, 12 * gib, None), u32::MAX);
+        assert_eq!(select_gpu_layers(12 * gib, 8 * gib, Some(40)), 20);
+        assert_eq!(select_gpu_layers(4 * gib, 2 * gib, Some(40)), 0);
+    }
 
     fn template_result(parser: Option<&str>, parse_tool_calls: bool) -> ChatTemplateResult {
         ChatTemplateResult {

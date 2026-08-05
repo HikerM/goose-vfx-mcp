@@ -165,7 +165,7 @@ fn invalid_windows_goose_path_root() -> WindowsGoosePathRootError {
     WindowsGoosePathRootError {
         kind: WindowsGoosePathRootErrorKind::InvalidPath,
         message:
-            "Goose can only use a regular folder on the local D drive for managed MCP storage on Windows. Choose a folder on D and restart Goose.",
+            "Lumina can only use a regular folder on the local D drive for managed MCP storage on Windows. Choose a folder on D and restart Lumina.",
     }
 }
 
@@ -173,7 +173,7 @@ fn unavailable_windows_goose_path_root() -> WindowsGoosePathRootError {
     WindowsGoosePathRootError {
         kind: WindowsGoosePathRootErrorKind::DriveUnavailable,
         message:
-            "Goose needs a local D drive before managed MCP storage can start on Windows. Reconnect or create the D drive and restart Goose.",
+            "Lumina needs a local D drive before managed MCP storage can start on Windows. Reconnect or create the D drive and restart Lumina.",
     }
 }
 
@@ -181,7 +181,7 @@ fn unwritable_windows_goose_path_root() -> WindowsGoosePathRootError {
     WindowsGoosePathRootError {
         kind: WindowsGoosePathRootErrorKind::NotWritable,
         message:
-            "Goose cannot write to its managed MCP storage folder on Windows. Choose or create a writable folder on D and restart Goose.",
+            "Lumina cannot write to its managed MCP storage folder on Windows. Choose or create a writable folder on D and restart Lumina.",
     }
 }
 
@@ -189,7 +189,7 @@ fn reparse_windows_goose_path_root() -> WindowsGoosePathRootError {
     WindowsGoosePathRootError {
         kind: WindowsGoosePathRootErrorKind::ReparseRisk,
         message:
-            "Goose cannot use a linked or redirected folder for managed MCP storage on Windows. Choose a regular folder on D and restart Goose.",
+            "Lumina cannot use a linked or redirected folder for managed MCP storage on Windows. Choose a regular folder on D and restart Lumina.",
     }
 }
 

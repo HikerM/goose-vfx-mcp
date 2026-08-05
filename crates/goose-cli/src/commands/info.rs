@@ -125,7 +125,7 @@ pub async fn handle_info(verbose: bool, check: bool) -> Result<()> {
         .unwrap_or(0)
         + 4;
 
-    println!("{}", style("goose Version:").cyan().bold());
+    println!("{}", style("Lumina Version:").cyan().bold());
     print_aligned("Version:", env!("CARGO_PKG_VERSION"), label_padding);
     println!();
 
@@ -140,7 +140,7 @@ pub async fn handle_info(verbose: bool, check: bool) -> Result<()> {
     }
 
     if verbose {
-        println!("\n{}", style("goose Configuration:").cyan().bold());
+        println!("\n{}", style("Lumina Configuration:").cyan().bold());
         let values = config.all_values()?;
         if values.is_empty() {
             println!("  No configuration values set");

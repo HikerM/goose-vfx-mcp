@@ -245,12 +245,12 @@ pub fn build_deeplink(nevent: &str, decryption_key: &str) -> String {
 }
 
 pub fn parse_deeplink(deeplink: &str) -> Result<ParsedShareLink> {
-    let parsed = url::Url::parse(deeplink).context("Invalid Goose session share link")?;
+    let parsed = url::Url::parse(deeplink).context("Invalid Lumina session share link")?;
     if parsed.scheme() != "goose"
         || parsed.host_str() != Some("sessions")
         || parsed.path() != "/nostr"
     {
-        return Err(anyhow!("Invalid Goose Nostr session share link"));
+        return Err(anyhow!("Invalid Lumina Nostr session share link"));
     }
 
     let nevent = parsed

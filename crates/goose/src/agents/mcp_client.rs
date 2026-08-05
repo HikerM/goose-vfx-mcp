@@ -414,7 +414,7 @@ impl ClientHandler for GooseClient {
         let system_prompt = params
             .system_prompt
             .as_deref()
-            .unwrap_or("You are a general-purpose AI agent called goose");
+            .unwrap_or("You are a general-purpose AI agent called Lumina");
 
         let model_config = resolve_sampling_model_config().map_err(|e| {
             ErrorData::new(
