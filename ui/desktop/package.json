@@ -1,7 +1,7 @@
 {
   "name": "goose-app",
   "productName": "Lumina",
-  "version": "1.43.0-mcp.13",
+  "version": "1.43.0-mcp.14",
   "description": "Lumina App",
   "engines": {
     "node": "^24.10.0",

@@ -4924,7 +4924,7 @@ dependencies = [
 
 [[package]]
 name = "goose"
-version = "1.43.0-mcp.13"
+version = "1.43.0-mcp.14"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-http",
@@ -5069,7 +5069,7 @@ dependencies = [
 
 [[package]]
 name = "goose-acp-macros"
-version = "1.43.0-mcp.13"
+version = "1.43.0-mcp.14"
 dependencies = [
  "quote",
  "syn 2.0.119",
@@ -5077,7 +5077,7 @@ dependencies = [
 
 [[package]]
 name = "goose-cli"
-version = "1.43.0-mcp.13"
+version = "1.43.0-mcp.14"
 dependencies = [
  "anstream",
  "anyhow",
@@ -5195,7 +5195,7 @@ dependencies = [
 
 [[package]]
 name = "goose-mcp"
-version = "1.43.0-mcp.13"
+version = "1.43.0-mcp.14"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -5316,7 +5316,7 @@ dependencies = [
 
 [[package]]
 name = "goose-test"
-version = "1.43.0-mcp.13"
+version = "1.43.0-mcp.14"
 dependencies = [
  "clap",
  "serde_json",
@@ -5324,7 +5324,7 @@ dependencies = [
 
 [[package]]
 name = "goose-test-support"
-version = "1.43.0-mcp.13"
+version = "1.43.0-mcp.14"
 dependencies = [
  "axum",
  "env-lock",
@@ -5336,7 +5336,7 @@ dependencies = [
 
 [[package]]
 name = "goose-verified-sources"
-version = "1.43.0-mcp.13"
+version = "1.43.0-mcp.14"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek 3.0.0",

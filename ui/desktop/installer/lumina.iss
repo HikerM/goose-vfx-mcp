@@ -37,18 +37,22 @@ SolidCompression=yes
 LZMAUseSeparateProcess=yes
 WizardStyle=modern dynamic
 CloseApplications=yes
+CloseApplicationsFilter=*.exe,*.dll
 RestartApplications=no
 ChangesAssociations=yes
 SetupLogging=yes
 VersionInfoCompany={#MyAppPublisher}
-VersionInfoDescription={#MyAppName} Installer
+VersionInfoDescription={#MyAppName} 安装程序
 VersionInfoProductName={#MyAppName}
 VersionInfoVersion={#MyFileVersion}
 VersionInfoProductVersion={#MyFileVersion}
 VersionInfoTextVersion={#MyAppVersion}
 
+[Languages]
+Name: "chinesesimp"; MessagesFile: "compiler:Default.isl,languages\ChineseSimplified.isl"
+
 [Tasks]
-Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -64,10 +68,30 @@ Root: HKCU; Subkey: "Software\Classes\goose\DefaultIcon"; ValueType: string; Val
 Root: HKCU; Subkey: "Software\Classes\goose\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-function InitializeSetup(): Boolean;
+procedure StopRunningLumina();
+var
+  Attempt: Integer;
+  ResultCode: Integer;
+begin
+  for Attempt := 1 to 3 do
+  begin
+    Exec(
+      ExpandConstant('{cmd}'),
+      '/D /C taskkill.exe /F /T /IM "Lumina.exe" >nul 2>&1',
+      '',
+      SW_HIDE,
+      ewWaitUntilTerminated,
+      ResultCode
+    );
+    Log(Format('关闭 Lumina 进程：第 %d 次，taskkill 返回码 %d', [Attempt, ResultCode]));
+    Sleep(500);
+  end;
+end;
+
+procedure RemoveLegacyInstallation();
 var
   LegacyRoot: String;
   LegacyUpdater: String;
@@ -78,6 +102,12 @@ begin
   if FileExists(LegacyUpdater) then
     Exec(LegacyUpdater, '--uninstall -s', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   if DirExists(LegacyRoot) and not DelTree(LegacyRoot, True, True, True) then
-    Log('Legacy Squirrel directory could not be removed completely');
-  Result := True;
+    Log('无法完全删除旧版 Squirrel 安装目录');
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  StopRunningLumina();
+  RemoveLegacyInstallation();
+  Result := '';
 end;
