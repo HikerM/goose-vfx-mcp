@@ -5072,7 +5072,7 @@ name = "goose-acp-macros"
 version = "1.43.0-mcp.10"
 dependencies = [
  "quote",
- "syn 2.0.119",
+ "syn 3.0.3",
 ]
 
 [[package]]
