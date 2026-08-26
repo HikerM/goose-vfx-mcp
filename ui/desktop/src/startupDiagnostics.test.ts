@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createGooseServeStartupDiagnostics } from './startupDiagnostics';
+import { createLuminaServeStartupDiagnostics } from './startupDiagnostics';
 
 const tempDirs: string[] = [];
 
@@ -24,10 +24,10 @@ describe('startup diagnostics', () => {
 
   it('writes serve startup diagnostics with serve-specific fields', () => {
     const diagnosticsDir = makeTempDir();
-    const trace = createGooseServeStartupDiagnostics(diagnosticsDir, '/tmp/project');
+    const trace = createLuminaServeStartupDiagnostics(diagnosticsDir, '/tmp/project');
 
     expect(trace).not.toBeNull();
-    trace!.diagnostics.binaryPath = '/bin/goose';
+    trace!.diagnostics.binaryPath = '/bin/lumina';
     trace!.diagnostics.httpBaseUrl = 'http://127.0.0.1:3000';
     trace!.diagnostics.readinessUrl = 'http://127.0.0.1:3000/status';
     trace!.diagnostics.statusUrl = 'http://127.0.0.1:3000/status';
@@ -40,10 +40,10 @@ describe('startup diagnostics', () => {
     });
     trace!.record('healthcheck_success', { attempt: 1 });
 
-    expect(path.basename(trace!.diagnosticsPath)).toMatch(/^goose-serve-startup-.*\.json$/);
+    expect(path.basename(trace!.diagnosticsPath)).toMatch(/^lumina-serve-startup-.*\.json$/);
     const saved = JSON.parse(fs.readFileSync(trace!.diagnosticsPath, 'utf8'));
     expect(saved).toMatchObject({
-      binaryPath: '/bin/goose',
+      binaryPath: '/bin/lumina',
       httpBaseUrl: 'http://127.0.0.1:3000',
       readinessUrl: 'http://127.0.0.1:3000/status',
       statusUrl: 'http://127.0.0.1:3000/status',
@@ -51,7 +51,7 @@ describe('startup diagnostics', () => {
       acpUrl: 'ws://127.0.0.1:3000/acp?token=REDACTED',
       healthCheckSucceeded: true,
     });
-    expect(saved).not.toHaveProperty('goosedPath');
+    expect(saved).not.toHaveProperty('luminadPath');
     expect(saved).not.toHaveProperty('certFingerprintSeen');
     expect(saved.events.map((event: { name: string }) => event.name)).toEqual([
       'healthcheck_start',

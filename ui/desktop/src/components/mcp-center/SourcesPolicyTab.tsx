@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import type { McpSourcesPolicyState } from '@aaif/goose-sdk';
+import type { McpSourcesPolicyState } from '@hikerm/lumina-sdk';
 import {
   confirmMcpSourceProvision,
   importGovernedMcpSource,

@@ -40,7 +40,7 @@ const i18n = defineMessages({
     defaultMessage: 'Local Inference Models',
   },
   description: {
-    id: 'localInferenceSettings.description',
+    id: 'localInferenceSettings.modelScopeDescription',
     defaultMessage:
       'Download and manage local GGUF models for inference without API keys. Search ModelScope or use the featured picks below.',
   },

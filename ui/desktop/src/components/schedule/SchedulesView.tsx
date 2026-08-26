@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import type { ScheduledJobDto } from '@aaif/goose-sdk';
+import type { ScheduledJobDto } from '@hikerm/lumina-sdk';
 import {
   acpListSchedules,
   acpCreateSchedule,

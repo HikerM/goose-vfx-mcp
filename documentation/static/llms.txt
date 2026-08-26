@@ -1,8 +1,8 @@
-# goose
+# lumina
 
-goose is an extensible, open source AI agent that enhances software development by automating coding tasks.
+lumina is an extensible, open source AI agent that enhances software development by automating coding tasks.
 It runs locally on your machine and connects to various tools and services through the Model Context Protocol (MCP).
-goose is available as both a desktop application and a command-line interface (CLI).
+lumina is available as both a desktop application and a command-line interface (CLI).
 
 ## Key Features
 
@@ -14,11 +14,11 @@ goose is available as both a desktop application and a command-line interface (C
 
 ## Core Concepts
 
-- **Extensions**: Plugins that give goose new capabilities via MCP servers (GitHub, Slack, databases, etc.)
+- **Extensions**: Plugins that give lumina new capabilities via MCP servers (GitHub, Slack, databases, etc.)
 - **Recipes**: Reusable task templates that can be shared and automated
 - **Sessions**: Conversation contexts that maintain state across interactions
-- **Providers**: LLM backends that power goose (OpenAI, Anthropic, Ollama, etc.)
-- **Goosehints**: Project-specific instructions that customize goose behavior
+- **Providers**: LLM backends that power lumina (OpenAI, Anthropic, Ollama, etc.)
+- **Luminahints**: Project-specific instructions that customize lumina behavior
 
 ## Documentation
 
@@ -26,7 +26,7 @@ goose is available as both a desktop application and a command-line interface (C
 - Installation: /docs/getting-started/installation
 - LLM Providers: /docs/getting-started/providers
 - Using Extensions: /docs/getting-started/using-extensions
-- CLI Commands: /docs/guides/goose-cli-commands
+- CLI Commands: /docs/guides/lumina-cli-commands
 - Recipes Guide: /docs/guides/recipes/
 - Tutorials: /docs/tutorials/
 - MCP Servers/Extensions: /docs/mcp/
@@ -36,13 +36,13 @@ goose is available as both a desktop application and a command-line interface (C
 ### macOS/Linux/Windows (CLI)
 
 ```sh
-curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash
+curl -fsSL https://github.com/HikerM/lumina/releases/download/stable/download_cli.sh | bash
 ```
 
 ### macOS (Homebrew)
 
 ```sh
-brew install --cask block-goose
+brew install --cask block-lumina
 ```
 
 Desktop applications are available for macOS, Linux, and Windows at /docs/getting-started/installation
@@ -68,20 +68,20 @@ Desktop applications are available for macOS, Linux, and Windows at /docs/gettin
 
 ## Configuration
 
-goose configuration is stored in `~/.config/goose/` with:
+lumina configuration is stored in `~/.config/lumina/` with:
 - `profiles.yaml`: Provider and extension settings
 - `config.yaml`: Global preferences
 
-Project-specific hints can be added via `.goosehints` and/or `AGENT.md` files.
+Project-specific hints can be added via `.luminahints` and/or `AGENT.md` files.
 
 ## Links
 
-- Website: https://goose-docs.ai/
-- GitHub: https://github.com/aaif-goose/goose
-- Discord: https://discord.gg/goose-oss
-- Extensions Registry: https://goose-docs.ai/extensions/
-- Blog: https://goose-docs.ai/blog/
+- Website: https://hikerm.github.io/lumina/
+- GitHub: https://github.com/HikerM/lumina
+- Issue tracker: https://github.com/HikerM/lumina/issues
+- Extensions Registry: https://hikerm.github.io/lumina/extensions/
+- Blog: https://hikerm.github.io/lumina/blog/
 
 ## About
 
-goose is developed by AAIF (Agentic AI Foundation) as an open source project under the Apache 2.0 license.
+Lumina is an independently maintained open source project distributed under the Apache License, Version 2.0.

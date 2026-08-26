@@ -1,12 +1,12 @@
 ---
 title: Square MCP Extension
-description: Add the Square API as a goose Extension
+description: Add the Square API as a lumina Extension
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructions';
 
 <details>
@@ -22,7 +22,7 @@ import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructi
 </details>
 
 
-This tutorial will get you started with the [Square MCP server](https://developer.squareup.com/docs/mcp) to enable interactive and automated work for your Square seller account. The Square MCP server is an open source project that allows you to interact with the Square API using goose.
+This tutorial will get you started with the [Square MCP server](https://developer.squareup.com/docs/mcp) to enable interactive and automated work for your Square seller account. The Square MCP server is an open source project that allows you to interact with the Square API using lumina.
 
 Square offers two versions of the MCP server:
 
@@ -39,10 +39,10 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
   <TabItem value="remote" label="Square Remote MCP" default>
   :::tip Quick Install
   <Tabs groupId="interface">
-    <TabItem value="ui" label="goose Desktop" default>
-    [Launch the installer](https://mcp.squareup.com/goose)
+    <TabItem value="ui" label="lumina Desktop" default>
+    [Launch the installer](https://mcp.squareup.com/lumina)
     </TabItem>
-    <TabItem value="cli" label="goose CLI">
+    <TabItem value="cli" label="lumina CLI">
     **Command**
     ```sh
     npx mcp-remote https://mcp.squareup.com/sse
@@ -52,15 +52,15 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
   :::
 
   <Tabs groupId="interface">
-    <TabItem value="ui" label="goose Desktop" default>
-     1. [Launch the installer](https://mcp.squareup.com/goose)
+    <TabItem value="ui" label="lumina Desktop" default>
+     1. [Launch the installer](https://mcp.squareup.com/lumina)
      2. Click `OK` to confirm the installation
-     3. goose should open a browser tab to an OAuth permissions page. Double-check which permissions you want to allow, and click `Grant Access`.
+     3. lumina should open a browser tab to an OAuth permissions page. Double-check which permissions you want to allow, and click `Grant Access`.
      4. It will ask you to login or reauthenticate to Square, and may ask you to confirm the permissions you want to allow.
-     5. In goose, navigate to the chat
+     5. In lumina, navigate to the chat
 
     </TabItem>
-    <TabItem value="cli" label="goose CLI">
+    <TabItem value="cli" label="lumina CLI">
       <CLIExtensionInstructions
         name="square-mcp-remote"
         type="stdio"
@@ -68,7 +68,7 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
         timeout={300}
       />
 
-      When you start the next session, goose will open a browser where you can grant permissions and sign in to your Square account.
+      When you start the next session, lumina will open a browser where you can grant permissions and sign in to your Square account.
   
     </TabItem>
   </Tabs>
@@ -77,11 +77,11 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
   <TabItem value="local" label="Square Local MCP">
   :::tip Quick Install
   <Tabs groupId="interface">
-    <TabItem value="ui" label="goose Desktop" default>
-    [Launch the installer](goose://extension?cmd=npx&arg=square-mcp-server&arg=start&id=mcp_square_api&name=Square%20MCP%20Server&description=Square%20API%20MCP%20Server&env=ACCESS_TOKEN%3DYour%20Access%20Token&env=SANDBOX%3Dtrue)
+    <TabItem value="ui" label="lumina Desktop" default>
+    [Launch the installer](lumina://extension?cmd=npx&arg=square-mcp-server&arg=start&id=mcp_square_api&name=Square%20MCP%20Server&description=Square%20API%20MCP%20Server&env=ACCESS_TOKEN%3DYour%20Access%20Token&env=SANDBOX%3Dtrue)
 
     </TabItem>
-    <TabItem value="cli" label="goose CLI">
+    <TabItem value="cli" label="lumina CLI">
     **Command**
     ```sh
     npx square-mcp-server start
@@ -99,8 +99,8 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
   :::
 
   <Tabs groupId="interface">
-    <TabItem value="ui" label="goose Desktop" default>
-    <GooseDesktopInstaller
+    <TabItem value="ui" label="lumina Desktop" default>
+    <LuminaDesktopInstaller
       extensionId="mcp_square_api"
       extensionName="Square MCP Server"
       description="Square API MCP Server"
@@ -115,7 +115,7 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
       apiKeyLinkText="Square Access Token"
     />
     </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     <CLIExtensionInstructions
       name="square-mcp"
       type="stdio"
@@ -141,7 +141,7 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 
 The Square MCP server allows you to interact with Square's connect API with an extensive [service catalog](https://github.com/square/square-mcp-server?tab=readme-ov-file#service-catalog) to access the Square API ecosystem.
 
-#### goose Prompt
+#### lumina Prompt
 
 ```
 ( O)> Find my food menu from the following image and import these into my Square seller account. "my-burger-menu.png"
@@ -149,7 +149,7 @@ The Square MCP server allows you to interact with Square's connect API with an e
 
 [Here's the menu image used in the demo.](../assets/guides/square-mcp-goosin-menu.png)
 
-#### goose Output
+#### lumina Output
 
 ```
 I'll help you import these menu items into your Square catalog. I'll use the Square API to create catalog items for each burger. Let me break this down into steps:

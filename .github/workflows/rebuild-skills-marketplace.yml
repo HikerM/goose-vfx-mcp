@@ -23,7 +23,7 @@ concurrency:
 jobs:
   rebuild-docs:
     runs-on: ubuntu-latest
-    if: github.repository == 'aaif-goose/goose'
+    if: github.repository == 'HikerM/lumina'
     permissions:
       contents: read
       pages: write
@@ -63,9 +63,6 @@ jobs:
       - name: Install dependencies and build docs
         working-directory: ./documentation
         env:
-          INKEEP_API_KEY: ${{ secrets.INKEEP_API_KEY }}
-          INKEEP_INTEGRATION_ID: ${{ secrets.INKEEP_INTEGRATION_ID }}
-          INKEEP_ORG_ID: ${{ secrets.INKEEP_ORG_ID }}
         run: |
           npm install
           npm run build

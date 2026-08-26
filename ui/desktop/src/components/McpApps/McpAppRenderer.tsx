@@ -12,7 +12,7 @@
  *
  * Display modes:
  * - "inline" | "fullscreen" | "pip" — standard MCP display modes
- * - "standalone" — Goose-specific mode for dedicated Electron windows
+ * - "standalone" — Lumina-specific mode for dedicated Electron windows
  */
 
 import {
@@ -42,10 +42,10 @@ import { cn } from '../../utils';
 import { errorMessage } from '../../utils/conversionUtils';
 import { getProtocol, isProtocolSafe } from '../../utils/urlSecurity';
 import { defineMessages, useIntl } from '../../i18n';
-import FlyingBird from '../FlyingBird';
+import LuminaActivity from '../LuminaActivity';
 import { formatExtensionName } from '../settings/extensions/subcomponents/ExtensionList';
 import {
-  GooseDisplayMode,
+  LuminaDisplayMode,
   SandboxPermissions,
   McpAppToolCancelled,
   McpAppToolInput,
@@ -133,7 +133,7 @@ const DEFAULT_IFRAME_HEIGHT = 200;
 const FULLSCREEN_HEADER_HEIGHT = 48;
 const DEFAULT_SANDBOX_PERMISSIONS = 'allow-scripts allow-same-origin allow-forms';
 
-const DISPLAY_MODE_LAYOUTS: Record<GooseDisplayMode, DimensionLayout> = {
+const DISPLAY_MODE_LAYOUTS: Record<LuminaDisplayMode, DimensionLayout> = {
   inline: { width: 'fixed', height: 'unbounded' },
   fullscreen: { width: 'fixed', height: 'fixed' },
   standalone: { width: 'fixed', height: 'fixed' },
@@ -142,7 +142,7 @@ const DISPLAY_MODE_LAYOUTS: Record<GooseDisplayMode, DimensionLayout> = {
 };
 
 function getContainerDimensions(
-  displayMode: GooseDisplayMode,
+  displayMode: LuminaDisplayMode,
   measuredWidth: number,
   measuredHeight: number
 ): McpUiHostContext['containerDimensions'] {
@@ -229,7 +229,7 @@ interface McpAppRendererProps {
   toolResult?: CallToolResult;
   toolCancelled?: McpAppToolCancelled;
   append?: (text: string) => void;
-  displayMode?: GooseDisplayMode;
+  displayMode?: LuminaDisplayMode;
   cachedHtml?: string;
   onDisplayModeChange?: OnDisplayModeChange;
 }
@@ -249,7 +249,7 @@ type FallbackRequestHandler = {
   ) => Promise<Record<string, unknown>>;
 };
 
-interface GooseAppFrameProps {
+interface LuminaAppFrameProps {
   html: string;
   sandbox: SandboxConfig;
   hostContext: McpUiHostContext;
@@ -282,7 +282,7 @@ interface GooseAppFrameProps {
 
 const SANDBOX_PROXY_READY_METHOD = 'ui/notifications/sandbox-proxy-ready';
 
-function GooseAppFrame({
+function LuminaAppFrame({
   html,
   sandbox,
   hostContext,
@@ -299,7 +299,7 @@ function GooseAppFrame({
   onSizeChanged,
   onInitialized,
   onError,
-}: GooseAppFrameProps) {
+}: LuminaAppFrameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bridgeRef = useRef<AppBridge | null>(null);
@@ -1035,7 +1035,7 @@ export default function McpAppRenderer({
                 'linear-gradient(90deg, transparent 0%, rgba(128,128,128,0.08) 40%, rgba(128,128,128,0.12) 50%, rgba(128,128,128,0.08) 60%, transparent 100%)',
             }}
           />
-          <FlyingBird className="relative z-10 scale-200 opacity-30" cycleInterval={120} />
+          <LuminaActivity className="relative z-10 scale-200 opacity-50" />
         </div>
       );
     }
@@ -1043,7 +1043,7 @@ export default function McpAppRenderer({
     if (!sandboxConfig) return null;
 
     return (
-      <GooseAppFrame
+      <LuminaAppFrame
         sandbox={sandboxConfig}
         html={html ?? ''}
         hostContext={hostContext}

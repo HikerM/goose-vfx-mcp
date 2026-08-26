@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defineMessages, useIntl } from '../i18n';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { SearchView } from './conversation/SearchView';
-import LoadingGoose from './LoadingGoose';
+import LoadingLumina from './LoadingLumina';
 import ProgressiveMessageList from './ProgressiveMessageList';
 import { MainPanelLayout } from './Layout/MainPanelLayout';
 import ChatInput from './ChatInput';
@@ -27,9 +27,11 @@ import { getTextAndImageContent, type Message, type UserInput } from '../types/m
 import { substituteParameters } from '../utils/parameterSubstitution';
 import { useAutoSubmit } from '../hooks/useAutoSubmit';
 import LuminaLogo from './LuminaLogo';
-import EnvironmentBadge from './GooseSidebar/EnvironmentBadge';
+import EnvironmentBadge from './LuminaSidebar/EnvironmentBadge';
 import SessionActionsHeader from './SessionActionsHeader';
 import { isAcpRecovering, subscribeToAcpRecovery } from '../acp/acpConnection';
+import { PRIMARY_HOMEPAGE_URL } from '../distribution-config';
+import { isProjectWorkspacePath } from '../utils/navigationUtils';
 
 const i18n = defineMessages({
   failedToLoadSession: {
@@ -137,7 +139,7 @@ export default function BaseChat({
   }, [initialMessage, recipe?.prompt, session?.user_recipe_values]);
 
   // noAutoSubmit only suppresses auto-submitting the initial prompt of a fresh session
-  // (goose://new-session?prompt=...). Once the conversation has messages, later flows
+  // (lumina://new-session?prompt=...). Once the conversation has messages, later flows
   // such as forks or resumes should auto-submit normally.
   const suppressInitialAutoSubmit = noAutoSubmit && messages.length === 0;
   const canAutoSubmit =
@@ -316,7 +318,8 @@ export default function BaseChat({
         params.set('shouldStartAgent', 'true');
       }
 
-      navigate(`/pair?${params.toString()}`, {
+      const targetPath = isProjectWorkspacePath(location.pathname) ? location.pathname : '/pair';
+      navigate(`${targetPath}?${params.toString()}`, {
         state: {
           disableAnimation: true,
           initialMessage: editedMessage ? { msg: editedMessage, images: [] } : undefined,
@@ -408,17 +411,26 @@ export default function BaseChat({
         <div className="flex flex-col flex-1 min-h-0 relative">
           {/* Lumina watermark - top right */}
           <div className="absolute top-[14px] right-4 z-[60] flex flex-row items-center gap-1">
-            <a
-              href="https://goose-docs.ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-drag flex flex-row items-center gap-1 hover:opacity-80 transition-opacity"
-            >
-              <LuminaLogo size="tiny" hover={false} />
-              <span className="text-sm leading-none text-text-secondary -translate-y-px">
-                Lumina
-              </span>
-            </a>
+            {PRIMARY_HOMEPAGE_URL ? (
+              <a
+                href={PRIMARY_HOMEPAGE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="no-drag flex flex-row items-center gap-1 hover:opacity-80 transition-opacity"
+              >
+                <LuminaLogo size="tiny" hover={false} />
+                <span className="text-sm leading-none text-text-secondary -translate-y-px">
+                  Lumina
+                </span>
+              </a>
+            ) : (
+              <div className="flex flex-row items-center gap-1">
+                <LuminaLogo size="tiny" hover={false} />
+                <span className="text-sm leading-none text-text-secondary -translate-y-px">
+                  Lumina
+                </span>
+              </div>
+            )}
             <EnvironmentBadge className="translate-y-px" />
           </div>
 
@@ -474,7 +486,7 @@ export default function BaseChat({
 
           {chatState !== ChatState.Idle && (
             <div className="absolute bottom-1 left-4 z-20 pointer-events-none">
-              <LoadingGoose chatState={chatState} message={progressMessage} />
+              <LoadingLumina chatState={chatState} message={progressMessage} />
             </div>
           )}
         </div>

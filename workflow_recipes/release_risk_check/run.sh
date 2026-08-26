@@ -9,4 +9,4 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-goose run --recipe "$SCRIPT_DIR/recipe.yaml" --params "version=$1"
+lumina run --recipe "$SCRIPT_DIR/recipe.yaml" --params "version=$1"

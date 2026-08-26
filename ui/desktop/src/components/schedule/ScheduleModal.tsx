@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent, useCallback } from 'react';
-import type { ScheduledJobDto } from '@aaif/goose-sdk';
+import type { ScheduledJobDto } from '@hikerm/lumina-sdk';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -18,7 +18,7 @@ const i18n = defineMessages({
   deepLink: { id: 'scheduleModal.deepLink', defaultMessage: 'Deep link' },
   browseYaml: { id: 'scheduleModal.browseYaml', defaultMessage: 'Browse for YAML file...' },
   selected: { id: 'scheduleModal.selected', defaultMessage: 'Selected: {path}' },
-  deepLinkPlaceholder: { id: 'scheduleModal.deepLinkPlaceholder', defaultMessage: 'Paste goose://recipe link here...' },
+  deepLinkPlaceholder: { id: 'scheduleModal.deepLinkPlaceholder', defaultMessage: 'Paste lumina://recipe link here...' },
   recipeParsed: { id: 'scheduleModal.recipeParsed', defaultMessage: 'Recipe parsed successfully' },
   recipeTitle: { id: 'scheduleModal.recipeTitle', defaultMessage: 'Title: {title}' },
   recipeDescription: { id: 'scheduleModal.recipeDescription', defaultMessage: 'Description: {description}' },
@@ -28,7 +28,7 @@ const i18n = defineMessages({
   creating: { id: 'scheduleModal.creating', defaultMessage: 'Creating...' },
   updateSchedule: { id: 'scheduleModal.updateSchedule', defaultMessage: 'Update Schedule' },
   createSchedule: { id: 'scheduleModal.createSchedule', defaultMessage: 'Create Schedule' },
-  invalidDeepLink: { id: 'scheduleModal.invalidDeepLink', defaultMessage: 'Invalid deep link. Please use a goose://recipe link.' },
+  invalidDeepLink: { id: 'scheduleModal.invalidDeepLink', defaultMessage: 'Invalid deep link. Please use a lumina://recipe link.' },
   failedReadFile: { id: 'scheduleModal.failedReadFile', defaultMessage: 'Failed to read the selected file.' },
   failedParseRecipe: { id: 'scheduleModal.failedParseRecipe', defaultMessage: 'Failed to parse recipe from file.' },
   invalidFileType: { id: 'scheduleModal.invalidFileType', defaultMessage: 'Invalid file type: Please select a YAML file (.yaml or .yml)' },

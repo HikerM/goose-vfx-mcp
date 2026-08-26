@@ -33,6 +33,16 @@ export type ViewOptions = {
   pendingScheduleDeepLink?: string;
 };
 
+export function isProjectWorkspacePath(pathname: string): boolean {
+  return /^\/projects\/[^/]+\/?$/.test(pathname);
+}
+
+export function projectTaskPath(projectId: string, sessionId?: string): string {
+  const path = `/projects/${encodeURIComponent(projectId)}`;
+  if (!sessionId) return path;
+  return `${path}?resumeSessionId=${encodeURIComponent(sessionId)}`;
+}
+
 export const createNavigationHandler = (navigate: NavigateFunction) => {
   return (view: View, options?: ViewOptions) => {
     switch (view) {

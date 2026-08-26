@@ -8,7 +8,7 @@ parameters:
   - key: target
     input_type: string
     requirement: required
-    description: "the run we want to improve (typically a goose run)"
+    description: "the run we want to improve (typically a lumina run)"
   - key: reference
     input_type: string
     requirement: required
@@ -26,20 +26,20 @@ extensions:
     bundled: true
     description: Core tool for file operations, shell commands, and code analysis
 
-instructions: analyze why goose (the target run) failed a task that the reference run passed, and suggest what might change in goose to fix it
+instructions: analyze why lumina (the target run) failed a task that the reference run passed, and suggest what might change in lumina to fix it
 
 prompt: |
   you are analyzing a single harbor benchmark task where the reference run
-  succeeded and the target run (typically goose) failed. the goal is to
+  succeeded and the target run (typically lumina) failed. the goal is to
   form a theory about *why* target failed and suggest what we could change
-  in goose to fix it. this is analysis, not implementation — no code
+  in lumina to fix it. this is analysis, not implementation — no code
   changes, no worktrees.
 
   target run (the one that failed):     {{ target }}
   reference run (the one that passed):  {{ reference }}
   task:                                 {{ task }}
 
-  this recipe assumes it is launched from the root of the goose repo
+  this recipe assumes it is launched from the root of the lumina repo
   (the current working directory contains `evals/harbor/`). all paths
   below are relative to that.
 
@@ -115,7 +115,7 @@ prompt: |
     per agent step. compact view:
     `jq '.steps[] | {step_id, source, message, tool_calls: [.tool_calls[]?.function_name]}' "$TRIAL_DIR/agent/trajectory.json"`
   - `$TRIAL_DIR/agent/<harness>.txt` — raw log. filename varies by harness
-    (commonly `goose.txt` or `pi.txt`). don't guess; run
+    (commonly `lumina.txt` or `pi.txt`). don't guess; run
     `ls "$TRIAL_DIR/agent/"` and use whatever .txt is there.
 
   for each side identify:
@@ -140,22 +140,22 @@ prompt: |
   tail -80 "$TARGET_DIR/verifier/test-stdout.txt"
   ```
 
-  ## step 6: look at goose source for a theory
+  ## step 6: look at lumina source for a theory
 
-  the target is (typically) goose. once you have a failure mode, dig into
-  the goose source (the current working directory) to see if there's
+  the target is (typically) lumina. once you have a failure mode, dig into
+  the lumina source (the current working directory) to see if there's
   something there that could plausibly be improved. relevant places
   depending on what you saw:
 
-  - `crates/goose/src/agents/` — agent loop, tool-call handling,
+  - `crates/lumina/src/agents/` — agent loop, tool-call handling,
     context management
-  - `crates/goose/src/providers/` — provider-specific quirks (prompt
+  - `crates/lumina/src/providers/` — provider-specific quirks (prompt
     shape, streaming, tool-call format)
-  - `crates/goose-mcp/src/developer/` — the developer extension, where
+  - `crates/lumina-mcp/src/developer/` — the developer extension, where
     most shell/file tools live
-  - `crates/goose/src/prompts/` and any system-prompt strings — what
+  - `crates/lumina/src/prompts/` and any system-prompt strings — what
     we're telling the model about how to behave
-  - `crates/goose-cli/src/` — cli-side behavior (less likely to matter
+  - `crates/lumina-cli/src/` — cli-side behavior (less likely to matter
     for bench)
 
   use `rg` to search; don't grep the world. if the reference run used a
@@ -176,8 +176,8 @@ prompt: |
     failure mode named
   - **theory** — why target failed in mechanism terms, not vibes. "the
     developer extension's text_editor truncates files >2MB and the task
-    output was 3MB" beats "goose got confused".
-  - **what we might change in goose** — concrete, but open-ended. could be
+    output was 3MB" beats "lumina got confused".
+  - **what we might change in lumina** — concrete, but open-ended. could be
     a prompt tweak, a tool behavior change, a default config, a new
     capability, or "this is a one-off task quirk and not worth chasing".
     cite the source files you looked at. it's fine to list more than one

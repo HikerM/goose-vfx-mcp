@@ -2,11 +2,28 @@ const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 const { resolve } = require('path');
 
-const isLinuxVulkanBuild = process.env.GOOSE_DESKTOP_LINUX_VARIANT === 'vulkan';
+const isLinuxVulkanBuild = process.env.LUMINA_DESKTOP_LINUX_VARIANT === 'vulkan';
+const distributionMode = process.env.LUMINA_DISTRIBUTION_MODE || 'portable';
+const releaseOwner = process.env.LUMINA_RELEASE_OWNER;
+const releaseRepo = process.env.LUMINA_RELEASE_REPO;
+const publisherName = process.env.LUMINA_PUBLISHER_NAME || 'Lumina contributors';
+const productHomepage = process.env.LUMINA_HOMEPAGE?.trim() || undefined;
+
+if (distributionMode === 'github' && (!releaseOwner || !releaseRepo)) {
+  throw new Error('GitHub distribution requires LUMINA_RELEASE_OWNER and LUMINA_RELEASE_REPO');
+}
 
 let cfg = {
   asar: true,
-  extraResource: ['src/bin', 'src/images', 'src/app-update.yml', 'src/custom-distribution.json'],
+  extraResource: [
+    'src/bin',
+    'src/images',
+    'src/custom-distribution.json',
+    resolve(__dirname, '../../LICENSE'),
+    resolve(__dirname, '../../NOTICE'),
+    resolve(__dirname, '../../MODIFICATIONS.md'),
+    resolve(__dirname, '../../THIRD_PARTY_NOTICES.md'),
+  ],
   icon: 'src/images/icon',
   // Windows specific configuration
   win32: {
@@ -20,7 +37,7 @@ let cfg = {
   protocols: [
     {
       name: 'LuminaProtocol',
-      schemes: ['goose'],
+      schemes: ['lumina'],
     },
   ],
   // macOS Info.plist extensions for drag-and-drop support
@@ -60,19 +77,22 @@ if (process.env.APPLE_TEAM_ID) {
 module.exports = {
   packagerConfig: cfg,
   rebuildConfig: {},
-  publishers: [
-    {
-      name: '@electron-forge/publisher-github',
-      config: {
-        repository: {
-          owner: 'HikerM',
-          name: 'goose-vfx-mcp',
-        },
-        prerelease: false,
-        draft: true,
-      },
-    },
-  ],
+  publishers:
+    distributionMode === 'github'
+      ? [
+          {
+            name: '@electron-forge/publisher-github',
+            config: {
+              repository: {
+                owner: releaseOwner,
+                name: releaseRepo,
+              },
+              prerelease: false,
+              draft: true,
+            },
+          },
+        ]
+      : [],
   makers: [
     {
       name: '@electron-forge/maker-zip',
@@ -89,8 +109,8 @@ module.exports = {
       config: {
         name: 'Lumina',
         bin: 'Lumina',
-        maintainer: 'AAIF (Agentic AI Foundation)',
-        homepage: 'https://goose-docs.ai/',
+        maintainer: publisherName,
+        ...(productHomepage ? { homepage: productHomepage } : {}),
         categories: ['Development'],
         desktopTemplate: './forge.deb.desktop',
         options: {
@@ -105,8 +125,8 @@ module.exports = {
       config: {
         name: 'Lumina',
         bin: 'Lumina',
-        maintainer: 'AAIF (Agentic AI Foundation)',
-        homepage: 'https://goose-docs.ai/',
+        maintainer: publisherName,
+        ...(productHomepage ? { homepage: productHomepage } : {}),
         categories: ['Development'],
         desktopTemplate: './forge.rpm.desktop',
         options: {
@@ -120,13 +140,13 @@ module.exports = {
       name: '@electron-forge/maker-flatpak',
       config: {
         options: {
-          id: 'io.github.block.Goose', // NOTE: kept for backwards compat with existing installs
+          id: 'io.github.hikerm.Lumina',
           productName: 'Lumina',
           categories: ['Development'],
           icon: {
             '512x512': 'src/images/icon-512.png',
           },
-          homepage: 'https://goose-docs.ai/',
+          ...(productHomepage ? { homepage: productHomepage } : {}),
           runtimeVersion: '25.08',
           baseVersion: '25.08',
           bin: 'Lumina',

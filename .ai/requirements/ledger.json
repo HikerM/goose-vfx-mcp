@@ -1,0 +1,364 @@
+{
+  "schema_version": "1.0.0",
+  "revision": 3,
+  "requirements": [
+    {
+      "type": "functional",
+      "source": "user",
+      "status": "active",
+      "dependencies": [],
+      "conflicts_with": [],
+      "acceptance": [
+        "Saving a provider preserves other configured providers and secrets.",
+        "Connection testing uses the selected provider's real configuration without sending project or conversation content.",
+        "A new session and an existing session can both use the selected provider and model.",
+        "Vendor-owned model IDs, API paths, OAuth identifiers, and endpoint hostnames remain exactly as required by that vendor."
+      ],
+      "id": "REQ-001",
+      "priority": "must",
+      "statement": "All supported model providers and custom OpenAI-compatible providers must remain configurable, testable, selectable, and usable after the Lumina separation; external provider IDs and real endpoints must not be mechanically renamed.",
+      "change_type": "modify",
+      "targets": [
+        "CAP-001",
+        "CAP-002"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina-providers",
+          "crates/lumina/src/config",
+          "crates/lumina/src/acp",
+          "ui/desktop/src/acp",
+          "ui/desktop/src/components/settings/providers"
+        ],
+        "apis": [
+          "provider configuration ACP methods",
+          "session config options"
+        ],
+        "data": [
+          "provider config",
+          "provider secrets",
+          "session provider/model state"
+        ],
+        "permissions": [
+          "provider network egress only after explicit configuration or connection test"
+        ],
+        "tests": [
+          "provider config persistence",
+          "custom provider CRUD",
+          "provider switching for existing sessions",
+          "live provider smoke test when credentials are supplied"
+        ],
+        "migrations": [
+          "preserve existing Lumina provider config and import supported legacy provider config"
+        ]
+      },
+      "updated_at": "2026-08-26T05:34:33+00:00"
+    },
+    {
+      "type": "functional",
+      "source": "user",
+      "status": "active",
+      "dependencies": [],
+      "conflicts_with": [],
+      "acceptance": [
+        "Opening the same project directory returns the same project and preserves its work history.",
+        "Project runs remain linked to their sessions after restart.",
+        "Existing sessions retain messages, working directory, provider, model, and Lumina mode.",
+        "An interrupted upgrade or import leaves the original data intact and can be retried or rolled back."
+      ],
+      "id": "REQ-002",
+      "priority": "must",
+      "statement": "Whole-project development workflows and all user sessions must remain persistent, reloadable, and usable across application restart, upgrade, custom installation path, and legacy-data import.",
+      "change_type": "modify",
+      "targets": [
+        "CAP-002",
+        "CAP-003",
+        "CAP-004"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina/src/session",
+          "crates/lumina/src/project",
+          "crates/lumina-legacy-migrator",
+          "ui/desktop/scripts"
+        ],
+        "apis": [
+          "session ACP methods",
+          "project workspace methods",
+          "legacy import command"
+        ],
+        "data": [
+          "sessions database",
+          "project tables",
+          "desktop settings",
+          "migration report"
+        ],
+        "permissions": [
+          "read-only access to legacy source",
+          "write access to Lumina staging and data directories"
+        ],
+        "tests": [
+          "fresh database",
+          "existing Lumina upgrade",
+          "legacy import",
+          "restart recovery",
+          "interrupted migration",
+          "custom install directory"
+        ],
+        "migrations": [
+          "Lumina schema 17 project tables",
+          "legacy session schema conversion",
+          "atomic staging activation"
+        ]
+      },
+      "updated_at": "2026-08-26T05:34:33+00:00"
+    },
+    {
+      "type": "security",
+      "source": "user",
+      "status": "active",
+      "dependencies": [],
+      "conflicts_with": [],
+      "acceptance": [
+        "The primary Lumina executable does not link the legacy migrator.",
+        "The primary runtime accepts lumina:// links only and preserves MCP and ACP standards compatibility.",
+        "Legacy data is verified and copied by a separate importer before being transformed into the Lumina schema and trust domain.",
+        "Cold start produces no non-loopback network traffic.",
+        "Legal attribution remains in LICENSE, NOTICE, MODIFICATIONS, and SBOM artifacts."
+      ],
+      "id": "REQ-003",
+      "priority": "must",
+      "statement": "The Lumina commercial runtime must not contain or depend on the legacy product protocol, storage namespace, release infrastructure, telemetry endpoints, or trust domains; legacy compatibility must be isolated in an optional one-time importer.",
+      "change_type": "replace",
+      "targets": [
+        "CAP-004"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina-cli",
+          "crates/lumina-legacy-migrator",
+          "crates/lumina/src/session",
+          "crates/lumina-evidence-db",
+          "crates/lumina/src/mcp_platform",
+          "ui/desktop"
+        ],
+        "apis": [
+          "lumina:// deep links",
+          "legacy import executable",
+          "Lumina-owned ACP extension methods"
+        ],
+        "data": [
+          "legacy source snapshot",
+          "Lumina schema baseline",
+          "evidence hashes and signatures",
+          "migration audit report"
+        ],
+        "permissions": [
+          "explicit user authorization for legacy import",
+          "deny non-loopback egress by default"
+        ],
+        "tests": [
+          "runtime banned-string scan",
+          "clean-VM packet capture",
+          "legacy import source immutability",
+          "hash/signature migration"
+        ],
+        "migrations": [
+          "separate legacy importer",
+          "Lumina schema baseline",
+          "legacy-to-Lumina ID mapping and re-issuance"
+        ]
+      },
+      "updated_at": "2026-08-26T05:34:33+00:00"
+    },
+    {
+      "type": "user-experience",
+      "source": "user",
+      "status": "active",
+      "dependencies": [],
+      "conflicts_with": [],
+      "acceptance": [
+        "安装器、首次启动、主页、项目、任务、会话、设置、MCP、扩展、通知和错误提示全部使用简体中文。",
+        "删除任意必需的简体中文翻译键会使生产构建失败，而不是显示英文默认文案。",
+        "供应商名称、模型标识、协议缩写、文件路径、命令和代码保持真实技术值。",
+        "第三方英文错误被映射为中文原因和处理建议，未知错误显示中文错误编号。"
+      ],
+      "id": "REQ-004",
+      "priority": "must",
+      "statement": "Lumina 自有的全部用户可见内容必须统一使用简体中文，生产版本不得在翻译缺失时回退为英文。",
+      "change_type": "modify",
+      "targets": [
+        "CAP-009"
+      ],
+      "impact": {
+        "modules": [
+          "ui/desktop/src/i18n",
+          "ui/desktop/src/components",
+          "ui/desktop/src/main.ts",
+          "ui/desktop/installer",
+          "crates/lumina"
+        ],
+        "apis": [
+          "getLocale",
+          "loadMessages",
+          "desktop notification messages",
+          "runtime error mapping"
+        ],
+        "data": [
+          "Simplified Chinese message catalog",
+          "localized error catalog"
+        ],
+        "permissions": [],
+        "tests": [
+          "user-visible string scan",
+          "Simplified Chinese screenshot tests",
+          "missing-key production build failure",
+          "installer language acceptance"
+        ],
+        "migrations": [
+          "preserve user settings while forcing the commercial display baseline to zh-CN"
+        ]
+      },
+      "updated_at": "2026-08-26T05:34:33+00:00"
+    },
+    {
+      "type": "functional",
+      "source": "user",
+      "status": "active",
+      "dependencies": [],
+      "conflicts_with": [],
+      "acceptance": [
+        "同一项目目录在重启后保留任务、会话、运行、步骤、检查点、变更和验证历史。",
+        "智能体可以在授权范围内完成至少三个关联文件的修改并运行真实验证命令。",
+        "用户可以逐文件和逐变更块接受或拒绝修改，并可以回滚整个任务。",
+        "本地模型在 GPU 和纯 CPU 环境分别完成规定的项目任务，且不静默切换云端。",
+        "浏览器和桌面控制只能在统一权限、审计、停止和恢复能力完成后开放。"
+      ],
+      "id": "REQ-005",
+      "priority": "must",
+      "statement": "Lumina 必须从以对话为主的桌面应用演进为项目级智能开发平台，支持持久任务、多文件变更、终端验证、Git 隔离、工具调用、中断恢复、审核和回滚。",
+      "change_type": "modify",
+      "targets": [
+        "CAP-002",
+        "CAP-003",
+        "CAP-005",
+        "CAP-008",
+        "CAP-012"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina/src/project",
+          "crates/lumina/src/session",
+          "crates/lumina/src/agents",
+          "crates/lumina-local-inference",
+          "crates/lumina-mcp",
+          "ui/desktop/src/components/projects",
+          "ui/desktop/src/acp"
+        ],
+        "apis": [
+          "Lumina project task protocol",
+          "tool execution protocol",
+          "permission decisions",
+          "checkpoint and change-set methods"
+        ],
+        "data": [
+          "projects",
+          "work items",
+          "runs",
+          "steps",
+          "checkpoints",
+          "change sets",
+          "validation runs",
+          "artifacts",
+          "audit events"
+        ],
+        "permissions": [
+          "workspace roots",
+          "file operations",
+          "commands",
+          "network",
+          "browser",
+          "desktop",
+          "MCP"
+        ],
+        "tests": [
+          "multi-file project task",
+          "terminal cancellation",
+          "restart recovery",
+          "diff approval and rollback",
+          "Git conflict isolation",
+          "GPU execution",
+          "CPU fallback"
+        ],
+        "migrations": [
+          "versioned project task schema",
+          "artifact storage migration",
+          "audit event schema"
+        ]
+      },
+      "updated_at": "2026-08-26T05:34:33+00:00"
+    },
+    {
+      "type": "security",
+      "source": "user",
+      "status": "active",
+      "dependencies": [],
+      "conflicts_with": [],
+      "acceptance": [
+        "所有文件、命令、网络、模型、浏览器、桌面和 MCP 操作经过同一个策略决策入口。",
+        "密钥不以明文出现在普通配置、日志、数据库字段或界面中。",
+        "冷启动和离线模式没有未经授权的非本机连接。",
+        "安装包、更新清单和企业扩展均可验证签名，篡改后被拒绝。",
+        "升级、迁移和扩展更新失败均可恢复上一可用状态。"
+      ],
+      "id": "REQ-006",
+      "priority": "must",
+      "statement": "Lumina 企业版本必须具备统一权限、凭据保险库、出站网络控制、审计证据、签名发布、数据恢复和扩展供应链治理。",
+      "change_type": "add",
+      "targets": [],
+      "impact": {
+        "modules": [
+          "crates/lumina",
+          "crates/lumina-evidence-db",
+          "crates/lumina-mcp",
+          "ui/desktop",
+          "ui/desktop/installer"
+        ],
+        "apis": [
+          "policy decision API",
+          "credential reference API",
+          "audit query and export API",
+          "signed extension manifest"
+        ],
+        "data": [
+          "policy rules",
+          "credential references",
+          "audit events",
+          "signed update metadata",
+          "extension provenance"
+        ],
+        "permissions": [
+          "deny by default",
+          "administrator-enforced policy",
+          "explicit high-risk approval"
+        ],
+        "tests": [
+          "permission bypass",
+          "secret scanning",
+          "clean-VM packet capture",
+          "tamper rejection",
+          "upgrade rollback",
+          "extension rollback"
+        ],
+        "migrations": [
+          "audit schema",
+          "credential reference migration",
+          "policy schema",
+          "extension provenance schema"
+        ]
+      },
+      "updated_at": "2026-08-26T05:34:33+00:00"
+    }
+  ],
+  "updated_at": "2026-08-26T05:34:33+00:00"
+}

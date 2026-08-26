@@ -8,6 +8,10 @@ import {
 } from './distribution-config';
 
 export function getDistributionInfo(): DistributionInfo {
+  if (process.env.LUMINA_DISTRIBUTION_MODE === 'github') {
+    return parseDistributionInfo({ mode: 'github' });
+  }
+
   const configPath = app.isPackaged
     ? path.join(process.resourcesPath, 'custom-distribution.json')
     : path.join(app.getAppPath(), 'src', 'custom-distribution.json');

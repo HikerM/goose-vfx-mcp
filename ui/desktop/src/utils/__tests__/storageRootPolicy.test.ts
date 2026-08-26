@@ -5,7 +5,7 @@ import {
   deriveWindowsShimsPath,
   preflightWindowsStorageDirectory,
   preflightWindowsStorageRoot,
-  resolveDesktopGoosePathRoot,
+  resolveDesktopLuminaPathRoot,
   runAfterStorageReady,
   isPathWithinRoot,
   resolveManagedPath,
@@ -40,13 +40,13 @@ function preflightFs(existing: string[] = []): WindowsStoragePreflightFileSystem
   };
 }
 
-describe('resolveDesktopGoosePathRoot', () => {
-  it('only permits nested .goosehints files and rejects sensitive managed paths', () => {
-    expect(isAllowedManagedFilePath('Projects/demo/.goosehints')).toBe(true);
-    expect(isAllowedManagedFilePath('.goosehints')).toBe(false);
-    expect(isAllowedManagedFilePath('settings/.goosehints')).toBe(false);
+describe('resolveDesktopLuminaPathRoot', () => {
+  it('only permits nested .luminahints files and rejects sensitive managed paths', () => {
+    expect(isAllowedManagedFilePath('Projects/demo/.luminahints')).toBe(true);
+    expect(isAllowedManagedFilePath('.luminahints')).toBe(false);
+    expect(isAllowedManagedFilePath('settings/.luminahints')).toBe(false);
     expect(isAllowedManagedFilePath('bin/tool.exe')).toBe(false);
-    expect(isAllowedManagedFilePath('../outside/.goosehints')).toBe(false);
+    expect(isAllowedManagedFilePath('../outside/.luminahints')).toBe(false);
     expect(isAllowedManagedFilePath('Projects/demo/config.json')).toBe(false);
   });
 
@@ -66,14 +66,14 @@ describe('resolveDesktopGoosePathRoot', () => {
   });
 
   it('uses relative path boundaries instead of string prefixes', () => {
-    expect(isPathWithinRoot('/managed/goose', '/managed/goose/config/file')).toBe(true);
-    expect(isPathWithinRoot('/managed/goose', '/managed/goose-copy/file')).toBe(false);
-    expect(isPathWithinRoot('/managed/goose', '/managed/goose/../outside')).toBe(false);
-    expect(() => resolveManagedPath('/managed/goose', '../outside')).toThrow();
-    expect(() => resolveManagedPath('/managed/goose', 'C:\\outside')).toThrow();
-    expect(isPathWithinRoot('D:\\Goose', 'd:\\goose\\config\\file')).toBe(true);
-    expect(isPathWithinRoot('D:\\Goose', 'D:\\Goose-copy\\file')).toBe(false);
-    expect(isPathWithinRoot('D:\\Goose', '\\\\server\\share\\file')).toBe(false);
+    expect(isPathWithinRoot('/managed/lumina', '/managed/lumina/config/file')).toBe(true);
+    expect(isPathWithinRoot('/managed/lumina', '/managed/lumina-copy/file')).toBe(false);
+    expect(isPathWithinRoot('/managed/lumina', '/managed/lumina/../outside')).toBe(false);
+    expect(() => resolveManagedPath('/managed/lumina', '../outside')).toThrow();
+    expect(() => resolveManagedPath('/managed/lumina', 'C:\\outside')).toThrow();
+    expect(isPathWithinRoot('D:\\Lumina', 'd:\\lumina\\config\\file')).toBe(true);
+    expect(isPathWithinRoot('D:\\Lumina', 'D:\\Lumina-copy\\file')).toBe(false);
+    expect(isPathWithinRoot('D:\\Lumina', '\\\\server\\share\\file')).toBe(false);
   });
   it('does not run a gated operation before storage is ready', async () => {
     let release!: () => void;
@@ -105,52 +105,52 @@ describe('resolveDesktopGoosePathRoot', () => {
   });
 
   it('falls back to the governed D root for missing or blank Windows configuration', () => {
-    expect(resolveDesktopGoosePathRoot(undefined, 'win32')).toBe('D:\\Goose');
-    expect(resolveDesktopGoosePathRoot('  ', 'win32')).toBe('D:\\Goose');
+    expect(resolveDesktopLuminaPathRoot(undefined, 'win32')).toBe('D:\\Lumina');
+    expect(resolveDesktopLuminaPathRoot('  ', 'win32')).toBe('D:\\Lumina');
   });
 
   it('accepts explicit D subdirectories on Windows', () => {
-    expect(resolveDesktopGoosePathRoot('d:/Goose Team/storage', 'win32')).toBe(
-      'd:\\Goose Team\\storage'
+    expect(resolveDesktopLuminaPathRoot('d:/Lumina Team/storage', 'win32')).toBe(
+      'd:\\Lumina Team\\storage'
     );
   });
 
   it('rejects C drive, relative, UNC, and bare drive roots on Windows', () => {
-    for (const candidate of ['C:\\Goose', 'Goose', '\\\\server\\share\\goose', 'D:\\']) {
-      expect(() => resolveDesktopGoosePathRoot(candidate, 'win32')).toThrow(/local D drive/i);
+    for (const candidate of ['C:\\Lumina', 'Lumina', '\\\\server\\share\\lumina', 'D:\\']) {
+      expect(() => resolveDesktopLuminaPathRoot(candidate, 'win32')).toThrow(/local D drive/i);
     }
   });
 
   it('keeps non-Windows behavior unchanged', () => {
-    expect(resolveDesktopGoosePathRoot('/tmp/goose', 'linux')).toBe('/tmp/goose');
-    expect(resolveDesktopGoosePathRoot(undefined, 'linux')).toBeUndefined();
+    expect(resolveDesktopLuminaPathRoot('/tmp/lumina', 'linux')).toBe('/tmp/lumina');
+    expect(resolveDesktopLuminaPathRoot(undefined, 'linux')).toBeUndefined();
   });
 
   it('derives Desktop user data and shim paths from the validated root', () => {
-    const root = resolveDesktopGoosePathRoot('D:\\Goose Team\\storage', 'win32')!;
-    expect(deriveDesktopUserDataPath(root, 'win32')).toBe('D:\\Goose Team\\storage\\desktop');
-    expect(deriveWindowsShimsPath(root, 'win32')).toBe('D:\\Goose Team\\storage\\bin');
+    const root = resolveDesktopLuminaPathRoot('D:\\Lumina Team\\storage', 'win32')!;
+    expect(deriveDesktopUserDataPath(root, 'win32')).toBe('D:\\Lumina Team\\storage\\desktop');
+    expect(deriveWindowsShimsPath(root, 'win32')).toBe('D:\\Lumina Team\\storage\\bin');
   });
 
   it('preflights the governed desktop and bin children', async () => {
-    const fileSystem = preflightFs(['D:\\', 'D:\\Goose']);
-    await preflightWindowsStorageDirectory('D:\\Goose\\desktop', fileSystem);
-    await preflightWindowsStorageDirectory('D:\\Goose\\bin', fileSystem);
-    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Goose\\desktop', { recursive: true });
-    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Goose\\bin', { recursive: true });
+    const fileSystem = preflightFs(['D:\\', 'D:\\Lumina']);
+    await preflightWindowsStorageDirectory('D:\\Lumina\\desktop', fileSystem);
+    await preflightWindowsStorageDirectory('D:\\Lumina\\bin', fileSystem);
+    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Lumina\\desktop', { recursive: true });
+    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Lumina\\bin', { recursive: true });
   });
 
   it('rejects an unsafe desktop or bin child before creating it', async () => {
     for (const child of ['desktop', 'bin']) {
-      const fileSystem = preflightFs(['D:\\', 'D:\\Goose']);
+      const fileSystem = preflightFs(['D:\\', 'D:\\Lumina']);
       const lstat = vi.mocked(fileSystem.lstat);
       lstat.mockImplementation(async (value: string) => {
-        if (value.toLowerCase() === `d:\\goose\\${child}`) {
+        if (value.toLowerCase() === `d:\\lumina\\${child}`) {
           return { isDirectory: () => true, isSymbolicLink: () => true } as never;
         }
         if (
-          value.toLowerCase() === 'd:\\goose' ||
-          !value.toLowerCase().startsWith('d:\\goose')
+          value.toLowerCase() === 'd:\\lumina' ||
+          !value.toLowerCase().startsWith('d:\\lumina')
         ) {
           return { isDirectory: () => true, isSymbolicLink: () => false } as never;
         }
@@ -158,58 +158,58 @@ describe('resolveDesktopGoosePathRoot', () => {
         throw error;
       });
       await expect(
-        preflightWindowsStorageDirectory(`D:\\Goose\\${child}`, fileSystem)
+        preflightWindowsStorageDirectory(`D:\\Lumina\\${child}`, fileSystem)
       ).rejects.toThrow(/local D drive/i);
       expect(fileSystem.mkdir).not.toHaveBeenCalled();
     }
   });
 
   it('rejects a non-directory child before creating it', async () => {
-    const fileSystem = preflightFs(['D:\\', 'D:\\Goose']);
+    const fileSystem = preflightFs(['D:\\', 'D:\\Lumina']);
     const lstat = vi.mocked(fileSystem.lstat);
     lstat.mockImplementation(async (value: string) => {
-      if (value.toLowerCase() === 'd:\\goose\\bin') {
+      if (value.toLowerCase() === 'd:\\lumina\\bin') {
         return { isDirectory: () => false, isSymbolicLink: () => false } as never;
       }
       return { isDirectory: () => true, isSymbolicLink: () => false } as never;
     });
 
     await expect(
-      preflightWindowsStorageDirectory('D:\\Goose\\bin', fileSystem)
+      preflightWindowsStorageDirectory('D:\\Lumina\\bin', fileSystem)
     ).rejects.toThrow(/local D drive/i);
     expect(fileSystem.mkdir).not.toHaveBeenCalled();
   });
 
   it('rejects a child whose real path differs before creating it', async () => {
-    const fileSystem = preflightFs(['D:\\', 'D:\\Goose', 'D:\\Goose\\desktop']);
+    const fileSystem = preflightFs(['D:\\', 'D:\\Lumina', 'D:\\Lumina\\desktop']);
     const realpath = vi.mocked(fileSystem.realpath);
     realpath.mockImplementation(async (value: string) =>
-      value.toLowerCase() === 'd:\\goose\\desktop' ? 'D:\\Redirected' : value
+      value.toLowerCase() === 'd:\\lumina\\desktop' ? 'D:\\Redirected' : value
     );
 
     await expect(
-      preflightWindowsStorageDirectory('D:\\Goose\\desktop', fileSystem)
+      preflightWindowsStorageDirectory('D:\\Lumina\\desktop', fileSystem)
     ).rejects.toThrow(/local D drive/i);
     expect(fileSystem.mkdir).not.toHaveBeenCalled();
   });
 
   it('preflights an existing directory chain without creating it', async () => {
-    const fileSystem = preflightFs(['D:\\', 'D:\\Goose']);
-    await preflightWindowsStorageRoot('D:\\Goose', fileSystem);
+    const fileSystem = preflightFs(['D:\\', 'D:\\Lumina']);
+    await preflightWindowsStorageRoot('D:\\Lumina', fileSystem);
     expect(fileSystem.mkdir).not.toHaveBeenCalled();
-    expect(fileSystem.access).toHaveBeenCalledWith('D:\\Goose', expect.any(Number));
+    expect(fileSystem.access).toHaveBeenCalledWith('D:\\Lumina', expect.any(Number));
   });
 
   it('creates a missing root only after its existing ancestor passes inspection', async () => {
     const fileSystem = preflightFs(['D:\\']);
-    await preflightWindowsStorageRoot('D:\\Goose', fileSystem);
-    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Goose', { recursive: true });
+    await preflightWindowsStorageRoot('D:\\Lumina', fileSystem);
+    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Lumina', { recursive: true });
   });
 
   it('creates nested missing parents from the nearest verified ancestor', async () => {
     const fileSystem = preflightFs(['D:\\']);
-    await preflightWindowsStorageRoot('D:\\Goose Team\\storage', fileSystem);
-    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Goose Team\\storage', {
+    await preflightWindowsStorageRoot('D:\\Lumina Team\\storage', fileSystem);
+    expect(fileSystem.mkdir).toHaveBeenCalledWith('D:\\Lumina Team\\storage', {
       recursive: true,
     });
   });
@@ -221,17 +221,17 @@ describe('resolveDesktopGoosePathRoot', () => {
       isDirectory: () => true,
       isSymbolicLink: () => true,
     }) as never);
-    await expect(preflightWindowsStorageRoot('D:\\Goose', fileSystem)).rejects.toThrow(
+    await expect(preflightWindowsStorageRoot('D:\\Lumina', fileSystem)).rejects.toThrow(
       /local D drive/i
     );
     expect(fileSystem.mkdir).not.toHaveBeenCalled();
   });
 
   it('rejects a directory whose real path differs before attempting mkdir', async () => {
-    const fileSystem = preflightFs(['D:\\', 'D:\\Goose']);
+    const fileSystem = preflightFs(['D:\\', 'D:\\Lumina']);
     const realpath = vi.mocked(fileSystem.realpath);
     realpath.mockResolvedValueOnce('D:\\Other');
-    await expect(preflightWindowsStorageRoot('D:\\Goose', fileSystem)).rejects.toThrow(
+    await expect(preflightWindowsStorageRoot('D:\\Lumina', fileSystem)).rejects.toThrow(
       /local D drive/i
     );
     expect(fileSystem.mkdir).not.toHaveBeenCalled();

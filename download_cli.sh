@@ -2,39 +2,39 @@
 set -eu
 
 ##############################################################################
-# goose CLI Install Script
+# lumina CLI Install Script
 #
-# This script downloads the latest stable 'goose' CLI binary from GitHub releases
+# This script downloads the latest stable 'lumina' CLI binary from GitHub releases
 # and installs it to your system.
 #
 # Supported OS: macOS (darwin), Linux, Windows (MSYS2/Git Bash/WSL)
 # Supported Architectures: x86_64, arm64
 #
 # Usage:
-#   curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash
+#   curl -fsSL https://github.com/HikerM/lumina/releases/download/stable/download_cli.sh | bash
 #
 # Environment variables:
-#   GOOSE_BIN_DIR  - Directory to which goose will be installed (default: $HOME/.local/bin)
-#   GOOSE_VERSION  - Optional: specific version to install (e.g., "v1.0.25"). Overrides CANARY. Can be in the format vX.Y.Z, vX.Y.Z-suffix, or X.Y.Z
-#   GOOSE_PROVIDER - Optional: provider for goose
-#   GOOSE_MODEL    - Optional: model for goose
-#   GOOSE_LINUX_VARIANT - Optional: Linux package variant to install (`standard`, `vulkan`, or `musl`)
-#   GOOSE_WINDOWS_VARIANT - Optional: Windows package variant to install (`standard` or `cuda`)
+#   LUMINA_BIN_DIR  - Directory to which lumina will be installed (default: $HOME/.local/bin)
+#   LUMINA_VERSION  - Optional: specific version to install (e.g., "v1.0.25"). Overrides CANARY. Can be in the format vX.Y.Z, vX.Y.Z-suffix, or X.Y.Z
+#   LUMINA_PROVIDER - Optional: provider for lumina
+#   LUMINA_MODEL    - Optional: model for lumina
+#   LUMINA_LINUX_VARIANT - Optional: Linux package variant to install (`standard`, `vulkan`, or `musl`)
+#   LUMINA_WINDOWS_VARIANT - Optional: Windows package variant to install (`standard` or `cuda`)
 #   CANARY         - Optional: if set to "true", downloads from canary release instead of stable
-#   CONFIGURE      - Optional: if set to "false", disables running goose configure interactively
+#   CONFIGURE      - Optional: if set to "false", disables running lumina configure interactively
 #   ** other provider specific environment variables (eg. DATABRICKS_HOST)
 ##############################################################################
 
 # --- 1) Check for dependencies ---
 # Check for curl
 if ! command -v curl >/dev/null 2>&1; then
-  echo "Error: 'curl' is required to download goose. Please install curl and try again."
+  echo "Error: 'curl' is required to download lumina. Please install curl and try again."
   exit 1
 fi
 
 # Check for tar or unzip (depending on OS)
 if ! command -v tar >/dev/null 2>&1 && ! command -v unzip >/dev/null 2>&1; then
-  echo "Error: Either 'tar' or 'unzip' is required to extract goose. Please install one and try again."
+  echo "Error: Either 'tar' or 'unzip' is required to extract lumina. Please install one and try again."
   exit 1
 fi
 
@@ -54,34 +54,34 @@ fi
 
 
 # --- 2) Variables ---
-REPO="aaif-goose/goose"
-OUT_FILE="goose"
+REPO="HikerM/lumina"
+OUT_FILE="lumina"
 
 # Set default bin directory based on detected OS environment
 if [[ "${WINDIR:-}" ]] || [[ "${windir:-}" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
     # Native Windows environments - use Windows user profile path
-    DEFAULT_BIN_DIR="$USERPROFILE/goose"
+    DEFAULT_BIN_DIR="$USERPROFILE/lumina"
 else
     # Linux, macOS, and WSL all use the same bin directory
     DEFAULT_BIN_DIR="$HOME/.local/bin"
 fi
 
-GOOSE_BIN_DIR="${GOOSE_BIN_DIR:-$DEFAULT_BIN_DIR}"
+LUMINA_BIN_DIR="${LUMINA_BIN_DIR:-$DEFAULT_BIN_DIR}"
 RELEASE="${CANARY:-false}"
 CONFIGURE="${CONFIGURE:-true}"
-GOOSE_LINUX_VARIANT="${GOOSE_LINUX_VARIANT:-}"
-GOOSE_WINDOWS_VARIANT="${GOOSE_WINDOWS_VARIANT:-standard}"
-if [ -n "${GOOSE_VERSION:-}" ]; then
+LUMINA_LINUX_VARIANT="${LUMINA_LINUX_VARIANT:-}"
+LUMINA_WINDOWS_VARIANT="${LUMINA_WINDOWS_VARIANT:-standard}"
+if [ -n "${LUMINA_VERSION:-}" ]; then
   # Validate the version format
-  if [[ ! "$GOOSE_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-.*)?$ ]]; then
-    echo "[error]: invalid version '$GOOSE_VERSION'."
+  if [[ ! "$LUMINA_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-.*)?$ ]]; then
+    echo "[error]: invalid version '$LUMINA_VERSION'."
     echo "  expected: semver format vX.Y.Z, vX.Y.Z-suffix, or X.Y.Z"
     exit 1
   fi
-  GOOSE_VERSION=$(echo "$GOOSE_VERSION" | sed 's/^v\{0,1\}/v/') # Ensure the version string is prefixed with 'v' if not already present
-  RELEASE_TAG="$GOOSE_VERSION"
+  LUMINA_VERSION=$(echo "$LUMINA_VERSION" | sed 's/^v\{0,1\}/v/') # Ensure the version string is prefixed with 'v' if not already present
+  RELEASE_TAG="$LUMINA_VERSION"
 else
-  # If GOOSE_VERSION is not set, fall back to existing behavior for backwards compatibility
+  # If LUMINA_VERSION is not set, fall back to existing behavior for backwards compatibility
   RELEASE_TAG="$([[ "$RELEASE" == "true" ]] && echo "canary" || echo "stable")"
 fi
 
@@ -122,7 +122,7 @@ case "$OS" in
     OS="windows"
     ;;
   *)
-    echo "Error: Unsupported OS '$OS'. goose currently supports Linux, macOS, and Windows."
+    echo "Error: Unsupported OS '$OS'. lumina currently supports Linux, macOS, and Windows."
     exit 1
     ;;
 esac
@@ -153,14 +153,14 @@ detect_linux_musl() {
   return 1
 }
 
-if [ "$OS" = "linux" ] && [ -z "$GOOSE_LINUX_VARIANT" ]; then
+if [ "$OS" = "linux" ] && [ -z "$LUMINA_LINUX_VARIANT" ]; then
   if detect_linux_musl; then
-    GOOSE_LINUX_VARIANT="musl"
+    LUMINA_LINUX_VARIANT="musl"
   else
-    GOOSE_LINUX_VARIANT="standard"
+    LUMINA_LINUX_VARIANT="standard"
   fi
-elif [ -z "$GOOSE_LINUX_VARIANT" ]; then
-  GOOSE_LINUX_VARIANT="standard"
+elif [ -z "$LUMINA_LINUX_VARIANT" ]; then
+  LUMINA_LINUX_VARIANT="standard"
 fi
 
 # Debug output (safely handle undefined variables)
@@ -175,13 +175,13 @@ echo "Detected OS: $OS with ARCH $ARCH"
 
 # Build the filename and URL for the stable release
 if [ "$OS" = "darwin" ]; then
-  FILE="goose-$ARCH-apple-darwin.tar.bz2"
+  FILE="lumina-$ARCH-apple-darwin.tar.bz2"
   EXTRACT_CMD="tar"
 elif [ "$OS" = "windows" ]; then
-  case "$GOOSE_WINDOWS_VARIANT" in
+  case "$LUMINA_WINDOWS_VARIANT" in
     standard|cuda) ;;
     *)
-      echo "Error: Unsupported GOOSE_WINDOWS_VARIANT '$GOOSE_WINDOWS_VARIANT'. Expected 'standard' or 'cuda'."
+      echo "Error: Unsupported LUMINA_WINDOWS_VARIANT '$LUMINA_WINDOWS_VARIANT'. Expected 'standard' or 'cuda'."
       exit 1
       ;;
   esac
@@ -190,37 +190,37 @@ elif [ "$OS" = "windows" ]; then
     echo "Error: Windows currently only supports x86_64 architecture."
     exit 1
   fi
-  FILE="goose-$ARCH-pc-windows-msvc.zip"
-  if [ "$GOOSE_WINDOWS_VARIANT" = "cuda" ]; then
-    FILE="goose-$ARCH-pc-windows-msvc-cuda.zip"
+  FILE="lumina-$ARCH-pc-windows-msvc.zip"
+  if [ "$LUMINA_WINDOWS_VARIANT" = "cuda" ]; then
+    FILE="lumina-$ARCH-pc-windows-msvc-cuda.zip"
   fi
   EXTRACT_CMD="unzip"
-  OUT_FILE="goose.exe"
+  OUT_FILE="lumina.exe"
 else
-  case "$GOOSE_LINUX_VARIANT" in
+  case "$LUMINA_LINUX_VARIANT" in
     standard|vulkan|musl) ;;
     *)
-      echo "Error: Unsupported GOOSE_LINUX_VARIANT '$GOOSE_LINUX_VARIANT'. Expected 'standard', 'vulkan', or 'musl'."
+      echo "Error: Unsupported LUMINA_LINUX_VARIANT '$LUMINA_LINUX_VARIANT'. Expected 'standard', 'vulkan', or 'musl'."
       exit 1
       ;;
   esac
-  FILE="goose-$ARCH-unknown-linux-gnu.tar.bz2"
-  if [ "$GOOSE_LINUX_VARIANT" = "vulkan" ]; then
-    FILE="goose-$ARCH-unknown-linux-gnu-vulkan.tar.bz2"
-  elif [ "$GOOSE_LINUX_VARIANT" = "musl" ]; then
-    FILE="goose-$ARCH-unknown-linux-musl.tar.bz2"
+  FILE="lumina-$ARCH-unknown-linux-gnu.tar.bz2"
+  if [ "$LUMINA_LINUX_VARIANT" = "vulkan" ]; then
+    FILE="lumina-$ARCH-unknown-linux-gnu-vulkan.tar.bz2"
+  elif [ "$LUMINA_LINUX_VARIANT" = "musl" ]; then
+    FILE="lumina-$ARCH-unknown-linux-musl.tar.bz2"
   fi
   EXTRACT_CMD="tar"
 fi
 
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/$RELEASE_TAG/$FILE"
 
-# --- 4) Download & extract 'goose' binary ---
+# --- 4) Download & extract 'lumina' binary ---
 echo "Downloading $RELEASE_TAG release: $FILE..."
 if ! curl -sLf "$DOWNLOAD_URL" --output "$FILE"; then
   # If the download fails, only fall back to latest stable when no version was specified and canary was not requested).
-  if ! [ -n "${GOOSE_VERSION:-}" ] && [ "${CANARY:-false}" != "true" ]; then
-    LATEST_TAG=$(curl -s https://api.github.com/repos/aaif-goose/goose/releases/latest | \
+  if ! [ -n "${LUMINA_VERSION:-}" ] && [ "${CANARY:-false}" != "true" ]; then
+    LATEST_TAG=$(curl -s https://api.github.com/repos/HikerM/lumina/releases/latest | \
       grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
     if [ -z "$LATEST_TAG" ]; then
       echo "Error: Failed to download $DOWNLOAD_URL and latest tag unavailable"
@@ -242,7 +242,7 @@ if ! curl -sLf "$DOWNLOAD_URL" --output "$FILE"; then
 fi
 
 # Create a temporary directory for extraction
-TMP_DIR="/tmp/goose_install_$RANDOM"
+TMP_DIR="/tmp/lumina_install_$RANDOM"
 if ! mkdir -p "$TMP_DIR"; then
   echo "Error: Could not create temporary extraction directory"
   exit 1
@@ -289,44 +289,44 @@ set -e  # Re-enable immediate exit on error
 rm "$FILE" # clean up the downloaded archive
 
 # Determine the extraction directory (handle subdirectory in Windows packages)
-# Windows releases may contain files in a 'goose-package' subdirectory
+# Windows releases may contain files in a 'lumina-package' subdirectory
 EXTRACT_DIR="$TMP_DIR"
-if [ "$OS" = "windows" ] && [ -d "$TMP_DIR/goose-package" ]; then
-  echo "Found goose-package subdirectory, using that as extraction directory"
-  EXTRACT_DIR="$TMP_DIR/goose-package"
+if [ "$OS" = "windows" ] && [ -d "$TMP_DIR/lumina-package" ]; then
+  echo "Found lumina-package subdirectory, using that as extraction directory"
+  EXTRACT_DIR="$TMP_DIR/lumina-package"
 fi
 
 # Make binary executable
 if [ "$OS" = "windows" ]; then
-  chmod +x "$EXTRACT_DIR/goose.exe"
+  chmod +x "$EXTRACT_DIR/lumina.exe"
 else
-  chmod +x "$EXTRACT_DIR/goose"
+  chmod +x "$EXTRACT_DIR/lumina"
 fi
 
-# --- 5) Install to $GOOSE_BIN_DIR ---
-if [ ! -d "$GOOSE_BIN_DIR" ]; then
-  echo "Creating directory: $GOOSE_BIN_DIR"
-  mkdir -p "$GOOSE_BIN_DIR"
+# --- 5) Install to $LUMINA_BIN_DIR ---
+if [ ! -d "$LUMINA_BIN_DIR" ]; then
+  echo "Creating directory: $LUMINA_BIN_DIR"
+  mkdir -p "$LUMINA_BIN_DIR"
 fi
 
-echo "Moving goose to $GOOSE_BIN_DIR/$OUT_FILE"
+echo "Moving lumina to $LUMINA_BIN_DIR/$OUT_FILE"
 if [ "$OS" = "windows" ]; then
-  mv "$EXTRACT_DIR/goose.exe" "$GOOSE_BIN_DIR/$OUT_FILE"
+  mv "$EXTRACT_DIR/lumina.exe" "$LUMINA_BIN_DIR/$OUT_FILE"
 else
   # On Linux, if the target binary is currently running, writing to it fails
   # with ETXTBSY ("Text file busy"). Rename the old binary out of the way
   # first, then move the new one in. If the move fails, restore the old binary
   # so the user is never left without an executable.
-  if [ -f "$GOOSE_BIN_DIR/$OUT_FILE" ]; then
-    mv "$GOOSE_BIN_DIR/$OUT_FILE" "$GOOSE_BIN_DIR/$OUT_FILE.old"
-    if ! mv "$EXTRACT_DIR/goose" "$GOOSE_BIN_DIR/$OUT_FILE"; then
+  if [ -f "$LUMINA_BIN_DIR/$OUT_FILE" ]; then
+    mv "$LUMINA_BIN_DIR/$OUT_FILE" "$LUMINA_BIN_DIR/$OUT_FILE.old"
+    if ! mv "$EXTRACT_DIR/lumina" "$LUMINA_BIN_DIR/$OUT_FILE"; then
       echo "Error: failed to install new binary, restoring previous version"
-      mv "$GOOSE_BIN_DIR/$OUT_FILE.old" "$GOOSE_BIN_DIR/$OUT_FILE"
+      mv "$LUMINA_BIN_DIR/$OUT_FILE.old" "$LUMINA_BIN_DIR/$OUT_FILE"
       exit 1
     fi
-    rm -f "$GOOSE_BIN_DIR/$OUT_FILE.old"
+    rm -f "$LUMINA_BIN_DIR/$OUT_FILE.old"
   else
-    mv "$EXTRACT_DIR/goose" "$GOOSE_BIN_DIR/$OUT_FILE"
+    mv "$EXTRACT_DIR/lumina" "$LUMINA_BIN_DIR/$OUT_FILE"
   fi
 fi
 
@@ -335,39 +335,39 @@ if [ "$OS" = "windows" ]; then
   for dll in "$EXTRACT_DIR"/*.dll; do
     if [ -f "$dll" ]; then
       echo "Moving Windows runtime DLL: $(basename "$dll")"
-      mv "$dll" "$GOOSE_BIN_DIR/"
+      mv "$dll" "$LUMINA_BIN_DIR/"
     fi
   done
 fi
 
 # skip configuration for non-interactive installs e.g. automation, docker
 if [ "$CONFIGURE" = true ]; then
-  # --- 6) Configure goose (Optional) ---
+  # --- 6) Configure lumina (Optional) ---
   echo ""
-  echo "Configuring goose"
+  echo "Configuring lumina"
   echo ""
   if [ -t 0 ]; then
-    "$GOOSE_BIN_DIR/$OUT_FILE" configure
+    "$LUMINA_BIN_DIR/$OUT_FILE" configure
   elif [ -r /dev/tty ]; then
-    "$GOOSE_BIN_DIR/$OUT_FILE" configure < /dev/tty
+    "$LUMINA_BIN_DIR/$OUT_FILE" configure < /dev/tty
   else
     echo "Non-interactive shell detected (e.g. 'curl ... | bash')."
-    echo "Skipping 'goose configure' — please run it manually after installation:"
-    echo "    $GOOSE_BIN_DIR/$OUT_FILE configure"
+    echo "Skipping 'lumina configure' — please run it manually after installation:"
+    echo "    $LUMINA_BIN_DIR/$OUT_FILE configure"
   fi
 else
-  echo "Skipping 'goose configure', you may need to run this manually later"
+  echo "Skipping 'lumina configure', you may need to run this manually later"
 fi
 
 
 
 # --- 7) Check PATH and give instructions if needed ---
-if [[ ":$PATH:" != *":$GOOSE_BIN_DIR:"* ]]; then
+if [[ ":$PATH:" != *":$LUMINA_BIN_DIR:"* ]]; then
   echo ""
-  echo "Warning: goose installed, but $GOOSE_BIN_DIR is not in your PATH."
+  echo "Warning: lumina installed, but $LUMINA_BIN_DIR is not in your PATH."
 
   if [ "$OS" = "windows" ]; then
-    echo "To add goose to your PATH in PowerShell:"
+    echo "To add lumina to your PATH in PowerShell:"
     echo ""
     echo "# Add to your PowerShell profile"
     echo '$profilePath = $PROFILE'
@@ -377,13 +377,13 @@ if [[ ":$PATH:" != *":$GOOSE_BIN_DIR:"* ]]; then
     echo '. $PROFILE'
     echo ""
     echo "Alternatively, you can run:"
-    echo "    goose configure"
+    echo "    lumina configure"
     echo "or rerun this install script after updating your PATH."
   else
     SHELL_NAME=$(basename "$SHELL")
 
     echo ""
-    echo "The \$GOOSE_BIN_DIR is not in your PATH."
+    echo "The \$LUMINA_BIN_DIR is not in your PATH."
 
     if [ "$CONFIGURE" = true ]; then
       echo "What would you like to do?"
@@ -405,23 +405,23 @@ if [[ ":$PATH:" != *":$GOOSE_BIN_DIR:"* ]]; then
       case "$choice" in
       1)
         RC_FILE="$HOME/.${SHELL_NAME}rc"
-        echo "Adding \$GOOSE_BIN_DIR to $RC_FILE..."
-        echo "export PATH=\"$GOOSE_BIN_DIR:\$PATH\"" >> "$RC_FILE"
+        echo "Adding \$LUMINA_BIN_DIR to $RC_FILE..."
+        echo "export PATH=\"$LUMINA_BIN_DIR:\$PATH\"" >> "$RC_FILE"
         echo "Done! Reload your shell or run 'source $RC_FILE' to apply changes."
         ;;
       2)
         echo ""
         echo "Add it to your PATH by editing ~/.${SHELL_NAME}rc or similar:"
-        echo "    export PATH=\"$GOOSE_BIN_DIR:\$PATH\""
+        echo "    export PATH=\"$LUMINA_BIN_DIR:\$PATH\""
         echo "Then reload your shell (e.g. 'source ~/.${SHELL_NAME}rc') to apply changes."
         ;;
       *)
-        echo "Invalid choice. Please add \$GOOSE_BIN_DIR to your PATH manually."
+        echo "Invalid choice. Please add \$LUMINA_BIN_DIR to your PATH manually."
         ;;
       esac
     else
       echo ""
-      echo "Configure disabled. Please add \$GOOSE_BIN_DIR to your PATH manually."
+      echo "Configure disabled. Please add \$LUMINA_BIN_DIR to your PATH manually."
     fi
 
   fi

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "LUMINA-ENTERPRISE",
+  "goal": "形成企业可用且具备项目级智能开发能力的Lumina产品",
+  "mode": "brownfield",
+  "stage": "READY_FOR_PLANNING",
+  "baseline_status": "RECORDED",
+  "decision_mode": "automatic_non_blocking",
+  "checkpoint_status": "AUTO_RECORDED",
+  "updated_at": "2026-08-26T05:34:34+00:00"
+}

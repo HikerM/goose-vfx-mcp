@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { Button } from '../ui/button';
-import PrivacyInfoModal from './PrivacyInfoModal';
 import { defineMessages, useIntl } from '../../i18n';
 
 const LOCAL_PROVIDER = 'local';
@@ -23,16 +21,9 @@ const i18n = defineMessages({
     defaultMessage: 'Privacy',
   },
   privacyDescription: {
-    id: 'onboardingSuccess.privacyDescription',
-    defaultMessage: 'Anonymous usage data helps improve Lumina. We never collect your conversations, code, or personal data.',
-  },
-  learnMore: {
-    id: 'onboardingSuccess.learnMore',
-    defaultMessage: 'Learn more',
-  },
-  shareUsageData: {
-    id: 'onboardingSuccess.shareUsageData',
-    defaultMessage: 'Share anonymous usage data',
+    id: 'onboardingSuccess.noTelemetryDescription',
+    defaultMessage:
+      'Lumina does not send telemetry. Prompts are only sent to the model provider you choose, or remain local when you use a local model.',
   },
   getStarted: {
     id: 'onboardingSuccess.getStarted',
@@ -42,13 +33,11 @@ const i18n = defineMessages({
 
 interface OnboardingSuccessProps {
   providerName: string;
-  onFinish: (telemetryEnabled: boolean) => void;
+  onFinish: () => void;
 }
 
 export default function OnboardingSuccess({ providerName, onFinish }: OnboardingSuccessProps) {
   const intl = useIntl();
-  const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
-  const [telemetryOptIn, setTelemetryOptIn] = useState(true);
 
   return (
     <div className="h-screen w-full bg-background-default overflow-hidden">
@@ -80,35 +69,20 @@ export default function OnboardingSuccess({ providerName, onFinish }: Onboarding
             </div>
 
             <div className="w-full p-4 bg-transparent border rounded-xl text-left mb-6">
-              <h3 className="font-medium text-text-default text-sm mb-1">{intl.formatMessage(i18n.privacyTitle)}</h3>
+              <h3 className="font-medium text-text-default text-sm mb-1">
+                {intl.formatMessage(i18n.privacyTitle)}
+              </h3>
               <p className="text-text-muted text-sm">
-                {intl.formatMessage(i18n.privacyDescription)}{' '}
-                <button
-                  onClick={() => setShowPrivacyInfo(true)}
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  {intl.formatMessage(i18n.learnMore)}
-                </button>
+                {intl.formatMessage(i18n.privacyDescription)}
               </p>
-              <label className="mt-3 flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={telemetryOptIn}
-                  onChange={(e) => setTelemetryOptIn(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-text-muted text-sm">{intl.formatMessage(i18n.shareUsageData)}</span>
-              </label>
             </div>
 
-            <Button onClick={() => onFinish(telemetryOptIn)} className="w-full">
+            <Button onClick={onFinish} className="w-full">
               {intl.formatMessage(i18n.getStarted)}
             </Button>
           </div>
         </div>
       </div>
-
-      <PrivacyInfoModal isOpen={showPrivacyInfo} onClose={() => setShowPrivacyInfo(false)} />
     </div>
   );
 }

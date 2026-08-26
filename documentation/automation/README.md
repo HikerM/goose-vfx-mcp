@@ -1,6 +1,6 @@
 # Documentation Automation
 
-This directory contains automated pipelines for keeping goose documentation synchronized with code changes.
+This directory contains automated pipelines for keeping lumina documentation synchronized with code changes.
 
 ## Overview
 

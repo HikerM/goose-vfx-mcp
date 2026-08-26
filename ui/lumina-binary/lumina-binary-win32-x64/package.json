@@ -1,0 +1,28 @@
+{
+  "name": "@hikerm/lumina-binary-win32-x64",
+  "version": "0.20.2",
+  "description": "Lumina binary for Windows x64",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HikerM/lumina.git"
+  },
+  "bin": {
+    "lumina": "bin/lumina.exe"
+  },
+  "keywords": [
+    "lumina",
+    "ai",
+    "agent",
+    "binary"
+  ],
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/lumina.exe"
+  ]
+}

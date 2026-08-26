@@ -45,7 +45,7 @@ const i18n = defineMessages({
   },
   secretKeyHelp: {
     id: 'externalBackendSection.secretKeyHelp',
-    defaultMessage: 'The secret key configured on the external backend (GOOSE_SERVER__SECRET_KEY).',
+    defaultMessage: 'The secret key configured on the external backend (LUMINA_SERVER__SECRET_KEY).',
   },
   clearSecret: {
     id: 'externalBackendSection.clearSecret',
@@ -89,14 +89,14 @@ const i18n = defineMessages({
 
 export default function ExternalBackendSection() {
   const intl = useIntl();
-  const [config, setConfig] = useState<ExternalBackendConfig>(defaultSettings.externalGoosed);
+  const [config, setConfig] = useState<ExternalBackendConfig>(defaultSettings.externalLuminad);
   const [isSaving, setIsSaving] = useState(false);
   const [urlError, setUrlError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSettings = async () => {
-      const externalGoosed = await window.electron.getSetting('externalGoosed');
-      setConfig(externalGoosed);
+      const externalLuminad = await window.electron.getSetting('externalLuminad');
+      setConfig(externalLuminad);
     };
     loadSettings();
   }, []);
@@ -134,7 +134,7 @@ export default function ExternalBackendSection() {
   const saveConfig = async (newConfig: ExternalBackendConfig): Promise<void> => {
     setIsSaving(true);
     try {
-      await window.electron.setSetting('externalGoosed', newConfig);
+      await window.electron.setSetting('externalLuminad', newConfig);
     } catch (error) {
       console.error('Failed to save external backend settings:', error);
     } finally {

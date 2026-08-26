@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-. (Join-Path $PSScriptRoot "goose-rust-tools.ps1")
+. (Join-Path $PSScriptRoot "lumina-rust-tools.ps1")
 
-$tools = Initialize-GooseRustEnvironment
+$tools = Initialize-LuminaRustEnvironment
 & $tools.RustupExe @args
 exit $LASTEXITCODE

@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Notify Discord
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_GOOSE_STATUS }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_LUMINA_STATUS }}
         run: |
           curl -sS --fail-with-body -H "Content-Type: application/json" \
             -d '{

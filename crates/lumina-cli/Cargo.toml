@@ -1,0 +1,132 @@
+[package]
+name = "lumina-agent-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
+
+[lib]
+name = "lumina_cli"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "lumina"
+path = "src/main.rs"
+
+[[bin]]
+name = "generate_manpages"
+path = "src/bin/generate_manpages.rs"
+
+[dependencies]
+clap_mangen = { version = "0.3", default-features = false }
+lumina = { package = "lumina-agent", path = "../lumina", default-features = false }
+lumina-mcp = { path = "../lumina-mcp", default-features = false }
+lumina-providers = { path = "../lumina-providers", default-features = false }
+rmcp = { workspace = true }
+clap = { workspace = true }
+cliclack = { version = "0.5", default-features = false }
+console = { version = "0.16", default-features = false, features = ["std"] }
+dotenvy = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+strum = { workspace = true }
+tempfile = { workspace = true }
+etcetera = { workspace = true }
+rand = { workspace = true }
+rustyline = { version = "18", default-features = false, features = ["custom-bindings", "with-dirs", "with-file-history"] }
+tracing = { workspace = true }
+chrono = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json", "time"] }
+shlex = { version = "2.0", default-features = false, features = ["std"] }
+async-trait = { workspace = true }
+base64 = { workspace = true }
+regex = { workspace = true }
+tar = { version = "0.4.46", default-features = false }
+reqwest = { workspace = true, features = ["blocking"] }
+zip = { workspace = true }
+bzip2 = { version = "0.6", default-features = false, features = ["default"] }
+webbrowser = { workspace = true }
+indicatif = { version = "0.18", default-features = false }
+tokio-util = { workspace = true, features = ["compat", "rt"] }
+anstream = { version = "1", default-features = false, features = ["auto"] }
+open = { version = "5", default-features = false }
+url = { workspace = true }
+urlencoding = { workspace = true }
+clap_complete = { version = "4", default-features = false }
+comfy-table = { version = "7", default-features = false }
+sha2 = { workspace = true }
+sigstore-verify = { version = "0.10", default-features = false, optional = true }
+axum.workspace = true
+axum-server = { version = "0.8", default-features = false, optional = true }
+clap_complete_nushell = { version = "4", default-features = false }
+[target.'cfg(target_os = "windows")'.dependencies]
+anstream = { version = "1", default-features = false, features = ["wincon"] }
+winapi = { workspace = true, features = [
+    "consoleapi",
+    "processenv",
+    "winbase",
+    "wincon",
+] }
+
+[features]
+default = [
+    "code-mode",
+    "local-inference",
+    "tui",
+    "aws-providers",
+    "rustls-tls",
+    "system-keyring",
+    "update",
+]
+code-mode = ["lumina/code-mode"]
+local-inference = ["lumina/local-inference"]
+aws-providers = ["lumina/aws-providers"]
+cuda = ["lumina/cuda", "local-inference"]
+vulkan = ["lumina/vulkan", "local-inference"]
+mlx = ["lumina/mlx", "local-inference"]
+system-keyring = ["lumina/system-keyring"]
+tui = []
+update = ["dep:sigstore-verify"]
+portable-default = ["rustls-tls", "aws-providers", "tui"]
+# disables the update command
+disable-update = []
+rustls-tls = [
+    "dep:axum-server",
+    "reqwest/rustls",
+    "axum-server/tls-rustls",
+    "sigstore-verify?/rustls",
+    "lumina/rustls-tls",
+    "lumina-mcp/rustls-tls",
+    "lumina-providers/rustls-tls",
+]
+native-tls = [
+    "dep:axum-server",
+    "reqwest/native-tls",
+    "axum-server/tls-openssl",
+    "sigstore-verify?/native-tls",
+    "lumina/native-tls",
+    "lumina-mcp/native-tls",
+    "lumina-providers/native-tls",
+]
+
+[dev-dependencies]
+env-lock.workspace = true
+tempfile = { workspace = true }
+test-case = { workspace = true }
+tokio = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = [
+    # Used only in windows
+    "winapi",
+]

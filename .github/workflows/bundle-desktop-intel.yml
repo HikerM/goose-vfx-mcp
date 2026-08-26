@@ -77,7 +77,7 @@ jobs:
         run: |
           source ./bin/activate-hermit
           rustup target add x86_64-apple-darwin
-          cargo build --release -p goose-cli --bin goose --target x86_64-apple-darwin
+          cargo build --release -p lumina-cli --bin lumina --target x86_64-apple-darwin
 
 
 
@@ -98,9 +98,9 @@ jobs:
       - name: Copy backend binary into Electron folder
         run: |
           mkdir -p ui/desktop/src/bin
-          rm -f ui/desktop/src/bin/goose
-          cp target/x86_64-apple-darwin/release/goose ui/desktop/src/bin/goose
-          chmod +x ui/desktop/src/bin/goose
+          rm -f ui/desktop/src/bin/lumina
+          cp target/x86_64-apple-darwin/release/lumina ui/desktop/src/bin/lumina
+          chmod +x ui/desktop/src/bin/lumina
           ls -la ui/desktop/src/bin/
 
       - name: Cache pnpm dependencies
@@ -157,7 +157,7 @@ jobs:
         working-directory: ui/desktop
 
       - name: Verify macOS updater resources
-        run: node scripts/verify-mac-update-resources.js "out/Goose-darwin-x64/Goose.app"
+        run: node scripts/verify-mac-update-resources.js "out/Lumina-darwin-x64/Lumina.app"
         working-directory: ui/desktop
 
       - name: Clean up signing keychain
@@ -178,26 +178,26 @@ jobs:
       - name: Upload Desktop artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: Goose-darwin-x64
-          path: ui/desktop/out/Goose-darwin-x64/Goose_intel_mac.zip
+          name: Lumina-darwin-x64
+          path: ui/desktop/out/Lumina-darwin-x64/Lumina_intel_mac.zip
 
       - name: Quick launch test (macOS)
         if: ${{ inputs.quick_test }}
         run: |
           # Ensure no quarantine attributes (if needed)
-          xattr -cr "ui/desktop/out/Goose-darwin-x64/Goose.app"
-          echo "Opening Goose.app..."
-          open -g "ui/desktop/out/Goose-darwin-x64/Goose.app"
+          xattr -cr "ui/desktop/out/Lumina-darwin-x64/Lumina.app"
+          echo "Opening Lumina.app..."
+          open -g "ui/desktop/out/Lumina-darwin-x64/Lumina.app"
 
           # Give the app a few seconds to start and write logs
           sleep 5
 
           # Check if it's running
-          if pgrep -f "Goose.app/Contents/MacOS/Goose" > /dev/null; then
+          if pgrep -f "Lumina.app/Contents/MacOS/Lumina" > /dev/null; then
             echo "App appears to be running."
           else
             echo "App did not stay open. Possible crash or startup error."
             exit 1
           fi
           # Kill the app to clean up
-          pkill -f "Goose.app/Contents/MacOS/Goose"
+          pkill -f "Lumina.app/Contents/MacOS/Lumina"

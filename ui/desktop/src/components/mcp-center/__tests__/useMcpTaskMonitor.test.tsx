@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { McpEventsPage, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpEventsPage, McpTaskRef } from '@hikerm/lumina-sdk';
 import { useMcpTaskMonitor } from '../useMcpTaskMonitor';
 import { getMcpTask, resumeMcpEvents } from '../../../acp/mcp-platform';
 

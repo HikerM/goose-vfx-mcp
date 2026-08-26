@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { McpSourcesPolicyState, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpSourcesPolicyState, McpTaskRef } from '@hikerm/lumina-sdk';
 import { Boxes, Compass, FileStack, ListChecks, Plus, ShieldCheck } from 'lucide-react';
 import { MainPanelLayout } from '../Layout/MainPanelLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';

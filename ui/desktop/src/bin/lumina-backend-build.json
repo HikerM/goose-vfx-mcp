@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "product": "Lumina",
+  "packageVersion": "1.43.0-mcp.14",
+  "binarySha256": "bd474d1b70f74f7241c57ad3e62f179d42ffd4044fb41291471374516b192c85",
+  "backendInputsSha256": "36a065fe19db549374e2a492a54ef3553fc968ef51d49bc68393ae9be61622a8",
+  "acpSchemaSha256": "259a6227d47ae785025e011fc1b72616a1c3578173284f6e299b5b3582e2a4d7"
+}

@@ -3,7 +3,7 @@
   "id": "com.example.knowledge-search",
   "version": "1.4.2",
   "name": "Knowledge Search",
-  "description": "Connects goose to a hosted knowledge-search MCP endpoint.",
+  "description": "Connects lumina to a hosted knowledge-search MCP endpoint.",
   "homepage": "https://example.com/knowledge-search",
   "publisher": {
     "id": "com.example",
@@ -27,7 +27,7 @@
     {
       "id": "service-credentials",
       "kind": "credentials",
-      "reason": "Authorize access with an OAuth grant stored by goose.",
+      "reason": "Authorize access with an OAuth grant stored by lumina.",
       "required": true,
       "scope": "knowledge.read"
     }

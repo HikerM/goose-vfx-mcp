@@ -1848,11 +1848,11 @@ const parseManagedDetail = createManagedDtoParser(
 const successPayloadParsers: Partial<
   Record<string, (value: unknown) => unknown | null>
 > = {
-  "goose.mcpList_unstable": parseManagedPage,
-  "goose.mcpGet_unstable": parseManagedDetail,
-  "goose.mcpSetDefaultEnabled_unstable": parseManagedSummary,
-  "goose.mcpRuntimeControl_unstable": parseManagedSummary,
-  "goose.mcpHealthGet_unstable": parseHealthStatus,
+  "lumina.mcpList_unstable": parseManagedPage,
+  "lumina.mcpGet_unstable": parseManagedDetail,
+  "lumina.mcpSetDefaultEnabled_unstable": parseManagedSummary,
+  "lumina.mcpRuntimeControl_unstable": parseManagedSummary,
+  "lumina.mcpHealthGet_unstable": parseHealthStatus,
 };
 
 function parseResponse<T>(
@@ -1930,31 +1930,31 @@ export class McpPlatformClient {
 
   mcpCatalogList_unstable(params: McpCatalogListRequest) {
     return this.request<McpCatalogPage>(
-      "goose.mcpCatalogList_unstable",
+      "lumina.mcpCatalogList_unstable",
       params,
     );
   }
   mcpCatalogDetail_unstable(params: McpCatalogDetailRequest) {
     return this.request<McpCatalogDetail>(
-      "goose.mcpCatalogDetail_unstable",
+      "lumina.mcpCatalogDetail_unstable",
       params,
     );
   }
   mcpSourcesPolicyGet_unstable() {
     return this.request<McpSourcesPolicyState>(
-      "goose.mcpSourcesPolicyGet_unstable",
+      "lumina.mcpSourcesPolicyGet_unstable",
       {},
     );
   }
   mcpSourceRefresh_unstable(params: { sourceId: string }) {
     return this.request<McpSourceRefreshResult>(
-      "goose.mcpSourceRefresh_unstable",
+      "lumina.mcpSourceRefresh_unstable",
       params,
     );
   }
   mcpManualStdioSourcesList_unstable() {
     return this.request<McpManualStdioSourcesPage>(
-      "goose.mcpManualStdioSourcesList_unstable",
+      "lumina.mcpManualStdioSourcesList_unstable",
       {},
     );
   }
@@ -1963,28 +1963,28 @@ export class McpPlatformClient {
     idempotencyKey: string;
   }) {
     return this.request<McpPlanReview>(
-      "goose.mcpManualPlanCreate_unstable",
+      "lumina.mcpManualPlanCreate_unstable",
       params,
     );
   }
   mcpPlanCreate_unstable(params: McpPlanCreateRequest) {
-    return this.request<McpPlanReview>("goose.mcpPlanCreate_unstable", params);
+    return this.request<McpPlanReview>("lumina.mcpPlanCreate_unstable", params);
   }
   mcpInstallConfirm_unstable(params: McpInstallConfirmRequest) {
-    return this.request<McpTaskRef>("goose.mcpInstallConfirm_unstable", params);
+    return this.request<McpTaskRef>("lumina.mcpInstallConfirm_unstable", params);
   }
   mcpTaskGet_unstable(params: { taskId: string }) {
-    return this.request<McpTaskRef>("goose.mcpTaskGet_unstable", params);
+    return this.request<McpTaskRef>("lumina.mcpTaskGet_unstable", params);
   }
   mcpTaskCancel_unstable(params: { taskId: string; expectedRevision: number }) {
-    return this.request<McpTaskRef>("goose.mcpTaskCancel_unstable", params);
+    return this.request<McpTaskRef>("lumina.mcpTaskCancel_unstable", params);
   }
   mcpTaskRetry_unstable(params: {
     taskId: string;
     expectedRevision: number;
     idempotencyKey: string;
   }) {
-    return this.request<McpTaskRef>("goose.mcpTaskRetry_unstable", params);
+    return this.request<McpTaskRef>("lumina.mcpTaskRetry_unstable", params);
   }
   mcpEventsResume_unstable(params: {
     afterEventId?: number;
@@ -1992,7 +1992,7 @@ export class McpPlatformClient {
     taskIds?: string[];
   }) {
     return this.request<McpEventsPage>(
-      "goose.mcpEventsResume_unstable",
+      "lumina.mcpEventsResume_unstable",
       params,
     );
   }
@@ -2005,20 +2005,20 @@ export class McpPlatformClient {
     health?: McpHealthState;
     defaultEnabled?: boolean;
   }) {
-    return this.request<McpManagedPage>("goose.mcpList_unstable", params);
+    return this.request<McpManagedPage>("lumina.mcpList_unstable", params);
   }
   mcpGet_unstable(params: { managedMcpId: string }) {
-    return this.request<McpManagedDetail>("goose.mcpGet_unstable", params);
+    return this.request<McpManagedDetail>("lumina.mcpGet_unstable", params);
   }
   mcpHealthRun_unstable(params: {
     managedMcpId: string;
     mode: "registration" | "runtime";
     idempotencyKey: string;
   }) {
-    return this.request<McpTaskRef>("goose.mcpHealthRun_unstable", params);
+    return this.request<McpTaskRef>("lumina.mcpHealthRun_unstable", params);
   }
   mcpHealthGet_unstable(params: { managedMcpId: string }) {
-    return this.request<McpHealthStatus>("goose.mcpHealthGet_unstable", params);
+    return this.request<McpHealthStatus>("lumina.mcpHealthGet_unstable", params);
   }
   mcpSetDefaultEnabled_unstable(params: {
     managedMcpId: string;
@@ -2026,7 +2026,7 @@ export class McpPlatformClient {
     expectedRevision: number;
   }) {
     return this.request<McpManagedSummary>(
-      "goose.mcpSetDefaultEnabled_unstable",
+      "lumina.mcpSetDefaultEnabled_unstable",
       params,
     );
   }
@@ -2037,7 +2037,7 @@ export class McpPlatformClient {
     runtimeBinding: string;
   }) {
     return this.request<McpManagedSummary>(
-      "goose.mcpRuntimeControl_unstable",
+      "lumina.mcpRuntimeControl_unstable",
       params,
     );
   }

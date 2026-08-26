@@ -1,17 +1,17 @@
 ---
 title: Auto Visualiser Extension
-description: Add automatic data visualization to goose
+description: Add automatic data visualization to lumina
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseBuiltinInstaller from '@site/src/components/GooseBuiltinInstaller';
+import LuminaBuiltinInstaller from '@site/src/components/LuminaBuiltinInstaller';
 import ImageCarousel from '@site/src/components/ImageCarousel';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/txh6DlzPwNo" />
 
-The Auto Visualiser extension enables goose to automatically generate interactive data visualizations directly in your conversation. This built-in extension uses MCP Apps to render charts, graphs, maps, and diagrams inline in goose Desktop.
+The Auto Visualiser extension enables lumina to automatically generate interactive data visualizations directly in your conversation. This built-in extension uses MCP Apps to render charts, graphs, maps, and diagrams inline in lumina Desktop.
 
 This guide will cover enabling and using the Auto Visualiser MCP Server.
 
@@ -19,30 +19,30 @@ This guide will cover enabling and using the Auto Visualiser MCP Server.
 
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseBuiltinInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaBuiltinInstaller
     extensionName="Auto Visualiser"
     description="Automatically generate interactive data visualizations"
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to `Toggle Extensions`
   ```sh
-  ┌   goose-configure 
+  ┌   lumina-configure
   │
   ◇  What would you like you configure?
-  │  Toggle Extensions 
+  │  Toggle Extensions
   │
   ◆  Enable extensions: (use "space" to toggle and "enter" to submit)
-  // highlight-start    
+  // highlight-start
   │  ● autovisualiser
-  // highlight-end  
+  // highlight-end
   └  Extension settings updated successfully
   ```
   </TabItem>
@@ -50,12 +50,12 @@ This guide will cover enabling and using the Auto Visualiser MCP Server.
 
 
 :::info
-Auto Visualiser now uses [MCP Apps](/docs/tutorials/building-mcp-apps), which means visualizations can render inline in chat and expand into fullscreen or picture-in-picture modes in goose Desktop.
+Auto Visualiser now uses [MCP Apps](/docs/tutorials/building-mcp-apps), which means visualizations can render inline in chat and expand into fullscreen or picture-in-picture modes in lumina Desktop.
 :::
 
 ## Visualization Types
 
-The Auto Visualiser automatically detects when data would benefit from visualization and chooses the most appropriate chart or diagram type. It renders those visualizations as interactive MCP Apps inside goose Desktop.
+The Auto Visualiser automatically detects when data would benefit from visualization and chooses the most appropriate chart or diagram type. It renders those visualizations as interactive MCP Apps inside lumina Desktop.
 
 | Chart Type | Description | Detected When Prompt Implies |
 |------------|-------------|------------------------------|
@@ -82,9 +82,9 @@ The Auto Visualiser automatically detects when data would benefit from visualiza
 
 ### Features
 
-- **Automatic Detection**: goose intelligently chooses the best visualization type for your data
+- **Automatic Detection**: lumina intelligently chooses the best visualization type for your data
 - **Interactive Components**: All visualizations are interactive with hover effects, zooming, and drilling capabilities
-- **MCP Apps Rendering**: Visualizations render as MCP Apps directly in goose Desktop
+- **MCP Apps Rendering**: Visualizations render as MCP Apps directly in lumina Desktop
 - **Multiple Display Modes**: Visualizations can appear inline and expand into fullscreen or picture-in-picture modes
 - **Multiple Chart Support**: Can render multiple visualizations in a single response
 - **Customizable Styling**: Supports custom colors, labels, and formatting options
@@ -92,7 +92,7 @@ The Auto Visualiser automatically detects when data would benefit from visualiza
 
 ## How It Works
 
-When goose decides that your data should be visualized, the Auto Visualiser extension returns an MCP App for the selected chart type. goose Desktop then renders that app directly in the conversation.
+When lumina decides that your data should be visualized, the Auto Visualiser extension returns an MCP App for the selected chart type. lumina Desktop then renders that app directly in the conversation.
 
 Depending on the visualization, you can:
 
@@ -103,23 +103,23 @@ Depending on the visualization, you can:
 
 ## Example Usage
 
-In this example, I'll have goose analyze some sales data and automatically visualize it using the Auto Visualiser extension.
+In this example, I'll have lumina analyze some sales data and automatically visualize it using the Auto Visualiser extension.
 
 
-### goose Prompt
+### lumina Prompt
 ```
 I have quarterly sales data for different product categories. Can you help me understand:
 1. The hierarchical breakdown of revenue across our nested product categories
-2. How our performance metrics compare across all four quarters  
+2. How our performance metrics compare across all four quarters
 3. The customer flow through our sales funnel process
 
 Here's the data:
 - Electronics: Q1: $150k, Q2: $180k, Q3: $220k, Q4: $195k
-- Clothing: Q1: $120k, Q2: $140k, Q3: $160k, Q4: $175k  
+- Clothing: Q1: $120k, Q2: $140k, Q3: $160k, Q4: $175k
 - Home & Garden: Q1: $80k, Q2: $95k, Q3: $110k, Q4: $125k
 ```
 
-### goose Output
+### lumina Output
 
 :::note Desktop
 
@@ -139,7 +139,7 @@ I've created three comprehensive visualizations to help you understand your quar
 #### 1. Hierarchical Revenue Breakdown (Treemap)
 The **treemap visualization** shows your revenue hierarchy with proportional areas representing the relative size of each category and quarter. Key insights:
 - **Electronics** is your largest revenue generator ($745k total)
-- **Clothing** follows as second largest ($595k total) 
+- **Clothing** follows as second largest ($595k total)
 - **Home & Garden** is smallest but growing ($410k total)
 - You can see how each quarter contributes within each category
 
@@ -172,7 +172,7 @@ Would you like me to create additional visualizations or dive deeper into any sp
 
 - **Visualization not appearing**: Ensure the Auto Visualiser extension is enabled and your data follows the expected format.
 
-- **Visualization opens but does not fit well inline**: Try fullscreen mode in goose Desktop for more space.
+- **Visualization opens but does not fit well inline**: Try fullscreen mode in lumina Desktop for more space.
 
 - **Data format errors**: Check that your data structure matches the required schema for the visualization type. The extension provides detailed error messages to guide you.
 

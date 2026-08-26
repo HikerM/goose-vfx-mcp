@@ -1197,7 +1197,7 @@
     "defaultMessage": "गुप्त कुंजी"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "गुप्त सर्वर पर कॉन्फ़िगर की गई गुप्त कुंजी (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "गुप्त सर्वर पर कॉन्फ़िगर की गई गुप्त कुंजी (LUMINA_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "सर्वर की गुप्त कुंजी दर्ज करें"
@@ -1226,67 +1226,67 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "कहीं और चल रहे Lumina सर्वर से कनेक्ट करें (ऐप पुनरारंभ की आवश्यकता है)"
   },
-  "goosehintsModal.close": {
+  "luminahintsModal.close": {
     "defaultMessage": "बंद करें"
   },
-  "goosehintsModal.developer": {
+  "luminahintsModal.developer": {
     "defaultMessage": "डेवलपर"
   },
-  "goosehintsModal.dialogDescription": {
+  "luminahintsModal.dialogDescription": {
     "defaultMessage": "Lumina के साथ संचार को बेहतर बनाने के लिए अपने प्रोजेक्ट के बारे में अतिरिक्त संदर्भ प्रदान करें"
   },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "प्रोजेक्ट संकेत कॉन्फ़िगर करें (.goosehints)"
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "प्रोजेक्ट संकेत कॉन्फ़िगर करें (.luminahints)"
   },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": ".goosehints फ़ाइल पढ़ने में त्रुटि: {error}"
+  "luminahintsModal.errorReading": {
+    "defaultMessage": ".luminahints फ़ाइल पढ़ने में त्रुटि: {error}"
   },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": ".goosehints फ़ाइल तक पहुँचने में विफल"
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": ".luminahints फ़ाइल तक पहुँचने में विफल"
   },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": ".goosehints फ़ाइल सहेजने में विफल"
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": ".luminahints फ़ाइल सहेजने में विफल"
   },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "नई .goosehints फ़ाइल यहां बनाई जा रही है: {filePath}"
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "नई .luminahints फ़ाइल यहां बनाई जा रही है: {filePath}"
   },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": ".goosehints फ़ाइल यहां मिली: {filePath}"
+  "luminahintsModal.fileFound": {
+    "defaultMessage": ".luminahints फ़ाइल यहां मिली: {filePath}"
   },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints एक टेक्स्ट फ़ाइल है जिसका उपयोग आपके प्रोजेक्ट के बारे में अतिरिक्त संदर्भ प्रदान करने और Lumina के साथ संचार को बेहतर बनाने के लिए किया जाता है।"
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints एक टेक्स्ट फ़ाइल है जिसका उपयोग आपके प्रोजेक्ट के बारे में अतिरिक्त संदर्भ प्रदान करने और Lumina के साथ संचार को बेहतर बनाने के लिए किया जाता है।"
   },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "कृपया सुनिश्चित करें कि एक्सटेंशन पृष्ठ में {bold} एक्सटेंशन सक्षम है। .goosehints का उपयोग करने के लिए यह एक्सटेंशन आवश्यक है। .goosehints अपडेट को प्रभावी बनाने के लिए आपको अपना सत्र पुनः आरंभ करना होगा।"
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "कृपया सुनिश्चित करें कि एक्सटेंशन पृष्ठ में {bold} एक्सटेंशन सक्षम है। .luminahints का उपयोग करने के लिए यह एक्सटेंशन आवश्यक है। .luminahints अपडेट को प्रभावी बनाने के लिए आपको अपना सत्र पुनः आरंभ करना होगा।"
   },
-  "goosehintsModal.helpText3": {
+  "luminahintsModal.helpText3": {
     "defaultMessage": "अधिक जानकारी के लिए {link} देखें।"
   },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": ".goosehints का उपयोग करना"
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": ".luminahints का उपयोग करना"
   },
-  "goosehintsModal.placeholder": {
+  "luminahintsModal.placeholder": {
     "defaultMessage": "प्रोजेक्ट संकेत यहां दर्ज करें..."
   },
-  "goosehintsModal.save": {
+  "luminahintsModal.save": {
     "defaultMessage": "सहेजें"
   },
-  "goosehintsModal.savedSuccessfully": {
+  "luminahintsModal.savedSuccessfully": {
     "defaultMessage": "सफलतापूर्वक सहेजा गया"
   },
-  "goosehintsModal.saving": {
+  "luminahintsModal.saving": {
     "defaultMessage": "सहेजा जा रहा है..."
   },
-  "goosehintsSection.configure": {
+  "luminahintsSection.configure": {
     "defaultMessage": "कॉन्फ़िगर करें"
   },
-  "goosehintsSection.description": {
-    "defaultMessage": "Lumina को अतिरिक्त संदर्भ प्रदान करने के लिए अपने प्रोजेक्ट की .goosehints फ़ाइल को कॉन्फ़िगर करें"
+  "luminahintsSection.description": {
+    "defaultMessage": "Lumina को अतिरिक्त संदर्भ प्रदान करने के लिए अपने प्रोजेक्ट की .luminahints फ़ाइल को कॉन्फ़िगर करें"
   },
-  "goosehintsSection.title": {
-    "defaultMessage": "प्रोजेक्ट संकेत (.goosehints)"
+  "luminahintsSection.title": {
+    "defaultMessage": "प्रोजेक्ट संकेत (.luminahints)"
   },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "पूछें Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1422,10 +1422,10 @@
     "defaultMessage": "रद्द करें"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "\"goose://recipe?config=\" से शुरू होने वाली रेसिपी डीपलिंक चिपकाएँ"
+    "defaultMessage": "\"lumina://recipe?config=\" से शुरू होने वाली रेसिपी डीपलिंक चिपकाएँ"
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "अपना goose://recipe?config=... डीपलिंक यहां पेस्ट करें"
+    "defaultMessage": "अपना lumina://recipe?config=... डीपलिंक यहां पेस्ट करें"
   },
   "importRecipeForm.example": {
     "defaultMessage": "उदाहरण"
@@ -1700,32 +1700,29 @@
   "launcher.placeholder": {
     "defaultMessage": "Lumina से कुछ भी पूछें..."
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina बातचीत को संक्षिप्त कर रहा है..."
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina इस पर काम कर रहा है..."
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "बातचीत लोड हो रही है..."
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "सत्र पुनः प्रारंभ हो रहा है..."
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina इस पर काम कर रहा है..."
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina सोच रहा है..."
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina इंतज़ार कर रहा है..."
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "यह मॉडल हटाएं? आप इसे बाद में पुनः डाउनलोड कर सकते हैं."
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "API कुंजियों के बिना अनुमान के लिए स्थानीय एलएलएम मॉडल डाउनलोड और प्रबंधित करें। किसी भी जीजीयूएफ मॉडल के लिए हगिंगफेस खोजें या नीचे दिए गए चुनिंदा विकल्पों का उपयोग करें।"
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "खारिज करें"
@@ -1753,9 +1750,6 @@
   },
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "विशेष रुप से प्रदर्शित मॉडल"
-  },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "मॉडल खोजते और डाउनलोड करते समय दर सीमा बढ़ाने के लिए और निजी या गेटेड हगिंग फेस रिपॉजिटरी तक पहुंचने के लिए साइन इन करें।"
   },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
@@ -2390,20 +2384,11 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "आरंभ करें"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "और जानें"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "स्थानीय मॉडल तैयार"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "अनाम उपयोग डेटा Lumina को बेहतर बनाने में मदद करता है। हम कभी भी आपकी बातचीत, कोड या व्यक्तिगत डेटा एकत्र नहीं करते हैं।"
-  },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "गोपनीयता"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "अनाम उपयोग डेटा साझा करें"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "डिफ़ॉल्ट मान"
@@ -2548,36 +2533,6 @@
   },
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "छिपे हुए निर्देश जो आपकी प्रतिक्रियाओं को निर्देशित करने और संदर्भ जोड़ने में सहायता के लिए प्रदाता को भेजे जाएंगे।"
-  },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "त्रुटि प्रकार (उदाहरण के लिए, \"रेट_लिमिट\", \"ऑथ\" - कोई विवरण नहीं)"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "एक्सटेंशन और टूल उपयोग की संख्या (केवल नाम)"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "ऑपरेटिंग सिस्टम, संस्करण और आर्किटेक्चर"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "प्रदाता और मॉडल का उपयोग किया गया"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "सत्र मेट्रिक्स (अवधि, इंटरैक्शन गिनती, टोकन उपयोग)"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Lumina संस्करण और इंस्टाल विधि"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "अनाम उपयोग डेटा हमें यह समझने में मदद करता है कि Lumina का उपयोग कैसे किया जाता है और सुधार के क्षेत्रों की पहचान की जाती है।"
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "हम कभी भी आपकी बातचीत, कोड, टूल तर्क, त्रुटि संदेश या कोई व्यक्तिगत डेटा एकत्र नहीं करते हैं। आप इस सेटिंग को सेटिंग्स में कभी भी बदल सकते हैं।"
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "गोपनीयता विवरण"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "हम क्या एकत्र करते हैं:"
   },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "संदेश लोड हो रहे हैं... ({renderedCount}/{totalCount})"
@@ -3429,7 +3384,7 @@
     "defaultMessage": "डीप लिंक"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "goose://recipe लिंक यहां चिपकाएं..."
+    "defaultMessage": "lumina://recipe लिंक यहां चिपकाएं..."
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "शेड्यूल संपादित करें"
@@ -3441,7 +3396,7 @@
     "defaultMessage": "चयनित फ़ाइल को पढ़ने में विफल."
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "अमान्य डीप लिंक। कृपया goose://recipe लिंक का उपयोग करें।"
+    "defaultMessage": "अमान्य डीप लिंक। कृपया lumina://recipe लिंक का उपयोग करें।"
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "अमान्य फ़ाइल प्रकार: कृपया YAML file (.yaml या .yml) चुनें"
@@ -3758,9 +3713,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "नई विंडो में खोलें"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "एन्क्रिप्टेड नोस्ट्र लिंक साझा करें"
-  },
   "sessions.cancel": {
     "defaultMessage": "रद्द करें"
   },
@@ -3769,9 +3721,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "Lumina के साथ अपनी पिछली बातचीत देखें और खोजें। {shortcut} खोजने के लिए."
-  },
-  "sessions.close": {
-    "defaultMessage": "बंद करें"
   },
   "sessions.delete.message": {
     "defaultMessage": "क्या आप वाकई सत्र \"{name}\" हटाना चाहते हैं? इस कार्रवाई को वापस नहीं किया जा सकता।"
@@ -3800,21 +3749,6 @@
   "sessions.import": {
     "defaultMessage": "आयात सत्र"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "लिंक आयात करें"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "सत्र लाने, डिक्रिप्ट करने और आयात करने के लिए Lumina नॉस्ट्र शेयर लिंक चिपकाएँ।"
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "नोस्ट्र सत्र आयात करें"
-  },
-  "sessions.importing": {
-    "defaultMessage": "आयात किया जा रहा है..."
-  },
   "sessions.loadingMore": {
     "defaultMessage": "अधिक सत्र लोड हो रहे हैं..."
   },
@@ -3832,15 +3766,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "खोज इतिहास..."
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "इस लिंक वाला कोई भी व्यक्ति सत्र को ला सकता है और डिक्रिप्ट कर सकता है। इसे एक रहस्य की तरह समझो."
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "एन्क्रिप्टेड नोस्ट्र शेयर लिंक"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "क्लिपबोर्ड पर कॉपी किया गया"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "सत्र \"{name}\" हटाने में विफल: {error}"
@@ -3862,12 +3787,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "सत्र सफलतापूर्वक आयात किया गया"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "एन्क्रिप्टेड नोस्ट्र शेयर लिंक बनाया गया"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "Nostr शेयर लिंक बनाने में विफल: {error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "सत्र विवरण अद्यतन करने में विफल: {error}"
@@ -4034,12 +3953,6 @@
   "settings.theme.title": {
     "defaultMessage": "थीम"
   },
-  "settings.updates.description": {
-    "defaultMessage": "Lumina को सर्वोत्तम रूप से चालू रखने के लिए अपडेट की जाँच करें और इंस्टॉल करें"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "अद्यतन"
-  },
   "settings.version.title": {
     "defaultMessage": "संस्करण"
   },
@@ -4104,7 +4017,7 @@
     "defaultMessage": "कोई मिलान कौशल नहीं मिला"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "कौशल SKILL.md फ़ाइलों से ~/.config/agents/skills/, .goose/skills/, या अन्य समर्थित निर्देशिकाओं में लोड किए जाते हैं।"
+    "defaultMessage": "कौशल SKILL.md फ़ाइलों से ~/.config/agents/skills/, .lumina/skills/, या अन्य समर्थित निर्देशिकाओं में लोड किए जाते हैं।"
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "कोई कौशल स्थापित नहीं"
@@ -4364,45 +4277,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "अन्य प्रदाता का उपयोग करें"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "क्या आप Lumina को बेहतर बनाने में सहायता के लिए अनाम उपयोग डेटा साझा करना चाहेंगे? हम कभी भी आपकी बातचीत, कोड या व्यक्तिगत डेटा एकत्र नहीं करते हैं।"
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Lumina को बेहतर बनाने में सहायता करें"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "और जानें"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "हाँ, अनाम उपयोग डेटा साझा करें"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "नहीं धन्यवाद"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "कॉन्फ़िगरेशन त्रुटि"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "नियंत्रित करें कि आपके डेटा का उपयोग कैसे किया जाता है"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "और जानें"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "टेलीमेट्री सेटिंग लोड करने में विफल."
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "गोपनीयता"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "अनाम उपयोग आँकड़े साझा करके Lumina को बेहतर बनाने में सहायता करें।"
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "अनाम उपयोग डेटा"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "टेलीमेट्री सेटिंग अपडेट करने में विफल."
-  },
   "themeSelector.dark": {
     "defaultMessage": "अंधेरा"
   },
@@ -4472,83 +4346,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "{toolName} को अनुमति दें?"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina {toolName} को कॉल करना चाहेंगे। अनुमति दें?"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "अपडेट बैकग्राउंड में अपने आप डाउनलोड हो जाएगा."
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "स्वचालित डाउनलोड GOOSE_DISABLE_AUTO_DOWNLOAD पर्यावरण चर के माध्यम से अक्षम हैं।"
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "स्वचालित डाउनलोड अक्षम है। मैन्युअल रूप से डाउनलोड करने के लिए \"अभी डाउनलोड करें\" पर क्लिक करें।"
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "जब आप ऐप छोड़ देंगे तो अपडेट अपने आप इंस्टॉल हो जाएगा।"
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "अद्यतनों के लिए जाँच करें"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "अपडेट की जांच की जा रही है..."
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "वर्तमान संस्करण"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "स्वचालित अपडेट डाउनलोड अक्षम करें"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "सक्षम होने पर, Lumina आपको नई संस्करणों की सूचना देगा लेकिन उन्हें स्वचालित रूप से डाउनलोड नहीं करेगा।"
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "अभी डाउनलोड करें"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "अपडेट डाउनलोड हो गया है और इंस्टॉल करने के लिए तैयार है!"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "अपडेट डाउनलोड हो रहा है... {percent}%"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "अपडेट डाउनलोड हो रहा है..."
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "स्थापित करें और पुनः प्रारंभ करें"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "या अभी अपडेट करने के लिए \"इंस्टॉल करें और पुनरारंभ करें\" पर क्लिक करें।"
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "आप नवीनतम संस्करण चला रहे हैं!"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "लोड हो रहा है..."
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "डाउनलोड करने के बाद, आपको अपडेट को मैन्युअल रूप से इंस्टॉल करना होगा।"
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "इस अद्यतन विधि के लिए मैन्युअल स्थापना आवश्यक है."
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ अपडेट तैयार है! जब आप Lumina छोड़ देंगे तो यह इंस्टॉल हो जाएगा।"
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ अपडेट तैयार है! इंस्टॉलेशन निर्देशों के लिए \"इंस्टॉल करें और पुनरारंभ करें\" पर क्लिक करें।"
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "(अप टू डेट)"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "उपलब्ध अद्यतन!"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ {version} उपलब्ध"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "संस्करण {version} उपलब्ध है"
   },
   "userMessage.cancel": {
     "defaultMessage": "रद्द करें"

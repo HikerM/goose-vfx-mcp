@@ -17,7 +17,6 @@ import {
   type DownloadModelRequest,
   type HfModelInfo,
   type HfModelVariant,
-  type RepoVariantsResponse,
 } from '../../../acp/local-inference';
 import { defineMessages, useIntl } from '../../../i18n';
 
@@ -68,7 +67,19 @@ const i18n = defineMessages({
   },
   searchFailed: {
     id: 'huggingFaceModelSearch.searchFailed',
-    defaultMessage: 'Search failed. Please try again.',
+    defaultMessage: 'ModelScope could not be reached. Check your network or proxy and retry.',
+  },
+  searching: {
+    id: 'huggingFaceModelSearch.searching',
+    defaultMessage: 'Searching ModelScope…',
+  },
+  retry: {
+    id: 'huggingFaceModelSearch.retry',
+    defaultMessage: 'Retry',
+  },
+  noVariants: {
+    id: 'huggingFaceModelSearch.noVariants',
+    defaultMessage: 'No compatible GGUF files were found in this repository.',
   },
   downloadStartFailed: {
     id: 'localModelPicker.failedToStartDownload',
@@ -96,6 +107,7 @@ interface RepoData {
   availableMemoryBytes: number;
   downloadedQuants: Set<string>;
   downloadedVariants: Set<string>;
+  hydrated: boolean;
 }
 
 interface Props {
@@ -121,47 +133,37 @@ export const HuggingFaceModelSearch = ({
   const [loadingFiles, setLoadingFiles] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestRef = useRef(0);
 
   const doSearch = useCallback(
-    async (q: string) => {
+    async (q: string, requestId: number) => {
       if (!q.trim()) {
-        setResults([]);
-        setError(null);
+        if (searchRequestRef.current === requestId) {
+          setResults([]);
+          setRepoData({});
+          setError(null);
+          setSearching(false);
+        }
         return;
       }
       setSearching(true);
       setError(null);
       try {
         const models = await searchHfModels(q, 20);
-        const modelsWithVariants = await Promise.all(
-          models.map(async (model) => {
-            try {
-              const repoData = await getRepoFiles(model.repoId);
-              if (repoData.variants.length > 0) {
-                return { model, data: repoData };
-              }
-            } catch {
-              // Skip repos we can't fetch
-            }
-            return null;
-          })
-        );
+        if (searchRequestRef.current !== requestId) return;
+        const validResults = models;
 
-        const validResults = modelsWithVariants.filter(Boolean) as {
-          model: HfModelInfo;
-          data: RepoVariantsResponse;
-        }[];
-
-        setResults(validResults.map((r) => r.model));
-        setRepoData((prev) => {
-          const next = { ...prev };
-          for (const r of validResults) {
-            next[r.model.repoId] = {
-              variants: r.data.variants,
-              recommendedIndex: r.data.recommendedIndex ?? null,
-              availableMemoryBytes: r.data.availableMemoryBytes,
-              downloadedQuants: new Set(r.data.downloadedQuants),
-              downloadedVariants: new Set(r.data.downloadedVariants),
+        setResults(validResults);
+        setRepoData(() => {
+          const next: Record<string, RepoData> = {};
+          for (const model of validResults) {
+            next[model.repoId] = {
+              variants: model.variants ?? [],
+              recommendedIndex: null,
+              availableMemoryBytes: 0,
+              downloadedQuants: new Set(),
+              downloadedVariants: new Set(),
+              hydrated: false,
             };
           }
           return next;
@@ -172,18 +174,37 @@ export const HuggingFaceModelSearch = ({
         }
       } catch (e) {
         console.error('Search failed:', e);
-        setError(intl.formatMessage(i18n.searchFailed));
+        if (searchRequestRef.current === requestId) {
+          setResults([]);
+          setRepoData({});
+          setError(intl.formatMessage(i18n.searchFailed));
+        }
       } finally {
-        setSearching(false);
+        if (searchRequestRef.current === requestId) setSearching(false);
       }
     },
     [intl]
   );
 
   const handleQueryChange = (value: string) => {
+    const requestId = ++searchRequestRef.current;
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(value), 300);
+    if (!value.trim()) {
+      setResults([]);
+      setRepoData({});
+      setError(null);
+      setSearching(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => doSearch(value, requestId), 300);
+  };
+
+  const retrySearch = () => {
+    if (!query.trim()) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const requestId = ++searchRequestRef.current;
+    void doSearch(query, requestId);
   };
 
   const toggleRepo = async (repoId: string) => {
@@ -193,7 +214,7 @@ export const HuggingFaceModelSearch = ({
     }
     setExpandedRepo(repoId);
 
-    if (!repoData[repoId]?.variants.length) {
+    if (!repoData[repoId]?.hydrated) {
       setLoadingFiles((prev) => new Set(prev).add(repoId));
       try {
         const response = await getRepoFiles(repoId);
@@ -205,6 +226,7 @@ export const HuggingFaceModelSearch = ({
             availableMemoryBytes: response.availableMemoryBytes,
             downloadedQuants: new Set(response.downloadedQuants),
             downloadedVariants: new Set(response.downloadedVariants),
+            hydrated: true,
           },
         }));
       } catch (e) {
@@ -266,6 +288,18 @@ export const HuggingFaceModelSearch = ({
 
       {error && !searching && <p className="text-xs text-text-muted">{error}</p>}
 
+      {searching && (
+        <p className="text-xs text-text-muted" role="status">
+          {intl.formatMessage(i18n.searching)}
+        </p>
+      )}
+
+      {error && !searching && (
+        <Button variant="outline" size="sm" onClick={retrySearch}>
+          {intl.formatMessage(i18n.retry)}
+        </Button>
+      )}
+
       {results.length > 0 && (
         <div className="space-y-1">
           {results.map((model) => {
@@ -309,6 +343,11 @@ export const HuggingFaceModelSearch = ({
                         <Loader2 className="w-3 h-3 animate-spin" />
                         {intl.formatMessage(i18n.loadingVariants)}
                       </div>
+                    )}
+                    {!loadingFiles.has(model.repoId) && data?.hydrated && variants.length === 0 && (
+                      <p className="py-2 text-xs text-text-muted">
+                        {intl.formatMessage(i18n.noVariants)}
+                      </p>
                     )}
                     {variants.map((variant, idx) => {
                       const isStarting = downloading.has(variant.downloadId);

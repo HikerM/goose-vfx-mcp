@@ -22,16 +22,16 @@ This tutorial walks through how RPI works via a real demonstration. By the end, 
 Copy the snippet below and paste it in your terminal. This will download the main RPI recipes and their subrecipes and save them into the global recipe directory.
 
 ```sh
-mkdir -p ~/.config/goose/recipes/subrecipes
+mkdir -p ~/.config/lumina/recipes/subrecipes
 
-curl -sL https://raw.githubusercontent.com/aaif-goose/goose/main/documentation/src/pages/recipes/data/recipes/rpi-research.yaml -o ~/.config/goose/recipes/rpi-research.yaml
-curl -sL https://raw.githubusercontent.com/aaif-goose/goose/main/documentation/src/pages/recipes/data/recipes/rpi-plan.yaml -o ~/.config/goose/recipes/rpi-plan.yaml
-curl -sL https://raw.githubusercontent.com/aaif-goose/goose/main/documentation/src/pages/recipes/data/recipes/rpi-implement.yaml -o ~/.config/goose/recipes/rpi-implement.yaml
-curl -sL https://raw.githubusercontent.com/aaif-goose/goose/main/documentation/src/pages/recipes/data/recipes/rpi-iterate.yaml -o ~/.config/goose/recipes/rpi-iterate.yaml
+curl -sL https://raw.githubusercontent.com/HikerM/lumina/main/documentation/src/pages/recipes/data/recipes/rpi-research.yaml -o ~/.config/lumina/recipes/rpi-research.yaml
+curl -sL https://raw.githubusercontent.com/HikerM/lumina/main/documentation/src/pages/recipes/data/recipes/rpi-plan.yaml -o ~/.config/lumina/recipes/rpi-plan.yaml
+curl -sL https://raw.githubusercontent.com/HikerM/lumina/main/documentation/src/pages/recipes/data/recipes/rpi-implement.yaml -o ~/.config/lumina/recipes/rpi-implement.yaml
+curl -sL https://raw.githubusercontent.com/HikerM/lumina/main/documentation/src/pages/recipes/data/recipes/rpi-iterate.yaml -o ~/.config/lumina/recipes/rpi-iterate.yaml
 
-curl -sL https://raw.githubusercontent.com/aaif-goose/goose/main/documentation/src/pages/recipes/data/recipes/subrecipes/rpi-codebase-locator.yaml -o ~/.config/goose/recipes/subrecipes/rpi-codebase-locator.yaml
-curl -sL https://raw.githubusercontent.com/aaif-goose/goose/main/documentation/src/pages/recipes/data/recipes/subrecipes/rpi-codebase-analyzer.yaml -o ~/.config/goose/recipes/subrecipes/rpi-codebase-analyzer.yaml
-curl -sL https://raw.githubusercontent.com/aaif-goose/goose/main/documentation/src/pages/recipes/data/recipes/subrecipes/rpi-pattern-finder.yaml -o ~/.config/goose/recipes/subrecipes/rpi-pattern-finder.yaml
+curl -sL https://raw.githubusercontent.com/HikerM/lumina/main/documentation/src/pages/recipes/data/recipes/subrecipes/rpi-codebase-locator.yaml -o ~/.config/lumina/recipes/subrecipes/rpi-codebase-locator.yaml
+curl -sL https://raw.githubusercontent.com/HikerM/lumina/main/documentation/src/pages/recipes/data/recipes/subrecipes/rpi-codebase-analyzer.yaml -o ~/.config/lumina/recipes/subrecipes/rpi-codebase-analyzer.yaml
+curl -sL https://raw.githubusercontent.com/HikerM/lumina/main/documentation/src/pages/recipes/data/recipes/subrecipes/rpi-pattern-finder.yaml -o ~/.config/lumina/recipes/subrecipes/rpi-pattern-finder.yaml
 ```
 </details>
 
@@ -50,7 +50,7 @@ Now that the recipes are imported, to quickly invoke them in-session [add custom
 
 ## RPI Workflow
 
-In goose, we use a structured RPI workflow using recipes to systematically tackle complex codebase changes. The workflow consists of slash commands that guide goose through disciplined phases of work:
+In lumina, we use a structured RPI workflow using recipes to systematically tackle complex codebase changes. The workflow consists of slash commands that guide lumina through disciplined phases of work:
 
 1. `research_codebase` – Document what exists today. No opinions.
 2. `create_plan` - Design the change with clear phases and success criteria.
@@ -130,18 +130,18 @@ The concept of planning before implementation has become a widely accepted pract
 I start the prompt with the `/research_codebase` command followed by a topic written in natural language
 
 ```
-/research_codebase "look through the cloned goose repo and research how the LLM Tool Discovery is implemented"
+/research_codebase "look through the cloned lumina repo and research how the LLM Tool Discovery is implemented"
 ```
 
 
-This command invokes the **[RPI Research Codebase](https://raw.githubusercontent.com/aaif-goose/goose/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-research.yaml)** recipe, whose job is very strict:
+This command invokes the **[RPI Research Codebase](https://raw.githubusercontent.com/HikerM/lumina/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-research.yaml)** recipe, whose job is very strict:
 
 - Document what exists
 - Do not suggest changes
 - Do not critique
 - Do not plan
 
-With this recipe, goose automatically spawns three parallel subagents:
+With this recipe, lumina automatically spawns three parallel subagents:
 
 - `find_files`: Uses the codebase locator to figure out where relevant files live.
 - `analyze_code`: Reads those files fully and documents how they work.
@@ -150,9 +150,9 @@ With this recipe, goose automatically spawns three parallel subagents:
 These subagents run independently and report back. You don't have to orchestrate that yourself.
 
 :::info A course correction
-After goose began researching, I noticed that it was researching "tool discovery" in general. But I only wanted to remove a specific feature called Tool Selection Strategy. So I stopped goose and reran research with a more accurate topic.
+After lumina began researching, I noticed that it was researching "tool discovery" in general. But I only wanted to remove a specific feature called Tool Selection Strategy. So I stopped lumina and reran research with a more accurate topic.
 
-That wasn't a failure. In fact, this is exactly why research exists. Had I told goose to "remove the LLM Tool Discovery feature", it may have removed our other tool discovery methods as well. Fortunately, catching these types of mistakes early is cheap and easy to recover from.
+That wasn't a failure. In fact, this is exactly why research exists. Had I told lumina to "remove the LLM Tool Discovery feature", it may have removed our other tool discovery methods as well. Fortunately, catching these types of mistakes early is cheap and easy to recover from.
 :::
 
 The output from the `/research_codebase` session was a detailed research document:
@@ -189,7 +189,7 @@ It's important to do each phase in a new session to keep the LLM laser focused o
 /create_plan a removal of the Tool Selection Strategy feature
 ```
 
-The **[RPI Create Plan](https://raw.githubusercontent.com/aaif-goose/goose/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-plan.yaml)** recipe starts by reading the research document goose created.
+The **[RPI Create Plan](https://raw.githubusercontent.com/HikerM/lumina/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-plan.yaml)** recipe starts by reading the research document lumina created.
 
 Then it did three key things:
 
@@ -203,7 +203,7 @@ Then it did three key things:
 
 2. **Presented design options**
     
-    Where there were multiple reasonable approaches, goose laid them out and asked me to choose.
+    Where there were multiple reasonable approaches, lumina laid them out and asked me to choose.
 
 3. **Produced a phased implementation plan**
 
@@ -231,7 +231,7 @@ At this point, the plan became the source of truth. The key shift here is that w
 
 The plan is explicit enough that someone else could execute it. That's not an accident. Remember that the implementation will be in a fresh new session, so the plan must have enough context to actually execute it.
 
-Again, you as the human need to step in here to review the plan and make sure it's solid. If there's anything amiss, instead of starting over you can run the **[RPI Iterate Plan](https://raw.githubusercontent.com/aaif-goose/goose/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-iterate.yaml)** plan (`/iterate_plan`) with details on what's wrong. goose will then read the existing plan, research only what needs rethinking, propose targeted updates, and edit the plan accordingly.
+Again, you as the human need to step in here to review the plan and make sure it's solid. If there's anything amiss, instead of starting over you can run the **[RPI Iterate Plan](https://raw.githubusercontent.com/HikerM/lumina/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-iterate.yaml)** plan (`/iterate_plan`) with details on what's wrong. lumina will then read the existing plan, research only what needs rethinking, propose targeted updates, and edit the plan accordingly.
 
 ## Session 3: Implement
 
@@ -241,17 +241,17 @@ Only after research and planning are complete should you move to implementation.
 /implement_plan thoughts/plans/2025-12-23-remove-tool-selection-strategy.md
 ```
 
-The **[RPI Implement Plan](https://raw.githubusercontent.com/aaif-goose/goose/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-implement.yaml)** recipe is intentionally boring. In fact, I fell asleep while goose was running it. Implementation should feel mechanical. If it feels creative, something upstream is missing. But knowing that you have a rock solid plan, I advise you to go do something else with your time while goose works (unless there are manual steps in the plan).
+The **[RPI Implement Plan](https://raw.githubusercontent.com/HikerM/lumina/refs/heads/main/documentation/src/pages/recipes/data/recipes/rpi-implement.yaml)** recipe is intentionally boring. In fact, I fell asleep while lumina was running it. Implementation should feel mechanical. If it feels creative, something upstream is missing. But knowing that you have a rock solid plan, I advise you to go do something else with your time while lumina works (unless there are manual steps in the plan).
 
 It will read the plan completely, execute the phases in order, run verification after each phase, and update the checkboxes directly in the plan file as it goes.
 
-That last bit was really helpful because my context window filled up partway through and goose was able to compact and pick up right where it left off because of the status updates in the plan.
+That last bit was really helpful because my context window filled up partway through and lumina was able to compact and pick up right where it left off because of the status updates in the plan.
 
 ## Final Result
 
-For 10 phases of work that spanned 32 files, the Research phase took 9 minutes, the Plan phase took 4 minutes, and the Implement phase took 39 minutes. So in total, this took just shy of an hour... 52 minutes to be exact. This included goose working and testing as well as me answering questions.
+For 10 phases of work that spanned 32 files, the Research phase took 9 minutes, the Plan phase took 4 minutes, and the Implement phase took 39 minutes. So in total, this took just shy of an hour... 52 minutes to be exact. This included lumina working and testing as well as me answering questions.
 
-Definitely not a fast process. BUT! When I put up [this PR](https://github.com/aaif-goose/goose/pull/6250), the build passed and the separate Code Review Agent didn't have a single comment. That's just how well done the work was.
+Definitely not a fast process. BUT! When I put up [this PR](https://github.com/HikerM/lumina/pull/6250), the build passed and the separate Code Review Agent didn't have a single comment. That's just how well done the work was.
 
 Had I done this without AI, it would have likely taken me several hours of work as the feature was complex and deeply integrated. And had I had AI jump straight to implementation, I have no doubt it would have surely drifted and messed something up.
 

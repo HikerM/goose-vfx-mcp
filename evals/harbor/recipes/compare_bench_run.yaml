@@ -8,7 +8,7 @@ parameters:
   - key: target
     input_type: string
     requirement: required
-    description: "the run we want to improve (typically a goose run)"
+    description: "the run we want to improve (typically a lumina run)"
   - key: reference
     input_type: string
     requirement: required
@@ -32,7 +32,7 @@ prompt: |
   target run (the one we want to improve): {{ target }}
   reference run (the one to learn from):   {{ reference }}
 
-  this recipe assumes it is launched from the root of the goose repo
+  this recipe assumes it is launched from the root of the lumina repo
   (i.e. the current working directory contains `evals/harbor/`). all paths
   below are relative to that.
 
@@ -81,7 +81,7 @@ prompt: |
   tell application "iTerm"
       tell current window
           create tab with default profile
-          tell current session to write text "cd $REPO && goose run --recipe evals/harbor/recipes/analyze_bench_failure.yaml --interactive --params=target={{ target }} --params=reference={{ reference }} --params=task=<TASK>"
+          tell current session to write text "cd $REPO && lumina run --recipe evals/harbor/recipes/analyze_bench_failure.yaml --interactive --params=target={{ target }} --params=reference={{ reference }} --params=task=<TASK>"
       end tell
   end tell
   APPLESCRIPT

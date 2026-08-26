@@ -68,7 +68,7 @@ function normalizeRecipe(recipe: any): Recipe {
     (cleaned as any).parameters = recipe.parameters;
   }
 
-  const configForGoose = {
+  const configForLumina = {
     title: cleaned.title,
     description: cleaned.description,
     instructions: cleaned.instructions,
@@ -78,8 +78,8 @@ function normalizeRecipe(recipe: any): Recipe {
     parameters: (cleaned as any).parameters || []
   };
   
-  const encoded = toBase64(JSON.stringify(configForGoose));
-  cleaned.recipeUrl = `goose://recipe?config=${encoded}`;
+  const encoded = toBase64(JSON.stringify(configForLumina));
+  cleaned.recipeUrl = `lumina://recipe?config=${encoded}`;
 
   return cleaned;
 }

@@ -1,0 +1,28 @@
+{
+  "name": "@hikerm/lumina-binary-darwin-x64",
+  "version": "0.20.2",
+  "description": "Lumina binary for macOS x64",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HikerM/lumina.git"
+  },
+  "bin": {
+    "lumina": "bin/lumina"
+  },
+  "keywords": [
+    "lumina",
+    "ai",
+    "agent",
+    "binary"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/lumina"
+  ]
+}

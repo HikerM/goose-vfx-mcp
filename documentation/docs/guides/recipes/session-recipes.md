@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Reusable Recipes
-description: "Share a goose session setup (including tools, goals, and instructions) as a reusable recipe that others can launch with a single click"
+description: "Share a lumina session setup (including tools, goals, and instructions) as a reusable recipe that others can launch with a single click"
 ---
 
 import Tabs from '@theme/Tabs';
@@ -9,14 +9,14 @@ import TabItem from '@theme/TabItem';
 import { PanelLeft, ChefHat, SquarePen, Link, Clock, Terminal, Share2 } from 'lucide-react';
 import RecipeFields from '@site/src/components/RecipeFields';
 
-Sometimes you finish a task in goose and realize, "Hey, this setup could be useful again." Maybe you have curated a great combination of tools, defined a clear goal, and want to preserve that flow. Or maybe you're trying to help someone else replicate what you just did without walking them through it step by step. 
+Sometimes you finish a task in lumina and realize, "Hey, this setup could be useful again." Maybe you have curated a great combination of tools, defined a clear goal, and want to preserve that flow. Or maybe you're trying to help someone else replicate what you just did without walking them through it step by step.
 
-You can turn your current goose session into a reusable recipe that includes the tools, goals, and setup you're using right now and package it into a new Agent that others (or future you) can launch with a single click.
+You can turn your current lumina session into a reusable recipe that includes the tools, goals, and setup you're using right now and package it into a new Agent that others (or future you) can launch with a single click.
 
 ## Create Recipe
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
 
   Create a recipe from the current session or from a template.
 
@@ -48,7 +48,7 @@ You can turn your current goose session into a reusable recipe that includes the
 
   </TabItem>
 
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
    Recipe files can be either JSON (.json) or YAML (.yaml) files. While in a [session](/docs/guides/sessions/session-management#start-session), run this command to generate a recipe.yaml file in your current directory:
 
    ```sh
@@ -78,8 +78,8 @@ You can turn your current goose session into a reusable recipe that includes the
    activities:                    # Example prompts to display in the Desktop app
    - $activities
    settings:                      # Additional settings
-     goose_provider: $provider    # Provider to use for this recipe
-     goose_model: $model          # Specific model to use for this recipe
+     lumina_provider: $provider    # Provider to use for this recipe
+     lumina_model: $model          # Specific model to use for this recipe
      temperature: $temperature    # Model temperature setting for this recipe (0.0 to 1.0)
    retry:                         # Automated retry logic with success validation
      max_retries: $max_retries    # Maximum number of retry attempts
@@ -125,10 +125,10 @@ You can turn your current goose session into a reusable recipe that includes the
    - "Review {{ language }} code for complexity"
    - "Check test coverage against {{ test_coverage }}% requirement"
    - "Verify {{ style_guide }} compliance"
-   settings:                     
-     goose_provider: "anthropic"   
-     goose_model: "claude-3-7-sonnet-latest"          
-     temperature: 0.7 
+   settings:
+     lumina_provider: "anthropic"
+     lumina_model: "claude-3-7-sonnet-latest"
+     temperature: 0.7
    parameters:
    - key: project_name
      input_type: string
@@ -156,16 +156,16 @@ You can turn your current goose session into a reusable recipe that includes the
    ```
    </details>
 
-   See the [Recipe Reference Guide](/docs/guides/recipes/recipe-reference) for more information about recipe fields. 
+   See the [Recipe Reference Guide](/docs/guides/recipes/recipe-reference) for more information about recipe fields.
 
-   </TabItem> 
+   </TabItem>
 
 
   <TabItem value="generator" label="Recipe Generator">
-    Use the online [Recipe Generator](https://goose-docs.ai/recipe-generator) tool to create a recipe. First choose your preferred format:
+    Use the online [Recipe Generator](https://hikerm.github.io/lumina/recipe-generator) tool to create a recipe. First choose your preferred format:
 
-    - **URL Format**: Generates a shareable link that opens a session in goose Desktop
-    - **YAML Format**: Generates YAML content that you can save to file and then run in goose CLI
+    - **URL Format**: Generates a shareable link that opens a session in lumina Desktop
+    - **YAML Format**: Generates YAML content that you can save to file and then run in lumina CLI
 
     Then fill out the recipe form by providing:
       - A **title** for the recipe
@@ -181,12 +181,12 @@ You can turn your current goose session into a reusable recipe that includes the
 </Tabs>
 
 :::tip Customize Recipe Generation
-You can customize how goose generates recipes by editing the `recipe.md` [prompt template](/docs/guides/context-engineering/prompt-templates).
+You can customize how lumina generates recipes by editing the `recipe.md` [prompt template](/docs/guides/context-engineering/prompt-templates).
 :::
 
 ## Edit Recipe
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
 
    1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
    2. Click `Recipes` in the sidebar
@@ -201,19 +201,19 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
   :::tip Edit In-Use Recipe
   You can also access the edit dialog while using a recipe in a session: Just click the <ChefHat className="inline" size={16} /> button at the bottom of the app. The button shows up after you've sent your first message.
   :::
-   
+
   </TabItem>
 
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   Once the recipe file is created, you can open it with your preferred text editor and modify the value of any field.
 
-</TabItem> 
+</TabItem>
 </Tabs>
 
 ## Use Recipe
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
 
   1. Open the recipe using a direct link or manual URL entry, or from your Recipe library:
 
@@ -223,9 +223,9 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
 
      **Manual URL Entry:**
 
-         1. Paste a recipe link into your browser's address bar 
-         2. Press `Enter` and click the `Open Goose.app` prompt
-       
+         1. Paste a recipe link into your browser's address bar
+         2. Press `Enter` and click the `Open Lumina.app` prompt
+
      **Recipe Library:**
 
          1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
@@ -235,18 +235,18 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
 
      **Slash Command:**
 
-         1. Enter a [custom slash command](/docs/guides/context-engineering/slash-commands) in any goose chat session
+         1. Enter a [custom slash command](/docs/guides/context-engineering/slash-commands) in any lumina chat session
 
   2. The first time you run a recipe, a warning dialog displays the recipe's title, description, and instructions for you to review. If you trust the recipe content, click `Trust and Execute` to continue. You won't be prompted again for the same recipe unless it changes.
 
   3. If the recipe contains parameters, enter your values in the `Recipe Parameters` dialog and click `Start Recipe`.
-  
+
      Parameters are dynamic values used in the recipe:
 
      - **Required parameters** are marked with red asterisks (*)
      - **Optional parameters** show default values that can be changed
 
-  4. The recipe automatically submits and goose begins execution. If the recipe includes a [prompt](#core-components), it's sent as the first message. If not, you can click an activity bubble or send a prompt to get started.
+  4. The recipe automatically submits and lumina begins execution. If the recipe includes a [prompt](#core-components), it's sent as the first message. If not, you can click an activity bubble or send a prompt to get started.
 
   :::info Privacy & Isolation
   - Each person gets their own private session
@@ -255,16 +255,16 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
   :::
   </TabItem>
 
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
-  Using a recipe with the goose CLI might involve the following tasks:
+  Using a recipe with the lumina CLI might involve the following tasks:
   - [Configuring your recipe location](#configure-recipe-location)
   - [Running a recipe](#run-a-recipe)
   - [Scheduling a recipe](#schedule-recipe)
 
    #### Configure Recipe Location
 
-  Recipes can be stored locally on your device or in a GitHub repository. Configure your recipe repository using either the `goose configure` command or [config file](/docs/guides/config-files#global-settings).
+  Recipes can be stored locally on your device or in a GitHub repository. Configure your recipe repository using either the `lumina configure` command or [config file](/docs/guides/config-files#global-settings).
 
   :::tip Repository Structure
   - Each recipe should be in its own directory
@@ -273,52 +273,52 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
   :::
 
    <Tabs>
-     <TabItem value="configure" label="Using goose configure" default>
+     <TabItem value="configure" label="Using lumina configure" default>
 
        Run the configure command:
        ```sh
-       goose configure
+       lumina configure
        ```
 
        You'll see the following prompts:
 
        ```sh
-       ┌  goose-configure 
+       ┌  lumina-configure
        │
        ◆  What would you like to configure?
-       │  ○ Configure Providers 
-       │  ○ Add Extension 
-       │  ○ Toggle Extensions 
-       │  ○ Remove Extension 
+       │  ○ Configure Providers
+       │  ○ Add Extension
+       │  ○ Toggle Extensions
+       │  ○ Remove Extension
        // highlight-start
-       │  ● goose settings (Set the goose mode, Tool Output, Tool Permissions, Experiment, goose recipe github repo and more)
+       │  ● lumina settings (Set the lumina mode, Tool Output, Tool Permissions, Experiment, lumina recipe github repo and more)
        // highlight-end
        │
        ◇  What would you like to configure?
-       │  goose settings 
+       │  lumina settings
        │
        ◆  What setting would you like to configure?
-       │  ○ goose mode 
-       │  ○ Tool Permission 
-       │  ○ Tool Output 
-       │  ○ Toggle Experiment 
+       │  ○ lumina mode
+       │  ○ Tool Permission
+       │  ○ Tool Output
+       │  ○ Toggle Experiment
        // highlight-start
-       │  ● goose recipe github repo (goose will pull recipes from this repo if not found locally.)
+       │  ● lumina recipe github repo (lumina will pull recipes from this repo if not found locally.)
        // highlight-end
-       └  
-       ┌  goose-configure 
+       └
+       ┌  lumina-configure
        │
        ◇  What would you like to configure?
-       │  goose settings 
+       │  lumina settings
        │
        ◇  What setting would you like to configure?
-       │  goose recipe github repo 
+       │  lumina recipe github repo
        │
-       ◆  Enter your goose recipe GitHub repo (owner/repo): eg: my_org/goose-recipes
+       ◆  Enter your lumina recipe GitHub repo (owner/repo): eg: my_org/lumina-recipes
        // highlight-start
-       │  squareup/goose-recipes (default)
+       │  squareup/lumina-recipes (default)
        // highlight-end
-       └  
+       └
        ```
 
      </TabItem>
@@ -326,8 +326,8 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
      <TabItem value="config" label="Using config file">
 
        Add to your config file:
-       ```yaml title="~/.config/goose/config.yaml"
-       GOOSE_RECIPE_GITHUB_REPO: "owner/repo"
+       ```yaml title="~/.config/lumina/config.yaml"
+       LUMINA_RECIPE_GITHUB_REPO: "owner/repo"
        ```
 
      </TabItem>
@@ -338,20 +338,20 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
    <Tabs groupId="interface">
      <TabItem value="local" label="Local Recipe" default>
 
-       **Basic Usage** - Run once and exit (see [run options](/docs/guides/goose-cli-commands#run-options) and [recipe commands](/docs/guides/goose-cli-commands#recipe) for more):
+       **Basic Usage** - Run once and exit (see [run options](/docs/guides/lumina-cli-commands#run-options) and [recipe commands](/docs/guides/lumina-cli-commands#recipe) for more):
        ```sh
-       # Using recipe file in current directory or [`GOOSE_RECIPE_PATH`](/docs/guides/environment-variables#recipe-configuration) directories
-       goose run --recipe recipe.yaml
+       # Using recipe file in current directory or [`LUMINA_RECIPE_PATH`](/docs/guides/environment-variables#recipe-configuration) directories
+       lumina run --recipe recipe.yaml
 
        # Using full path
-       goose run --recipe ./recipes/my-recipe.yaml
+       lumina run --recipe ./recipes/my-recipe.yaml
        ```
 
-       **Preview Recipe** - Use the [`explain`](/docs/guides/goose-cli-commands#run-options) command to view details before running:
- 
+       **Preview Recipe** - Use the [`explain`](/docs/guides/lumina-cli-commands#run-options) command to view details before running:
+
        **Interactive Mode** - Start an interactive session:
        ```sh
-       goose run --recipe recipe.yaml --interactive
+       lumina run --recipe recipe.yaml --interactive
        ```
        The interactive mode will prompt for required values:
        ```sh
@@ -362,14 +362,14 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
        │ PEP8
        ```
 
-       **With Parameters** - Supply parameter values when running recipes. See the [`run` command documentation](/docs/guides/goose-cli-commands#run-options) for detailed examples and options.
+       **With Parameters** - Supply parameter values when running recipes. See the [`run` command documentation](/docs/guides/lumina-cli-commands#run-options) for detailed examples and options.
 
        Basic example:
        ```sh
-       goose run --recipe recipe.yaml --params language=Python
+       lumina run --recipe recipe.yaml --params language=Python
        ```
 
-       **Slash Command** - Enter a [custom slash command](/docs/guides/context-engineering/slash-commands) in any goose chat session
+       **Slash Command** - Enter a [custom slash command](/docs/guides/context-engineering/slash-commands) in any lumina chat session
 
      </TabItem>
 
@@ -377,10 +377,10 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
 
        Once you've configured your GitHub repository, you can run recipes by name:
 
-       **Basic Usage** - Run recipes from your configured repo using the recipe name that matches its directory (see [run options](/docs/guides/goose-cli-commands#run-options) and [recipe commands](/docs/guides/goose-cli-commands#recipe) for more):
+       **Basic Usage** - Run recipes from your configured repo using the recipe name that matches its directory (see [run options](/docs/guides/lumina-cli-commands#run-options) and [recipe commands](/docs/guides/lumina-cli-commands#recipe) for more):
 
        ```sh
-       goose run --recipe recipe-name
+       lumina run --recipe recipe-name
        ```
 
        For example, if your repository structure is:
@@ -391,17 +391,17 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
        └── setup-project/
            └── recipe.yaml
        ```
-       
+
        You would run the following command to run the code review recipe:
        ```sh
-       goose run --recipe code-review
+       lumina run --recipe code-review
        ```
 
-      **Preview Recipe** - Use the [`explain`](/docs/guides/goose-cli-commands#run-options) command to view details before running:
+      **Preview Recipe** - Use the [`explain`](/docs/guides/lumina-cli-commands#run-options) command to view details before running:
 
        **Interactive Mode** - With parameter prompts:
        ```sh
-       goose run --recipe code-review --interactive
+       lumina run --recipe code-review --interactive
        ```
        The interactive mode will prompt for required values:
        ```sh
@@ -412,7 +412,7 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
        │ Python
        ```
 
-       **With Parameters** - Supply parameter values when running recipes. See the [`run` command documentation](/docs/guides/goose-cli-commands#run-options) for detailed examples and options.
+       **With Parameters** - Supply parameter values when running recipes. See the [`run` command documentation](/docs/guides/lumina-cli-commands#run-options) for detailed examples and options.
 
      </TabItem>
    </Tabs>
@@ -429,10 +429,10 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
 ## Validate Recipe
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     Recipe validation is only available through the CLI.
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     Validate your recipe file to ensure it's properly configured. Validation verifies that:
     - All required fields are present
     - Parameters are properly formatted
@@ -440,11 +440,11 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
     - The YAML/JSON syntax is correct
 
    ```sh
-   goose recipe validate recipe.yaml
+   lumina recipe validate recipe.yaml
    ```
 
    :::info
-   If you want to validate a recipe you just created, you need to [exit the session](/docs/guides/sessions/session-management#exit-session) before running the [`validate` subcommand](/docs/guides/goose-cli-commands#recipe).
+   If you want to validate a recipe you just created, you need to [exit the session](/docs/guides/sessions/session-management#exit-session) before running the [`validate` subcommand](/docs/guides/lumina-cli-commands#recipe).
    :::
 
    Recipe validation can be useful for:
@@ -456,7 +456,7 @@ You can customize how goose generates recipes by editing the `recipe.md` [prompt
 </Tabs>
 
 ## Share Recipe
-Share your recipe with goose users using a recipe link or recipe file.
+Share your recipe with lumina users using a recipe link or recipe file.
 
 :::info Privacy & Isolation
 Each recipient gets their own private session when using your shared recipe. No data is shared between users, and your original session and recipe remain unaffected.
@@ -466,35 +466,35 @@ Each recipient gets their own private session when using your shared recipe. No 
 You can share a recipe with Desktop users via a recipe link.
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     Copy the deeplink from your Recipe Library to share with others:
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
     2. Click `Recipes` in the sidebar
     3. Find the recipe you want to share and click the <Link className="inline" size={16} /> button to copy the link
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     Generate a deeplink from your recipe file to share with others:
     ```sh
-    goose recipe deeplink <FILE>
+    lumina recipe deeplink <FILE>
     ```
 
     You can also provide parameter values to pre-fill the `Recipe Parameters` dialog:
     ```sh
-    goose recipe deeplink <FILE> --param key1=value1 --param key2=value2
+    lumina recipe deeplink <FILE> --param key1=value1 --param key2=value2
     ```
   </TabItem>
 </Tabs>
 
-When someone clicks the link, it will open goose Desktop with your recipe configuration. They can also use your recipe link to [import a recipe](/docs/guides/recipes/storing-recipes#importing-recipes) for future use.
+When someone clicks the link, it will open lumina Desktop with your recipe configuration. They can also use your recipe link to [import a recipe](/docs/guides/recipes/storing-recipes#importing-recipes) for future use.
 
 ### Share via Recipe File
 You can share a recipe with Desktop or CLI users by sending the recipe file directly.
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
 
-  In goose Desktop, you can export a recipe file or copy its content to share with others.
+  In lumina Desktop, you can export a recipe file or copy its content to share with others.
 
   1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
   2. Click `Recipes` in the sidebar
@@ -506,23 +506,23 @@ You can share a recipe with Desktop or CLI users by sending the recipe file dire
   Other Desktop users can [import the recipe](/docs/guides/recipes/storing-recipes#importing-recipes) to their Recipe Library.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
   Exporting or copying recipe content is only available through the Desktop, but you can copy local recipe files directly.
 
-  CLI users can run a shared recipe file using `goose run --recipe <FILE>` or open it directly in goose Desktop with `goose recipe open <FILE>`. See the [CLI Commands guide](/docs/guides/goose-cli-commands#recipe) for details.
+  CLI users can run a shared recipe file using `lumina run --recipe <FILE>` or open it directly in lumina Desktop with `lumina recipe open <FILE>`. See the [CLI Commands guide](/docs/guides/lumina-cli-commands#recipe) for details.
 
   </TabItem>
 </Tabs>
 
 ## Schedule Recipe
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-Automate goose recipes by running them on a schedule. When creating a schedule, you'll configure:
+  <TabItem value="ui" label="lumina Desktop" default>
+Automate lumina recipes by running them on a schedule. When creating a schedule, you'll configure:
 - **Name**: A descriptive name for the schedule
 - **Source**: The recipe to run
-- **Execution mode**: Whether the recipe runs in the background (no window, results saved) or foreground (opens window if goose Desktop is running, otherwise runs in background)
-- **Frequency and time**: When to run the recipe (e.g. every 20 minutes, weekly at 10 AM on Friday). Your selection is converted into a [cron expression](https://en.wikipedia.org/wiki/Cron#Cron_expression) used by goose.
+- **Execution mode**: Whether the recipe runs in the background (no window, results saved) or foreground (opens window if lumina Desktop is running, otherwise runs in background)
+- **Frequency and time**: When to run the recipe (e.g. every 20 minutes, weekly at 10 AM on Friday). Your selection is converted into a [cron expression](https://en.wikipedia.org/wiki/Cron#Cron_expression) used by lumina.
 
 **Schedule from Recipe Library:**
 
@@ -536,7 +536,7 @@ Automate goose recipes by running them on a schedule. When creating a schedule, 
 **Schedule from Scheduler View:**
 
    1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
-   2. Click `Scheduler` 
+   2. Click `Scheduler`
    3. Click `Create Schedule`
    4. In the dialog that appears, configure the schedule. For **Source**, select a `.yaml` or `.yml` file or provide a [recipe link](#share-recipe).
    5. Click `Create Schedule`
@@ -552,16 +552,16 @@ Click on a schedule to view details, see when it was last run, and perform actio
 At the bottom of the `Schedule Details` page you can view the list of sessions created by the scheduled recipe and open or restore each session.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
-  Automate goose recipes by scheduling them to run with a [cron expression](https://en.wikipedia.org/wiki/Cron#Cron_expression).
+  <TabItem value="cli" label="lumina CLI">
+  Automate lumina recipes by scheduling them to run with a [cron expression](https://en.wikipedia.org/wiki/Cron#Cron_expression).
 
   ```bash
   # Add a new scheduled recipe which runs every day at 9 AM
-  goose schedule add --schedule-id daily-report --cron "0 0 9 * * *" --recipe-source ./recipes/daily-report.yaml
+  lumina schedule add --schedule-id daily-report --cron "0 0 9 * * *" --recipe-source ./recipes/daily-report.yaml
   ```
   You can use either a 5, 6, or 7-digit cron expression for full scheduling precision, following the format "seconds minutes hours day-of-month month day-of-week year".
 
-  See the [`schedule` command documentation](/docs/guides/goose-cli-commands.md#schedule) for detailed examples and options.
+  See the [`schedule` command documentation](/docs/guides/lumina-cli-commands.md#schedule) for detailed examples and options.
 </TabItem>
 </Tabs>
 
@@ -590,7 +590,7 @@ At the bottom of the `Schedule Details` page you can view the list of sessions c
 Recipes can include retry logic to automatically attempt task completion multiple times until success criteria are met. This is particularly useful for:
 
 - **Automation workflows** that need to ensure successful completion
-- **Development tasks** like running tests that may need multiple attempts  
+- **Development tasks** like running tests that may need multiple attempts
 - **System operations** that require validation and cleanup
 
 **Basic retry configuration:**
@@ -619,12 +619,12 @@ See the [Recipe Reference Guide](/docs/guides/recipes/recipe-reference#retry) fo
 Recipes can enforce [structured JSON output](/docs/guides/recipes/recipe-reference#response), making them ideal for automation workflows that need to parse and process agent responses reliably. Key benefits include:
 
 - **Reliable parsing**: Consistent JSON format for scripts, automation, and CI/CD pipelines
-- **Built-in validation**: Ensures output matches your requirements  
+- **Built-in validation**: Ensures output matches your requirements
 - **Easy extraction**: Final output appears as a single line for simple parsing
 
-Structured output is particularly useful for: 
+Structured output is particularly useful for:
 - **Development workflows**: Code analysis reports, test results with pass/fail counts, and build status with deployment readiness
-- **Data processing**: Results with counts and validation status, content analysis with structured findings  
+- **Data processing**: Results with counts and validation status, content analysis with structured findings
 - **Documentation generation**: Consistent metadata and structured project reports for further processing
 
 **Example structured output configuration:**
@@ -660,45 +660,45 @@ response:
 
 **How it works:**
 1. Recipe runs normally with provided instructions
-2. goose calls a `final_output` tool with JSON matching your schema
+2. lumina calls a `final_output` tool with JSON matching your schema
 3. Output is validated against the JSON schema
-4. If validation fails, goose receives error details and must correct the output
+4. If validation fails, lumina receives error details and must correct the output
 5. Final validated JSON appears as the last line of output for easy extraction
 
 **Example automation usage:**
 ```bash
 # Run recipe and extract JSON output
-goose run --recipe analysis.yaml --params project_path=./src > output.log
+lumina run --recipe analysis.yaml --params project_path=./src > output.log
 RESULT=$(tail -n 1 output.log)
 echo "Analysis Status: $(echo $RESULT | jq -r '.build_status')"
 echo "Issues Found: $(echo $RESULT | jq -r '.tests_failed')"
 ```
 
 :::info
-Structured output is supported in recipes run in both the goose CLI and goose Desktop. However, creating and editing the `json_schema` configuration must be done manually in the recipe file.
+Structured output is supported in recipes run in both the lumina CLI and lumina Desktop. However, creating and editing the `json_schema` configuration must be done manually in the recipe file.
 :::
 
 ## What's Included
 
 A recipe captures:
 
-- AI instructions (goal/purpose)  
-- Suggested activities (examples for the user to click)  
-- Enabled extensions and their configurations  
-- Project folder or file context  
+- AI instructions (goal/purpose)
+- Suggested activities (examples for the user to click)
+- Enabled extensions and their configurations
+- Project folder or file context
 - Initial setup (but not full conversation history)
 - The model and provider to use when running the recipe (optional)
 - Retry logic and success validation configuration (if configured)
 
 
-To protect your privacy and system integrity, goose excludes:
+To protect your privacy and system integrity, lumina excludes:
 
-- Global and local memory  
-- API keys and personal credentials  
-- System-level goose settings  
+- Global and local memory
+- API keys and personal credentials
+- System-level lumina settings
 
 
 This means others may need to supply their own credentials or memory context if the recipe depends on those elements.
 
 ## Learn More
-Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master goose recipes.
+Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master lumina recipes.

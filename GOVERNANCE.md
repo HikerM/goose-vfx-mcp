@@ -1,25 +1,25 @@
-# goose Technical Governance and Stewardship
+# lumina Technical Governance and Stewardship
 
-Learn about goose's governance structure and how to participate
+Learn about lumina's governance structure and how to participate
 
-goose follows a lightweight technical governance model designed to support rapid iteration while maintaining community involvement. This document outlines how the project is organized and how decisions are made.
+lumina follows a lightweight technical governance model designed to support rapid iteration while maintaining community involvement. This document outlines how the project is organized and how decisions are made.
 
 ## Core Values
-goose's governance is guided by three fundamental values:
+lumina's governance is guided by three fundamental values:
 
-* **Open**: goose is open source, but we go beyond code availability. We plan and build in the open. Our roadmap as well as goose recipes, extensions, and prompts are editable and shareable. Our goal is to make goose the most hackable agent available.
-* **Flexible**: we prefer open models – but we don’t restrict ourselves. goose equally supports remotely deployed frontier models as well as local private models, whether open or proprietary.
-* **Choice**: We're not bound to any one model, protocol, or stack. goose is built for choice and open standards, adapting to your tools, workflow, and identity as a creator.
+* **Open**: lumina is open source, but we go beyond code availability. We plan and build in the open. Our roadmap as well as lumina recipes, extensions, and prompts are editable and shareable. Our goal is to make lumina the most hackable agent available.
+* **Flexible**: we prefer open models – but we don’t restrict ourselves. lumina equally supports remotely deployed frontier models as well as local private models, whether open or proprietary.
+* **Choice**: We're not bound to any one model, protocol, or stack. lumina is built for choice and open standards, adapting to your tools, workflow, and identity as a creator.
 
 ## Roles
 
 ### Contributors
 
-Anyone in the community who contributes to goose through issues, pull requests, or discussions. Community contributions of all kinds, from code and bug reports to feature requests and discussion participation, help ensure goose evolves in directions that serve real user needs and remains aligned with how people actually use the project.
+Anyone in the community who contributes to lumina through issues, pull requests, or discussions. Community contributions of all kinds, from code and bug reports to feature requests and discussion participation, help ensure lumina evolves in directions that serve real user needs and remains aligned with how people actually use the project.
 
 ### Maintainers
 
-Maintainers are trusted community members responsible for key components of goose. They review pull requests, guide contributors, and ensure technical and community health within their domain.
+Maintainers are trusted community members responsible for key components of lumina. They review pull requests, guide contributors, and ensure technical and community health within their domain.
 
 #### Responsibilities
 
@@ -32,16 +32,16 @@ Maintainers have write access to create branches on the repository but not full 
 
 ### Core Maintainers
 
-Core Maintainers have broad technical understanding of goose and are responsible for the project's overall direction, technical consistency, and long-term vision.
+Core Maintainers have broad technical understanding of lumina and are responsible for the project's overall direction, technical consistency, and long-term vision.
 
 #### Responsibilities
 
-* Setting the overall technical direction and vision for goose
-* Define and uphold goose’s technical direction and principles.
+* Setting the overall technical direction and vision for lumina
+* Define and uphold lumina’s technical direction and principles.
 * Resolve disputes escalated by Maintainers.
 * Appoint and remove Maintainers.
 * Ensure the balance between innovation and stability.
-* Steward goose in the best interest of the open community.
+* Steward lumina in the best interest of the open community.
 
 Core Maintainers have admin access across all repositories but use standard contribution workflows (e.g., pull requests) for transparency.
 
@@ -65,7 +65,7 @@ This process ensures fairness and transparency while enabling timely decision-ma
 
 ### Deadlocks
 
-In the event of a decision deadlock in the process above, goose’s creator, Bradley Axen, steps in as a tie breaker to remove the deadlock and make progress.
+In the event of a decision deadlock in the process above, lumina’s creator, Bradley Axen, steps in as a tie breaker to remove the deadlock and make progress.
 
 ### Major Changes
 
@@ -165,34 +165,34 @@ If a Core Maintainer leaves for any reason:
 
 ## Governance Changes
 
-This governance model may evolve as goose grows. Any proposed modification to this document must:
+This governance model may evolve as lumina grows. Any proposed modification to this document must:
 
 1. Be proposed through a GitHub issue with rationale.
 2. Undergo open community discussion for at least one week.
 3. Be approved by a majority of Core Maintainers.
 4. Clear communication of changes to the community.
-5. Implemented via a pull request to the GOVERNANCE.md file in the main goose repository.
+5. Implemented via a pull request to the GOVERNANCE.md file in the main lumina repository.
 
 ## Current Membership
 
-Core Maintainers and Maintainers are listed in the main goose repository's [MAINTAINERS.md](https://github.com/aaif-goose/goose/blob/main/MAINTAINERS.md) file with their areas of expertise where applicable.
+Core Maintainers and Maintainers are listed in the main lumina repository's [MAINTAINERS.md](https://github.com/HikerM/lumina/blob/main/MAINTAINERS.md) file with their areas of expertise where applicable.
 
 ## Summary
 
-### goose's governance prioritizes
+### lumina's governance prioritizes
 
 * **Speed**: Minimal process to support rapid experimentation
 * **Openness**: Transparent decision-making and community involvement
-* **Autonomy**: Empowering users and contributors to shape goose
+* **Autonomy**: Empowering users and contributors to shape lumina
 * **Quality**: Thoughtful review while avoiding bureaucracy
 
-We believe this balance enables goose to remain innovative while building a strong, engaged community around the shared goal of creating the most hackable, user-controlled AI agent available.
+We believe this balance enables lumina to remain innovative while building a strong, engaged community around the shared goal of creating the most hackable, user-controlled AI agent available.
 
 # General Project Policies
 
-Founded by Block and now stewarded by AAIF (Agentic AI Foundation), goose has been established as a Series of LF Projects, LLC. Policies applicable to goose and participants in the goose project, including guidelines on the usage of trademarks, are located at [https://lfprojects.org/policies/](https://lfprojects.org/policies/).  Governance changes approved as per the provisions of this governance document must also be approved by LF Projects, LLC.
+Founded by Block and now stewarded by AAIF (Agentic AI Foundation), lumina has been established as a Series of LF Projects, LLC. Policies applicable to lumina and participants in the lumina project, including guidelines on the usage of trademarks, are located at [https://lfprojects.org/policies/](https://lfprojects.org/policies/).  Governance changes approved as per the provisions of this governance document must also be approved by LF Projects, LLC.
 
-goose participants acknowledge that the copyright in all new contributions will be retained by the copyright holder as independent works of authorship and that no contributor or copyright holder will be required to assign copyrights to the project.
+lumina participants acknowledge that the copyright in all new contributions will be retained by the copyright holder as independent works of authorship and that no contributor or copyright holder will be required to assign copyrights to the project.
 Except as described below, all code and specification contributions to the project must be made using the Apache License, Version 2.0 available at (the “Project License”).
 
 All outbound code and specifications will be made available under the Project License. The Core Maintainers may approve the use of an alternative open license or licenses for inbound or outbound contributions on an exception basis.

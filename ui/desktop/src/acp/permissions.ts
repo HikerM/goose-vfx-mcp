@@ -1,11 +1,11 @@
-import type { ToolListItem, ToolPermissionEntry, ToolPermissionLevel } from '@aaif/goose-sdk';
+import type { ToolListItem, ToolPermissionEntry, ToolPermissionLevel } from '@hikerm/lumina-sdk';
 import { getAcpClient } from './acpConnection';
 
 export type { ToolListItem, ToolPermissionEntry, ToolPermissionLevel };
 
 export async function listTools(sessionId: string, extensionName?: string): Promise<ToolListItem[]> {
   const client = await getAcpClient();
-  const response = await client.goose.toolsList_unstable({
+  const response = await client.lumina.toolsList_unstable({
     sessionId,
     extensionName: extensionName ?? null,
   });
@@ -14,5 +14,5 @@ export async function listTools(sessionId: string, extensionName?: string): Prom
 
 export async function setToolPermissions(toolPermissions: ToolPermissionEntry[]): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.toolsPermissionsSet_unstable({ toolPermissions });
+  await client.lumina.toolsPermissionsSet_unstable({ toolPermissions });
 }

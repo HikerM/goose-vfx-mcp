@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.1.0",
+  "active_context_max_chars": 8000,
+  "session_context_max_chars": 4000,
+  "max_items_per_section": 8,
+  "max_recent_checkpoints": 8,
+  "max_milestone_checkpoints": 6,
+  "max_ledger_entries": 24,
+  "max_task_index_closed": 120,
+  "max_task_history_events": 40,
+  "max_task_history_ledger_entries": 20,
+  "max_session_epoch_turns": 20,
+  "max_session_epoch_tool_calls": 40,
+  "max_session_epoch_tool_output_chars": 60000,
+  "max_session_epoch_compactions": 1
+}

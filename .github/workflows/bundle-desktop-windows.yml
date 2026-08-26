@@ -4,42 +4,42 @@ on:
   workflow_dispatch:
     inputs:
       signing:
-        description: 'Whether to sign the Windows executable'
+        description: "Whether to sign the Windows executable"
         required: false
         type: boolean
         default: false
       windows_variant:
-        description: 'Windows artifact variant to build'
+        description: "Windows artifact variant to build"
         required: false
         type: string
-        default: 'standard'
+        default: "standard"
   workflow_call:
     inputs:
       version:
-        description: 'Version to build'
+        description: "Version to build"
         required: false
         type: string
       signing:
-        description: 'Whether to sign the Windows executable'
+        description: "Whether to sign the Windows executable"
         required: false
         type: boolean
         default: false
       ref:
-        description: 'Git ref to checkout'
+        description: "Git ref to checkout"
         required: false
         type: string
-        default: ''
+        default: ""
       windows_variant:
-        description: 'Windows artifact variant to build'
+        description: "Windows artifact variant to build"
         required: false
         type: string
-        default: 'standard'
+        default: "standard"
 
 # Permissions required for OIDC authentication with Azure Trusted Signing
 permissions:
-  id-token: write   # Required to fetch the OIDC token for Azure federated credentials
-  contents: read    # Required by actions/checkout
-  actions: read     # May be needed for some workflows
+  id-token: write # Required to fetch the OIDC token for Azure federated credentials
+  contents: read # Required by actions/checkout
+  actions: read # May be needed for some workflows
 
 jobs:
   build-desktop-windows:
@@ -48,12 +48,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ inputs.ref != '' && inputs.ref || '' }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24.10.0
 
@@ -61,7 +61,7 @@ jobs:
         run: npm install -g pnpm@10.30.3
 
       - name: Cache node_modules
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             node_modules
@@ -72,7 +72,7 @@ jobs:
             windows-pnpm-cache-v1-${{ runner.os }}-node24-
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4  # v2.9.1
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           key: windows-msvc-desktop-${{ inputs.windows_variant }}
 
@@ -86,9 +86,9 @@ jobs:
         if: ${{ inputs.windows_variant == 'cuda' }}
         uses: Jimver/cuda-toolkit@v0.2.35
         with:
-          cuda: '12.9.1'
-          method: 'local'
-          log-file-suffix: 'bundle-desktop-windows-cuda.txt'
+          cuda: "12.9.1"
+          method: "local"
+          log-file-suffix: "bundle-desktop-windows-cuda.txt"
 
       - name: Set up MSVC developer environment (Windows CUDA)
         if: ${{ inputs.windows_variant == 'cuda' }}
@@ -112,16 +112,17 @@ jobs:
         shell: pwsh
         env:
           CUDA_COMPUTE_CAP: ${{ inputs.windows_variant == 'cuda' && '80' || '' }}
+          CXXFLAGS: /utf-8 /EHsc
         run: |
           $isCuda = "${{ inputs.windows_variant }}" -eq "cuda"
 
           Write-Output "Building Windows ACP backend"
           if ($isCuda) {
-            cargo build --release --target x86_64-pc-windows-msvc -p goose-cli --bin goose --features cuda
+            cargo build --release --target x86_64-pc-windows-msvc -p lumina-agent-cli --bin lumina --features cuda
           } else {
-            cargo build --release --target x86_64-pc-windows-msvc -p goose-cli --bin goose
+            cargo build --release --target x86_64-pc-windows-msvc -p lumina-agent-cli --bin lumina
           }
-          $binaryPath = "./target/x86_64-pc-windows-msvc/release/goose.exe"
+          $binaryPath = "./target/x86_64-pc-windows-msvc/release/lumina.exe"
 
           # Verify build succeeded
           if (-not (Test-Path $binaryPath)) {
@@ -136,7 +137,7 @@ jobs:
       - name: Prepare Windows binary
         shell: bash
         run: |
-          BACKEND_BINARY="./target/x86_64-pc-windows-msvc/release/goose.exe"
+          BACKEND_BINARY="./target/x86_64-pc-windows-msvc/release/lumina.exe"
 
           if [ ! -f "$BACKEND_BINARY" ]; then
             echo "Windows backend binary not found: $BACKEND_BINARY"
@@ -154,14 +155,14 @@ jobs:
             echo "Copying Windows platform files..."
             for file in ./ui/desktop/src/platform/windows/bin/*.{exe,dll,cmd}; do
               filename="$(basename "$file")"
-              if [ -f "$file" ] && [ "$filename" != "goose.exe" ]; then
+              if [ -f "$file" ] && [ "$filename" != "lumina.exe" ]; then
                 cp -f "$file" ./ui/desktop/src/bin/
               fi
             done
 
-            if [ -d "./ui/desktop/src/platform/windows/bin/goose-npm" ]; then
+            if [ -d "./ui/desktop/src/platform/windows/bin/lumina-npm" ]; then
               echo "Setting up npm environment..."
-              cp -r ./ui/desktop/src/platform/windows/bin/goose-npm/ ./ui/desktop/src/bin/goose-npm/
+              cp -r ./ui/desktop/src/platform/windows/bin/lumina-npm/ ./ui/desktop/src/bin/lumina-npm/
             fi
             echo "Windows-specific files copied successfully"
           fi
@@ -177,6 +178,7 @@ jobs:
         shell: bash
         env:
           ELECTRON_PLATFORM: win32
+          LUMINA_DESKTOP_CUDA: ${{ inputs.windows_variant == 'cuda' && '1' || '0' }}
         run: |
           cd ui/desktop
 
@@ -189,11 +191,11 @@ jobs:
         shell: bash
         run: |
           cd ui/desktop
-          mkdir -p ./out/Goose-win32-x64/resources/bin
-          cp -r src/bin/* out/Goose-win32-x64/resources/bin/
+          mkdir -p ./out/Lumina-win32-x64/resources/bin
+          cp -r src/bin/* out/Lumina-win32-x64/resources/bin/
 
           mkdir -p ./dist-windows
-          cp -r ./out/Goose-win32-x64/* ./dist-windows/
+          cp -r ./out/Lumina-win32-x64/* ./dist-windows/
 
           echo "📋 Final flat distribution structure:"
           ls -la ./dist-windows/
@@ -201,7 +203,7 @@ jobs:
           ls -la ./dist-windows/resources/bin/
 
       - name: Upload unsigned distribution
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: windows-unsigned${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}
           path: ui/desktop/dist-windows/
@@ -214,35 +216,45 @@ jobs:
     environment: ${{ inputs.signing && 'signing' || null }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.ref != '' && inputs.ref || '' }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.10.0
+
       - name: Download unsigned distribution
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: windows-unsigned${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}
           path: dist-windows
 
       - name: Azure login
-        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43  # v3.0.0
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Sign Windows executables with Azure Trusted Signing
-        uses: azure/trusted-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82  # v2.0.0
+        uses: azure/trusted-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
         with:
           endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
           trusted-signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT_NAME }}
           certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE_NAME }}
           files: |
-            ${{ github.workspace }}/dist-windows/Goose.exe
-            ${{ github.workspace }}/dist-windows/resources/bin/goose.exe
+            ${{ github.workspace }}/dist-windows/Lumina.exe
+            ${{ github.workspace }}/dist-windows/resources/bin/lumina.exe
 
       - name: Verify signed executables
         shell: pwsh
         run: |
           $files = @(
-            "dist-windows/Goose.exe",
-            "dist-windows/resources/bin/goose.exe"
+            "dist-windows/Lumina.exe",
+            "dist-windows/resources/bin/lumina.exe"
           )
           foreach ($file in $files) {
             Write-Output "Verifying signature: $file"
@@ -251,20 +263,49 @@ jobs:
             Write-Output "Signature valid: $file"
           }
 
+      - name: Build customizable Windows installer
+        shell: pwsh
+        env:
+          LUMINA_WINDOWS_APP_DIRECTORY: ${{ github.workspace }}\dist-windows
+          LUMINA_DESKTOP_CUDA: ${{ inputs.windows_variant == 'cuda' && '1' || '0' }}
+        run: |
+          node ui/desktop/scripts/build-windows-installer.js
+          $installer = Get-ChildItem "ui/desktop/out/make/inno/Lumina-*-Windows-x64-Setup.exe" | Select-Object -First 1
+          if (-not $installer) { throw "Windows installer was not created" }
+          "LUMINA_SETUP_PATH=$($installer.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Sign Windows installer with Azure Trusted Signing
+        uses: azure/trusted-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+        with:
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE_NAME }}
+          files: ${{ env.LUMINA_SETUP_PATH }}
+
+      - name: Verify signed Windows installer
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem "ui/desktop/out/make/inno/Lumina-*-Windows-x64-Setup.exe" | Select-Object -First 1
+          if (-not $installer) { throw "Windows installer was not created" }
+          $signature = Get-AuthenticodeSignature $installer.FullName
+          if ($signature.Status -ne "Valid") { throw "Installer signature invalid: $($signature.Status)" }
+
       - name: Create Windows zip package
         shell: bash
         run: |
-          ZIP_NAME="Goose-win32-x64"
+          ZIP_NAME="Lumina-win32-x64"
           if [ "${{ inputs.windows_variant }}" = "cuda" ]; then
             ZIP_NAME="${ZIP_NAME}-cuda"
           fi
           7z a -tzip "${ZIP_NAME}.zip" dist-windows/
 
       - name: Upload signed Windows build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Goose-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}
-          path: Goose-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}.zip
+          name: Lumina-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}
+          path: |
+            Lumina-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}.zip
+            ui/desktop/out/make/inno/Lumina-*-Windows-x64-Setup.exe
 
   # When signing is disabled, package the unsigned build directly
   package-desktop-windows:
@@ -274,23 +315,42 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.ref != '' && inputs.ref || '' }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.10.0
+
       - name: Download unsigned distribution
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: windows-unsigned${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}
           path: dist-windows
 
+      - name: Build customizable Windows installer
+        shell: pwsh
+        env:
+          LUMINA_WINDOWS_APP_DIRECTORY: ${{ github.workspace }}\dist-windows
+          LUMINA_DESKTOP_CUDA: ${{ inputs.windows_variant == 'cuda' && '1' || '0' }}
+        run: node ui/desktop/scripts/build-windows-installer.js
+
       - name: Create Windows zip package
         shell: bash
         run: |
-          ZIP_NAME="Goose-win32-x64"
+          ZIP_NAME="Lumina-win32-x64"
           if [ "${{ inputs.windows_variant }}" = "cuda" ]; then
             ZIP_NAME="${ZIP_NAME}-cuda"
           fi
           7z a -tzip "${ZIP_NAME}.zip" dist-windows/
 
       - name: Upload Windows build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Goose-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}
-          path: Goose-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}.zip
+          name: Lumina-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}
+          path: |
+            Lumina-win32-x64${{ inputs.windows_variant == 'cuda' && '-cuda' || '' }}.zip
+            ui/desktop/out/make/inno/Lumina-*-Windows-x64-Setup.exe

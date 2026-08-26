@@ -1,4 +1,4 @@
-import type { GooseSessionNotification_unstable } from '@aaif/goose-sdk';
+import type { LuminaSessionNotification_unstable } from '@hikerm/lumina-sdk';
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import { AppEvents } from '../constants/events';
 import { maybeHandlePlatformEvent } from '../utils/platform_events';
@@ -43,9 +43,9 @@ function maybeHandleLivePlatformEvent(notification: SessionNotification): void {
   }
 }
 
-export function handleAcpGooseSessionNotification(
-  notification: GooseSessionNotification_unstable
+export function handleAcpLuminaSessionNotification(
+  notification: LuminaSessionNotification_unstable
 ): Promise<void> {
-  acpChatSessionActions.applyAcpGooseSessionNotification(notification);
+  acpChatSessionActions.applyAcpLuminaSessionNotification(notification);
   return Promise.resolve();
 }

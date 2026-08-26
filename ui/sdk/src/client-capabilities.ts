@@ -1,8 +1,8 @@
-import type { GooseMcpHostCapabilities } from "./mcp-apps.js";
+import type { LuminaMcpHostCapabilities } from "./mcp-apps.js";
 
-export interface GooseClientCapabilitiesMeta {
-  goose?: {
-    mcpHostCapabilities?: GooseMcpHostCapabilities;
+export interface LuminaClientCapabilitiesMeta {
+  lumina?: {
+    mcpHostCapabilities?: LuminaMcpHostCapabilities;
     customNotifications?: boolean;
   };
 }

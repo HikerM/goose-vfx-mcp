@@ -8,7 +8,7 @@ import type {
   McpCatalogSummary,
   McpPlanReview,
   McpSourcesPolicyState,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { DiscoverTab } from '../DiscoverTab';
 import { createMcpPlan, getMcpCatalogDetail, listMcpCatalog } from '../../../acp/mcp-platform';
 

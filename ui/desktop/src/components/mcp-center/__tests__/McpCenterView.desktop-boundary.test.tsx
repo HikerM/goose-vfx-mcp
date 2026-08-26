@@ -3,16 +3,16 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  GooseClient,
+  LuminaClient,
   type McpCatalogPage,
   type McpCatalogSummary,
   type McpGovernedImportResult,
   type McpSourcesPolicyState,
   type Stream,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import McpCenterView from '../McpCenterView';
 
-const boundary = vi.hoisted(() => ({ client: null as GooseClient | null }));
+const boundary = vi.hoisted(() => ({ client: null as LuminaClient | null }));
 
 vi.mock('../../../acp/acpConnection', () => ({
   getAcpClient: async () => {
@@ -181,7 +181,7 @@ describe('McpCenterView through the real Desktop adapter and SDK client', () => 
 
   beforeEach(() => {
     transport = new DeferredAcpTransport();
-    boundary.client = new GooseClient(
+    boundary.client = new LuminaClient(
       () => ({
         requestPermission: async () => {
           throw new Error('unexpected permission request');
@@ -193,15 +193,15 @@ describe('McpCenterView through the real Desktop adapter and SDK client', () => 
 
     let imported = false;
     let refreshable = false;
-    transport.handlers.set('goose.mcpSourcesPolicyGet_unstable', () =>
+    transport.handlers.set('lumina.mcpSourcesPolicyGet_unstable', () =>
       success(policy(imported, refreshable))
     );
-    transport.handlers.set('goose.mcpCatalogList_unstable', () => success(catalogPage(imported)));
-    transport.handlers.set('goose.mcpGovernedImport_unstable', () => {
+    transport.handlers.set('lumina.mcpCatalogList_unstable', () => success(catalogPage(imported)));
+    transport.handlers.set('lumina.mcpGovernedImport_unstable', () => {
       imported = true;
       return success(importResult());
     });
-    transport.handlers.set('goose.mcpSourceRefresh_unstable', () => {
+    transport.handlers.set('lumina.mcpSourceRefresh_unstable', () => {
       imported = true;
       refreshable = true;
       return success(sourceRefreshResult());
@@ -222,7 +222,7 @@ describe('McpCenterView through the real Desktop adapter and SDK client', () => 
 
     await waitFor(() => {
       expect(
-        transport.calls.filter(({ method }) => method === 'goose.mcpCatalogList_unstable')
+        transport.calls.filter(({ method }) => method === 'lumina.mcpCatalogList_unstable')
       ).toHaveLength(1);
     });
 
@@ -235,7 +235,7 @@ describe('McpCenterView through the real Desktop adapter and SDK client', () => 
     await user.click(screen.getByRole('button', { name: 'Open Discover' }));
     await waitFor(() => {
       expect(
-        transport.calls.filter(({ method }) => method === 'goose.mcpCatalogList_unstable')
+        transport.calls.filter(({ method }) => method === 'lumina.mcpCatalogList_unstable')
       ).toHaveLength(2);
     });
 
@@ -243,7 +243,7 @@ describe('McpCenterView through the real Desktop adapter and SDK client', () => 
     expect(transport.calls).toEqual(
       expect.arrayContaining([
         {
-          method: 'goose.mcpGovernedImport_unstable',
+          method: 'lumina.mcpGovernedImport_unstable',
           params: {
             source: {
               type: 'local_manifest',
@@ -252,36 +252,36 @@ describe('McpCenterView through the real Desktop adapter and SDK client', () => 
           },
         },
         {
-          method: 'goose.mcpCatalogList_unstable',
+          method: 'lumina.mcpCatalogList_unstable',
           params: {
             pageSize: 24,
           },
         },
       ])
     );
-    expect(transport.calls.some(({ method }) => method === 'goose.mcpPlanCreate_unstable')).toBe(
+    expect(transport.calls.some(({ method }) => method === 'lumina.mcpPlanCreate_unstable')).toBe(
       false
     );
     expect(
-      transport.calls.some(({ method }) => method === 'goose.mcpInstallConfirm_unstable')
+      transport.calls.some(({ method }) => method === 'lumina.mcpInstallConfirm_unstable')
     ).toBe(false);
     expect(
-      transport.calls.some(({ method }) => method === 'goose.mcpSetDefaultEnabled_unstable')
+      transport.calls.some(({ method }) => method === 'lumina.mcpSetDefaultEnabled_unstable')
     ).toBe(false);
   });
 
   it('refreshes a registered source through formal ACP without creating plans or enabling MCPs', async () => {
     const user = userEvent.setup();
 
-    transport.handlers.set('goose.mcpSourcesPolicyGet_unstable', () =>
+    transport.handlers.set('lumina.mcpSourcesPolicyGet_unstable', () =>
       success(policy(false, true))
     );
-    transport.handlers.set('goose.mcpCatalogList_unstable', () => success(catalogPage(false)));
-    transport.handlers.set('goose.mcpSourceRefresh_unstable', () => {
-      transport.handlers.set('goose.mcpSourcesPolicyGet_unstable', () =>
+    transport.handlers.set('lumina.mcpCatalogList_unstable', () => success(catalogPage(false)));
+    transport.handlers.set('lumina.mcpSourceRefresh_unstable', () => {
+      transport.handlers.set('lumina.mcpSourcesPolicyGet_unstable', () =>
         success(policy(true, true))
       );
-      transport.handlers.set('goose.mcpCatalogList_unstable', () => success(catalogPage(true)));
+      transport.handlers.set('lumina.mcpCatalogList_unstable', () => success(catalogPage(true)));
       return success(sourceRefreshResult());
     });
 
@@ -297,21 +297,21 @@ describe('McpCenterView through the real Desktop adapter and SDK client', () => 
     expect(transport.calls).toEqual(
       expect.arrayContaining([
         {
-          method: 'goose.mcpSourceRefresh_unstable',
+          method: 'lumina.mcpSourceRefresh_unstable',
           params: {
             sourceId: 'verified_source_catalog_source-alpha',
           },
         },
       ])
     );
-    expect(transport.calls.some(({ method }) => method === 'goose.mcpPlanCreate_unstable')).toBe(
+    expect(transport.calls.some(({ method }) => method === 'lumina.mcpPlanCreate_unstable')).toBe(
       false
     );
     expect(
-      transport.calls.some(({ method }) => method === 'goose.mcpInstallConfirm_unstable')
+      transport.calls.some(({ method }) => method === 'lumina.mcpInstallConfirm_unstable')
     ).toBe(false);
     expect(
-      transport.calls.some(({ method }) => method === 'goose.mcpSetDefaultEnabled_unstable')
+      transport.calls.some(({ method }) => method === 'lumina.mcpSetDefaultEnabled_unstable')
     ).toBe(false);
   });
 });

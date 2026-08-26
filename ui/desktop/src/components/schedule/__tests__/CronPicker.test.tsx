@@ -1,7 +1,7 @@
 import { render, screen, type RenderOptions, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { ScheduledJobDto } from '@aaif/goose-sdk';
+import type { ScheduledJobDto } from '@hikerm/lumina-sdk';
 import { IntlTestWrapper } from '../../../i18n/test-utils';
 import { CronPicker } from '../CronPicker';
 

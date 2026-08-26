@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://goose.ai/schemas/mcp-package-manifest-v2.schema.json",
-  "title": "goose MCP Package Manifest v2 runtime contract",
+  "$id": "https://hikerm.github.io/lumina/schemas/mcp-package-manifest-v2.schema.json",
+  "title": "lumina MCP Package Manifest v2 runtime contract",
   "description": "Unplanned runtime metadata contract. It does not authorize installation or bootstrap.",
   "type": "object",
   "additionalProperties": false,

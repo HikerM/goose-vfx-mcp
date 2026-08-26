@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '../../../ui/dialog';
 import { Button } from '../../../ui/button';
-import { QUICKSTART_GUIDE_URL } from '../../providers/modal/constants';
+import { PRIMARY_QUICKSTART_URL } from '../../../../distribution-config';
 import { Input } from '../../../ui/input';
 import { Select } from '../../../ui/Select';
 import {
@@ -968,15 +968,17 @@ export const SwitchModelModal = ({
         </div>
 
         <DialogFooter className="pt-4 flex-col sm:flex-row gap-3">
-          <a
-            href={QUICKSTART_GUIDE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-text-secondary hover:text-text-primary text-sm mr-auto"
-          >
-            <ExternalLink size={14} className="mr-1" />
-            {intl.formatMessage(i18n.quickStartGuide)}
-          </a>
+          {PRIMARY_QUICKSTART_URL && (
+            <a
+              href={PRIMARY_QUICKSTART_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-text-secondary hover:text-text-primary text-sm mr-auto"
+            >
+              <ExternalLink size={14} className="mr-1" />
+              {intl.formatMessage(i18n.quickStartGuide)}
+            </a>
+          )}
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleClose} type="button">
               {intl.formatMessage(i18n.cancel)}

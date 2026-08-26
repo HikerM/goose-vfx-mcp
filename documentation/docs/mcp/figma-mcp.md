@@ -1,16 +1,16 @@
 ---
 title: Figma Extension
-description: Add Figma Dev Mode MCP Server as a goose Extension
+description: Add Figma Dev Mode MCP Server as a lumina Extension
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
 import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructions';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 import { PanelLeft } from 'lucide-react';
 
-This tutorial covers how to add the [Figma Dev Mode MCP Server](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Dev-Mode-MCP-Server) as a goose extension to enable interaction with Figma files, designs, and components.
+This tutorial covers how to add the [Figma Dev Mode MCP Server](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Dev-Mode-MCP-Server) as a lumina extension to enable interaction with Figma files, designs, and components.
 
 :::info
 The MCP Server requires a Dev or Full seat on Professional, Organization, or Enterprise Figma plans.
@@ -18,14 +18,14 @@ The MCP Server requires a Dev or Full seat on Professional, Organization, or Ent
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-    [Launch the installer](goose://extension?type=streamable_http&url=http%3A%2F%2F127.0.0.1%3A3845%2Fmcp&id=figma&name=Figma&description=Convert%20Figma%20designs%20into%20code%20and%20extract%20design%20context)
+  <TabItem value="ui" label="lumina Desktop" default>
+    [Launch the installer](lumina://extension?type=streamable_http&url=http%3A%2F%2F127.0.0.1%3A3845%2Fmcp&id=figma&name=Figma&description=Convert%20Figma%20designs%20into%20code%20and%20extract%20design%20context)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
-    Use `goose configure` to add a `Remote Extension (Streaming HTTP)` extension type with:
-    
+  <TabItem value="cli" label="lumina CLI">
+    Use `lumina configure` to add a `Remote Extension (Streaming HTTP)` extension type with:
+
     **Endpoint URL**
-    
+
     ```
     http://127.0.0.1:3845/mcp
     ```
@@ -49,10 +49,10 @@ The Dev Mode MCP Server must be enabled in the [Figma desktop app](https://www.f
    2. In the right panel, toggle `Enable MCP server`
    :::
 
-2. Add the Figma extension to goose:
+2. Add the Figma extension to lumina:
    <Tabs groupId="interface">
-     <TabItem value="ui" label="goose Desktop" default>
-       <GooseDesktopInstaller
+     <TabItem value="ui" label="lumina Desktop" default>
+       <LuminaDesktopInstaller
          extensionId="figma"
          extensionName="Figma"
          description="Convert Figma designs into code and extract design context"
@@ -60,8 +60,8 @@ The Dev Mode MCP Server must be enabled in the [Figma desktop app](https://www.f
          url="http://127.0.0.1:3845/mcp"
        />
      </TabItem>
-     <TabItem value="cli" label="goose CLI">
-       <CLIExtensionInstructions            
+     <TabItem value="cli" label="lumina CLI">
+       <CLIExtensionInstructions
          name="figma"
          description="Convert Figma designs into code and extract design context"
          type="http"
@@ -73,7 +73,7 @@ The Dev Mode MCP Server must be enabled in the [Figma desktop app](https://www.f
 
 ## Example Usage
 
-The Figma extension in goose works alongside the Figma desktop app. You can use the extension to:
+The Figma extension in lumina works alongside the Figma desktop app. You can use the extension to:
 - Convert Figma designs into production-ready code (React, Vue, HTML/CSS, etc.)
 - Extract design tokens, variables, and generate design system rules
 - Capture visual references of your designs
@@ -83,16 +83,16 @@ Let's try converting a Figma design into React code. First, copy the link:
   2. In the layers panel, right-click any frame or component and choose `Copy link to selection`
 
 :::tip
-You can provide goose with a Figma link or simply select an element in the Figma desktop app.
+You can provide lumina with a Figma link or simply select an element in the Figma desktop app.
 :::
 
-### goose Prompt
+### lumina Prompt
 
 ```
 Convert this to React: https://www.figma.com/design/B6IFM1qjwxJw5fOYJYKRl5/Buttons-?node-id=351-8&m=dev
 ```
 
-### goose Output
+### lumina Output
 
 :::note Desktop
 
@@ -126,7 +126,7 @@ function Component1() {
         data-node-id="351:3"
       >
         <p className="block mb-0">ask</p>
-        <p className="block">goose</p>
+        <p className="block">lumina</p>
       </div>
       <div
         className="absolute aspect-[92/90] bg-center bg-cover bg-no-repeat left-0 right-[52.82%] rounded-lg top-0"
@@ -150,15 +150,15 @@ export default function Component2() {
 #### Key Features of the Generated Component:
 
 - **Tailwind CSS Styling**: Uses Tailwind classes for responsive design and styling
-- **Image Asset**: The goose logo is loaded from a localhost server as a background image  
-- **Typography**: Uses Inter Black font for the "ask goose" text
+- **Image Asset**: The lumina logo is loaded from a localhost server as a background image
+- **Typography**: Uses Inter Black font for the "ask lumina" text
 - **Layout**: Positioned absolutely with precise inset values to match the Figma design
 - **Responsive**: Uses relative positioning and percentage-based insets for scalability
 
 #### Component Structure:
 - **Background**: Light gray rounded container (#d9d9d9)
-- **Logo**: goose silhouette image positioned on the left side
-- **Text**: "ask goose" text positioned on the right in dark gray (#333b43)
+- **Logo**: lumina silhouette image positioned on the left side
+- **Text**: "ask lumina" text positioned on the right in dark gray (#333b43)
 
 The component maintains the exact visual hierarchy and styling from your Figma design while being fully responsive and ready to integrate into a React application with Tailwind CSS.
 

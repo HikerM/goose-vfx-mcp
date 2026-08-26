@@ -28,7 +28,7 @@ jobs:
             if [ "$user" = "$PR_AUTHOR" ]; then
               echo "PR author is in the quarantine list - closing PR"
               # Close PR using GitHub CLI
-              gh pr close ${{ github.event.pull_request.number }} -c "Thanks for this, please contact the project on discord before opening PRs"
+              gh pr close ${{ github.event.pull_request.number }} -c "Thanks for this. Please contact the maintainers through the project issue tracker before opening another PR."
               exit 0
             fi
           done

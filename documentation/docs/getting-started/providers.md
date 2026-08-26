@@ -11,7 +11,7 @@ import { OnboardingProviderSetup } from '@site/src/components/OnboardingProvider
 
 # Supported LLM Providers
 
-goose is compatible with a wide range of LLM providers, allowing you to choose and integrate your preferred model.
+lumina is compatible with a wide range of LLM providers, allowing you to choose and integrate your preferred model.
 
 :::tip Model Selection
 <ModelSelectionTip/>
@@ -22,7 +22,7 @@ goose is compatible with a wide range of LLM providers, allowing you to choose a
 
 | Provider                                                                    | Description                                                                                                                                                                                                               | Parameters                                                                                                                                                                          |
 |-----------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Amazon Bedrock](https://aws.amazon.com/bedrock/)                           | Offers a variety of foundation models, including Claude, Jurassic-2, and others. **AWS environment variables must be set in advance, not configured through `goose configure`**                                           | Credential auth: `AWS_PROFILE`, or `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`<br /><br />Bearer token auth: `AWS_BEARER_TOKEN_BEDROCK` and `AWS_REGION`, `AWS_DEFAULT_REGION`, or `AWS_PROFILE` |
+| [Amazon Bedrock](https://aws.amazon.com/bedrock/)                           | Offers a variety of foundation models, including Claude, Jurassic-2, and others. **AWS environment variables must be set in advance, not configured through `lumina configure`**                                           | Credential auth: `AWS_PROFILE`, or `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`<br /><br />Bearer token auth: `AWS_BEARER_TOKEN_BEDROCK` and `AWS_REGION`, `AWS_DEFAULT_REGION`, or `AWS_PROFILE` |
 | [Amazon SageMaker TGI](https://docs.aws.amazon.com/sagemaker/latest/dg/realtime-endpoints.html) | Run Text Generation Inference models through Amazon SageMaker endpoints. **AWS credentials must be configured in advance.** | `SAGEMAKER_ENDPOINT_NAME`, `AWS_REGION` (optional), `AWS_PROFILE` (optional)  |
 | [Anthropic](https://www.anthropic.com/)                                     | Offers Claude, an advanced AI model for natural language tasks.                                                                                                                                                           | `ANTHROPIC_API_KEY`, `ANTHROPIC_HOST` (optional)                                                                                                                                                                 |
 | [Atomic Chat](https://github.com/AtomicBot-ai/Atomic-Chat)                | Run local models with Atomic Chat's OpenAI-compatible server. **Because this provider runs locally, you must first [download a model](#local-llms).** | None required. Connects to local server at `localhost:1337` by default. |
@@ -47,12 +47,12 @@ goose is compatible with a wide range of LLM providers, allowing you to choose a
 | [Novita AI](https://novita.ai/)                                             | 90+ open-source models with OpenAI-compatible API and competitive pricing. Supports Kimi K2.5, DeepSeek, GLM, MiniMax, Qwen, and more.                                                                       | `NOVITA_API_KEY`                                                                                                  |
 | [Ollama](https://ollama.com/)                                               | Local model runner supporting Qwen, Llama, DeepSeek, and other open-source models. **Because this provider runs locally, you must first [download and run a model](#local-llms).**  | `OLLAMA_HOST`                                                                                                                                                                       |
 | [Ollama Cloud](https://ollama.com/)                                         | Access hosted models on ollama.com via OpenAI-compatible API. Requires an Ollama account and API key.  | `OLLAMA_CLOUD_API_KEY`                                                                                                                                                                       |
-| [OpenAI](https://platform.openai.com/api-keys)                              | Provides gpt-4o, o1, and other advanced language models. Also supports OpenAI-compatible endpoints (e.g., self-hosted LLaMA, vLLM, KServe). **o1-mini and o1-preview are not supported because goose uses tool calling.** | `OPENAI_API_KEY`, `OPENAI_HOST` (optional), `OPENAI_ORGANIZATION` (optional), `OPENAI_PROJECT` (optional), `OPENAI_CUSTOM_HEADERS` (optional)                                       |
+| [OpenAI](https://platform.openai.com/api-keys)                              | Provides gpt-4o, o1, and other advanced language models. Also supports OpenAI-compatible endpoints (e.g., self-hosted LLaMA, vLLM, KServe). **o1-mini and o1-preview are not supported because lumina uses tool calling.** | `OPENAI_API_KEY`, `OPENAI_HOST` (optional), `OPENAI_ORGANIZATION` (optional), `OPENAI_PROJECT` (optional), `OPENAI_CUSTOM_HEADERS` (optional)                                       |
 | [OpenRouter](https://openrouter.ai/)                                        | API gateway for unified access to various models with features like rate-limiting management.                                                                                                                             | `OPENROUTER_API_KEY`, `OPENROUTER_HOST` (optional), `OPENROUTER_PARAMETERS` (optional)                                                                                              |
 | [Perplexity](https://www.perplexity.ai/)                                    | Chat models with built-in real-time web search grounding. OpenAI-compatible chat completions API at `https://api.perplexity.ai`.                                                                                          | `PERPLEXITY_API_KEY`                                                                                                                                                                |
 | [OVHcloud AI](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/)       | Provides access to open-source models including Qwen, Llama, Mistral, and DeepSeek through AI Endpoints service.                                                       | `OVHCLOUD_API_KEY`                                                                                                                                                                  |
-| [Ramalama](https://ramalama.ai/)                                            | Local model using native [OCI](https://opencontainers.org/) container runtimes, [CNCF](https://www.cncf.io/) tools, and supporting models as OCI artifacts. Ramalama API is a compatible alternative to Ollama and can be used with the goose Ollama provider. Supports Qwen, Llama, DeepSeek, and other open-source models. **Because this provider runs locally, you must first [download and run a model](#local-llms).**  | `OLLAMA_HOST`                                                                                                                                                                       |
-| [Routstr](https://routstr.com/)                                             | OpenAI-compatible aggregator that fronts dozens of upstream providers (Anthropic, OpenAI, Google, DeepSeek, Llama, …) behind a single API. Authenticate with an `sk-...` bearer issued by your Routstr instance — payment is handled outside goose.                                                                                                                                                                       | `ROUTSTR_API_KEY`, `ROUTSTR_HOST` (optional, default `https://api.routstr.com`)                                                                                                     |
+| [Ramalama](https://ramalama.ai/)                                            | Local model using native [OCI](https://opencontainers.org/) container runtimes, [CNCF](https://www.cncf.io/) tools, and supporting models as OCI artifacts. Ramalama API is a compatible alternative to Ollama and can be used with the lumina Ollama provider. Supports Qwen, Llama, DeepSeek, and other open-source models. **Because this provider runs locally, you must first [download and run a model](#local-llms).**  | `OLLAMA_HOST`                                                                                                                                                                       |
+| [Routstr](https://routstr.com/)                                             | OpenAI-compatible aggregator that fronts dozens of upstream providers (Anthropic, OpenAI, Google, DeepSeek, Llama, …) behind a single API. Authenticate with an `sk-...` bearer issued by your Routstr instance — payment is handled outside lumina.                                                                                                                                                                       | `ROUTSTR_API_KEY`, `ROUTSTR_HOST` (optional, default `https://api.routstr.com`)                                                                                                     |
 | [SaladCloud AI Gateway](https://salad.com/)                                 | OpenAI-compatible access to SaladCloud-hosted open-source models, including Qwen, Gemma, and others.                                                                                                          | `SALAD_CLOUD_API_KEY`                                                                                                                                                              |
 | [Scaleway](https://www.scaleway.com/en/generative-apis/)                    | European cloud offering OpenAI-compatible access to models like Mistral, Qwen, and open-source weights. Ensures data residency and GDPR compliance.                                                                                                                                                                                                                                                                | `SCW_SECRET_KEY`      |
 | [Snowflake](https://docs.snowflake.com/user-guide/snowflake-cortex/aisql#choosing-a-model) | Access the latest models using Snowflake Cortex services, including Claude models. **Requires a Snowflake account and programmatic access token (PAT)**.                                                     | `SNOWFLAKE_HOST`, `SNOWFLAKE_TOKEN`                                                                                                                                                                 |
@@ -63,7 +63,7 @@ goose is compatible with a wide range of LLM providers, allowing you to choose a
 | [xAI](https://x.ai/)                                                        | Access to xAI's Grok models including grok-3, grok-3-mini, and grok-3-fast with 131,072 token context window.                                                                                                            | `XAI_API_KEY`, `XAI_HOST` (optional)                                                                                                                                                |
 
 :::tip Prompt Caching for Claude Models
-goose automatically enables Anthropic's [prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching) when using Claude models via Anthropic, Amazon Bedrock, Databricks, OpenRouter, and LiteLLM providers. This adds `cache_control` markers to requests, which can reduce costs for longer conversations by caching frequently-used context. See the [provider implementations](https://github.com/aaif-goose/goose/tree/main/crates/goose/src/providers) for technical details.
+lumina automatically enables Anthropic's [prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching) when using Claude models via Anthropic, Amazon Bedrock, Databricks, OpenRouter, and LiteLLM providers. This adds `cache_control` markers to requests, which can reduce costs for longer conversations by caching frequently-used context. See the [provider implementations](https://github.com/HikerM/lumina/tree/main/crates/lumina/src/providers) for technical details.
 :::
 
 ### CLI Providers
@@ -74,12 +74,12 @@ goose automatically enables Anthropic's [prompt caching](https://platform.claude
 
 ### ACP Providers
 
-goose supports [Agent Client Protocol (ACP)](https://agentclientprotocol.com/) agents as providers. ACP providers pass goose extensions through to the agent as MCP servers.
+lumina supports [Agent Client Protocol (ACP)](https://agentclientprotocol.com/) agents as providers. ACP providers pass lumina extensions through to the agent as MCP servers.
 
 | Provider                                                                    | Description                                                                                                                                                                                                               | Requirements                                                                                                                                                                          |
 |-----------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Claude ACP](https://github.com/agentclientprotocol/claude-agent-acp) (`claude-acp`) | Uses Claude Code via ACP. Passes goose extensions to the agent as MCP servers. | `npm install -g @agentclientprotocol/claude-agent-acp`, active Claude Code subscription |
-| [Codex ACP](https://github.com/zed-industries/codex-acp) (`codex-acp`) | Uses OpenAI Codex via ACP. Passes goose extensions to the agent as MCP servers. | `npm install -g @zed-industries/codex-acp`, active ChatGPT Plus/Pro subscription |
+| [Claude ACP](https://github.com/agentclientprotocol/claude-agent-acp) (`claude-acp`) | Uses Claude Code via ACP. Passes lumina extensions to the agent as MCP servers. | `npm install -g @agentclientprotocol/claude-agent-acp`, active Claude Code subscription |
+| [Codex ACP](https://github.com/zed-industries/codex-acp) (`codex-acp`) | Uses OpenAI Codex via ACP. Passes lumina extensions to the agent as MCP servers. | `npm install -g @zed-industries/codex-acp`, active ChatGPT Plus/Pro subscription |
 
 :::tip ACP Providers
 See the [ACP Providers guide](/docs/guides/acp-providers) for detailed setup instructions.
@@ -87,13 +87,13 @@ See the [ACP Providers guide](/docs/guides/acp-providers) for detailed setup ins
 
 ## Configure Provider and Model
 
-To configure your chosen provider, see available options, or select a model, visit the `Models` tab in goose Desktop or run `goose configure` in the CLI.
+To configure your chosen provider, see available options, or select a model, visit the `Models` tab in lumina Desktop or run `lumina configure` in the CLI.
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   **First-time users:**
 
-  On the welcome screen the first time you open goose, you have these options:
+  On the welcome screen the first time you open lumina, you have these options:
 
   <OnboardingProviderSetup />
 
@@ -101,35 +101,35 @@ To configure your chosen provider, see available options, or select a model, vis
     <TabItem value="apikey" label="Quick Setup" default>
     1. Choose `Quick Setup with API Key`.
     2. Enter your API key from your provider (for example, OpenAI, Anthropic, or Google).
-    3. goose will automatically detect your provider and configure the connection.
+    3. lumina will automatically detect your provider and configure the connection.
     4. When setup is complete, you're ready to begin your first session.
     </TabItem>
 
     <TabItem value="chatgpt" label="ChatGPT Subscription">
     1. Choose `ChatGPT Subscription`.
-    2. goose will open a browser window for you to sign in with the credentials of your active ChatGPT Plus or Pro subscription.
-    3. Authorize goose to access your ChatGPT subscription.
-    4. When you return to goose Desktop, you're ready to begin your first session.
+    2. lumina will open a browser window for you to sign in with the credentials of your active ChatGPT Plus or Pro subscription.
+    3. Authorize lumina to access your ChatGPT subscription.
+    4. When you return to lumina Desktop, you're ready to begin your first session.
     </TabItem>
     <TabItem value="tetrate" label="Agent Router">
     We recommend new users start with Agent Router by Tetrate. Tetrate provides access to multiple AI models with built-in rate limiting and automatic failover.
 
     :::info Free Credits Offer
-    You'll receive $10 in free credits the first time you automatically authenticate with Tetrate through goose. This offer is available to both new and existing Tetrate users.
+    You'll receive $10 in free credits the first time you automatically authenticate with Tetrate through lumina. This offer is available to both new and existing Tetrate users.
     :::
     1. Choose `Agent Router by Tetrate`.
-    2. goose will open a browser window for you to authenticate with Tetrate, or create a new account if you don't have one already.
-    3. When you return to goose Desktop, you're ready to begin your first session.
+    2. lumina will open a browser window for you to authenticate with Tetrate, or create a new account if you don't have one already.
+    3. When you return to lumina Desktop, you're ready to begin your first session.
     </TabItem>
 
     <TabItem value="openrouter" label="OpenRouter">
     1. Choose `Automatic setup with OpenRouter`.
-    2. goose will open a browser window for you to authenticate with OpenRouter, or create a new account if you don't have one already.
-    3. When you return to the goose Desktop, you're ready to begin your first session.
+    2. lumina will open a browser window for you to authenticate with OpenRouter, or create a new account if you don't have one already.
+    3. When you return to the lumina Desktop, you're ready to begin your first session.
     </TabItem>
 
     <TabItem value="others" label="Other Providers">
-    1. If you have a specific provider you want to use with goose, and an API key from that provider, choose `Other Providers`.
+    1. If you have a specific provider you want to use with lumina, and an API key from that provider, choose `Other Providers`.
     2. Find the provider of your choice and click its `Configure` button. If you don't see your provider in the list, click `Add Custom Provider` at the bottom of the window to [configure a custom provider](#configure-custom-provider).
     3. Depending on your provider, you'll need to input your API Key, API Host, or other optional [parameters](#available-providers). Click the `Submit` button to authenticate and begin your first session.
 
@@ -166,17 +166,17 @@ To configure your chosen provider, see available options, or select a model, vis
   3. Click the `Models` tab
   4. Click `Reset Provider and Model` to clear your current settings and return to the welcome screen
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. In your terminal, run the following command:
 
        ```sh
-       goose configure
+       lumina configure
        ```
 
     2. Select `Configure Providers` from the menu and press `Enter`.
 
        ```
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◆  What would you like to configure?
        // highlight-start
@@ -186,13 +186,13 @@ To configure your chosen provider, see available options, or select a model, vis
        │  ○ Add Extension
        │  ○ Toggle Extensions
        │  ○ Remove Extension
-       │  ○ goose Settings
+       │  ○ lumina Settings
        └
        ```
     3. Choose a model provider and press `Enter`. Use the arrow keys (↑/↓) to move through the options, or start typing to filter the list.
 
        ```
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◇  What would you like to configure?
        │  Configure Providers
@@ -211,7 +211,7 @@ To configure your chosen provider, see available options, or select a model, vis
     4. Enter your API key (and any other configuration details) when prompted.
 
        ```
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◇  What would you like to configure?
        │  Configure Providers
@@ -257,14 +257,14 @@ To configure your chosen provider, see available options, or select a model, vis
        This change takes effect the next time you start a session.
 
   :::note
-  `goose configure` doesn't support entering custom model names. To use a model not in the provider's list, use goose Desktop or edit the `GOOSE_MODEL` variable in your [`config.yaml`](/docs/guides/config-files) directly.
+  `lumina configure` doesn't support entering custom model names. To use a model not in the provider's list, use lumina Desktop or edit the `LUMINA_MODEL` variable in your [`config.yaml`](/docs/guides/config-files) directly.
   :::
 
   :::tip
-  Set the model for an individual session using the [`run` command](/docs/guides/goose-cli-commands#run-options):
+  Set the model for an individual session using the [`run` command](/docs/guides/lumina-cli-commands#run-options):
 
   ```bash
-  goose run --model claude-sonnet-4-0 -t "initial prompt"
+  lumina run --model claude-sonnet-4-0 -t "initial prompt"
   ```
   :::
 
@@ -335,7 +335,7 @@ Need to connect to multiple OpenAI-compatible endpoints? [Configure custom provi
 #### Setup Instructions
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
     2. Click the `Settings` button on the sidebar
     3. Click the `Models` tab
@@ -348,8 +348,8 @@ Need to connect to multiple OpenAI-compatible endpoints? [Configure custom provi
        - Project (for resource management)
     7. Click `Submit`
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
-    1. Run `goose configure`
+  <TabItem value="cli" label="lumina CLI">
+    1. Run `lumina configure`
     2. Select `Configure Providers`
     3. Choose `OpenAI` as the provider
     4. Enter your configuration when prompted:
@@ -366,7 +366,7 @@ For enterprise deployments, you can pre-configure these values using environment
 
 ## Configure Custom Provider
 
-Create custom providers to connect to services that aren't [already supported](#available-providers) or customize how you connect to them. Custom providers appear in goose's provider list and can be selected like any other provider.
+Create custom providers to connect to services that aren't [already supported](#available-providers) or customize how you connect to them. Custom providers appear in lumina's provider list and can be selected like any other provider.
 
 **Benefits:**
 - **Multiple endpoints**: Switch between different services (e.g., vLLM, corporate proxy, OpenAI)
@@ -379,7 +379,7 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
 
 **To add a custom provider:**
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
     2. Click the `Settings` button on the sidebar
     3. Click the `Models` tab
@@ -400,21 +400,21 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
     7. Click `Create Provider`
 
     :::info Custom Headers
-    Currently, custom headers can't be defined in goose Desktop. As a workaround, edit the provider configuration file after creation.
+    Currently, custom headers can't be defined in lumina Desktop. As a workaround, edit the provider configuration file after creation.
     :::
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. In your terminal, run the following command:
 
        ```sh
-       goose configure
+       lumina configure
        ```
 
     2. Select `Custom Providers`. Use the arrow keys (↑/↓) to move through the options.
 
        ```sh
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◆  What would you like to configure?
        │  ○ Configure Providers
@@ -424,14 +424,14 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
        │  ○ Add Extension
        │  ○ Toggle Extensions
        │  ○ Remove Extension
-       │  ○ goose Settings
+       │  ○ lumina Settings
        └
        ```
 
     3. Select `Add A Custom Provider`
 
        ```sh
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◇  What would you like to configure?
        │  Custom Providers
@@ -466,8 +466,8 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
   <TabItem value="config" label="Config File">
 
     First create a JSON file in the `custom_providers` directory:
-    - macOS/Linux: `~/.config/goose/custom_providers/`
-    - Windows: `%APPDATA%\Block\goose\config\custom_providers\`
+    - macOS/Linux: `~/.config/lumina/custom_providers/`
+    - Windows: `%APPDATA%\Block\lumina\config\custom_providers\`
 
     Example `custom_corp_api.json` configuration file:
     ```json
@@ -500,11 +500,11 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
     Then use the `api_key_env` to set the key for your session. For example:
     ```bash
     export CUSTOM_CORP_API_API_KEY="your-api-key"
-    goose session start --provider custom_corp_api
+    lumina session start --provider custom_corp_api
     ```
 
     :::tip Keychain Key Storage
-    If you want to store the API key in the `goose` keychain, update the provider in goose Desktop and enter the key. This provides secure, persistent storage and allows goose to connect natively to the provider.
+    If you want to store the API key in the `lumina` keychain, update the provider in lumina Desktop and enter the key. This provides secure, persistent storage and allows lumina to connect natively to the provider.
     :::
 
   </TabItem>
@@ -513,7 +513,7 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
 **To update a custom provider:**
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
     2. Click the `Settings` button on the sidebar
     3. Click the `Models` tab
@@ -523,18 +523,18 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
     7. Click `Update Provider`
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
     1. In your terminal, run the following command:
 
        ```sh
-       goose configure
+       lumina configure
        ```
 
     2. Select `Configure Providers` from the menu and press `Enter`.
 
        ```sh
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◆  What would you like to configure?
        // highlight-start
@@ -544,14 +544,14 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
        │  ○ Add Extension
        │  ○ Toggle Extensions
        │  ○ Remove Extension
-       │  ○ goose Settings
+       │  ○ lumina Settings
        └
        ```
 
     3. Select the custom provider you want to update and press `Enter`. Use the arrow keys (↑/↓) to move through the options, or start typing to filter the list.
 
        ```sh
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◇  What would you like to configure?
        │  Configure Providers
@@ -576,19 +576,19 @@ Custom providers must use OpenAI, Anthropic, or Ollama compatible API formats. T
   <TabItem value="config" label="Config File">
 
     Open the custom provider configuration file in the `custom_providers` directory:
-    - macOS/Linux: `~/.config/goose/custom_providers/`
-    - Windows: `%APPDATA%\Block\goose\config\custom_providers\`
+    - macOS/Linux: `~/.config/lumina/custom_providers/`
+    - Windows: `%APPDATA%\Block\lumina\config\custom_providers\`
 
     Update the fields you want to change and save your changes.
   </TabItem>
 </Tabs>
 
-Your changes are available in your next goose session.
+Your changes are available in your next lumina session.
 
 **To remove a custom provider:**
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
     2. Click the `Settings` button on the sidebar
     3. Click the `Models` tab
@@ -598,18 +598,18 @@ Your changes are available in your next goose session.
     7. Confirm that you want to permanently remove the custom provider and its stored API key (if applicable) by clicking `Confirm Delete`
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
     1. In your terminal, run the following command:
 
        ```sh
-       goose configure
+       lumina configure
        ```
 
     2. Select `Custom Providers`. Use the arrow keys (↑/↓) to move through the options.
 
        ```sh
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◆  What would you like to configure?
        │  ○ Configure Providers
@@ -619,14 +619,14 @@ Your changes are available in your next goose session.
        │  ○ Add Extension
        │  ○ Toggle Extensions
        │  ○ Remove Extension
-       │  ○ goose Settings
+       │  ○ lumina Settings
        └
        ```
 
     3. Select `Remove Custom Provider`.
 
        ```sh
-       ┌   goose-configure
+       ┌   lumina-configure
        │
        ◇  What would you like to configure?
        │  Custom Providers
@@ -647,29 +647,29 @@ Your changes are available in your next goose session.
   <TabItem value="config" label="Config File">
 
     :::tip
-    If the provider's API key is stored in the keychain, use goose CLI to remove the custom provider. This also removes the stored API key.
+    If the provider's API key is stored in the keychain, use lumina CLI to remove the custom provider. This also removes the stored API key.
     :::
 
     Delete the custom provider configuration file in the `custom_providers` directory:
-    - macOS/Linux: `~/.config/goose/custom_providers/`
-    - Windows: `%APPDATA%\Block\goose\config\custom_providers\`
+    - macOS/Linux: `~/.config/lumina/custom_providers/`
+    - Windows: `%APPDATA%\Block\lumina\config\custom_providers\`
 
   </TabItem>
 </Tabs>
 
-## Using goose for Free
+## Using lumina for Free
 
-goose is a free and open source AI agent that you can start using right away, but not all supported [LLM Providers][providers] provide a free tier.
+lumina is a free and open source AI agent that you can start using right away, but not all supported [LLM Providers][providers] provide a free tier.
 
 Below, we outline a couple of free options and how to get started with them.
 
 :::warning Limitations
-These free options are a great way to get started with goose and explore its capabilities. However, you may need to upgrade your LLM for better performance.
+These free options are a great way to get started with lumina and explore its capabilities. However, you may need to upgrade your LLM for better performance.
 :::
 
 
 ### Groq
-Groq provides free access to open source (open weight) models with high-speed inference. To use Groq with goose, you need an API key from [Groq Console](https://console.groq.com/keys).
+Groq provides free access to open source (open weight) models with high-speed inference. To use Groq with lumina, you need an API key from [Groq Console](https://console.groq.com/keys).
 
 Groq offers several open source models that support tool calling, including:
 - **moonshotai/kimi-k2-instruct-0905** - Mixture-of-Experts model with 1 trillion parameters, optimized for agentic intelligence and tool use
@@ -677,12 +677,12 @@ Groq offers several open source models that support tool calling, including:
 - **llama-3.3-70b-versatile** - Meta's Llama 3.3 model for versatile applications
 - **llama-3.1-8b-instant** - Meta's Llama 3.1 model for fast inference
 
-For the complete list of supported Groq models, see [groq.json](https://github.com/aaif-goose/goose/blob/main/crates/goose/src/providers/declarative/groq.json).
+For the complete list of supported Groq models, see [groq.json](https://github.com/HikerM/lumina/blob/main/crates/lumina/src/providers/declarative/groq.json).
 
-To set up Groq with goose, follow these steps:
+To set up Groq with lumina, follow these steps:
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   **To update your LLM provider and API key:**
 
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
@@ -694,10 +694,10 @@ To set up Groq with goose, follow these steps:
     7. Select the Groq model of your choice.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. Run:
     ```sh
-    goose configure
+    lumina configure
     ```
     2. Select `Configure Providers` from the menu.
     3. Follow the prompts to choose `Groq` as the provider.
@@ -707,7 +707,7 @@ To set up Groq with goose, follow these steps:
 </Tabs>
 
 ### EmpirioLabs AI
-[EmpirioLabs AI](https://empiriolabs.ai/) provides access to frontier open and proprietary chat models through a single OpenAI-compatible API with streaming. To use EmpirioLabs with goose, you need an API key from [EmpirioLabs](https://platform.empiriolabs.ai/dashboard/api-keys).
+[EmpirioLabs AI](https://empiriolabs.ai/) provides access to frontier open and proprietary chat models through a single OpenAI-compatible API with streaming. To use EmpirioLabs with lumina, you need an API key from [EmpirioLabs](https://platform.empiriolabs.ai/dashboard/api-keys).
 
 EmpirioLabs offers models that support tool calling, including:
 - **qwen3-7-plus** - Qwen3.7 Plus with a 1M context window
@@ -718,12 +718,12 @@ EmpirioLabs offers models that support tool calling, including:
 - **kimi-k2-7-code** - Kimi K2.7 Code with a 256K context window
 - **minimax-m3** - MiniMax M3 with a 524K context window
 
-The full live catalog is available at `https://api.empiriolabs.ai/v1/models`. For the complete list of EmpirioLabs models configured in goose, see [empiriolabs.json](https://github.com/aaif-goose/goose/blob/main/crates/goose/src/providers/declarative/empiriolabs.json). For more details, see the [EmpirioLabs documentation](https://docs.empiriolabs.ai).
+The full live catalog is available at `https://api.empiriolabs.ai/v1/models`. For the complete list of EmpirioLabs models configured in lumina, see [empiriolabs.json](https://github.com/HikerM/lumina/blob/main/crates/lumina/src/providers/declarative/empiriolabs.json). For more details, see the [EmpirioLabs documentation](https://docs.empiriolabs.ai).
 
-To set up EmpirioLabs with goose, follow these steps:
+To set up EmpirioLabs with lumina, follow these steps:
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   **To update your LLM provider and API key:**
 
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
@@ -735,10 +735,10 @@ To set up EmpirioLabs with goose, follow these steps:
     7. Select the EmpirioLabs model of your choice.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. Run:
     ```sh
-    goose configure
+    lumina configure
     ```
     2. Select `Configure Providers` from the menu.
     3. Follow the prompts to choose `EmpirioLabs AI` as the provider.
@@ -748,7 +748,7 @@ To set up EmpirioLabs with goose, follow these steps:
 </Tabs>
 
 ### FuturMix
-[FuturMix](https://futurmix.ai/) is a unified AI gateway providing access to models from Anthropic, Google, OpenAI, and DeepSeek through an OpenAI-compatible API. To use FuturMix with goose, you need an API key from [FuturMix](https://futurmix.ai/).
+[FuturMix](https://futurmix.ai/) is a unified AI gateway providing access to models from Anthropic, Google, OpenAI, and DeepSeek through an OpenAI-compatible API. To use FuturMix with lumina, you need an API key from [FuturMix](https://futurmix.ai/).
 
 FuturMix offers models that support tool calling, including:
 - **claude-sonnet-4-20250514** - Anthropic Claude Sonnet 4 with 200K context
@@ -757,12 +757,12 @@ FuturMix offers models that support tool calling, including:
 - **deepseek-chat** - DeepSeek V3 with 131K context
 - **claude-haiku-4-20250514** - Anthropic Claude Haiku 4 with 200K context
 
-For the complete list of supported FuturMix models, see [futurmix.json](https://github.com/aaif-goose/goose/blob/main/crates/goose/src/providers/declarative/futurmix.json).
+For the complete list of supported FuturMix models, see [futurmix.json](https://github.com/HikerM/lumina/blob/main/crates/lumina/src/providers/declarative/futurmix.json).
 
-To set up FuturMix with goose, follow these steps:
+To set up FuturMix with lumina, follow these steps:
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   **To update your LLM provider and API key:**
 
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
@@ -774,10 +774,10 @@ To set up FuturMix with goose, follow these steps:
     7. Select the FuturMix model of your choice.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. Run:
     ```sh
-    goose configure
+    lumina configure
     ```
     2. Select `Configure Providers` from the menu.
     3. Follow the prompts to choose `FuturMix` as the provider.
@@ -787,7 +787,7 @@ To set up FuturMix with goose, follow these steps:
 </Tabs>
 
 ### Novita AI
-[Novita AI](https://novita.ai/) provides access to 90+ open-source models via an OpenAI-compatible API with competitive pricing. To use Novita AI with goose, you need an API key from [Novita AI](https://novita.ai/settings#key-management).
+[Novita AI](https://novita.ai/) provides access to 90+ open-source models via an OpenAI-compatible API with competitive pricing. To use Novita AI with lumina, you need an API key from [Novita AI](https://novita.ai/settings#key-management).
 
 Novita AI offers many models that support tool calling, including:
 - **moonshotai/kimi-k2.5** - Moonshot's latest model with 262K context window
@@ -796,12 +796,12 @@ Novita AI offers many models that support tool calling, including:
 - **deepseek/deepseek-v3.2** - DeepSeek V3.2 with 164K context
 - **google/gemma-4-31b-it** - Google Gemma 4 31B with 262K context
 
-For the complete list of supported Novita AI models, see [novita.json](https://github.com/aaif-goose/goose/blob/main/crates/goose/src/providers/declarative/novita.json).
+For the complete list of supported Novita AI models, see [novita.json](https://github.com/HikerM/lumina/blob/main/crates/lumina/src/providers/declarative/novita.json).
 
-To set up Novita AI with goose, follow these steps:
+To set up Novita AI with lumina, follow these steps:
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   **To update your LLM provider and API key:**
 
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
@@ -813,10 +813,10 @@ To set up Novita AI with goose, follow these steps:
     7. Select the Novita AI model of your choice.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. Run:
     ```sh
-    goose configure
+    lumina configure
     ```
     2. Select `Configure Providers` from the menu.
     3. Follow the prompts to choose `Novita AI` as the provider.
@@ -826,19 +826,19 @@ To set up Novita AI with goose, follow these steps:
 </Tabs>
 
 ### Routstr
-[Routstr](https://routstr.com/) is an OpenAI-compatible aggregator that fronts dozens of upstream providers behind a single API. Payment is handled by the Routstr instance itself, so all goose needs is the `sk-...` bearer that instance issues you. To use Routstr with goose, pick an instance (the default is `https://api.routstr.com`) and obtain an API key from its payment flow.
+[Routstr](https://routstr.com/) is an OpenAI-compatible aggregator that fronts dozens of upstream providers behind a single API. Payment is handled by the Routstr instance itself, so all lumina needs is the `sk-...` bearer that instance issues you. To use Routstr with lumina, pick an instance (the default is `https://api.routstr.com`) and obtain an API key from its payment flow.
 
 Routstr aggregates models from many upstream providers, including:
 - **claude-opus-4.7** — Anthropic's Claude opus 4.7
 - **deepseek-v4-pro** — DeepSeek V4 Pro
 - **gemini-3.1-pro-preview** — gemini-3.1 Pro Preview
 
-`/v1/models` is queried at configure time, so the full catalogue your Routstr instance exposes is available in the model picker. For the static defaults shipped with goose, see [routstr.json](https://github.com/aaif-goose/goose/blob/main/crates/goose/src/providers/declarative/routstr.json).
+`/v1/models` is queried at configure time, so the full catalogue your Routstr instance exposes is available in the model picker. For the static defaults shipped with lumina, see [routstr.json](https://github.com/HikerM/lumina/blob/main/crates/lumina/src/providers/declarative/routstr.json).
 
-To set up Routstr with goose, follow these steps:
+To set up Routstr with lumina, follow these steps:
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   **To update your LLM provider and API key:**
 
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
@@ -850,10 +850,10 @@ To set up Routstr with goose, follow these steps:
     7. Select the Routstr model of your choice.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. Run:
     ```sh
-    goose configure
+    lumina configure
     ```
     2. Select `Configure Providers` from the menu.
     3. Follow the prompts to choose `Routstr` as the provider.
@@ -863,12 +863,12 @@ To set up Routstr with goose, follow these steps:
 </Tabs>
 
 ### Google Gemini
-Google Gemini provides a free tier. To start using the Gemini API with goose, you need an API Key from [Google AI studio](https://aistudio.google.com/app/apikey).
+Google Gemini provides a free tier. To start using the Gemini API with lumina, you need an API Key from [Google AI studio](https://aistudio.google.com/app/apikey).
 
-To set up Google Gemini with goose, follow these steps:
+To set up Google Gemini with lumina, follow these steps:
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   **To update your LLM provider and API key:**
 
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
@@ -879,10 +879,10 @@ To set up Google Gemini with goose, follow these steps:
     6. Click `Configure`, enter your API key, and click `Submit`.
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     1. Run:
     ```sh
-    goose configure
+    lumina configure
     ```
     2. Select `Configure Providers` from the menu.
     3. Follow the prompts to choose `Google Gemini` as the provider.
@@ -890,7 +890,7 @@ To set up Google Gemini with goose, follow these steps:
     5. Enter the Gemini model of your choice.
 
     ```
-    ┌   goose-configure
+    ┌   lumina-configure
     │
     ◇ What would you like to configure?
     │ Configure Providers
@@ -914,10 +914,10 @@ To set up Google Gemini with goose, follow these steps:
 
 ### Local LLMs
 
-goose is a local AI agent, and by using a local LLM, you keep your data private, maintain full control over your environment, and can work entirely offline without relying on cloud access. However, please note that local LLMs require a bit more set up before you can use one of them with goose.
+lumina is a local AI agent, and by using a local LLM, you keep your data private, maintain full control over your environment, and can work entirely offline without relying on cloud access. However, please note that local LLMs require a bit more set up before you can use one of them with lumina.
 
 :::warning Limited Support for models without tool calling
-goose extensively uses tool calling, so models without it can only do chat completion. If using models without tool calling, all goose [extensions must be disabled](/docs/getting-started/using-extensions#enablingdisabling-extensions).
+lumina extensively uses tool calling, so models without it can only do chat completion. If using models without tool calling, all lumina [extensions must be disabled](/docs/getting-started/using-extensions#enablingdisabling-extensions).
 :::
 
 Here are some local providers we support:
@@ -929,7 +929,7 @@ Here are some local providers we support:
         1. [Download Ramalama](https://github.com/containers/ramalama?tab=readme-ov-file#install).
         2. In a terminal, run any Ollama [model supporting tool-calling](https://ollama.com/search?c=tools) or [GGUF format HuggingFace Model](https://huggingface.co/search/full-text?q=%22tools+support%22+%2B+%22gguf%22&type=model):
 
-          The `--runtime-args="--jinja"` flag is required for Ramalama to work with the goose Ollama provider.
+          The `--runtime-args="--jinja"` flag is required for Ramalama to work with the lumina Ollama provider.
 
           Example:
 
@@ -937,16 +937,16 @@ Here are some local providers we support:
           ramalama serve --runtime-args="--jinja" ollama://qwen2.5
           ```
 
-          3. In a separate terminal window, configure with goose:
+          3. In a separate terminal window, configure with lumina:
 
           ```sh
-          goose configure
+          lumina configure
           ```
 
           4. Choose to `Configure Providers`
 
           ```
-          ┌   goose-configure
+          ┌   lumina-configure
           │
           ◆  What would you like to configure?
           │  ● Configure Providers (Change provider or update credentials)
@@ -955,10 +955,10 @@ Here are some local providers we support:
           └
           ```
 
-          5. Choose `Ollama` as the model provider since Ramalama is API compatible and can use the goose Ollama provider
+          5. Choose `Ollama` as the model provider since Ramalama is API compatible and can use the lumina Ollama provider
 
           ```
-          ┌   goose-configure
+          ┌   lumina-configure
           │
           ◇  What would you like to configure?
           │  Configure Providers
@@ -981,7 +981,7 @@ Here are some local providers we support:
           :::
 
           ```
-          ┌   goose-configure
+          ┌   lumina-configure
           │
           ◇  What would you like to configure?
           │  Configure Providers
@@ -998,7 +998,7 @@ Here are some local providers we support:
           7. Enter the model you have running
 
           ```
-          ┌   goose-configure
+          ┌   lumina-configure
           │
           ◇  What would you like to configure?
           │  Configure Providers
@@ -1018,12 +1018,12 @@ Here are some local providers we support:
           ```
 
           :::tip Context Length
-          If you notice that goose is having trouble using extensions or is ignoring [.goosehints](/docs/guides/context-engineering/using-goosehints), it is likely that the model's default context length of 2048 tokens is too low. Use `ramalama serve` to set the `--ctx-size, -c` option to a [higher value](https://github.com/containers/ramalama/blob/main/docs/ramalama-serve.1.md#--ctx-size--c).
+          If you notice that lumina is having trouble using extensions or is ignoring [.luminahints](/docs/guides/context-engineering/using-luminahints), it is likely that the model's default context length of 2048 tokens is too low. Use `ramalama serve` to set the `--ctx-size, -c` option to a [higher value](https://github.com/containers/ramalama/blob/main/docs/ramalama-serve.1.md#--ctx-size--c).
           :::
 
       </TabItem>
       <TabItem value="deepseek" label="DeepSeek-R1">
-        The native `DeepSeek-r1` model doesn't support tool calling, however, we have a [custom model](https://ollama.com/michaelneale/deepseek-r1-goose) you can use with goose.
+        The native `DeepSeek-r1` model doesn't support tool calling, however, we have a [custom model](https://ollama.com/michaelneale/deepseek-r1-lumina) you can use with lumina.
 
         :::warning
         Note that this is a 70B model size and requires a powerful device to run smoothly.
@@ -1034,19 +1034,19 @@ Here are some local providers we support:
         2. In a terminal window, run the following command to install the custom DeepSeek-r1 model:
 
         ```sh
-        ollama run michaelneale/deepseek-r1-goose
+        ollama run michaelneale/deepseek-r1-lumina
         ```
 
-        3. In a separate terminal window, configure with goose:
+        3. In a separate terminal window, configure with lumina:
 
         ```sh
-        goose configure
+        lumina configure
         ```
 
         4. Choose to `Configure Providers`
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◆  What would you like to configure?
         │  ● Configure Providers (Change provider or update credentials)
@@ -1058,7 +1058,7 @@ Here are some local providers we support:
         5. Choose `Ollama` as the model provider
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1077,7 +1077,7 @@ Here are some local providers we support:
         6. Enter the host where your model is running
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1093,7 +1093,7 @@ Here are some local providers we support:
         7. Enter the installed model from above
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1105,7 +1105,7 @@ Here are some local providers we support:
         │  http://localhost:11434
         │
         ◇  Enter a model from that provider:
-        │  michaelneale/deepseek-r1-goose
+        │  michaelneale/deepseek-r1-lumina
         │
         ◇  Welcome! You're all set to explore and utilize my capabilities. Let's get started on solving your problems together!
         │
@@ -1122,16 +1122,16 @@ Here are some local providers we support:
           ollama run qwen2.5
           ```
 
-        3. In a separate terminal window, configure with goose:
+        3. In a separate terminal window, configure with lumina:
 
           ```sh
-          goose configure
+          lumina configure
           ```
 
         4. Choose to `Configure Providers`
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◆  What would you like to configure?
         │  ● Configure Providers (Change provider or update credentials)
@@ -1143,7 +1143,7 @@ Here are some local providers we support:
         5. Choose `Ollama` as the model provider
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1169,7 +1169,7 @@ Here are some local providers we support:
         :::
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1186,7 +1186,7 @@ Here are some local providers we support:
         7. Enter the model you have running
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1206,7 +1206,7 @@ Here are some local providers we support:
         ```
 
         :::tip Context Length
-        If you notice that goose is having trouble using extensions or is ignoring [.goosehints](/docs/guides/context-engineering/using-goosehints), it is likely that the model's default context length of 4096 tokens is too low. Set the `OLLAMA_CONTEXT_LENGTH` environment variable to a [higher value](https://github.com/ollama/ollama/blob/main/docs/faq.mdx#how-can-i-specify-the-context-window-size).
+        If you notice that lumina is having trouble using extensions or is ignoring [.luminahints](/docs/guides/context-engineering/using-luminahints), it is likely that the model's default context length of 4096 tokens is too low. Set the `OLLAMA_CONTEXT_LENGTH` environment variable to a [higher value](https://github.com/ollama/ollama/blob/main/docs/faq.mdx#how-can-i-specify-the-context-window-size).
         :::
 
       </TabItem>
@@ -1219,10 +1219,10 @@ Here are some local providers we support:
     2. Open LM Studio and download a model that supports tool calling (e.g., Qwen, Llama, or Mistral variants).
     3. Start the local server in LM Studio. The server runs on `http://localhost:1234` by default
 
-    4. Configure goose to use LM Studio:
+    4. Configure lumina to use LM Studio:
 
     <Tabs groupId="interface">
-      <TabItem value="ui" label="goose Desktop" default>
+      <TabItem value="ui" label="lumina Desktop" default>
         1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
         2. Click the `Settings` button on the sidebar.
         3. Click the `Models` tab.
@@ -1231,17 +1231,17 @@ Here are some local providers we support:
         6. Click `Submit` (no API key is needed).
         7. Select the model you have loaded in LM Studio.
       </TabItem>
-      <TabItem value="cli" label="goose CLI">
+      <TabItem value="cli" label="lumina CLI">
         1. Run:
         ```sh
-        goose configure
+        lumina configure
         ```
         2. Select `Configure Providers` from the menu.
         3. Choose `LM Studio` as the provider.
         4. Enter the model name that matches the model loaded in LM Studio.
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1258,7 +1258,7 @@ Here are some local providers we support:
     </Tabs>
 
     :::tip Model Name
-    Make sure the model name you enter in goose matches the model identifier shown in LM Studio's server panel.
+    Make sure the model name you enter in lumina matches the model identifier shown in LM Studio's server panel.
     :::
   </TabItem>
   <TabItem value="atomic-chat" label="Atomic Chat">
@@ -1268,10 +1268,10 @@ Here are some local providers we support:
     2. Open Atomic Chat and download a model that supports tool calling (e.g., Qwen, Llama, or Mistral variants).
     3. Start the local server in Atomic Chat. The server runs on `http://localhost:1337` by default
 
-    4. Configure goose to use Atomic Chat:
+    4. Configure lumina to use Atomic Chat:
 
     <Tabs groupId="interface">
-      <TabItem value="ui" label="goose Desktop" default>
+      <TabItem value="ui" label="lumina Desktop" default>
         1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar.
         2. Click the `Settings` button on the sidebar.
         3. Click the `Models` tab.
@@ -1280,17 +1280,17 @@ Here are some local providers we support:
         6. Click `Submit` (no API key is needed).
         7. Select the model you have loaded in Atomic Chat.
       </TabItem>
-      <TabItem value="cli" label="goose CLI">
+      <TabItem value="cli" label="lumina CLI">
         1. Run:
         ```sh
-        goose configure
+        lumina configure
         ```
         2. Select `Configure Providers` from the menu.
         3. Choose `Atomic Chat` as the provider.
         4. Enter the model name that matches the model loaded in Atomic Chat.
 
         ```
-        ┌   goose-configure
+        ┌   lumina-configure
         │
         ◇  What would you like to configure?
         │  Configure Providers
@@ -1307,7 +1307,7 @@ Here are some local providers we support:
     </Tabs>
 
     :::tip Model Name
-    Make sure the model name you enter in goose matches the model identifier shown for your server in Atomic Chat. If the API listens on a different origin than `http://localhost:1337`, set `ATOMIC_CHAT_HOST` in goose to match (scheme, host, and port only).
+    Make sure the model name you enter in lumina matches the model identifier shown for your server in Atomic Chat. If the API listens on a different origin than `http://localhost:1337`, set `ATOMIC_CHAT_HOST` in lumina to match (scheme, host, and port only).
     :::
   </TabItem>
   <TabItem value="docker" label="Docker Model Runner" default>
@@ -1321,16 +1321,16 @@ Here are some local providers we support:
     docker model pull hf.co/unsloth/gemma-3n-e4b-it-gguf:q6_k
     ```
 
-    4. Configure goose to use Docker Model Runner, using the OpenAI API compatible endpoint:
+    4. Configure lumina to use Docker Model Runner, using the OpenAI API compatible endpoint:
 
     ```sh
-    goose configure
+    lumina configure
     ```
 
     5. Choose to `Configure Providers`
 
     ```
-    ┌   goose-configure
+    ┌   lumina-configure
     │
     ◆  What would you like to configure?
     │  ● Configure Providers (Change provider or update credentials)
@@ -1342,7 +1342,7 @@ Here are some local providers we support:
     6. Choose `OpenAI` as the model provider:
 
     ```
-    ┌   goose-configure
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
     │  Configure Providers
@@ -1358,7 +1358,7 @@ Here are some local providers we support:
     7. Configure Docker Model Runner endpoint as the `OPENAI_HOST`:
 
     ```
-    ┌   goose-configure
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
     │  Configure Providers
@@ -1384,7 +1384,7 @@ Here are some local providers we support:
 
     Docker model runner uses `/engines/llama.cpp/v1/chat/completions` for the base path.
 
-    9. Finally configure the model available in Docker Model Runner to be used by goose: `hf.co/unsloth/gemma-3n-e4b-it-gguf:q6_k`
+    9. Finally configure the model available in Docker Model Runner to be used by lumina: `hf.co/unsloth/gemma-3n-e4b-it-gguf:q6_k`
 
     ```
     │
@@ -1420,23 +1420,23 @@ Or a JSON string:
 OPENROUTER_PARAMETERS: '{"verbosity":"xhigh","plugins":[{"id":"web"}]}'
 ```
 
-goose ignores reserved request fields it already manages, such as `model`, `messages`, `stream`, and `stream_options`. Other OpenRouter-specific top-level fields are passed through the shared OpenAI-compatible request parameter handling.
+lumina ignores reserved request fields it already manages, such as `model`, `messages`, `stream`, and `stream_options`. Other OpenRouter-specific top-level fields are passed through the shared OpenAI-compatible request parameter handling.
 
 ## GitHub Copilot Authentication
 
 GitHub Copilot uses a device flow for authentication, so no API keys are required:
 
-1. Run [`goose configure`](#configure-provider-and-model) and select **GitHub Copilot**
+1. Run [`lumina configure`](#configure-provider-and-model) and select **GitHub Copilot**
 2. An eight-character code will be automatically copied to your clipboard
 3. A browser will open to GitHub's device activation page
 4. Paste the code to authorize the application
-5. When you return to goose, GitHub Copilot will be available as a provider in both CLI and Desktop.
+5. When you return to lumina, GitHub Copilot will be available as a provider in both CLI and Desktop.
 
 ## Azure OpenAI Authentication
 
-goose supports three authentication methods for Azure OpenAI:
+lumina supports three authentication methods for Azure OpenAI:
 
-1. **Entra ID Bearer Token** - Uses a pre-acquired Microsoft Entra access token from `AZURE_OPENAI_AD_TOKEN`, sent as `Authorization: Bearer <token>`. goose skips Azure CLI and token acquisition entirely, which suits enterprise deployments where only short-lived tokens are exposed to the runtime (e.g. obtained via `az account get-access-token --resource https://cognitiveservices.azure.com --query accessToken --output tsv`)
+1. **Entra ID Bearer Token** - Uses a pre-acquired Microsoft Entra access token from `AZURE_OPENAI_AD_TOKEN`, sent as `Authorization: Bearer <token>`. lumina skips Azure CLI and token acquisition entirely, which suits enterprise deployments where only short-lived tokens are exposed to the runtime (e.g. obtained via `az account get-access-token --resource https://cognitiveservices.azure.com --query accessToken --output tsv`)
 2. **API Key Authentication** - Uses the `AZURE_OPENAI_API_KEY` for direct authentication
 3. **Azure Credential Chain** - Uses Azure CLI credentials automatically without requiring an API key
 
@@ -1445,13 +1445,13 @@ When more than one is configured, `AZURE_OPENAI_AD_TOKEN` takes precedence over 
 To use the Azure Credential Chain:
 - Ensure you're logged in with `az login`
 - Have appropriate Azure role assignments for the Azure OpenAI service
-- Configure with `goose configure` and select Azure OpenAI, leaving the API key field empty
+- Configure with `lumina configure` and select Azure OpenAI, leaving the API key field empty
 
 This method simplifies authentication and enhances security for enterprise environments.
 
 ## Multi-Model Configuration
 
-Beyond single-model setups, goose supports [multi-model configurations](/docs/guides/multi-model/) that can use different models and providers for specialized tasks:
+Beyond single-model setups, lumina supports [multi-model configurations](/docs/guides/multi-model/) that can use different models and providers for specialized tasks:
 
 - **Planning Mode** - Use a dedicated planner model to create detailed project breakdowns before execution
 - **Subagents** - Delegate scoped tasks to isolated sessions to keep your primary workflow focused and efficient
@@ -1465,12 +1465,12 @@ Meta's Muse Spark models support a configurable reasoning effort that maps to Me
 - **Max** - Sent as `xhigh`, the deepest reasoning level Meta supports
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     When selecting a Muse Spark model, a "Thinking Effort" dropdown appears automatically. Select your preference and the setting persists across sessions.
   </TabItem>
 
-  <TabItem value="cli" label="goose CLI">
-    When you run `goose configure` and select a Muse Spark model, you'll be prompted to choose a thinking effort:
+  <TabItem value="cli" label="lumina CLI">
+    When you run `lumina configure` and select a Muse Spark model, you'll be prompted to choose a thinking effort:
 
     ```
     ◆  Select thinking effort:
@@ -1481,7 +1481,7 @@ Meta's Muse Spark models support a configurable reasoning effort that maps to Me
     │  ○ Max - No constraints on thinking depth
     ```
 
-    You can also set this globally with the `GOOSE_THINKING_EFFORT` environment variable (`off`, `low`, `medium`, `high`, or `max`).
+    You can also set this globally with the `LUMINA_THINKING_EFFORT` environment variable (`off`, `low`, `medium`, `high`, or `max`).
   </TabItem>
 </Tabs>
 
@@ -1500,14 +1500,14 @@ When thinking is enabled, you can view the model's reasoning process. See [Viewi
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     When selecting a Gemini 3 model, a "Thinking Level" dropdown appears automatically. Select your preference and the setting persists across sessions.
   </TabItem>
 
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     **Interactive configuration:**
 
-    When you run `goose configure` and select a Gemini 3 model, you'll be prompted to choose a thinking level:
+    When you run `lumina configure` and select a Gemini 3 model, you'll be prompted to choose a thinking level:
 
     ```
     ◆  Select thinking level for Gemini 3:
@@ -1526,7 +1526,7 @@ The thinking level is determined in this order (highest to lowest priority):
 
 ## Viewing Model Reasoning
 
-Some models expose their internal reasoning or "chain of thought" as part of their response. goose automatically captures this reasoning output and makes it available to you. The following models and providers support reasoning output:
+Some models expose their internal reasoning or "chain of thought" as part of their response. lumina automatically captures this reasoning output and makes it available to you. The following models and providers support reasoning output:
 
 | Provider / Model | How It Works |
 |---|---|
@@ -1536,15 +1536,15 @@ Some models expose their internal reasoning or "chain of thought" as part of the
 | **Claude** (Anthropic, with [Claude thinking](/docs/guides/environment-variables#claude-thinking-configuration) enabled) | Thinking blocks captured from the API response |
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     Reasoning output appears automatically in a collapsible **"Show reasoning"** toggle above the model's response. Click it to expand and view the model's thought process.
   </TabItem>
 
-  <TabItem value="cli" label="goose CLI">
-    Reasoning output is **hidden by default** in the CLI. To display it, set the `GOOSE_CLI_SHOW_THINKING` environment variable:
+  <TabItem value="cli" label="lumina CLI">
+    Reasoning output is **hidden by default** in the CLI. To display it, set the `LUMINA_CLI_SHOW_THINKING` environment variable:
 
     ```bash
-    export GOOSE_CLI_SHOW_THINKING=1
+    export LUMINA_CLI_SHOW_THINKING=1
     ```
 
     When enabled, reasoning appears under a "Thinking:" header in dimmed text before the model's main response.
@@ -1561,7 +1561,7 @@ Reasoning output can be useful for understanding how the model arrived at its an
 
 ---
 
-If you have any questions or need help with a specific provider, feel free to reach out to us on [Discord](https://discord.gg/goose-oss) or on the [goose repo](https://github.com/aaif-goose/goose).
+If you have any questions or need help with a specific provider, feel free to reach out to us on [Lumina issue tracker](https://github.com/HikerM/lumina/issues) or on the [lumina repo](https://github.com/HikerM/lumina).
 
 
 [providers]: /docs/getting-started/providers

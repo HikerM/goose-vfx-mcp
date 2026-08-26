@@ -1,5 +1,5 @@
 import { v7 as uuidv7 } from 'uuid';
-import type { GooseExtension } from '@aaif/goose-sdk';
+import type { LuminaExtension } from '@hikerm/lumina-sdk';
 import { AppEvents } from '../constants/events';
 import { ChatState } from '../types/chatState';
 import type { Session } from '../types/session';
@@ -22,7 +22,7 @@ import {
   acpTruncateSessionConversation,
   isAcpSessionLoadInFlight,
   sessionInfoToSession,
-  type AcpRecipeOptions,
+  type AcpNewSessionOptions,
 } from './sessions';
 
 export interface AcpLoadSessionOptions {
@@ -40,8 +40,8 @@ export interface AcpSubmitMessageOptions extends AcpSnapshotOptions {
 export interface AcpChatSessionController {
   createSession(
     cwd: string,
-    gooseExtensions: GooseExtension[],
-    recipe?: AcpRecipeOptions
+    luminaExtensions: LuminaExtension[],
+    options?: AcpNewSessionOptions
   ): Promise<Session>;
   loadSession(sessionId: string, options?: AcpLoadSessionOptions): Promise<void>;
   restoreSession(sessionId: string): Promise<void>;
@@ -103,10 +103,10 @@ async function forkSessionWithEditedMessage(
 
 async function createSession(
   cwd: string,
-  gooseExtensions: GooseExtension[],
-  recipe?: AcpRecipeOptions
+  luminaExtensions: LuminaExtension[],
+  options?: AcpNewSessionOptions
 ): Promise<Session> {
-  const { sessionId, sessionInfo, meta } = await acpNewSession(cwd, gooseExtensions, recipe);
+  const { sessionId, sessionInfo, meta } = await acpNewSession(cwd, luminaExtensions, options);
   const session = sessionInfoToSession(sessionInfo, meta);
 
   showExtensionLoadResults(meta.extensionResults);

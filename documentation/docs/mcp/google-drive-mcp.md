@@ -1,39 +1,39 @@
 ---
 title: Google Drive Extension
-description: Add Google Drive MCP Server as a goose Extension
+description: Add Google Drive MCP Server as a lumina Extension
 unlisted: true
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/p9HGYbJk9wU" />
 
-Server archived 
+Server archived
 
-This tutorial covers how to add the [Google Drive MCP Server](https://www.pulsemcp.com/servers/modelcontextprotocol-gdrive) as a goose extension, allowing you to list, read, and search files in Google Drive.
+This tutorial covers how to add the [Google Drive MCP Server](https://www.pulsemcp.com/servers/modelcontextprotocol-gdrive) as a lumina extension, allowing you to list, read, and search files in Google Drive.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-gdrive&id=google-drive&name=Google%20Drive&description=Google%20Drive%20integration&env=GDRIVE_CREDENTIALS_PATH%3DPath%20to%20Google%20Drive%20credentials&env=GDRIVE_OAUTH_PATH%3DPath%20to%20OAuth%20token)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-gdrive&id=google-drive&name=Google%20Drive&description=Google%20Drive%20integration&env=GDRIVE_CREDENTIALS_PATH%3DPath%20to%20Google%20Drive%20credentials&env=GDRIVE_OAUTH_PATH%3DPath%20to%20OAuth%20token)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
-  GDRIVE_OAUTH_PATH=$USER_HOME/.config/gcp-oauth.keys.json \ 
-  GDRIVE_CREDENTIALS_PATH=$USER_HOME/.config/.gdrive-server-credentials.json \ 
+  GDRIVE_OAUTH_PATH=$USER_HOME/.config/gcp-oauth.keys.json \
+  GDRIVE_CREDENTIALS_PATH=$USER_HOME/.config/.gdrive-server-credentials.json \
   npx -y @modelcontextprotocol/server-gdrive auth \
-  npx -y @modelcontextprotocol/server-gdrive 
+  npx -y @modelcontextprotocol/server-gdrive
   ```
   </TabItem>
 </Tabs>
   **Environment Variable**
   ```
   GDRIVE_CREDENTIALS_PATH: $USER_HOME/.config/.gdrive-server-credentials.json
-  GDRIVE_OAUTH_PATH: $USER_HOME/.config/gcp-oauth.keys.json  
+  GDRIVE_OAUTH_PATH: $USER_HOME/.config/gcp-oauth.keys.json
   ```
 :::
 
@@ -58,9 +58,9 @@ To obtain your Google Drive server credentials and oauth keys, follow the steps 
             - Confirm you're in the right project by checking the top left corner
             - Search `Google Drive API` and enable it
 
-  2. Configure OAuth Consent Screen 
+  2. Configure OAuth Consent Screen
         -  Go to the [OAuth Consent Screen](https://console.cloud.google.com/auth/overview/create)
-        -  Enter required information, `project name` , `user support email` 
+        -  Enter required information, `project name` , `user support email`
         -  Choose `Internal` for `Audience` and press `create`
         -  If you are unable to choose `Internal` select `External` and follow these additional steps:
             - Navigate to the [Audience](https://console.cloud.google.com/auth/audience) screen
@@ -68,7 +68,7 @@ To obtain your Google Drive server credentials and oauth keys, follow the steps 
 
  3. Create OAuth Credential
         -  Go to [OAuth Clients](https://console.cloud.google.com/apis/credentials/oauthclient)
-        -  Click `Create Client` 
+        -  Click `Create Client`
         -  Choose **Application Type: Desktop App**
         -  Download the JSON key file
         -  Rename it to `gcp-oauth.keys.json`
@@ -77,11 +77,11 @@ To obtain your Google Drive server credentials and oauth keys, follow the steps 
             mv ~/Downloads/gcp-oauth.keys.json ~/.config/gcp-oauth.keys.json
             ```
   4. Connect Google Account
-  
+
      To connect your Google account, run the following authentication command in your terminal:
           ```sh
-          GDRIVE_OAUTH_PATH=$USER_HOME/.config/gcp-oauth.keys.json \ 
-          GDRIVE_CREDENTIALS_PATH=$USER_HOME/.config/.gdrive-server-credentials.json \ 
+          GDRIVE_OAUTH_PATH=$USER_HOME/.config/gcp-oauth.keys.json \
+          GDRIVE_CREDENTIALS_PATH=$USER_HOME/.config/.gdrive-server-credentials.json \
           npx -y @modelcontextprotocol/server-gdrive auth
           ```
          :::info
@@ -95,8 +95,8 @@ You'll need to re-authenticate once a day when using the Google Drive extension.
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaDesktopInstaller
     extensionId="google-drive"
     extensionName="Google Drive"
     description="Google Drive integration"
@@ -111,107 +111,107 @@ You'll need to re-authenticate once a day when using the Google Drive extension.
   :::info
   - For `GDRIVE_CREDENTIALS_PATH`, enter `$USER_HOME/.config/.gdrive-server-credentials.json`
   - For `GDRIVE_OAUTH_PATH`, enter `$USER_HOME/.config/gcp-oauth.keys.json`
-  
+
   Replace `$USER_HOME` with your home directory. You must specify an absolute path for this extension to work.
   :::
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to add a `Command-line Extension`
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◆  What type of extension would you like to add?
-    │  ○ Built-in Extension 
-    // highlight-start    
+    │  ○ Built-in Extension
+    // highlight-start
     │  ● Command-line Extension (Run a local command or script)
     // highlight-end
-    │  ○ Remote Extension (Streamable HTTP) 
-    └ 
+    │  ○ Remote Extension (Streamable HTTP)
+    └
   ```
 
   3. Give your extension a name
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     // highlight-start
     ◆  What would you like to call this extension?
     │  google drive
     // highlight-end
-    └ 
+    └
   ```
 
   4. Enter the command
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  google drive
     │
     // highlight-start
     ◆  What command should be run?
-    │  npx -y @modelcontextprotocol/server-gdrive 
+    │  npx -y @modelcontextprotocol/server-gdrive
     // highlight-end
-    └ 
-  ```  
+    └
+  ```
 
-  5. Enter the number of seconds goose should wait for actions to complete before timing out. Default is 300s
+  5. Enter the number of seconds lumina should wait for actions to complete before timing out. Default is 300s
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  google drive
     │
     ◇  What command should be run?
-    │  npx -y @modelcontextprotocol/server-gdrive 
+    │  npx -y @modelcontextprotocol/server-gdrive
     │
     // highlight-start
     ◆  Please set the timeout for this tool (in secs):
     │  300
     // highlight-end
-    └ 
-  ``` 
+    └
+  ```
 
   6. Choose to add a description. If you select "Yes" here, you will be prompted to enter a description for the extension.
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  google drive
     │
     ◇  What command should be run?
-    │  npx -y @modelcontextprotocol/server-gdrive 
+    │  npx -y @modelcontextprotocol/server-gdrive
     │
     ◇  Please set the timeout for this tool (in secs):
     │  300
@@ -220,35 +220,35 @@ You'll need to re-authenticate once a day when using the Google Drive extension.
     ◇  Would you like to add a description?
     │  No
     // highlight-end
-    └ 
+    └
   ```
 
-  7. Add your environment variables 
+  7. Add your environment variables
 
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  google drive
     │
     ◇  What command should be run?
-    │  npx -y @modelcontextprotocol/server-gdrive 
+    │  npx -y @modelcontextprotocol/server-gdrive
     │
     ◇  Please set the timeout for this tool (in secs):
     │  300
     │
     ◇  Would you like to add a description?
     │  No
-    │    
+    │
     // highlight-start
     ◆  Would you like to add environment variables?
-    │  Yes 
+    │  Yes
     │
     ◇  Environment variable name:
     │  GDRIVE_CREDENTIALS_PATH
@@ -257,7 +257,7 @@ You'll need to re-authenticate once a day when using the Google Drive extension.
     │  ~/.config/.gdrive-server-credentials.json
     │
     ◇  Add another environment variable?
-    │  yes 
+    │  yes
     |
     ◇  Environment variable name:
     │  GDRIVE_OAUTH_PATH
@@ -267,16 +267,16 @@ You'll need to re-authenticate once a day when using the Google Drive extension.
     │
     // highlight-end
     └  Added google drive extension
-  ```  
+  ```
 
   </TabItem>
 </Tabs>
 
 ## Example Usage
 
-In this example, I’ll use goose to quickly gather and summarize important information for my upcoming marketing budget review meeting in 30 minutes. I’ll ask goose to find relevant documents from my Google Drive, summarize Q1 performance, highlight critical decisions on marketing automation and video production, and identify any outstanding action items from our last meeting.
+In this example, I’ll use lumina to quickly gather and summarize important information for my upcoming marketing budget review meeting in 30 minutes. I’ll ask lumina to find relevant documents from my Google Drive, summarize Q1 performance, highlight critical decisions on marketing automation and video production, and identify any outstanding action items from our last meeting.
 
-### goose Prompt
+### lumina Prompt
 ```
 I have an important marketing budget review meeting in 30 minutes and I need your help getting prepared. I have several documents in my Google Drive from our previous meetings and planning sessions. Could you help me by:
 
@@ -288,18 +288,18 @@ I have an important marketing budget review meeting in 30 minutes and I need you
 I need a quick but comprehensive overview so I can walk into this meeting well-prepared.
 ```
 
-### goose Output
+### lumina Output
 
 ```
-I'll help you prepare for your meeting. Let me first list available resources from Google Drive to make sure we access the correct files. 
+I'll help you prepare for your meeting. Let me first list available resources from Google Drive to make sure we access the correct files.
 
 [... list resources ...]
 
-Great! I can see several relevant documents. Let me access them one by one to gather the information you need. 
+Great! I can see several relevant documents. Let me access them one by one to gather the information you need.
 
 [... reads resources ...]
 
-Based on all these documents, here's your comprehensive overview for the meeting: 
+Based on all these documents, here's your comprehensive overview for the meeting:
 
 Q1 Performance Summary:
 

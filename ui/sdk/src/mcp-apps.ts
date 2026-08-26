@@ -10,63 +10,63 @@ import type {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 
-export const GOOSE_MCP_UI_EXTENSION_ID = "io.modelcontextprotocol/ui" as const;
+export const LUMINA_MCP_UI_EXTENSION_ID = "io.modelcontextprotocol/ui" as const;
 
-export interface GooseMcpUiExtensionSettings {
+export interface LuminaMcpUiExtensionSettings {
   mimeTypes: string[];
 }
 
-export interface GooseMcpHostCapabilities {
-  extensions: Record<string, GooseMcpUiExtensionSettings>;
+export interface LuminaMcpHostCapabilities {
+  extensions: Record<string, LuminaMcpUiExtensionSettings>;
 }
 
-export type GooseToolUiMetadata = Extract<
+export type LuminaToolUiMetadata = Extract<
   McpUiAppToolConfig["_meta"],
   { ui: unknown }
 >["ui"];
 
-export type GooseToolMetadata = NonNullable<Tool["_meta"]> & {
-  ui?: GooseToolUiMetadata;
-  goose_extension?: string;
+export type LuminaToolMetadata = NonNullable<Tool["_meta"]> & {
+  ui?: LuminaToolUiMetadata;
+  lumina_extension?: string;
 };
 
-export type GooseSessionTool = Tool & {
-  meta?: GooseToolMetadata;
-  _meta?: GooseToolMetadata;
+export type LuminaSessionTool = Tool & {
+  meta?: LuminaToolMetadata;
+  _meta?: LuminaToolMetadata;
 };
 
-export type GooseTextResourceContents = TextResourceContents;
+export type LuminaTextResourceContents = TextResourceContents;
 
-export type GooseBlobResourceContents = BlobResourceContents;
+export type LuminaBlobResourceContents = BlobResourceContents;
 
-export type GooseResourceContents = TextResourceContents | BlobResourceContents;
+export type LuminaResourceContents = TextResourceContents | BlobResourceContents;
 
-export type GooseReadResourceResult = ReadResourceResult;
+export type LuminaReadResourceResult = ReadResourceResult;
 
-export type GooseResourceMetadata = NonNullable<
+export type LuminaResourceMetadata = NonNullable<
   Extract<NonNullable<McpUiAppResourceConfig["_meta"]>, { ui?: unknown }>["ui"]
 >;
 
-export interface GooseMcpAppToolPayload {
+export interface LuminaMcpAppToolPayload {
   toolName: string;
   extensionName: string;
   resourceUri: string;
-  toolMeta?: GooseToolMetadata;
-  resourceResult?: GooseReadResourceResult | null;
+  toolMeta?: LuminaToolMetadata;
+  resourceResult?: LuminaReadResourceResult | null;
   readError?: string;
 }
 
-export interface GooseToolCallUpdateMeta {
-  goose?: {
-    mcpApp?: GooseMcpAppToolPayload;
+export interface LuminaToolCallUpdateMeta {
+  lumina?: {
+    mcpApp?: LuminaMcpAppToolPayload;
     [key: string]: unknown;
   };
   [key: string]: unknown;
 }
 
-export const DEFAULT_GOOSE_MCP_HOST_CAPABILITIES: GooseMcpHostCapabilities = {
+export const DEFAULT_LUMINA_MCP_HOST_CAPABILITIES: LuminaMcpHostCapabilities = {
   extensions: {
-    [GOOSE_MCP_UI_EXTENSION_ID]: {
+    [LUMINA_MCP_UI_EXTENSION_ID]: {
       mimeTypes: [RESOURCE_MIME_TYPE],
     },
   },

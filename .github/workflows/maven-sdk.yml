@@ -44,15 +44,15 @@ jobs:
 
       - name: Build native library
         shell: bash
-        run: cargo build -p goose-sdk --features uniffi --release
+        run: cargo build -p lumina-sdk --features uniffi --release
 
       - name: Stage native library
         shell: bash
         run: |
           case "${{ runner.os }}" in
-            Linux) lib="target/release/libgoose_sdk.so" ;;
-            macOS) lib="target/release/libgoose_sdk.dylib" ;;
-            Windows) lib="target/release/goose_sdk.dll" ;;
+            Linux) lib="target/release/liblumina_sdk.so" ;;
+            macOS) lib="target/release/liblumina_sdk.dylib" ;;
+            Windows) lib="target/release/lumina_sdk.dll" ;;
             *) echo "unsupported runner OS: ${{ runner.os }}" >&2; exit 1 ;;
           esac
           mkdir -p "maven-native/${{ matrix.resource-prefix }}"
@@ -61,7 +61,7 @@ jobs:
       - name: Upload native library artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: goose-sdk-native-${{ matrix.name }}
+          name: lumina-sdk-native-${{ matrix.name }}
           path: maven-native/**
           if-no-files-found: error
 
@@ -88,37 +88,37 @@ jobs:
       - name: Download native library artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: goose-sdk-native-*
+          pattern: lumina-sdk-native-*
           path: native-artifacts
           merge-multiple: true
 
       - name: Generate Kotlin bindings
         shell: bash
         run: |
-          cargo build -p goose-sdk --features uniffi --release
-          crates/goose-sdk/scripts/prepare-maven-package.sh \
-            target/release/libgoose_sdk.so \
+          cargo build -p lumina-sdk --features uniffi --release
+          crates/lumina-sdk/scripts/prepare-maven-package.sh \
+            target/release/liblumina_sdk.so \
             linux-x86-64
 
       - name: Restore downloaded native libraries
         shell: bash
-        run: cp -R native-artifacts/* crates/goose-sdk/maven/src/main/resources/
+        run: cp -R native-artifacts/* crates/lumina-sdk/maven/src/main/resources/
 
       - name: Build Maven publication
-        working-directory: crates/goose-sdk/maven
+        working-directory: crates/lumina-sdk/maven
         run: gradle --no-daemon publishToMavenLocal
 
       - name: Stage Maven local artifacts
         shell: bash
         run: |
-          version=$(grep -m1 '^version =' crates/goose-sdk/Cargo.toml | sed -E 's/version = "([^"]+)"/\1/')
+          version=$(grep -m1 '^version =' crates/lumina-sdk/Cargo.toml | sed -E 's/version = "([^"]+)"/\1/')
           mkdir -p maven-artifacts
-          cp -R "$HOME/.m2/repository/io/github/aaif-goose/gdk/$version" maven-artifacts/
+          cp -R "$HOME/.m2/repository/io/github/HikerM/gdk/$version" maven-artifacts/
 
       - name: Upload Maven artifact bundle
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: goose-sdk-maven
+          name: lumina-sdk-maven
           path: maven-artifacts/**
           if-no-files-found: error
 
@@ -126,7 +126,7 @@ jobs:
     name: Publish to Maven Central
     needs: package
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && vars.LUMINA_PUBLISHING_READY == 'true'
     environment: maven-central
     steps:
       - name: Checkout code
@@ -147,24 +147,24 @@ jobs:
       - name: Download native library artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: goose-sdk-native-*
+          pattern: lumina-sdk-native-*
           path: native-artifacts
           merge-multiple: true
 
       - name: Generate Kotlin bindings
         shell: bash
         run: |
-          cargo build -p goose-sdk --features uniffi --release
-          crates/goose-sdk/scripts/prepare-maven-package.sh \
-            target/release/libgoose_sdk.so \
+          cargo build -p lumina-sdk --features uniffi --release
+          crates/lumina-sdk/scripts/prepare-maven-package.sh \
+            target/release/liblumina_sdk.so \
             linux-x86-64
 
       - name: Restore downloaded native libraries
         shell: bash
-        run: cp -R native-artifacts/* crates/goose-sdk/maven/src/main/resources/
+        run: cp -R native-artifacts/* crates/lumina-sdk/maven/src/main/resources/
 
       - name: Publish to Maven Central
-        working-directory: crates/goose-sdk/maven
+        working-directory: crates/lumina-sdk/maven
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_TOKEN_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_TOKEN_PASSWORD }}

@@ -1,6 +1,6 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type { ToolListItem } from '@aaif/goose-sdk';
-import type { GooseApp } from '../types/apps';
+import type { ToolListItem } from '@hikerm/lumina-sdk';
+import type { LuminaApp } from '../types/apps';
 import { getAcpClient } from './acpConnection';
 import { normalizeAcpError } from './errors';
 
@@ -63,21 +63,21 @@ function flattenReadResourceResult(result: unknown, fallbackUri: string): McpApp
   };
 }
 
-function acpApp(value: unknown): GooseApp | null {
+function acpApp(value: unknown): LuminaApp | null {
   if (!isRecord(value)) return null;
-  return value as GooseApp;
+  return value as LuminaApp;
 }
 
-export async function listMcpApps(sessionId?: string): Promise<GooseApp[]> {
+export async function listMcpApps(sessionId?: string): Promise<LuminaApp[]> {
   const client = await getAcpClient();
-  const response = await client.goose.appsList_unstable(sessionId ? { sessionId } : {});
-  return (response.apps ?? []).map(acpApp).filter((app): app is GooseApp => !!app);
+  const response = await client.lumina.appsList_unstable(sessionId ? { sessionId } : {});
+  return (response.apps ?? []).map(acpApp).filter((app): app is LuminaApp => !!app);
 }
 
 export async function exportMcpApp(name: string): Promise<string> {
   try {
     const client = await getAcpClient();
-    const response = await client.goose.appsExport_unstable({ name });
+    const response = await client.lumina.appsExport_unstable({ name });
     return response.html;
   } catch (error) {
     throw normalizeAcpError(error, 'Failed to export app');
@@ -87,7 +87,7 @@ export async function exportMcpApp(name: string): Promise<string> {
 export async function importMcpApp(html: string): Promise<void> {
   try {
     const client = await getAcpClient();
-    await client.goose.appsImport_unstable({ html });
+    await client.lumina.appsImport_unstable({ html });
   } catch (error) {
     throw normalizeAcpError(error, 'Failed to import app');
   }
@@ -96,7 +96,7 @@ export async function importMcpApp(html: string): Promise<void> {
 export async function deleteMcpApp(name: string): Promise<void> {
   try {
     const client = await getAcpClient();
-    await client.goose.appsDelete_unstable({ name });
+    await client.lumina.appsDelete_unstable({ name });
   } catch (error) {
     throw normalizeAcpError(error, 'Failed to delete app');
   }
@@ -107,7 +107,7 @@ export async function listMcpAppTools(
   extensionName?: string
 ): Promise<McpAppTool[]> {
   const client = await getAcpClient();
-  const response = await client.goose.toolsList_unstable({
+  const response = await client.lumina.toolsList_unstable({
     sessionId,
     extensionName: extensionName ?? null,
   });
@@ -120,7 +120,7 @@ export async function readMcpAppResource(
   uri: string
 ): Promise<McpAppResourceResponse> {
   const client = await getAcpClient();
-  const response = await client.goose.resourcesRead_unstable({
+  const response = await client.lumina.resourcesRead_unstable({
     sessionId,
     uri,
     extensionName,
@@ -136,7 +136,7 @@ export async function callMcpAppTool(
 ): Promise<CallToolResult> {
   const fullToolName = `${extensionName}__${name}`;
   const client = await getAcpClient();
-  const response = await client.goose.toolsCall_unstable({
+  const response = await client.lumina.toolsCall_unstable({
     sessionId,
     name: fullToolName,
     arguments: args || {},

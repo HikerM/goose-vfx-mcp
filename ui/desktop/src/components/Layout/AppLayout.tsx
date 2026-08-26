@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { IpcRendererEvent } from 'electron';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Menu, PanelLeft } from 'lucide-react';
 import { defineMessages, useIntl } from '../../i18n';
@@ -12,6 +12,7 @@ import { Navigation } from './NavigationPanel';
 import { NAV_DIMENSIONS, Z_INDEX } from './constants';
 import { cn } from '../../utils';
 import { UserInput } from '../../types/message';
+import { isProjectWorkspacePath } from '../../utils/navigationUtils';
 
 const i18n = defineMessages({
   openNavigation: {
@@ -35,9 +36,14 @@ interface AppLayoutContentProps {
 const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) => {
   const intl = useIntl();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const safeIsMacOS = (window?.electron?.platform || 'darwin') === 'darwin';
   const chatContext = useChatContext();
   const isOnPairRoute = location.pathname === '/pair';
+  const isProjectWorkspaceRoute = isProjectWorkspacePath(location.pathname);
+  const isChatSurfaceRoute = isOnPairRoute || isProjectWorkspaceRoute;
+  const hasSelectedProjectTask =
+    isProjectWorkspaceRoute && Boolean(searchParams.get('resumeSessionId'));
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -93,22 +99,45 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
         <motion.div
           key="nav"
           initial={false}
-          animate={{ width: isNavExpanded ? NAV_DIMENSIONS.NAV_WIDTH : 0 }}
+          animate={{
+            width: isNavExpanded
+              ? isProjectWorkspaceRoute
+                ? NAV_DIMENSIONS.PROJECT_NAV_WIDTH
+                : NAV_DIMENSIONS.NAV_WIDTH
+              : 0,
+          }}
           transition={{ type: 'spring', stiffness: 400, damping: 40 }}
           style={{ height: '100%' }}
           className="relative flex-shrink-0 overflow-hidden h-full p-2"
         >
           <div className="w-full h-full overflow-hidden rounded-xl border border-border-primary">
-            <Navigation />
+            {isProjectWorkspaceRoute ? <Outlet /> : <Navigation />}
           </div>
         </motion.div>
 
         {/* Main content — no border / no card; just flows on the canvas. */}
         <div className="flex-1 overflow-hidden min-h-0">
-          <Outlet />
+          {!isProjectWorkspaceRoute && <Outlet />}
+          {isProjectWorkspaceRoute && !hasSelectedProjectTask && (
+            <div className="flex h-full items-center justify-center px-8 pt-12">
+              <div className="max-w-md text-center">
+                <h1 className="text-xl font-semibold text-text-primary">Start a project task</h1>
+                <p className="mt-2 text-sm leading-6 text-text-secondary">
+                  Create a task or choose an existing conversation from the project sidebar. Each
+                  task keeps its own context while sharing the project workspace.
+                </p>
+              </div>
+            </div>
+          )}
           {/* Always render ChatSessionsContainer to keep SSE connections alive.
-              When navigating away from /pair, hide it with CSS */}
-          <div className={isOnPairRoute ? 'contents' : 'hidden'}>
+              When navigating away from a chat surface, hide it with CSS. */}
+          <div
+            className={
+              isChatSurfaceRoute && (!isProjectWorkspaceRoute || hasSelectedProjectTask)
+                ? 'contents'
+                : 'hidden'
+            }
+          >
             <ChatSessionsContainer setChat={setChat} activeSessions={activeSessions} />
           </div>
         </div>

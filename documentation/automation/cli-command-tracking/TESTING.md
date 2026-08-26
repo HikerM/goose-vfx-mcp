@@ -5,10 +5,10 @@ This guide explains how to test the CLI command tracking automation locally and 
 ## Prerequisites
 
 - Python 3.7+
-- Rust toolchain (for building goose)
+- Rust toolchain (for building lumina)
 - jq (for JSON processing)
-- goose CLI installed (for running recipes)
-- Git with access to goose repository
+- lumina CLI installed (for running recipes)
+- Git with access to lumina repository
 
 ## Local Testing
 
@@ -17,8 +17,8 @@ This guide explains how to test the CLI command tracking automation locally and 
 ```bash
 cd /path/to/cli-command-tracking
 
-# Set the goose repository path
-export GOOSE_REPO=/path/to/goose
+# Set the lumina repository path
+export LUMINA_REPO=/path/to/lumina
 
 # Create output directory
 mkdir -p output
@@ -93,7 +93,7 @@ Generate human-readable documentation:
 cd output
 
 # Run synthesis recipe
-goose run --recipe ../recipes/synthesize-cli-changes.yaml
+lumina run --recipe ../recipes/synthesize-cli-changes.yaml
 
 # Check output
 ls -lh cli-changes.md
@@ -115,10 +115,10 @@ Update the actual documentation:
 cd output
 
 # Set path to documentation file
-export CLI_COMMANDS_PATH=/path/to/goose/documentation/docs/guides/goose-cli-commands.md
+export CLI_COMMANDS_PATH=/path/to/lumina/documentation/docs/guides/lumina-cli-commands.md
 
 # Run update recipe
-goose run --recipe ../recipes/update-cli-commands.yaml
+lumina run --recipe ../recipes/update-cli-commands.yaml
 
 # Check outputs
 ls -lh update-summary.md
@@ -136,7 +136,7 @@ Run the complete end-to-end pipeline:
 cd /path/to/cli-command-tracking
 
 # Set documentation path (optional - only needed for update step)
-export CLI_COMMANDS_PATH=/path/to/goose/documentation/docs/guides/goose-cli-commands.md
+export CLI_COMMANDS_PATH=/path/to/lumina/documentation/docs/guides/lumina-cli-commands.md
 
 # Run pipeline
 ./scripts/run-pipeline.sh v1.14.0 v1.15.0
@@ -160,10 +160,10 @@ ls -lh output/
 2. **Copy automation files** to your fork:
    ```bash
    cp -r /path/to/cli-command-tracking \
-         /path/to/forked-goose/documentation/automation/
+         /path/to/forked-lumina/documentation/automation/
    
-   cp /path/to/goose/.github/workflows/docs-update-cli-ref.yml \
-      /path/to/forked-goose/.github/workflows/
+   cp /path/to/lumina/.github/workflows/docs-update-cli-ref.yml \
+      /path/to/forked-lumina/.github/workflows/
    ```
 
 3. **Set up secrets** in your fork:
@@ -171,8 +171,8 @@ ls -lh output/
    - Add `ANTHROPIC_API_KEY` secret
 
 4. **Set up variables** (optional):
-   - Add `GOOSE_PROVIDER` variable (default: anthropic)
-   - Add `GOOSE_MODEL` variable (default: claude-opus-4-5)
+   - Add `LUMINA_PROVIDER` variable (default: anthropic)
+   - Add `LUMINA_MODEL` variable (default: claude-opus-4-5)
 
 5. **Trigger workflow manually**:
    - Go to Actions → "Update CLI Documentation"
@@ -217,13 +217,13 @@ To validate the automation works correctly, test with versions that have known C
 ### Finding Test Versions
 
 ```bash
-cd /path/to/goose
+cd /path/to/lumina
 
 # Check git history for CLI changes
-git log --oneline --all -- crates/goose-cli/src/cli.rs | head -20
+git log --oneline --all -- crates/lumina-cli/src/cli.rs | head -20
 
 # Look for commits that added/removed/modified commands
-git show <commit-hash>:crates/goose-cli/src/cli.rs | grep "enum Command" -A 30
+git show <commit-hash>:crates/lumina-cli/src/cli.rs | grep "enum Command" -A 30
 ```
 
 ### Test Case: New Command Added
@@ -264,7 +264,7 @@ Before considering the automation complete:
 - [ ] Captures defaults and possible values
 - [ ] Works with commands that have no description
 - [ ] Handles nested subcommands (2+ levels)
-- [ ] Builds goose from git tags correctly
+- [ ] Builds lumina from git tags correctly
 
 ### Diff Script
 - [ ] Detects added commands
@@ -287,11 +287,11 @@ Before considering the automation complete:
 - [ ] Runs end-to-end without errors
 - [ ] Handles "no changes" case
 - [ ] Creates all expected output files
-- [ ] Filters goose session output correctly
+- [ ] Filters lumina session output correctly
 
 ### GitHub Actions
 - [ ] Workflow triggers correctly
-- [ ] Builds goose for both versions
+- [ ] Builds lumina for both versions
 - [ ] Uploads artifacts
 - [ ] Creates PR when changes detected
 - [ ] Respects dry_run mode
@@ -301,11 +301,11 @@ Before considering the automation complete:
 
 ### Keychain Access (macOS)
 
-On macOS, running `goose --help` or `goose --version` may prompt for keychain access. This happens because goose tries to access stored credentials on startup.
+On macOS, running `lumina --help` or `lumina --version` may prompt for keychain access. This happens because lumina tries to access stored credentials on startup.
 
 **Local workaround:** Allow the keychain access when prompted.
 
-**CI consideration:** GitHub Actions runners don't have a keychain, so this may need to be handled. Check existing goose workflows for patterns - there may be a `keyring: false` config option or environment variable to disable credential loading.
+**CI consideration:** GitHub Actions runners don't have a keychain, so this may need to be handled. Check existing lumina workflows for patterns - there may be a `keyring: false` config option or environment variable to disable credential loading.
 
 **TODO:** Investigate if this blocks CI execution and document the solution.
 
@@ -318,8 +318,8 @@ Some old versions may have different dependencies:
 git tag | grep v1.14.0
 
 # Try building manually
-git worktree add /tmp/goose-test v1.14.0
-cd /tmp/goose-test
+git worktree add /tmp/lumina-test v1.14.0
+cd /tmp/lumina-test
 cargo build --release
 ```
 
@@ -337,8 +337,8 @@ Check if help text formatting changed:
 
 ```bash
 # Compare raw help output
-./old-goose session --help > old-help.txt
-./new-goose session --help > new-help.txt
+./old-lumina session --help > old-help.txt
+./new-lumina session --help > new-help.txt
 diff old-help.txt new-help.txt
 ```
 

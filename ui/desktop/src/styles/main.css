@@ -158,9 +158,9 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   4. GOOSE DESKTOP UI ALIASES — @theme inline {}
+   4. LUMINA DESKTOP UI ALIASES — @theme inline {}
    App-specific tokens that map to MCP spec tokens.
-   Not part of the MCP spec — only used by Goose components.
+   Not part of the MCP spec — only used by Lumina components.
    ═══════════════════════════════════════════════════════════════════════════ */
 @theme inline {
   --font-serif: serif;
@@ -174,7 +174,7 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════
    5. APP-SPECIFIC VARIABLES — :root / .dark
-   Goose-only variables that derive from MCP tokens. These are NOT duplicated
+   Lumina-only variables that derive from MCP tokens. These are NOT duplicated
    in theme-tokens.ts — they exist only here.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -244,47 +244,6 @@
   body {
     @apply text-text-primary;
   }
-}
-
-@font-face {
-  font-family: 'Cash Sans';
-  src:
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Light.woff2)
-      format('woff2'),
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Light.woff) format('woff');
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cash Sans';
-  src:
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Regular.woff2)
-      format('woff2'),
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Regular.woff)
-      format('woff');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cash Sans';
-  src:
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Medium.woff2)
-      format('woff2'),
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Medium.woff) format('woff');
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Cash Sans';
-  src:
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Bold.woff2)
-      format('woff2'),
-    url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Bold.woff) format('woff');
-  font-weight: 700;
-  font-style: normal;
 }
 
 /* animations */
@@ -403,8 +362,8 @@
     opacity: 1 !important;
   }
 
-  /* Goose icon entrance animation */
-  .goose-icon-entrance {
+  /* Lumina icon entrance animation */
+  .lumina-icon-entrance {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -589,7 +548,7 @@ pre:has(> code.bg-inline-code) {
   scrollbar-width: thin;
 }
 
-.assistant:has(+ .user):not(.in-chain) .goose-message {
+.assistant:has(+ .user):not(.in-chain) .lumina-message {
   padding-bottom: 24px;
 }
 

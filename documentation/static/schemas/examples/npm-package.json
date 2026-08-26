@@ -3,7 +3,7 @@
   "id": "org.example.issue-tracker",
   "version": "2.3.1",
   "name": "Issue Tracker MCP",
-  "description": "Installs a pinned npm MCP package into a goose-managed runtime.",
+  "description": "Installs a pinned npm MCP package into a lumina-managed runtime.",
   "homepage": "https://example.org/issue-tracker-mcp",
   "publisher": {
     "id": "org.example",
@@ -28,7 +28,7 @@
     {
       "id": "tracker-credentials",
       "kind": "credentials",
-      "reason": "Read a credential from goose's credential store.",
+      "reason": "Read a credential from lumina's credential store.",
       "required": true,
       "scope": "issue-tracker-access"
     },

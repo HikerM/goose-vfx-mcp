@@ -2,7 +2,7 @@ packages:
   - 'sdk'
   - 'text'
   - 'desktop'
-  - 'goose-binary/*'
+  - 'lumina-binary/*'
 
 registry: https://registry.npmjs.org/
 preferOffline: true

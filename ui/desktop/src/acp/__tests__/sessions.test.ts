@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getAcpClient } from '../acpConnection';
 import {
   acpGetSessionListItem,
+  acpListProjectSessions,
   acpLoadSession,
   acpNewSession,
   sessionInfoToSession,
@@ -48,7 +49,7 @@ describe('ACP sessions', () => {
       },
     });
     const client = {
-      goose: {
+      lumina: {
         sessionInfo_unstable: vi
           .fn()
           .mockResolvedValueOnce({ session: sessionInfo() })
@@ -67,7 +68,7 @@ describe('ACP sessions', () => {
       cwd: '/tmp',
       mcpServers: [],
     });
-    expect(client.goose.sessionInfo_unstable).toHaveBeenCalledTimes(2);
+    expect(client.lumina.sessionInfo_unstable).toHaveBeenCalledTimes(2);
     expect(result.sessionInfo).toBe(loadedSessionInfo);
     expect(sessionInfoToSession(result.sessionInfo).provider_name).toBe('anthropic');
     expect(sessionInfoToSession(result.sessionInfo).model_config?.model_name).toBe(
@@ -77,7 +78,7 @@ describe('ACP sessions', () => {
 
   it('returns a list item from ACP session info', async () => {
     const client = {
-      goose: {
+      lumina: {
         sessionInfo_unstable: vi.fn().mockResolvedValue({
           session: sessionInfo({
             title: 'Subagent session',
@@ -99,7 +100,7 @@ describe('ACP sessions', () => {
 
     const item = await acpGetSessionListItem('session-1');
 
-    expect(client.goose.sessionInfo_unstable).toHaveBeenCalledWith({ sessionId: 'session-1' });
+    expect(client.lumina.sessionInfo_unstable).toHaveBeenCalledWith({ sessionId: 'session-1' });
     expect(item).toMatchObject({
       id: 'session-1',
       name: 'Subagent session',
@@ -111,10 +112,46 @@ describe('ACP sessions', () => {
     });
   });
 
+  it('lists every task for one project, including empty sessions', async () => {
+    const client = {
+      listSessions: vi
+        .fn()
+        .mockResolvedValueOnce({
+          sessions: [sessionInfo({ sessionId: 'session-1', title: 'First task' })],
+          nextCursor: 'next-page',
+        })
+        .mockResolvedValueOnce({
+          sessions: [sessionInfo({ sessionId: 'session-2', title: 'Empty task' })],
+        }),
+    };
+    vi.mocked(getAcpClient).mockResolvedValue(
+      client as unknown as Awaited<ReturnType<typeof getAcpClient>>
+    );
+
+    const sessions = await acpListProjectSessions('D:\\Projects\\Lumina');
+
+    expect(sessions.map((session) => session.id)).toEqual(['session-1', 'session-2']);
+    expect(client.listSessions).toHaveBeenNthCalledWith(1, {
+      cwd: 'D:\\Projects\\Lumina',
+      _meta: {
+        types: ['user', 'scheduled'],
+        lumina: { includeEmpty: true },
+      },
+    });
+    expect(client.listSessions).toHaveBeenNthCalledWith(2, {
+      cwd: 'D:\\Projects\\Lumina',
+      cursor: 'next-page',
+      _meta: {
+        types: ['user', 'scheduled'],
+        lumina: { includeEmpty: true },
+      },
+    });
+  });
+
   it('passes a profile application token only in new session metadata', async () => {
     const client = {
       newSession: vi.fn().mockResolvedValue({ sessionId: 'session-1', _meta: {} }),
-      goose: {
+      lumina: {
         sessionInfo_unstable: vi.fn().mockResolvedValue({ session: sessionInfo() }),
       },
     };
@@ -130,7 +167,7 @@ describe('ACP sessions', () => {
       cwd: '/tmp',
       mcpServers: [],
       _meta: {
-        client: 'goose-desktop',
+        client: 'lumina-desktop',
         profileApplicationToken: 'profile-application-token',
       },
     });

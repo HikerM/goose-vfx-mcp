@@ -1,25 +1,25 @@
-Goose 桌面端 + FX Houdini MCP：另一台电脑安装与测试说明
+Lumina 桌面端 + FX Houdini MCP：另一台电脑安装与测试说明
 
 适用系统：Windows 10 / Windows 11 64 位
 
-这份说明使用的是“可自定义 MCP”的 Goose 安装包。不要使用旧版标准安装包。
+这份说明使用的是“可自定义 MCP”的 Lumina 安装包。不要使用旧版标准安装包。
 
 ================================================================
 一、先从当前电脑复制这一个安装包
 ================================================================
 
 文件位置：
-D:\Project\goose-package\ui\desktop\out\make\zip\win32\x64\Goose-custom-mcp-win32-x64-1.43.0.zip
+D:\Project\lumina-package\ui\desktop\out\make\zip\win32\x64\Lumina-custom-mcp-win32-x64-1.43.0.zip
 
 把这个 ZIP 文件复制到 U 盘、网盘或另一台电脑。
 
 在另一台电脑上，建议解压到：
-D:\Goose\
+D:\Lumina\
 
 解压后启动：
-D:\Goose\Goose.exe
+D:\Lumina\Lumina.exe
 
-如果解压出来多了一层文件夹，请在解压后的文件夹中找到 Goose.exe 双击启动即可。
+如果解压出来多了一层文件夹，请在解压后的文件夹中找到 Lumina.exe 双击启动即可。
 
 ================================================================
 二、另一台电脑需要准备的软件
@@ -27,7 +27,7 @@ D:\Goose\Goose.exe
 
 1. Houdini（必须）
 
-FX Houdini MCP 是给 Houdini 用的。没有安装 Houdini 时，Goose 可以先配置完成，
+FX Houdini MCP 是给 Houdini 用的。没有安装 Houdini 时，Lumina 可以先配置完成，
 但无法真正调用 Houdini 工具。
 
 Houdini 官方下载页面：
@@ -88,11 +88,11 @@ FX Houdini MCP 会在本机 Houdini 中启动本地服务。默认只绑定到�
 不要把它改成外网可访问地址。
 
 ================================================================
-四、启动 Goose，并配置模型
+四、启动 Lumina，并配置模型
 ================================================================
 
 1. 双击启动：
-D:\Goose\Goose.exe
+D:\Lumina\Lumina.exe
 
 2. 打开设置中的 Providers（模型提供商）或模型配置页面。
 
@@ -107,13 +107,13 @@ D:\Goose\Goose.exe
 如果暂时没有模型 API Key，也可以先完成下一节 MCP 配置；但无法进行 AI 调用测试。
 
 ================================================================
-五、在 Goose 中添加自定义 FX Houdini MCP
+五、在 Lumina 中添加自定义 FX Houdini MCP
 ================================================================
 
-注意：必须使用本说明第一节中的 Goose-custom-mcp-win32-x64-1.43.0.zip。
+注意：必须使用本说明第一节中的 Lumina-custom-mcp-win32-x64-1.43.0.zip。
 正确版本在 MCP 页面会显示“Custom stdio”标签。
 
-1. 在 Goose 中进入 MCP Center（MCP 中心）。
+1. 在 Lumina 中进入 MCP Center（MCP 中心）。
 
 2. 选择：手动 / Manual。
 
@@ -152,7 +152,7 @@ D:\MCP\fxhoudinimcp\Scripts\python.exe -m fxhoudinimcp
 
 测试前必须保持 Houdini 已打开。
 
-1. 在 Goose 中新建一个对话，选择已配置的模型。
+1. 在 Lumina 中新建一个对话，选择已配置的模型。
 
 2. 确认 FX Houdini MCP 已启用后，输入：
 
@@ -171,9 +171,9 @@ D:\MCP\fxhoudinimcp\Scripts\python.exe -m fxhoudinimcp
 
 问题 1：看不到“Custom stdio”标签
 
-原因：启动的是旧版 Goose，或解压后没有运行新安装包里的 Goose.exe。
+原因：启动的是旧版 Lumina，或解压后没有运行新安装包里的 Lumina.exe。
 处理：重新确认使用的是：
-Goose-custom-mcp-win32-x64-1.43.0.zip
+Lumina-custom-mcp-win32-x64-1.43.0.zip
 
 问题 2：提示 py 不是命令，或找不到 Python
 
@@ -186,13 +186,13 @@ py -0p
 处理：确认 Houdini 已安装并至少启动过一次；重新执行：
 D:\MCP\fxhoudinimcp\Scripts\python.exe -m fxhoudinimcp install --client none
 
-问题 4：Goose 里 MCP 已启用，但提示无法连接 Houdini / connection refused
+问题 4：Lumina 里 MCP 已启用，但提示无法连接 Houdini / connection refused
 
 处理：
 - 先启动 Houdini；
 - 完全退出后重新启动 Houdini，等待其插件加载；
 - 检查是否完成了 fxhoudinimcp install --client none；
-- 在 Goose 中禁用再启用 FX Houdini MCP，或重启 Goose。
+- 在 Lumina 中禁用再启用 FX Houdini MCP，或重启 Lumina。
 
 问题 5：模型能聊天，但没有调用 MCP 工具
 

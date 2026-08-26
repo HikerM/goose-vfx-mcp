@@ -1,6 +1,8 @@
 export const NAV_DIMENSIONS = {
   /** Width of the navigation sidebar */
   NAV_WIDTH: 240,
+  /** Width of the project task rail */
+  PROJECT_NAV_WIDTH: 288,
 } as const;
 
 export const Z_INDEX = {

@@ -105,7 +105,7 @@ instructions: |
   2. **Check for existing documentation:**
      - Look for existing doc files, READMEs, or inline documentation
      - Check if there are documentation standards already in use
-     - Check for `.goosehints`, `AGENTS.md`, or `DOCS_GUIDELINES.md` files with documentation preferences
+     - Check for `.luminahints`, `AGENTS.md`, or `DOCS_GUIDELINES.md` files with documentation preferences
      - If documentation already exists, analyze it to maintain consistency in style and format
      - Preserve existing documentation structure while filling in gaps for undocumented items
      - Extract inline docstrings/comments to use as foundation for generated documentation
@@ -116,7 +116,7 @@ instructions: |
      - For JavaScript/TypeScript: Look for JSDoc standards
      - For Rust: Look for rustdoc conventions
      - For Go: Look for godoc conventions
-     - Check if `.goosehints` or `AGENTS.md` already exists and use those guidelines if present
+     - Check if `.luminahints` or `AGENTS.md` already exists and use those guidelines if present
      - If no local guidelines exist, prepare to create them based on detected language standards
   
   ## Phase 2: Code Analysis and Extraction
@@ -266,7 +266,7 @@ instructions: |
       - Check for typos and grammar issues
   
   13. **Save documentation patterns:**
-      - Create or update `.goosehints` file in {{ source_path }} with documentation preferences
+      - Create or update `.luminahints` file in {{ source_path }} with documentation preferences
       - Store documentation style, format preferences, and project-specific conventions
       - Include example patterns that worked well
       - Consider updating `AGENTS.md` with documentation standards for team reference
@@ -296,7 +296,7 @@ instructions: |
   3. Location of generated documentation files
   4. Quick preview of the documentation structure
   5. Suggestions for improving inline code documentation
-  6. Confirmation that documentation guidelines have been saved to `.goosehints` or `AGENTS.md`
+  6. Confirmation that documentation guidelines have been saved to `.luminahints` or `AGENTS.md`
   
-  **Note**: Documentation preferences and patterns are stored in repository files (`.goosehints`, `AGENTS.md`, or `DOCS_GUIDELINES.md`) rather than memory to avoid cluttering the LLM context on unrelated tasks.
+  **Note**: Documentation preferences and patterns are stored in repository files (`.luminahints`, `AGENTS.md`, or `DOCS_GUIDELINES.md`) rather than memory to avoid cluttering the LLM context on unrelated tasks.
 

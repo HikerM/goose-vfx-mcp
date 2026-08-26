@@ -2,7 +2,7 @@ import type {
   RecipeParameterDto,
   RecipeParamsResponse_unstable,
   RequestRecipeParams_unstable,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { v7 as uuidv7 } from 'uuid';
 
 export interface AcpRecipeParamRequest {

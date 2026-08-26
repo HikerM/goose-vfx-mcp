@@ -17,9 +17,9 @@ function buildWindowsBackend() {
     "build",
     "--release",
     "-p",
-    "goose-cli",
+    "lumina-cli",
     "--bin",
-    "goose",
+    "lumina",
   ];
 
   execFileSync(
@@ -32,15 +32,15 @@ function buildWindowsBackend() {
   );
 
   const targetDir = resolve(repoRoot, "target", "release");
-  const gooseBinary = resolve(targetDir, "goose.exe");
+  const luminaBinary = resolve(targetDir, "lumina.exe");
   const binDir = resolve(desktopRoot, "src", "bin");
 
-  if (!existsSync(gooseBinary)) {
-    throw new Error(`Backend binary not found at ${gooseBinary}`);
+  if (!existsSync(luminaBinary)) {
+    throw new Error(`Backend binary not found at ${luminaBinary}`);
   }
 
   mkdirSync(binDir, { recursive: true });
-  copyFileSync(gooseBinary, resolve(binDir, "goose.exe"));
+  copyFileSync(luminaBinary, resolve(binDir, "lumina.exe"));
 
   for (const entry of readdirSync(targetDir)) {
     if (!entry.toLowerCase().endsWith(".dll")) {

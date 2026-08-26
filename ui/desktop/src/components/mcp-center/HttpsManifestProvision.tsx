@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { McpHttpsManifestPreview, McpHttpsProvisionPlanReview } from '../../acp/mcp-platform';
-import type { McpTaskRef } from '@aaif/goose-sdk';
+import type { McpTaskRef } from '@hikerm/lumina-sdk';
 import {
   confirmHttpsMcpManifest,
   createHttpsProvisionPlanReview,

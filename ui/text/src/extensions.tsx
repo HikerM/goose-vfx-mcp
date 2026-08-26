@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Box, Text, useInput, useStdout } from "ink";
 import { TextInput } from "@inkjs/ui";
 import type {
-  GooseClient,
-  GooseExtension,
-  GooseExtensionEntry,
+  LuminaClient,
+  LuminaExtension,
+  LuminaExtensionEntry,
   McpServerStdio,
-} from "@aaif/goose-sdk";
+} from "@hikerm/lumina-sdk";
 import {
   CRANBERRY,
   GOLD,
@@ -26,7 +26,7 @@ type ExtEntry = {
   [key: string]: unknown;
 };
 
-function entryToExtEntry(entry: GooseExtensionEntry): ExtEntry | null {
+function entryToExtEntry(entry: LuminaExtensionEntry): ExtEntry | null {
   const ext = entry.extension;
   if (ext.type !== "mcp") {
     return {
@@ -70,7 +70,7 @@ function entryToExtEntry(entry: GooseExtensionEntry): ExtEntry | null {
   };
 }
 
-function toGooseExtension(e: ExtEntry): GooseExtension {
+function toLuminaExtension(e: ExtEntry): LuminaExtension {
   if (e.type === "streamable_http") {
     return {
       type: "mcp",
@@ -140,7 +140,7 @@ export default function ExtensionsManager({
   height,
   onClose,
 }: {
-  client: GooseClient;
+  client: LuminaClient;
   sessionId: string;
   height: number;
   onClose: () => void;
@@ -173,11 +173,11 @@ export default function ExtensionsManager({
     setPhase("loading");
     try {
       const [configResp, sessionResp] = await Promise.all([
-        client.goose.configExtensionsList_unstable({}),
-        client.goose.sessionExtensionsList_unstable({ sessionId }),
+        client.lumina.configExtensionsList_unstable({}),
+        client.lumina.sessionExtensionsList_unstable({ sessionId }),
       ]);
 
-      const allExtensions = (configResp.extensions as GooseExtensionEntry[])
+      const allExtensions = (configResp.extensions as LuminaExtensionEntry[])
         .map(entryToExtEntry)
         .filter((e): e is ExtEntry => e !== null);
       const activeNames = new Set(
@@ -221,12 +221,12 @@ export default function ExtensionsManager({
     if (!sel) return;
     withSaving(async () => {
       if (sel.enabled) {
-        await client.goose.sessionExtensionsRemove_unstable({
+        await client.lumina.sessionExtensionsRemove_unstable({
           sessionId,
           name: sel.name,
         });
       } else {
-        await client.goose.sessionExtensionsAdd_unstable({
+        await client.lumina.sessionExtensionsAdd_unstable({
           sessionId,
           config: sel as any,
         });
@@ -238,11 +238,11 @@ export default function ExtensionsManager({
     (description: string) => {
       const config = buildConfig(addType, addValue, addName, description);
       withSaving(async () => {
-        await client.goose.configExtensionsAdd_unstable({
-          extension: toGooseExtension(config),
+        await client.lumina.configExtensionsAdd_unstable({
+          extension: toLuminaExtension(config),
           enabled: true,
         });
-        await client.goose.sessionExtensionsAdd_unstable({
+        await client.lumina.sessionExtensionsAdd_unstable({
           sessionId,
           config: config as any,
         });

@@ -1,13 +1,13 @@
 ---
 title: Cognee Extension
-description: Add Cognee MCP Server as a goose Extension
+description: Add Cognee MCP Server as a lumina Extension
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructions';
 
-This tutorial covers how to add the [Cognee MCP Server](https://github.com/topoteretes/cognee/tree/main/cognee-mcp) as a goose extension to enable knowledge graph memory capabilities, connecting to over 30 data sources for enhanced context and retrieval.
+This tutorial covers how to add the [Cognee MCP Server](https://github.com/topoteretes/cognee/tree/main/cognee-mcp) as a lumina extension to enable knowledge graph memory capabilities, connecting to over 30 data sources for enhanced context and retrieval.
 
 :::tip Quick Install
 **Command**
@@ -27,7 +27,7 @@ Note that you'll need [uv](https://docs.astral.sh/uv/#installation) installed on
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="cli" label="goose CLI" default>
+  <TabItem value="cli" label="lumina CLI" default>
 
 **Install Cognee:**
 
@@ -70,13 +70,13 @@ See the [Cognee MCP documentation](https://docs.cognee.ai/how-to-guides/deployme
 
 ## Example Usage
 
-Cognee provides knowledge graph memory capabilities for goose, allowing it to remember and connect information across conversations and documents.
+Cognee provides knowledge graph memory capabilities for lumina, allowing it to remember and connect information across conversations and documents.
 
-### goose Prompt
+### lumina Prompt
 
-> _goose, please cognify this information: "I prefer Python for data analysis and use pandas extensively. My current project involves analyzing customer behavior data." Then search for information about my programming preferences._
+> _lumina, please cognify this information: "I prefer Python for data analysis and use pandas extensively. My current project involves analyzing customer behavior data." Then search for information about my programming preferences._
 
-### goose Output
+### lumina Output
 
 :::note CLI
 

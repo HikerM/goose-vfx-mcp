@@ -43,7 +43,7 @@ describe('ensureWinShims', () => {
 
   it('is a no-op outside Windows', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
-    await expect(ensureWinShims('D:\\Goose')).resolves.toBeUndefined();
+    await expect(ensureWinShims('D:\\Lumina')).resolves.toBeUndefined();
     expect(fsMock.copyFile).not.toHaveBeenCalled();
     expect(process.env.PATH).toBe('C:\\Windows\\System32');
   });
@@ -52,30 +52,30 @@ describe('ensureWinShims', () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     Object.defineProperty(process, 'resourcesPath', { configurable: true, value: 'C:\\Resources' });
     const originalPath = process.env.PATH;
-    const result = await ensureWinShims('D:\\Goose');
+    const result = await ensureWinShims('D:\\Lumina');
     expect(fsMock.copyFile).toHaveBeenCalledTimes(4);
     expect(process.env.PATH).toBe(originalPath);
-    expect(result?.env.PATH?.startsWith('D:\\Goose\\bin;')).toBe(true);
+    expect(result?.env.PATH?.startsWith('D:\\Lumina\\bin;')).toBe(true);
   });
 
   it('uses a governed custom D-drive root for the shim destination', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     Object.defineProperty(process, 'resourcesPath', { configurable: true, value: 'C:\\Resources' });
 
-    await ensureWinShims('D:\\Other Goose');
+    await ensureWinShims('D:\\Other Lumina');
 
     expect(fsMock.copyFile).toHaveBeenCalledWith(
       'C:\\Resources\\bin\\npx.cmd',
-      expect.stringMatching(/D:\\Other Goose\\bin\.staging-.*\\npx\.cmd/)
+      expect.stringMatching(/D:\\Other Lumina\\bin\.staging-.*\\npx\.cmd/)
     );
     expect(fsMock.copyFile).toHaveBeenCalledWith(
       'C:\\Resources\\bin\\npx-forward.ps1',
-      expect.stringMatching(/D:\\Other Goose\\bin\.staging-.*\\npx-forward\.ps1/)
+      expect.stringMatching(/D:\\Other Lumina\\bin\.staging-.*\\npx-forward\.ps1/)
     );
     expect(process.env.PATH).toBe('C:\\Windows\\System32');
   });
 
-  it.each(['C:\\Goose', '\\\\server\\share\\Goose', 'D:\\Other\\..\\Goose'])(
+  it.each(['C:\\Lumina', '\\\\server\\share\\Lumina', 'D:\\Other\\..\\Lumina'])(
     'rejects a non-governed root: %s',
     async (root) => {
       vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
@@ -88,31 +88,31 @@ describe('ensureWinShims', () => {
   it('inserts the target when PATH contains only a similar directory', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     Object.defineProperty(process, 'resourcesPath', { configurable: true, value: 'C:\\Resources' });
-    process.env.PATH = 'D:\\Goose\\bin-old;C:\\Windows\\System32';
+    process.env.PATH = 'D:\\Lumina\\bin-old;C:\\Windows\\System32';
 
-    await ensureWinShims('D:\\Goose');
+    await ensureWinShims('D:\\Lumina');
 
-    expect(process.env.PATH).toBe('D:\\Goose\\bin-old;C:\\Windows\\System32');
+    expect(process.env.PATH).toBe('D:\\Lumina\\bin-old;C:\\Windows\\System32');
   });
 
   it('does not duplicate a case-insensitively matching target', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     Object.defineProperty(process, 'resourcesPath', { configurable: true, value: 'C:\\Resources' });
-    process.env.PATH = 'd:\\goose\\bin;C:\\Windows\\System32';
+    process.env.PATH = 'd:\\lumina\\bin;C:\\Windows\\System32';
 
-    await ensureWinShims('D:\\Goose');
+    await ensureWinShims('D:\\Lumina');
 
-    expect(process.env.PATH).toBe('d:\\goose\\bin;C:\\Windows\\System32');
+    expect(process.env.PATH).toBe('d:\\lumina\\bin;C:\\Windows\\System32');
   });
 
   it('moves an existing target from the middle to the beginning', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     Object.defineProperty(process, 'resourcesPath', { configurable: true, value: 'C:\\Resources' });
-    process.env.PATH = 'C:\\Windows\\System32;D:\\Goose\\bin;C:\\Tools';
+    process.env.PATH = 'C:\\Windows\\System32;D:\\Lumina\\bin;C:\\Tools';
 
-    await ensureWinShims('D:\\Goose');
+    await ensureWinShims('D:\\Lumina');
 
-    expect(process.env.PATH).toBe('C:\\Windows\\System32;D:\\Goose\\bin;C:\\Tools');
+    expect(process.env.PATH).toBe('C:\\Windows\\System32;D:\\Lumina\\bin;C:\\Tools');
   });
 
   it.each(['copy', 'verify'])('%s failure rejects without changing PATH', async (failure) => {
@@ -125,25 +125,25 @@ describe('ensureWinShims', () => {
       fsMock.realpath.mockResolvedValueOnce('D:\\Elsewhere');
     }
 
-    await expect(ensureWinShims('D:\\Goose')).rejects.toThrow('required Windows shims');
+    await expect(ensureWinShims('D:\\Lumina')).rejects.toThrow('required Windows shims');
     expect(process.env.PATH).toBe(originalPath);
     expect(preflightWindowsStorageDirectory).toHaveBeenCalled();
   });
 
   it('clones PATH and removes duplicate shim entries', () => {
-    const base = { PATH: 'C:\\Tools;D:\\Goose\\bin;C:\\Other' };
-    const child = windowsMcpSpawnEnvironment(base, 'd:\\goose\\bin');
-    expect(child).toEqual({ PATH: 'd:\\goose\\bin;C:\\Tools;C:\\Other' });
-    expect(base.PATH).toBe('C:\\Tools;D:\\Goose\\bin;C:\\Other');
+    const base = { PATH: 'C:\\Tools;D:\\Lumina\\bin;C:\\Other' };
+    const child = windowsMcpSpawnEnvironment(base, 'd:\\lumina\\bin');
+    expect(child).toEqual({ PATH: 'd:\\lumina\\bin;C:\\Tools;C:\\Other' });
+    expect(base.PATH).toBe('C:\\Tools;D:\\Lumina\\bin;C:\\Other');
   });
 
   it('uses a unique staging directory while holding an exclusive deployment lock', async () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     Object.defineProperty(process, 'resourcesPath', { configurable: true, value: 'C:\\Resources' });
 
-    await ensureWinShims('D:\\Goose');
+    await ensureWinShims('D:\\Lumina');
 
-    expect(fsMock.open).toHaveBeenCalledWith('D:\\Goose\\bin.deploy.lock', 'wx');
+    expect(fsMock.open).toHaveBeenCalledWith('D:\\Lumina\\bin.deploy.lock', 'wx');
     const copiedDestinations = fsMock.copyFile.mock.calls.map(
       (call) => (call as unknown as [string, string])[1]
     );
@@ -154,7 +154,7 @@ describe('ensureWinShims', () => {
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     fsMock.open.mockRejectedValue(new Object(Object.assign(new Error('busy'), { code: 'EEXIST' })));
 
-    await expect(ensureWinShims('D:\\Goose')).rejects.toThrow('deployment lock');
+    await expect(ensureWinShims('D:\\Lumina')).rejects.toThrow('deployment lock');
     expect(fsMock.copyFile).not.toHaveBeenCalled();
   }, 7000);
 });

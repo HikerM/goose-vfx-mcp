@@ -4,7 +4,7 @@ import { Button } from './button';
 import { toastError } from '../../toasts';
 import { defineMessages, useIntl } from '../../i18n';
 import { getDiagnosticsReport } from '../../acp/diagnostics';
-import { PRIMARY_ISSUES_URL } from '../../distribution-config';
+import { PRIMARY_DOCS_URL, PRIMARY_ISSUES_URL } from '../../distribution-config';
 
 const i18n = defineMessages({
   reportProblem: {
@@ -123,6 +123,8 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
   };
 
   const handleFileGitHubIssue = async () => {
+    if (!PRIMARY_ISSUES_URL) return;
+
     setIsFilingBug(true);
 
     try {
@@ -139,14 +141,19 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
           ? info.enabled_extensions.join(', ')
           : '[e.g. Computer Controller, Figma]';
 
+      const documentationHelp = PRIMARY_DOCS_URL
+        ? `💡 Before filing, please check common issues:
+${PRIMARY_DOCS_URL}/troubleshooting
+
+📦 To help us debug faster, attach your **diagnostics JSON report** if possible.
+👉 How to capture it: ${PRIMARY_DOCS_URL}/troubleshooting/diagnostics-and-reporting/
+
+`
+        : '📦 To help us debug faster, attach your **diagnostics JSON report** if possible.\n\n';
+
       const body = `**Describe the bug**
 
-💡 Before filing, please check common issues:  
-https://goose-docs.ai/docs/troubleshooting  
-
-📦 To help us debug faster, attach your **diagnostics JSON report** if possible.  
-👉 How to capture it: https://goose-docs.ai/docs/troubleshooting/diagnostics-and-reporting/
-
+${documentationHelp}
 A clear and concise description of what the bug is.
 
 ---
@@ -251,16 +258,18 @@ Add any other context about the problem here.
               ? intl.formatMessage(i18n.downloading)
               : intl.formatMessage(i18n.download)}
           </Button>
-          <Button
-            onClick={handleFileGitHubIssue}
-            variant="outline"
-            size="sm"
-            disabled={isDownloading || isFilingBug}
-            className="bg-slate-600 text-white hover:bg-slate-700"
-          >
-            <Github size={16} className="mr-1" />
-            {isFilingBug ? intl.formatMessage(i18n.opening) : intl.formatMessage(i18n.fileBug)}
-          </Button>
+          {PRIMARY_ISSUES_URL && (
+            <Button
+              onClick={handleFileGitHubIssue}
+              variant="outline"
+              size="sm"
+              disabled={isDownloading || isFilingBug}
+              className="bg-slate-600 text-white hover:bg-slate-700"
+            >
+              <Github size={16} className="mr-1" />
+              {isFilingBug ? intl.formatMessage(i18n.opening) : intl.formatMessage(i18n.fileBug)}
+            </Button>
+          )}
         </div>
       </div>
     </div>

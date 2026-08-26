@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "request": "按顺序实现 Lumina 项目级开发智能体：Project/WorkItem/Run/ChangeSet/Checkpoint 后端与 ACP 契约，Electron Project Workbench，自定义安装目录，以及旧版本原位覆盖且用户数据不丢失；完成静态验证、测试与发布风险审查",
+  "lanes": [
+    {
+      "lane": "backend",
+      "matched": [
+        "后端"
+      ],
+      "mode": "worktree-if-writing",
+      "status": "PLANNED",
+      "depends_on": []
+    },
+    {
+      "lane": "qa",
+      "matched": [
+        "测试"
+      ],
+      "mode": "read-heavy-subagent",
+      "status": "PLANNED",
+      "depends_on": [
+        "backend"
+      ]
+    },
+    {
+      "lane": "release",
+      "matched": [
+        "发布"
+      ],
+      "mode": "serial-after-quality",
+      "status": "PLANNED",
+      "depends_on": [
+        "qa"
+      ]
+    }
+  ],
+  "policy": {
+    "read_heavy": "subagent",
+    "parallel_write": "separate_git_worktree",
+    "same_file_write": "serial",
+    "main_thread": "requirements_decisions_summary"
+  }
+}

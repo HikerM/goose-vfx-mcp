@@ -2,28 +2,28 @@
 sidebar_position: 8
 title: CLI Providers
 sidebar_label: CLI Providers
-description: Use Claude Code, Codex, Cursor Agent, or Gemini CLI subscriptions in goose
+description: Use Claude Code, Codex, Cursor Agent, or Gemini CLI subscriptions in lumina
 ---
 
 # CLI Providers
 
 :::warning Deprecated — Use ACP Providers
-The Claude Code (`claude-code`), Codex (`codex`), and Gemini CLI (`gemini-cli`) providers are deprecated. Use the [ACP providers](/docs/guides/acp-providers) (`claude-acp`, `codex-acp`) instead, which support goose extensions via MCP and use the standardized Agent Client Protocol. For Gemini, use the `Gemini` (`gemini_oauth`) provider which authenticates via OAuth. CLI providers are kept for backward compatibility only.
+The Claude Code (`claude-code`), Codex (`codex`), and Gemini CLI (`gemini-cli`) providers are deprecated. Use the [ACP providers](/docs/guides/acp-providers) (`claude-acp`, `codex-acp`) instead, which support lumina extensions via MCP and use the standardized Agent Client Protocol. For Gemini, use the `Gemini` (`gemini_oauth`) provider which authenticates via OAuth. CLI providers are kept for backward compatibility only.
 :::
 
-goose can make use of pass-through providers that integrate with existing CLI tools from Anthropic, OpenAI, Cursor, and Google. These providers allow you to use your existing Claude Code, Codex, Cursor Agent, and Google Gemini CLI subscriptions through goose's interface, adding session management, persistence, and workflow integration capabilities to these tools.
+lumina can make use of pass-through providers that integrate with existing CLI tools from Anthropic, OpenAI, Cursor, and Google. These providers allow you to use your existing Claude Code, Codex, Cursor Agent, and Google Gemini CLI subscriptions through lumina's interface, adding session management, persistence, and workflow integration capabilities to these tools.
 
 :::warning Limitations
-These providers don’t fully support all goose features, may have platform or capability limitations, and can sometimes require advanced debugging if issues arise. They’re included here purely as a convenience.
+These providers don’t fully support all lumina features, may have platform or capability limitations, and can sometimes require advanced debugging if issues arise. They’re included here purely as a convenience.
 :::
 
 ## Why Use CLI Providers?
 
 CLI providers are useful if you:
 
-- already have a Claude Code, Codex, Cursor, or Google Gemini CLI subscription and want to use it through goose instead of paying per token
+- already have a Claude Code, Codex, Cursor, or Google Gemini CLI subscription and want to use it through lumina instead of paying per token
 - need session persistence to save, resume, and export conversation history
-- want to use goose recipes and scheduled tasks to create repeatable workflows
+- want to use lumina recipes and scheduled tasks to create repeatable workflows
 - prefer unified commands across different AI providers
 - want to [use multiple models together](#combining-with-planner-models) in your tasks
 
@@ -34,17 +34,17 @@ CLI providers are useful if you:
 - **Export capabilities**: Export conversation history and artifacts
 - **Session organization**: Manage multiple conversation threads
 
-#### Workflow Integration  
-- **Recipe compatibility**: Use CLI providers in automated goose recipes
+#### Workflow Integration
+- **Recipe compatibility**: Use CLI providers in automated lumina recipes
 - **Scheduling support**: Include in scheduled tasks and workflows
 - **Hybrid configurations**: Combine with planning mode and model-specific workflows
 
 #### Interface Consistency
-- **Unified commands**: Use the same `goose session` interface across all providers
-- **Consistent configuration**: Manage all providers through goose's configuration system
+- **Unified commands**: Use the same `lumina session` interface across all providers
+- **Consistent configuration**: Manage all providers through lumina's configuration system
 
 :::warning Extensions
-CLI providers do **not** give you access to goose's extension ecosystem (MCP servers, third-party integrations, etc.). They use their own built-in tools to prevent conflicts. If you need goose's extensions, use standard [API providers](/docs/getting-started/providers#available-providers) instead.
+CLI providers do **not** give you access to lumina's extension ecosystem (MCP servers, third-party integrations, etc.). They use their own built-in tools to prevent conflicts. If you need lumina's extensions, use standard [API providers](/docs/getting-started/providers#available-providers) instead.
 :::
 
 
@@ -57,7 +57,7 @@ The Claude Code provider integrates with Anthropic's [Claude CLI tool](https://c
 **Features:**
 - Uses Claude's latest models
 - 200,000 token context limit
-- Automatic filtering of goose extensions from system prompts (since Claude Code has its own tool ecosystem)
+- Automatic filtering of lumina extensions from system prompts (since Claude Code has its own tool ecosystem)
 - Streaming JSON (NDJSON) protocol for persistent, multi-turn sessions
 
 **Requirements:**
@@ -74,7 +74,7 @@ The Codex provider integrates with OpenAI's [Codex CLI tool](https://developers.
 - Configurable reasoning effort levels (`low`, `medium`, `high`, `xhigh`; `none` is only supported on non-codex models like `gpt-5.2`)
 - Optional skills support for enhanced capabilities
 - JSON output parsing for structured responses
-- Automatic filtering of goose extensions from system prompts
+- Automatic filtering of lumina extensions from system prompts
 
 **Requirements:**
 - Codex CLI tool installed (`npm i -g @openai/codex` or `brew install --cask codex`)
@@ -112,30 +112,30 @@ The Gemini CLI provider integrates with Google's [Gemini CLI tool](https://ai.go
 ### Claude Code
 
 1. **Install Claude CLI Tool**
-   
+
    Follow the [installation instructions for Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) to install and configure the Claude CLI tool.
 
 2. **Authenticate with Claude**
-   
+
    Ensure your Claude CLI is authenticated and working
 
-3. **Configure goose**
-   
+3. **Configure lumina**
+
    Set the provider environment variable:
    ```bash
-   export GOOSE_PROVIDER=claude-code
+   export LUMINA_PROVIDER=claude-code
    ```
-   
-   Or configure through the goose CLI using `goose configure`:
+
+   Or configure through the lumina CLI using `lumina configure`:
 
    ```bash
-   ┌   goose-configure 
+   ┌   lumina-configure
    │
    ◇  What would you like to configure?
-   │  Configure Providers 
+   │  Configure Providers
    │
    ◇  Which model provider should we use?
-   │  Claude Code 
+   │  Claude Code
    │
    ◇  Model fetch complete
    │
@@ -157,17 +157,17 @@ The Gemini CLI provider integrates with Google's [Gemini CLI tool](https://ai.go
 
    Run `codex` and follow the authentication prompts. You can use your ChatGPT account or API key.
 
-3. **Configure goose**
+3. **Configure lumina**
 
    Set the provider environment variable:
    ```bash
-   export GOOSE_PROVIDER=codex
+   export LUMINA_PROVIDER=codex
    ```
 
-   Or configure through the goose CLI using `goose configure`:
+   Or configure through the lumina CLI using `lumina configure`:
 
    ```bash
-   ┌   goose-configure
+   ┌   lumina-configure
    │
    ◇  What would you like to configure?
    │  Configure Providers
@@ -191,18 +191,18 @@ The Gemini CLI provider integrates with Google's [Gemini CLI tool](https://ai.go
 
    Ensure your Cursor Agent is authenticated and working
 
-3. **Configure goose**
+3. **Configure lumina**
 
    Set the provider environment variable:
 
    ```bash
-   export GOOSE_PROVIDER=cursor-agent
+   export LUMINA_PROVIDER=cursor-agent
    ```
 
-   Or configure through the goose CLI using `goose configure`:
+   Or configure through the lumina CLI using `lumina configure`:
 
    ```bash
-   ┌   goose-configure
+   ┌   lumina-configure
    │
    ◇  What would you like to configure?
    │  Configure Providers
@@ -219,30 +219,30 @@ The Gemini CLI provider integrates with Google's [Gemini CLI tool](https://ai.go
 ### Gemini CLI
 
 1. **Install Gemini CLI Tool**
-   
+
    Follow the [installation instructions for Gemini CLI](https://blog.google/technology/developers/introducing-gemini-cli-open-source-ai-agent/) to install and configure the Gemini CLI tool.
 
 2. **Authenticate with Google**
-   
+
    Ensure your Gemini CLI is authenticated and working.
 
-3. **Configure goose**
-   
+3. **Configure lumina**
+
    Set the provider environment variable:
    ```bash
-   export GOOSE_PROVIDER=gemini-cli
+   export LUMINA_PROVIDER=gemini-cli
    ```
-   
-   Or configure through the goose CLI using `goose configure`:
+
+   Or configure through the lumina CLI using `lumina configure`:
 
    ```bash
-   ┌   goose-configure 
+   ┌   lumina-configure
    │
    ◇  What would you like to configure?
-   │  Configure Providers 
+   │  Configure Providers
    │
    ◇  Which model provider should we use?
-   │  Gemini CLI 
+   │  Gemini CLI
    │
    ◇  Model fetch complete
    │
@@ -254,10 +254,10 @@ The Gemini CLI provider integrates with Google's [Gemini CLI tool](https://ai.go
 
 ### Basic Usage
 
-Once configured, you can start a goose session using these providers just like any others:
+Once configured, you can start a lumina session using these providers just like any others:
 
 ```bash
-goose session
+lumina session
 ```
 
 ### Combining with Planner Models
@@ -266,12 +266,12 @@ CLI providers also work well with planning mode when you want one model for stra
 
 ```bash
 # Use Claude Code for execution, OpenAI for planning
-export GOOSE_PROVIDER=claude-code
-export GOOSE_MODEL=default
-export GOOSE_PLANNER_PROVIDER=openai
-export GOOSE_PLANNER_MODEL=gpt-4o
+export LUMINA_PROVIDER=claude-code
+export LUMINA_MODEL=default
+export LUMINA_PLANNER_PROVIDER=openai
+export LUMINA_PLANNER_MODEL=gpt-4o
 
-goose session
+lumina session
 ```
 
 ## Configuration Options
@@ -280,19 +280,19 @@ goose session
 
 | Environment Variable | Description | Default |
 |---------------------|-------------|---------|
-| `GOOSE_PROVIDER` | Set to `claude-code` to use this provider | None |
-| `GOOSE_MODEL` | Model to use (only `sonnet` or `opus` are passed to CLI) | `claude-sonnet-4-20250514` |
+| `LUMINA_PROVIDER` | Set to `claude-code` to use this provider | None |
+| `LUMINA_MODEL` | Model to use (only `sonnet` or `opus` are passed to CLI) | `claude-sonnet-4-20250514` |
 | `CLAUDE_CODE_COMMAND` | Path to the Claude CLI command | `claude` |
 
 **Known Models:**
 
-The following models are recognized and passed to the Claude CLI via the `--model` flag. If `GOOSE_MODEL` is set to a value not in this list, no model flag is passed and Claude Code uses its default:
+The following models are recognized and passed to the Claude CLI via the `--model` flag. If `LUMINA_MODEL` is set to a value not in this list, no model flag is passed and Claude Code uses its default:
 
 - `default` (opus)
 - `sonnet`
 - `haiku`
 
-**Permission Modes (`GOOSE_MODE`):**
+**Permission Modes (`LUMINA_MODE`):**
 
 | Mode | Claude Code Flag | Behavior |
 |------|------------------|----------|
@@ -302,17 +302,17 @@ The following models are recognized and passed to the Claude CLI via the `--mode
 | `chat` | (none) | Default Claude Code behavior |
 
 :::tip Approve Mode Integration
-When using `approve` or `smart_approve` mode with Claude Code, goose routes Claude Code's permission prompts through goose's confirmation interface. This means:
+When using `approve` or `smart_approve` mode with Claude Code, lumina routes Claude Code's permission prompts through lumina's confirmation interface. This means:
 
-- **Sensitive operations** (file writes, shell commands, etc.) trigger approval prompts in goose
-- **You review and approve/deny** directly in the goose CLI or Desktop interface
+- **Sensitive operations** (file writes, shell commands, etc.) trigger approval prompts in lumina
+- **You review and approve/deny** directly in the lumina CLI or Desktop interface
 - **Denied operations** are communicated back to Claude Code, which adapts accordingly
 
-This provides a consistent permission experience across all goose providers while leveraging Claude Code's built-in safety checks.
+This provides a consistent permission experience across all lumina providers while leveraging Claude Code's built-in safety checks.
 
 Example with approve mode:
 ```bash
-GOOSE_PROVIDER=claude-code GOOSE_MODE=approve goose session
+LUMINA_PROVIDER=claude-code LUMINA_MODE=approve lumina session
 ```
 :::
 
@@ -320,15 +320,15 @@ GOOSE_PROVIDER=claude-code GOOSE_MODE=approve goose session
 
 | Environment Variable | Description | Default |
 |---------------------|-------------|---------|
-| `GOOSE_PROVIDER` | Set to `cursor-agent` to use this provider | None |
+| `LUMINA_PROVIDER` | Set to `cursor-agent` to use this provider | None |
 | `CURSOR_AGENT_COMMAND` | Path to the Cursor Agent command | `cursor-agent` |
 
 ### OpenAI Codex Configuration
 
 | Environment Variable | Description | Default |
 |---------------------|-------------|---------|
-| `GOOSE_PROVIDER` | Set to `codex` to use this provider | None |
-| `GOOSE_MODEL` | Model to use (only known models are passed to CLI) | `gpt-5.2-codex` |
+| `LUMINA_PROVIDER` | Set to `codex` to use this provider | None |
+| `LUMINA_MODEL` | Model to use (only known models are passed to CLI) | `gpt-5.2-codex` |
 | `CODEX_COMMAND` | Path to the Codex CLI command | `codex` |
 | `CODEX_REASONING_EFFORT` | Reasoning effort level: `low`, `medium`, `high`, or `xhigh` (`none` is only supported on non-codex models like `gpt-5.2`) | `high` |
 | `CODEX_ENABLE_SKILLS` | Enable Codex skills: `true` or `false` | `true` |
@@ -336,7 +336,7 @@ GOOSE_PROVIDER=claude-code GOOSE_MODE=approve goose session
 
 **Known Models:**
 
-The following models are recognized and passed to the Codex CLI via the `-m` flag. If `GOOSE_MODEL` is set to a value not in this list, no model flag is passed and Codex uses its default:
+The following models are recognized and passed to the Codex CLI via the `-m` flag. If `LUMINA_MODEL` is set to a value not in this list, no model flag is passed and Codex uses its default:
 
 - `gpt-5.2-codex` (400K context, auto-compacting)
 - `gpt-5.2` (400K context, auto-compacting)
@@ -347,7 +347,7 @@ The following models are recognized and passed to the Codex CLI via the `-m` fla
 These are the default models supported by Codex CLI v0.77.0. To access older or legacy models, you can run `codex -m <model_name>` directly or configure them in Codex's `config.toml`. See the [Codex CLI documentation](https://developers.openai.com/codex/cli) for details.
 :::
 
-**Permission Modes (`GOOSE_MODE`):**
+**Permission Modes (`LUMINA_MODE`):**
 
 | Mode | Codex Flag | Behavior |
 |------|------------|----------|
@@ -360,20 +360,20 @@ These are the default models supported by Codex CLI v0.77.0. To access older or 
 
 | Environment Variable | Description | Default |
 |---------------------|-------------|---------|
-| `GOOSE_PROVIDER` | Set to `gemini-cli` to use this provider | None |
+| `LUMINA_PROVIDER` | Set to `gemini-cli` to use this provider | None |
 | `GEMINI_CLI_COMMAND` | Path to the Gemini CLI command | `gemini` |
 
 ## How It Works
 
 ### System Prompt Filtering
 
-The CLI providers automatically filter out goose's extension information from system prompts since these CLI tools have their own tool ecosystems. This prevents conflicts and ensures clean interaction with the underlying CLI tools.
+The CLI providers automatically filter out lumina's extension information from system prompts since these CLI tools have their own tool ecosystems. This prevents conflicts and ensures clean interaction with the underlying CLI tools.
 
 ### Message Translation
 
-- **Claude Code**: Converts goose messages to text content blocks with role prefixes (Human:/Assistant:), similar to Codex and Gemini CLI
+- **Claude Code**: Converts lumina messages to text content blocks with role prefixes (Human:/Assistant:), similar to Codex and Gemini CLI
 - **Codex**: Converts messages to simple text prompts with role prefixes (Human:/Assistant:), similar to Gemini CLI
-- **Cursor Agent**: Converts goose messages to Cursor's JSON message format, handling tool calls and responses appropriately
+- **Cursor Agent**: Converts lumina messages to Cursor's JSON message format, handling tool calls and responses appropriately
 - **Gemini CLI**: Converts messages to simple text prompts with role prefixes (Human:/Assistant:)
 
 ### Response Processing
@@ -395,4 +395,4 @@ CLI providers depend on external tools, so ensure:
 
 ---
 
-CLI providers offer a way to use existing AI tool subscriptions through goose's interface, adding session management and workflow integration capabilities. They're particularly valuable for users with existing CLI subscriptions who want unified session management and recipe integration.
+CLI providers offer a way to use existing AI tool subscriptions through lumina's interface, adding session management and workflow integration capabilities. They're particularly valuable for users with existing CLI subscriptions who want unified session management and recipe integration.

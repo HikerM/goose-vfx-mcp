@@ -6,12 +6,12 @@ describe('Windows MCP environment', () => {
 
   it('adds only the main-process prepared runtime environment to stdio MCPs', () => {
     setWindowsMcpEnvironment({
-      PATH: 'D:\\Goose\\bin;C:\\Windows\\System32',
-      GOOSE_NODE_DIR: 'D:\\Goose\\runtime\\node',
-      npm_config_cache: 'D:\\Goose\\runtime\\npm-cache',
-      NPM_CONFIG_CACHE: 'D:\\Goose\\runtime\\npm-cache',
-      TMP: 'D:\\Goose\\tmp',
-      TEMP: 'D:\\Goose\\tmp',
+      PATH: 'D:\\Lumina\\bin;C:\\Windows\\System32',
+      LUMINA_NODE_DIR: 'D:\\Lumina\\runtime\\node',
+      npm_config_cache: 'D:\\Lumina\\runtime\\npm-cache',
+      NPM_CONFIG_CACHE: 'D:\\Lumina\\runtime\\npm-cache',
+      TMP: 'D:\\Lumina\\tmp',
+      TEMP: 'D:\\Lumina\\tmp',
       SECRET_FROM_RENDERER: 'must-not-be-forwarded',
     });
     const server = { name: 'npx-server', command: 'npx.cmd', args: ['--version'], env: [] };
@@ -25,19 +25,19 @@ describe('Windows MCP environment', () => {
       server: {
         ...server,
         env: [
-          { name: 'PATH', value: 'D:\\Goose\\bin;C:\\Windows\\System32' },
-          { name: 'GOOSE_NODE_DIR', value: 'D:\\Goose\\runtime\\node' },
-          { name: 'npm_config_cache', value: 'D:\\Goose\\runtime\\npm-cache' },
-          { name: 'NPM_CONFIG_CACHE', value: 'D:\\Goose\\runtime\\npm-cache' },
-          { name: 'TMP', value: 'D:\\Goose\\tmp' },
-          { name: 'TEMP', value: 'D:\\Goose\\tmp' },
+          { name: 'PATH', value: 'D:\\Lumina\\bin;C:\\Windows\\System32' },
+          { name: 'LUMINA_NODE_DIR', value: 'D:\\Lumina\\runtime\\node' },
+          { name: 'npm_config_cache', value: 'D:\\Lumina\\runtime\\npm-cache' },
+          { name: 'NPM_CONFIG_CACHE', value: 'D:\\Lumina\\runtime\\npm-cache' },
+          { name: 'TMP', value: 'D:\\Lumina\\tmp' },
+          { name: 'TEMP', value: 'D:\\Lumina\\tmp' },
         ],
       },
     });
   });
 
   it('leaves non-stdio extensions unchanged', () => {
-    setWindowsMcpEnvironment({ PATH: 'D:\\Goose\\bin' });
+    setWindowsMcpEnvironment({ PATH: 'D:\\Lumina\\bin' });
     const extension = {
       type: 'mcp' as const,
       server: { type: 'http' as const, name: 'remote', url: 'https://example.test', headers: [] },
@@ -46,7 +46,7 @@ describe('Windows MCP environment', () => {
   });
 
   it('preserves harmless configured stdio env and overrides controlled names', () => {
-    setWindowsMcpEnvironment({ PATH: 'D:\\Goose\\bin', TMP: 'D:\\Goose\\tmp' });
+    setWindowsMcpEnvironment({ PATH: 'D:\\Lumina\\bin', TMP: 'D:\\Lumina\\tmp' });
     const extension = {
       type: 'mcp' as const,
       server: {
@@ -68,8 +68,8 @@ describe('Windows MCP environment', () => {
       ...extension.server,
       env: [
         { name: 'API_MODE', value: 'safe' },
-        { name: 'PATH', value: 'D:\\Goose\\bin' },
-        { name: 'TMP', value: 'D:\\Goose\\tmp' },
+        { name: 'PATH', value: 'D:\\Lumina\\bin' },
+        { name: 'TMP', value: 'D:\\Lumina\\tmp' },
       ],
     });
   });

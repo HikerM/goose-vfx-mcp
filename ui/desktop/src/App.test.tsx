@@ -124,8 +124,8 @@ vi.mock('react-toastify', () => ({
   ToastContainer: () => null,
 }));
 
-vi.mock('./components/GoosehintsModal', () => ({
-  GoosehintsModal: () => null,
+vi.mock('./components/LuminahintsModal', () => ({
+  LuminahintsModal: () => null,
 }));
 
 vi.mock('./components/AnnouncementModal', () => ({
@@ -151,8 +151,8 @@ vi.mock('react-router-dom', () => ({
 // Mock electron API
 const mockElectron = {
   getConfig: vi.fn().mockReturnValue({
-    GOOSE_ALLOWLIST_WARNING: false,
-    GOOSE_WORKING_DIR: '/test/dir',
+    LUMINA_ALLOWLIST_WARNING: false,
+    LUMINA_WORKING_DIR: '/test/dir',
   }),
   logInfo: vi.fn(),
   on: vi.fn(),
@@ -168,7 +168,7 @@ const mockElectron = {
 // Mock appConfig
 const mockAppConfig = {
   get: vi.fn((key: string): string | null => {
-    if (key === 'GOOSE_WORKING_DIR') return '/test/dir';
+    if (key === 'LUMINA_WORKING_DIR') return '/test/dir';
     return null;
   }),
 };
@@ -206,7 +206,7 @@ describe('App Component - Brand New State', () => {
     mockNavigate.mockClear();
     mockSetSearchParams.mockClear();
     mockAppConfig.get.mockImplementation((key: string): string | null => {
-      if (key === 'GOOSE_WORKING_DIR') return '/test/dir';
+      if (key === 'LUMINA_WORKING_DIR') return '/test/dir';
       return null;
     });
 
@@ -227,9 +227,9 @@ describe('App Component - Brand New State', () => {
   it('should redirect to "/" when app is brand new (no provider configured)', async () => {
     // Mock no provider configured
     mockElectron.getConfig.mockReturnValue({
-      GOOSE_DEFAULT_PROVIDER: null,
-      GOOSE_DEFAULT_MODEL: null,
-      GOOSE_ALLOWLIST_WARNING: false,
+      LUMINA_DEFAULT_PROVIDER: null,
+      LUMINA_DEFAULT_MODEL: null,
+      LUMINA_ALLOWLIST_WARNING: false,
     });
 
     render(<AppInner />, { wrapper: AppInnerTestWrapper });
@@ -247,9 +247,9 @@ describe('App Component - Brand New State', () => {
   it('should handle deep links correctly when app is brand new', async () => {
     // Mock no provider configured
     mockElectron.getConfig.mockReturnValue({
-      GOOSE_DEFAULT_PROVIDER: null,
-      GOOSE_DEFAULT_MODEL: null,
-      GOOSE_ALLOWLIST_WARNING: false,
+      LUMINA_DEFAULT_PROVIDER: null,
+      LUMINA_DEFAULT_MODEL: null,
+      LUMINA_ALLOWLIST_WARNING: false,
     });
 
     // Set up search params to simulate view=settings deep link
@@ -268,9 +268,9 @@ describe('App Component - Brand New State', () => {
   it('should not redirect when provider is configured', async () => {
     // Mock provider configured
     mockElectron.getConfig.mockReturnValue({
-      GOOSE_DEFAULT_PROVIDER: 'openai',
-      GOOSE_DEFAULT_MODEL: 'gpt-4',
-      GOOSE_ALLOWLIST_WARNING: false,
+      LUMINA_DEFAULT_PROVIDER: 'openai',
+      LUMINA_DEFAULT_MODEL: 'gpt-4',
+      LUMINA_ALLOWLIST_WARNING: false,
     });
 
     render(<AppInner />, { wrapper: AppInnerTestWrapper });
@@ -286,9 +286,9 @@ describe('App Component - Brand New State', () => {
 
   it('should navigate home when the main process emits new-chat', async () => {
     mockElectron.getConfig.mockReturnValue({
-      GOOSE_DEFAULT_PROVIDER: 'openai',
-      GOOSE_DEFAULT_MODEL: 'gpt-4',
-      GOOSE_ALLOWLIST_WARNING: false,
+      LUMINA_DEFAULT_PROVIDER: 'openai',
+      LUMINA_DEFAULT_MODEL: 'gpt-4',
+      LUMINA_ALLOWLIST_WARNING: false,
     });
 
     render(<AppInner />, { wrapper: AppInnerTestWrapper });

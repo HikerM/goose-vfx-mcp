@@ -1030,7 +1030,7 @@ describe('RecipeFormFields', () => {
         subRecipes: [
           {
             name: 'data_fetcher',
-            path: '~/.config/goose/recipes/abc123.yaml',
+            path: '~/.config/lumina/recipes/abc123.yaml',
             description: 'Fetches data from an API',
             sequential_when_repeated: false,
           },
@@ -1042,7 +1042,7 @@ describe('RecipeFormFields', () => {
       await expandAdvancedSection(user);
 
       expect(screen.getByText('data_fetcher')).toBeInTheDocument();
-      expect(screen.getByText('~/.config/goose/recipes/abc123.yaml')).toBeInTheDocument();
+      expect(screen.getByText('~/.config/lumina/recipes/abc123.yaml')).toBeInTheDocument();
       expect(screen.getByText('Fetches data from an API')).toBeInTheDocument();
     });
 
@@ -1052,7 +1052,7 @@ describe('RecipeFormFields', () => {
         subRecipes: [
           {
             name: 'report_generator',
-            path: '~/.config/goose/recipes/def456.yaml',
+            path: '~/.config/lumina/recipes/def456.yaml',
             sequential_when_repeated: false,
             values: { output_format: 'pdf', language: 'en' },
           },
@@ -1077,7 +1077,7 @@ describe('RecipeFormFields', () => {
         subRecipes: [
           {
             name: 'sequential_tool',
-            path: '~/.config/goose/recipes/ghi789.yaml',
+            path: '~/.config/lumina/recipes/ghi789.yaml',
             sequential_when_repeated: true,
           },
         ],
@@ -1111,7 +1111,7 @@ describe('RecipeFormFields', () => {
         subRecipes: [
           {
             name: 'to_be_deleted',
-            path: '~/.config/goose/recipes/jkl012.yaml',
+            path: '~/.config/lumina/recipes/jkl012.yaml',
             sequential_when_repeated: false,
           },
         ],

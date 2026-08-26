@@ -1,6 +1,6 @@
-# Building goose Desktop on Linux
+# Building lumina Desktop on Linux
 
-This guide covers building the goose Desktop application from source on various Linux distributions.
+This guide covers building the lumina Desktop application from source on various Linux distributions.
 
 ## Prerequisites
 
@@ -29,10 +29,10 @@ sudo zypper install dpkg fakeroot gcc gcc-c++ make vulkan-headers vulkan-loader 
 
 **android / termux:**
 
-goose is not officially support termux build yet, you need some minor patch to fix build issues.
-We will publish goose (block-goose) into termux-packages. <!-- NOTE: package name kept for backwards compat -->
-If you want to try there is a non-official build, https://github.com/shawn111/goose/releases/download/termux/goose-termux-aarch64.tar.bz2
-For more details, see: https://github.com/aaif-goose/goose/pull/3890
+lumina is not officially support termux build yet, you need some minor patch to fix build issues.
+We will publish lumina (block-lumina) into termux-packages. <!-- NOTE: package name kept for backwards compat -->
+If you want to try there is a non-official build, https://github.com/shawn111/lumina/releases/download/termux/lumina-termux-aarch64.tar.bz2
+For more details, see: https://github.com/HikerM/lumina/pull/3890
 
 ```bash
 pkg install rust
@@ -50,16 +50,16 @@ pkg install cmake protobuf clang build-essential
 
 ### 1. Clone and Setup
 ```bash
-git clone https://github.com/aaif-goose/goose.git
-cd goose
+git clone https://github.com/HikerM/lumina.git
+cd lumina
 ```
 
 ### 2. Build
 
-Build Goose CLI:
+Build Lumina CLI:
 
 ```bash
-cargo build --release -p goose-cli --bin goose
+cargo build --release -p lumina-cli --bin lumina
 ```
 
 This command should give you a list of possible packages in the
@@ -74,9 +74,9 @@ cargo test -p
 cd ui/desktop
 pnpm install
 
-# Copy the goose binary to the expected location
+# Copy the lumina binary to the expected location
 mkdir -p src/bin
-cp ../../target/release/goose src/bin/
+cp ../../target/release/lumina src/bin/
 ```
 
 ### 4. Build the Application
@@ -87,7 +87,7 @@ Works on all Linux distributions:
 pnpm run make --targets=@electron-forge/maker-zip
 ```
 
-Output: `out/make/zip/linux/x64/goose-linux-x64-{version}.zip`
+Output: `out/make/zip/linux/x64/lumina-linux-x64-{version}.zip`
 
 #### Option B: DEB Package
 For Debian/Ubuntu systems:
@@ -95,7 +95,7 @@ For Debian/Ubuntu systems:
 pnpm run make --targets=@electron-forge/maker-deb
 ```
 
-Output: `out/make/deb/x64/goose_{version}_amd64.deb`
+Output: `out/make/deb/x64/lumina_{version}_amd64.deb`
 
 #### Option C: Both Formats
 ```bash
@@ -106,12 +106,12 @@ pnpm run make
 
 #### From Build Directory
 ```bash
-./out/goose-linux-x64/goose
+./out/lumina-linux-x64/lumina
 ```
 
 #### Install DEB Package (if built)
 ```bash
-sudo dpkg -i out/make/deb/x64/goose_*.deb
+sudo dpkg -i out/make/deb/x64/lumina_*.deb
 ```
 
 ## Troubleshooting
@@ -133,14 +133,14 @@ These are harmless and don't affect functionality. To suppress them, create a la
 
 ```bash
 #!/bin/bash
-cd /path/to/goose/ui/desktop/out/goose-linux-x64
-./goose 2>&1 | grep -v "GLib-GObject" | grep -v "browser_main_loop"
+cd /path/to/lumina/ui/desktop/out/lumina-linux-x64
+./lumina 2>&1 | grep -v "GLib-GObject" | grep -v "browser_main_loop"
 ```
 
-#### Goose Binary Not Found
-If you see "Goose binary not found", ensure you've:
-1. Built the Rust binary: `cargo build --release -p goose-cli --bin goose`
-2. Copied it to the right location: `cp ../../target/release/goose src/bin/`
+#### Lumina Binary Not Found
+If you see "Lumina binary not found", ensure you've:
+1. Built the Rust binary: `cargo build --release -p lumina-cli --bin lumina`
+2. Copied it to the right location: `cp ../../target/release/lumina src/bin/`
 3. Rebuilt the application: `pnpm run make`
 
 ### Distribution-Specific Notes
@@ -171,32 +171,32 @@ Building as Snap packages is not currently supported but may be added in the fut
 
 For active development:
 
-1. **Backend changes**: Rebuild with `cargo build --release -p goose-cli --bin goose` and copy the binary
+1. **Backend changes**: Rebuild with `cargo build --release -p lumina-cli --bin lumina` and copy the binary
 2. **Frontend changes**: Use `pnpm run start` for hot reload during development
 3. **Full rebuild**: Run the complete build process above
 
 ## Creating System Integration
 
 ### Desktop Entry
-Create `~/.local/share/applications/goose.desktop`:
+Create `~/.local/share/applications/lumina.desktop`:
 ```ini
 [Desktop Entry]
-Name=goose AI Agent
+Name=lumina AI Agent
 Comment=Local AI agent for development tasks
-Exec=/path/to/goose/ui/desktop/out/goose-linux-x64/goose %U
-Icon=/path/to/goose/ui/desktop/out/goose-linux-x64/resources/app.asar.unpacked/src/images/icon.png
+Exec=/path/to/lumina/ui/desktop/out/lumina-linux-x64/lumina %U
+Icon=/path/to/lumina/ui/desktop/out/lumina-linux-x64/resources/app.asar.unpacked/src/images/icon.png
 Terminal=false
 Type=Application
 Categories=Development;Utility;
 StartupNotify=true
-MimeType=x-scheme-handler/goose
+MimeType=x-scheme-handler/lumina
 ```
 
 ### System-wide Installation
 To install system-wide:
 ```bash
-sudo cp -r out/goose-linux-x64 /opt/goose
-sudo ln -s /opt/goose/goose /usr/local/bin/goose-gui
+sudo cp -r out/lumina-linux-x64 /opt/lumina
+sudo ln -s /opt/lumina/lumina /usr/local/bin/lumina-gui
 ```
 
 ## Contributing

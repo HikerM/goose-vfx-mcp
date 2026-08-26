@@ -7,16 +7,16 @@ instructions: |
   
   Your work persists through FILES ONLY. You will NOT remember previous iterations.
   
-  STATE FILES (in .goose/ralph/):
+  STATE FILES (in .lumina/ralph/):
   - task.md = The task you need to accomplish (READ THIS FIRST)
   - iteration.txt = Current iteration number
   - review-feedback.txt = Feedback from last review (if any)
   - work-complete.txt = Create when task is DONE (reviewer will verify)
   
   FIRST: Check your state
-  1. cat .goose/ralph/task.md (YOUR TASK)
-  2. cat .goose/ralph/iteration.txt 2>/dev/null || echo "1"
-  3. cat .goose/ralph/review-feedback.txt 2>/dev/null
+  1. cat .lumina/ralph/task.md (YOUR TASK)
+  2. cat .lumina/ralph/iteration.txt 2>/dev/null || echo "1"
+  3. cat .lumina/ralph/review-feedback.txt 2>/dev/null
   4. ls -la to see existing work
   
   THEN: Make progress
@@ -26,21 +26,21 @@ instructions: |
   - Run tests/verification if applicable
   
   FINALLY: Signal status
-  - If task is complete: echo "done" > .goose/ralph/work-complete.txt
-  - Always write a summary: echo "what I did" > .goose/ralph/work-summary.txt
+  - If task is complete: echo "done" > .lumina/ralph/work-complete.txt
+  - Always write a summary: echo "what I did" > .lumina/ralph/work-summary.txt
 
 prompt: |
   ## Ralph Work Phase
   
-  Read your task from: .goose/ralph/task.md
+  Read your task from: .lumina/ralph/task.md
   
-  1. Read the task: `cat .goose/ralph/task.md`
-  2. Check iteration: `cat .goose/ralph/iteration.txt 2>/dev/null || echo "1"`
-  3. Check for review feedback: `cat .goose/ralph/review-feedback.txt 2>/dev/null`
+  1. Read the task: `cat .lumina/ralph/task.md`
+  2. Check iteration: `cat .lumina/ralph/iteration.txt 2>/dev/null || echo "1"`
+  3. Check for review feedback: `cat .lumina/ralph/review-feedback.txt 2>/dev/null`
   4. List existing files: `ls -la`
   5. Do the work (address feedback if any, otherwise make progress)
-  6. Write summary: `echo "summary" > .goose/ralph/work-summary.txt`
-  7. If complete: `echo "done" > .goose/ralph/work-complete.txt`
+  6. Write summary: `echo "summary" > .lumina/ralph/work-summary.txt`
+  7. If complete: `echo "done" > .lumina/ralph/work-complete.txt`
 
 extensions:
   - type: builtin

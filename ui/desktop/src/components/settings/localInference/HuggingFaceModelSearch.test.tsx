@@ -17,15 +17,6 @@ vi.mock('../../../acp/local-inference', () => ({
   searchHfModels: vi.fn(),
 }));
 
-const model = {
-  repoId: 'Qwen/Qwen3-4B-GGUF',
-  author: 'Qwen',
-  modelName: 'Qwen3-4B-GGUF',
-  downloads: 42,
-  ggufFiles: [],
-  variants: [],
-} as HfModelInfo;
-
 const variant = {
   variantId: 'Q4_K_M',
   label: 'Q4_K_M',
@@ -39,6 +30,15 @@ const variant = {
   sharded: false,
   supported: true,
 } as HfModelVariant;
+
+const model = {
+  repoId: 'Qwen/Qwen3-4B-GGUF',
+  author: 'Qwen',
+  modelName: 'Qwen3-4B-GGUF',
+  downloads: 42,
+  ggufFiles: [],
+  variants: [],
+} as HfModelInfo;
 
 describe('HuggingFaceModelSearch', () => {
   beforeEach(() => {
@@ -93,5 +93,24 @@ describe('HuggingFaceModelSearch', () => {
     expect(
       await screen.findByText('Failed to start download. Please try again.')
     ).toBeInTheDocument();
+  });
+
+  it('offers a retry when ModelScope search fails', async () => {
+    const user = userEvent.setup();
+    vi.mocked(searchHfModels)
+      .mockRejectedValueOnce(new Error('network unavailable'))
+      .mockResolvedValueOnce([model]);
+    render(<HuggingFaceModelSearch onDownloadStarted={vi.fn()} />, {
+      wrapper: IntlTestWrapper,
+    });
+
+    await user.type(screen.getByPlaceholderText('Search for local models...'), 'qwen');
+    expect(
+      await screen.findByText('ModelScope could not be reached. Check your network or proxy and retry.')
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByRole('button', { name: /Qwen\/Qwen3-4B-GGUF/ })).toBeInTheDocument();
+    expect(searchHfModels).toHaveBeenCalledTimes(2);
   });
 });

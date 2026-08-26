@@ -3,17 +3,17 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  GooseClient,
+  LuminaClient,
   type McpHealthStatus,
   type McpManagedDetail,
   type McpManagedSummary,
   type McpPlanReview,
   type McpTaskRef,
   type Stream,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { ManagedTab } from '../ManagedTab';
 
-const boundary = vi.hoisted(() => ({ client: null as GooseClient | null }));
+const boundary = vi.hoisted(() => ({ client: null as LuminaClient | null }));
 
 vi.mock('../../../acp/acpConnection', () => ({
   getAcpClient: async () => {
@@ -229,7 +229,7 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
 
   beforeEach(() => {
     transport = new DeferredAcpTransport();
-    boundary.client = new GooseClient(
+    boundary.client = new LuminaClient(
       () => ({
         requestPermission: async () => {
           throw new Error('unexpected permission request');
@@ -253,25 +253,25 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const planCreation = deferred<RpcResult>();
     const confirmedTask = task({ taskId: 'task-confirm-a' });
     let confirmed = false;
-    transport.handlers.set('goose.mcpList_unstable', () =>
+    transport.handlers.set('lumina.mcpList_unstable', () =>
       success({ items: [itemA, itemB], nextCursor: null })
     );
-    transport.handlers.set('goose.mcpGet_unstable', ({ managedMcpId }) => {
+    transport.handlers.set('lumina.mcpGet_unstable', ({ managedMcpId }) => {
       if (managedMcpId === 'managed-b') return success(detail(itemB));
       return success(
         detail(confirmed ? { ...itemA, revision: 3, currentTask: confirmedTask } : itemA)
       );
     });
-    transport.handlers.set('goose.mcpHealthGet_unstable', ({ managedMcpId }) =>
+    transport.handlers.set('lumina.mcpHealthGet_unstable', ({ managedMcpId }) =>
       success(health(String(managedMcpId)))
     );
-    transport.handlers.set('goose.mcpPlanCreate_unstable', () => planCreation.promise);
-    transport.handlers.set('goose.mcpInstallConfirm_unstable', () => {
+    transport.handlers.set('lumina.mcpPlanCreate_unstable', () => planCreation.promise);
+    transport.handlers.set('lumina.mcpInstallConfirm_unstable', () => {
       confirmed = true;
       return success(confirmedTask);
     });
-    transport.handlers.set('goose.mcpTaskGet_unstable', () => success(confirmedTask));
-    transport.handlers.set('goose.mcpEventsResume_unstable', () =>
+    transport.handlers.set('lumina.mcpTaskGet_unstable', () => success(confirmedTask));
+    transport.handlers.set('lumina.mcpEventsResume_unstable', () =>
       success({ events: [], nextEventId: 0, tasks: [] })
     );
     const user = userEvent.setup();
@@ -280,7 +280,7 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     await user.click(await screen.findByRole('button', { name: /MCP A/i }));
     await user.click(screen.getByRole('button', { name: 'Review repair' }));
     await waitFor(() =>
-      expect(transport.calls.some(({ method }) => method === 'goose.mcpPlanCreate_unstable')).toBe(
+      expect(transport.calls.some(({ method }) => method === 'lumina.mcpPlanCreate_unstable')).toBe(
         true
       )
     );
@@ -292,7 +292,7 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
 
     await waitFor(() => {
       expect(
-        transport.calls.filter(({ method }) => method === 'goose.mcpGet_unstable')
+        transport.calls.filter(({ method }) => method === 'lumina.mcpGet_unstable')
       ).toHaveLength(3);
     });
     expect(screen.getByRole('heading', { level: 2, name: 'MCP B' })).toBeInTheDocument();
@@ -302,20 +302,20 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     expect(transport.calls).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          method: 'goose.mcpPlanCreate_unstable',
+          method: 'lumina.mcpPlanCreate_unstable',
           params: expect.objectContaining({
             intent: { type: 'repair', managed_mcp_id: 'managed-a' },
           }),
         }),
         expect.objectContaining({
-          method: 'goose.mcpInstallConfirm_unstable',
+          method: 'lumina.mcpInstallConfirm_unstable',
           params: expect.objectContaining({
             planId: 'plan-managed-a',
             planDigest: 'plan-digest-managed-a',
             userDecision: 'confirm',
           }),
         }),
-        { method: 'goose.mcpGet_unstable', params: { managedMcpId: 'managed-a' } },
+        { method: 'lumina.mcpGet_unstable', params: { managedMcpId: 'managed-a' } },
       ])
     );
 
@@ -330,13 +330,13 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const itemB = summary('managed-b', 4);
     const delayedDetail = deferred<RpcResult>();
     const delayedHealth = deferred<RpcResult>();
-    transport.handlers.set('goose.mcpList_unstable', () =>
+    transport.handlers.set('lumina.mcpList_unstable', () =>
       success({ items: [itemA, itemB], nextCursor: null })
     );
-    transport.handlers.set('goose.mcpGet_unstable', ({ managedMcpId }) =>
+    transport.handlers.set('lumina.mcpGet_unstable', ({ managedMcpId }) =>
       managedMcpId === 'managed-a' ? delayedDetail.promise : success(detail(itemB))
     );
-    transport.handlers.set('goose.mcpHealthGet_unstable', ({ managedMcpId }) =>
+    transport.handlers.set('lumina.mcpHealthGet_unstable', ({ managedMcpId }) =>
       managedMcpId === 'managed-a' ? delayedHealth.promise : success(health('managed-b'))
     );
     const user = userEvent.setup();
@@ -353,7 +353,7 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'MCP B' })).toBeInTheDocument();
     expect(
       transport.calls
-        .filter(({ method }) => method === 'goose.mcpGet_unstable')
+        .filter(({ method }) => method === 'lumina.mcpGet_unstable')
         .map(({ params }) => params)
     ).toEqual([{ managedMcpId: 'managed-a' }, { managedMcpId: 'managed-b' }]);
   });
@@ -365,19 +365,19 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const monitorTask = deferred<RpcResult>();
     const cancelResponse = deferred<RpcResult>();
     let taskGetCalls = 0;
-    transport.handlers.set('goose.mcpList_unstable', () =>
+    transport.handlers.set('lumina.mcpList_unstable', () =>
       success({ items: [initial], nextCursor: null })
     );
-    transport.handlers.set('goose.mcpGet_unstable', () => success(detail(initial)));
-    transport.handlers.set('goose.mcpHealthGet_unstable', () => success(health('managed-a')));
-    transport.handlers.set('goose.mcpTaskGet_unstable', () => {
+    transport.handlers.set('lumina.mcpGet_unstable', () => success(detail(initial)));
+    transport.handlers.set('lumina.mcpHealthGet_unstable', () => success(health('managed-a')));
+    transport.handlers.set('lumina.mcpTaskGet_unstable', () => {
       taskGetCalls += 1;
       return taskGetCalls === 1 ? monitorTask.promise : success(advanced);
     });
-    transport.handlers.set('goose.mcpEventsResume_unstable', () =>
+    transport.handlers.set('lumina.mcpEventsResume_unstable', () =>
       success({ events: [], nextEventId: 0, tasks: [] })
     );
-    transport.handlers.set('goose.mcpTaskCancel_unstable', () => cancelResponse.promise);
+    transport.handlers.set('lumina.mcpTaskCancel_unstable', () => cancelResponse.promise);
     const user = userEvent.setup();
     const onTaskChange = renderManaged();
 
@@ -395,7 +395,7 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     expect(transport.calls).toEqual(
       expect.arrayContaining([
         {
-          method: 'goose.mcpTaskCancel_unstable',
+          method: 'lumina.mcpTaskCancel_unstable',
           params: { taskId: 'task-a', expectedRevision: 2 },
         },
       ])
@@ -410,19 +410,19 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     const terminalRefresh = deferred<RpcResult>();
     const retryResponse = deferred<RpcResult>();
     let detailCalls = 0;
-    transport.handlers.set('goose.mcpList_unstable', () =>
+    transport.handlers.set('lumina.mcpList_unstable', () =>
       success({ items: [initial], nextCursor: null })
     );
-    transport.handlers.set('goose.mcpGet_unstable', () => {
+    transport.handlers.set('lumina.mcpGet_unstable', () => {
       detailCalls += 1;
       return detailCalls === 1 ? success(detail(initial)) : terminalRefresh.promise;
     });
-    transport.handlers.set('goose.mcpHealthGet_unstable', () => success(health('managed-a')));
-    transport.handlers.set('goose.mcpTaskGet_unstable', () => success(terminal));
-    transport.handlers.set('goose.mcpEventsResume_unstable', () =>
+    transport.handlers.set('lumina.mcpHealthGet_unstable', () => success(health('managed-a')));
+    transport.handlers.set('lumina.mcpTaskGet_unstable', () => success(terminal));
+    transport.handlers.set('lumina.mcpEventsResume_unstable', () =>
       success({ events: [], nextEventId: 0, tasks: [] })
     );
-    transport.handlers.set('goose.mcpTaskRetry_unstable', () => retryResponse.promise);
+    transport.handlers.set('lumina.mcpTaskRetry_unstable', () => retryResponse.promise);
     const user = userEvent.setup();
     const onTaskChange = renderManaged();
 
@@ -442,7 +442,7 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     expect(transport.calls).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          method: 'goose.mcpTaskRetry_unstable',
+          method: 'lumina.mcpTaskRetry_unstable',
           params: expect.objectContaining({ taskId: 'task-a', expectedRevision: 3 }),
         }),
       ])
@@ -462,22 +462,22 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     });
     const terminalRefresh = deferred<RpcResult>();
     let detailCalls = 0;
-    transport.handlers.set('goose.mcpList_unstable', () =>
+    transport.handlers.set('lumina.mcpList_unstable', () =>
       success({ items: [initial], nextCursor: null })
     );
-    transport.handlers.set('goose.mcpGet_unstable', () => {
+    transport.handlers.set('lumina.mcpGet_unstable', () => {
       detailCalls += 1;
       return detailCalls === 1 ? success(detail(initial)) : terminalRefresh.promise;
     });
-    transport.handlers.set('goose.mcpHealthGet_unstable', () => success(health('managed-a')));
-    transport.handlers.set('goose.mcpTaskGet_unstable', ({ taskId }) =>
+    transport.handlers.set('lumina.mcpHealthGet_unstable', () => success(health('managed-a')));
+    transport.handlers.set('lumina.mcpTaskGet_unstable', ({ taskId }) =>
       success(taskId === 'task-a' ? terminal : retried)
     );
-    transport.handlers.set('goose.mcpEventsResume_unstable', () =>
+    transport.handlers.set('lumina.mcpEventsResume_unstable', () =>
       success({ events: [], nextEventId: 0, tasks: [] })
     );
-    transport.handlers.set('goose.mcpTaskRetry_unstable', () => success(retried));
-    transport.handlers.set('goose.mcpTaskCancel_unstable', () => success(cancelling));
+    transport.handlers.set('lumina.mcpTaskRetry_unstable', () => success(retried));
+    transport.handlers.set('lumina.mcpTaskCancel_unstable', () => success(cancelling));
     const user = userEvent.setup();
     const onTaskChange = renderManaged();
 
@@ -492,11 +492,11 @@ describe('ManagedTab through the real Desktop adapter and SDK client', () => {
     expect(transport.calls).toEqual(
       expect.arrayContaining([
         {
-          method: 'goose.mcpTaskRetry_unstable',
+          method: 'lumina.mcpTaskRetry_unstable',
           params: expect.objectContaining({ taskId: 'task-a', expectedRevision: 3 }),
         },
         {
-          method: 'goose.mcpTaskCancel_unstable',
+          method: 'lumina.mcpTaskCancel_unstable',
           params: { taskId: 'task-retried', expectedRevision: 1 },
         },
       ])

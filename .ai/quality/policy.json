@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "require_build": true,
+  "require_tests": true,
+  "require_review": true,
+  "max_graph_depth": 2,
+  "max_graph_nodes": 300,
+  "auto_destructive_rollback": false,
+  "auto_merge": false,
+  "include_staged": true,
+  "include_unstaged": true,
+  "include_untracked": true
+}

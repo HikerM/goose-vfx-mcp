@@ -4,7 +4,7 @@ sidebar_label: Subrecipes In Parallel
 description: Run multiple subrecipes instances concurrently with real-time progress tracking
 ---
 
-goose recipes can execute multiple [subrecipe](/docs/guides/recipes/subrecipes) instances concurrently using isolated worker processes. This feature enables efficient batch operations, parallel processing of different tasks, and faster completion of complex workflows.
+lumina recipes can execute multiple [subrecipe](/docs/guides/recipes/subrecipes) instances concurrently using isolated worker processes. This feature enables efficient batch operations, parallel processing of different tasks, and faster completion of complex workflows.
 
 :::warning Experimental Feature
 Running subrecipes in parallel is an experimental feature in active development. Behavior and configuration may change in future releases.
@@ -18,7 +18,7 @@ Here are some common use cases:
 
 ## How It Works
 
-Parallel subrecipe execution uses an isolated worker system that automatically manages concurrent task execution. goose creates individual tasks for each subrecipe instance and distributes them across up to 10 concurrent workers.
+Parallel subrecipe execution uses an isolated worker system that automatically manages concurrent task execution. lumina creates individual tasks for each subrecipe instance and distributes them across up to 10 concurrent workers.
 
 | Scenario | Default Behavior | Override Options |
 |----------|------------------|------------------|
@@ -27,7 +27,7 @@ Parallel subrecipe execution uses an isolated worker system that automatically m
 
 ### Different Subrecipes
 
-When running different subrecipes, goose determines the execution mode based on:
+When running different subrecipes, lumina determines the execution mode based on:
 1. **Explicit user request** in the prompt ("in parallel", "sequentially") 
 2. **Sequential execution by default**: Different subrecipes run one after another unless explicitly requested to run in parallel
 
@@ -42,21 +42,21 @@ prompt: |
 
 ### Same Subrecipe
 
-When running the same subrecipe with different parameters, goose determines the execution mode based on:
+When running the same subrecipe with different parameters, lumina determines the execution mode based on:
 1. **[Recipe-level configuration](#choosing-between-execution-modes)** (`sequential_when_repeated` flag) - when set to true, this forces sequential execution
 2. **User request** in the prompt ("sequentially" to override default parallel behavior)
 3. **Parallel execution by default**: Multiple instances of the same subrecipe run concurrently
 
-If your prompt implies multiple executions of the same subrecipe, goose will automatically create parallel instances:
+If your prompt implies multiple executions of the same subrecipe, lumina will automatically create parallel instances:
 
 ```yaml
 prompt: |
   get the weather for three biggest cities in Australia
 ```
 
-In this example, goose recognizes that "three biggest cities" requires running the weather subrecipe multiple times for different cities, so it executes them in parallel.
+In this example, lumina recognizes that "three biggest cities" requires running the weather subrecipe multiple times for different cities, so it executes them in parallel.
 
-If you wanted to run them sequentially, you can just tell goose:
+If you wanted to run them sequentially, you can just tell lumina:
 
 ```yaml
 prompt: |
@@ -211,4 +211,4 @@ sub_recipes:
 ```
 
 ## Learn More
-Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master goose recipes.
+Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master lumina recipes.

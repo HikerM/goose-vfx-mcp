@@ -1,26 +1,26 @@
 ---
 title: Puppeteer Extension
-description: Add Puppeteer MCP Server as a goose Extension
+description: Add Puppeteer MCP Server as a lumina Extension
 unlisted: true
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 
 <YouTubeShortEmbed videoUrl="https://youtube.com/embed/rms0wVGnlXA" />
 
 Server archived
 
-This tutorial covers how to add the [Puppeteer MCP Server](https://www.pulsemcp.com/servers/merajmehrabi-puppeteer) as a goose extension, enabling goose to interact with websites - navigating pages, filling forms, clicking buttons, taking screenshots, and executing JavaScript in a real browser environment.
+This tutorial covers how to add the [Puppeteer MCP Server](https://www.pulsemcp.com/servers/merajmehrabi-puppeteer) as a lumina extension, enabling lumina to interact with websites - navigating pages, filling forms, clicking buttons, taking screenshots, and executing JavaScript in a real browser environment.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-puppeteer&id=puppeteer&name=Puppeteer&description=Headless%20browser%20automation)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-puppeteer&id=puppeteer&name=Puppeteer&description=Headless%20browser%20automation)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
   npx -y @modelcontextprotocol/server-puppeteer
@@ -37,8 +37,8 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaDesktopInstaller
     extensionId="puppeteer"
     extensionName="Puppeteer"
     description="Headless browser automation"
@@ -46,54 +46,54 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     args={["-y", "@modelcontextprotocol/server-puppeteer"]}
   />
 </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to add a `Command-line Extension`
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◆  What type of extension would you like to add?
-    │  ○ Built-in Extension 
-    // highlight-start    
+    │  ○ Built-in Extension
+    // highlight-start
     │  ● Command-line Extension (Run a local command or script)
     // highlight-end
-    │  ○ Remote Extension (Streamable HTTP) 
-    └ 
+    │  ○ Remote Extension (Streamable HTTP)
+    └
   ```
 
   3. Give your extension a name
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     // highlight-start
     ◆  What would you like to call this extension?
     │  Puppeteer
     // highlight-end
-    └ 
+    └
   ```
 
   4. Enter the command
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Puppeteer
@@ -102,18 +102,18 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  What command should be run?
     │  npx -y @modelcontextprotocol/server-puppeteer
     // highlight-end
-    └ 
-  ```  
+    └
+  ```
 
-  5. Enter the number of seconds goose should wait for actions to complete before timing out. Default is 300s
+  5. Enter the number of seconds lumina should wait for actions to complete before timing out. Default is 300s
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Puppeteer
@@ -125,18 +125,18 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  Please set the timeout for this tool (in secs):
     │  300
     // highlight-end
-    └ 
-  ``` 
+    └
+  ```
 
   6. Choose to add a description. If you select "Yes" here, you will be prompted to enter a description for the extension.
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Puppeteer
@@ -151,19 +151,19 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◇  Would you like to add a description?
     │  No
     // highlight-end
-    └ 
+    └
   ```
 
   7. Choose No when asked to add environment variables
 
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Puppeteer
@@ -176,39 +176,39 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │
     ◇  Would you like to add a description?
     │  No
-    │    
+    │
     // highlight-start
     ◆  Would you like to add environment variables?
-    │  No 
+    │  No
     │
     // highlight-end
     └  Added puppeteer extension
-  ```  
+  ```
 
   </TabItem>
 </Tabs>
 
 
 ## Example Usage
-In this example, I’ll show you how to use goose with the Puppeteer Extension to perform an accessibility audit on a website. By automating browser interactions, goose can navigate the site, test keyboard navigation, check color contrast, analyze ARIA attributes, and generate a detailed report with recommendations and code fixes.
+In this example, I’ll show you how to use lumina with the Puppeteer Extension to perform an accessibility audit on a website. By automating browser interactions, lumina can navigate the site, test keyboard navigation, check color contrast, analyze ARIA attributes, and generate a detailed report with recommendations and code fixes.
 
 This allows you to quickly identify and resolve accessibility issues without manually inspecting each page.
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-   1. Open a new session in goose Desktop
+  <TabItem value="ui" label="lumina Desktop" default>
+   1. Open a new session in lumina Desktop
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
-  1. Open a terminal and start a new goose session:
+  <TabItem value="cli" label="lumina CLI">
+  1. Open a terminal and start a new lumina session:
 
   ```sh
-  goose session
+  lumina session
   ```
 
   </TabItem>
 </Tabs>
 
-### goose Prompt
+### lumina Prompt
 ```
 Can you check if my website is accessible? Please conduct a full accessibility audit, focusing on the following:
 
@@ -228,7 +228,7 @@ Here is the website to test: https://broken-workshop.dequelabs.com/. I want to e
 
 ```
 
-### goose Output
+### lumina Output
 
 :::note Desktop
 I'll help you conduct a comprehensive accessibility audit of the website. I'll use a combination of automated and manual testing approaches to evaluate different accessibility aspects.
@@ -298,7 +298,7 @@ Based on my analysis, here's a detailed report with recommendations:
 <button class="cook-button">COOK CHOCOLATE CAKE</button>
 
 <!-- Recommended -->
-<button 
+<button
   class="cook-button"
   aria-label="Cook Chocolate Cake recipe"
   tabindex="0">
@@ -311,8 +311,8 @@ Based on my analysis, here's a detailed report with recommendations:
 <img src="chocolate-cake.jpg">
 
 <!-- Recommended -->
-<img 
-  src="chocolate-cake.jpg" 
+<img
+  src="chocolate-cake.jpg"
   alt="Chocolate cake with dark chocolate frosting"
   role="img">
 ```
@@ -321,8 +321,8 @@ Based on my analysis, here's a detailed report with recommendations:
 
 ```html
 <!-- Recommended addition -->
-<div class="yumminess-chart" 
-     role="region" 
+<div class="yumminess-chart"
+     role="region"
      aria-label="Monthly yumminess ratings">
   <table class="sr-only">
     <!-- Add hidden table for screen readers -->
@@ -412,27 +412,27 @@ This audit reveals several critical accessibility issues that should be addresse
 
 ### Further Automation with GitHub Extension
 
-You can take this accessibility audit a step further by combining the [GitHub Extension](/docs/mcp/github-mcp) with the Puppeteer Extension. With this setup, goose doesn’t just find issues and apply fixes, it can also handle the entire Git workflow for you. The GitHub Extension allows goose to commit changes, create a pull request, and even generate a PR description, so all you have to do is review and merge.
+You can take this accessibility audit a step further by combining the [GitHub Extension](/docs/mcp/github-mcp) with the Puppeteer Extension. With this setup, lumina doesn’t just find issues and apply fixes, it can also handle the entire Git workflow for you. The GitHub Extension allows lumina to commit changes, create a pull request, and even generate a PR description, so all you have to do is review and merge.
 
 1. Enable the GitHub extension by following the steps in the **[GitHub Extension Tutorial](/docs/mcp/github-mcp#configuration)**.
 
 
-:::tip 
-Ensure your GitHub Personal Access Token has the necessary permissions for repository access and pull request creation when using this combined approach. 
+:::tip
+Ensure your GitHub Personal Access Token has the necessary permissions for repository access and pull request creation when using this combined approach.
 :::
 
-2. Ask goose to:
+2. Ask lumina to:
 
    - Create a new branch
    - Commit the accessibility improvements
    - Open a pull request
 
-### goose prompt:
+### lumina prompt:
 
 ```
 Can you create a new branch called 'accessibility-improvements', apply the accessibility fixes you suggested, and open a pull request with these changes?
 ```
-goose will then:
+lumina will then:
    - ✅ Create a branch: `accessibility-improvements`
    - ✅ Apply the recommended accessibility fixes
    - ✅ Commit the changes with a descriptive message

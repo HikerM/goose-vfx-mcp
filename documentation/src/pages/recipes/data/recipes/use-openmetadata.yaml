@@ -1,6 +1,6 @@
 version: 1.0.0
 title: Use OpenMetadata
-description: Interact with OpenMetadata in Goose via OpenMetadata MCP Server to generate SQL or propagate classifications
+description: Interact with OpenMetadata in Lumina via OpenMetadata MCP Server to generate SQL or propagate classifications
 instructions: Utilize OpenMetadata tools to search for, retrieve, and modify metadata related to data assets such as tables, dashboards, and glossaries. Adhere to specified output formats like JSON for search queries and maintain structured responses using Markdown for human-readable information.
 extensions:
 - type: stdio

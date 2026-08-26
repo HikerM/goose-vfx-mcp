@@ -6,15 +6,15 @@ description: Load skills and delegate tasks to subagents
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import { PlatformExtensionNote } from '@site/src/components/PlatformExtensionNote';
-import GooseBuiltinInstaller from '@site/src/components/GooseBuiltinInstaller';
+import LuminaBuiltinInstaller from '@site/src/components/LuminaBuiltinInstaller';
 
-The Summon extension lets you load knowledge into goose's context and delegate tasks to [subagents](/docs/guides/context-engineering/subagents). 
+The Summon extension lets you load knowledge into lumina's context and delegate tasks to [subagents](/docs/guides/context-engineering/subagents).
 
 You can load different types of sources:
-- [**Skills**](/docs/guides/context-engineering/using-skills) - Reusable instruction sets that teach goose specific workflows
+- [**Skills**](/docs/guides/context-engineering/using-skills) - Reusable instruction sets that teach lumina specific workflows
 - [**Recipes**](/docs/guides/recipes) - Automated task definitions with prompts and parameters
 
-This is useful for teaching goose how to perform tasks and running work in parallel through subagents.
+This is useful for teaching lumina how to perform tasks and running work in parallel through subagents.
 
 :::info
 This extension is available in v1.25.0+.
@@ -25,30 +25,30 @@ This extension is available in v1.25.0+.
 <PlatformExtensionNote/>
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseBuiltinInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaBuiltinInstaller
     extensionName="Summon"
     description="Load knowledge and delegate tasks to subagents"
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to `Toggle Extensions`
   ```sh
-  ┌   goose-configure 
+  ┌   lumina-configure
   │
   ◇  What would you like to configure?
-  │  Toggle Extensions 
+  │  Toggle Extensions
   │
   ◆  Enable extensions: (use "space" to toggle and "enter" to submit)
-  // highlight-start    
+  // highlight-start
   │  ● summon
-  // highlight-end  
+  // highlight-end
   └  Extension settings updated successfully
   ```
   </TabItem>
@@ -56,7 +56,7 @@ This extension is available in v1.25.0+.
 
 ## Example Usage
 
-In this example, we'll create a custom skill that teaches goose a 90s web aesthetic, then use Summon to load that skill and delegate a subagent to build a retro homepage.
+In this example, we'll create a custom skill that teaches lumina a 90s web aesthetic, then use Summon to load that skill and delegate a subagent to build a retro homepage.
 
 ### Create a Skill
 
@@ -77,13 +77,13 @@ Channel the 90s internet:
 6. Marquee-style excitement
 ```
 
-### goose Prompt
+### lumina Prompt
 
 ```
 Load the retro skill with summon. Then delegate a subagent to create an HTML page called my-site.html for a personal homepage.
 ```
 
-### goose Output
+### lumina Output
 
 ```
 ─── load | summon ───────────────────────────────────────────
@@ -112,7 +112,7 @@ This knowledge is now available in your context.
 
 
 ─── delegate | summon ───────────────────────────────────────
-instructions: Create an HTML file called my-site.html for a personal homepage 
+instructions: Create an HTML file called my-site.html for a personal homepage
 using the 90s web aesthetic...
 
 I've created your 90s-style personal homepage at `my-site.html`! 🌟

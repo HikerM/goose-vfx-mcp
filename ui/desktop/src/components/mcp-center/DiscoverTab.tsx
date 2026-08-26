@@ -9,7 +9,7 @@ import type {
   McpSourcesPolicyState,
   McpTaskRef,
   McpTrustTier,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { Search } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';

@@ -3,7 +3,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Talk to goose directly from your shell prompt. Instead of switching to a separate REPL session, stay in your terminal and call goose when you need it.
+Talk to lumina directly from your shell prompt. Instead of switching to a separate REPL session, stay in your terminal and call lumina when you need it.
 
 ## Setup
 
@@ -12,7 +12,7 @@ Talk to goose directly from your shell prompt. Instead of switching to a separat
 
 Add to `~/.zshrc`:
 ```bash
-eval "$(goose term init zsh)"
+eval "$(lumina term init zsh)"
 ```
 
 </TabItem>
@@ -20,7 +20,7 @@ eval "$(goose term init zsh)"
 
 Add to `~/.bashrc`:
 ```bash
-eval "$(goose term init bash)"
+eval "$(lumina term init bash)"
 ```
 
 </TabItem>
@@ -28,7 +28,7 @@ eval "$(goose term init bash)"
 
 Add to `~/.config/fish/config.fish`:
 ```fish
-goose term init fish | source
+lumina term init fish | source
 ```
 
 </TabItem>
@@ -36,9 +36,9 @@ goose term init fish | source
 
 Add to `~/.config/nushell/config.nu`:
 ```nu
-let goose_term_init = ($nu.cache-dir | path join "goose-term-init.nu")
-^goose term init nu | save --force $goose_term_init
-source $goose_term_init
+let lumina_term_init = ($nu.cache-dir | path join "lumina-term-init.nu")
+^lumina term init nu | save --force $lumina_term_init
+source $lumina_term_init
 ```
 
 </TabItem>
@@ -46,7 +46,7 @@ source $goose_term_init
 
 Add to `$PROFILE`:
 ```powershell
-Invoke-Expression (goose term init powershell)
+Invoke-Expression (lumina term init powershell)
 ```
 
 </TabItem>
@@ -56,104 +56,104 @@ Restart your terminal or source the config, and that's it!
 
 ## Usage
 
-Just type `@goose` (or `@g` for short) followed by your question:
+Just type `@lumina` (or `@g` for short) followed by your question:
 
 ```bash
 npm install express
     npm ERR! code EACCES
     npm ERR! permission denied
 
-@goose "how do I fix this error?"
+@lumina "how do I fix this error?"
 ```
 
-goose automatically sees the commands you've run since your last question, so you don't need to explain what you've been doing. Use quotes around your prompt if it contains special characters like `?`, `*`, or `'`:
+lumina automatically sees the commands you've run since your last question, so you don't need to explain what you've been doing. Use quotes around your prompt if it contains special characters like `?`, `*`, or `'`:
 
 ```bash
-@goose "what's in this directory?"
+@lumina "what's in this directory?"
 @g "analyze the error: 'permission denied'"
 ```
 
 ## Named Sessions
-By default, each terminal gets its own goose session that lasts until you close it. Named sessions let you continue conversations across terminal restarts and share context between windows.
+By default, each terminal gets its own lumina session that lasts until you close it. Named sessions let you continue conversations across terminal restarts and share context between windows.
 
 <Tabs groupId="shells">
 <TabItem value="zsh" label="zsh" default>
 
 ```bash
-eval "$(goose term init zsh --name my-project)"
+eval "$(lumina term init zsh --name my-project)"
 ```
 
 </TabItem>
 <TabItem value="bash" label="bash">
 
 ```bash
-eval "$(goose term init bash --name my-project)"
+eval "$(lumina term init bash --name my-project)"
 ```
 
 </TabItem>
 <TabItem value="fish" label="fish">
 
 ```fish
-goose term init fish --name my-project | source
+lumina term init fish --name my-project | source
 ```
 
 </TabItem>
 <TabItem value="nu" label="Nushell">
 
 ```nu
-let goose_term_init = ($nu.cache-dir | path join "goose-term-init.nu")
-^goose term init nu --name my-project | save --force $goose_term_init
-source $goose_term_init
+let lumina_term_init = ($nu.cache-dir | path join "lumina-term-init.nu")
+^lumina term init nu --name my-project | save --force $lumina_term_init
+source $lumina_term_init
 ```
 
 </TabItem>
 <TabItem value="powershell" label="PowerShell">
 
 ```powershell
-Invoke-Expression (goose term init powershell --name my-project)
+Invoke-Expression (lumina term init powershell --name my-project)
 ```
 
 </TabItem>
 </Tabs>
 
-Named sessions persist in goose's database, so they're available anytime, even after restarting your computer. Reopen later and run the same command to continue:
+Named sessions persist in lumina's database, so they're available anytime, even after restarting your computer. Reopen later and run the same command to continue:
 
 ```bash
 # Start debugging
-eval "$(goose term init zsh --name auth-bug)"
-@goose help me debug this login timeout
+eval "$(lumina term init zsh --name auth-bug)"
+@lumina help me debug this login timeout
 
 # Close terminal, come back later
-eval "$(goose term init zsh --name auth-bug)"
-@goose "what was the solution we discussed?"
+eval "$(lumina term init zsh --name auth-bug)"
+@lumina "what was the solution we discussed?"
 # Continues the same conversation with context
 ```
 
 ## Default Handler
 
-Use `--default` if you want goose to answer commands your shell cannot resolve.
+Use `--default` if you want lumina to answer commands your shell cannot resolve.
 
 <Tabs groupId="default-shells">
 <TabItem value="zsh" label="zsh" default>
 
 ```bash
-eval "$(goose term init zsh --default)"
+eval "$(lumina term init zsh --default)"
 ```
 
 </TabItem>
 <TabItem value="bash" label="bash">
 
 ```bash
-eval "$(goose term init bash --default)"
+eval "$(lumina term init bash --default)"
 ```
 
 </TabItem>
 <TabItem value="nu" label="Nushell">
 
 ```nu
-let goose_term_init = ($nu.cache-dir | path join "goose-term-init.nu")
-^goose term init nu --default | save --force $goose_term_init
-source $goose_term_init
+let lumina_term_init = ($nu.cache-dir | path join "lumina-term-init.nu")
+^lumina term init nu --default | save --force $lumina_term_init
+source $lumina_term_init
 ```
 
 </TabItem>
@@ -161,20 +161,20 @@ source $goose_term_init
 
 ## Show Context Status in Your Prompt
 
-Add `goose term info` to your prompt to see how much context you've used and which model is active during a terminal goose session. 
+Add `lumina term info` to your prompt to see how much context you've used and which model is active during a terminal lumina session.
 
 <Tabs groupId="shells">
 <TabItem value="zsh" label="zsh" default>
 
 ```bash
-PROMPT='$(goose term info) %~ $ '
+PROMPT='$(lumina term info) %~ $ '
 ```
 
 </TabItem>
 <TabItem value="bash" label="bash">
 
 ```bash
-PS1='$(goose term info) \w $ '
+PS1='$(lumina term info) \w $ '
 ```
 
 </TabItem>
@@ -182,7 +182,7 @@ PS1='$(goose term info) \w $ '
 
 ```fish
 function fish_prompt
-    goose term info
+    lumina term info
     echo -n ' '(prompt_pwd)' $ '
 end
 ```
@@ -191,7 +191,7 @@ end
 <TabItem value="nu" label="Nushell">
 
 ```nu
-$env.PROMPT_COMMAND = {|| $"(goose term info) (pwd)> " }
+$env.PROMPT_COMMAND = {|| $"(lumina term info) (pwd)> " }
 ```
 
 </TabItem>
@@ -199,28 +199,28 @@ $env.PROMPT_COMMAND = {|| $"(goose term info) (pwd)> " }
 
 ```powershell
 function prompt {
-    $gooseInfo = & goose term info
-    "$gooseInfo $(Get-Location) PS> "
+    $luminaInfo = & lumina term info
+    "$luminaInfo $(Get-Location) PS> "
 }
 ```
 
 </TabItem>
 </Tabs>
 
-Your terminal prompt now shows the context usage and model name (shortened for readability) for the active goose session. For example:
+Your terminal prompt now shows the context usage and model name (shortened for readability) for the active lumina session. For example:
 
 ```bash
 ●●○○○ sonnet ~/projects $
 ```
-## Shell Completion for goose Commands
+## Shell Completion for lumina Commands
 
-`@goose` provides context-aware assistance based on your command history. To enable tab completion of goose CLI commands (like `goose session`, `goose run`, etc.), see the [shell completion documentation](/docs/guides/goose-cli-commands#completion).
+`@lumina` provides context-aware assistance based on your command history. To enable tab completion of lumina CLI commands (like `lumina session`, `lumina run`, etc.), see the [shell completion documentation](/docs/guides/lumina-cli-commands#completion).
 
 ## Troubleshooting
 
-**goose doesn't see recent commands:**
-If you run commands but goose says it doesn't see any recent activity, check if terminal integration is properly [set up in your shell config](#setup).
-You can also check the id of the goose session in your current terminal:
+**lumina doesn't see recent commands:**
+If you run commands but lumina says it doesn't see any recent activity, check if terminal integration is properly [set up in your shell config](#setup).
+You can also check the id of the lumina session in your current terminal:
 ```bash
 # Check if session ID exists
 echo $AGENT_SESSION_ID
@@ -234,14 +234,14 @@ $env.AGENT_SESSION_ID
 To share context across terminal windows, use a [named session](#named-sessions) instead.
 
 **Session getting too full** (prompt shows `●●●●●`):
-If goose's responses are getting slow or hitting context limits, start a fresh goose session in the terminal. The new goose session sees your command history, but not the conversation history from the previous session. 
+If lumina's responses are getting slow or hitting context limits, start a fresh lumina session in the terminal. The new lumina session sees your command history, but not the conversation history from the previous session.
 ```bash
-# Start a new goose session in the same shell
-eval "$(goose term init zsh)"
+# Start a new lumina session in the same shell
+eval "$(lumina term init zsh)"
 ```
 ```nu
 # Nushell
-let goose_term_init = ($nu.cache-dir | path join "goose-term-init.nu")
-^goose term init nu | save --force $goose_term_init
-source $goose_term_init
+let lumina_term_init = ($nu.cache-dir | path join "lumina-term-init.nu")
+^lumina term init nu | save --force $lumina_term_init
+source $lumina_term_init
 ```

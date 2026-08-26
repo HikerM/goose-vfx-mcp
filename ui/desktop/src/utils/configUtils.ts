@@ -1,16 +1,16 @@
 export const configLabels: Record<string, string> = {
-  // goose settings
-  GOOSE_PROVIDER: 'Provider',
-  GOOSE_MODEL: 'Model',
-  GOOSE_TEMPERATURE: 'Temperature',
-  GOOSE_MODE: 'Mode',
-  GOOSE_PLANNER_PROVIDER: 'Planner Provider',
-  GOOSE_PLANNER_MODEL: 'Planner Model',
-  GOOSE_TOOLSHIM: 'Tool Shim',
-  GOOSE_TOOLSHIM_OLLAMA_MODEL: 'Tool Shim Ollama Model',
-  GOOSE_CLI_MIN_PRIORITY: 'CLI Min Priority',
-  GOOSE_ALLOWLIST: 'Allow List',
-  GOOSE_RECIPE_GITHUB_REPO: 'Recipe GitHub Repo',
+  // lumina settings
+  LUMINA_PROVIDER: 'Provider',
+  LUMINA_MODEL: 'Model',
+  LUMINA_TEMPERATURE: 'Temperature',
+  LUMINA_MODE: 'Mode',
+  LUMINA_PLANNER_PROVIDER: 'Planner Provider',
+  LUMINA_PLANNER_MODEL: 'Planner Model',
+  LUMINA_TOOLSHIM: 'Tool Shim',
+  LUMINA_TOOLSHIM_OLLAMA_MODEL: 'Tool Shim Ollama Model',
+  LUMINA_CLI_MIN_PRIORITY: 'CLI Min Priority',
+  LUMINA_ALLOWLIST: 'Allow List',
+  LUMINA_RECIPE_GITHUB_REPO: 'Recipe GitHub Repo',
 
   // security settings
   SECURITY_PROMPT_ENABLED: 'Prompt Injection Detection Enabled',

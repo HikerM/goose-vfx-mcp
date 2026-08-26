@@ -1,26 +1,26 @@
 ---
 title: PostgreSQL Extension
-description: Add PostgreSQL MCP Server as a goose Extension
+description: Add PostgreSQL MCP Server as a lumina Extension
 unlisted: true
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/PZlYQ5IthYM" />
 
 Server archived
 
-The PostgreSQL MCP Server extension allows goose to interact directly with your PostgreSQL databases, enabling database operations, querying, and schema management capabilities. This makes it easy to work with your databases through natural language interactions.
+The PostgreSQL MCP Server extension allows lumina to interact directly with your PostgreSQL databases, enabling database operations, querying, and schema management capabilities. This makes it easy to work with your databases through natural language interactions.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=npx&arg=-y&arg=@modelcontextprotocol/server-postgres&arg=Your%20PostgreSQL%20connection%20URL&id=postgres&name=PostgreSQL&description=PostgreSQL%20database%20integration)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=npx&arg=-y&arg=@modelcontextprotocol/server-postgres&arg=Your%20PostgreSQL%20connection%20URL&id=postgres&name=PostgreSQL&description=PostgreSQL%20database%20integration)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
   npx -y @modelcontextprotocol/server-postgres postgresql://localhost/mydb
@@ -63,8 +63,8 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaDesktopInstaller
     extensionId="postgres"
     extensionName="PostgreSQL"
     description="PostgreSQL database integration"
@@ -77,51 +77,51 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
   :::
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to add a `Command-line Extension`
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◆  What type of extension would you like to add?
-    │  ○ Built-in Extension 
-    // highlight-start    
+    │  ○ Built-in Extension
+    // highlight-start
     │  ● Command-line Extension (Run a local command or script)
     // highlight-end
-    │  ○ Remote Extension (Streamable HTTP) 
-    └ 
+    │  ○ Remote Extension (Streamable HTTP)
+    └
   ```
 
   3. Name your extension
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     // highlight-start
     ◆  What would you like to call this extension?
     │  PostgreSQL
     // highlight-end
-    └ 
+    └
   ```
 
   4. Enter the command with your database connection URL
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What would you like to call this extension?
     │  PostgreSQL
@@ -130,15 +130,15 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  What command should be run?
     │  npx -y @modelcontextprotocol/server-postgres postgresql://localhost/mydb
     // highlight-end
-    └ 
-  ```  
+    └
+  ```
 
   5. Set the timeout (default 300s is usually sufficient)
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What would you like to call this extension?
     │  PostgreSQL
@@ -150,15 +150,15 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  Please set the timeout for this tool (in secs):
     │  300
     // highlight-end
-    └ 
+    └
   ```
 
   6. Choose to add a description. If you select "Yes" here, you will be prompted to enter a description for the extension.
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What would you like to call this extension?
     │  PostgreSQL
@@ -173,34 +173,34 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  Would you like to add a description?
     │  No
     // highlight-end
-    └ 
+    └
   ```
 
   7. Configure your PostgreSQL connection URL
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What would you like to call this extension?
     │  PostgreSQL
     │
     ◇  What command should be run?
     │  npx -y @modelcontextprotocol/server-postgres postgresql://localhost/mydb
-    │     
+    │
     ◇  Please set the timeout for this tool (in secs):
     │  300
     │
     ◇  Would you like to add a description?
     │  No
-    │    
+    │
     // highlight-start
     ◆  Would you like to add environment variables?
-    │  No 
+    │  No
     // highlight-end
     └  Added PostgreSQL extension
-  ```  
+  ```
 
   </TabItem>
 </Tabs>
@@ -209,14 +209,14 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 
 The PostgreSQL extension enables you to query and analyze data or give you information about the table structures. The extension is only capable of *read-only* operations, so you can use it to get information about your database, but not to modify it.
 
-Just describe what you want to do in natural language, and goose will help you accomplish it using the appropriate SQL commands and PostgreSQL features.
+Just describe what you want to do in natural language, and lumina will help you accomplish it using the appropriate SQL commands and PostgreSQL features.
 
-#### goose Prompt
+#### lumina Prompt
 ```
 Search my database for any students whose current GPA is higher than the average in their current grade level. Tell me their name, grade, and how much they exceed their grade’s average GPA, and the average GPA.
 ```
 
-#### goose Output
+#### lumina Output
 ```
 Based on the query results, here are the students who are performing above their grade level average:
 

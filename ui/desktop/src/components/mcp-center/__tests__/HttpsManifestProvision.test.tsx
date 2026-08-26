@@ -7,7 +7,7 @@ import type {
   McpHttpsManifestConfirmResult,
   McpHttpsProvisionPlanReview,
 } from '../../../acp/mcp-platform';
-import type { McpTaskRef } from '@aaif/goose-sdk';
+import type { McpTaskRef } from '@hikerm/lumina-sdk';
 import { HttpsManifestProvision } from '../HttpsManifestProvision';
 import {
   confirmHttpsMcpManifest,

@@ -137,16 +137,16 @@ jobs:
             FEATURE_ARGS=(--features vulkan)
           fi
 
-          cargo build --release --target ${TARGET} -p goose-cli --bin goose "${FEATURE_ARGS[@]}"
+          cargo build --release --target ${TARGET} -p lumina-cli --bin lumina "${FEATURE_ARGS[@]}"
 
       - name: Copy backend binary into Electron folder
         run: |
           echo "Copying backend binary to ui/desktop/src/bin/"
           export TARGET="x86_64-unknown-linux-gnu"
           mkdir -p ui/desktop/src/bin
-          rm -f ui/desktop/src/bin/goose
-          cp target/$TARGET/release/goose ui/desktop/src/bin/
-          chmod +x ui/desktop/src/bin/goose
+          rm -f ui/desktop/src/bin/lumina
+          cp target/$TARGET/release/lumina ui/desktop/src/bin/
+          chmod +x ui/desktop/src/bin/lumina
           ls -la ui/desktop/src/bin/
 
       - name: Free Rust build artifacts before packaging
@@ -174,7 +174,7 @@ jobs:
 
       - name: Build Linux packages
         env:
-          GOOSE_DESKTOP_LINUX_VARIANT: ${{ matrix.variant }}
+          LUMINA_DESKTOP_LINUX_VARIANT: ${{ matrix.variant }}
         run: |
           source ./bin/activate-hermit
           cd ui/desktop
@@ -219,7 +219,7 @@ jobs:
         if: matrix.variant == 'standard'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: Goose-linux-x64-deb
+          name: Lumina-linux-x64-deb
           path: ui/desktop/out/make/deb/x64/*.deb
           if-no-files-found: error
 
@@ -227,7 +227,7 @@ jobs:
         if: matrix.variant == 'vulkan'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: Goose-linux-x64-vulkan-deb
+          name: Lumina-linux-x64-vulkan-deb
           path: ui/desktop/out/make/deb/x64/*-vulkan.deb
           if-no-files-found: error
 
@@ -235,7 +235,7 @@ jobs:
         if: matrix.variant == 'standard'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: Goose-linux-x64-rpm
+          name: Lumina-linux-x64-rpm
           path: ui/desktop/out/make/rpm/x64/*.rpm
           if-no-files-found: error
 
@@ -243,7 +243,7 @@ jobs:
         if: matrix.variant == 'vulkan'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: Goose-linux-x64-vulkan-rpm
+          name: Lumina-linux-x64-vulkan-rpm
           path: ui/desktop/out/make/rpm/x64/*-vulkan.rpm
           if-no-files-found: error
 
@@ -251,7 +251,7 @@ jobs:
         if: matrix.variant == 'standard'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: Goose-linux-x64-flatpak
+          name: Lumina-linux-x64-flatpak
           path: ui/desktop/out/make/flatpak/x86_64/*.flatpak
           if-no-files-found: error
 
@@ -259,6 +259,6 @@ jobs:
         if: matrix.variant == 'vulkan'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: Goose-linux-x64-vulkan-flatpak
+          name: Lumina-linux-x64-vulkan-flatpak
           path: ui/desktop/out/make/flatpak/x86_64/*-vulkan.flatpak
           if-no-files-found: error

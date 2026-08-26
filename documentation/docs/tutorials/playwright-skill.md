@@ -1,11 +1,11 @@
 ---
 title: Agentic Testing with Playwright CLI Skill
-description: Use goose with the Playwright CLI to generate automated tests using natural language
+description: Use lumina with the Playwright CLI to generate automated tests using natural language
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import GooseBuiltinInstaller from '@site/src/components/GooseBuiltinInstaller';
+import LuminaBuiltinInstaller from '@site/src/components/LuminaBuiltinInstaller';
 
 <iframe
   class="aspect-ratio"
@@ -17,11 +17,11 @@ import GooseBuiltinInstaller from '@site/src/components/GooseBuiltinInstaller';
   allowFullScreen
 ></iframe>
 
-With the [Playwright CLI](https://github.com/microsoft/playwright-cli), goose can navigate websites, click buttons, fill forms, and turn those interactions into Playwright tests, all from natural language. Unlike the Playwright MCP, which sends the full page structure to the LLM on every request, Playwright CLI stores the accessibility tree locally. That means faster responses, lower costs, and no issues with large pages.
+With the [Playwright CLI](https://github.com/microsoft/playwright-cli), lumina can navigate websites, click buttons, fill forms, and turn those interactions into Playwright tests, all from natural language. Unlike the Playwright MCP, which sends the full page structure to the LLM on every request, Playwright CLI stores the accessibility tree locally. That means faster responses, lower costs, and no issues with large pages.
 
 ## Why as a Skill?
 
-LLMs may not be trained on Playwright's CLI, so when asking an agent to use it, it may hallucinate commands and arguments resulting in errors and wasted tokens. The [Playwright CLI Skill](https://github.com/microsoft/playwright-cli/blob/main/skills/playwright-cli/SKILL.md) teaches goose how to use the CLI and when to invoke specific commands.
+LLMs may not be trained on Playwright's CLI, so when asking an agent to use it, it may hallucinate commands and arguments resulting in errors and wasted tokens. The [Playwright CLI Skill](https://github.com/microsoft/playwright-cli/blob/main/skills/playwright-cli/SKILL.md) teaches lumina how to use the CLI and when to invoke specific commands.
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ npx skills add https://github.com/microsoft/playwright-cli --skill playwright-cl
 
 2. Enter `y` when asked to install the skills package
 
-3. Choose `goose` when asked which agent to install to
+3. Choose `lumina` when asked which agent to install to
 
 4. Choose `Global` scope to be able to use the skill in any project, or `Local` to only have access within the current working directory
 
@@ -53,30 +53,30 @@ npx skills add https://github.com/microsoft/playwright-cli --skill playwright-cl
 6. You'll get a confirmation of the installation, choose `Yes` to proceed
 
 ### Enable Summon Extension
-In goose, enable the [Summon extension](/docs/mcp/summon-mcp) to load Agent Skills within sessions.
+In lumina, enable the [Summon extension](/docs/mcp/summon-mcp) to load Agent Skills within sessions.
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseBuiltinInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaBuiltinInstaller
     extensionName="Summon"
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to `Toggle Extensions`
   ```sh
-  ┌   goose-configure 
+  ┌   lumina-configure
   │
   ◇  What would you like to configure?
-  │  Toggle Extensions 
+  │  Toggle Extensions
   │
   ◆  Enable extensions: (use "space" to toggle and "enter" to submit)
-  // highlight-start    
+  // highlight-start
   │  ● summon
   // highlight-end
   |
@@ -88,10 +88,10 @@ In goose, enable the [Summon extension](/docs/mcp/summon-mcp) to load Agent Skil
 
 ## Generate a Test with Video and Traces
 
-Give goose a single prompt that describes what you want to test:
+Give lumina a single prompt that describes what you want to test:
 
 ```
-Using the Playwright CLI skill, open goose-docs.ai, click on the Docs menu, click on Context Engineering, 
+Using the Playwright CLI skill, open hikerm.github.io/lumina, click on the Docs menu, click on Context Engineering,
 then click on Using Skills and generate a test with video and traces
 ```
 
@@ -109,9 +109,9 @@ executes the following Playwright code:
 await page.getByRole('link', { name: 'Docs' }).click();
 ```
 
-### What goose does
+### What lumina does
 
-1. Opens the browser: `playwright-cli open goose-docs.ai`
+1. Opens the browser: `playwright-cli open hikerm.github.io/lumina`
 2. Starts recording: `playwright-cli video-start` and `playwright-cli tracing-start`
 3. Takes snapshots to find elements: `playwright-cli snapshot`
 4. Performs clicks: `playwright-cli click <ref>`
@@ -134,18 +134,18 @@ The generated test might look like:
 import { test, expect } from '@playwright/test';
 
 test('navigate to Using Skills guide via docs menu', async ({ page }) => {
-  await page.goto('https://goose-docs.ai');
-  await expect(page).toHaveTitle(/goose/);
-  
+  await page.goto('https://hikerm.github.io/lumina');
+  await expect(page).toHaveTitle(/lumina/);
+
   // Click on Docs in the navigation
   await page.getByRole('link', { name: 'Docs' }).click();
-  
+
   // Expand Context Engineering category
   await page.getByRole('button', { name: 'Expand sidebar category \'Context Engineering\'' }).click();
-  
+
   // Click on Using Skills
   await page.getByRole('link', { name: 'Using Skills' }).click();
-  
+
   // Verify navigation
   await expect(page).toHaveURL(/using-skills/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Using Skills');
@@ -154,21 +154,21 @@ test('navigate to Using Skills guide via docs menu', async ({ page }) => {
 
 ### Running the Test
 
-goose can even run the test for you to make sure it works as expected. If Playwright is already set up, just ask it to run the test. If not, goose can install Playwright for you and then run the test.
+lumina can even run the test for you to make sure it works as expected. If Playwright is already set up, just ask it to run the test. If not, lumina can install Playwright for you and then run the test.
 
 ## Viewing the Video
 
-To see a video of what happened, prompt goose:
+To see a video of what happened, prompt lumina:
 
 ```
 Show me the video
 ```
 
-goose will use the CLI to open the recorded video, so you can see exactly what happened during the session.
+lumina will use the CLI to open the recorded video, so you can see exactly what happened during the session.
 
 ## Viewing the Trace
 
-To debug or review what happened, prompt goose:
+To debug or review what happened, prompt lumina:
 
 ```
 Open the trace
@@ -183,17 +183,17 @@ The trace viewer shows:
 
 ## Visual Dashboard for Multiple Sessions
 
-When you have goose running several browser tasks at once, it can be hard to keep track of what's happening. The visual dashboard gives you a bird's eye view of all your active browser sessions, letting you watch progress in real time or jump in and take control when needed.
+When you have lumina running several browser tasks at once, it can be hard to keep track of what's happening. The visual dashboard gives you a bird's eye view of all your active browser sessions, letting you watch progress in real time or jump in and take control when needed.
 
 ```
 Show playwright dashboard
 ```
 
-From here you can see live previews of every browser goose is controlling. Click into any session to watch it full-size, or take over the mouse and keyboard yourself if goose needs a hand. Press `Escape` when you're done and goose picks up right where you left off.
+From here you can see live previews of every browser lumina is controlling. Click into any session to watch it full-size, or take over the mouse and keyboard yourself if lumina needs a hand. Press `Escape` when you're done and lumina picks up right where you left off.
 
 ## Full Capabilities
 
-Want to know what else the Playwright skill can do? Ask goose:
+Want to know what else the Playwright skill can do? Ask lumina:
 
 ```
 What else can you do with the Playwright skill?
@@ -220,10 +220,10 @@ What else can you do with the Playwright skill?
 
 ## Conclusion
 
-Getting started with the Playwright CLI agent skill is easy and opens up powerful browser automation capabilities directly from natural language prompts. Whether you're generating tests, debugging with videos and traces, or automating complex interactions, the Playwright CLI agent skill provides a token-efficient way to leverage Playwright's full power with goose.
+Getting started with the Playwright CLI agent skill is easy and opens up powerful browser automation capabilities directly from natural language prompts. Whether you're generating tests, debugging with videos and traces, or automating complex interactions, the Playwright CLI agent skill provides a token-efficient way to leverage Playwright's full power with lumina.
 
 ## Resources
 
 - [Summon Extension Documentation](/docs/mcp/summon-mcp)
-- [Using Skills Guide](/docs/guides/context-engineering/using-skills) - Learn how to create and use skills with goose
+- [Using Skills Guide](/docs/guides/context-engineering/using-skills) - Learn how to create and use skills with lumina
 - [Playwright CLI GitHub](https://github.com/microsoft/playwright-cli)

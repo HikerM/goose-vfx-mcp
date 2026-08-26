@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { IntlShape } from 'react-intl';
-import type { McpPlanReview, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpPlanReview, McpTaskRef } from '@hikerm/lumina-sdk';
 import type { McpHttpsProvisionPlanReview } from '../../acp/mcp-platform';
 import {
   Dialog,

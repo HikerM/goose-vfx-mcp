@@ -22,7 +22,7 @@ Code Mode controls how tools are discovered and called:
 
 ## How Code Mode Works
 
-The [Code Mode extension](/docs/mcp/code-mode-mcp) is an MCP server that uses the MCP protocol to expose three foundational meta-tools. When Code Mode is enabled, goose switches to Code Mode. For every request, the LLM writes JavaScript code that goose executes using [pctx (Port of Context)](https://portofcontext.com/) ([GitHub](https://github.com/portofcontext/pctx)), a custom Deno-based runtime, to:
+The [Code Mode extension](/docs/mcp/code-mode-mcp) is an MCP server that uses the MCP protocol to expose three foundational meta-tools. When Code Mode is enabled, lumina switches to Code Mode. For every request, the LLM writes JavaScript code that lumina executes using [pctx (Port of Context)](https://portofcontext.com/) ([GitHub](https://github.com/portofcontext/pctx)), a custom Deno-based runtime, to:
 
 - Discover available tools from your enabled extensions (if needed)
 - Learn how to work with the tools it needs for the current task
@@ -30,7 +30,7 @@ The [Code Mode extension](/docs/mcp/code-mode-mcp) is an MCP server that uses th
 
 ### Traditional vs. Code Mode Tool Calling
 
-Traditional MCP tool calling and Code Mode are two different approaches to the same goal: giving goose access to tools.
+Traditional MCP tool calling and Code Mode are two different approaches to the same goal: giving lumina access to tools.
 
 | Aspect | Traditional | Code Mode |
 |--------|------------------|-----------|
@@ -46,7 +46,7 @@ Code Mode only supports text content from tool results. Images, binary data, and
 ## Additional Resources
 
 import ContentCardCarousel from '@site/src/components/ContentCardCarousel';
-import gooseCodeMode from '@site/blog/2025-12-15-code-mode-mcp/header-image.jpg';
+import luminaCodeMode from '@site/blog/2025-12-15-code-mode-mcp/header-image.jpg';
 import notMcpReplacement from '@site/blog/2025-12-21-code-mode-doesnt-replace-mcp/header-image.png';
 
 <ContentCardCarousel
@@ -55,7 +55,7 @@ import notMcpReplacement from '@site/blog/2025-12-21-code-mode-doesnt-replace-mc
       type: 'blog',
       title: 'Code Mode for MCP',
       description: 'Learn about the code execution approach to MCP tool calling.',
-      thumbnailUrl: gooseCodeMode,
+      thumbnailUrl: luminaCodeMode,
       linkUrl: '/blog/2025/12/15/code-mode-mcp',
       date: '2025-12-15',
       duration: '5 min read'

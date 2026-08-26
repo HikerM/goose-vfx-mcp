@@ -19,7 +19,7 @@ export interface AdapterState {
   localSteerTextByMessageId: Map<string, string>;
 }
 
-export interface GooseMessageMeta {
+export interface LuminaMessageMeta {
   messageId?: string;
   created?: number;
   steer?: boolean;
@@ -47,35 +47,35 @@ export function cloneMessage(message: Message): Message {
   };
 }
 
-export function getGooseMessageMeta(update: { _meta?: unknown }): GooseMessageMeta {
+export function getLuminaMessageMeta(update: { _meta?: unknown }): LuminaMessageMeta {
   if (!isRecord(update._meta)) {
     return {};
   }
 
-  const goose = update._meta.goose;
-  if (!isRecord(goose)) {
+  const lumina = update._meta.lumina;
+  if (!isRecord(lumina)) {
     return {};
   }
 
   return {
-    created: typeof goose.created === 'number' ? goose.created : undefined,
-    messageId: typeof goose.messageId === 'string' ? goose.messageId : undefined,
-    steer: goose.steer === true ? true : undefined,
+    created: typeof lumina.created === 'number' ? lumina.created : undefined,
+    messageId: typeof lumina.messageId === 'string' ? lumina.messageId : undefined,
+    steer: lumina.steer === true ? true : undefined,
   };
 }
 
-export function getGooseActiveRunId(update: { _meta?: unknown }): string | null | undefined {
+export function getLuminaActiveRunId(update: { _meta?: unknown }): string | null | undefined {
   if (!isRecord(update._meta)) {
     return undefined;
   }
 
-  const goose = update._meta.goose;
-  if (!isRecord(goose) || !('activeRunId' in goose)) {
+  const lumina = update._meta.lumina;
+  if (!isRecord(lumina) || !('activeRunId' in lumina)) {
     return undefined;
   }
 
-  return typeof goose.activeRunId === 'string' || goose.activeRunId === null
-    ? goose.activeRunId
+  return typeof lumina.activeRunId === 'string' || lumina.activeRunId === null
+    ? lumina.activeRunId
     : undefined;
 }
 
@@ -88,15 +88,15 @@ export function toolIdentity(update: ToolCall | ToolCallUpdate): ToolIdentity {
     return {};
   }
 
-  const goose = update._meta.goose;
-  if (!isRecord(goose) || !isRecord(goose.toolCall)) {
+  const lumina = update._meta.lumina;
+  if (!isRecord(lumina) || !isRecord(lumina.toolCall)) {
     return {};
   }
 
   return {
-    toolName: typeof goose.toolCall.toolName === 'string' ? goose.toolCall.toolName : undefined,
+    toolName: typeof lumina.toolCall.toolName === 'string' ? lumina.toolCall.toolName : undefined,
     extensionName:
-      typeof goose.toolCall.extensionName === 'string' ? goose.toolCall.extensionName : undefined,
+      typeof lumina.toolCall.extensionName === 'string' ? lumina.toolCall.extensionName : undefined,
   };
 }
 

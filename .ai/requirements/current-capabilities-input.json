@@ -1,0 +1,328 @@
+{
+  "capabilities": [
+    {
+      "id": "CAP-001",
+      "statement": "Lumina can persist multiple provider configurations, select an active provider/model, manage custom providers through ACP, and switch the provider/model used by an active session.",
+      "confidence": "observed",
+      "evidence": [
+        "crates/lumina/src/config/providers.rs",
+        "ui/desktop/src/acp/providers.ts",
+        "crates/lumina/tests/acp_custom_provider_methods_test.rs",
+        "crates/lumina/tests/acp_custom_requests_test.rs"
+      ],
+      "modules": [
+        "crates/lumina/src/config",
+        "crates/lumina/src/acp",
+        "crates/lumina-providers",
+        "ui/desktop/src/acp"
+      ],
+      "apis": [
+        "lumina.providersConfigSave_unstable",
+        "lumina.providersCustomCreate_unstable",
+        "setSessionConfigOption"
+      ],
+      "data": [
+        "config.yaml providers",
+        "provider secrets"
+      ],
+      "tests": [
+        "acp_custom_provider_methods_test",
+        "acp_custom_requests_test"
+      ]
+    },
+    {
+      "id": "CAP-002",
+      "statement": "Lumina creates, lists, reloads, and updates persistent sessions, including working directory, messages, provider/model state, and Lumina execution mode.",
+      "confidence": "observed",
+      "evidence": [
+        "crates/lumina/src/session/session_manager.rs",
+        "crates/lumina/tests/acp_server_test.rs",
+        "crates/lumina/tests/acp_custom_requests_test.rs"
+      ],
+      "modules": [
+        "crates/lumina/src/session",
+        "crates/lumina/src/acp",
+        "ui/desktop/src"
+      ],
+      "apis": [
+        "session/new",
+        "session/load",
+        "session/list",
+        "setSessionConfigOption"
+      ],
+      "data": [
+        "sessions/sessions.db",
+        "sessions",
+        "messages"
+      ],
+      "tests": [
+        "acp_server_test",
+        "acp_custom_requests_test"
+      ]
+    },
+    {
+      "id": "CAP-003",
+      "statement": "Lumina opens a complete project directory, persists work items, runs, steps, checkpoints, and change sets, associates runs with sessions, and recovers interrupted work after restart.",
+      "confidence": "observed",
+      "evidence": [
+        "crates/lumina/src/project/service.rs",
+        "crates/lumina/tests/project_workspace.rs",
+        "ui/desktop/src/acp/__tests__/projects.test.ts"
+      ],
+      "modules": [
+        "crates/lumina/src/project",
+        "crates/lumina/src/acp",
+        "ui/desktop/src/acp"
+      ],
+      "apis": [
+        "_lumina/project/open",
+        "_lumina/project/snapshot",
+        "_lumina/project/runs/start"
+      ],
+      "data": [
+        "projects",
+        "project_work_items",
+        "project_runs",
+        "project_checkpoints"
+      ],
+      "tests": [
+        "project_workspace",
+        "projects.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-004",
+      "statement": "The legacy migrator copies legacy configuration, desktop settings, and session databases into a Lumina target without modifying the source and converts legacy session fields and links.",
+      "confidence": "observed-with-known-version-gap",
+      "evidence": [
+        "crates/lumina-legacy-migrator/src/lib.rs",
+        "crates/lumina-legacy-migrator/src/sqlite.rs",
+        "crates/lumina-legacy-migrator/tests/migration.rs"
+      ],
+      "modules": [
+        "crates/lumina-legacy-migrator"
+      ],
+      "apis": [
+        "lumina_legacy_migrator::migrate"
+      ],
+      "data": [
+        "legacy config",
+        "legacy sessions database",
+        "migration report"
+      ],
+      "tests": [
+        "migration"
+      ]
+    },
+    {
+      "id": "CAP-005",
+      "statement": "Lumina includes local model discovery, download, registration, configuration and local inference paths, including native and emulated tool parsing.",
+      "confidence": "observed-with-project-execution-gap",
+      "evidence": [
+        "crates/lumina-local-inference/src/management.rs",
+        "crates/lumina-local-inference/src/backend.rs",
+        "crates/lumina-local-inference/src/local_model_registry.rs",
+        "ui/desktop/src/components/settings/localInference/LocalInferenceSettings.tsx"
+      ],
+      "modules": [
+        "crates/lumina-local-inference",
+        "crates/lumina-providers/src/local_inference.rs",
+        "ui/desktop/src/components/settings/localInference"
+      ],
+      "apis": [
+        "local inference ACP methods",
+        "local model registry"
+      ],
+      "data": [
+        "local model registry",
+        "downloaded model artifacts",
+        "local inference configuration"
+      ],
+      "tests": [
+        "local inference unit tests",
+        "desktop local inference tests"
+      ]
+    },
+    {
+      "id": "CAP-006",
+      "statement": "Lumina provides MCP platform contracts and a desktop MCP center for discovery, managed entries, profiles, manual configuration and source policy.",
+      "confidence": "observed-with-managed-install-gap",
+      "evidence": [
+        "crates/lumina/src/mcp_platform/mod.rs",
+        "crates/lumina-sdk-types/src/custom_requests/mcp_platform.rs",
+        "ui/desktop/src/components/mcp-center/McpCenterView.tsx",
+        "ui/desktop/src/components/mcp-center/__tests__/SecurityBoundaries.test.tsx"
+      ],
+      "modules": [
+        "crates/lumina/src/mcp_platform",
+        "crates/lumina-mcp",
+        "ui/desktop/src/components/mcp-center"
+      ],
+      "apis": [
+        "Lumina MCP platform methods",
+        "MCP stdio transport"
+      ],
+      "data": [
+        "MCP catalog",
+        "MCP profiles",
+        "MCP source policy"
+      ],
+      "tests": [
+        "MCP center component tests",
+        "MCP integration tests"
+      ]
+    },
+    {
+      "id": "CAP-007",
+      "statement": "Lumina's Windows installer supports a custom program directory, in-place upgrade, separated governed data storage and retained upgrade backups.",
+      "confidence": "observed",
+      "evidence": [
+        "ui/desktop/installer/INSTALL_UPGRADE.md",
+        "ui/desktop/src/__tests__/windowsInstallerPolicy.test.ts",
+        "ui/desktop/src/utils/storageRootPolicy.ts"
+      ],
+      "modules": [
+        "ui/desktop/installer",
+        "ui/desktop/src/utils/storageRootPolicy.ts"
+      ],
+      "apis": [
+        "Windows installer",
+        "LUMINA_PATH_ROOT"
+      ],
+      "data": [
+        "governed Lumina data root",
+        "versioned upgrade backup"
+      ],
+      "tests": [
+        "windowsInstallerPolicy.test.ts",
+        "storage root policy tests"
+      ]
+    },
+    {
+      "id": "CAP-008",
+      "statement": "Lumina exposes session tool discovery and tool permission configuration through its desktop ACP adapter.",
+      "confidence": "observed-with-policy-unification-gap",
+      "evidence": [
+        "ui/desktop/src/acp/permissions.ts",
+        "ui/desktop/src/acp/permissionRequests.ts",
+        "crates/lumina-provider-types/src/permission.rs"
+      ],
+      "modules": [
+        "ui/desktop/src/acp",
+        "crates/lumina-provider-types"
+      ],
+      "apis": [
+        "lumina.toolsList_unstable",
+        "lumina.toolsPermissionsSet_unstable"
+      ],
+      "data": [
+        "tool permission entries"
+      ],
+      "tests": [
+        "permissionRequests.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-009",
+      "statement": "Lumina has a react-intl localization layer and a Simplified Chinese message catalog, but currently falls back to English when no locale or catalog is available.",
+      "confidence": "observed-conflict",
+      "evidence": [
+        "ui/desktop/src/i18n/index.ts",
+        "ui/desktop/src/i18n/messages/zh-CN.json",
+        "ui/desktop/src/i18n/i18n.test.ts"
+      ],
+      "modules": [
+        "ui/desktop/src/i18n",
+        "ui/desktop/src/components",
+        "ui/desktop/installer"
+      ],
+      "apis": [
+        "getLocale",
+        "loadMessages"
+      ],
+      "data": [
+        "compiled locale catalogs"
+      ],
+      "tests": [
+        "i18n.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-010",
+      "statement": "Lumina contains an evidence database with schemas, projections, path guards and versioned storage primitives.",
+      "confidence": "observed-with-enterprise-audit-gap",
+      "evidence": [
+        "crates/lumina-evidence-db/src/schema.rs",
+        "crates/lumina-evidence-db/src/store.rs",
+        "crates/lumina-evidence-db/src/path_guard.rs",
+        "crates/lumina-evidence-db/src/v2/store.rs"
+      ],
+      "modules": [
+        "crates/lumina-evidence-db"
+      ],
+      "apis": [
+        "evidence store"
+      ],
+      "data": [
+        "evidence records",
+        "evidence projections"
+      ],
+      "tests": [
+        "lumina-evidence-db tests"
+      ]
+    },
+    {
+      "id": "CAP-011",
+      "statement": "Lumina exposes desktop views for Skills and Extensions and retains extension configuration paths.",
+      "confidence": "observed-with-supply-chain-gap",
+      "evidence": [
+        "ui/desktop/src/components/skills/SkillsView.tsx",
+        "ui/desktop/src/components/extensions/ExtensionsView.tsx",
+        "ui/desktop/src/acp/extensions.ts"
+      ],
+      "modules": [
+        "ui/desktop/src/components/skills",
+        "ui/desktop/src/components/extensions",
+        "ui/desktop/src/acp/extensions.ts"
+      ],
+      "apis": [
+        "extension ACP methods"
+      ],
+      "data": [
+        "installed skills",
+        "extension configuration"
+      ],
+      "tests": [
+        "extensions.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-012",
+      "statement": "Lumina contains Windows computer-controller code paths, but product-level browser and desktop control has not yet been proven by end-to-end acceptance evidence.",
+      "confidence": "code-path-only",
+      "evidence": [
+        "crates/lumina-mcp/src/computercontroller/platform/windows.rs",
+        "crates/lumina-mcp/src/computercontroller/mod.rs"
+      ],
+      "modules": [
+        "crates/lumina-mcp/src/computercontroller"
+      ],
+      "apis": [
+        "computer controller tools"
+      ],
+      "data": [
+        "computer interaction requests"
+      ],
+      "tests": []
+    }
+  ],
+  "unknowns": [
+    "The renamed workspace has not yet passed a clean provider, project, and session regression run.",
+    "Real external provider credentials and endpoints are not available for automated live verification.",
+    "The legacy migrator targets session schema version 16 while the Lumina core currently uses version 17.",
+    "Legacy cryptographic evidence and MCP trust records do not yet have a verified re-issuance path into the Lumina trust domain.",
+    "Project-level tool calling by local models has not yet passed a complete multi-file, terminal and validation acceptance scenario.",
+    "Windows computer and browser control has not yet passed a product-level end-to-end acceptance scenario.",
+    "The current English localization fallback conflicts with the Simplified-Chinese-only commercial product requirement."
+  ]
+}

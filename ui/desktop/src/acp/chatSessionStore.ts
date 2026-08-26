@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { GooseSessionNotification_unstable } from '@aaif/goose-sdk';
+import type { LuminaSessionNotification_unstable } from '@hikerm/lumina-sdk';
 import type { RequestPermissionRequest, SessionNotification } from '@agentclientprotocol/sdk';
 import type { TokenState } from '../types/chat';
 import { ChatState } from '../types/chatState';
@@ -57,8 +57,8 @@ export interface AcpChatSessionActions {
   deleteSnapshot(sessionId: string): void;
 
   applyAcpSessionNotification(notification: SessionNotification): AcpChatSessionSnapshot;
-  applyAcpGooseSessionNotification(
-    notification: GooseSessionNotification_unstable
+  applyAcpLuminaSessionNotification(
+    notification: LuminaSessionNotification_unstable
   ): AcpChatSessionSnapshot;
   applyPermissionRequest(request: RequestPermissionRequest): AcpChatSessionSnapshot;
   applyElicitationRequest(request: AcpElicitationRequest): AcpChatSessionSnapshot;
@@ -435,10 +435,10 @@ function createAcpChatSessionStoreInternal(): AcpChatSessionStoreInternal {
     return notify(notification.sessionId, entry);
   };
 
-  const applyAcpGooseSessionNotification: AcpChatSessionActions['applyAcpGooseSessionNotification'] =
+  const applyAcpLuminaSessionNotification: AcpChatSessionActions['applyAcpLuminaSessionNotification'] =
     (notification) => {
       const entry = getOrCreateEntry(notification.sessionId);
-      const changes = entry.adapter.applyGoose(notification);
+      const changes = entry.adapter.applyLumina(notification);
       applyChatStateChanges(entry, changes);
       return notify(notification.sessionId, entry);
     };
@@ -504,7 +504,7 @@ function createAcpChatSessionStoreInternal(): AcpChatSessionStoreInternal {
     clearActivePromptAttempt,
     isCurrentPromptAttempt,
     applyAcpSessionNotification,
-    applyAcpGooseSessionNotification,
+    applyAcpLuminaSessionNotification,
     applyPermissionRequest,
     applyElicitationRequest,
     setElicitationStatus,
@@ -560,7 +560,7 @@ function actionsFromStore(store: AcpChatSessionStoreInternal): AcpChatSessionAct
   return {
     deleteSnapshot: store.deleteSnapshot,
     applyAcpSessionNotification: store.applyAcpSessionNotification,
-    applyAcpGooseSessionNotification: store.applyAcpGooseSessionNotification,
+    applyAcpLuminaSessionNotification: store.applyAcpLuminaSessionNotification,
     applyPermissionRequest: store.applyPermissionRequest,
     applyElicitationRequest: store.applyElicitationRequest,
     setElicitationStatus: store.setElicitationStatus,

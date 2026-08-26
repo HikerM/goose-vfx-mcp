@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "decisions": [
+    {
+      "id": "DEC-LUMINA-001",
+      "status": "LOCKED",
+      "content": "Keep standard MCP and ACP wire compatibility and preserve vendor-owned provider IDs, model IDs, OAuth identifiers, API paths, and endpoint hostnames; isolate legacy product compatibility in a separate optional importer that is not linked into the primary Lumina executable.",
+      "reason": "Commercial independence must not break provider interoperability or leak legacy protocol and trust-domain code into the primary runtime.",
+      "created_at": "2026-08-19T10:33:30+00:00",
+      "superseded_by": null
+    },
+    {
+      "id": "DEC-LUMINA-002",
+      "status": "LOCKED",
+      "content": "Never mutate a legacy source database in place. Import through staging, verify integrity and schema compatibility, upgrade the staged copy to the current Lumina schema, then atomically activate it while retaining the source and a migration report.",
+      "reason": "Projects and sessions must survive upgrade, interruption, rollback, and custom installation paths without data loss.",
+      "created_at": "2026-08-19T10:33:47+00:00",
+      "superseded_by": null
+    }
+  ]
+}

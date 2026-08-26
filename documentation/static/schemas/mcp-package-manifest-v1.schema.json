@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://goose.ai/schemas/mcp-package-manifest-v1.schema.json",
-  "title": "goose MCP Package Manifest v1",
+  "$id": "https://hikerm.github.io/lumina/schemas/mcp-package-manifest-v1.schema.json",
+  "title": "lumina MCP Package Manifest v1",
   "description": "Declarative, non-executable metadata for registering or installing an MCP package.",
   "type": "object",
   "additionalProperties": false,

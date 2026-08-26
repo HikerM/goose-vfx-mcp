@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { McpManagedSummary } from '@aaif/goose-sdk';
+import type { McpManagedSummary } from '@hikerm/lumina-sdk';
 import { Archive, FileStack, PencilLine, RefreshCw, Sparkles, Wand2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';

@@ -1,18 +1,18 @@
-# @aaif/goose-sdk
+# @hikerm/lumina-sdk
 
-TypeScript client library for the Goose Agent Client Protocol (ACP).
+TypeScript client library for the Lumina Agent Client Protocol (ACP).
 
 This package provides:
-- TypeScript types and Zod validators for Goose ACP extension methods
-- A client for communicating with the Goose ACP server
+- TypeScript types and Zod validators for Lumina ACP extension methods
+- A client for communicating with the Lumina ACP server
 
 ## Installation
 
 ```bash
-npm install @aaif/goose-sdk
+npm install @hikerm/lumina-sdk
 ```
 
-The native `goose` binaries are distributed as optional dependencies
+The native `lumina` binaries are distributed as optional dependencies
 and will be automatically installed for your platform.
 
 ## Development
@@ -44,7 +44,7 @@ npm run build:native:all
 
 ### Local Development with npm link
 
-To use this package locally in another project (e.g., `@aaif/goose`):
+To use this package locally in another project (e.g., `@hikerm/lumina`):
 
 ```bash
 # In ui/sdk
@@ -52,12 +52,12 @@ npm run build
 npm link
 
 # In ui/text (or another project)
-npm link @aaif/goose-sdk
+npm link @hikerm/lumina-sdk
 ```
 
 ### Schema Generation
 
-The TypeScript types are generated from Rust schemas defined in `crates/goose`.
+The TypeScript types are generated from Rust schemas defined in `crates/lumina`.
 The build process:
 
 1. Builds the `generate-acp-schema` Rust binary
@@ -73,18 +73,18 @@ npm run build:schema
 
 ## Native Binary Packages
 
-Platform-specific npm packages for the `goose` binary are located in
-`ui/goose-binary/`:
+Platform-specific npm packages for the `lumina` binary are located in
+`ui/lumina-binary/`:
 
 | Package | Platform |
 |---------|----------|
-| `@aaif/goose-binary-darwin-arm64` | macOS Apple Silicon |
-| `@aaif/goose-binary-darwin-x64` | macOS Intel |
-| `@aaif/goose-binary-linux-arm64` | Linux ARM64 |
-| `@aaif/goose-binary-linux-x64` | Linux x64 |
-| `@aaif/goose-binary-win32-x64` | Windows x64 |
+| `@hikerm/lumina-binary-darwin-arm64` | macOS Apple Silicon |
+| `@hikerm/lumina-binary-darwin-x64` | macOS Intel |
+| `@hikerm/lumina-binary-linux-arm64` | Linux ARM64 |
+| `@hikerm/lumina-binary-linux-x64` | Linux x64 |
+| `@hikerm/lumina-binary-win32-x64` | Windows x64 |
 
-These are published separately from `@aaif/goose-sdk`.
+These are published separately from `@hikerm/lumina-sdk`.
 
 ### Building Native Binaries
 
@@ -111,16 +111,16 @@ For manual publishing:
 ```
 
 This will:
-1. Build and publish `@aaif/goose-sdk`
+1. Build and publish `@hikerm/lumina-sdk`
 2. Publish all native binary packages
-3. Publish `@aaif/goose` (which depends on the above)
+3. Publish `@hikerm/lumina` (which depends on the above)
 
 ## Usage
 
 ```typescript
-import { GooseClient } from "@aaif/goose-sdk";
+import { LuminaClient } from "@hikerm/lumina-sdk";
 
-const client = new GooseClient({
+const client = new LuminaClient({
   // ... configuration
 });
 

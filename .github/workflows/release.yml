@@ -137,10 +137,10 @@ jobs:
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373  # v4.1.1
         with:
           subject-path: |
-            goose-*.tar.bz2
-            goose-*.tar.gz
-            goose-*.zip
-            Goose*.zip
+            lumina-*.tar.bz2
+            lumina-*.tar.gz
+            lumina-*.zip
+            Lumina*.zip
             *.deb
             *.rpm
             *.flatpak
@@ -152,10 +152,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: |
-            goose-*.tar.bz2
-            goose-*.tar.gz
-            goose-*.zip
-            Goose*.zip
+            lumina-*.tar.bz2
+            lumina-*.tar.gz
+            lumina-*.zip
+            Lumina*.zip
             *.deb
             *.rpm
             *.flatpak
@@ -172,10 +172,10 @@ jobs:
           name: Stable
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: |
-            goose-*.tar.bz2
-            goose-*.tar.gz
-            goose-*.zip
-            Goose*.zip
+            lumina-*.tar.bz2
+            lumina-*.tar.gz
+            lumina-*.zip
+            Lumina*.zip
             *.deb
             *.rpm
             *.flatpak

@@ -1,5 +1,5 @@
 {
-  description = "goose - An AI agent CLI";
+  description = "lumina - An AI agent CLI";
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
@@ -18,7 +18,7 @@
         rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         
         # Read package metadata from Cargo.toml
-        cargoToml = builtins.fromTOML (builtins.readFile ./crates/goose-cli/Cargo.toml);
+        cargoToml = builtins.fromTOML (builtins.readFile ./crates/lumina-cli/Cargo.toml);
         workspaceToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
         
         commonInputs = [
@@ -82,7 +82,7 @@
           ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin darwinInputs;
 
           # Build only the CLI package
-          cargoBuildFlags = [ "--package" "goose-cli" ];
+          cargoBuildFlags = [ "--package" "lumina-cli" ];
           
           # Enable tests with proper environment
           # Tests need writable HOME and XDG directories for config/cache access
@@ -95,15 +95,15 @@
             export XDG_CACHE_HOME=$HOME/.cache
             mkdir -p $XDG_CONFIG_HOME $XDG_DATA_HOME $XDG_STATE_HOME $XDG_CACHE_HOME
             
-            # Run tests for goose-cli package only
-            cargo test --package goose-cli --release
+            # Run tests for lumina-cli package only
+            cargo test --package lumina-cli --release
           '';
 
           meta = with pkgs.lib; {
             description = workspaceToml.workspace.package.description;
             homepage = workspaceToml.workspace.package.repository;
             license = licenses.asl20;  # Maps from "Apache-2.0" in Cargo.toml
-            mainProgram = "goose";
+            mainProgram = "lumina";
           };
         };
 
@@ -124,14 +124,14 @@
           ]);
           
           shellHook = ''
-            echo "goose development environment"
+            echo "lumina development environment"
             echo "Rust version: $(rustc --version)"
             echo ""
             echo "Commands:"
-            echo "  nix build           - Build goose CLI"
-            echo "  nix run             - Run goose CLI"
-            echo "  cargo build -p goose-cli - Build with cargo"
-            echo "  cargo run -p goose-cli   - Run with cargo"
+            echo "  nix build           - Build lumina CLI"
+            echo "  nix run             - Run lumina CLI"
+            echo "  cargo build -p lumina-cli - Build with cargo"
+            echo "  cargo run -p lumina-cli   - Run with cargo"
           '';
         };
       }

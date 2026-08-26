@@ -30,8 +30,8 @@ const i18n = defineMessages({
     id: 'groupedExtensionLoadingToast.failedToAddExtension',
     defaultMessage: 'Failed to add extension',
   },
-  askGoose: {
-    id: 'groupedExtensionLoadingToast.askGoose',
+  askLumina: {
+    id: 'groupedExtensionLoadingToast.askLumina',
     defaultMessage: 'Ask Lumina',
   },
   copied: {
@@ -173,7 +173,7 @@ export function GroupedExtensionLoadingToast({
                                   );
                                 }}
                               >
-                                {intl.formatMessage(i18n.askGoose)}
+                                {intl.formatMessage(i18n.askLumina)}
                               </Button>
                             )}
                             <Button

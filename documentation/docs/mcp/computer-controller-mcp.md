@@ -1,48 +1,48 @@
 ---
 title: Computer Controller Extension
-description: Use Computer Controller MCP Server as a goose Extension
+description: Use Computer Controller MCP Server as a lumina Extension
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseBuiltinInstaller from '@site/src/components/GooseBuiltinInstaller';
+import LuminaBuiltinInstaller from '@site/src/components/LuminaBuiltinInstaller';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/EuMzToNOQtw" />
 
 The Computer Controller extension helps automate everyday computer tasks and web interactions such as searching the web, controlling system settings, processing data files, and controlling applications without needing to know how to code.
 
-This tutorial covers enabling and using the Computer Controller MCP Server, which is a built-in goose extension.
+This tutorial covers enabling and using the Computer Controller MCP Server, which is a built-in lumina extension.
 
 :::tip
-Let goose complete its tasks without interruption - avoid using your mouse or keyboard until it's done.
+Let lumina complete its tasks without interruption - avoid using your mouse or keyboard until it's done.
 :::
 
 ## Configuration
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseBuiltinInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaBuiltinInstaller
     extensionName="Computer Controller"
     description="Automate everyday computer tasks and web interactions"
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to `Toggle Extensions`
   ```sh
-  ┌   goose-configure 
+  ┌   lumina-configure
   │
   ◇  What would you like to configure?
-  │  Toggle Extensions 
+  │  Toggle Extensions
   │
   ◆  Enable extensions: (use "space" to toggle and "enter" to submit)
-  // highlight-start    
+  // highlight-start
   │  ● computercontroller
   // highlight-end
   |
@@ -53,26 +53,26 @@ Let goose complete its tasks without interruption - avoid using your mouse or ke
 
 ## Example Usage
 
-In this example, I'll show you how goose can multitask, handling everything from system controls and music playback to web research and data organization.
+In this example, I'll show you how lumina can multitask, handling everything from system controls and music playback to web research and data organization.
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-   1. Open a new session in goose Desktop
+  <TabItem value="ui" label="lumina Desktop" default>
+   1. Open a new session in lumina Desktop
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
-  1. Open a terminal and start a new goose session:
+  1. Open a terminal and start a new lumina session:
 
   ```sh
-  goose session
+  lumina session
   ```
 
   </TabItem>
 </Tabs>
 
-### goose Prompt
+### lumina Prompt
 ```
-goose, I need to decompress while researching AI models for tomorrow's meeting. Can you create a relaxing environment and help me research?
+lumina, I need to decompress while researching AI models for tomorrow's meeting. Can you create a relaxing environment and help me research?
 
 1. Play classical music in Safari
 2. Dim screen brightness (2 levels)
@@ -85,7 +85,7 @@ goose, I need to decompress while researching AI models for tomorrow's meeting. 
 6. Reset brightness and close Safari
 ```
 
-### goose Output
+### lumina Output
 ```md
 I'll help you create a relaxing research environment and gather information about AI models. I'll break this down into steps:
 

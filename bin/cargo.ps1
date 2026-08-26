@@ -1,10 +1,8 @@
-param(
-    [switch]$ValidateCmdShim
-)
-
 $ErrorActionPreference = "Stop"
 
-if ($ValidateCmdShim) {
+$validateCmdShim = $args.Count -eq 1 -and $args[0] -eq "-ValidateCmdShim"
+
+if ($validateCmdShim) {
     $current = Get-CimInstance Win32_Process -Filter "ProcessId=$PID"
     $parent = if ($null -ne $current -and $current.ParentProcessId) {
         Get-CimInstance Win32_Process -Filter "ProcessId=$($current.ParentProcessId)"
@@ -21,8 +19,8 @@ if ($ValidateCmdShim) {
     exit 0
 }
 
-. (Join-Path $PSScriptRoot "goose-rust-tools.ps1")
+. (Join-Path $PSScriptRoot "lumina-rust-tools.ps1")
 
-$tools = Initialize-GooseRustEnvironment
+$tools = Initialize-LuminaRustEnvironment
 & $tools.CargoExe @args
 exit $LASTEXITCODE

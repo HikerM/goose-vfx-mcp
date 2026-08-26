@@ -5,7 +5,7 @@ import type {
   RunScheduleNowResponse_unstable,
   ScheduledJobDto,
   SessionInfo,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { getAcpClient } from './acpConnection';
 
 let inFlightListSchedules: Promise<ScheduledJobDto[]> | null = null;
@@ -54,7 +54,7 @@ export async function acpListSchedules(): Promise<ScheduledJobDto[]> {
 
   const listPromise = (async () => {
     const client = await getAcpClient();
-    const response = await client.goose.schedulesList_unstable({});
+    const response = await client.lumina.schedulesList_unstable({});
     return response.jobs;
   })().catch((error) => {
     throw normalizeAcpError(error, 'Failed to list schedules');
@@ -76,7 +76,7 @@ export async function acpCreateSchedule(
 ): Promise<ScheduledJobDto> {
   try {
     const client = await getAcpClient();
-    const response = await client.goose.schedulesCreate_unstable(request);
+    const response = await client.lumina.schedulesCreate_unstable(request);
     clearInFlightScheduleReads();
     return response.job;
   } catch (error) {
@@ -87,7 +87,7 @@ export async function acpCreateSchedule(
 export async function acpDeleteSchedule(scheduleId: string): Promise<void> {
   try {
     const client = await getAcpClient();
-    await client.goose.schedulesDelete_unstable({ scheduleId });
+    await client.lumina.schedulesDelete_unstable({ scheduleId });
     clearInFlightScheduleReads();
   } catch (error) {
     throw normalizeAcpError(error, 'Failed to delete schedule');
@@ -106,7 +106,7 @@ export async function acpListScheduleSessions(
 
   const listPromise = (async () => {
     const client = await getAcpClient();
-    const response = await client.goose.schedulesSessionsList_unstable({ scheduleId, limit });
+    const response = await client.lumina.schedulesSessionsList_unstable({ scheduleId, limit });
     return response.sessions;
   })().catch((error) => {
     throw normalizeAcpError(error, 'Failed to list schedule sessions');
@@ -128,7 +128,7 @@ export async function acpRunScheduleNow(
 ): Promise<RunScheduleNowResponse_unstable> {
   try {
     const client = await getAcpClient();
-    const response = await client.goose.schedulesRunNow_unstable({ scheduleId });
+    const response = await client.lumina.schedulesRunNow_unstable({ scheduleId });
     clearInFlightScheduleReads();
     return response;
   } catch (error) {
@@ -139,7 +139,7 @@ export async function acpRunScheduleNow(
 export async function acpPauseSchedule(scheduleId: string): Promise<void> {
   try {
     const client = await getAcpClient();
-    await client.goose.schedulesPause_unstable({ scheduleId });
+    await client.lumina.schedulesPause_unstable({ scheduleId });
     clearInFlightScheduleReads();
   } catch (error) {
     throw normalizeAcpError(error, 'Failed to pause schedule');
@@ -149,7 +149,7 @@ export async function acpPauseSchedule(scheduleId: string): Promise<void> {
 export async function acpUnpauseSchedule(scheduleId: string): Promise<void> {
   try {
     const client = await getAcpClient();
-    await client.goose.schedulesUnpause_unstable({ scheduleId });
+    await client.lumina.schedulesUnpause_unstable({ scheduleId });
     clearInFlightScheduleReads();
   } catch (error) {
     throw normalizeAcpError(error, 'Failed to unpause schedule');
@@ -162,7 +162,7 @@ export async function acpUpdateSchedule(
 ): Promise<ScheduledJobDto> {
   try {
     const client = await getAcpClient();
-    const response = await client.goose.schedulesUpdate_unstable({ scheduleId, cron });
+    const response = await client.lumina.schedulesUpdate_unstable({ scheduleId, cron });
     clearInFlightScheduleReads();
     return response.job;
   } catch (error) {
@@ -173,7 +173,7 @@ export async function acpUpdateSchedule(
 export async function acpKillRunningJob(jobId: string): Promise<KillRunningJobResponse_unstable> {
   try {
     const client = await getAcpClient();
-    const response = await client.goose.schedulesRunningJobKill_unstable({ jobId });
+    const response = await client.lumina.schedulesRunningJobKill_unstable({ jobId });
     clearInFlightScheduleReads();
     return response;
   } catch (error) {
@@ -186,7 +186,7 @@ export async function acpInspectRunningJob(
 ): Promise<InspectRunningJobResponse_unstable> {
   try {
     const client = await getAcpClient();
-    return await client.goose.schedulesRunningJobInspect_unstable({ jobId });
+    return await client.lumina.schedulesRunningJobInspect_unstable({ jobId });
   } catch (error) {
     throw normalizeAcpError(error, 'Failed to inspect running job');
   }

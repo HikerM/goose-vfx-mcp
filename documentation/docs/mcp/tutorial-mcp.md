@@ -1,17 +1,17 @@
 ---
 title: Tutorial Extension
-description: Learn how to use goose's built-in Tutorial extension for guided learning
+description: Learn how to use lumina's built-in Tutorial extension for guided learning
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import GooseBuiltinInstaller from '@site/src/components/GooseBuiltinInstaller';
+import LuminaBuiltinInstaller from '@site/src/components/LuminaBuiltinInstaller';
 
-The Tutorial extension is a built-in feature of goose that provides interactive, step-by-step guidance for learning various aspects of goose and its capabilities. It's designed to help users get comfortable with goose's features through hands-on practice.
+The Tutorial extension is a built-in feature of lumina that provides interactive, step-by-step guidance for learning various aspects of lumina and its capabilities. It's designed to help users get comfortable with lumina's features through hands-on practice.
 
 The Tutorial extension serves as an interactive learning tool that:
 - Provides structured, step-by-step tutorials
-- Allows hands-on practice with goose features
+- Allows hands-on practice with lumina features
 - Offers immediate feedback and guidance
 
 ## Configuration
@@ -19,27 +19,27 @@ The Tutorial extension serves as an interactive learning tool that:
 1. Ensure the Tutorial extension is enabled:
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseBuiltinInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaBuiltinInstaller
     extensionName="Tutorial"
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
 
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to `Toggle Extensions`
   ```sh
-  ┌   goose-configure 
+  ┌   lumina-configure
   │
   ◇  What would you like to configure?
-  │  Toggle Extensions 
+  │  Toggle Extensions
   │
   ◆  Enable extensions: (use "space" to toggle and "enter" to submit)
-  // highlight-start    
+  // highlight-start
   │  ● tutorial
   // highlight-end
   |
@@ -53,7 +53,7 @@ The Tutorial extension serves as an interactive learning tool that:
 Currently, the following tutorials are available:
 
 - **build-mcp-extension**: Learn how to build an extension using the Model Context Protocol (MCP)
-- **first-game**: Create your first game with goose
+- **first-game**: Create your first game with lumina
 
 More tutorials are being added regularly to cover additional features and use cases.
 
@@ -63,10 +63,10 @@ More tutorials are being added regularly to cover additional features and use ca
 
 There are two main ways to interact with tutorials:
 
-1. **Ask goose directly**: You can simply ask about a topic you're interested in, and goose will suggest relevant tutorials.
+1. **Ask lumina directly**: You can simply ask about a topic you're interested in, and lumina will suggest relevant tutorials.
 
 ```
-( O)> I'd like to learn how to build an extension for goose
+( O)> I'd like to learn how to build an extension for lumina
 ```
 
 2. **Request a specific tutorial**: You can directly request a tutorial by name.
@@ -79,7 +79,7 @@ There are two main ways to interact with tutorials:
 
 While going through a tutorial:
 
-1. goose will guide you step-by-step through the process
+1. lumina will guide you step-by-step through the process
 2. You'll receive clear instructions before any actions are taken
 3. You can ask questions at any time for clarification
 4. You can take breaks and resume later
@@ -87,7 +87,7 @@ While going through a tutorial:
 ### Best Practices
 
 - **Take your time**: Don't rush through the tutorials. Make sure you understand each step before moving on.
-- **Ask questions**: If something isn't clear, ask goose to explain it further.
+- **Ask questions**: If something isn't clear, ask lumina to explain it further.
 - **Experiment**: Feel free to try variations of what you're learning.
 - **Take notes**: Document any interesting findings or techniques you learn.
 
@@ -97,12 +97,12 @@ While going through a tutorial:
 
 Here's an example of how to start learning about building extensions:
 
-### goose Prompt
+### lumina Prompt
 ```
-I'd like to learn how to build an extension for goose
+I'd like to learn how to build an extension for lumina
 ```
 
-### goose Output
+### lumina Output
 ```
 I'll help you learn about building extensions! The "build-mcp-extension" tutorial would be perfect for this. Let me load it and guide you through it.
 
@@ -138,10 +138,10 @@ Which SDK would you like to use to get started?
 
 After completing tutorials, you can:
 - Apply learned concepts to your own projects
-- Contribute to the goose community by sharing your experiences
+- Contribute to the lumina community by sharing your experiences
 - Suggest new tutorial topics that would be helpful for others
 
-### Need Further Help? 
-If you have questions, run into issues, or just need to brainstorm ideas join the [Discord Community][discord]!
+### Need Further Help?
+If you have questions or run into issues, use the [Lumina issue tracker][issue-tracker].
 
-[discord]: https://discord.gg/goose-oss
+[issue-tracker]: https://github.com/HikerM/lumina/issues

@@ -1197,7 +1197,7 @@
     "defaultMessage": "Kunci Rahasia"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "Kunci rahasia yang dikonfigurasi pada server Lumina (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "Kunci rahasia yang dikonfigurasi pada server Lumina (LUMINA_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "Masukkan kunci rahasia server"
@@ -1226,67 +1226,67 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "Terhubung ke server Lumina yang berjalan di tempat lain (memerlukan mulai ulang aplikasi)"
   },
-  "goosehintsModal.close": {
+  "luminahintsModal.close": {
     "defaultMessage": "Tutup"
   },
-  "goosehintsModal.developer": {
+  "luminahintsModal.developer": {
     "defaultMessage": "Pengembang"
   },
-  "goosehintsModal.dialogDescription": {
+  "luminahintsModal.dialogDescription": {
     "defaultMessage": "Berikan konteks tambahan tentang proyek Anda untuk meningkatkan komunikasi dengan Lumina"
   },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "Konfigurasikan Petunjuk Proyek (.goosehints)"
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "Konfigurasikan Petunjuk Proyek (.luminahints)"
   },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": "Kesalahan membaca file .goosehints: {error}"
+  "luminahintsModal.errorReading": {
+    "defaultMessage": "Kesalahan membaca file .luminahints: {error}"
   },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": "Gagal mengakses file .goosehints"
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": "Gagal mengakses file .luminahints"
   },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": "Gagal menyimpan file .goosehints"
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": "Gagal menyimpan file .luminahints"
   },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "Membuat file .goosehints baru di: {filePath}"
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "Membuat file .luminahints baru di: {filePath}"
   },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": "File .goosehints ditemukan di: {filePath}"
+  "luminahintsModal.fileFound": {
+    "defaultMessage": "File .luminahints ditemukan di: {filePath}"
   },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints adalah file teks yang digunakan untuk memberikan konteks tambahan tentang proyek Anda dan meningkatkan komunikasi dengan Lumina."
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints adalah file teks yang digunakan untuk memberikan konteks tambahan tentang proyek Anda dan meningkatkan komunikasi dengan Lumina."
   },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "Pastikan ekstensi {bold} diaktifkan di halaman ekstensi. Ekstensi ini diperlukan untuk menggunakan .goosehints. Anda perlu memulai ulang sesi agar pembaruan .goosehints berlaku."
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "Pastikan ekstensi {bold} diaktifkan di halaman ekstensi. Ekstensi ini diperlukan untuk menggunakan .luminahints. Anda perlu memulai ulang sesi agar pembaruan .luminahints berlaku."
   },
-  "goosehintsModal.helpText3": {
+  "luminahintsModal.helpText3": {
     "defaultMessage": "Lihat {link} untuk informasi lebih lanjut."
   },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": "menggunakan .goosehints"
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": "menggunakan .luminahints"
   },
-  "goosehintsModal.placeholder": {
+  "luminahintsModal.placeholder": {
     "defaultMessage": "Masukkan petunjuk proyek di sini..."
   },
-  "goosehintsModal.save": {
+  "luminahintsModal.save": {
     "defaultMessage": "Simpan"
   },
-  "goosehintsModal.savedSuccessfully": {
+  "luminahintsModal.savedSuccessfully": {
     "defaultMessage": "Berhasil disimpan"
   },
-  "goosehintsModal.saving": {
+  "luminahintsModal.saving": {
     "defaultMessage": "Menyimpan..."
   },
-  "goosehintsSection.configure": {
+  "luminahintsSection.configure": {
     "defaultMessage": "Konfigurasikan"
   },
-  "goosehintsSection.description": {
-    "defaultMessage": "Konfigurasikan file .goosehints proyek Anda untuk memberikan konteks tambahan ke Lumina"
+  "luminahintsSection.description": {
+    "defaultMessage": "Konfigurasikan file .luminahints proyek Anda untuk memberikan konteks tambahan ke Lumina"
   },
-  "goosehintsSection.title": {
-    "defaultMessage": "Petunjuk Proyek (.goosehints)"
+  "luminahintsSection.title": {
+    "defaultMessage": "Petunjuk Proyek (.luminahints)"
   },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "Tanya Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1422,10 +1422,10 @@
     "defaultMessage": "Batal"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "Tempelkan deeplink resep yang dimulai dengan \"goose://recipe?config=\""
+    "defaultMessage": "Tempelkan deeplink resep yang dimulai dengan \"lumina://recipe?config=\""
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "Tempelkan deeplink goose://recipe?config=... Anda di sini"
+    "defaultMessage": "Tempelkan deeplink lumina://recipe?config=... Anda di sini"
   },
   "importRecipeForm.example": {
     "defaultMessage": "contoh"
@@ -1700,32 +1700,29 @@
   "launcher.placeholder": {
     "defaultMessage": "Tanyakan apa saja kepada Lumina..."
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina sedang meringkas percakapan..."
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina sedang mengerjakannya…"
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "memuat percakapan..."
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "memulai ulang sesi..."
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina sedang mengerjakannya…"
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina sedang berpikir…"
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina sedang menunggu…"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "Hapus model ini? Anda dapat mengunduhnya kembali nanti."
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "Unduh dan kelola model LLM lokal untuk inferensi tanpa kunci API. Cari model GGUF atau MLX di HuggingFace, atau gunakan pilihan unggulan di bawah."
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "Tutup"
@@ -1753,9 +1750,6 @@
   },
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "Model Unggulan"
-  },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "Masuk untuk meningkatkan batas laju saat mencari dan mengunduh model, serta untuk mengakses repositori Hugging Face yang privat atau terbatas."
   },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
@@ -2390,20 +2384,11 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "Mulai"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "Pelajari selengkapnya"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "Model lokal siap"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "Data penggunaan anonim membantu meningkatkan Lumina. Kami tidak pernah mengumpulkan percakapan, kode, atau data pribadi Anda."
-  },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "Privasi"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "Bagikan data penggunaan anonim"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "Nilai Default"
@@ -2548,36 +2533,6 @@
   },
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "Instruksi tersembunyi yang akan diteruskan ke penyedia untuk membantu mengarahkan dan menambahkan konteks ke respons Anda."
-  },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "Jenis kesalahan (mis., \"rate_limit\", \"auth\" - tanpa detail)"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "Jumlah penggunaan ekstensi dan alat (hanya nama)"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "Sistem operasi, versi, dan arsitektur"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "Penyedia dan model yang digunakan"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "Metrik sesi (durasi, jumlah interaksi, penggunaan token)"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Versi Lumina dan metode instalasi"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "Data penggunaan anonim membantu kami memahami cara Lumina digunakan dan mengidentifikasi area yang dapat ditingkatkan."
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "Kami tidak pernah mengumpulkan percakapan, kode, argumen alat, pesan kesalahan, atau data pribadi Anda. Anda dapat mengubah pengaturan ini kapan saja di Pengaturan."
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "Detail privasi"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "Apa yang kami kumpulkan:"
   },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "Memuat pesan... ({renderedCount}/{totalCount})"
@@ -3429,7 +3384,7 @@
     "defaultMessage": "Tautan dalam"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "Tempel tautan goose://recipe di sini..."
+    "defaultMessage": "Tempel tautan lumina://recipe di sini..."
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "Edit Jadwal"
@@ -3441,7 +3396,7 @@
     "defaultMessage": "Gagal membaca berkas yang dipilih."
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "Tautan dalam tidak valid. Harap gunakan tautan goose://recipe."
+    "defaultMessage": "Tautan dalam tidak valid. Harap gunakan tautan lumina://recipe."
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "Jenis berkas tidak valid: Harap pilih berkas YAML (.yaml atau .yml)"
@@ -3758,9 +3713,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "Buka di jendela baru"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "Bagikan tautan Nostr terenkripsi"
-  },
   "sessions.cancel": {
     "defaultMessage": "Batal"
   },
@@ -3769,9 +3721,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "Lihat dan cari percakapan Anda sebelumnya dengan Lumina. {shortcut} untuk mencari."
-  },
-  "sessions.close": {
-    "defaultMessage": "Tutup"
   },
   "sessions.delete.message": {
     "defaultMessage": "Apakah Anda yakin ingin menghapus sesi \"{name}\"? Tindakan ini tidak dapat dibatalkan."
@@ -3800,21 +3749,6 @@
   "sessions.import": {
     "defaultMessage": "Impor Sesi"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "Impor Tautan"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "Tempel tautan berbagi Nostr Lumina untuk mengambil, mendekripsi, dan mengimpor sesi."
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "Impor Sesi Nostr"
-  },
-  "sessions.importing": {
-    "defaultMessage": "Mengimpor..."
-  },
   "sessions.loadingMore": {
     "defaultMessage": "Memuat lebih banyak sesi..."
   },
@@ -3832,15 +3766,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "Cari riwayat..."
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "Siapa pun yang memiliki tautan ini dapat mengambil dan mendekripsi sesi. Perlakukan seperti rahasia."
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "Tautan Berbagi Nostr Terenkripsi"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "Disalin ke papan klip"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "Gagal menghapus sesi \"{name}\": {error}"
@@ -3862,12 +3787,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "Sesi berhasil diimpor"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "Tautan berbagi Nostr terenkripsi dibuat"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "Gagal membuat tautan berbagi Nostr: {error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "Gagal memperbarui deskripsi sesi: {error}"
@@ -4034,12 +3953,6 @@
   "settings.theme.title": {
     "defaultMessage": "Tema"
   },
-  "settings.updates.description": {
-    "defaultMessage": "Periksa dan instal pembaruan agar Lumina berjalan optimal"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "Pembaruan"
-  },
   "settings.version.title": {
     "defaultMessage": "Versi"
   },
@@ -4104,7 +4017,7 @@
     "defaultMessage": "Tidak ada keterampilan yang cocok ditemukan"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "Keterampilan dimuat dari file SKILL.md di ~/.config/agents/skills/, .goose/skills/, atau direktori lain yang didukung."
+    "defaultMessage": "Keterampilan dimuat dari file SKILL.md di ~/.config/agents/skills/, .lumina/skills/, atau direktori lain yang didukung."
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "Tidak ada keterampilan yang terpasang"
@@ -4364,45 +4277,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "Gunakan penyedia lain"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "Apakah Anda ingin membagikan data penggunaan anonim untuk membantu meningkatkan Lumina? Kami tidak pernah mengumpulkan percakapan, kode, atau data pribadi Anda."
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Bantu tingkatkan Lumina"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "Pelajari lebih lanjut"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "Ya, bagikan data penggunaan anonim"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "Tidak, terima kasih"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "Kesalahan Konfigurasi"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "Kontrol bagaimana data Anda digunakan"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "Pelajari lebih lanjut"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "Gagal memuat pengaturan telemetri."
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "Privasi"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "Bantu tingkatkan Lumina dengan membagikan statistik penggunaan anonim."
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "Data penggunaan anonim"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "Gagal memperbarui pengaturan telemetri."
-  },
   "themeSelector.dark": {
     "defaultMessage": "Gelap"
   },
@@ -4472,83 +4346,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "Izinkan {toolName}?"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina ingin memanggil {toolName}. Izinkan?"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "Lumina akan mengunduh pembaruan di latar belakang dan menginstalnya saat Anda keluar atau memulai ulang berikutnya."
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "Pengunduhan otomatis dinonaktifkan melalui variabel lingkungan GOOSE_DISABLE_AUTO_DOWNLOAD."
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "Pengunduhan otomatis dinonaktifkan. Klik \"Download Now\" untuk mengunduh secara manual."
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "Tidak diperlukan instalasi manual."
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "Periksa Pembaruan"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "Memeriksa pembaruan..."
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "Versi saat ini"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "Nonaktifkan pengunduhan pembaruan otomatis"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "Saat diaktifkan, Lumina akan memberi tahu Anda tentang versi baru tetapi tidak akan mengunduhnya secara otomatis."
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "Unduh Sekarang"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "Pembaruan telah diunduh dan siap dipasang!"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "Mengunduh pembaruan... {percent}%"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "Mengunduh pembaruan..."
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "Instal & Mulai Ulang"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "Klik \"Install & Restart\" untuk memperbarui sekarang."
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "Anda menjalankan versi terbaru!"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "Memuat..."
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "Setelah pengunduhan, Anda perlu menginstal pembaruan secara manual."
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "Instalasi manual diperlukan untuk metode pembaruan ini."
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ Pembaruan sudah siap. Mulai ulang Lumina untuk menyelesaikan pemasangan, atau keluar saat Anda selesai."
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ Pembaruan sudah siap! Klik \"Install & Restart\" untuk petunjuk pemasangan."
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "(terbaru)"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "Pembaruan tersedia!"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ {version} tersedia"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "Versi {version} tersedia"
   },
   "userMessage.cancel": {
     "defaultMessage": "Batal"

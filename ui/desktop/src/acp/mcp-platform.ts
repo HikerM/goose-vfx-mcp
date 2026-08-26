@@ -20,7 +20,7 @@ import type {
   McpSourcesPolicyState,
   McpTaskRef,
   McpTrustTier,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import {
   createMcpTaskMonitorCursor,
   getMcpTaskMonitorResumeRequest,
@@ -3871,20 +3871,20 @@ const phaseUnavailableTargets: Record<
   profiles: {
     phase: '4B',
     operations: new Set([
-      'goose.mcpProfileList_unstable',
-      'goose.mcpProfileGet_unstable',
-      'goose.mcpProfileCreate_unstable',
-      'goose.mcpProfileUpdate_unstable',
-      'goose.mcpProfileRestore_unstable',
-      'goose.mcpProfileArchive_unstable',
-      'goose.mcpProfileDraftCreate_unstable',
-      'goose.mcpProfileApplyPlanCreate_unstable',
-      'goose.mcpProfileApplyConfirm_unstable',
+      'lumina.mcpProfileList_unstable',
+      'lumina.mcpProfileGet_unstable',
+      'lumina.mcpProfileCreate_unstable',
+      'lumina.mcpProfileUpdate_unstable',
+      'lumina.mcpProfileRestore_unstable',
+      'lumina.mcpProfileArchive_unstable',
+      'lumina.mcpProfileDraftCreate_unstable',
+      'lumina.mcpProfileApplyPlanCreate_unstable',
+      'lumina.mcpProfileApplyConfirm_unstable',
     ]),
   },
   modelSuggestions: {
     phase: '4B',
-    operations: new Set(['goose.mcpProfileModelRecommend_unstable']),
+    operations: new Set(['lumina.mcpProfileModelRecommend_unstable']),
   },
 };
 
@@ -3905,7 +3905,7 @@ export function isMcpPhaseUnavailableError(
 }
 
 export async function listMcpCatalog(params: McpCatalogListRequest): Promise<McpCatalogPage> {
-  return requestMcpPlatform('goose.mcpCatalogList_unstable', parseMcpCatalogPageValue, {
+  return requestMcpPlatform('lumina.mcpCatalogList_unstable', parseMcpCatalogPageValue, {
     ...params,
   });
 }
@@ -3923,7 +3923,7 @@ export async function getMcpCatalogDetail(
           version: locator.version,
         };
   const detail = await requestMcpPlatform(
-    'goose.mcpCatalogDetail_unstable',
+    'lumina.mcpCatalogDetail_unstable',
     parseMcpCatalogDetailValue,
     { catalog }
   );
@@ -4224,12 +4224,12 @@ export async function resumePublicMcpTaskMonitor(
 }
 
 export async function getMcpSourcesPolicy(): Promise<McpSourcesPolicyState> {
-  return requestMcpPlatform('goose.mcpSourcesPolicyGet_unstable', parseMcpSourcesPolicyStateValue);
+  return requestMcpPlatform('lumina.mcpSourcesPolicyGet_unstable', parseMcpSourcesPolicyStateValue);
 }
 
 export async function refreshMcpSource(sourceId: string): Promise<McpSourceRefreshResult> {
   const result = await requestMcpPlatform(
-    'goose.mcpSourceRefresh_unstable',
+    'lumina.mcpSourceRefresh_unstable',
     parseMcpSourceRefreshResultValue,
     { sourceId }
   );
@@ -4241,7 +4241,7 @@ export async function prepareMcpSourceProvision(
   localDirectory: string
 ): Promise<McpSourceProvisionPrepareResult> {
   return requestMcpPlatform(
-    'goose.mcpSourceProvisionPrepare_unstable',
+    'lumina.mcpSourceProvisionPrepare_unstable',
     parseMcpSourceProvisionPrepareResultValue,
     { localDirectory }
   );
@@ -4253,7 +4253,7 @@ export async function prepareHttpsMcpManifest(url: string): Promise<McpHttpsMani
   }
   try {
     return await requestMcpPlatform(
-      'goose.mcpHttpsManifestPrepare_unstable',
+      'lumina.mcpHttpsManifestPrepare_unstable',
       parseMcpHttpsManifestPrepareResultValue,
       { url }
     );
@@ -4268,7 +4268,7 @@ export async function createHttpsProvisionPlanReview(
   const request = projectHttpsProvisionPlanReviewRequest(input);
   try {
     return await requestMcpPlatform(
-      'goose.mcpHttpsProvisionPlanCreate_unstable',
+      'lumina.mcpHttpsProvisionPlanCreate_unstable',
       parseHttpsProvisionPlanReview,
       {
         provisionId: request.provisionId,
@@ -4297,7 +4297,7 @@ export async function confirmHttpsMcpManifest(input: {
   }
   try {
     return await requestMcpPlatform(
-      'goose.mcpHttpsManifestConfirm_unstable',
+      'lumina.mcpHttpsManifestConfirm_unstable',
       parseMcpHttpsManifestConfirmResultValue,
       {
         provisionId: input.provisionId,
@@ -4314,7 +4314,7 @@ export async function confirmMcpSourceProvision(
   prepared: Pick<McpSourceProvisionPrepareResult, 'provisionId' | 'confirmationToken'>
 ): Promise<McpSourceProvisionConfirmResult> {
   const result = await requestMcpPlatform(
-    'goose.mcpSourceProvisionConfirm_unstable',
+    'lumina.mcpSourceProvisionConfirm_unstable',
     parseMcpSourceProvisionConfirmResultValue,
     {
       provisionId: prepared.provisionId,
@@ -4329,7 +4329,7 @@ export async function confirmMcpSourceProvision(
 export async function importGovernedMcpSource(
   source: McpGovernedImportSource
 ): Promise<McpGovernedImportResult> {
-  return requestMcpPlatform('goose.mcpGovernedImport_unstable', parseMcpGovernedImportResultValue, {
+  return requestMcpPlatform('lumina.mcpGovernedImport_unstable', parseMcpGovernedImportResultValue, {
     source,
   });
 }
@@ -4340,13 +4340,13 @@ export async function listManualStdioSources(): Promise<McpManualStdioSourcesPag
 }
 
 export async function listMcpProfiles(includeArchived: boolean): Promise<McpProfilePage> {
-  return requestMcpPlatform('goose.mcpProfileList_unstable', parseMcpProfilePageValue, {
+  return requestMcpPlatform('lumina.mcpProfileList_unstable', parseMcpProfilePageValue, {
     includeArchived,
   });
 }
 
 export async function getMcpProfile(profileId: string): Promise<McpProfileDetail> {
-  return requestMcpPlatform('goose.mcpProfileGet_unstable', parseMcpProfileDetailValue, {
+  return requestMcpPlatform('lumina.mcpProfileGet_unstable', parseMcpProfileDetailValue, {
     profileId,
   });
 }
@@ -4356,7 +4356,7 @@ export async function createMcpProfile(params: {
   description: string;
   managedMcpIds: string[];
 }): Promise<McpProfileSummary> {
-  return requestMcpPlatform('goose.mcpProfileCreate_unstable', parseMcpProfileSummaryValue, {
+  return requestMcpPlatform('lumina.mcpProfileCreate_unstable', parseMcpProfileSummaryValue, {
     name: params.name,
     description: params.description,
     managedMcpIds: params.managedMcpIds,
@@ -4371,7 +4371,7 @@ export async function updateMcpProfile(params: {
   description: string;
   managedMcpIds: string[];
 }): Promise<McpProfileSummary> {
-  return requestMcpPlatform('goose.mcpProfileUpdate_unstable', parseMcpProfileSummaryValue, {
+  return requestMcpPlatform('lumina.mcpProfileUpdate_unstable', parseMcpProfileSummaryValue, {
     profileId: params.profileId,
     expectedRevision: params.expectedRevision,
     name: params.name,
@@ -4386,7 +4386,7 @@ export async function restoreMcpProfile(params: {
   sourceRevision: number;
   expectedRevision: number;
 }): Promise<McpProfileSummary> {
-  return requestMcpPlatform('goose.mcpProfileRestore_unstable', parseMcpProfileSummaryValue, {
+  return requestMcpPlatform('lumina.mcpProfileRestore_unstable', parseMcpProfileSummaryValue, {
     profileId: params.profileId,
     sourceRevision: params.sourceRevision,
     expectedRevision: params.expectedRevision,
@@ -4398,7 +4398,7 @@ export async function archiveMcpProfile(params: {
   profileId: string;
   expectedRevision: number;
 }): Promise<McpProfileSummary> {
-  return requestMcpPlatform('goose.mcpProfileArchive_unstable', parseMcpProfileSummaryValue, {
+  return requestMcpPlatform('lumina.mcpProfileArchive_unstable', parseMcpProfileSummaryValue, {
     profileId: params.profileId,
     expectedRevision: params.expectedRevision,
     idempotencyKey: createMcpIdempotencyKey('profile-archive'),
@@ -4410,7 +4410,7 @@ export async function createMcpProfileApplyPlan(params: {
   profileRevision: number;
 }): Promise<McpProfileApplyPlan> {
   return requestMcpPlatform(
-    'goose.mcpProfileApplyPlanCreate_unstable',
+    'lumina.mcpProfileApplyPlanCreate_unstable',
     parseMcpProfileApplyPlanValue,
     {
       profileId: params.profileId,
@@ -4426,7 +4426,7 @@ export async function confirmMcpProfileApply(params: {
   confirm: boolean;
 }): Promise<McpProfileApplicationToken> {
   return requestMcpPlatform(
-    'goose.mcpProfileApplyConfirm_unstable',
+    'lumina.mcpProfileApplyConfirm_unstable',
     parseMcpProfileApplicationTokenValue,
     {
       planId: params.planId,
@@ -4442,7 +4442,7 @@ export async function testMcpProfileConnection(params: {
   modelId: string;
 }): Promise<McpProfileConnectionTestResult> {
   return requestMcpPlatform(
-    'goose.mcpProfileConnectionTest_unstable',
+    'lumina.mcpProfileConnectionTest_unstable',
     parseMcpProfileConnectionTestResultValue,
     {
       profileId: params.profileId,
@@ -4456,7 +4456,7 @@ export async function createMcpProfileDraft(
   text: string,
   locale: string
 ): Promise<McpProfileDraft> {
-  return requestMcpPlatform('goose.mcpProfileDraftCreate_unstable', parseMcpProfileDraftValue, {
+  return requestMcpPlatform('lumina.mcpProfileDraftCreate_unstable', parseMcpProfileDraftValue, {
     text,
     locale,
   });
@@ -4467,7 +4467,7 @@ export async function recommendMcpProfileModels(
   providerIds: string[]
 ): Promise<McpModelRecommendation> {
   return requestMcpPlatform(
-    'goose.mcpProfileModelRecommend_unstable',
+    'lumina.mcpProfileModelRecommend_unstable',
     parseMcpModelRecommendationValue,
     {
       text,

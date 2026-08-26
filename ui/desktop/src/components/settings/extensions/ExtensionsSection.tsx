@@ -23,6 +23,7 @@ import {
   mcpConfigNeedsSecrets,
   parseMcpConfigExport,
 } from './mcp-config-transfer';
+import { PRIMARY_EXTENSIONS_URL } from '../../../distribution-config';
 
 const i18n = defineMessages({
   addCustomExtension: {
@@ -214,7 +215,7 @@ export default function ExtensionsSection({
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'goose-custom-mcps.json';
+    anchor.download = 'lumina-custom-mcps.json';
     anchor.click();
     URL.revokeObjectURL(url);
     setTransferStatus(undefined);
@@ -386,14 +387,16 @@ export default function ExtensionsSection({
               <Plus className="h-4 w-4" />
               {intl.formatMessage(i18n.addCustomExtension)}
             </Button>
-            <Button
-              className="flex items-center gap-2 justify-center"
-              variant="secondary"
-              onClick={() => window.open('https://goose-docs.ai/v1/extensions/', '_blank')}
-            >
-              <GPSIcon size={12} />
-              {intl.formatMessage(i18n.browseExtensions)}
-            </Button>
+            {PRIMARY_EXTENSIONS_URL && (
+              <Button
+                className="flex items-center gap-2 justify-center"
+                variant="secondary"
+                onClick={() => window.open(PRIMARY_EXTENSIONS_URL, '_blank')}
+              >
+                <GPSIcon size={12} />
+                {intl.formatMessage(i18n.browseExtensions)}
+              </Button>
+            )}
           </div>
         )}
 

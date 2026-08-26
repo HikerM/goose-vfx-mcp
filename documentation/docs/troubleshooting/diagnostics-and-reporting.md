@@ -1,14 +1,14 @@
 ---
 title: Diagnostics and Reporting
 sidebar_label: Diagnostics and Reporting
-description: Use built-in diagnostics, report bugs, and request new features with goose's integrated support tools.
+description: Use built-in diagnostics, report bugs, and request new features with lumina's integrated support tools.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import { PanelLeft, Bug, MessageSquarePlus, Download } from 'lucide-react';
 
-goose provides several built-in features to help you get support, report issues, and request new functionality. This guide covers the diagnostics system, bug reporting, and feature request tools.
+lumina provides several built-in features to help you get support, report issues, and request new functionality. This guide covers the diagnostics system, bug reporting, and feature request tools.
 
 | Feature | Purpose | Location | Output |
 |---------|---------|----------|---------|
@@ -23,7 +23,7 @@ The diagnostics feature creates a comprehensive troubleshooting JSON report that
 ### Generating Diagnostics
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. In an active chat session, look for the <Bug className="inline" size={16} /> icon in the bottom toolbar
     2. Click the diagnostics button
     3. Review the information in the modal about what data will be collected
@@ -36,24 +36,24 @@ The diagnostics feature creates a comprehensive troubleshooting JSON report that
     The diagnostics button is only available when you have an active session, as it needs a session ID to generate the bundle.
     :::
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
-    Use the session diagnostics command to generate a troubleshooting bundle. For complete details and all available options, see the [CLI Commands guide](/docs/guides/goose-cli-commands#session-diagnostics-options).
+  <TabItem value="cli" label="lumina CLI">
+    Use the session diagnostics command to generate a troubleshooting bundle. For complete details and all available options, see the [CLI Commands guide](/docs/guides/lumina-cli-commands#session-diagnostics-options).
 
     ```sh
     # Generate diagnostics for a specific session
-    goose session diagnostics --session-id <session_id>
+    lumina session diagnostics --session-id <session_id>
 
     # Interactive selection (prompts you to choose a session)
-    goose session diagnostics
+    lumina session diagnostics
 
     # Save to a custom location
-    goose session diagnostics --session-id <session_id> --output /path/to/diagnostics.json
+    lumina session diagnostics --session-id <session_id> --output /path/to/diagnostics.json
     ```
 
     To find your session ID, first list available sessions:
 
     ```sh
-    goose session list
+    lumina session list
     ```
 
     Example output:
@@ -104,29 +104,29 @@ The bug report feature opens a structured GitHub issue template to help you prov
 ### Creating Bug Reports
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. In an active chat session, look for the <Bug className="inline" size={16} /> icon in the bottom toolbar
     2. Click the diagnostics button
     3. Click `File Bug on GitHub`
     4. This opens GitHub in your browser with a pre-filled bug report template
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     For CLI users, navigate directly to the GitHub repository:
 
     ```
-    https://github.com/aaif-goose/goose/issues/new?template=bug_report.md
+    https://github.com/HikerM/lumina/issues/new?template=bug_report.md
     ```
   </TabItem>
 </Tabs>
 
 ## Feature Requests
 
-The feature request system helps you suggest improvements and new functionality for goose.
+The feature request system helps you suggest improvements and new functionality for lumina.
 
 ### Submitting Feature Requests
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
     2. Click `Settings` in the sidebar
     3. Click the `App` tab
@@ -134,22 +134,22 @@ The feature request system helps you suggest improvements and new functionality 
     5. Click `Request a Feature`
     6. This opens GitHub in your browser with a feature request template
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     Navigate directly to the GitHub repository:
 
     ```
-    https://github.com/aaif-goose/goose/issues/new?template=feature_request.md
+    https://github.com/HikerM/lumina/issues/new?template=feature_request.md
     ```
   </TabItem>
 </Tabs>
 
-## Error Recovery with "Ask goose"
+## Error Recovery with "Ask lumina"
 
-When certain types of error occur in goose Desktop (such as failures to activate extensions), you'll see an `Ask goose` button in the error notification. This feature lets you quickly troubleshoot the issue with goose's help:
+When certain types of error occur in lumina Desktop (such as failures to activate extensions), you'll see an `Ask lumina` button in the error notification. This feature lets you quickly troubleshoot the issue with lumina's help:
 
-1. When the error occurs, an `Ask goose` button appears in the error notification
-2. Click the button to send the error details to goose in a chat prompt
-3. goose provides diagnostic suggestions and potential solutions
+1. When the error occurs, an `Ask lumina` button appears in the error notification
+2. Click the button to send the error details to lumina in a chat prompt
+3. lumina provides diagnostic suggestions and potential solutions
 
 ## Additional Debugging
 

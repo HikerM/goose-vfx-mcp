@@ -5,6 +5,7 @@ import {
   PRIMARY_GITHUB_OWNER,
   PRIMARY_GITHUB_REPO,
   PRIMARY_RELEASES_URL,
+  RELEASE_CHANNEL_CONFIGURED,
 } from './distribution-config';
 
 describe('distribution config', () => {
@@ -14,10 +15,14 @@ describe('distribution config', () => {
     expect(parseDistributionInfo({ mode: 'official' })).toEqual(DEFAULT_DISTRIBUTION);
   });
 
-  it('enables GitHub updates only for the explicit HikerM mode', () => {
-    expect(parseDistributionInfo({ mode: 'github' })).toEqual({ mode: 'github' });
-    expect(PRIMARY_GITHUB_OWNER).toBe('HikerM');
-    expect(PRIMARY_GITHUB_REPO).toBe('goose-vfx-mcp');
-    expect(PRIMARY_RELEASES_URL).toBe('https://github.com/HikerM/goose-vfx-mcp/releases');
+  it('enables GitHub updates only when an owned release channel is configured', () => {
+    expect(parseDistributionInfo({ mode: 'github' }, false)).toEqual(DEFAULT_DISTRIBUTION);
+    expect(parseDistributionInfo({ mode: 'github' }, true)).toEqual({ mode: 'github' });
+    expect(RELEASE_CHANNEL_CONFIGURED).toBe(Boolean(PRIMARY_GITHUB_OWNER && PRIMARY_GITHUB_REPO));
+    expect(PRIMARY_RELEASES_URL).toBe(
+      RELEASE_CHANNEL_CONFIGURED
+        ? `https://github.com/${PRIMARY_GITHUB_OWNER}/${PRIMARY_GITHUB_REPO}/releases`
+        : undefined
+    );
   });
 });

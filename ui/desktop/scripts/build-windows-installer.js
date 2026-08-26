@@ -9,18 +9,31 @@ if (!versionMatch) {
   throw new Error(`Unsupported Lumina version: ${packageJson.version}`);
 }
 const fileVersion = `${versionMatch[1]}.${versionMatch[2]}.${versionMatch[3]}.${versionMatch[4] || 0}`;
-const appDirectory = path.join(desktopDir, 'out', 'Lumina-win32-x64');
-const outputDirectory = path.join(desktopDir, 'out', 'make', 'inno');
+const appDirectory = process.env.LUMINA_WINDOWS_APP_DIRECTORY
+  ? path.resolve(process.env.LUMINA_WINDOWS_APP_DIRECTORY)
+  : path.join(desktopDir, 'out', 'Lumina-win32-x64');
+const outputDirectory = process.env.LUMINA_WINDOWS_INSTALLER_OUTPUT
+  ? path.resolve(process.env.LUMINA_WINDOWS_INSTALLER_OUTPUT)
+  : path.join(desktopDir, 'out', 'make', 'inno');
 const installerScript = path.join(desktopDir, 'installer', 'lumina.iss');
 const installerName = `Lumina-${packageJson.version}-Windows-x64-Setup.exe`;
+const publisherName = process.env.LUMINA_PUBLISHER_NAME || 'Lumina contributors';
 const requiredRuntimeFiles = [
   'Lumina.exe',
-  path.join('resources', 'bin', 'goose.exe'),
-  path.join('resources', 'bin', 'cublas64_12.dll'),
-  path.join('resources', 'bin', 'cublasLt64_12.dll'),
-  path.join('resources', 'bin', 'cudart64_12.dll'),
-  path.join('resources', 'bin', 'curand64_10.dll'),
+  path.join('resources', 'bin', 'lumina.exe'),
+  path.join('resources', 'LICENSE'),
+  path.join('resources', 'NOTICE'),
+  path.join('resources', 'MODIFICATIONS.md'),
+  path.join('resources', 'THIRD_PARTY_NOTICES.md'),
 ];
+if (process.env.LUMINA_DESKTOP_CUDA === '1') {
+  requiredRuntimeFiles.push(
+    path.join('resources', 'bin', 'cublas64_12.dll'),
+    path.join('resources', 'bin', 'cublasLt64_12.dll'),
+    path.join('resources', 'bin', 'cudart64_12.dll'),
+    path.join('resources', 'bin', 'curand64_10.dll')
+  );
+}
 
 function findCompiler() {
   const candidates = [
@@ -61,6 +74,7 @@ const result = spawnSync(
     '/Qp',
     `/DMyAppVersion=${packageJson.version}`,
     `/DMyFileVersion=${fileVersion}`,
+    `/DMyAppPublisher=${publisherName}`,
     `/DSourceDir=${appDirectory}`,
     `/DOutputDir=${outputDirectory}`,
     installerScript,

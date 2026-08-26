@@ -67,7 +67,7 @@ export default function RecipeDetailPage(): JSX.Element {
       return;
     }
 
-    const command = `goose run --recipe ${recipe?.localPath}`;
+    const command = `lumina run --recipe ${recipe?.localPath}`;
     navigator.clipboard.writeText(command);
     toast.success("CLI command copied!");
   };
@@ -78,7 +78,7 @@ export default function RecipeDetailPage(): JSX.Element {
       .map(([key, val]) => `${key}=${val}`)
       .join(" ");
 
-    const command = `goose run --recipe ${recipe?.localPath}${
+    const command = `lumina run --recipe ${recipe?.localPath}${
       filledParams ? ` --params ${filledParams}` : ""
     }`;
 
@@ -212,7 +212,7 @@ export default function RecipeDetailPage(): JSX.Element {
               <div className="mb-6 border-t border-borderSubtle dark:border-zinc-700 pt-6">
                 <h2 className="text-2xl font-medium mb-4 text-textProminent dark:text-white">Initial Prompt</h2>
                 <Admonition type="info" className="mb-4">
-                  This prompt auto-starts the recipe when launched in Goose.
+                  This prompt auto-starts the recipe when launched in Lumina.
                 </Admonition>
                 <CodeBlock language="markdown">{recipe.prompt}</CodeBlock>
               </div>
@@ -233,14 +233,14 @@ export default function RecipeDetailPage(): JSX.Element {
                 target="_blank"
                 className="inline-block text-white bg-black dark:bg-white dark:text-black px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-900 dark:hover:bg-gray-100 transition-colors"
               >
-                Launch in Goose Desktop →
+                Launch in Lumina Desktop →
               </Link>
               <div className="relative group inline-block">
                 <button
                   onClick={handleCopyCLI}
                   className="text-sm font-medium px-6 py-2 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-white hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                 >
-                  Copy Goose CLI Command
+                  Copy Lumina CLI Command
                 </button>
 
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block bg-zinc-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-50">

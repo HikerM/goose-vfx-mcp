@@ -6,9 +6,9 @@ sidebar_label: Hooks
 
 # Hooks
 
-Hooks let you run your own scripts when key events happen during a goose session. Use hooks to log activity, send notifications, format files after edits, run checks after shell commands, or integrate goose with local workflows without writing a custom extension.
+Hooks let you run your own scripts when key events happen during a lumina session. Use hooks to log activity, send notifications, format files after edits, run checks after shell commands, or integrate lumina with local workflows without writing a custom extension.
 
-goose follows the [Open Plugins hooks specification](https://open-plugins.com/agent-builders/components/hooks). Hooks are discovered from [plugins](/docs/guides/context-engineering/plugins) on disk and run as shell commands when matching lifecycle events fire.
+lumina follows the [Open Plugins hooks specification](https://open-plugins.com/agent-builders/components/hooks). Hooks are discovered from [plugins](/docs/guides/context-engineering/plugins) on disk and run as shell commands when matching lifecycle events fire.
 
 :::warning Run trusted hooks only
 Hooks execute local commands on your machine. Only install or create hooks from sources you trust, and review hook scripts before enabling them.
@@ -16,13 +16,13 @@ Hooks execute local commands on your machine. Only install or create hooks from 
 
 ## Where Hooks Live
 
-A hook belongs to a [plugin](/docs/guides/context-engineering/plugins) directory. goose discovers plugins from these locations:
+A hook belongs to a [plugin](/docs/guides/context-engineering/plugins) directory. lumina discovers plugins from these locations:
 
 | Scope | Location |
 |---|---|
 | User | `~/.agents/plugins/<plugin-name>/` |
 | Project | `<project>/.agents/plugins/<plugin-name>/` |
-| Installed plugin | goose's plugin install directory |
+| Installed plugin | lumina's plugin install directory |
 
 Each plugin that defines hooks must include a `hooks/hooks.json` file:
 
@@ -35,7 +35,7 @@ my-plugin/
     └── notify.sh
 ```
 
-Project plugins are loaded when goose is started from that project. User plugins are available across projects.
+Project plugins are loaded when lumina is started from that project. User plugins are available across projects.
 
 ## Create a Hook
 
@@ -58,7 +58,7 @@ The plugin manifest identifies the plugin:
 {
   "name": "session-logger",
   "version": "0.1.0",
-  "description": "Log goose session events"
+  "description": "Log lumina session events"
 }
 ```
 
@@ -89,7 +89,7 @@ payload="$(cat)"
 session_id="$(printf '%s' "$payload" | jq -r .session_id)"
 date_str="$(date '+%Y-%m-%d %H:%M')"
 
-echo "- $date_str — session $session_id ended" >> ~/goose-session-log.md
+echo "- $date_str — session $session_id ended" >> ~/lumina-session-log.md
 ```
 
 Place the plugin under a discovered plugin location, such as `~/.agents/plugins/session-logger/`, and make command scripts executable when your operating system requires it.
@@ -121,11 +121,11 @@ Place the plugin under a discovered plugin location, such as `~/.agents/plugins/
 |---|---:|---|
 | `matcher` | No | Regular expression used to decide whether the rule runs for the event. If omitted, the rule runs for every event of that type. |
 | `hooks` | Yes | Actions to run when the event and matcher apply. |
-| `type` | No | Action type. goose currently supports `command`. If omitted, `command` is used. |
-| `command` | Yes for command hooks | Shell command to run. goose runs it with `sh -c`. |
+| `type` | No | Action type. lumina currently supports `command`. If omitted, `command` is used. |
+| `command` | Yes for command hooks | Shell command to run. lumina runs it with `sh -c`. |
 | `timeout` | No | Timeout in seconds for the command. Defaults to 30 seconds. |
 
-Use `${PLUGIN_ROOT}` in a command to reference the plugin directory. goose also sets `PLUGIN_ROOT` in the hook command's environment.
+Use `${PLUGIN_ROOT}` in a command to reference the plugin directory. lumina also sets `PLUGIN_ROOT` in the hook command's environment.
 
 ## Supported Events
 
@@ -133,15 +133,15 @@ Use `${PLUGIN_ROOT}` in a command to reference the plugin directory. goose also 
 |---|---|---|
 | `SessionStart` | A session starts | None |
 | `SessionEnd` | A session ends | None |
-| `Stop` | goose finishes a turn or receives a stop event | None |
+| `Stop` | lumina finishes a turn or receives a stop event | None |
 | `UserPromptSubmit` | The user submits a prompt | Prompt text |
-| `PreToolUse` | Before goose runs a tool | Tool name |
+| `PreToolUse` | Before lumina runs a tool | Tool name |
 | `PostToolUse` | After a tool succeeds | Tool name |
 | `PostToolUseFailure` | After a tool fails | Tool name |
-| `BeforeReadFile` | Before goose reads a file | File path |
-| `AfterFileEdit` | After goose successfully edits a file | File path |
-| `BeforeShellExecution` | Before goose runs a shell command | Shell command |
-| `AfterShellExecution` | After goose successfully runs a shell command | Shell command |
+| `BeforeReadFile` | Before lumina reads a file | File path |
+| `AfterFileEdit` | After lumina successfully edits a file | File path |
+| `BeforeShellExecution` | Before lumina runs a shell command | Shell command |
+| `AfterShellExecution` | After lumina successfully runs a shell command | Shell command |
 
 The matcher is a regular expression matched against the most relevant string for the event. For example, use `"\\.rs$"` to match Rust files on `AfterFileEdit`, or `"^(cargo test|pnpm test)"` to match test commands on `AfterShellExecution`.
 
@@ -151,12 +151,12 @@ The matcher is a regular expression matched against the most relevant string for
 
 ## Hook Payload
 
-When a hook runs, goose writes a JSON payload to the command's stdin. Every payload includes the event name and session ID. The remaining fields are only present when they apply to the event, so a hook should treat them as optional.
+When a hook runs, lumina writes a JSON payload to the command's stdin. Every payload includes the event name and session ID. The remaining fields are only present when they apply to the event, so a hook should treat them as optional.
 
 | Field | Description |
 |---|---|
 | `event` | Name of the event that fired, such as `PostToolUse` or `UserPromptSubmit`. |
-| `session_id` | ID of the current goose session. |
+| `session_id` | ID of the current lumina session. |
 | `matcher_context` | String the rule's `matcher` is tested against (for example, the tool name on tool events or the prompt text on `UserPromptSubmit`). |
 | `tool_name` | Name of the tool, on tool events. |
 | `tool_input` | Input arguments passed to the tool, on tool events. |
@@ -208,7 +208,7 @@ payload="$(cat)"
 event="$(printf '%s' "$payload" | jq -r .event)"
 tool="$(printf '%s' "$payload" | jq -r '.tool_name // "none"')"
 
-echo "goose hook: event=$event tool=$tool" >> "${PLUGIN_ROOT}/hook.log"
+echo "lumina hook: event=$event tool=$tool" >> "${PLUGIN_ROOT}/hook.log"
 ```
 
 ## Examples
@@ -237,10 +237,10 @@ echo "goose hook: event=$event tool=$tool" >> "${PLUGIN_ROOT}/hook.log"
 payload="$(cat)"
 tool="$(printf '%s' "$payload" | jq -r '.tool_name // "tool"')"
 
-osascript -e "display notification \"$tool failed\" with title \"goose\""
+osascript -e "display notification \"$tool failed\" with title \"lumina\""
 ```
 
-### Format Files After goose Edits Them
+### Format Files After lumina Edits Them
 
 ```json
 {
@@ -292,7 +292,7 @@ fi
         "hooks": [
           {
             "type": "command",
-            "command": "say 'goose finished running your command'"
+            "command": "say 'lumina finished running your command'"
           }
         ]
       }
@@ -303,14 +303,14 @@ fi
 
 ## Try the Example Plugin
 
-goose includes an example plugin at `examples/plugins/hello-hooks`.
+lumina includes an example plugin at `examples/plugins/hello-hooks`.
 
 ```bash
 mkdir -p ~/.agents/plugins
 cp -R examples/plugins/hello-hooks ~/.agents/plugins/hello-hooks
 chmod +x ~/.agents/plugins/hello-hooks/scripts/announce.sh
 
-goose session
+lumina session
 ```
 
 The example prints hook events to stderr and appends full payloads to:
@@ -321,9 +321,9 @@ The example prints hook events to stderr and appends full payloads to:
 
 ## Disable a Hook Plugin
 
-To disable a plugin, add its name to `disabledPlugins` in your goose settings file:
+To disable a plugin, add its name to `disabledPlugins` in your lumina settings file:
 
-```json title="~/.config/goose/settings.json"
+```json title="~/.config/lumina/settings.json"
 {
   "disabledPlugins": ["session-logger"]
 }
@@ -332,7 +332,7 @@ To disable a plugin, add its name to `disabledPlugins` in your goose settings fi
 For project-specific settings, use:
 
 ```text
-<project>/.config/goose/settings.json
+<project>/.config/lumina/settings.json
 ```
 
 A plugin listed in `disabledPlugins` is skipped during plugin discovery, so its hooks will not run.
@@ -350,11 +350,11 @@ Check the following:
 - The command path is correct. Use `${PLUGIN_ROOT}` for scripts inside the plugin.
 - The script is executable if you call it directly.
 - The plugin is not listed in `disabledPlugins`.
-- The event is not a subagent lifecycle event. `SubagentStart` and `SubagentStop` are not currently emitted by goose, so hooks registered for them will never run.
+- The event is not a subagent lifecycle event. `SubagentStart` and `SubagentStop` are not currently emitted by lumina, so hooks registered for them will never run.
 
 ### My Hook Timed Out or Failed
 
-Hook failures are logged but do not crash goose or the tool that triggered the hook. If a hook fails or exceeds its timeout, goose logs the failure and continues.
+Hook failures are logged but do not crash lumina or the tool that triggered the hook. If a hook fails or exceeds its timeout, lumina logs the failure and continues.
 
 Set a larger timeout for long-running hooks:
 
@@ -383,16 +383,16 @@ Hooks run as local shell commands. Make sure any commands your script uses are i
 ## Additional Resources
 
 import ContentCardCarousel from '@site/src/components/ContentCardCarousel';
-import hooksBanner from '@site/static/img/blog/goose-hooks.jpg';
+import hooksBanner from '@site/static/img/blog/lumina-hooks.jpg';
 
 <ContentCardCarousel
   items={[
     {
       type: 'blog',
-      title: 'Hooks: run your own scripts on every goose event',
+      title: 'Hooks: run your own scripts on every lumina event',
       description: 'Learn how lifecycle hooks let you react to session, prompt, tool, file, and shell events with your own scripts.',
       thumbnailUrl: hooksBanner,
-      linkUrl: '/blog/2026/05/14/goose-hooks',
+      linkUrl: '/blog/2026/05/14/lumina-hooks',
       date: '2026-05-14',
       duration: '5 min read'
     }

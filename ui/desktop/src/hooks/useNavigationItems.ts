@@ -8,6 +8,7 @@ import {
   Boxes,
   Settings,
   Zap,
+  FolderKanban,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { defineMessages, type IntlShape, type MessageDescriptor } from 'react-intl';
@@ -23,6 +24,7 @@ export interface NavItem {
 
 /** Top-level nav items (excluding Settings which is pinned to the bottom). */
 export const NAV_ITEMS: NavItem[] = [
+  { id: 'projects', path: '/projects', label: 'Projects', icon: FolderKanban },
   { id: 'home', path: '/', label: 'New Chat', icon: MessageSquarePlus },
   { id: 'recipes', path: '/recipes', label: 'Recipes', icon: FileText },
   { id: 'skills', path: '/skills', label: 'Skills', icon: Zap },
@@ -44,6 +46,10 @@ export const SETTINGS_NAV_ITEM: NavItem = {
 // Translation descriptors for nav labels. Kept here next to NAV_ITEMS so the two
 // stay in sync.
 const navItemMessages = defineMessages({
+  projects: {
+    id: 'navigation.itemProjects',
+    defaultMessage: 'Projects',
+  },
   home: {
     id: 'navigation.itemHome',
     defaultMessage: 'New Chat',

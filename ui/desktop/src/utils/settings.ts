@@ -33,13 +33,12 @@ export type LanguageSetting =
 export interface Settings {
   // Desktop app settings
   showMenuBarIcon: boolean;
-  disableAutoDownload: boolean;
   showDockIcon: boolean;
   enableWakelock: boolean;
   enableNotifications: boolean;
   spellcheckEnabled: boolean;
-  // Key is kept as `externalGoosed` for backward compat with persisted user settings.
-  externalGoosed: ExternalBackendConfig;
+  // Key is kept as `externalLuminad` for backward compat with persisted user settings.
+  externalLuminad: ExternalBackendConfig;
   globalShortcut?: string | null;
   keyboardShortcuts: KeyboardShortcuts;
 
@@ -71,13 +70,12 @@ export const defaultKeyboardShortcuts: DefaultKeyboardShortcuts = {
 export const defaultSettings: Settings = {
   // Desktop app settings
   showMenuBarIcon: true,
-  disableAutoDownload: false,
   showDockIcon: true,
   enableWakelock: false,
   enableNotifications: true,
   spellcheckEnabled: true,
   keyboardShortcuts: defaultKeyboardShortcuts,
-  externalGoosed: {
+  externalLuminad: {
     enabled: false,
     url: '',
     secret: '',
@@ -95,7 +93,7 @@ export const defaultSettings: Settings = {
 export function redactExternalBackendSecret(settings: Settings): Settings {
   return {
     ...settings,
-    externalGoosed: { ...settings.externalGoosed, secret: '' },
+    externalLuminad: { ...settings.externalLuminad, secret: '' },
   };
 }
 

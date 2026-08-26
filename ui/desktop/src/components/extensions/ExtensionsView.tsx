@@ -18,6 +18,7 @@ import { useConfig } from '../ConfigContext';
 import { SearchView } from '../conversation/SearchView';
 import { getSearchShortcutText } from '../../utils/keyboardShortcuts';
 import { defineMessages, useIntl } from '../../i18n';
+import { PRIMARY_EXTENSIONS_URL } from '../../distribution-config';
 
 const i18n = defineMessages({
   heading: {
@@ -152,14 +153,16 @@ export default function ExtensionsView({
                 <Plus className="h-4 w-4" />
                 {intl.formatMessage(i18n.addCustomExtension)}
               </Button>
-              <Button
-                className="flex items-center gap-2 justify-center"
-                variant="secondary"
-                onClick={() => window.open('https://goose-docs.ai/v1/extensions/', '_blank')}
-              >
-                <GPSIcon size={12} />
-                {intl.formatMessage(i18n.browseExtensions)}
-              </Button>
+              {PRIMARY_EXTENSIONS_URL && (
+                <Button
+                  className="flex items-center gap-2 justify-center"
+                  variant="secondary"
+                  onClick={() => window.open(PRIMARY_EXTENSIONS_URL, '_blank')}
+                >
+                  <GPSIcon size={12} />
+                  {intl.formatMessage(i18n.browseExtensions)}
+                </Button>
+              )}
             </div>
           </div>
         </div>

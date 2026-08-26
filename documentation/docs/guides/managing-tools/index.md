@@ -1,7 +1,7 @@
 ---
 title: Managing Tools
 hide_title: true
-description: Control and configure the tools and extensions that power your goose workflows
+description: Control and configure the tools and extensions that power your lumina workflows
 ---
 
 import Card from '@site/src/components/Card';
@@ -9,20 +9,20 @@ import styles from '@site/src/components/Card/styles.module.css';
 
 <h1 className={styles.pageTitle}>Managing Tools</h1>
 <p className={styles.pageDescription}>
-  Tools are specific functions within <a href="/docs/getting-started/using-extensions">extensions</a> that give goose its capabilities. Learn to control and customize how these tools work for you.
+  Tools are specific functions within <a href="/docs/getting-started/using-extensions">extensions</a> that give lumina its capabilities. Learn to control and customize how these tools work for you.
 </p>
 
 <div className={styles.categorySection}>
   <h2 className={styles.categoryTitle}>📚 Documentation & Guides</h2>
   <div className={styles.cardGrid}>
     <Card 
-      title="goose Permissions"
-      description="Choose how much autonomy goose has when using tools, editing files, and taking action in a session."
-      link="/docs/guides/managing-tools/goose-permissions"
+      title="lumina Permissions"
+      description="Choose how much autonomy lumina has when using tools, editing files, and taking action in a session."
+      link="/docs/guides/managing-tools/lumina-permissions"
     />
     <Card 
       title="Tool Permissions"
-      description="Configure fine-grained permissions to control which tools goose can use and when, ensuring secure and controlled automation."
+      description="Configure fine-grained permissions to control which tools lumina can use and when, ensuring secure and controlled automation."
       link="/docs/guides/managing-tools/tool-permissions"
     />
     <Card 

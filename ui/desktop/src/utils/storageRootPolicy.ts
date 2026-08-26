@@ -4,7 +4,7 @@ import { constants as fsConstants } from 'node:fs';
 import type { Stats } from 'node:fs';
 import path from 'node:path';
 
-export const DEFAULT_WINDOWS_GOOSE_PATH_ROOT = 'D:\\Goose';
+export const DEFAULT_WINDOWS_LUMINA_PATH_ROOT = 'D:\\Lumina';
 export const WINDOWS_DESKTOP_DATA_DIRECTORY = 'desktop';
 export const WINDOWS_SHIMS_DIRECTORY = 'bin';
 
@@ -35,7 +35,7 @@ export function resolveManagedPath(root: string, relativePath: string): string {
   return candidate;
 }
 
-const MANAGED_FILE_NAME = /^\.goosehints$/i;
+const MANAGED_FILE_NAME = /^\.luminahints$/i;
 const FORBIDDEN_MANAGED_SEGMENTS = new Set([
   'settings',
   'credentials',
@@ -120,8 +120,8 @@ export async function assertManagedPath(root: string, candidate: string): Promis
 const WINDOWS_STORAGE_ROOT_ERROR =
   'Lumina can only use a regular folder on the local D drive for managed MCP storage on Windows. Choose a folder on D and restart Lumina.';
 
-export function resolveDesktopGoosePathRoot(
-  envPathRoot: string | undefined = process.env.GOOSE_PATH_ROOT,
+export function resolveDesktopLuminaPathRoot(
+  envPathRoot: string | undefined = process.env.LUMINA_PATH_ROOT,
   platform: typeof process.platform = process.platform
 ): string | undefined {
   const trimmed = envPathRoot?.trim();
@@ -129,7 +129,7 @@ export function resolveDesktopGoosePathRoot(
     return trimmed ? expandTilde(trimmed) : undefined;
   }
   if (!trimmed) {
-    return DEFAULT_WINDOWS_GOOSE_PATH_ROOT;
+    return DEFAULT_WINDOWS_LUMINA_PATH_ROOT;
   }
 
   const expanded = expandTilde(trimmed).replace(/\//g, '\\');

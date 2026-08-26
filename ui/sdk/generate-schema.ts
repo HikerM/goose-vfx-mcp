@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generates TypeScript types + Zod validators for Goose custom extension methods.
+ * Generates TypeScript types + Zod validators for Lumina custom extension methods.
  *
  * Usage:
  *   npm run generate              # build Rust schema, then generate TS
@@ -16,8 +16,8 @@ import * as prettier from "prettier";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = resolve(__dirname, "../..");
-const SCHEMA_PATH = resolve(ROOT, "crates/goose/acp-schema.json");
-const META_PATH = resolve(ROOT, "crates/goose/acp-meta.json");
+const SCHEMA_PATH = resolve(ROOT, "crates/lumina/acp-schema.json");
+const META_PATH = resolve(ROOT, "crates/lumina/acp-meta.json");
 const OUTPUT_DIR = resolve(__dirname, "src/generated");
 
 // Export the main function so it can be imported by build-schema.ts
@@ -29,16 +29,26 @@ export default async function main() {
 
   const metaSrc = await fs.readFile(META_PATH, "utf8");
   const meta = JSON.parse(metaSrc);
+  const generatedMeta = {
+    ...meta,
+    methods: meta.methods.filter(
+      (entry: MethodMeta) => !entry.method.startsWith("lumina.mcp"),
+    ),
+  };
+  const generatedSchemas = collectReferencedSchemas(
+    jsonSchema.$defs,
+    generatedMeta,
+  );
 
   await createClient({
     input: {
       openapi: "3.1.0",
       info: {
-        title: "Goose Extensions",
+        title: "Lumina Extensions",
         version: "1.0.0",
       },
       components: {
-        schemas: jsonSchema.$defs,
+        schemas: generatedSchemas,
       },
     },
     output: {
@@ -57,11 +67,74 @@ export default async function main() {
   });
 
   await postProcessTypes();
-  await postProcessIndex(meta);
+  await postProcessZod();
+  await postProcessIndex(generatedMeta);
 
-  await generateClient(meta);
+  await generateClient(generatedMeta);
 
-  console.log(`\nGenerated Goose extension schema in ${OUTPUT_DIR}`);
+  console.log(`\nGenerated Lumina extension schema in ${OUTPUT_DIR}`);
+}
+
+function collectReferencedSchemas(
+  definitions: Record<string, unknown>,
+  meta: {
+    methods: MethodMeta[];
+    notifications?: NotificationMeta[];
+    agentRequests?: AgentRequestMeta[];
+  },
+): Record<string, unknown> {
+  const included = new Set<string>();
+  const include = (name: string | null) => {
+    if (!name || included.has(name) || !definitions[name]) return;
+    included.add(name);
+    visitSchemaReferences(definitions[name], include);
+  };
+
+  for (const method of meta.methods) {
+    include(method.requestType);
+    include(method.responseType);
+  }
+  for (const notification of meta.notifications ?? []) {
+    include(notification.paramsType);
+  }
+  for (const request of meta.agentRequests ?? []) {
+    include(request.requestType);
+    include(request.responseType);
+  }
+
+  return Object.fromEntries(
+    [...included].sort().map((name) => [name, definitions[name]]),
+  );
+}
+
+function visitSchemaReferences(
+  value: unknown,
+  include: (name: string) => void,
+): void {
+  if (Array.isArray(value)) {
+    for (const item of value) visitSchemaReferences(item, include);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+
+  for (const [key, child] of Object.entries(value)) {
+    if (key === "$ref" && typeof child === "string") {
+      const prefix = "#/components/schemas/";
+      if (child.startsWith(prefix)) include(child.slice(prefix.length));
+      continue;
+    }
+    visitSchemaReferences(child, include);
+  }
+}
+
+async function postProcessZod() {
+  const zodPath = resolve(OUTPUT_DIR, "zod.gen.ts");
+  let src = await fs.readFile(zodPath, "utf8");
+  src = src.replace(
+    "export const zExtResponse = ",
+    "export const zExtResponse: z.ZodType<unknown> = ",
+  );
+  await fs.writeFile(zodPath, src);
 }
 
 async function postProcessTypes() {
@@ -89,17 +162,17 @@ async function postProcessIndex(meta: {
 
   const methodConstants = await prettier.format(
     `
-export const GOOSE_EXT_METHODS = ${JSON.stringify(meta.methods, null, 2)} as const;
+export const LUMINA_EXT_METHODS = ${JSON.stringify(meta.methods, null, 2)} as const;
 
-export type GooseExtMethod = (typeof GOOSE_EXT_METHODS)[number];
+export type LuminaExtMethod = (typeof LUMINA_EXT_METHODS)[number];
 
-export const GOOSE_EXT_NOTIFICATIONS = ${JSON.stringify(meta.notifications ?? [], null, 2)} as const;
+export const LUMINA_EXT_NOTIFICATIONS = ${JSON.stringify(meta.notifications ?? [], null, 2)} as const;
 
-export type GooseExtNotification = (typeof GOOSE_EXT_NOTIFICATIONS)[number];
+export type LuminaExtNotification = (typeof LUMINA_EXT_NOTIFICATIONS)[number];
 
-export const GOOSE_EXT_AGENT_REQUESTS = ${JSON.stringify(meta.agentRequests ?? [], null, 2)} as const;
+export const LUMINA_EXT_AGENT_REQUESTS = ${JSON.stringify(meta.agentRequests ?? [], null, 2)} as const;
 
-export type GooseExtAgentRequest = (typeof GOOSE_EXT_AGENT_REQUESTS)[number];
+export type LuminaExtAgentRequest = (typeof LUMINA_EXT_AGENT_REQUESTS)[number];
 `,
     { parser: "typescript" },
   );
@@ -152,11 +225,11 @@ interface AgentRequestMeta {
 function methodToHandlerName(method: string): string {
   let methodParts = method.split(/[/_]/).filter((part) => part.length > 0);
   let prefix = "";
-  if (methodParts[0] == "goose" && methodParts[1] == "unstable") {
+  if (methodParts[0] == "lumina" && methodParts[1] == "unstable") {
     methodParts.shift();
     methodParts.shift();
     prefix = "unstable_";
-  } else if (methodParts[0] == "goose") {
+  } else if (methodParts[0] == "lumina") {
     methodParts.shift();
   }
   const body = methodParts
@@ -174,7 +247,7 @@ function methodToCamelCase(method: string): string {
   let methodParts = method.split(/[/_]/).filter((part) => part.length > 0);
 
   let suffix: string;
-  if (methodParts[0] == "goose" && methodParts[1] == "unstable") {
+  if (methodParts[0] == "lumina" && methodParts[1] == "unstable") {
     methodParts.shift();
     methodParts.shift();
     suffix = "_unstable";
@@ -317,16 +390,16 @@ async function generateClient(meta: {
     );
   }
 
-  const handlersInterface = `export interface GooseExtNotifications {
+  const handlersInterface = `export interface LuminaExtNotifications {
 ${handlerFields.join("\n")}
 }`;
 
-  const agentRequestsInterface = `export interface GooseExtAgentRequests {
+  const agentRequestsInterface = `export interface LuminaExtAgentRequests {
 ${agentRequestHandlerFields.join("\n")}
 }`;
 
-  const agentRequestDispatcherFn = `export function installGooseExtAgentRequestDispatcher(
-  callbacks: GooseClientCallbacks,
+  const agentRequestDispatcherFn = `export function installLuminaExtAgentRequestDispatcher(
+  callbacks: LuminaClientCallbacks,
 ): Client {
   const dispatcher: Pick<Client, "extMethod"> = {
     extMethod: async (method, params) => {
@@ -352,8 +425,8 @@ ${agentRequestDispatchCases.join("\n")}
   }) as Client;
 }`;
 
-  const dispatcherFn = `export function installGooseExtNotificationDispatcher(
-  callbacks: GooseClientCallbacks,
+  const dispatcherFn = `export function installLuminaExtNotificationDispatcher(
+  callbacks: LuminaClientCallbacks,
 ): Client {
   const dispatcher: Pick<Client, "extNotification"> = {
     extNotification: async (method, params) => {
@@ -395,7 +468,7 @@ ${upstreamImportLine}
 ${typeImportLine}
 ${zodImportLine}
 
-export class GooseExtClient {
+export class LuminaExtClient {
   constructor(private conn: ExtMethodProvider) {}
 ${methodDefs.join("\n")}
 }
@@ -404,11 +477,11 @@ ${handlersInterface}
 
 ${agentRequestsInterface}
 
-export type GooseClientCallbacks =
+export type LuminaClientCallbacks =
   Omit<Client, "extNotification" | "extMethod"> &
   Partial<Pick<Client, "extNotification" | "extMethod">> &
-  GooseExtNotifications &
-  GooseExtAgentRequests;
+  LuminaExtNotifications &
+  LuminaExtAgentRequests;
 
 ${dispatcherFn}
 
@@ -423,7 +496,7 @@ ${agentRequestDispatcherFn}
 }
 
 // Run main if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && resolve(process.argv[1]) === __filename) {
   main().catch((err) => {
     console.error(err);
     process.exit(1);

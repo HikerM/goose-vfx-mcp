@@ -24,10 +24,10 @@ Subagents are independent instances that execute tasks while keeping your main c
 ## How to Use Subagents
 
 :::tip Autonomous Subagent Creation
-goose can autonomously decide to use subagents when it determines they would be beneficial for your task - you don't always need to explicitly request them. This happens automatically in autonomous [permission mode](/docs/guides/managing-tools/goose-permissions) (the default). Subagents are disabled in manual approval, smart approval, and chat-only modes.
+lumina can autonomously decide to use subagents when it determines they would be beneficial for your task - you don't always need to explicitly request them. This happens automatically in autonomous [permission mode](/docs/guides/managing-tools/lumina-permissions) (the default). Subagents are disabled in manual approval, smart approval, and chat-only modes.
 :::
 
-To use subagents, ask goose to delegate tasks using natural language. goose automatically decides when to spawn subagents and handles their lifecycle. You can:
+To use subagents, ask lumina to delegate tasks using natural language. lumina automatically decides when to spawn subagents and handles their lifecycle. You can:
 
 1. **Request specialized help**: "Use a code reviewer to analyze this function for security issues"
 2. **Reference specific recipes**: "Use the 'security-auditor' recipe to scan this endpoint"  
@@ -44,16 +44,16 @@ You can run multiple subagents sequentially or in parallel.
 
 ## Monitoring Subagent Activity
 
-When goose delegates work to a subagent, you can see the subagent's tool calls in real-time. This transparency helps you understand what the subagent is doing and verify it's on the right track.
+When lumina delegates work to a subagent, you can see the subagent's tool calls in real-time. This transparency helps you understand what the subagent is doing and verify it's on the right track.
 
 <Tabs groupId="interface">
-  <TabItem value="desktop" label="goose Desktop" default>
+  <TabItem value="desktop" label="lumina Desktop" default>
     Subagent tool calls appear as expandable sections within the conversation. Click to expand and see the full details of each tool call, including:
     - The tool name being invoked
     - Arguments passed to the tool
     - Tool output and results
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     Subagent tool calls are displayed inline with visual indicators showing the tool name and extension. For example:
 
     ```text
@@ -73,7 +73,7 @@ If a subagent fails or times out (5-minute default), you will receive no output 
 
 ## Internal Subagents
 
-Internal subagents spawn goose instances to handle tasks using your current session's context and extensions. There are two ways to configure and execute internal subagents:
+Internal subagents spawn lumina instances to handle tasks using your current session's context and extensions. There are two ways to configure and execute internal subagents:
 
 1. **Direct Prompts** - Quick, one-off tasks using natural language instructions
 2. **Recipes** - Reusable, structured configurations for specialized subagent behavior
@@ -81,7 +81,7 @@ Internal subagents spawn goose instances to handle tasks using your current sess
 ### Direct Prompts
 Direct prompts provided for one-off tasks using natural language prompts. The main agent automatically configures the subagent based on your request.
 
-**goose Prompt:**
+**lumina Prompt:**
 ```
 "Use 2 subagents to create hello.html with 'Hello World' content and goodbye.html with 'Goodbye World' content in parallel"
 ```
@@ -149,16 +149,16 @@ prompt: |
   Provide specific, actionable feedback with examples.
 ```
 
-**Place your recipe file where goose can find it**
-- Set [`GOOSE_RECIPE_PATH`](/docs/guides/recipes/recipe-reference#recipe-location) environment variable to your recipe directory
+**Place your recipe file where lumina can find it**
+- Set [`LUMINA_RECIPE_PATH`](/docs/guides/recipes/recipe-reference#recipe-location) environment variable to your recipe directory
 - Or place it in your current working directory
 
-**goose Prompt**
+**lumina Prompt**
 ```
 Use the "code-reviewer" recipe to analyze the authentication feature I implemented
 ```
 
-**goose Output**
+**lumina Output**
 ```
 I'll use your code-reviewer recipe to create a specialized subagent for this analysis.
 
@@ -181,9 +181,9 @@ I'll use your code-reviewer recipe to create a specialized subagent for this ana
 
 ## External Subagents
 
-External subagents let you bring in AI agents from other providers and platforms, enabling goose to coordinate and integrate your workflow with the broader ecosystem. In the below example, we use Codex as a subagent by running it as an MCP server:
+External subagents let you bring in AI agents from other providers and platforms, enabling lumina to coordinate and integrate your workflow with the broader ecosystem. In the below example, we use Codex as a subagent by running it as an MCP server:
 
-**[goose Configuration File](/docs/guides/config-files)** (`.~/.config/goose/config.yaml `):
+**[lumina Configuration File](/docs/guides/config-files)** (`.~/.config/lumina/config.yaml `):
 ```yaml
 subagent:
   args:
@@ -213,26 +213,26 @@ approval_policy = "never"
 mode = "workspace-write"
 ```
 
-**goose Prompt:**
+**lumina Prompt:**
 ```
 "Use the codex subagent to analyze my codebase structure and identify the main components"
 ```
 
-**goose Output:**
+**lumina Output:**
 
 ```md
 Based on my analysis of your codebase, here are the main components:
 
-1. **Core Agent System** (`crates/goose/src/agents/`)
+1. **Core Agent System** (`crates/lumina/src/agents/`)
    - Agent orchestration and session management
    - Tool execution framework
    - Extension system integration
 
-2. **CLI Interface** (`crates/goose-cli/`)
+2. **CLI Interface** (`crates/lumina-cli/`)
    - Command-line interface and session handling
    - Configuration management
 
-3. **ACP Server** (`crates/goose/src/acp/`)
+3. **ACP Server** (`crates/lumina/src/acp/`)
    - Agent Client Protocol endpoints
    - HTTP/WebSocket communication for real-time interaction
 
@@ -271,7 +271,7 @@ Subagents use the following pre-configured settings, but you can override any de
 ### Default Settings
 | Parameter | Default | How to Customize |
 |-----------|---------|------------------|
-| **Max Turns** | 25 | Use natural language, set `GOOSE_SUBAGENT_MAX_TURNS`, or configure `settings.max_turns` in [recipes](/docs/guides/recipes/recipe-reference#settings) or subagent tool calls |
+| **Max Turns** | 25 | Use natural language, set `LUMINA_SUBAGENT_MAX_TURNS`, or configure `settings.max_turns` in [recipes](/docs/guides/recipes/recipe-reference#settings) or subagent tool calls |
 | **Timeout** | 5 minutes | Request longer timeout in your prompt |
 | **Extensions** | Inherited from parent | Specify which extensions to use in your prompt |
 | **Return Mode** | All subagent information provided in main session | Specify how much detail you want in your prompt |
@@ -293,7 +293,7 @@ You can override any default by including the setting in your natural language r
 "Use a research subagent with 30 turns and 20-minute timeout to investigate quantum computing trends"
 ```
 
-**Environment variable:** Set `GOOSE_SUBAGENT_MAX_TURNS` to change the default max turns for all subagents.
+**Environment variable:** Set `LUMINA_SUBAGENT_MAX_TURNS` to change the default max turns for all subagents.
 
 ### Extension Control
 
@@ -322,7 +322,7 @@ Recipes that define [`sub_recipes`](/docs/guides/recipes/subrecipes) have `summo
 ```
 
 ### Return Mode Control
-Choose how much information goose provides from its subagents in your main session.
+Choose how much information lumina provides from its subagents in your main session.
 
 **Full Details (Default):** See all tool executions and reasoning steps
 ```
@@ -378,7 +378,7 @@ import agentCoordination from '@site/blog/2025-08-14-agent-coordination-patterns
     {
       type: 'video',
       title: 'How I Built an App with 6 Subagents',
-      description: 'Deep dive into goose subagents. Walk through building an app using 6 specialized AI agents for advanced workflow automation and development.',
+      description: 'Deep dive into lumina subagents. Walk through building an app using 6 specialized AI agents for advanced workflow automation and development.',
       thumbnailUrl: 'https://img.youtube.com/vi/yIBrD5AxtTc/maxresdefault.jpg',
       linkUrl: 'https://www.youtube.com/watch?v=yIBrD5AxtTc',
       date: '2025-10-01',
@@ -388,7 +388,7 @@ import agentCoordination from '@site/blog/2025-08-14-agent-coordination-patterns
       type: 'tutorial',
       title: 'Tutorial: Using Subagents',
       description: 'Spin up a team of subagents to build a fully functional app',
-      thumbnailUrl: 'https://goose-docs.ai/assets/images/tutorial-using-subagents-ef265627024db73e73d80e5799ed0c1a.png',
+      thumbnailUrl: 'https://hikerm.github.io/lumina/assets/images/tutorial-using-subagents-ef265627024db73e73d80e5799ed0c1a.png',
       linkUrl: '/docs/tutorials/subagents',
       date: '2026-01-27',
       duration: '1 hour'
@@ -396,7 +396,7 @@ import agentCoordination from '@site/blog/2025-08-14-agent-coordination-patterns
     {
       type: 'video',
       title: 'Flight School - Choosing the Right Tools for AI Work',
-      description: 'Discover the differences between subagents and subrecipes for efficient task execution in goose. Learn which approach is best for your workflow.',
+      description: 'Discover the differences between subagents and subrecipes for efficient task execution in lumina. Learn which approach is best for your workflow.',
       thumbnailUrl: 'https://img.youtube.com/vi/joePzlkARjs/maxresdefault.jpg',
       linkUrl: 'https://www.youtube.com/watch?v=joePzlkARjs',
       date: '2025-09-29',
@@ -405,7 +405,7 @@ import agentCoordination from '@site/blog/2025-08-14-agent-coordination-patterns
     {
       type: 'video',
       title: 'Flight School - Choosing the Right Tools for AI Work',
-      description: 'Discover the differences between subagents and subrecipes for efficient task execution in goose. Learn which approach is best for your workflow.',
+      description: 'Discover the differences between subagents and subrecipes for efficient task execution in lumina. Learn which approach is best for your workflow.',
       thumbnailUrl: 'https://img.youtube.com/vi/joePzlkARjs/maxresdefault.jpg',
       linkUrl: 'https://www.youtube.com/watch?v=joePzlkARjs',
       date: '2025-09-29',
@@ -413,8 +413,8 @@ import agentCoordination from '@site/blog/2025-08-14-agent-coordination-patterns
     },
     {
       type: 'blog',
-      title: 'How to Choose Between Subagents and Subrecipes in goose',
-      description: 'Detailed guide to subagents and subrecipes in goose. Compare reusability, setup complexity, and get practical advice for choosing the right approach.',
+      title: 'How to Choose Between Subagents and Subrecipes in lumina',
+      description: 'Detailed guide to subagents and subrecipes in lumina. Compare reusability, setup complexity, and get practical advice for choosing the right approach.',
       thumbnailUrl: subagentsVsSubrecipes,
       linkUrl: '/blog/2025/09/26/subagents-vs-subrecipes',
       date: '2025-09-26',

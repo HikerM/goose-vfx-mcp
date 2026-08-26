@@ -1,26 +1,26 @@
 ---
 title: Brave Search Extension
-description: Add Brave Search API as a goose Extension
+description: Add Brave Search API as a lumina Extension
 unlisted: true
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/kD2YA61NTLU" />
 
 Server moved
 
-This tutorial will get you started with the [Brave Search MCP Server](https://www.pulsemcp.com/servers/brave-search) as a goose extension to enable interactive searches for both web and local searches.
+This tutorial will get you started with the [Brave Search MCP Server](https://www.pulsemcp.com/servers/brave-search) as a lumina extension to enable interactive searches for both web and local searches.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-brave-search&id=brave-search&name=Brave%20Search&description=Brave%20Search%20API&env=BRAVE_API_KEY%3DYour%20API%20Key)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-brave-search&id=brave-search&name=Brave%20Search&description=Brave%20Search%20API&env=BRAVE_API_KEY%3DYour%20API%20Key)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
   npx -y @modelcontextprotocol/server-brave-search
@@ -40,8 +40,8 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaDesktopInstaller
     extensionId="brave-search"
     extensionName="Brave Search"
     description="Brave Search API"
@@ -52,54 +52,54 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     apiKeyLinkText="Brave Search API Key"
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to add a `Command-line Extension`
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◆  What type of extension would you like to add?
-    │  ○ Built-in Extension 
-    // highlight-start    
+    │  ○ Built-in Extension
+    // highlight-start
     │  ● Command-line Extension (Run a local command or script)
     // highlight-end
-    │  ○ Remote Extension (Streamable HTTP) 
-    └ 
+    │  ○ Remote Extension (Streamable HTTP)
+    └
   ```
 
   3. Give your extension a name
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     // highlight-start
     ◆  What would you like to call this extension?
     │  brave-search
     // highlight-end
-    └ 
+    └
   ```
 
   4. Enter the command
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  brave-search
@@ -108,18 +108,18 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  What command should be run?
     │  npx -y @modelcontextprotocol/server-brave-search
     // highlight-end
-    └ 
-  ```  
+    └
+  ```
 
-  5. Enter the number of seconds goose should wait for actions to complete before timing out. Default is 300s
+  5. Enter the number of seconds lumina should wait for actions to complete before timing out. Default is 300s
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  brave-search
@@ -132,18 +132,18 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │  300
     // highlight-end
     │
-    └ 
-  ```  
+    └
+  ```
 
   6. Choose to add a description. If you select "Yes" here, you will be prompted to enter a description for the extension.
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  brave-search
@@ -159,8 +159,8 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │  No
     // highlight-end
     │
-    └ 
-  ```  
+    └
+  ```
 
   7. Obtain a [Brave Search API Key](https://api-dashboard.search.brave.com/app/keys) and paste it in.
   :::info
@@ -168,13 +168,13 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
   :::
 
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  brave-search
@@ -190,7 +190,7 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │
     // highlight-start
     ◆  Would you like to add environment variables?
-    │  Yes 
+    │  Yes
     │
     ◇  Environment variable name:
     │  BRAVE_API_KEY
@@ -199,10 +199,10 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │  ▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪
     │
     ◇  Add another environment variable?
-    │  No 
+    │  No
     // highlight-end
     └  Added brave-search extension
-  ```  
+  ```
 
   </TabItem>
 </Tabs>
@@ -217,13 +217,13 @@ The Brave Search MCP server gives you access to the Brave Search API, providing 
 - **Smart Fallbacks**: Local search automatically falls back to web when no results are found
 
 
-#### goose Prompt
+#### lumina Prompt
 
 ```
 ( O)> Organize a Italian dinner party with Ian, Rizel, Ace, and Ebony. Find 3 or 4 YouTube cooking channels (with URLs) that focus on Italian cuisine for beginners, and then find one recipe (with URL) for each person to make: one salad, two entrees, and one dessert.
 ```
 
-#### goose Output
+#### lumina Output
 
 ```
 

@@ -7,10 +7,6 @@ import tailwindPlugin from "./plugins/tailwind-config.cjs";
 
 require("dotenv").config();
 
-const inkeepApiKey = process.env.INKEEP_API_KEY;
-const inkeepIntegrationId = process.env.INKEEP_INTEGRATION_ID;
-const inkeepOrgId = process.env.INKEEP_ORG_ID;
-
 type SidebarItem = {
   type?: string;
   label?: string;
@@ -19,20 +15,20 @@ type SidebarItem = {
 };
 
 const config: Config = {
-  title: "goose | Your open source AI agent",
+  title: "Lumina | Your open source AI agent",
   tagline: "your local AI agent, automating engineering tasks seamlessly",
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
-  url: "https://goose-docs.ai/",
+  url: "https://hikerm.github.io",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: process.env.TARGET_PATH || "/",
+  baseUrl: process.env.TARGET_PATH || "/lumina/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: "aaif-goose", // Usually your GitHub org/user name.
-  projectName: "goose", // Usually your repo name.
+  organizationName: "HikerM", // Usually your GitHub org/user name.
+  projectName: "lumina", // Usually your repo name.
 
   onBrokenLinks: "throw",
 
@@ -111,21 +107,7 @@ const config: Config = {
             return items;
           },
         },
-        blog: {
-          showReadingTime: true,
-          readingTime: ({ content, frontMatter, defaultReadingTime }) =>
-            frontMatter.reading_time ?? defaultReadingTime({ content }),
-          feedOptions: {
-            type: ["rss", "atom"],
-            xslt: true,
-          },
-          // Useful options to enforce blogging best practices
-          onInlineTags: "warn",
-          onInlineAuthors: "warn",
-          onUntruncatedBlogPosts: "warn",
-          blogSidebarCount: "ALL",
-          postsPerPage: 22,
-        },
+        blog: false,
         theme: {
           customCss: [
             "./src/css/custom.css",
@@ -133,13 +115,7 @@ const config: Config = {
             "./src/css/tailwind.css",
           ],
         },
-        gtag:
-          process.env.NODE_ENV === "production"
-            ? {
-                trackingID: "G-ZS5D6SB4ZJ",
-                anonymizeIP: true,
-              }
-            : false,
+        gtag: false,
       } satisfies Preset.Options,
     ],
   ],
@@ -150,8 +126,8 @@ const config: Config = {
       {
         redirects: [
           {
-            from: "/docs/getting-started/using-goose-free",
-            to: "/docs/getting-started/providers#using-goose-for-free",
+            from: "/docs/getting-started/using-lumina-free",
+            to: "/docs/getting-started/providers#using-lumina-for-free",
           },
           {
             from: "/v1/docs/getting-started/providers",
@@ -186,7 +162,7 @@ const config: Config = {
             to: "/docs/mcp/computer-controller-mcp",
           },
           {
-            from: "/docs/guides/managing-goose-sessions",
+            from: "/docs/guides/managing-lumina-sessions",
             to: "/docs/guides/sessions/session-management",
           },
           {
@@ -194,7 +170,7 @@ const config: Config = {
             to: "/docs/guides/sessions/smart-context-management",
           },
           {
-            from: "/docs/guides/share-goose-sessions",
+            from: "/docs/guides/share-lumina-sessions",
             to: "/docs/guides/recipes/session-recipes",
           },
           {
@@ -222,8 +198,8 @@ const config: Config = {
             to: "/docs/guides/managing-tools/adjust-tool-output",
           },
           {
-            from: "/docs/guides/goose-in-docker",
-            to: "/docs/tutorials/goose-in-docker",
+            from: "/docs/guides/lumina-in-docker",
+            to: "/docs/tutorials/lumina-in-docker",
           },
           {
             from: "/docs/guides/multi-model/creating-plans",
@@ -234,8 +210,8 @@ const config: Config = {
             to: "/docs/guides/context-engineering/creating-plans",
           },
           {
-            from: "/docs/guides/using-gooseignore",
-            to: "/docs/guides/context-engineering/using-gooseignore",
+            from: "/docs/guides/using-luminaignore",
+            to: "/docs/guides/context-engineering/using-luminaignore",
           },
           {
             from: "/docs/guides/config-file",
@@ -254,12 +230,12 @@ const config: Config = {
             to: "/docs/guides/context-engineering/prompt-templates",
           },
           {
-            from: "/docs/guides/goose-permissions",
-            to: "/docs/guides/managing-tools/goose-permissions",
+            from: "/docs/guides/lumina-permissions",
+            to: "/docs/guides/managing-tools/lumina-permissions",
           },
           {
-            from: "/docs/guides/using-goosehints",
-            to: "/docs/guides/context-engineering/using-goosehints",
+            from: "/docs/guides/using-luminahints",
+            to: "/docs/guides/context-engineering/using-luminahints",
           },
           {
             from: "/docs/guides/managing-tools/hooks",
@@ -429,7 +405,7 @@ const config: Config = {
       },
     ],
   ],
-  themes: ["@inkeep/docusaurus/chatButton", "@inkeep/docusaurus/searchBar"],
+  themes: [],
   themeConfig: {
     // Replace with your project's social card
     image: "img/home-banner.png",
@@ -439,7 +415,7 @@ const config: Config = {
     navbar: {
       title: "",
       logo: {
-        alt: "goose Logo", // TODO: replace logo assets with AAIF branding
+        alt: "Lumina Logo",
         src: "img/logo_light.png",
         srcDark: "img/logo_dark.png",
       },
@@ -464,7 +440,6 @@ const config: Config = {
           position: "left",
           label: "MCPs",
         },
-        { to: "/blog", label: "Blog", position: "left" },
         {
           type: "dropdown",
           label: "Resources",
@@ -498,12 +473,7 @@ const config: Config = {
         },
 
         {
-          href: "https://discord.gg/goose-oss",
-          label: "Discord",
-          position: "right",
-        },
-        {
-          href: "https://github.com/aaif-goose/goose",
+          href: "https://github.com/HikerM/lumina",
           label: "GitHub",
           position: "right",
         },
@@ -515,7 +485,7 @@ const config: Config = {
           title: "Quick Links",
           items: [
             {
-              label: "Install goose",
+              label: "Install lumina",
               to: "docs/getting-started/installation",
             },
             {
@@ -525,87 +495,20 @@ const config: Config = {
           ],
         },
         {
-          title: "Community",
-          items: [
-            {
-              label: "Spotlight",
-              to: "community",
-            },
-            {
-              label: "Discord",
-              href: "https://discord.gg/goose-oss",
-            },
-            {
-              label: "YouTube",
-              href: "https://www.youtube.com/@goose-oss",
-            },
-            {
-              label: "LinkedIn",
-              href: "https://www.linkedin.com/company/goose-oss",
-            },
-            {
-              label: "Twitter / X",
-              href: "https://x.com/goose_oss",
-            },
-            {
-              label: "BlueSky",
-              href: "https://bsky.app/profile/opensource.block.xyz",
-            },
-            {
-              label: "Nostr",
-              href: "https://njump.me/opensource@block.xyz",
-            },
-          ],
-        },
-        {
           title: "More",
           items: [
             {
-              label: "Blog",
-              to: "/blog",
-            },
-            {
               label: "GitHub",
-              href: "https://github.com/aaif-goose/goose",
+              href: "https://github.com/HikerM/lumina",
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} AAIF (Agentic AI Foundation)`,
+      copyright: `Copyright © ${new Date().getFullYear()} Lumina contributors`,
     },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.nightOwl,
-    },
-    inkeepConfig: {
-      baseSettings: {
-        apiKey: inkeepApiKey,
-        integrationId: inkeepIntegrationId,
-        organizationId: inkeepOrgId,
-        primaryBrandColor: "#1E1E1E",
-      },
-      aiChatSettings: {
-        chatSubjectName: "goose",
-        botAvatarSrcUrl: "",
-        getHelpCallToActions: [
-          {
-            name: "GitHub",
-            url: "https://github.com/aaif-goose/goose",
-            icon: {
-              builtIn: "FaGithub",
-            },
-          },
-        ],
-        quickQuestions: ["What is goose?"],
-      },
-    },
-    announcementBar: {
-      id: 'goose-aaif-announcement', // Increment on new announcements to reuse the bar
-      content:
-        '✨ goose has moved to the Agentic AI Foundation (AAIF): <a href="/blog/2026/04/07/goose-moves-to-aaif">Learn more</a>! ✨',
-      backgroundColor: '#20232a',
-      textColor: '#fff',
-      isCloseable: true,
     },
   } satisfies Preset.ThemeConfig,
 };

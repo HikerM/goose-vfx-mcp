@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://goose.ai/schemas/mcp-install-authorization-envelope-v1.schema.json",
+  "$id": "https://hikerm.github.io/lumina/schemas/mcp-install-authorization-envelope-v1.schema.json",
   "title": "Unverified MCP install authorization envelope v1",
   "description": "Structural prefilter for an unverified authorization envelope. A schema match does not verify a signature, grant authorization, or permit installation, download, or execution; JSON Schema cannot inspect duplicate lexical JSON keys, and consumers must use the fail-closed Rust parser before relying on this document.",
   "type": "object",
   "additionalProperties": false,
   "required": ["document_type", "schema_version", "authorization_id", "issuer", "tenant", "manifest_digest", "closure_digest", "artifact_bindings", "adapter_contract", "platform", "mode", "issued_at_ms", "not_before_ms", "expires_at_ms", "revocation", "offline", "signature"],
   "properties": {
-    "document_type": {"const": "goose.mcp.install-authorization"}, "schema_version": {"const": 1}, "authorization_id": {"$ref": "#/$defs/id"}, "issuer": {"$ref": "#/$defs/id"}, "tenant": {"$ref": "#/$defs/id"}, "manifest_digest": {"$ref": "#/$defs/digest"}, "closure_digest": {"$ref": "#/$defs/digest"},
+    "document_type": {"const": "lumina.mcp.install-authorization"}, "schema_version": {"const": 1}, "authorization_id": {"$ref": "#/$defs/id"}, "issuer": {"$ref": "#/$defs/id"}, "tenant": {"$ref": "#/$defs/id"}, "manifest_digest": {"$ref": "#/$defs/digest"}, "closure_digest": {"$ref": "#/$defs/digest"},
     "artifact_bindings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/artifact"}, "description": "uniqueItems compares complete JSON values only; the Rust parser also requires artifact_id to be unique."}, "adapter_contract": {"$ref": "#/$defs/contract"}, "platform": {"$ref": "#/$defs/id"}, "mode": {"enum": ["offline_bound", "online_bound"]}, "issued_at_ms": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615, "description": "The Rust parser enforces issued_at_ms <= not_before_ms <= expires_at_ms."}, "not_before_ms": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615, "description": "The Rust parser enforces issued_at_ms <= not_before_ms <= expires_at_ms."}, "expires_at_ms": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615, "description": "The Rust parser enforces issued_at_ms <= not_before_ms <= expires_at_ms."}, "revocation": {"$ref": "#/$defs/revocation"}, "offline": {"$ref": "#/$defs/offline"}, "signature": {"$ref": "#/$defs/signature"}
   },
   "$defs": {

@@ -6,7 +6,7 @@ import type {
   McpPlanIntent,
   McpPlanReview,
   McpTaskRef,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { Activity, Play, RotateCcw, Square, Trash2, Wrench } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';

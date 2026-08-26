@@ -8,17 +8,14 @@ import {
   useLocation,
   useSearchParams,
 } from 'react-router-dom';
-import { importNostrSessionFromDeepLink } from './sessionLinks';
 import { ErrorUI } from './components/ErrorBoundary';
 import { ExtensionInstallModal } from './components/ExtensionInstallModal';
 import RecipeParamsModalContainer from './components/RecipeParamsModalContainer';
 import { isRecipeParamsCancelled } from './acp/errors';
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import AnnouncementModal from './components/AnnouncementModal';
-import TelemetryConsentPrompt from './components/TelemetryConsentPrompt';
 import OnboardingGuard from './components/onboarding/OnboardingGuard';
 import { createSession } from './sessions';
-import { acpListSessions, acpDeleteSession } from './acp/sessions';
 
 import { ChatType } from './types/chat';
 import Hub from './components/Hub';
@@ -49,6 +46,8 @@ import RecipesView from './components/recipes/RecipesView';
 import SkillsView from './components/skills/SkillsView';
 import AppsView from './components/apps/AppsView';
 import McpCenterView from './components/mcp-center/McpCenterView';
+import ProjectHomeView from './components/projects/ProjectHomeView';
+import ProjectWorkbenchView from './components/projects/ProjectWorkbenchView';
 import StandaloneAppView from './components/apps/StandaloneAppView';
 import { View, ViewOptions } from './utils/navigationUtils';
 
@@ -309,8 +308,6 @@ const ExtensionsRoute = () => {
 export function AppInner() {
   const [fatalError, setFatalError] = useState<string | null>(null);
 
-  const nostrImportInFlight = useRef<string | null>(null);
-
   const navigate = useNavigate();
   const setView = useNavigation();
 
@@ -403,60 +400,6 @@ export function AppInner() {
     window.electron.on('system-resume', handleSystemResume);
     return () => window.electron.off('system-resume', handleSystemResume);
   }, []);
-
-  useEffect(() => {
-    acpListSessions()
-      .then(({ sessions }) => {
-        const phantom = sessions.filter(
-          (s) => s.messageCount === 0 && !s.userSetName && !s.hasRecipe
-        );
-        for (const s of phantom) {
-          acpDeleteSession(s.id).catch(() => {});
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const handleOpenSharedSession = async (_event: IpcRendererEvent, ...args: unknown[]) => {
-      const link = args[0] as string;
-      window.electron.logInfo('Opening session share link');
-
-      if (!link.startsWith('goose://sessions/nostr')) {
-        toast.error('Unsupported session share link');
-        navigate('/sessions');
-        return;
-      }
-
-      if (nostrImportInFlight.current === link) {
-        window.electron.logInfo('Skipping duplicate Nostr deep link import');
-        return;
-      }
-      nostrImportInFlight.current = link;
-
-      try {
-        await importNostrSessionFromDeepLink(link);
-        navigate('/sessions');
-      } catch (error) {
-        console.error('Unexpected error opening Nostr session share:', error);
-        trackErrorWithContext(error, {
-          component: 'AppInner',
-          action: 'open_nostr_session_share',
-          recoverable: true,
-        });
-        toast.error(`Failed to import Nostr session: ${errorMessage(error, 'Unknown error')}`);
-        navigate('/sessions');
-      } finally {
-        if (nostrImportInFlight.current === link) {
-          nostrImportInFlight.current = null;
-        }
-      }
-    };
-    window.electron.on('open-shared-session', handleOpenSharedSession);
-    return () => {
-      window.electron.off('open-shared-session', handleOpenSharedSession);
-    };
-  }, [navigate]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -665,6 +608,8 @@ export function AppInner() {
               />
               <Route path="apps" element={<AppsView />} />
               <Route path="mcp-center" element={<McpCenterView />} />
+              <Route path="projects" element={<ProjectHomeView />} />
+              <Route path="projects/:projectId" element={<ProjectWorkbenchView />} />
               <Route path="sessions" element={<SessionsRoute />} />
               <Route path="schedules" element={<SchedulesRoute />} />
               <Route path="recipes" element={<RecipesRoute />} />
@@ -687,7 +632,6 @@ export default function App() {
             <AppInner />
           </HashRouter>
           <AnnouncementModal />
-          <TelemetryConsentPrompt />
         </ModelAndProviderProvider>
       </FeaturesProvider>
     </ThemeProvider>

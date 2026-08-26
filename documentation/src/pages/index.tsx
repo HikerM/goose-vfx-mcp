@@ -4,17 +4,17 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 
 import styles from "./index.module.css";
-import { GooseLogo } from "../components/GooseLogo";
+import { LuminaLogo } from "../components/LuminaLogo";
 
 function HeroSection() {
   return (
     <header className={styles.hero}>
       <div className={styles.heroInner}>
         <div className={styles.heroBadge}>
-          Open Source · Apache 2.0 · Agentic AI Foundation
+          Open Source · Apache 2.0 · Rust
         </div>
         <div className={styles.heroLogo}>
-          <GooseLogo />
+          <LuminaLogo />
         </div>
         <p className={styles.heroSubtitle}>
           Your native open source AI agent. Desktop app, CLI, and API — for code,
@@ -25,7 +25,7 @@ function HeroSection() {
             className="button button--primary button--lg"
             to="docs/getting-started/installation"
           >
-            Install goose
+            Install Lumina
           </Link>
           <Link
             className={`button button--outline button--lg ${styles.secondaryButton}`}
@@ -33,22 +33,6 @@ function HeroSection() {
           >
             Quickstart
           </Link>
-        </div>
-        <div className={styles.heroStats}>
-          <div className={styles.stat}>
-            <span className={styles.statNumber}>45k+</span>
-            <span className={styles.statLabel}>GitHub stars</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.stat}>
-            <span className={styles.statNumber}>500+</span>
-            <span className={styles.statLabel}>Contributors</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.stat}>
-            <span className={styles.statNumber}>70+</span>
-            <span className={styles.statLabel}>MCP extensions</span>
-          </div>
         </div>
       </div>
     </header>
@@ -91,9 +75,9 @@ function FeaturesSection() {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <h2 className={styles.sectionTitle}>What goose does</h2>
+        <h2 className={styles.sectionTitle}>What Lumina does</h2>
         <p className={styles.sectionSubtitle}>
-          goose is a general-purpose AI agent that runs on your machine. Not
+          Lumina is a general-purpose AI agent that runs on your machine. Not
           just for code — use it for research, writing, automation, data
           analysis, or anything you need to get done.
         </p>
@@ -114,7 +98,7 @@ function FeaturesSection() {
             title="Extensible"
             description={
               <p>
-                Connect to 70+ extensions — databases, APIs, browsers, GitHub,
+                Connect to extensions for databases, APIs, browsers, GitHub,
                 Google Drive, and more — via the{" "}
                 <a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">
                   Model Context Protocol
@@ -130,7 +114,7 @@ function FeaturesSection() {
             title="Any LLM, including your subscriptions"
             description={
               <p>
-                Works with 15+ providers — Anthropic, OpenAI, Google, Ollama,
+                Works with providers including Anthropic, OpenAI, Google, Ollama,
                 OpenRouter, Azure, Bedrock, and more. Use API keys or your
                 existing Claude, ChatGPT, or Gemini subscriptions via{" "}
                 <Link to="/docs/guides/acp-providers">ACP</Link>.
@@ -156,7 +140,7 @@ function FeaturesSection() {
             title="MCP Apps"
             description={
               <p>
-                Extensions can render interactive UIs directly inside goose
+                Extensions can render interactive UIs directly inside Lumina
                 Desktop — buttons, forms, visualizations. A new way to build{" "}
                 <Link to="/docs/tutorials/building-mcp-apps">
                   agent-powered tools
@@ -207,9 +191,8 @@ function StandardsSection() {
             <p>
               <a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener">MCP</a>{" "}
               is the open standard for connecting AI agents to tools and data
-              sources. goose was one of the earliest adopters and has one of the
-              deepest integrations in the ecosystem — with 70+ documented
-              extensions and growing.
+              sources. Lumina uses MCP for tool, data, and interactive app
+              integrations without tying the runtime to a single vendor.
             </p>
             <Link to="/docs/category/mcp-servers">Browse MCP extensions →</Link>
           </div>
@@ -217,25 +200,20 @@ function StandardsSection() {
             <h3>Agent Client Protocol</h3>
             <p>
               <a href="https://agentclientprotocol.com/" target="_blank" rel="noopener">ACP</a>{" "}
-              is a standard for communicating with coding agents. goose works as
+              is a standard for communicating with coding agents. Lumina works as
               an ACP server — connect from Zed, JetBrains, or VS Code — and can
               use ACP agents like Claude Code and Codex as providers.
             </p>
-            <Link to="/docs/guides/acp-clients">goose as ACP server →</Link>
+            <Link to="/docs/guides/acp-clients">lumina as ACP server →</Link>
           </div>
           <div className={styles.standardCard}>
-            <h3>Agentic AI Foundation</h3>
+            <h3>Independent Lumina protocols</h3>
             <p>
-              goose is part of the{" "}
-              <a href="https://aaif.io/" target="_blank" rel="noopener">
-                Agentic AI Foundation
-              </a>{" "}
-              at the Linux Foundation — ensuring the project remains
-              vendor-neutral, community-governed, and open for the long term.
+              Lumina has its own application, storage, package, update, and
+              extension namespaces. Legacy imports are handled by an isolated
+              migration command rather than by hidden runtime fallbacks.
             </p>
-            <a href="https://aaif.io/" target="_blank" rel="noopener">
-              Learn about AAIF →
-            </a>
+            <Link to="/docs/quickstart">Read the Lumina quickstart →</Link>
           </div>
         </div>
       </div>
@@ -243,38 +221,25 @@ function StandardsSection() {
   );
 }
 
-function CommunitySection() {
+function ResourcesSection() {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <h2 className={styles.sectionTitle}>Community</h2>
+        <h2 className={styles.sectionTitle}>Project resources</h2>
         <p className={styles.sectionSubtitle}>
-          An active community of developers, contributors, and users building
-          extensions, sharing recipes, and pushing the boundaries of what local
-          AI agents can do.
+          Documentation and extension surfaces designed for maintainable,
+          independently versioned Lumina releases.
         </p>
         <div className={styles.communityGrid}>
           <a
-            href="https://discord.gg/goose-oss"
-            target="_blank"
-            rel="noopener"
-            className={styles.communityCard}
-          >
-            <h3>💬 Discord</h3>
-            <p>
-              Ask questions, share what you've built, get help from the
-              community.
-            </p>
-          </a>
-          <a
-            href="https://github.com/aaif-goose/goose"
+            href="https://github.com/HikerM/lumina"
             target="_blank"
             rel="noopener"
             className={styles.communityCard}
           >
             <h3>🐙 GitHub</h3>
             <p>
-              Star, fork, file issues, contribute code. goose is built in the
+              Review source, file issues, and contribute code. Lumina is built in the
               open.
             </p>
           </a>
@@ -282,9 +247,9 @@ function CommunitySection() {
             <h3>🧩 Extensions</h3>
             <p>Browse community-built MCP extensions and add your own.</p>
           </Link>
-          <Link to="/blog" className={styles.communityCard}>
-            <h3>📝 Blog</h3>
-            <p>Tutorials, deep dives, release notes, and community spotlights.</p>
+          <Link to="/docs/category/guides" className={styles.communityCard}>
+            <h3>📘 Guides</h3>
+            <p>Configuration, security, provider, and workflow documentation.</p>
           </Link>
         </div>
       </div>
@@ -303,46 +268,12 @@ function InstallSection() {
               className="button button--primary button--lg"
               to="docs/getting-started/installation"
             >
-              Download the desktop app
+              Read installation instructions
             </Link>
             <p className={styles.installPlatforms}>
               Available for macOS, Linux, and Windows
             </p>
           </div>
-          <div className={styles.installDivider}>
-            <span>or install the CLI</span>
-          </div>
-          <div className={styles.installTerminal}>
-            <div className={styles.terminalBar}>
-              <span className={styles.terminalDot} />
-              <span className={styles.terminalDot} />
-              <span className={styles.terminalDot} />
-            </div>
-            <pre className={styles.terminalBody}>
-              <code>
-{`curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash`}
-              </code>
-            </pre>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function VideoSection() {
-  return (
-    <section className={styles.section}>
-      <div className={styles.container}>
-        <h2 className={styles.sectionTitle}>See goose in action</h2>
-        <div className={styles.videoWrapper}>
-          <iframe
-            src="https://www.youtube.com/embed/D-DpDunrbpo"
-            className={styles.video}
-            title="vibe coding with goose"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
         </div>
       </div>
     </section>
@@ -356,9 +287,8 @@ export default function Home(): ReactNode {
       <main>
         <FeaturesSection />
         <StandardsSection />
-        <CommunitySection />
+        <ResourcesSection />
         <InstallSection />
-        <VideoSection />
       </main>
     </Layout>
   );

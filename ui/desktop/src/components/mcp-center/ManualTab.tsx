@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { McpManualStdioSourcesPage, McpPlanReview, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpManualStdioSourcesPage, McpPlanReview, McpTaskRef } from '@hikerm/lumina-sdk';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';

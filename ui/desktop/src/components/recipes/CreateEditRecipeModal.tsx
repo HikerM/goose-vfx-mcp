@@ -3,7 +3,7 @@ import { useForm } from '@tanstack/react-form';
 import { generateDeepLink } from '../../recipe';
 import type { Recipe, Parameter, RecipeExtension, RecipeSettings } from '../../recipe';
 import { Check, ExternalLink, Play, Save, X } from 'lucide-react';
-import { Geese } from '../icons/Geese';
+import LuminaLogo from '../LuminaLogo';
 import Copy from '../icons/Copy';
 import { Button } from '../ui/button';
 
@@ -13,6 +13,7 @@ import { toastSuccess, toastError } from '../../toasts';
 import { saveRecipe } from '../../recipe/recipe_management';
 import { errorMessage } from '../../utils/conversionUtils';
 import { defineMessages, useIntl } from '../../i18n';
+import { PRIMARY_DOCS_URL } from '../../distribution-config';
 
 const i18n = defineMessages({
   createRecipeTitle: {
@@ -137,8 +138,8 @@ export default function CreateEditRecipeModal({
         jsonSchema: recipe.response?.json_schema
           ? JSON.stringify(recipe.response.json_schema, null, 2)
           : '',
-        model: recipe.settings?.goose_model ?? undefined,
-        provider: recipe.settings?.goose_provider ?? undefined,
+        model: recipe.settings?.lumina_model ?? undefined,
+        provider: recipe.settings?.lumina_provider ?? undefined,
         extensions: recipe.extensions || undefined,
         subRecipes: (recipe.sub_recipes || []).map((sr) => ({
           name: sr.name,
@@ -273,14 +274,14 @@ export default function CreateEditRecipeModal({
       ...(recipe?.settings || {}),
     };
     if (model !== undefined) {
-      mergedSettings.goose_model = model || null;
-    } else if ('goose_model' in mergedSettings) {
-      delete mergedSettings.goose_model;
+      mergedSettings.lumina_model = model || null;
+    } else if ('lumina_model' in mergedSettings) {
+      delete mergedSettings.lumina_model;
     }
     if (provider !== undefined) {
-      mergedSettings.goose_provider = provider || null;
-    } else if ('goose_provider' in mergedSettings) {
-      delete mergedSettings.goose_provider;
+      mergedSettings.lumina_provider = provider || null;
+    } else if ('lumina_provider' in mergedSettings) {
+      delete mergedSettings.lumina_provider;
     }
     const settings = Object.values(mergedSettings).some(
       (value) => value !== undefined && value !== null
@@ -495,7 +496,7 @@ export default function CreateEditRecipeModal({
         <div className="flex items-center justify-between p-6 border-b border-border-primary">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-background-primary rounded-full flex items-center justify-center">
-              <Geese className="w-6 h-6 text-iconProminent" />
+              <LuminaLogo className="h-6 w-6" size="tiny" hover={false} />
             </div>
             <div>
               <h1 className="text-xl font-medium text-text-primary">
@@ -507,15 +508,17 @@ export default function CreateEditRecipeModal({
                 {isCreateMode
                   ? intl.formatMessage(i18n.createSubtitle)
                   : intl.formatMessage(i18n.editSubtitle)}{' '}
-                <a
-                  href="https://goose-docs.ai/docs/guides/recipes/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-blue-500 hover:text-blue-600 hover:underline"
-                >
-                  {intl.formatMessage(i18n.learnMore)}
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                {PRIMARY_DOCS_URL && (
+                  <a
+                    href={`${PRIMARY_DOCS_URL}/guides/recipes/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-500 hover:text-blue-600 hover:underline"
+                  >
+                    {intl.formatMessage(i18n.learnMore)}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </p>
             </div>
           </div>

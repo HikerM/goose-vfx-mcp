@@ -1,24 +1,24 @@
 ---
 title: Chrome DevTools Extension
-description: Add Chrome DevTools MCP Server as a goose Extension
+description: Add Chrome DevTools MCP Server as a lumina Extension
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructions';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/I9FwKbPvgvU" />
 
-This tutorial covers how to add the Chrome DevTools MCP Server as a goose extension to enable browser automation, web performance testing, and interactive web application debugging in a Chrome browser.
+This tutorial covers how to add the Chrome DevTools MCP Server as a lumina extension to enable browser automation, web performance testing, and interactive web application debugging in a Chrome browser.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=npx&arg=-y&arg=chrome-devtools-mcp%40latest&id=chrome-devtools&name=Chrome%20DevTools&description=Browser%20automation%20and%20web%20performance%20testing%20capabilities)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=npx&arg=-y&arg=chrome-devtools-mcp%40latest&id=chrome-devtools&name=Chrome%20DevTools&description=Browser%20automation%20and%20web%20performance%20testing%20capabilities)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
   npx -y chrome-devtools-mcp@latest
@@ -34,8 +34,8 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-    <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+    <LuminaDesktopInstaller
       extensionId="chrome-devtools"
       extensionName="Chrome DevTools"
       description="Browser automation and web performance testing capabilities"
@@ -45,7 +45,7 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
       timeout={300}
     />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     <CLIExtensionInstructions
       name="Chrome DevTools"
       description="Browser automation and web performance testing capabilities"
@@ -56,14 +56,14 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 
 ## Example Usage
 
-In this example, I'll show you how to use goose with the Chrome DevTools Extension to perform automated performance testing on a demo website.
+In this example, I'll show you how to use lumina with the Chrome DevTools Extension to perform automated performance testing on a demo website.
 
-### goose Prompt
+### lumina Prompt
 ```
 Use the chrome dev tools extension to Navigate to https://www.saucedemo.com 
 Then, login as performance_glitch_user and measure the site's performance
 ```
-### goose Output
+### lumina Output
 
 ```
 

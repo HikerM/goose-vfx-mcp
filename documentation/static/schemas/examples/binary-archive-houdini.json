@@ -109,7 +109,7 @@
       "actions": [
         {
           "type": "write_config_fragment",
-          "target": "${host.user_config}/packages/goose-houdini-bridge.json",
+          "target": "${host.user_config}/packages/lumina-houdini-bridge.json",
           "format": "json",
           "fragment": {
             "enable": true,
@@ -118,8 +118,8 @@
         },
         {
           "type": "register_plugin",
-          "registration_id": "goose-houdini-bridge",
-          "target": "${host.user_config}/packages/goose-houdini-bridge.json"
+          "registration_id": "lumina-houdini-bridge",
+          "target": "${host.user_config}/packages/lumina-houdini-bridge.json"
         }
       ]
     }
@@ -139,7 +139,7 @@
     },
     {
       "root": "host",
-      "path": "packages/goose-houdini-bridge.json",
+      "path": "packages/lumina-houdini-bridge.json",
       "kind": "file",
       "remove_on_uninstall": true
     }

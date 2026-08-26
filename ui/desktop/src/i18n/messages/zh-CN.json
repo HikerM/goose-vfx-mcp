@@ -1239,7 +1239,7 @@
     "defaultMessage": "密钥"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "在 Lumina 服务器上配置的密钥（GOOSE_SERVER__SECRET_KEY）"
+    "defaultMessage": "在 Lumina 服务器上配置的密钥（LUMINA_SERVER__SECRET_KEY）"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "输入服务器的密钥"
@@ -1268,67 +1268,67 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "连接到运行在其他位置的 Lumina 服务器（需要重启应用）"
   },
-  "goosehintsModal.close": {
+  "luminahintsModal.close": {
     "defaultMessage": "关闭"
   },
-  "goosehintsModal.developer": {
+  "luminahintsModal.developer": {
     "defaultMessage": "Developer"
   },
-  "goosehintsModal.dialogDescription": {
+  "luminahintsModal.dialogDescription": {
     "defaultMessage": "为你的项目提供额外上下文，改善与 Lumina 的沟通"
   },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "配置项目提示（.goosehints）"
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "配置项目提示（.luminahints）"
   },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": "读取 .goosehints 文件出错：{error}"
+  "luminahintsModal.errorReading": {
+    "defaultMessage": "读取 .luminahints 文件出错：{error}"
   },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": "访问 .goosehints 文件失败"
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": "访问 .luminahints 文件失败"
   },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": "保存 .goosehints 文件失败"
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": "保存 .luminahints 文件失败"
   },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "正在创建新的 .goosehints 文件：{filePath}"
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "正在创建新的 .luminahints 文件：{filePath}"
   },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": "已找到 .goosehints 文件：{filePath}"
+  "luminahintsModal.fileFound": {
+    "defaultMessage": "已找到 .luminahints 文件：{filePath}"
   },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints 是一个文本文件，用于为你的项目提供额外上下文，改善与 Lumina 的沟通。"
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints 是一个文本文件，用于为你的项目提供额外上下文，改善与 Lumina 的沟通。"
   },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "请确认已在扩展页面启用 {bold} 扩展。此扩展是使用 .goosehints 所必需的。你需要重启会话，.goosehints 的更新才会生效。"
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "请确认已在扩展页面启用 {bold} 扩展。此扩展是使用 .luminahints 所必需的。你需要重启会话，.luminahints 的更新才会生效。"
   },
-  "goosehintsModal.helpText3": {
+  "luminahintsModal.helpText3": {
     "defaultMessage": "更多信息请参见 {link}。"
   },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": "使用 .goosehints"
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": "使用 .luminahints"
   },
-  "goosehintsModal.placeholder": {
+  "luminahintsModal.placeholder": {
     "defaultMessage": "在此输入项目提示…"
   },
-  "goosehintsModal.save": {
+  "luminahintsModal.save": {
     "defaultMessage": "保存"
   },
-  "goosehintsModal.savedSuccessfully": {
+  "luminahintsModal.savedSuccessfully": {
     "defaultMessage": "保存成功"
   },
-  "goosehintsModal.saving": {
+  "luminahintsModal.saving": {
     "defaultMessage": "保存中…"
   },
-  "goosehintsSection.configure": {
+  "luminahintsSection.configure": {
     "defaultMessage": "配置"
   },
-  "goosehintsSection.description": {
-    "defaultMessage": "配置项目的 .goosehints 文件，为 Lumina 提供额外上下文"
+  "luminahintsSection.description": {
+    "defaultMessage": "配置项目的 .luminahints 文件，为 Lumina 提供额外上下文"
   },
-  "goosehintsSection.title": {
-    "defaultMessage": "项目提示（.goosehints）"
+  "luminahintsSection.title": {
+    "defaultMessage": "项目提示（.luminahints）"
   },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "问问 Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1412,14 +1412,20 @@
   "huggingFaceModelSearch.noGgufModels": {
     "defaultMessage": "未找到此查询的 GGUF 模型。"
   },
+  "huggingFaceModelSearch.noVariants": {
+    "defaultMessage": "此仓库中未找到兼容的 GGUF 文件。"
+  },
   "huggingFaceModelSearch.recommended": {
     "defaultMessage": "推荐"
+  },
+  "huggingFaceModelSearch.retry": {
+    "defaultMessage": "重试"
   },
   "huggingFaceModelSearch.searchError": {
     "defaultMessage": "搜索错误：{details}"
   },
   "huggingFaceModelSearch.searchFailed": {
-    "defaultMessage": "搜索失败，请重试。"
+    "defaultMessage": "无法连接 ModelScope，请检查网络或代理后重试。"
   },
   "huggingFaceModelSearch.searchHuggingFace": {
     "defaultMessage": "搜索 ModelScope"
@@ -1429,6 +1435,9 @@
   },
   "huggingFaceModelSearch.searchPlaceholder": {
     "defaultMessage": "搜索 GGUF 模型…"
+  },
+  "huggingFaceModelSearch.searching": {
+    "defaultMessage": "正在搜索 ModelScope…"
   },
   "huggingFaceModelSearch.tooLarge": {
     "defaultMessage": "可能超出内存（模型 {size}，可用 {available}）"
@@ -1464,10 +1473,10 @@
     "defaultMessage": "取消"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "粘贴以“goose://recipe?config=”开头的配方深层链接"
+    "defaultMessage": "粘贴以“lumina://recipe?config=”开头的配方深层链接"
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "在此粘贴你的 goose://recipe?config=... 深层链接"
+    "defaultMessage": "在此粘贴你的 lumina://recipe?config=... 深层链接"
   },
   "importRecipeForm.example": {
     "defaultMessage": "示例"
@@ -1742,32 +1751,35 @@
   "launcher.placeholder": {
     "defaultMessage": "问 Lumina 任何问题…"
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina 正在压缩对话…"
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina 正在处理…"
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "正在加载对话…"
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "正在重启会话…"
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina 正在处理…"
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina 正在思考…"
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina 正在等待…"
+  },
+  "localInferenceSettings.automaticSetup": {
+    "defaultMessage": "来源：ModelScope · 连接失败时自动重试 · 下载完成后自动应用本机 GPU 或 CPU 设置。"
+  },
+  "localInferenceSettings.clearToken": {
+    "defaultMessage": "清除令牌"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "删除此模型？之后可以重新下载。"
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "下载和管理用于本地推理的大模型，无需 API 密钥。在 HuggingFace 搜索任意 GGUF 模型，或使用下方推荐。"
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "关闭"
@@ -1791,16 +1803,28 @@
     "defaultMessage": "下载中"
   },
   "localInferenceSettings.evictFromMemory": {
-    "defaultMessage": "Evict from memory"
+    "defaultMessage": "从内存中卸载"
   },
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "推荐模型"
   },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "登录后可在搜索和下载模型时提高速率限制，并访问私有或受限的 Hugging Face 仓库。"
-  },
   "localInferenceSettings.loadedInMemory": {
-    "defaultMessage": "Loaded in memory"
+    "defaultMessage": "已加载到内存"
+  },
+  "localInferenceSettings.modelScopeDescription": {
+    "defaultMessage": "下载和管理用于本地推理的 GGUF 模型，无需 API 密钥。可搜索 ModelScope 或使用下方推荐。"
+  },
+  "localInferenceSettings.modelScopeSourceNote": {
+    "defaultMessage": "模型通过 ModelScope 搜索和下载。公开模型无需登录；私有或受限模型需要 ModelScope 访问令牌。"
+  },
+  "localInferenceSettings.modelScopeTokenDescription": {
+    "defaultMessage": "仅私有或受限模型需要。令牌保存在操作系统凭据存储中，不会写入 Lumina 配置文件。"
+  },
+  "localInferenceSettings.modelScopeTokenPlaceholder": {
+    "defaultMessage": "粘贴新令牌以保存或替换当前令牌"
+  },
+  "localInferenceSettings.modelScopeTokenTitle": {
+    "defaultMessage": "ModelScope 访问令牌"
   },
   "localInferenceSettings.modelSettings": {
     "defaultMessage": "模型设置"
@@ -1820,6 +1844,12 @@
   "localInferenceSettings.retry": {
     "defaultMessage": "重试"
   },
+  "localInferenceSettings.retryingConnection": {
+    "defaultMessage": "连接已中断——正在自动重试（{attempt}/{maximum}）"
+  },
+  "localInferenceSettings.saveToken": {
+    "defaultMessage": "保存令牌"
+  },
   "localInferenceSettings.showAllFeatured": {
     "defaultMessage": "显示全部推荐（还有 {count} 个）"
   },
@@ -1828,6 +1858,9 @@
   },
   "localInferenceSettings.title": {
     "defaultMessage": "本地推理模型"
+  },
+  "localInferenceSettings.tokenConfigured": {
+    "defaultMessage": "已配置访问令牌"
   },
   "localInferenceSettings.vision": {
     "defaultMessage": "视觉"
@@ -2432,20 +2465,14 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "开始使用"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "了解更多"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "本地模型就绪"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "匿名使用数据有助于改善 Lumina。我们绝不采集你的对话、代码或个人数据。"
+  "onboardingSuccess.noTelemetryDescription": {
+    "defaultMessage": "Lumina 不发送遥测数据。提示词只会发送给你主动选择的模型供应商；使用本地模型时，提示词保留在本机。"
   },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "隐私"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "分享匿名使用数据"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "默认值"
@@ -2590,36 +2617,6 @@
   },
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "传给提供商的隐藏指令，用于引导并为回复补充上下文。"
-  },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "错误类型（例如“rate_limit”“auth”——不含详情）"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "扩展及工具使用次数（仅名称）"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "操作系统、版本和架构"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "使用的提供商和模型"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "会话指标（时长、交互次数、令牌用量）"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Lumina 版本和安装方式"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "匿名使用数据帮助我们理解 Lumina 的使用情况并找出改进方向。"
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "我们绝不采集你的对话、代码、工具参数、错误消息或任何个人数据。你随时可以在“设置”中更改此设置。"
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "隐私详情"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "我们采集的内容："
   },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "正在加载消息…（{renderedCount}/{totalCount}）"
@@ -3471,7 +3468,7 @@
     "defaultMessage": "深层链接"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "在此粘贴 goose://recipe 链接…"
+    "defaultMessage": "在此粘贴 lumina://recipe 链接…"
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "编辑计划"
@@ -3483,7 +3480,7 @@
     "defaultMessage": "读取所选文件失败。"
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "深层链接无效。请使用 goose://recipe 链接。"
+    "defaultMessage": "深层链接无效。请使用 lumina://recipe 链接。"
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "文件类型无效：请选择 YAML 文件（.yaml 或 .yml）"
@@ -3800,9 +3797,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "在新窗口中打开"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "分享加密的 Nostr 链接"
-  },
   "sessions.cancel": {
     "defaultMessage": "取消"
   },
@@ -3811,9 +3805,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "查看并搜索你与 Lumina 的过往对话。按 {shortcut} 搜索。"
-  },
-  "sessions.close": {
-    "defaultMessage": "关闭"
   },
   "sessions.delete.message": {
     "defaultMessage": "确定要删除会话“{name}”吗？此操作无法撤销。"
@@ -3842,21 +3833,6 @@
   "sessions.import": {
     "defaultMessage": "导入会话"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "导入链接"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "粘贴 Lumina Nostr 分享链接以获取、解密并导入会话。"
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "导入 Nostr 会话"
-  },
-  "sessions.importing": {
-    "defaultMessage": "正在导入..."
-  },
   "sessions.loadingMore": {
     "defaultMessage": "正在加载更多会话…"
   },
@@ -3874,15 +3850,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "搜索历史…"
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "任何拥有此链接的人都可以获取并解密该会话。请像对待密钥一样保护它。"
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "加密的 Nostr 分享链接"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "已复制到剪贴板"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "删除会话“{name}”失败：{error}"
@@ -3904,12 +3871,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "会话导入成功"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "已创建加密的 Nostr 分享链接"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "创建 Nostr 分享链接失败：{error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "更新会话描述失败：{error}"
@@ -4076,12 +4037,6 @@
   "settings.theme.title": {
     "defaultMessage": "主题"
   },
-  "settings.updates.description": {
-    "defaultMessage": "检查并安装更新，让 Lumina 保持最佳状态"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "更新"
-  },
   "settings.version.title": {
     "defaultMessage": "版本"
   },
@@ -4146,7 +4101,7 @@
     "defaultMessage": "未找到匹配的技能"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "技能从 ~/.config/agents/skills/、.goose/skills/ 或其他受支持目录中的 SKILL.md 文件加载。"
+    "defaultMessage": "技能从 ~/.config/agents/skills/、.lumina/skills/ 或其他受支持目录中的 SKILL.md 文件加载。"
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "未安装任何技能"
@@ -4406,45 +4361,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "使用其他提供商"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "是否愿意分享匿名使用数据帮助改进 Lumina？我们绝不采集你的对话、代码或个人数据。"
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "帮助改进 Lumina"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "了解更多"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "是的，分享匿名使用数据"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "不用了"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "配置错误"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "控制你的数据如何被使用"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "了解更多"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "加载遥测设置失败。"
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "隐私"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "通过分享匿名使用统计来帮助改进 Lumina。"
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "匿名使用数据"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "更新遥测设置失败。"
-  },
   "themeSelector.dark": {
     "defaultMessage": "深色"
   },
@@ -4514,95 +4430,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "允许 {toolName} 吗？"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina 想调用 {toolName}，允许吗？"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "更新将在后台自动下载。"
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "自动下载已通过 GOOSE_DISABLE_AUTO_DOWNLOAD 环境变量禁用。"
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "自动下载已禁用。点击\"立即下载\"以手动下载。"
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "退出应用时将自动安装更新。"
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "检查更新"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "正在检查更新…"
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "当前版本"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "禁用自动更新下载"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "启用后，Lumina 会通知你有新版本，但不会自动下载。"
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "立即下载"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "更新已下载，可以安装！"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "正在下载更新… {percent}%"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "正在下载更新…"
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "安装并重启"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "或点击“安装并重启”立即更新。"
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "你已是最新版本！"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "加载中…"
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "下载完成后，你需要手动安装更新。"
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "此更新方式需要手动安装。"
-  },
-  "updateSection.openCustomReleases": {
-    "defaultMessage": "打开 HikerM 版本下载页"
-  },
-  "updateSection.portableUpdateDescription": {
-    "defaultMessage": "此自定义版本只使用 HikerM 分发通道。更新时请下载新版自定义安装包、关闭 Lumina，再用新版解压后的整个应用文件夹替换旧文件夹。MCP 和模型设置存放在应用文件夹外。"
-  },
-  "updateSection.portableUpdateModelNote": {
-    "defaultMessage": "应用更新不会复制已下载模型。请保留原本地模型数据，或在新电脑重新下载所选模型。"
-  },
-  "updateSection.portableUpdateTitle": {
-    "defaultMessage": "便携自定义版本"
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ 更新已就绪！退出 Lumina 时将自动安装。"
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ 更新已就绪！点击“安装并重启”查看安装说明。"
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "（已是最新）"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "有可用更新！"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ {version} 可用"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "{version} 版本已可用"
   },
   "userMessage.cancel": {
     "defaultMessage": "取消"
@@ -4731,7 +4560,7 @@
     "defaultMessage": "添加本地 stdio 命令或 Streamable HTTP 端点，并按需配置参数、工作目录、环境变量或 HTTP 请求头。"
   },
   "mcpCenter.customStdioHealthAvailable": {
-    "defaultMessage": "启用 MCP 后，可在卡片上检查工具发现；检查失败时可导出诊断报告。"
+    "defaultMessage": "启用 MCP 后，可从卡片检查工具发现；检查失败时请导出诊断报告。"
   },
   "mcpCenter.customStdioHealthUnavailable": {
     "defaultMessage": "请先打开一个聊天，再检查 MCP 工具发现或导出诊断报告。"
@@ -5248,12 +5077,6 @@
   },
   "mcpCenter.yes": {
     "defaultMessage": "是"
-  },
-  "mcpCenter.customStdioHealthAvailable": {
-    "defaultMessage": "启用 MCP 后，可从卡片检查工具发现；检查失败时请导出诊断报告。"
-  },
-  "mcpCenter.customStdioHealthUnavailable": {
-    "defaultMessage": "请先打开一个聊天，再检查 MCP 工具发现或导出诊断报告。"
   },
   "mcpCenter.exportMcpDiagnostics": {
     "defaultMessage": "导出 MCP 诊断报告"

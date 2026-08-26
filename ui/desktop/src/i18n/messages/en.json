@@ -1242,7 +1242,7 @@
     "defaultMessage": "Secret Key"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "The secret key configured on the external backend (GOOSE_SERVER__SECRET_KEY)."
+    "defaultMessage": "The secret key configured on the external backend (LUMINA_SERVER__SECRET_KEY)."
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "Enter the server's secret key"
@@ -1271,67 +1271,7 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "Connect to an ACP-compatible backend running elsewhere."
   },
-  "goosehintsModal.close": {
-    "defaultMessage": "Close"
-  },
-  "goosehintsModal.developer": {
-    "defaultMessage": "Developer"
-  },
-  "goosehintsModal.dialogDescription": {
-    "defaultMessage": "Provide additional context about your project to improve communication with Lumina"
-  },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "Configure Project Hints (.goosehints)"
-  },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": "Error reading .goosehints file: {error}"
-  },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": "Failed to access .goosehints file"
-  },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": "Failed to save .goosehints file"
-  },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "Creating new .goosehints file at: {filePath}"
-  },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": ".goosehints file found at: {filePath}"
-  },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints is a text file used to provide additional context about your project and improve the communication with Lumina."
-  },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "Please make sure {bold} extension is enabled in the extensions page. This extension is required to use .goosehints. You'll need to restart your session for .goosehints updates to take effect."
-  },
-  "goosehintsModal.helpText3": {
-    "defaultMessage": "See {link} for more information."
-  },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": "using .goosehints"
-  },
-  "goosehintsModal.placeholder": {
-    "defaultMessage": "Enter project hints here..."
-  },
-  "goosehintsModal.save": {
-    "defaultMessage": "Save"
-  },
-  "goosehintsModal.savedSuccessfully": {
-    "defaultMessage": "Saved successfully"
-  },
-  "goosehintsModal.saving": {
-    "defaultMessage": "Saving..."
-  },
-  "goosehintsSection.configure": {
-    "defaultMessage": "Configure"
-  },
-  "goosehintsSection.description": {
-    "defaultMessage": "Configure your project's .goosehints file to provide additional context to Lumina"
-  },
-  "goosehintsSection.title": {
-    "defaultMessage": "Project Hints (.goosehints)"
-  },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "Ask Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1415,14 +1355,20 @@
   "huggingFaceModelSearch.noGgufModels": {
     "defaultMessage": "No compatible local models found for this query."
   },
+  "huggingFaceModelSearch.noVariants": {
+    "defaultMessage": "No compatible GGUF files were found in this repository."
+  },
   "huggingFaceModelSearch.recommended": {
     "defaultMessage": "Recommended"
+  },
+  "huggingFaceModelSearch.retry": {
+    "defaultMessage": "Retry"
   },
   "huggingFaceModelSearch.searchError": {
     "defaultMessage": "Search error: {details}"
   },
   "huggingFaceModelSearch.searchFailed": {
-    "defaultMessage": "Search failed. Please try again."
+    "defaultMessage": "ModelScope could not be reached. Check your network or proxy and retry."
   },
   "huggingFaceModelSearch.searchHuggingFace": {
     "defaultMessage": "Search ModelScope"
@@ -1432,6 +1378,9 @@
   },
   "huggingFaceModelSearch.searchPlaceholder": {
     "defaultMessage": "Search for local models..."
+  },
+  "huggingFaceModelSearch.searching": {
+    "defaultMessage": "Searching ModelScope…"
   },
   "huggingFaceModelSearch.tooLarge": {
     "defaultMessage": "May not fit in memory ({size} model, {available} available)"
@@ -1467,10 +1416,10 @@
     "defaultMessage": "Cancel"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "Paste a recipe deeplink starting with \"goose://recipe?config=\""
+    "defaultMessage": "Paste a recipe deeplink starting with \"lumina://recipe?config=\""
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "Paste your goose://recipe?config=... deeplink here"
+    "defaultMessage": "Paste your lumina://recipe?config=... deeplink here"
   },
   "importRecipeForm.example": {
     "defaultMessage": "example"
@@ -1745,25 +1694,25 @@
   "launcher.placeholder": {
     "defaultMessage": "Ask Lumina anything..."
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina is compacting the conversation..."
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina is working on it…"
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "loading conversation..."
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "restarting session..."
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina is working on it…"
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina is thinking…"
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina is waiting…"
   },
   "localInferenceSettings.automaticSetup": {
@@ -1774,9 +1723,6 @@
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "Delete this model? You can re-download it later."
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "Download and manage local GGUF models for inference without API keys. Search ModelScope or use the featured picks below."
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "Dismiss"
@@ -1807,6 +1753,9 @@
   },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
+  },
+  "localInferenceSettings.modelScopeDescription": {
+    "defaultMessage": "Download and manage local GGUF models for inference without API keys. Search ModelScope or use the featured picks below."
   },
   "localInferenceSettings.modelScopeSourceNote": {
     "defaultMessage": "Models are searched and downloaded from ModelScope. Public models do not require login; private or gated models require a ModelScope access token."
@@ -1945,6 +1894,66 @@
   },
   "localModelPicker.useModel": {
     "defaultMessage": "Use {modelId}"
+  },
+  "luminahintsModal.close": {
+    "defaultMessage": "Close"
+  },
+  "luminahintsModal.developer": {
+    "defaultMessage": "Developer"
+  },
+  "luminahintsModal.dialogDescription": {
+    "defaultMessage": "Provide additional context about your project to improve communication with Lumina"
+  },
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "Configure Project Hints (.luminahints)"
+  },
+  "luminahintsModal.errorReading": {
+    "defaultMessage": "Error reading .luminahints file: {error}"
+  },
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": "Failed to access .luminahints file"
+  },
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": "Failed to save .luminahints file"
+  },
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "Creating new .luminahints file at: {filePath}"
+  },
+  "luminahintsModal.fileFound": {
+    "defaultMessage": ".luminahints file found at: {filePath}"
+  },
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints is a text file used to provide additional context about your project and improve the communication with Lumina."
+  },
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "Please make sure {bold} extension is enabled in the extensions page. This extension is required to use .luminahints. You'll need to restart your session for .luminahints updates to take effect."
+  },
+  "luminahintsModal.helpText3": {
+    "defaultMessage": "See {link} for more information."
+  },
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": "using .luminahints"
+  },
+  "luminahintsModal.placeholder": {
+    "defaultMessage": "Enter project hints here..."
+  },
+  "luminahintsModal.save": {
+    "defaultMessage": "Save"
+  },
+  "luminahintsModal.savedSuccessfully": {
+    "defaultMessage": "Saved successfully"
+  },
+  "luminahintsModal.saving": {
+    "defaultMessage": "Saving..."
+  },
+  "luminahintsSection.configure": {
+    "defaultMessage": "Configure"
+  },
+  "luminahintsSection.description": {
+    "defaultMessage": "Configure your project's .luminahints file to provide additional context to Lumina"
+  },
+  "luminahintsSection.title": {
+    "defaultMessage": "Project Hints (.luminahints)"
   },
   "markdownContent.cancel": {
     "defaultMessage": "Cancel"
@@ -4097,6 +4106,9 @@
   "navigation.itemMcpCenter": {
     "defaultMessage": "MCP Center"
   },
+  "navigation.itemProjects": {
+    "defaultMessage": "Projects"
+  },
   "navigation.itemRecipes": {
     "defaultMessage": "Recipes"
   },
@@ -4145,20 +4157,14 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "Get Started"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "Learn more"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "Local model ready"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "Anonymous usage data helps improve Lumina. We never collect your conversations, code, or personal data."
+  "onboardingSuccess.noTelemetryDescription": {
+    "defaultMessage": "Lumina does not send telemetry. Prompts are only sent to the model provider you choose, or remain local when you use a local model."
   },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "Privacy"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "Share anonymous usage data"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "Default Value"
@@ -4304,36 +4310,6 @@
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "Hidden instructions that will be passed to the provider to help direct and add context to your responses."
   },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "Error types (e.g., \"rate_limit\", \"auth\" - no details)"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "Extensions and tool usage counts (names only)"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "Operating system, version, and architecture"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "Provider and model used"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "Session metrics (duration, interaction count, token usage)"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Lumina version and install method"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "Anonymous usage data helps us understand how Lumina is used and identify areas for improvement."
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "We never collect your conversations, code, tool arguments, error messages, or any personal data. You can change this setting anytime in Settings."
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "Privacy details"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "What we collect:"
-  },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "Loading messages... ({renderedCount}/{totalCount})"
   },
@@ -4342,6 +4318,33 @@
   },
   "progressiveMessageList.searchHint": {
     "defaultMessage": "Press Cmd/Ctrl+F to load all messages immediately for search"
+  },
+  "projectWorkspace.back": {
+    "defaultMessage": "Back to projects"
+  },
+  "projectWorkspace.creating": {
+    "defaultMessage": "Creating…"
+  },
+  "projectWorkspace.empty": {
+    "defaultMessage": "No tasks in this project yet."
+  },
+  "projectWorkspace.loading": {
+    "defaultMessage": "Loading project…"
+  },
+  "projectWorkspace.newTask": {
+    "defaultMessage": "New task"
+  },
+  "projectWorkspace.refresh": {
+    "defaultMessage": "Refresh tasks"
+  },
+  "projectWorkspace.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "projectWorkspace.unavailable": {
+    "defaultMessage": "Project is unavailable."
+  },
+  "projectWorkspace.untitled": {
+    "defaultMessage": "Untitled task"
   },
   "promptsSettings.allPromptsReset": {
     "defaultMessage": "All prompts reset to defaults"
@@ -5184,7 +5187,7 @@
     "defaultMessage": "Deep link"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "Paste goose://recipe link here..."
+    "defaultMessage": "Paste lumina://recipe link here..."
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "Edit Schedule"
@@ -5196,7 +5199,7 @@
     "defaultMessage": "Failed to read the selected file."
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "Invalid deep link. Please use a goose://recipe link."
+    "defaultMessage": "Invalid deep link. Please use a lumina://recipe link."
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "Invalid file type: Please select a YAML file (.yaml or .yml)"
@@ -5513,9 +5516,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "Open in new window"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "Share encrypted Nostr link"
-  },
   "sessions.cancel": {
     "defaultMessage": "Cancel"
   },
@@ -5524,9 +5524,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "View and search your past conversations with Lumina. {shortcut} to search."
-  },
-  "sessions.close": {
-    "defaultMessage": "Close"
   },
   "sessions.delete.message": {
     "defaultMessage": "Are you sure you want to delete the session \"{name}\"? This action cannot be undone."
@@ -5555,21 +5552,6 @@
   "sessions.import": {
     "defaultMessage": "Import Session"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "Import Link"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "Paste a Lumina Nostr share link to fetch, decrypt, and import the session."
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "Import Nostr Session"
-  },
-  "sessions.importing": {
-    "defaultMessage": "Importing..."
-  },
   "sessions.loadingMore": {
     "defaultMessage": "Loading more sessions..."
   },
@@ -5587,15 +5569,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "Search history..."
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "Anyone with this link can fetch and decrypt the session. Treat it like a secret."
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "Encrypted Nostr Share Link"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "Copied to clipboard"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "Failed to delete session \"{name}\": {error}"
@@ -5617,12 +5590,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "Session imported successfully"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "Encrypted Nostr share link created"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "Failed to create Nostr share link: {error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "Failed to update session description: {error}"
@@ -5789,12 +5756,6 @@
   "settings.theme.title": {
     "defaultMessage": "Theme"
   },
-  "settings.updates.description": {
-    "defaultMessage": "Check for and install updates to keep Lumina running at its best"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "Updates"
-  },
   "settings.version.title": {
     "defaultMessage": "Version"
   },
@@ -5859,7 +5820,7 @@
     "defaultMessage": "No matching skills found"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "Skills are loaded from SKILL.md files in ~/.config/agents/skills/, .goose/skills/, or other supported directories."
+    "defaultMessage": "Skills are loaded from SKILL.md files in ~/.config/agents/skills/, .lumina/skills/, or other supported directories."
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "No skills installed"
@@ -6119,45 +6080,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "Use other provider"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "Would you like to share anonymous usage data to help improve Lumina? We never collect your conversations, code, or personal data."
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Help improve Lumina"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "Learn more"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "Yes, share anonymous usage data"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "No thanks"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "Configuration Error"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "Control how your data is used"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "Learn more"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "Failed to load telemetry settings."
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "Privacy"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "Help improve Lumina by sharing anonymous usage statistics."
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "Anonymous usage data"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "Failed to update telemetry settings."
-  },
   "themeSelector.dark": {
     "defaultMessage": "Dark"
   },
@@ -6227,95 +6149,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "Allow {toolName}?"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina would like to call {toolName}. Allow?"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "Lumina will download the update in the background and install it the next time you quit or restart."
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "Automatic downloads are disabled via the GOOSE_DISABLE_AUTO_DOWNLOAD environment variable."
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "Automatic download is disabled. Click \"Download Now\" to download manually."
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "No manual install is needed."
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "Check for Updates"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "Checking for updates..."
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "Current version"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "Disable automatic update downloads"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "When enabled, Lumina will notify you of new versions but will not download them automatically."
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "Download Now"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "Update downloaded and ready to install!"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "Downloading update... {percent}%"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "Downloading update..."
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "Install & Restart"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "Click \"Install & Restart\" to update now."
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "You are running the latest version!"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "Loading..."
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "After download, you'll need to manually install the update."
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "Manual installation required for this update method."
-  },
-  "updateSection.openCustomReleases": {
-    "defaultMessage": "Open HikerM releases"
-  },
-  "updateSection.portableUpdateDescription": {
-    "defaultMessage": "This custom build only uses the HikerM distribution channel. To update, download the newer custom package, close Lumina, and replace the extracted application folder. Your MCP and model settings are stored separately from the application folder."
-  },
-  "updateSection.portableUpdateModelNote": {
-    "defaultMessage": "Downloaded models are not copied by an application update. Keep the existing local model data, or download the selected model again on the new computer."
-  },
-  "updateSection.portableUpdateTitle": {
-    "defaultMessage": "Portable custom build"
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ Update is ready. Restart Lumina to finish installing it, or quit when you're done."
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ Update is ready! Click \"Install & Restart\" for installation instructions."
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "(up to date)"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "Update available!"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ {version} available"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "Version {version} is available"
   },
   "userMessage.cancel": {
     "defaultMessage": "Cancel"

@@ -1,7 +1,7 @@
 # Justfile
 
 rust_cargo := if os() == "windows" { "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"" + justfile_directory() + "\\bin\\cargo.ps1\"" } else { "cargo" }
-goose_record_mcp := if os() == "windows" { "$env:GOOSE_RECORD_MCP=1; " } else { "GOOSE_RECORD_MCP=1 " }
+lumina_record_mcp := if os() == "windows" { "$env:LUMINA_RECORD_MCP=1; " } else { "LUMINA_RECORD_MCP=1 " }
 
 # list all tasks
 default:
@@ -23,7 +23,7 @@ check-everything:
 [unix]
 release-binary:
     @echo "Building release version..."
-    {{rust_cargo}} build --release -p goose-cli --bin goose
+    {{rust_cargo}} build --release -p lumina-agent-cli --bin lumina
     @just copy-binary
 
 [windows]
@@ -34,12 +34,12 @@ release-binary:
 # Build Windows executable on a Windows host
 [unix]
 release-windows:
-    @echo "just release-windows requires a Windows host because Goose Windows releases build the MSVC target. Use .github/workflows/bundle-desktop-windows.yml for CI builds."
+    @echo "just release-windows requires a Windows host because Lumina Windows releases build the MSVC target. Use .github/workflows/bundle-desktop-windows.yml for CI builds."
     @exit 1
 
 [windows]
 release-windows:
-    @powershell.exe -NoProfile -ExecutionPolicy Bypass -Command '& ".\bin\rustup.ps1" target add x86_64-pc-windows-msvc; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & ".\bin\cargo.ps1" build --release --target x86_64-pc-windows-msvc -p goose-cli --bin goose; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Write-Host "Windows executable created at ./target/x86_64-pc-windows-msvc/release/goose.exe"'
+    @powershell.exe -NoProfile -ExecutionPolicy Bypass -Command '& ".\bin\rustup.ps1" target add x86_64-pc-windows-msvc; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & ".\bin\cargo.ps1" build --release --target x86_64-pc-windows-msvc -p lumina-agent-cli --bin lumina; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Write-Host "Windows executable created at ./target/x86_64-pc-windows-msvc/release/lumina.exe"'
 
 # Build for Intel Mac
 release-intel:
@@ -48,25 +48,25 @@ release-intel:
     @just copy-binary-intel
 
 copy-binary BUILD_MODE="release":
-    @rm -f ./ui/desktop/src/bin/goosed
-    @if [ -f ./target/{{BUILD_MODE}}/goose ]; then \
-        echo "Copying goose CLI binary from target/{{BUILD_MODE}}..."; \
-        rm -f ./ui/desktop/src/bin/goose; \
-        cp -p ./target/{{BUILD_MODE}}/goose ./ui/desktop/src/bin/; \
+    @rm -f ./ui/desktop/src/bin/luminad
+    @if [ -f ./target/{{BUILD_MODE}}/lumina ]; then \
+        echo "Copying lumina CLI binary from target/{{BUILD_MODE}}..."; \
+        rm -f ./ui/desktop/src/bin/lumina; \
+        cp -p ./target/{{BUILD_MODE}}/lumina ./ui/desktop/src/bin/; \
     else \
-        echo "goose CLI binary not found in target/{{BUILD_MODE}}"; \
+        echo "lumina CLI binary not found in target/{{BUILD_MODE}}"; \
         exit 1; \
     fi
 
 # Copy binary command for Intel build
 copy-binary-intel:
-    @rm -f ./ui/desktop/src/bin/goosed
-    @if [ -f ./target/x86_64-apple-darwin/release/goose ]; then \
-        echo "Copying Intel goose CLI binary to ui/desktop/src/bin..."; \
-        rm -f ./ui/desktop/src/bin/goose; \
-        cp -p ./target/x86_64-apple-darwin/release/goose ./ui/desktop/src/bin/; \
+    @rm -f ./ui/desktop/src/bin/luminad
+    @if [ -f ./target/x86_64-apple-darwin/release/lumina ]; then \
+        echo "Copying Intel lumina CLI binary to ui/desktop/src/bin..."; \
+        rm -f ./ui/desktop/src/bin/lumina; \
+        cp -p ./target/x86_64-apple-darwin/release/lumina ./ui/desktop/src/bin/; \
     else \
-        echo "Intel goose CLI binary not found."; \
+        echo "Intel lumina CLI binary not found."; \
         exit 1; \
     fi
 
@@ -78,11 +78,11 @@ copy-binary-windows:
 
 [windows]
 copy-binary-windows:
-    @powershell.exe -NoProfile -ExecutionPolicy Bypass -Command 'if (Test-Path ./target/x86_64-pc-windows-msvc/release/goose.exe) { \
+    @powershell.exe -NoProfile -ExecutionPolicy Bypass -Command 'if (Test-Path ./target/x86_64-pc-windows-msvc/release/lumina.exe) { \
         Write-Host "Copying Windows binary to ui/desktop/src/bin..."; \
         New-Item -ItemType Directory -Force "./ui/desktop/src/bin" | Out-Null; \
-        Remove-Item -Path "./ui/desktop/src/bin/goosed.exe" -Force -ErrorAction SilentlyContinue; \
-        Copy-Item -Path "./target/x86_64-pc-windows-msvc/release/goose.exe" -Destination "./ui/desktop/src/bin/" -Force; \
+        Remove-Item -Path "./ui/desktop/src/bin/luminad.exe" -Force -ErrorAction SilentlyContinue; \
+        Copy-Item -Path "./target/x86_64-pc-windows-msvc/release/lumina.exe" -Destination "./ui/desktop/src/bin/" -Force; \
     } else { \
         Write-Host "Windows binary not found." -ForegroundColor Red; \
         exit 1; \
@@ -103,20 +103,20 @@ run-ui-playwright:
     #!/usr/bin/env sh
     just release-binary
     echo "Running UI with Playwright debugging..."
-    RUN_DIR="$HOME/goose-runs/$(date +%Y%m%d-%H%M%S)"
+    RUN_DIR="$HOME/lumina-runs/$(date +%Y%m%d-%H%M%S)"
     mkdir -p "$RUN_DIR"
     echo "Using isolated directory: $RUN_DIR"
-    cd ui/desktop && ENABLE_PLAYWRIGHT=true GOOSE_PATH_ROOT="$RUN_DIR" pnpm run start-gui
+    cd ui/desktop && ENABLE_PLAYWRIGHT=true LUMINA_PATH_ROOT="$RUN_DIR" pnpm run start-gui
 
 run-ui-only:
     @echo "Running UI..."
     cd ui/desktop && pnpm install && pnpm run start-gui
 
 debug-ui:
-    @echo "🚀 Starting goose frontend in external ACP backend mode"
+    @echo "🚀 Starting lumina frontend in external ACP backend mode"
     cd ui/desktop && \
-    export GOOSE_EXTERNAL_BACKEND=true && \
-    export GOOSE_SERVER__SECRET_KEY="${GOOSE_SERVER__SECRET_KEY:-test}" && \
+    export LUMINA_EXTERNAL_BACKEND=true && \
+    export LUMINA_SERVER__SECRET_KEY="${LUMINA_SERVER__SECRET_KEY:-test}" && \
     pnpm install && \
     pnpm run start-gui
 
@@ -128,7 +128,7 @@ debug-ui:
 # 4. If not auto-detected, click "Configure" and add: localhost:9229
 
 debug-ui-main-process:
-	@echo "🔍 Starting goose UI with main process debugging enabled"
+	@echo "🔍 Starting lumina UI with main process debugging enabled"
 	@just release-binary
 	cd ui/desktop && \
 	pnpm install && \
@@ -141,8 +141,8 @@ package-ui:
     @echo "Packaging desktop app..."
     cd ui/desktop && pnpm install && pnpm run package
     @echo "Signing with entitlements..."
-    codesign --force --deep --sign - --entitlements ui/desktop/entitlements.plist ui/desktop/out/Goose-darwin-arm64/Goose.app
-    @echo "Done! Launch with: open ui/desktop/out/Goose-darwin-arm64/Goose.app"
+    codesign --force --deep --sign - --entitlements ui/desktop/entitlements.plist ui/desktop/out/Lumina-darwin-arm64/Lumina.app
+    @echo "Done! Launch with: open ui/desktop/out/Lumina-darwin-arm64/Lumina.app"
 
 # Run UI with latest (Windows version)
 run-ui-windows:
@@ -160,19 +160,19 @@ run-docs:
 [unix]
 run-server:
     @echo "Running external ACP backend..."
-    GOOSE_SERVER__SECRET_KEY="${GOOSE_SERVER__SECRET_KEY:-test}" {{rust_cargo}} run -p goose-cli --bin goose -- serve --platform desktop --host 127.0.0.1 --port 3000
+    LUMINA_SERVER__SECRET_KEY="${LUMINA_SERVER__SECRET_KEY:-test}" {{rust_cargo}} run -p lumina-agent-cli --bin lumina -- serve --platform desktop --host 127.0.0.1 --port 3000
 
 [windows]
 run-server:
     @echo "Running external ACP backend..."
-    @powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$env:GOOSE_SERVER__SECRET_KEY = if ([string]::IsNullOrEmpty($env:GOOSE_SERVER__SECRET_KEY)) { 'test' } else { $env:GOOSE_SERVER__SECRET_KEY }; $cargo = Join-Path (Get-Location) 'bin\cargo.ps1'; & $cargo @('run', '-p', 'goose-cli', '--bin', 'goose', '--', 'serve', '--platform', 'desktop', '--host', '127.0.0.1', '--port', '3000')"
+    @powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$env:LUMINA_SERVER__SECRET_KEY = if ([string]::IsNullOrEmpty($env:LUMINA_SERVER__SECRET_KEY)) { 'test' } else { $env:LUMINA_SERVER__SECRET_KEY }; $cargo = Join-Path (Get-Location) 'bin\cargo.ps1'; & $cargo @('run', '-p', 'lumina-cli', '--bin', 'lumina', '--', 'serve', '--platform', 'desktop', '--host', '127.0.0.1', '--port', '3000')"
 
 # Check if generated ACP schema and TypeScript types are up-to-date
 check-acp-schema: generate-acp-types
     #!/usr/bin/env bash
     set -e
     echo "🔍 Checking ACP schema and generated types are up-to-date..."
-    if ! git diff --exit-code crates/goose/acp-schema.json crates/goose/acp-meta.json ui/sdk/src/generated/; then
+    if ! git diff --exit-code crates/lumina/acp-schema.json crates/lumina/acp-meta.json ui/sdk/src/generated/; then
       echo ""
       echo "❌ ACP generated files are out of date!"
       echo ""
@@ -184,8 +184,8 @@ check-acp-schema: generate-acp-types
 # Generate ACP JSON schema from Rust types
 generate-acp-schema:
     @echo "Generating ACP schema..."
-    {{rust_cargo}} run --manifest-path crates/goose/Cargo.toml --features code-mode,local-inference,aws-providers,telemetry,otel,rustls-tls,system-keyring --bin generate-acp-schema
-    @echo "ACP schema generated: crates/goose/acp-schema.json, crates/goose/acp-meta.json"
+    {{rust_cargo}} run --manifest-path crates/lumina/Cargo.toml --features code-mode,local-inference,aws-providers,rustls-tls,system-keyring --bin generate-acp-schema
+    @echo "ACP schema generated: crates/lumina/acp-schema.json, crates/lumina/acp-meta.json"
 
 # Generate ACP TypeScript types from JSON schema (requires generate-acp-schema first)
 generate-acp-types: generate-acp-schema
@@ -202,7 +202,7 @@ build-sdk: generate-acp-types
 # Generate manpages for the CLI
 generate-manpages:
     @echo "Generating manpages..."
-    {{rust_cargo}} run -p goose-cli --bin generate_manpages
+    {{rust_cargo}} run -p lumina-agent-cli --bin generate_manpages
     @echo "Manpages generated at target/man/"
 
 # make GUI with latest binary
@@ -218,7 +218,7 @@ make-ui:
 # make GUI with latest Windows binary on a Windows host
 [unix]
 make-ui-windows:
-    @echo "just make-ui-windows requires a Windows host because Goose Windows releases build the MSVC target. Use .github/workflows/bundle-desktop-windows.yml for CI builds."
+    @echo "just make-ui-windows requires a Windows host because Lumina Windows releases build the MSVC target. Use .github/workflows/bundle-desktop-windows.yml for CI builds."
     @exit 1
 
 [windows]
@@ -325,8 +325,8 @@ prepare-release version:
         Cargo.lock \
         ui/desktop/package.json \
         ui/pnpm-lock.yaml \
-        crates/goose-provider-types/src/canonical/data/canonical_models.json \
-        crates/goose-provider-types/src/canonical/data/provider_metadata.json
+        crates/lumina-provider-types/src/canonical/data/canonical_models.json \
+        crates/lumina-provider-types/src/canonical/data/provider_metadata.json
     @git commit --message "chore(release): release version {{ version }}"
 
 # extract version from Cargo.toml
@@ -391,7 +391,7 @@ win-app-deps:
 win-copy-win profile:
   copy target{{s}}{{profile}}{{s}}*.exe ui{{s}}desktop{{s}}src{{s}}bin
   copy target{{s}}{{profile}}{{s}}*.dll ui{{s}}desktop{{s}}src{{s}}bin
-  if exist ui{{s}}desktop{{s}}src{{s}}bin{{s}}goosed.exe del /f /q ui{{s}}desktop{{s}}src{{s}}bin{{s}}goosed.exe
+  if exist ui{{s}}desktop{{s}}src{{s}}bin{{s}}luminad.exe del /f /q ui{{s}}desktop{{s}}src{{s}}bin{{s}}luminad.exe
 
 ### "Other" copy {release|debug} files to ui/desktop/src/bin
 ### s = os dependent file separator
@@ -435,8 +435,8 @@ win-total-rls *allparam:
   just win-run-rls
 
 build-test-tools:
-  {{rust_cargo}} build -p goose-test
+  {{rust_cargo}} build -p lumina-test
 
 record-mcp-tests: build-test-tools
-  {{goose_record_mcp}}{{rust_cargo}} test --package goose --test mcp_integration_test
-  git add crates/goose/tests/mcp_replays/
+  {{lumina_record_mcp}}{{rust_cargo}} test --package lumina --test mcp_integration_test
+  git add crates/lumina/tests/mcp_replays/

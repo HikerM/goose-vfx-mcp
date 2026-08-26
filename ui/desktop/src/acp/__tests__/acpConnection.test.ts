@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GOOSE_SERVE_EXITED_USER_MESSAGE } from '../../gooseServeLeaseRegistry';
+import { LUMINA_SERVE_EXITED_USER_MESSAGE } from '../../luminaServeLeaseRegistry';
 
 const sdk = vi.hoisted(() => {
   const initialize = vi.fn();
-  const instances: MockGooseClient[] = [];
+  const instances: MockLuminaClient[] = [];
 
-  class MockGooseClient {
+  class MockLuminaClient {
     readonly initialize = initialize;
     readonly closed: Promise<void>;
     resolveClosed: () => void = () => undefined;
@@ -18,16 +18,16 @@ const sdk = vi.hoisted(() => {
     }
   }
 
-  return { GooseClient: MockGooseClient, initialize, instances };
+  return { LuminaClient: MockLuminaClient, initialize, instances };
 });
 
 const transport = vi.hoisted(() => ({
   createWebSocketStream: vi.fn(),
 }));
 
-vi.mock('@aaif/goose-sdk', () => ({
-  DEFAULT_GOOSE_MCP_HOST_CAPABILITIES: {},
-  GooseClient: sdk.GooseClient,
+vi.mock('@hikerm/lumina-sdk', () => ({
+  DEFAULT_LUMINA_MCP_HOST_CAPABILITIES: {},
+  LuminaClient: sdk.LuminaClient,
 }));
 
 vi.mock('../createWebSocketStream', () => ({
@@ -112,7 +112,7 @@ describe('ACP connection ownership', () => {
     expect(sdk.instances).toHaveLength(3);
   });
 
-  it('stops reconnecting when the Goose backend has exited', async () => {
+  it('stops reconnecting when the Lumina backend has exited', async () => {
     const { getAcpClient, subscribeToAcpRecovery } = await import('../acpConnection');
     const listener = vi.fn();
     subscribeToAcpRecovery(listener);
@@ -121,13 +121,13 @@ describe('ACP connection ownership', () => {
     const getAcpUrl = vi
       .fn()
       .mockRejectedValue(
-        new Error(`Error invoking remote method 'get-acp-url': ${GOOSE_SERVE_EXITED_USER_MESSAGE}`)
+        new Error(`Error invoking remote method 'get-acp-url': ${LUMINA_SERVE_EXITED_USER_MESSAGE}`)
       );
     window.electron.getAcpUrl = getAcpUrl;
     sdk.instances[0].resolveClosed();
     await Promise.resolve();
 
-    const connection = expect(getAcpClient()).rejects.toThrow(GOOSE_SERVE_EXITED_USER_MESSAGE);
+    const connection = expect(getAcpClient()).rejects.toThrow(LUMINA_SERVE_EXITED_USER_MESSAGE);
     await vi.advanceTimersByTimeAsync(250);
     await connection;
 

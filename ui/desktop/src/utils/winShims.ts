@@ -5,7 +5,7 @@ import log from './logger';
 import {
   deriveWindowsShimsPath,
   preflightWindowsStorageDirectory,
-  resolveDesktopGoosePathRoot,
+  resolveDesktopLuminaPathRoot,
   type WindowsStoragePreflightFileSystem,
 } from './storageRootPolicy';
 
@@ -89,8 +89,8 @@ async function acquireDeploymentLock(lockPath: string): Promise<fs.promises.File
 }
 
 /**
- * Ensures Windows shims are available under the governed Goose storage root.
- * This allows the bundled executables to be found via PATH regardless of where Goose is installed
+ * Ensures Windows shims are available under the governed Lumina storage root.
+ * This allows the bundled executables to be found via PATH regardless of where Lumina is installed
  */
 export interface WindowsMcpSpawnEnvironment {
   env: typeof process.env;
@@ -102,7 +102,7 @@ export async function ensureWinShims(
 ): Promise<WindowsMcpSpawnEnvironment | undefined> {
   if (process.platform !== 'win32') return undefined;
 
-  const governedRoot = resolveDesktopGoosePathRoot(root, 'win32');
+  const governedRoot = resolveDesktopLuminaPathRoot(root, 'win32');
   if (!governedRoot) throw new Error('Failed to prepare required Windows shims');
 
   const srcDir = path.join(process.resourcesPath, 'bin'); // existing dir

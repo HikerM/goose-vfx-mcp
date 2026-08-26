@@ -1,32 +1,32 @@
 ---
 title: Known Issues
 sidebar_label: Known Issues
-description: Comprehensive troubleshooting guide for common goose problems with step-by-step solutions.
+description: Comprehensive troubleshooting guide for common lumina problems with step-by-step solutions.
 ---
 
-goose, like any system, may run into occasional issues. This guide provides solutions for common problems.
+lumina, like any system, may run into occasional issues. This guide provides solutions for common problems.
 
 :::tip Need help with an issue not listed here?
-Our [Discord community](https://discord.gg/goose-oss) is here to help! For the fastest support, consider generating a [diagnostic report](/docs/troubleshooting/diagnostics-and-reporting) - it helps us understand your setup quickly.
+Our [Lumina issue tracker](https://github.com/HikerM/lumina/issues) is here to help! For the fastest support, consider generating a [diagnostic report](/docs/troubleshooting/diagnostics-and-reporting) - it helps us understand your setup quickly.
 :::
 
-### goose Edits Files
-goose can and will edit files as part of its workflow. To avoid losing personal changes, use version control to stage your personal edits. Leave goose edits unstaged until reviewed. Consider separate commits for goose's edits so you can easily revert them if needed.
+### lumina Edits Files
+lumina can and will edit files as part of its workflow. To avoid losing personal changes, use version control to stage your personal edits. Leave lumina edits unstaged until reviewed. Consider separate commits for lumina's edits so you can easily revert them if needed.
 
 ---
 
-### Interrupting goose
-If goose is heading in the wrong direction or gets stuck, you can [interrupt it](/docs/guides/sessions/in-session-actions#interrupt-task) to correct its actions or provide additional information.
+### Interrupting lumina
+If lumina is heading in the wrong direction or gets stuck, you can [interrupt it](/docs/guides/sessions/in-session-actions#interrupt-task) to correct its actions or provide additional information.
 
 ---
 
 ### Stuck in a Loop or Unresponsive
-In rare cases, goose may enter a "doom spiral" or become unresponsive during a long session. This is often resolved by ending the current session, and starting a new session.
+In rare cases, lumina may enter a "doom spiral" or become unresponsive during a long session. This is often resolved by ending the current session, and starting a new session.
 
 1. Hold down `Ctrl+C` to cancel
 2. Start a new session:
   ```sh
-  goose session
+  lumina session
   ```
 :::tip
 For particularly large or complex tasks, consider breaking them into smaller sessions.
@@ -36,9 +36,9 @@ For particularly large or complex tasks, consider breaking them into smaller ses
 
 ### Preventing Long-Running Commands
 
-If you use goose CLI and work with web development projects, you may encounter commands that cause goose to hang indefinitely. Commands like `npm run dev`, `python -m http.server`, or `webpack serve` start development servers that never exit on their own.
+If you use lumina CLI and work with web development projects, you may encounter commands that cause lumina to hang indefinitely. Commands like `npm run dev`, `python -m http.server`, or `webpack serve` start development servers that never exit on their own.
 
-You can prevent these issues by customizing your shell to handle these commands differently when goose runs them. See [Customizing Shell Behavior](/docs/guides/environment-variables#customizing-shell-behavior) for details on using the `GOOSE_TERMINAL` environment variable.
+You can prevent these issues by customizing your shell to handle these commands differently when lumina runs them. See [Customizing Shell Behavior](/docs/guides/environment-variables#customizing-shell-behavior) for details on using the `LUMINA_TERMINAL` environment variable.
 
 ---
 
@@ -46,23 +46,23 @@ You can prevent these issues by customizing your shell to handle these commands 
 
 ### Context Length Exceeded Error
 
-This error occurs when the input provided to goose exceeds the maximum token limit of the LLM being used. To resolve this, try breaking down your input into smaller parts. You can also use [`.goosehints`][goosehints] as a way to provide goose with detailed context and use [message queues](/docs/guides/sessions/in-session-actions#queue-messages) in goose Desktop.
+This error occurs when the input provided to lumina exceeds the maximum token limit of the LLM being used. To resolve this, try breaking down your input into smaller parts. You can also use [`.luminahints`][luminahints] as a way to provide lumina with detailed context and use [message queues](/docs/guides/sessions/in-session-actions#queue-messages) in lumina Desktop.
 
 ---
 
 ### Using Ollama Provider
 
-Ollama provides local LLMs, which means you must first [download Ollama and run a model](/docs/getting-started/providers#local-llms) before attempting to use this provider with goose. If you do not have the model downloaded, you'll run into the following error:
+Ollama provides local LLMs, which means you must first [download Ollama and run a model](/docs/getting-started/providers#local-llms) before attempting to use this provider with lumina. If you do not have the model downloaded, you'll run into the following error:
 
 > ExecutionError("error sending request for url (http://localhost:11434/v1/chat/completions)")
 
 
-Another thing to note is that the DeepSeek models do not support tool calling, so all goose [extensions must be disabled](/docs/getting-started/using-extensions#enablingdisabling-extensions) to use one of these models. Unfortunately, without the use of tools, there is not much goose will be able to do autonomously if using DeepSeek. However, Ollama's other models such as `qwen2.5` do support tool calling and can be used with goose extensions.
+Another thing to note is that the DeepSeek models do not support tool calling, so all lumina [extensions must be disabled](/docs/getting-started/using-extensions#enablingdisabling-extensions) to use one of these models. Unfortunately, without the use of tools, there is not much lumina will be able to do autonomously if using DeepSeek. However, Ollama's other models such as `qwen2.5` do support tool calling and can be used with lumina extensions.
 
 ---
 
 ### Handling Rate Limit Errors
-goose may encounter a `429 error` (rate limit exceeded) when interacting with LLM providers. The recommended solution is to use a provider that provides built-in rate limiting. See [Handling LLM Rate Limits][handling-rate-limits] for more info.
+lumina may encounter a `429 error` (rate limit exceeded) when interacting with LLM providers. The recommended solution is to use a provider that provides built-in rate limiting. See [Handling LLM Rate Limits][handling-rate-limits] for more info.
 
 ---
 
@@ -84,11 +84,11 @@ Users may run into an error like the one below when there are issues with their 
 
 ```sh
 Traceback (most recent call last):
-  File "/Users/admin/.local/pipx/venvs/goose-ai/lib/python3.13/site-packages/exchange/providers/utils.py",
+  File "/Users/admin/.local/pipx/venvs/lumina-ai/lib/python3.13/site-packages/exchange/providers/utils.py",
 line 30, in raise_for_status
     response.raise_for_status()
     ~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/Users/admin/.local/pipx/venvs/goose-ai/lib/python3.13/site-packages/httpx/_models.py",
+  File "/Users/admin/.local/pipx/venvs/lumina-ai/lib/python3.13/site-packages/httpx/_models.py",
 line 829, in raise_for_status
     raise HTTPStatusError(message, request=request, response=self)
 httpx.HTTPStatusError: Client error '404 Not Found' for url
@@ -104,7 +104,7 @@ This error typically occurs when LLM API credits are exhausted or your API key i
 2. Verify API Key:
     - Run the following command to reconfigure your API key:
     ```sh
-    goose configure
+    lumina configure
     ```
 For detailed steps on updating your LLM provider, refer to the [Installation][installation] Guide.
 
@@ -116,19 +116,19 @@ If you encounter errors when configuring GitHub Copilot as your provider, try th
 
 #### Container and Keyring Issues
 
-goose tries to use the system keyring (typically via Secret Service over DBus) to securely store your GitHub Copilot token. In containerized or headless environments, DBus and/or a desktop keyring service may not be available (and some setups fail with X11-based DBus autolaunch errors), so keyring access can fail.
+lumina tries to use the system keyring (typically via Secret Service over DBus) to securely store your GitHub Copilot token. In containerized or headless environments, DBus and/or a desktop keyring service may not be available (and some setups fail with X11-based DBus autolaunch errors), so keyring access can fail.
 
-If you're running goose in Docker containers or Linux environments without keyring support, goose may automatically fall back to [file-based secret storage](#keyring-cannot-be-accessed-automatic-fallback).
+If you're running lumina in Docker containers or Linux environments without keyring support, lumina may automatically fall back to [file-based secret storage](#keyring-cannot-be-accessed-automatic-fallback).
 
-If you still receive authentication/keyring errors like the following, goose was not able to fall back automatically. This can happen if goose doesn’t recognize the keyring failure as an access issue, or if the error is unrelated to keyring access.
+If you still receive authentication/keyring errors like the following, lumina was not able to fall back automatically. This can happen if lumina doesn’t recognize the keyring failure as an access issue, or if the error is unrelated to keyring access.
 ```
 Failed to save token: Failed to access keyring: <error message>
 ```
 
-To resolve this (or to proactively force file-based secret storage), set `GOOSE_DISABLE_KEYRING` to any value. This example sets it only while running `goose configure`:
+To resolve this (or to proactively force file-based secret storage), set `LUMINA_DISABLE_KEYRING` to any value. This example sets it only while running `lumina configure`:
 
 ```bash
-GOOSE_DISABLE_KEYRING=1 goose configure
+LUMINA_DISABLE_KEYRING=1 lumina configure
 ```
 
 If you prefer not to store secrets in `secrets.yaml`, set the token via environment variables instead.
@@ -139,92 +139,92 @@ See [Keychain/Keyring Errors](#keychainkeyring-errors) for more details on keyri
 
 ### New Recipe Warning
 
-The first time you run a given recipe in goose Desktop, you'll see a `New Recipe Warning` dialog that allows you to review the recipe's title, description, and instructions. If you trust the recipe, click `Trust and Execute` to continue. You won't be prompted again for the same recipe unless it changes.
+The first time you run a given recipe in lumina Desktop, you'll see a `New Recipe Warning` dialog that allows you to review the recipe's title, description, and instructions. If you trust the recipe, click `Trust and Execute` to continue. You won't be prompted again for the same recipe unless it changes.
 
 This warning helps protect against inadvertently executing potentially harmful recipe code.
 
 ---
-### Uninstall goose or Remove Cached Data
+### Uninstall lumina or Remove Cached Data
 
-You may need to uninstall goose or clear existing data before re-installing. goose stores data in different locations depending on your operating system. Secrets, such as API keys, are stored in the system keychain/keyring by default (or in `secrets.yaml` when file-based secret storage is in use).
+You may need to uninstall lumina or clear existing data before re-installing. lumina stores data in different locations depending on your operating system. Secrets, such as API keys, are stored in the system keychain/keyring by default (or in `secrets.yaml` when file-based secret storage is in use).
 
 #### macOS
 
 **Data Locations**
 
-- **Logs and Config**: `~/.config/goose`
-- **Application Data**: `~/Library/Application Support/Goose`
-- **Secrets**: macOS Keychain (credential named "goose").
+- **Logs and Config**: `~/.config/lumina`
+- **Application Data**: `~/Library/Application Support/Lumina`
+- **Secrets**: macOS Keychain (credential named "lumina").
 
 #### Removal Steps
 
-1. Stop any copies of goose running (CLI or GUI)
+1. Stop any copies of lumina running (CLI or GUI)
 
   - Consider confirming you've stopped them all via Activity Monitor
 
-2. Open Keychain Access and delete the credential called "goose", which contains all secrets stored by goose
+2. Open Keychain Access and delete the credential called "lumina", which contains all secrets stored by lumina
 3. Remove data directories:
 
 ```
-rm -rf ~/.config/goose
-rm -rf ~/Library/Application\ Support/goose
+rm -rf ~/.config/lumina
+rm -rf ~/Library/Application\ Support/lumina
 ```
-4. Delete the "goose" app from your Applications folder (if using goose Desktop).
+4. Delete the "lumina" app from your Applications folder (if using lumina Desktop).
 
 #### Linux
 **Data Locations**
 
-- **Data/Sessions**: `~/.local/share/goose/`
-- **Logs**: `~/.local/state/goose/`
-- **Config**: `~/.config/goose/`
+- **Data/Sessions**: `~/.local/share/lumina/`
+- **Logs**: `~/.local/state/lumina/`
+- **Config**: `~/.config/lumina/`
 - **Secrets**: System keyring (if available)
 
 #### Removal Steps
 
-- Stop any copies of goose running (CLI or GUI)
+- Stop any copies of lumina running (CLI or GUI)
 - Clear secrets from your system keyring (if applicable)
 - Remove data directories:
 
 ```
-rm -rf ~/.local/share/goose/
-rm -rf ~/.local/state/goose/
-rm -rf ~/.config/goose/
+rm -rf ~/.local/share/lumina/
+rm -rf ~/.local/state/lumina/
+rm -rf ~/.config/lumina/
 ```
 #### Windows
 
 **Data Locations**
-- **Configuration and Data**: `%APPDATA%\Block\goose\`
-- **Local Application Data**: `%LOCALAPPDATA%\Block\goose\`
+- **Configuration and Data**: `%APPDATA%\Block\lumina\`
+- **Local Application Data**: `%LOCALAPPDATA%\Block\lumina\`
 - **Secrets**: Windows Credential Manager
 
 #### Removal Steps
 
-1. Stop any copies of goose running (CLI or GUI)
+1. Stop any copies of lumina running (CLI or GUI)
 
   - Check Task Manager to confirm all instances are closed
 
-2. Open Windows Credential Manager and delete credentials related to "goose"
+2. Open Windows Credential Manager and delete credentials related to "lumina"
 3. Remove data directories:
 ```
-rmdir /s /q "%APPDATA%\Block\goose"
-rmdir /s /q "%LOCALAPPDATA%\Block\goose"
+rmdir /s /q "%APPDATA%\Block\lumina"
+rmdir /s /q "%LOCALAPPDATA%\Block\lumina"
 ```
-4. Uninstall the goose Desktop app from Settings > Apps (if applicable)
+4. Uninstall the lumina Desktop app from Settings > Apps (if applicable)
 
-> After this cleanup, if you are looking to try out a fresh install of goose, you can now start from the usual install instructions.
+> After this cleanup, if you are looking to try out a fresh install of lumina, you can now start from the usual install instructions.
 ---
 
 ### Keychain/Keyring Errors
 
-goose tries to use the system keyring (keychain on macOS) to store secrets by default. In environments where the keyring cannot be accessed (or there is no keyring support), you may see an error like:
+lumina tries to use the system keyring (keychain on macOS) to store secrets by default. In environments where the keyring cannot be accessed (or there is no keyring support), you may see an error like:
 
 ```bash
 Error Failed to access secure storage (keyring): Platform secure storage failure: DBus error: The name org.freedesktop.secrets was not provided by any .service files
-Please check your system keychain and run 'goose configure' again.
+Please check your system keychain and run 'lumina configure' again.
 If your system is unable to use the keyring, please try setting secret key(s) via environment variables.
 ```
 
-In some cases, goose may automatically fall back to file-based secret storage. See [Keyring Cannot Be Accessed (Automatic Fallback)](#keyring-cannot-be-accessed-automatic-fallback).
+In some cases, lumina may automatically fall back to file-based secret storage. See [Keyring Cannot Be Accessed (Automatic Fallback)](#keyring-cannot-be-accessed-automatic-fallback).
 
 If you still receive keyring errors, use one of the following options:
 
@@ -235,12 +235,12 @@ If you still receive keyring errors, use one of the following options:
     Then select the `No` option when prompted to save the value to your keyring.
 
   ```bash
-  $ goose configure
+  $ lumina configure
 
-  Welcome to goose! Let's get you set up with a provider.
+  Welcome to lumina! Let's get you set up with a provider.
     you can rerun this command later to update your configuration
 
-  ┌   goose-configure
+  ┌   lumina-configure
   │
   ◇  Which model provider should we use?
   │  Google Gemini
@@ -254,18 +254,18 @@ If you still receive keyring errors, use one of the following options:
   │  gemini-2.0-flash-exp
   ```
 
-- **If you need to disable the keyring**, set `GOOSE_DISABLE_KEYRING` to any value to force file-based secret storage. The actual value doesn't matter, only whether the variable is set.
+- **If you need to disable the keyring**, set `LUMINA_DISABLE_KEYRING` to any value to force file-based secret storage. The actual value doesn't matter, only whether the variable is set.
 
-  This example sets it only while running `goose configure`:
+  This example sets it only while running `lumina configure`:
 
   ```bash
-  GOOSE_DISABLE_KEYRING=1 goose configure
+  LUMINA_DISABLE_KEYRING=1 lumina configure
   ```
 
-When the keyring is disabled (or cannot be accessed and goose falls back to file-based secret storage), secrets are stored here:
+When the keyring is disabled (or cannot be accessed and lumina falls back to file-based secret storage), secrets are stored here:
 
-- macOS/Linux: `~/.config/goose/secrets.yaml`
-- Windows: `%APPDATA%\Block\goose\config\secrets.yaml`
+- macOS/Linux: `~/.config/lumina/secrets.yaml`
+- Windows: `%APPDATA%\Block\lumina\config\secrets.yaml`
 
 See [Configuration Files](/docs/guides/config-files) for details.
 
@@ -273,7 +273,7 @@ See [Configuration Files](/docs/guides/config-files) for details.
 
 ### Keyring Cannot Be Accessed (Automatic Fallback)
 
-goose uses the system keyring (keychain on macOS) to store secrets by default. If the keyring cannot be accessed, goose may fall back to file-based secret storage.
+lumina uses the system keyring (keychain on macOS) to store secrets by default. If the keyring cannot be accessed, lumina may fall back to file-based secret storage.
 
 In this case, you may see a warning like the following in logs:
 
@@ -281,12 +281,12 @@ In this case, you may see a warning like the following in logs:
 Keyring unavailable. Using file storage for secrets.
 ```
 
-Automatic fallback only applies to the current goose process. When you start a new session, goose will try to use the keyring again.
+Automatic fallback only applies to the current lumina process. When you start a new session, lumina will try to use the keyring again.
 
-If you need to force file-based secret storage (for example, in containers or headless environments), set `GOOSE_DISABLE_KEYRING` to any value:
+If you need to force file-based secret storage (for example, in containers or headless environments), set `LUMINA_DISABLE_KEYRING` to any value:
 
 ```bash
-GOOSE_DISABLE_KEYRING=1 goose configure
+LUMINA_DISABLE_KEYRING=1 lumina configure
 ```
 
 See [Configuration Files](/docs/guides/config-files) for `secrets.yaml` details.
@@ -308,7 +308,7 @@ An example is the GitHub extension whose command is `npx -y @modelcontextprotoco
 
 ### Node.js Extensions Not Activating on Windows
 
-If you encounter the error `Node.js installer script not found` when trying to activate Node.js-based extensions on Windows, this is likely due to goose not finding Node.js in the expected system path.
+If you encounter the error `Node.js installer script not found` when trying to activate Node.js-based extensions on Windows, this is likely due to lumina not finding Node.js in the expected system path.
 
 #### Symptoms:
 - Node.js is installed and working (verified with `node -v` and `npm -v`)
@@ -316,7 +316,7 @@ If you encounter the error `Node.js installer script not found` when trying to a
 - Error occurs specifically when activating Node.js extensions
 
 #### Solution:
-This issue typically occurs when Node.js is installed in a non-standard location. goose expects to find Node.js in `C:\Program Files\nodejs\`, but it may be installed elsewhere (e.g., `D:\Program Files\nodejs\`).
+This issue typically occurs when Node.js is installed in a non-standard location. lumina expects to find Node.js in `C:\Program Files\nodejs\`, but it may be installed elsewhere (e.g., `D:\Program Files\nodejs\`).
 
 1. **Check your Node.js installation path:**
    ```powershell
@@ -325,19 +325,19 @@ This issue typically occurs when Node.js is installed in a non-standard location
 
 2. **If Node.js is not in `C:\Program Files\nodejs\`, create a symbolic link:**
    - Open PowerShell as Administrator
-   - Create a symbolic link to redirect goose to your actual Node.js installation:
+   - Create a symbolic link to redirect lumina to your actual Node.js installation:
    ```powershell
    mklink /D "C:\Program Files\nodejs" "D:\Program Files\nodejs"
    ```
    (Replace `D:\Program Files\nodejs` with your actual Node.js installation path)
 
-3. **Restart goose** and try activating the extension again.
+3. **Restart lumina** and try activating the extension again.
 
-This creates a symbolic link that allows goose to find Node.js in the expected location while keeping your actual installation intact.
+This creates a symbolic link that allows lumina to find Node.js in the expected location while keeping your actual installation intact.
 
 ---
 
-### Malicious Package Detected 
+### Malicious Package Detected
 
 If you see an error about a "blocked malicious package" when trying to use an extension, it means the extension was blocked because malware was detected in a package used by the extension. The error message will contain details about the package, for example:
 
@@ -348,7 +348,7 @@ Blocked malicious package: package-name@1.0.0 (npm). OSV MAL advisories: MAL-202
 Steps to resolve:
 1. **Find an alternative**: Look for similar extensions in the [extensions directory][extensions-directory] or [PulseMCP](https://www.pulsemcp.com/servers)
 2. **Optional verification**: Verify the source of the blocked extension or the package name/publisher
-3. **Report false positives**: If you believe this is an error, please [open an issue](https://github.com/aaif-goose/goose/issues)
+3. **Report false positives**: If you believe this is an error, please [open an issue](https://github.com/HikerM/lumina/issues)
 
 This security check only applies to locally-executed external extensions that use PyPI (`uvx`) or NPM (`npx`). The check uses real-time data from the OSV database; if the security service is unavailable, extensions will still install normally.
 
@@ -358,7 +358,7 @@ As a best practice, only install extensions from trusted, official sources.
 
 ### macOS Permission Issues
 
-If you encounter an issue where the goose Desktop app shows no window on launch, it may be due to file and folder permissions. This typically happens because goose needs read and write access to the `~/.config` directory to create its log directory and file. 
+If you encounter an issue where the lumina Desktop app shows no window on launch, it may be due to file and folder permissions. This typically happens because lumina needs read and write access to the `~/.config` directory to create its log directory and file.
 Similarly, if tools fail to create files or directories during use, it could be caused by the same permission issue.
 
 #### How to Check and Fix Permissions:
@@ -390,24 +390,24 @@ Similarly, if tools fail to create files or directories during use, it could be 
     ls -ld ~/.config
     ```
 
-If you still experience issues after fixing permissions, try launching goose with superuser (admin) privileges:
+If you still experience issues after fixing permissions, try launching lumina with superuser (admin) privileges:
 ```sh
-sudo /Applications/Goose.app/Contents/MacOS/Goose
+sudo /Applications/Lumina.app/Contents/MacOS/Lumina
 ```
 
 :::note
-Running goose with sudo may create files owned by root, which could lead to further permission issues. Use this as a troubleshooting step rather than a permanent fix.
+Running lumina with sudo may create files owned by root, which could lead to further permission issues. Use this as a troubleshooting step rather than a permanent fix.
 :::
 
 #### Update permission in System Settings (macOs)
 1. Go to `System Settings` -> `Privacy & Security` -> `Files & Folders`
-2. Grant goose access
+2. Grant lumina access
 
 ---
 
 ### Connection Error with Ollama Provider on WSL
 
-If you encounter an error like this when setting up Ollama as the provider in goose:
+If you encounter an error like this when setting up Ollama as the provider in lumina:
     ```
     Execution error: error sending request for url (http://localhost:11434/v1/chat/completions)
     ```
@@ -420,25 +420,25 @@ This likely means that the local host address is not accessible from WSL.
     ```
     ip route show | grep -i default | awk '{ print $3 }'
     ```
-2. Once you get the IP address, use it in your goose configuration instead of localhost. For example:
+2. Once you get the IP address, use it in your lumina configuration instead of localhost. For example:
     ```
     http://172.24.80.1:11434
     ```
-    
-If you still encounter a `failed to connect` error, you can try using WSL's [Mirrored Networking](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking) setting if you using Windows 11 22H2 or higher 
+
+If you still encounter a `failed to connect` error, you can try using WSL's [Mirrored Networking](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking) setting if you using Windows 11 22H2 or higher
 
 ---
 
 ### Corporate Proxy or Firewall Issues
 
-If you're behind a corporate proxy or firewall and goose cannot connect to your LLM provider, you may see errors like:
+If you're behind a corporate proxy or firewall and lumina cannot connect to your LLM provider, you may see errors like:
 
 ```
 error sending request for url (https://api.openai.com/...)
 failed to connect to api.openai.com
 ```
 
-goose supports HTTP/HTTPS proxy configuration through standard environment variables and system proxy settings. Environment variables take precedence when both are configured.
+lumina supports HTTP/HTTPS proxy configuration through standard environment variables and system proxy settings. Environment variables take precedence when both are configured.
 
 **Solution:**
 
@@ -452,7 +452,7 @@ goose supports HTTP/HTTPS proxy configuration through standard environment varia
    - **macOS**: System Settings → Network → [select connection] → Details → Proxies
    - **Windows**: Settings → Network & Internet → Proxy
 
-3. **Restart goose** after configuring proxy settings
+3. **Restart lumina** after configuring proxy settings
 
 If you continue to experience connection issues, verify:
 - Your proxy URL and port are correct
@@ -472,7 +472,7 @@ If you're working in an airgapped, offline, or corporate-restricted environment,
 - Error messages like: `Failed to start extension: Could not run extension command`
 
 #### Solution:
-goose Desktop uses **"shims"** (packaged versions of `npx` and `uvx`) that automatically download runtime environments via Hermit. In restricted networks, these downloads fail.
+lumina Desktop uses **"shims"** (packaged versions of `npx` and `uvx`) that automatically download runtime environments via Hermit. In restricted networks, these downloads fail.
 
 **Workaround - Use Custom Command Names:**
 
@@ -480,13 +480,13 @@ goose Desktop uses **"shims"** (packaged versions of `npx` and `uvx`) that autom
    ```bash
    # For uvx (Python packages)
    ln -s /usr/local/bin/uvx /usr/local/bin/runuv
-   
-   # For npx (Node.js packages)  
+
+   # For npx (Node.js packages)
    ln -s /usr/local/bin/npx /usr/local/bin/runnpx
    ```
 
 2. **Update your MCP server configurations to use the custom names:**
-   
+
    Instead of:
    ```yaml
    extensions:
@@ -494,23 +494,23 @@ goose Desktop uses **"shims"** (packaged versions of `npx` and `uvx`) that autom
        cmd: uvx
        args: [mcp-server-example]
    ```
-   
+
    Use:
    ```yaml
    extensions:
      example:
-       cmd: runuv  # This bypasses goose's shims
+       cmd: runuv  # This bypasses lumina's shims
        args: [mcp-server-example]
    ```
 
-3. **Why this works:** goose only replaces known command names (`npx`, `uvx`, `jbang`, etc.) with its packaged shims. Custom names are passed through unchanged to your system's actual executables.
+3. **Why this works:** lumina only replaces known command names (`npx`, `uvx`, `jbang`, etc.) with its packaged shims. Custom names are passed through unchanged to your system's actual executables.
 
-4. **Require more changes**: In a corporate proxy environment or airgapped environment where the above doesn't work, it is recommended that you customize and package up goose Desktop with shims/config that will work given the network constraints you have (for example, TLS certificate limitations, [proxy configuration](/docs/guides/environment-variables#network-configuration), inability to download required content etc).
+4. **Require more changes**: In a corporate proxy environment or airgapped environment where the above doesn't work, it is recommended that you customize and package up lumina Desktop with shims/config that will work given the network constraints you have (for example, TLS certificate limitations, [proxy configuration](/docs/guides/environment-variables#network-configuration), inability to download required content etc).
 
 ---
-### Need Further Help? 
+### Need Further Help?
 
-Still running into issues? We're here to help! Join our [Discord Community][discord] where the goose team and community members are happy to assist.
+Still running into issues? Use the [Lumina issue tracker][issue-tracker] and attach a diagnostics report when possible.
 
 :::tip
 If you can share a [diagnostic report](/docs/troubleshooting/diagnostics-and-reporting#diagnostics-system) along with your question, it helps us understand your setup and provide more targeted solutions.
@@ -518,9 +518,9 @@ If you can share a [diagnostic report](/docs/troubleshooting/diagnostics-and-rep
 
 
 
-[handling-rate-limits]: /docs/guides/handling-llm-rate-limits-with-goose
+[handling-rate-limits]: /docs/guides/handling-llm-rate-limits-with-lumina
 [installation]: /docs/getting-started/installation
-[discord]: https://discord.gg/goose-oss
-[goosehints]: /docs/guides/context-engineering/using-goosehints
+[issue-tracker]: https://github.com/HikerM/lumina/issues
+[luminahints]: /docs/guides/context-engineering/using-luminahints
 [configure-llm-provider]: /docs/getting-started/providers
 [extensions-directory]: /extensions

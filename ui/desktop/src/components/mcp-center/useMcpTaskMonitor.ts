@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { McpEventsPage, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpEventsPage, McpTaskRef } from '@hikerm/lumina-sdk';
 import { getMcpTask, resumeMcpEvents } from '../../acp/mcp-platform';
 
 const terminalStatuses = new Set<McpTaskRef['status']>([

@@ -5,7 +5,7 @@ import type {
   ProviderSecretDto,
   ProviderTemplateCatalogEntryDto,
   ProviderTemplateDto,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import type { ProviderDetails, ThinkingEffort, UpdateCustomProviderRequest } from '../types/providers';
 import { getAcpClient } from './acpConnection';
 
@@ -31,7 +31,7 @@ function updateRequestToCreate(
 
 export async function acpListProviderDetails(): Promise<ProviderDetails[]> {
   const client = await getAcpClient();
-  const { entries } = await client.goose.providersList_unstable({});
+  const { entries } = await client.lumina.providersList_unstable({});
   return entries.map((entry) => ({
     name: entry.providerId,
     is_configured: entry.configured,
@@ -64,7 +64,7 @@ export async function acpListProviderDetails(): Promise<ProviderDetails[]> {
 
 export async function acpListProviderModels(providerId: string) {
   const client = await getAcpClient();
-  const { entries } = await client.goose.providersList_unstable({ providerIds: [providerId] });
+  const { entries } = await client.lumina.providersList_unstable({ providerIds: [providerId] });
   return entries.find((e) => e.providerId === providerId)?.models ?? [];
 }
 
@@ -72,13 +72,13 @@ export async function acpListProviderCatalogEntries(
   format?: string
 ): Promise<ProviderTemplateCatalogEntryDto[]> {
   const client = await getAcpClient();
-  const { providers } = await client.goose.providersCatalogList_unstable(format ? { format } : {});
+  const { providers } = await client.lumina.providersCatalogList_unstable(format ? { format } : {});
   return providers;
 }
 
 export async function acpGetProviderTemplate(providerId: string): Promise<ProviderTemplateDto> {
   const client = await getAcpClient();
-  const { template } = await client.goose.providersCatalogTemplate_unstable({ providerId });
+  const { template } = await client.lumina.providersCatalogTemplate_unstable({ providerId });
   return template;
 }
 
@@ -86,14 +86,14 @@ export async function acpGetCustomProvider(
   providerId: string
 ): Promise<CustomProviderReadResponse_unstable> {
   const client = await getAcpClient();
-  return client.goose.providersCustomRead_unstable({ providerId });
+  return client.lumina.providersCustomRead_unstable({ providerId });
 }
 
 export async function acpCreateCustomProviderFromRequest(
   request: UpdateCustomProviderRequest
 ): Promise<{ provider_name: string }> {
   const client = await getAcpClient();
-  const response = await client.goose.providersCustomCreate_unstable(
+  const response = await client.lumina.providersCustomCreate_unstable(
     updateRequestToCreate(request)
   );
   return { provider_name: response.providerId };
@@ -104,7 +104,7 @@ export async function acpUpdateCustomProviderFromRequest(
   request: UpdateCustomProviderRequest
 ): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.providersCustomUpdate_unstable({
+  await client.lumina.providersCustomUpdate_unstable({
     providerId,
     ...updateRequestToCreate(request),
   });
@@ -112,18 +112,18 @@ export async function acpUpdateCustomProviderFromRequest(
 
 export async function acpDeleteCustomProvider(providerId: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.providersCustomDelete_unstable({ providerId });
+  await client.lumina.providersCustomDelete_unstable({ providerId });
 }
 
 export async function acpReadProviderConfig(providerId: string) {
   const client = await getAcpClient();
-  const { fields } = await client.goose.providersConfigRead_unstable({ providerId });
+  const { fields } = await client.lumina.providersConfigRead_unstable({ providerId });
   return fields;
 }
 
 export async function acpDeleteProviderConfig(providerId: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.providersConfigDelete_unstable({ providerId });
+  await client.lumina.providersConfigDelete_unstable({ providerId });
 }
 
 export async function acpSaveProviderConfig(
@@ -131,23 +131,23 @@ export async function acpSaveProviderConfig(
   fields: { key: string; value: string }[]
 ): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.providersConfigSave_unstable({ providerId, fields });
+  await client.lumina.providersConfigSave_unstable({ providerId, fields });
 }
 
 export async function acpAuthenticateProvider(providerId: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.providersConfigAuthenticate_unstable({ providerId });
+  await client.lumina.providersConfigAuthenticate_unstable({ providerId });
 }
 
 export async function acpListProviderSecrets(): Promise<ProviderSecretDto[]> {
   const client = await getAcpClient();
-  const { secrets } = await client.goose.providersSecretsList_unstable({});
+  const { secrets } = await client.lumina.providersSecretsList_unstable({});
   return secrets;
 }
 
 export async function acpDeleteProviderSecret(id: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.providersSecretsDelete_unstable({ id });
+  await client.lumina.providersSecretsDelete_unstable({ id });
 }
 
 export async function acpGetCanonicalModelInfo(
@@ -155,7 +155,7 @@ export async function acpGetCanonicalModelInfo(
   model: string
 ): Promise<CanonicalModelInfoDto | null> {
   const client = await getAcpClient();
-  const { modelInfo } = await client.goose.providersCanonicalModelInfo_unstable({
+  const { modelInfo } = await client.lumina.providersCanonicalModelInfo_unstable({
     provider,
     model,
   });
@@ -167,7 +167,7 @@ export async function acpReadDefaults(): Promise<{
   modelId: string | null;
 }> {
   const client = await getAcpClient();
-  const response = await client.goose.defaultsRead_unstable({});
+  const response = await client.lumina.defaultsRead_unstable({});
   return {
     providerId: response.providerId ?? null,
     modelId: response.modelId ?? null,
@@ -176,25 +176,25 @@ export async function acpReadDefaults(): Promise<{
 
 export async function acpSaveDefaults(providerId: string, modelId?: string | null): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.defaultsSave_unstable({ providerId, modelId: modelId ?? null });
+  await client.lumina.defaultsSave_unstable({ providerId, modelId: modelId ?? null });
 }
 
 export async function acpClearDefaults(): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.defaultsClear_unstable({});
+  await client.lumina.defaultsClear_unstable({});
 }
 
 export async function acpReadThinkingEffort(): Promise<ThinkingEffort | null> {
   const client = await getAcpClient();
-  const response = await client.goose.preferencesRead_unstable({ keys: ['gooseThinkingEffort'] });
-  const value = response.values.find((v) => v.key === 'gooseThinkingEffort')?.value;
+  const response = await client.lumina.preferencesRead_unstable({ keys: ['luminaThinkingEffort'] });
+  const value = response.values.find((v) => v.key === 'luminaThinkingEffort')?.value;
   return typeof value === 'string' ? (value as ThinkingEffort) : null;
 }
 
 export async function acpSaveThinkingEffort(effort: ThinkingEffort): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.preferencesSave_unstable({
-    values: [{ key: 'gooseThinkingEffort', value: effort }],
+  await client.lumina.preferencesSave_unstable({
+    values: [{ key: 'luminaThinkingEffort', value: effort }],
   });
 }
 

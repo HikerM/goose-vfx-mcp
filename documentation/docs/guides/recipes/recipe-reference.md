@@ -2,13 +2,13 @@
 sidebar_position: 2
 title: Recipe Reference Guide
 sidebar_label: Recipe Reference
-description: Complete technical reference for creating and customizing recipes in goose
+description: Complete technical reference for creating and customizing recipes in lumina
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Recipes are reusable goose configurations that package up instructions and settings so the setup can be easily shared and launched by others.
+Recipes are reusable lumina configurations that package up instructions and settings so the setup can be easily shared and launched by others.
 
 ## Recipe File Format
 
@@ -17,7 +17,7 @@ Recipes can be defined in:
 - `.json` files
 
 :::info
-`.yml` files aren't supported by goose CLI.
+`.yml` files aren't supported by lumina CLI.
 :::
 
 See [Reusable Recipes](/docs/guides/recipes/session-recipes) to learn how to create, use, and manage recipes.
@@ -28,10 +28,10 @@ Recipes can be loaded from:
 
 1. Local filesystem:
    - Current directory
-   - Directories specified in [`GOOSE_RECIPE_PATH`](/docs/guides/environment-variables#recipe-configuration) environment variable
-   
+   - Directories specified in [`LUMINA_RECIPE_PATH`](/docs/guides/environment-variables#recipe-configuration) environment variable
+
 2. GitHub repositories:
-   - Configure using [`GOOSE_RECIPE_GITHUB_REPO`](/docs/guides/environment-variables#recipe-configuration) configuration key
+   - Configure using [`LUMINA_RECIPE_GITHUB_REPO`](/docs/guides/environment-variables#recipe-configuration) configuration key
    - Requires GitHub CLI (`gh`) to be installed and authenticated
 
 ## Core Recipe Schema
@@ -42,9 +42,9 @@ Recipes follow this schema structure:
 |-------|------|----------|-------------|
 | `description` | String | ✅ | A detailed description of what the recipe does |
 | `instructions` | String | ✅*  | Template instructions that can include parameter substitutions |
-| `prompt` | String| ✅*   | A template prompt that can include parameter substitutions. Required in [headless](/docs/tutorials/headless-goose) (non-interactive) mode. |
+| `prompt` | String| ✅*   | A template prompt that can include parameter substitutions. Required in [headless](/docs/tutorials/headless-lumina) (non-interactive) mode. |
 | `title` | String | ✅ | A short title describing the recipe |
-| [`activities`](#activities) | Array | - | List of example prompts that can include parameter substitutions. Activities appear as clickable bubbles in goose Desktop. |
+| [`activities`](#activities) | Array | - | List of example prompts that can include parameter substitutions. Activities appear as clickable bubbles in lumina Desktop. |
 | [`extensions`](#extensions) | Array | - | List of extension configurations |
 | [`parameters`](#parameters) | Array | - | List of parameter definitions for dynamic recipes |
 | [`response`](#response) | Object | - | Structured output schema for automation workflows |
@@ -59,7 +59,7 @@ Recipes follow this schema structure:
 
 ### Activities
 
-The `activities` field defines an optional message and clickable activity bubbles (buttons) that appears when a recipe is opened in goose Desktop.
+The `activities` field defines an optional message and clickable activity bubbles (buttons) that appears when a recipe is opened in lumina Desktop.
 
 :::info Desktop only
 Activities are a Desktop-only feature. When recipes with activities are run via the CLI or as a scheduled job, the `activities` field is ignored and has no effect on recipe execution.
@@ -70,12 +70,12 @@ Activities are a Desktop-only feature. When recipes with activities are run via 
 Activities can be defined in two ways:
 
 1. **Message Activity**: Displays the markdown-formatted activity text in an info box above the activity bubbles. For example:
-   
+
    ```
    activities:
      - "message: **Welcome!** Here's what I can help with:\n\n• 📊 Data analysis\n• 🔍 Code review\n• 📝 Documentation\n\nSelect an option below to begin."
    ```
-   
+
    Only include one `message:` prefixed activity. Additional `message:` prefixed activities become regular clickable bubbles (and display the literal "message:" text).
 
 2. **Button Activities**: Text to display in activity bubbles, which send the activity text as a prompt when clicked
@@ -163,14 +163,14 @@ The `extensions` field allows you to specify which Model Context Protocol (MCP) 
 | `args` | Array | List of arguments for the command |
 | `env_keys` | Array | (Optional) Names of environment variables required by the extension |
 | `timeout` | Number | Timeout in seconds |
-| `bundled` | Boolean | (Optional) Whether the extension is bundled with goose |
+| `bundled` | Boolean | (Optional) Whether the extension is bundled with lumina |
 | `description` | String | Description of what the extension does |
 | `available_tools` | Array | List of tool names within the extension that will be available. When not specified all will be available |
 
 #### Extension Types
 
 - **`stdio`**: Standard I/O client with command and arguments
-- **`builtin`**: Built-in extension that is part of the bundled goose MCP server
+- **`builtin`**: Built-in extension that is part of the bundled lumina MCP server
 - **`platform`**: Platform extensions that run in the agent process
 - **`streamable_http`**: Streamable HTTP client with URI endpoint
 - **`frontend`**: Frontend-provided tools called through the frontend
@@ -202,8 +202,8 @@ extensions:
       - mcp_codesearch@latest
     timeout: 300
     bundled: true
-    description: "Query https://codesearch.sqprod.co/ directly from goose"
-  
+    description: "Query https://codesearch.sqprod.co/ directly from lumina"
+
   - type: stdio
     name: presidio
     timeout: 300
@@ -221,7 +221,7 @@ extensions:
       - GITHUB_PERSONAL_ACCESS_TOKEN
     timeout: 60
     description: "GitHub MCP extension for repository operations"
-    
+
   - type: inline_python
     name: data_processor
     code: |
@@ -247,7 +247,7 @@ extensions:
       "args": ["mcp_codesearch@latest"],
       "timeout": 300,
       "bundled": true,
-      "description": "Query https://codesearch.sqprod.co/ directly from goose"
+      "description": "Query https://codesearch.sqprod.co/ directly from lumina"
     },
     {
       "type": "stdio",
@@ -285,10 +285,10 @@ extensions:
 
 This feature is only available through the CLI.
 
-If a recipe uses an extension that requires a secret, goose can prompt users to provide the secret when running the recipe:
+If a recipe uses an extension that requires a secret, lumina can prompt users to provide the secret when running the recipe:
 
-1. When a recipe is loaded, goose scans all extensions (including those in subrecipes) for `env_keys` fields
-2. If any required environment variables are missing from the secure keyring, goose prompts the user to enter them
+1. When a recipe is loaded, lumina scans all extensions (including those in subrecipes) for `env_keys` fields
+2. If any required environment variables are missing from the secure keyring, lumina prompts the user to enter them
 3. Values are stored securely in the system keyring and reused for subsequent runs
 
 To update a stored secret, remove it from the system keyring and run the recipe again to be re-prompted.
@@ -296,7 +296,7 @@ To update a stored secret, remove it from the system keyring and run the recipe 
 :::info
 This feature is designed to prompt for and securely store secrets (such as API keys), but `env_keys` can include any environment variable needed by the extension (such as API endpoints, configuration values, etc.).
 
-Users can press `ESC` to skip entering a variable if it's optional for the extension. 
+Users can press `ESC` to skip entering a variable if it's optional for the extension.
 :::
 
 ### Parameters
@@ -322,7 +322,7 @@ Parameter substitution uses Jinja-style template syntax with `{{ parameter_name 
 - `optional`: Can be omitted if a default value is specified
 - `user_prompt`: Will interactively prompt the user for input if not provided
 
-The `required` and `optional` parameters work best for recipes opened in goose Desktop. If a value isn't provided for a `user_prompt` parameter, the parameter won't be substituted and may appear as literal `{{ parameter_name }}` text in the recipe output.
+The `required` and `optional` parameters work best for recipes opened in lumina Desktop. If a value isn't provided for a `user_prompt` parameter, the parameter won't be substituted and may appear as literal `{{ parameter_name }}` text in the recipe output.
 
 #### Input Types
 
@@ -330,7 +330,7 @@ The `required` and `optional` parameters work best for recipes opened in goose D
 - `number`: Numeric values. Desktop UI provides number input validation
 - `boolean`: True/false values. Desktop UI shows dropdown with "True"/"False" options
 - `date`: Date values. Currently renders as text input
-- `file`: The parameter value should be a file path. goose reads the file contents and substitutes the actual content (not the path) into the template
+- `file`: The parameter value should be a file path. lumina reads the file contents and substitutes the actual content (not the path) into the template
 - `select`: Dropdown selection with predefined options. Requires `options` field
 
 **Example:**
@@ -341,7 +341,7 @@ parameters:
     requirement: optional
     default: "10"
     description: "Maximum files to process"
-  
+
   - key: output_format
     input_type: select
     requirement: required
@@ -350,13 +350,13 @@ parameters:
       - json
       - markdown
       - csv
-  
+
   - key: enable_debug
     input_type: boolean
     requirement: optional
     default: "false"
     description: "Enable debug mode"
-  
+
   - key: source_code
     input_type: file
     requirement: required
@@ -375,21 +375,21 @@ prompt: "Process {{ max_files }} files in {{ output_format }} format. Debug: {{ 
 
 #### Parameter Substitution in Desktop
 
-When a recipe with parameters is opened in goose Desktop, users are presented with a **Recipe Parameters** dialog where they can:
+When a recipe with parameters is opened in lumina Desktop, users are presented with a **Recipe Parameters** dialog where they can:
 - Provide values for required parameters
-- Modify or accept default values for optional parameters  
+- Modify or accept default values for optional parameters
 - Enter values for `user_prompt` parameters
 
 Once parameter values are submitted, they are substituted into the recipe's `instructions`, `prompt`, and `activities` fields before the recipe starts.
 
 ### Response
 
-The `response` field enables recipes to enforce a final structured JSON output. When you specify a `json_schema`, goose will:
+The `response` field enables recipes to enforce a final structured JSON output. When you specify a `json_schema`, lumina will:
 
 1. **Validate the output**: Validates the output JSON against your JSON schema with basic JSON schema validations
 2. **Final structured output**: Ensure the final output of the agent is a response matching your JSON structure
 
-This feature is designed for **non-interactive automation** to ensure consistent, parseable output. Recipes can produce structured output when run from either the goose CLI or goose Desktop. See [use cases and ideas for automation workflows](/docs/guides/recipes/session-recipes#structured-output-for-automation).
+This feature is designed for **non-interactive automation** to ensure consistent, parseable output. Recipes can produce structured output when run from either the lumina CLI or lumina Desktop. See [use cases and ideas for automation workflows](/docs/guides/recipes/session-recipes#structured-output-for-automation).
 
 #### Response Schema
 
@@ -503,7 +503,7 @@ retry:
   checks:
     - type: shell
       command: "curl -f http://localhost:8080/health"
-    - type: shell  
+    - type: shell
       command: "pgrep -f 'web-service' > /dev/null"
   on_failure: "systemctl stop web-service || killall web-service"
 ```
@@ -512,8 +512,8 @@ retry:
 
 You can configure retry behavior globally using environment variables:
 
-- `GOOSE_RECIPE_RETRY_TIMEOUT_SECONDS`: Global timeout for success check commands
-- `GOOSE_RECIPE_ON_FAILURE_TIMEOUT_SECONDS`: Global timeout for on_failure commands
+- `LUMINA_RECIPE_RETRY_TIMEOUT_SECONDS`: Global timeout for success check commands
+- `LUMINA_RECIPE_ON_FAILURE_TIMEOUT_SECONDS`: Global timeout for on_failure commands
 
 These environment variables are overridden by recipe-specific timeout configurations.
 
@@ -525,8 +525,8 @@ The `settings` field allows you to configure the AI model and provider settings 
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `goose_provider` | String | - | The AI provider to use (e.g., "anthropic", "openai") |
-| `goose_model` | String | - | The specific model name to use |
+| `lumina_provider` | String | - | The AI provider to use (e.g., "anthropic", "openai") |
+| `lumina_model` | String | - | The specific model name to use |
 | `temperature` | Number | - | The temperature setting for the model (typically 0.0-1.0) |
 | `max_turns` | Number | - | Maximum number of turns for subagent tasks created by this recipe |
 
@@ -537,7 +537,7 @@ The `max_turns` setting controls how many iterations an agent can perform before
 **Configuration precedence (highest to lowest):**
 1. Subagent tool call override
 2. Recipe `settings.max_turns`
-3. `GOOSE_SUBAGENT_MAX_TURNS` environment variable
+3. `LUMINA_SUBAGENT_MAX_TURNS` environment variable
 4. Default value (1000 for main recipes, 25 for subagents)
 
 **Common use cases:** Limit execution time for automated workflows, prevent runaway subagents, control resource usage in scheduled jobs.
@@ -546,21 +546,21 @@ The `max_turns` setting controls how many iterations an agent can perform before
 
 ```yaml
 settings:
-  goose_provider: "anthropic"
-  goose_model: "claude-sonnet-4-20250514"
+  lumina_provider: "anthropic"
+  lumina_model: "claude-sonnet-4-20250514"
   temperature: 0.7
   max_turns: 50
 ```
 
 ```yaml
 settings:
-  goose_provider: "openai"
-  goose_model: "gpt-4o"
+  lumina_provider: "openai"
+  lumina_model: "gpt-4o"
   temperature: 0.3
 ```
 
 :::note
-Settings specified in a recipe will override your default goose configuration when that recipe is executed. If no settings are specified, goose will use your configured defaults.
+Settings specified in a recipe will override your default lumina configuration when that recipe is executed. If no settings are specified, lumina will use your configured defaults.
 :::
 
 ### Subrecipes
@@ -586,7 +586,7 @@ sub_recipes:
     values:  # in key-value format: {parameter_name}: {parameter_value}
       scan_level: "comprehensive"
       include_dependencies: "true"
-  
+
   - name: "quality_check"
     path: "./subrecipes/quality-analysis.yaml"
     description: "Performs code quality analysis"
@@ -594,7 +594,7 @@ sub_recipes:
 
 ## Desktop Metadata Fields
 
-Recipes saved from goose Desktop include additional metadata fields. These fields are used by the Desktop app for organization and management but are ignored by CLI operations. 
+Recipes saved from lumina Desktop include additional metadata fields. These fields are used by the Desktop app for organization and management but are ignored by CLI operations.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -779,7 +779,7 @@ Built-in template parameters are automatically supported and don't need to be de
 
 ## Validation Rules
 
-Validation rules from [`validate_recipe.rs`](https://github.com/aaif-goose/goose/blob/main/crates/goose/src/recipe/validate_recipe.rs) are enforced when loading recipes and used by the [`goose recipe validate`](/docs/guides/goose-cli-commands#recipe) subcommand:
+Validation rules from [`validate_recipe.rs`](https://github.com/HikerM/lumina/blob/main/crates/lumina/src/recipe/validate_recipe.rs) are enforced when loading recipes and used by the [`lumina recipe validate`](/docs/guides/lumina-cli-commands#recipe) subcommand:
 
 ### Recipe-Level Validation
 
@@ -812,13 +812,13 @@ parameters:
     input_type: string
     requirement: required
     description: "A required text parameter"
-  
+
   - key: file_count
     input_type: number
     requirement: optional
     default: 10
     description: "Maximum number of files to process"
-  
+
   - key: output_format
     input_type: select
     requirement: required
@@ -827,7 +827,7 @@ parameters:
       - json
       - markdown
       - csv
-  
+
   - key: config_file
     input_type: file
     requirement: required
@@ -841,11 +841,11 @@ extensions:
       - mcp_codesearch@latest
     timeout: 300
     bundled: true
-    description: "Query codesearch directly from goose"
+    description: "Query codesearch directly from lumina"
 
 settings:
-  goose_provider: "anthropic"
-  goose_model: "claude-sonnet-4-20250514"
+  lumina_provider: "anthropic"
+  lumina_model: "claude-sonnet-4-20250514"
   temperature: 0.7
   max_turns: 100
 
@@ -920,12 +920,12 @@ response:
       "args": ["mcp_codesearch@latest"],
       "timeout": 300,
       "bundled": true,
-      "description": "Query codesearch directly from goose"
+      "description": "Query codesearch directly from lumina"
     }
   ],
   "settings": {
-    "goose_provider": "anthropic",
-    "goose_model": "claude-sonnet-4-20250514",
+    "lumina_provider": "anthropic",
+    "lumina_model": "claude-sonnet-4-20250514",
     "temperature": 0.7,
     "max_turns": 100
   },
@@ -977,7 +977,7 @@ Common errors to watch for:
 - Invalid extension configurations
 - Invalid retry configuration (missing required fields, invalid shell commands)
 
-When these occur, goose will provide helpful error messages indicating what needs to be fixed.
+When these occur, lumina will provide helpful error messages indicating what needs to be fixed.
 
 ### Retry-Specific Errors
 
@@ -987,4 +987,4 @@ When these occur, goose will provide helpful error messages indicating what need
 - **Missing required retry fields**: When `max_retries` or `checks` are not specified
 
 ## Learn More
-Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master goose recipes.
+Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master lumina recipes.

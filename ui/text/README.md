@@ -1,36 +1,36 @@
-# goose ACP TUI
+# lumina ACP TUI
 
-Early stage and part of goose's broader move to ACP
+Early stage and part of lumina's broader move to ACP
 
-https://github.com/aaif-goose/goose/issues/6642
-https://github.com/aaif-goose/goose/discussions/7309
+https://github.com/HikerM/lumina/issues/6642
+https://github.com/HikerM/lumina/discussions/7309
 
 ## Running
 
-The TUI launches the goose ACP server by spawning `goose acp`. Which binary it spawns is resolved by `@aaif/goose-sdk`:
+The TUI launches the lumina ACP server by spawning `lumina acp`. Which binary it spawns is resolved by `@hikerm/lumina-sdk`:
 
-1. the `GOOSE_BINARY` environment variable, if set, otherwise
-2. the platform's prebuilt `@aaif/goose-binary-*` package (an optional dependency of the pinned `@aaif/goose-sdk`).
+1. the `LUMINA_BINARY` environment variable, if set, otherwise
+2. the platform's prebuilt `@hikerm/lumina-binary-*` package (an optional dependency of the pinned `@hikerm/lumina-sdk`).
 
 ```bash
 cd ui/text
-pnpm install   # pulls the pinned @aaif/goose-sdk and its matching @aaif/goose-binary-* package
+pnpm install   # links the in-repository Lumina SDK and matching binary packages
 pnpm start     # tsx src/tui.tsx — runs against the released binary, no Rust build
 ```
 
-The TUI pins a specific `@aaif/goose-sdk` version, so `pnpm start` always runs against a goose binary that matches the SDK.
+The TUI uses the workspace `@hikerm/lumina-sdk`, so local builds always run against a Lumina binary that matches the SDK source.
 
-### Building goose from local source
+### Building lumina from local source
 
-To test local Rust changes, run the dev launcher directly. It builds a debug binary (`cargo build -p goose-cli` → `target/debug/goose`) from the workspace root and points the TUI at it via `GOOSE_BINARY`:
+To test local Rust changes, run the dev launcher directly. It builds a debug binary (`cargo build -p lumina-cli` → `target/debug/lumina`) from the workspace root and points the TUI at it via `LUMINA_BINARY`:
 
 ```bash
 node scripts/dev-start.mjs
 ```
 
-If your changes touch the ACP schema, also point the TUI at the in-repo SDK so the two stay matched: set `@aaif/goose-sdk` to `workspace:*` in `package.json` and re-run `pnpm install`. Otherwise the locally built binary may not match the pinned published SDK's schema. Revert that change before committing — the TUI is meant to stay frozen on its pinned SDK version.
+If your changes touch the ACP schema, regenerate the SDK and update the Rust schema, generated TypeScript, Desktop adapters, and TUI in the same change.
 
-To run any other prebuilt binary, set `GOOSE_BINARY=/path/to/goose` and use `pnpm start`.
+To run any other prebuilt binary, set `LUMINA_BINARY=/path/to/lumina` and use `pnpm start`.
 
 ### Custom server URL
 

@@ -1,0 +1,1342 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "LUMINA-COMMERCIAL",
+  "git": {
+    "root": "D:\\Project\\goose",
+    "is_git": true,
+    "head": "a501edf7c0bf3e4b375d9c0b44056c1b3f39b877",
+    "branch": "codex/lumina-commercial",
+    "dirty": true
+  },
+  "tech_stack_snapshot": {
+    "schema_version": "1.0.0",
+    "repository": {
+      "root": "D:\\Project\\goose",
+      "is_git": true,
+      "head": "a501edf7c0bf3e4b375d9c0b44056c1b3f39b877",
+      "branch": "codex/lumina-commercial",
+      "dirty": true
+    },
+    "scan_root": "D:\\Project\\goose",
+    "projects": [
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp",
+        "name": "fxhoudinimcp",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {
+          "changelog": "auto-changelog -p --unreleased"
+        },
+        "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp\\package.json"
+      },
+      {
+        "kind": "python",
+        "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp",
+        "name": "fxhoudinimcp",
+        "languages": [
+          {
+            "name": "Python",
+            "version": ">=3.10"
+          }
+        ],
+        "frameworks": [
+          "Pydantic"
+        ],
+        "dependencies": [
+          "mcp>=1.8.0",
+          "httpx>=0.27.0",
+          "pydantic>=2.0.0"
+        ],
+        "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp\\pyproject.toml"
+      },
+      {
+        "kind": "python",
+        "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\nuke-mcp",
+        "name": "nuke-mcp",
+        "languages": [
+          {
+            "name": "Python",
+            "version": ">=3.10"
+          }
+        ],
+        "frameworks": [],
+        "dependencies": [
+          "fastmcp>=2.14,<3.0"
+        ],
+        "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\nuke-mcp\\pyproject.toml"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\Unreal_mcp",
+        "name": "unreal-engine-mcp-server",
+        "languages": [
+          {
+            "name": "TypeScript",
+            "version": "7.0.2"
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": ">=18"
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": "npm",
+          "version": null
+        },
+        "scripts": {
+          "build:core": "tsc -p tsconfig.json",
+          "build": "npm run clean && npm run build:core",
+          "build:watch": "tsc -p tsconfig.json --watch",
+          "start": "node dist/cli.js",
+          "dev": "ts-node-esm src/cli.ts",
+          "lint": "echo \"Lint: typescript/javascript, C, C++, C#\" && eslint .",
+          "lint:fix": "eslint . --fix",
+          "lint:cpp": "echo \"Running C/C++ lint (cpplint)\" && (python -m cpplint --recursive plugins || echo 'cpplint not found; skipping C/C++ lint')",
+          "lint:c": "echo \"Running C lint (cpplint)\" && (python -m cpplint --recursive plugins || echo 'cpplint not found; skipping C lint')",
+          "lint:csharp": "echo \"Running C# lint (dotnet format)\" && (dotnet tool run dotnet-format --verify-no-changes || echo 'dotnet-format not available or formatting required; skipping C# lint')",
+          "clean": "rimraf dist tsconfig.tsbuildinfo",
+          "prepare": "node -e \"const fs=require('fs');(fs.existsSync('dist')&&fs.existsSync('dist/cli.js')&&fs.existsSync('dist/index.js'))||require('child_process').execSync('npm run build',{stdio:'inherit'})\"",
+          "automation:sync": "node scripts/sync-mcp-plugin.js",
+          "clean:tmp": "node scripts/clean-tmp.js",
+          "test": "node tests/integration.mjs",
+          "test:unit": "vitest run",
+          "test:unit:watch": "vitest",
+          "test:unit:coverage": "vitest run --coverage",
+          "test:all": "node tests/integration.mjs",
+          "test:smoke": "node --loader ts-node/esm scripts/smoke-test.ts",
+          "test:native-parity": "node tests/native-mcp-parity-audit.mjs",
+          "test:params": "npm run test:native-parity && node tests/parameter-combination-audit.mjs --static --strict --optional-strict",
+          "type-check": "tsc --noEmit"
+        },
+        "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\Unreal_mcp\\package.json"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose",
+        "name": "goose",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": null
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina",
+        "name": "lumina-agent",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-acp-macros",
+        "name": "lumina-acp-macros",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-acp-macros\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-cli",
+        "name": "lumina-agent-cli",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-cli\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-download-manager",
+        "name": "lumina-download-manager",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-download-manager\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-evidence-db",
+        "name": "lumina-evidence-db",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-evidence-db\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-legacy-migrator",
+        "name": "lumina-legacy-migrator",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-legacy-migrator\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-local-inference",
+        "name": "lumina-local-inference",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-local-inference\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-mcp",
+        "name": "lumina-mcp",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-mcp\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-provider-types",
+        "name": "lumina-provider-types",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-provider-types\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-providers",
+        "name": "lumina-providers",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-providers\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-sdk",
+        "name": "lumina-sdk",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\Cargo.toml"
+      },
+      {
+        "kind": "java-gradle",
+        "root": "D:\\Project\\goose\\crates\\lumina-sdk\\examples\\uniffi\\kotlin",
+        "name": "kotlin",
+        "languages": [
+          {
+            "name": "Java",
+            "version": "JavaVersion.VERSION_11"
+          }
+        ],
+        "frameworks": [],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\examples\\uniffi\\kotlin\\build.gradle.kts"
+      },
+      {
+        "kind": "java-gradle",
+        "root": "D:\\Project\\goose\\crates\\lumina-sdk\\maven",
+        "name": "maven",
+        "languages": [
+          {
+            "name": "Java",
+            "version": "JavaVersion.VERSION_11"
+          }
+        ],
+        "frameworks": [],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\maven\\build.gradle.kts"
+      },
+      {
+        "kind": "python",
+        "root": "D:\\Project\\goose\\crates\\lumina-sdk\\python",
+        "name": "python",
+        "languages": [
+          {
+            "name": "Python",
+            "version": ">=3.9"
+          }
+        ],
+        "frameworks": [],
+        "dependencies": [],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\python\\pyproject.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-sdk-types",
+        "name": "lumina-sdk-types",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-sdk-types\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-test",
+        "name": "lumina-test",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-test\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-test-support",
+        "name": "lumina-test-support",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-test-support\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\crates\\lumina-verified-sources",
+        "name": "lumina-verified-sources",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": {
+              "workspace": true
+            }
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\crates\\lumina-verified-sources\\Cargo.toml"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\documentation",
+        "name": "lumina",
+        "languages": [
+          {
+            "name": "TypeScript",
+            "version": "5.6.3"
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": ">=18.0"
+          }
+        ],
+        "frameworks": [
+          {
+            "name": "React",
+            "package": "react",
+            "version": "19.2.8"
+          }
+        ],
+        "package_manager": {
+          "name": "npm",
+          "version": null
+        },
+        "scripts": {
+          "docusaurus": "docusaurus",
+          "start": "docusaurus start",
+          "build": "node scripts/generate-docs-map.js && node scripts/generate-skills-manifest.js && node scripts/generate-skills-zips.js && docusaurus build",
+          "swizzle": "docusaurus swizzle",
+          "deploy": "docusaurus deploy",
+          "clear": "docusaurus clear",
+          "serve": "docusaurus serve",
+          "write-translations": "docusaurus write-translations",
+          "write-heading-ids": "docusaurus write-heading-ids",
+          "test": "node --test scripts/*.test.js",
+          "typecheck": "tsc",
+          "serve-static": "node scripts/serve-static.js"
+        },
+        "manifest": "D:\\Project\\goose\\documentation\\package.json"
+      },
+      {
+        "kind": "python",
+        "root": "D:\\Project\\goose\\examples\\mcp-wiki",
+        "name": "mcp-wiki",
+        "languages": [
+          {
+            "name": "Python",
+            "version": "3.13"
+          }
+        ],
+        "frameworks": [],
+        "dependencies": [
+          "beautifulsoup4>=4.12.3",
+          "html2text>=2024.2.26",
+          "mcp[cli]>=1.2.0",
+          "requests>=2.32.3"
+        ],
+        "manifest": "D:\\Project\\goose\\examples\\mcp-wiki\\pyproject.toml"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\oidc-proxy",
+        "name": "oidc-proxy",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {
+          "dev": "wrangler dev",
+          "deploy": "wrangler deploy",
+          "test": "vitest run"
+        },
+        "manifest": "D:\\Project\\goose\\oidc-proxy\\package.json"
+      },
+      {
+        "kind": "python",
+        "root": "D:\\Project\\goose\\scripts\\provider-error-proxy",
+        "name": "provider-error-proxy",
+        "languages": [
+          {
+            "name": "Python",
+            "version": ">=3.11"
+          }
+        ],
+        "frameworks": [],
+        "dependencies": [
+          "aiohttp>=3.14.0",
+          "brotli>=1.1.0"
+        ],
+        "manifest": "D:\\Project\\goose\\scripts\\provider-error-proxy\\pyproject.toml"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\services\\ask-ai-bot",
+        "name": "lumina-ask-ai-bot",
+        "languages": [
+          {
+            "name": "TypeScript",
+            "version": "^7.0.2"
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": "bun",
+          "version": null
+        },
+        "scripts": {
+          "start": "discraft start",
+          "build": "discraft build",
+          "dev": "discraft dev"
+        },
+        "manifest": "D:\\Project\\goose\\services\\ask-ai-bot\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\desktop",
+        "name": "lumina-desktop",
+        "languages": [
+          {
+            "name": "TypeScript",
+            "version": "~5.9.3"
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": "^24.10.0"
+          }
+        ],
+        "frameworks": [
+          {
+            "name": "React",
+            "package": "react",
+            "version": "^19.2.4"
+          },
+          {
+            "name": "Vite",
+            "package": "vite",
+            "version": "^7.3.1"
+          },
+          {
+            "name": "Express",
+            "package": "express",
+            "version": "^5.2.1"
+          },
+          {
+            "name": "Electron",
+            "package": "electron",
+            "version": "41.0.0"
+          }
+        ],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {
+          "postinstall": "pnpm run build-lumina-sdk",
+          "typecheck": "tsc --noEmit",
+          "build-lumina-sdk": "pnpm --filter @hikerm/lumina-sdk run build && pnpm run clean-vite-cache",
+          "clean-vite-cache": "node scripts/clean-vite-cache.js",
+          "start-gui": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge start",
+          "start-gui-debug": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge start -- --inspect=9229",
+          "start": "node scripts/start-dev.js",
+          "start:test-error": "LUMINA_TEST_ERROR=true electron-forge start",
+          "package": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge package",
+          "make": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge make",
+          "make:win:installer": "node scripts/build-windows-installer.js",
+          "bundle:default": "node scripts/prepare-platform-binaries.js && pnpm run make && BUNDLE_NAME=\"${LUMINA_BUNDLE_NAME:-Lumina}\" && APP_DIR=\"out/${BUNDLE_NAME}-darwin-arm64\" && APP_BUNDLE=\"${APP_DIR}/${BUNDLE_NAME}.app\" && (cd \"$APP_DIR\" && ditto -c -k --sequesterRsrc --keepParent \"${BUNDLE_NAME}.app\" \"${BUNDLE_NAME}.zip\")",
+          "bundle:intel": "node scripts/prepare-platform-binaries.js && pnpm run make --arch=x64 && BUNDLE_NAME=\"${LUMINA_BUNDLE_NAME:-Lumina}\" && APP_DIR=\"out/${BUNDLE_NAME}-darwin-x64\" && APP_BUNDLE=\"${APP_DIR}/${BUNDLE_NAME}.app\" && (cd \"$APP_DIR\" && ditto -c -k --sequesterRsrc --keepParent \"${BUNDLE_NAME}.app\" \"${BUNDLE_NAME}_intel_mac.zip\")",
+          "debug": "echo 'run --remote-debugging-port=8315' && BUNDLE_NAME=\"${LUMINA_BUNDLE_NAME:-Lumina}\" && lldb \"out/${BUNDLE_NAME}-darwin-arm64/${BUNDLE_NAME}.app\"",
+          "test-e2e": "playwright test",
+          "test-e2e:dev": "playwright test --reporter=list --retries=0 --max-failures=1",
+          "test-e2e:ui": "playwright test --ui",
+          "test-e2e:debug": "playwright test --debug",
+          "test-e2e:report": "playwright show-report",
+          "test-e2e:single": "playwright test -g",
+          "lint": "eslint \"src/**/*.{ts,tsx}\" --fix --no-warn-ignored",
+          "lint:check": "pnpm run typecheck && eslint \"src/**/*.{ts,tsx}\" --max-warnings 0 --no-warn-ignored && pnpm run i18n:check",
+          "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+          "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
+          "test": "vitest",
+          "test:run": "vitest run",
+          "test:ui": "vitest --ui",
+          "test:coverage": "vitest run --coverage",
+          "test:integration": "vitest run --config vitest.integration.config.ts",
+          "test:integration:providers": "vitest run --config vitest.integration.config.ts tests/integration/test_providers.test.ts",
+          "test:integration:providers-code-exec": "vitest run --config vitest.integration.config.ts tests/integration/test_providers_code_exec.test.ts",
+          "test:integration:watch": "vitest --config vitest.integration.config.ts",
+          "test:integration:debug": "DEBUG=1 vitest run --config vitest.integration.config.ts",
+          "i18n:extract": "formatjs extract 'src/**/*.{ts,tsx}' --ignore '**/*.d.ts' --out-file src/i18n/messages/en.json --flatten && pnpm run i18n:compile",
+          "i18n:check": "node scripts/i18n-check.js && node scripts/i18n-validate-locale.js",
+          "i18n:compile": "node scripts/i18n-compile.js",
+          "i18n:validate-es": "node scripts/i18n-validate-locale.js es",
+          "i18n:validate-ja": "node scripts/i18n-validate-locale.js ja",
+          "i18n:validate-locale": "node scripts/i18n-validate-locale.js"
+        },
+        "manifest": "D:\\Project\\goose\\ui\\desktop\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-arm64",
+        "name": "@hikerm/lumina-binary-darwin-arm64",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {},
+        "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-arm64\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-x64",
+        "name": "@hikerm/lumina-binary-darwin-x64",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {},
+        "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-x64\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-arm64",
+        "name": "@hikerm/lumina-binary-linux-arm64",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {},
+        "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-arm64\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-x64",
+        "name": "@hikerm/lumina-binary-linux-x64",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {},
+        "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-x64\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-win32-x64",
+        "name": "@hikerm/lumina-binary-win32-x64",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {},
+        "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-win32-x64\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui",
+        "name": "ui",
+        "languages": [
+          {
+            "name": "JavaScript",
+            "version": null
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": "pnpm",
+          "version": null
+        },
+        "scripts": {
+          "changeset": "changeset",
+          "version": "changeset version",
+          "release": "changeset publish"
+        },
+        "manifest": "D:\\Project\\goose\\ui\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\sdk",
+        "name": "@hikerm/lumina-sdk",
+        "languages": [
+          {
+            "name": "TypeScript",
+            "version": "~5.9.3"
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {
+          "build": "npm run generate && npm run build:ts",
+          "build:ts": "tsc",
+          "build:native": "tsx scripts/build-native.ts",
+          "build:native:all": "tsx scripts/build-native.ts --all",
+          "generate": "tsx generate-schema.ts",
+          "lint": "tsc --noEmit",
+          "test": "node --import tsx --test tests/*.test.ts",
+          "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+          "format": "prettier --write src/",
+          "check:compat": "node scripts/check-binary-compat.mjs"
+        },
+        "manifest": "D:\\Project\\goose\\ui\\sdk\\package.json"
+      },
+      {
+        "kind": "web-node",
+        "root": "D:\\Project\\goose\\ui\\text",
+        "name": "@hikerm/lumina",
+        "languages": [
+          {
+            "name": "TypeScript",
+            "version": "^5.7.0"
+          }
+        ],
+        "runtimes": [
+          {
+            "name": "Node.js",
+            "version": null
+          }
+        ],
+        "frameworks": [
+          {
+            "name": "React",
+            "package": "react",
+            "version": "^19.2.4"
+          }
+        ],
+        "package_manager": {
+          "name": null,
+          "version": null
+        },
+        "scripts": {
+          "build": "tsc",
+          "start": "tsx src/tui.tsx",
+          "lint": "tsc --noEmit"
+        },
+        "manifest": "D:\\Project\\goose\\ui\\text\\package.json"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\vendor\\agent-client-protocol",
+        "name": "agent-client-protocol",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": null
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\vendor\\agent-client-protocol\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\vendor\\agent-client-protocol-derive",
+        "name": "agent-client-protocol-derive",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": "1.88.0"
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\vendor\\agent-client-protocol-derive\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\vendor\\agent-client-protocol-http",
+        "name": "agent-client-protocol-http",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": null
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\vendor\\agent-client-protocol-http\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\vendor\\lumina-v8-engine",
+        "name": "lumina-v8-engine",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": null
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\vendor\\lumina-v8-engine\\Cargo.toml"
+      },
+      {
+        "kind": "rust",
+        "root": "D:\\Project\\goose\\vendor\\v8",
+        "name": "v8",
+        "languages": [
+          {
+            "name": "Rust",
+            "version": null
+          }
+        ],
+        "manifest": "D:\\Project\\goose\\vendor\\v8\\Cargo.toml"
+      }
+    ],
+    "monorepo": true,
+    "unknown": false,
+    "uncertainties": [
+      "未安装依赖时框架版本可能保留声明范围"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "CAP-001",
+      "statement": "Lumina can persist multiple provider configurations, select an active provider/model, manage custom providers through ACP, and switch the provider/model used by an active session.",
+      "confidence": "observed",
+      "evidence": [
+        {
+          "path": "crates/lumina/src/config/providers.rs",
+          "sha256": "92f171bc73be6d0c4ac8f8685c3572a73c036ce1c6236826d528e44ddebd4cd5"
+        },
+        {
+          "path": "ui/desktop/src/acp/providers.ts",
+          "sha256": "8bc6e385f065baba2d89a54d79df94defdffe74d70651e325c6780d08d298df9"
+        },
+        {
+          "path": "crates/lumina/tests/acp_custom_provider_methods_test.rs",
+          "sha256": "7ced6c5610274e7cba12e78d134f610bd91929fdc8d18b11f85fdcac5867539e"
+        },
+        {
+          "path": "crates/lumina/tests/acp_custom_requests_test.rs",
+          "sha256": "5eaea31d691a103218cfa5f40bc69bf4af86e4a30d74ff90dc379a57fbf81616"
+        }
+      ],
+      "modules": [
+        "crates/lumina/src/config",
+        "crates/lumina/src/acp",
+        "crates/lumina-providers",
+        "ui/desktop/src/acp"
+      ],
+      "apis": [
+        "lumina.providersConfigSave_unstable",
+        "lumina.providersCustomCreate_unstable",
+        "setSessionConfigOption"
+      ],
+      "data": [
+        "config.yaml providers",
+        "provider secrets"
+      ],
+      "tests": [
+        "acp_custom_provider_methods_test",
+        "acp_custom_requests_test"
+      ]
+    },
+    {
+      "id": "CAP-002",
+      "statement": "Lumina creates, lists, reloads, and updates persistent sessions, including working directory, messages, provider/model state, and Lumina execution mode.",
+      "confidence": "observed",
+      "evidence": [
+        {
+          "path": "crates/lumina/src/session/session_manager.rs",
+          "sha256": "959d6860e7d049186fd1524f8104be47f765b2032a5c4fd6d9a0bc45f539c6b0"
+        },
+        {
+          "path": "crates/lumina/tests/acp_server_test.rs",
+          "sha256": "afb978f66892b2e8b2e8aa31352fe963518d891ed3c31cf87dd3ea1ab545695f"
+        },
+        {
+          "path": "crates/lumina/tests/acp_custom_requests_test.rs",
+          "sha256": "5eaea31d691a103218cfa5f40bc69bf4af86e4a30d74ff90dc379a57fbf81616"
+        }
+      ],
+      "modules": [
+        "crates/lumina/src/session",
+        "crates/lumina/src/acp",
+        "ui/desktop/src"
+      ],
+      "apis": [
+        "session/new",
+        "session/load",
+        "session/list",
+        "setSessionConfigOption"
+      ],
+      "data": [
+        "sessions/sessions.db",
+        "sessions",
+        "messages"
+      ],
+      "tests": [
+        "acp_server_test",
+        "acp_custom_requests_test"
+      ]
+    },
+    {
+      "id": "CAP-003",
+      "statement": "Lumina opens a complete project directory, persists work items, runs, steps, checkpoints, and change sets, associates runs with sessions, and recovers interrupted work after restart.",
+      "confidence": "observed",
+      "evidence": [
+        {
+          "path": "crates/lumina/src/project/service.rs",
+          "sha256": "d09ce9212dbc83d3ecc23c9271ce78f60406140256ab435a270011a34a5c2df4"
+        },
+        {
+          "path": "crates/lumina/tests/project_workspace.rs",
+          "sha256": "9290e4f68d5fb4f907e4a76c401f523bc99fbf53ebcd0b740d5bd95dfa3dcd81"
+        },
+        {
+          "path": "ui/desktop/src/acp/__tests__/projects.test.ts",
+          "sha256": "a980b0e01d1a30f2249113fad82955c387cf9a51043a3809f9fb3da13ba13c72"
+        }
+      ],
+      "modules": [
+        "crates/lumina/src/project",
+        "crates/lumina/src/acp",
+        "ui/desktop/src/acp"
+      ],
+      "apis": [
+        "_lumina/project/open",
+        "_lumina/project/snapshot",
+        "_lumina/project/runs/start"
+      ],
+      "data": [
+        "projects",
+        "project_work_items",
+        "project_runs",
+        "project_checkpoints"
+      ],
+      "tests": [
+        "project_workspace",
+        "projects.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-004",
+      "statement": "The legacy migrator copies legacy configuration, desktop settings, and session databases into a Lumina target without modifying the source and converts legacy session fields and links.",
+      "confidence": "observed-with-known-version-gap",
+      "evidence": [
+        {
+          "path": "crates/lumina-legacy-migrator/src/lib.rs",
+          "sha256": "44aa4820b38fa80ea3ec76aec9ac05bcbf240f4b1c00f3d2a7647db41b2d5e91"
+        },
+        {
+          "path": "crates/lumina-legacy-migrator/src/sqlite.rs",
+          "sha256": "19651a8b98bd9dc6f025df12374576a309f07860c51b3ff6096055687d309bd5"
+        },
+        {
+          "path": "crates/lumina-legacy-migrator/tests/migration.rs",
+          "sha256": "39523ff4cacdd31fc9a58406ef3745ce9bfa690e84de16b5472a1870433768de"
+        }
+      ],
+      "modules": [
+        "crates/lumina-legacy-migrator"
+      ],
+      "apis": [
+        "lumina_legacy_migrator::migrate"
+      ],
+      "data": [
+        "legacy config",
+        "legacy sessions database",
+        "migration report"
+      ],
+      "tests": [
+        "migration"
+      ]
+    },
+    {
+      "id": "CAP-005",
+      "statement": "Lumina includes local model discovery, download, registration, configuration and local inference paths, including native and emulated tool parsing.",
+      "confidence": "observed-with-project-execution-gap",
+      "evidence": [
+        {
+          "path": "crates/lumina-local-inference/src/management.rs",
+          "sha256": "3135b0011bac56f70dfcc0baaf32f31d5f7dd52b0c88b65526731603103a7270"
+        },
+        {
+          "path": "crates/lumina-local-inference/src/backend.rs",
+          "sha256": "f536ecca1631ff281ea27a5e2884f44c23b8d83a210f77af0b650c7b934f07e2"
+        },
+        {
+          "path": "crates/lumina-local-inference/src/local_model_registry.rs",
+          "sha256": "7cbf5ff18d3b56d0152f0e1f7d273ca7383e1ffbc2dae7670f1410bbad102eb3"
+        },
+        {
+          "path": "ui/desktop/src/components/settings/localInference/LocalInferenceSettings.tsx",
+          "sha256": "65822ea30b5d40a7c827c93a91f3ebc9fc78f0efd088f4f07b4e1eea54619745"
+        }
+      ],
+      "modules": [
+        "crates/lumina-local-inference",
+        "crates/lumina-providers/src/local_inference.rs",
+        "ui/desktop/src/components/settings/localInference"
+      ],
+      "apis": [
+        "local inference ACP methods",
+        "local model registry"
+      ],
+      "data": [
+        "local model registry",
+        "downloaded model artifacts",
+        "local inference configuration"
+      ],
+      "tests": [
+        "local inference unit tests",
+        "desktop local inference tests"
+      ]
+    },
+    {
+      "id": "CAP-006",
+      "statement": "Lumina provides MCP platform contracts and a desktop MCP center for discovery, managed entries, profiles, manual configuration and source policy.",
+      "confidence": "observed-with-managed-install-gap",
+      "evidence": [
+        {
+          "path": "crates/lumina/src/mcp_platform/mod.rs",
+          "sha256": "d2bb621460f505d3e2574bd0ad00a906197996e5a13bbacb91a5148ce1e59535"
+        },
+        {
+          "path": "crates/lumina-sdk-types/src/custom_requests/mcp_platform.rs",
+          "sha256": "da5cfcf9b55ce65cd8246e5f04c4c88ef5b59fadcb518b1bf4a7283f0f2bbebe"
+        },
+        {
+          "path": "ui/desktop/src/components/mcp-center/McpCenterView.tsx",
+          "sha256": "5bd73beb056e3fbfd9b499744fef1d7c707288c875ae60a4a5c3148937025996"
+        },
+        {
+          "path": "ui/desktop/src/components/mcp-center/__tests__/SecurityBoundaries.test.tsx",
+          "sha256": "8027c4168acac98834df687a8dfa936871b164b8ab28e150b3ad9e02e0a420e1"
+        }
+      ],
+      "modules": [
+        "crates/lumina/src/mcp_platform",
+        "crates/lumina-mcp",
+        "ui/desktop/src/components/mcp-center"
+      ],
+      "apis": [
+        "Lumina MCP platform methods",
+        "MCP stdio transport"
+      ],
+      "data": [
+        "MCP catalog",
+        "MCP profiles",
+        "MCP source policy"
+      ],
+      "tests": [
+        "MCP center component tests",
+        "MCP integration tests"
+      ]
+    },
+    {
+      "id": "CAP-007",
+      "statement": "Lumina's Windows installer supports a custom program directory, in-place upgrade, separated governed data storage and retained upgrade backups.",
+      "confidence": "observed",
+      "evidence": [
+        {
+          "path": "ui/desktop/installer/INSTALL_UPGRADE.md",
+          "sha256": "772e86446368c59f1a4387991e3b0c7798af8de7cd50378b0f3b9b4adb64ae63"
+        },
+        {
+          "path": "ui/desktop/src/__tests__/windowsInstallerPolicy.test.ts",
+          "sha256": "e38a3b9b0ed8378781a0e7fab3aa8d13aaca21a31e5723327791953ad1e31778"
+        },
+        {
+          "path": "ui/desktop/src/utils/storageRootPolicy.ts",
+          "sha256": "5a8ae80734c2f89585188e42b81c0a0d41b2ea29aa1f8b24848f3d5dbd648e5a"
+        }
+      ],
+      "modules": [
+        "ui/desktop/installer",
+        "ui/desktop/src/utils/storageRootPolicy.ts"
+      ],
+      "apis": [
+        "Windows installer",
+        "LUMINA_PATH_ROOT"
+      ],
+      "data": [
+        "governed Lumina data root",
+        "versioned upgrade backup"
+      ],
+      "tests": [
+        "windowsInstallerPolicy.test.ts",
+        "storage root policy tests"
+      ]
+    },
+    {
+      "id": "CAP-008",
+      "statement": "Lumina exposes session tool discovery and tool permission configuration through its desktop ACP adapter.",
+      "confidence": "observed-with-policy-unification-gap",
+      "evidence": [
+        {
+          "path": "ui/desktop/src/acp/permissions.ts",
+          "sha256": "1dde7cdc0ae4140ba839bd108af64de2095b08b691db85b0fccaf4d9e63dac24"
+        },
+        {
+          "path": "ui/desktop/src/acp/permissionRequests.ts",
+          "sha256": "878ed9c53f57c6c4577184f6f0384ec99a624ad21fe35e8a33d78c44ad3293a7"
+        },
+        {
+          "path": "crates/lumina-provider-types/src/permission.rs",
+          "sha256": "1afabee757b150d02782b822c79ab34f1814b43deebeb4573817a067d870a012"
+        }
+      ],
+      "modules": [
+        "ui/desktop/src/acp",
+        "crates/lumina-provider-types"
+      ],
+      "apis": [
+        "lumina.toolsList_unstable",
+        "lumina.toolsPermissionsSet_unstable"
+      ],
+      "data": [
+        "tool permission entries"
+      ],
+      "tests": [
+        "permissionRequests.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-009",
+      "statement": "Lumina has a react-intl localization layer and a Simplified Chinese message catalog, but currently falls back to English when no locale or catalog is available.",
+      "confidence": "observed-conflict",
+      "evidence": [
+        {
+          "path": "ui/desktop/src/i18n/index.ts",
+          "sha256": "621b7db053192d85d6de5f33a3c6cb828741f8512432576361dda76c7afe948d"
+        },
+        {
+          "path": "ui/desktop/src/i18n/messages/zh-CN.json",
+          "sha256": "ffa71bf07142a969ee2967955cab2dc0d084c47d6b9875f0d925f9c57f6a6971"
+        },
+        {
+          "path": "ui/desktop/src/i18n/i18n.test.ts",
+          "sha256": "4bb95d18748f8f6c418a09e2da7d84e8997ee418aeaf9a2d2e948204aecefe88"
+        }
+      ],
+      "modules": [
+        "ui/desktop/src/i18n",
+        "ui/desktop/src/components",
+        "ui/desktop/installer"
+      ],
+      "apis": [
+        "getLocale",
+        "loadMessages"
+      ],
+      "data": [
+        "compiled locale catalogs"
+      ],
+      "tests": [
+        "i18n.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-010",
+      "statement": "Lumina contains an evidence database with schemas, projections, path guards and versioned storage primitives.",
+      "confidence": "observed-with-enterprise-audit-gap",
+      "evidence": [
+        {
+          "path": "crates/lumina-evidence-db/src/schema.rs",
+          "sha256": "c9c488175f170eb560e9bd7f697a7a3b9c84090664ff6f26dd3662153f32cdc5"
+        },
+        {
+          "path": "crates/lumina-evidence-db/src/store.rs",
+          "sha256": "2a66bd95e792856781ceac9d28f9294df2dcb137792ae14a0af413e392208947"
+        },
+        {
+          "path": "crates/lumina-evidence-db/src/path_guard.rs",
+          "sha256": "387348dc485960fbd26f61cb05e06a0f4daf807c5a59ada04ec87748dcae213b"
+        },
+        {
+          "path": "crates/lumina-evidence-db/src/v2/store.rs",
+          "sha256": "9f05b5cd34e512017d7109c4e2000950e408e9eeb3460227c5a68c46ce315e3e"
+        }
+      ],
+      "modules": [
+        "crates/lumina-evidence-db"
+      ],
+      "apis": [
+        "evidence store"
+      ],
+      "data": [
+        "evidence records",
+        "evidence projections"
+      ],
+      "tests": [
+        "lumina-evidence-db tests"
+      ]
+    },
+    {
+      "id": "CAP-011",
+      "statement": "Lumina exposes desktop views for Skills and Extensions and retains extension configuration paths.",
+      "confidence": "observed-with-supply-chain-gap",
+      "evidence": [
+        {
+          "path": "ui/desktop/src/components/skills/SkillsView.tsx",
+          "sha256": "51cf62c4238e9987170f47fd5950ff05f57dfc1730490d5d0a83858bd78215aa"
+        },
+        {
+          "path": "ui/desktop/src/components/extensions/ExtensionsView.tsx",
+          "sha256": "02b25968ef87373a4d18e8b8fd49a122071682b84cea37a478bcd767fb9e0b4c"
+        },
+        {
+          "path": "ui/desktop/src/acp/extensions.ts",
+          "sha256": "f1087ca820c4d42a0765cc2a06eb69b6655a68a743df54484cd2552b1bd77623"
+        }
+      ],
+      "modules": [
+        "ui/desktop/src/components/skills",
+        "ui/desktop/src/components/extensions",
+        "ui/desktop/src/acp/extensions.ts"
+      ],
+      "apis": [
+        "extension ACP methods"
+      ],
+      "data": [
+        "installed skills",
+        "extension configuration"
+      ],
+      "tests": [
+        "extensions.test.ts"
+      ]
+    },
+    {
+      "id": "CAP-012",
+      "statement": "Lumina contains Windows computer-controller code paths, but product-level browser and desktop control has not yet been proven by end-to-end acceptance evidence.",
+      "confidence": "code-path-only",
+      "evidence": [
+        {
+          "path": "crates/lumina-mcp/src/computercontroller/platform/windows.rs",
+          "sha256": "9e20cb8763bddaec20378c02fcec7dd07f06f343e88782577b85707cac1aa6be"
+        },
+        {
+          "path": "crates/lumina-mcp/src/computercontroller/mod.rs",
+          "sha256": "c930a7ae4c9e3cbe31f8299b36e01487f47ca8e24ee6ac9896a707d479fbe628"
+        }
+      ],
+      "modules": [
+        "crates/lumina-mcp/src/computercontroller"
+      ],
+      "apis": [
+        "computer controller tools"
+      ],
+      "data": [
+        "computer interaction requests"
+      ],
+      "tests": []
+    }
+  ],
+  "unknowns": [
+    "The renamed workspace has not yet passed a clean provider, project, and session regression run.",
+    "Real external provider credentials and endpoints are not available for automated live verification.",
+    "The legacy migrator targets session schema version 16 while the Lumina core currently uses version 17.",
+    "Legacy cryptographic evidence and MCP trust records do not yet have a verified re-issuance path into the Lumina trust domain.",
+    "Project-level tool calling by local models has not yet passed a complete multi-file, terminal and validation acceptance scenario.",
+    "Windows computer and browser control has not yet passed a product-level end-to-end acceptance scenario.",
+    "The current English localization fallback conflicts with the Simplified-Chinese-only commercial product requirement."
+  ],
+  "updated_at": "2026-08-26T05:34:31+00:00"
+}

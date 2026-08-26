@@ -28,8 +28,8 @@ import os from 'node:os';
 import { execFileSync, spawn } from 'child_process';
 import 'dotenv/config';
 import { checkBackendStatus } from './backendStatus';
-import { startGooseServe } from './gooseServe';
-import { GooseServeLeaseRegistry, type GooseServeLease } from './gooseServeLeaseRegistry';
+import { startLuminaServe } from './luminaServe';
+import { LuminaServeLeaseRegistry, type LuminaServeLease } from './luminaServeLeaseRegistry';
 import { acpWebSocketUrlFromHttpBase, normalizeAcpHttpBaseUrl } from './acp/url';
 import { expandTilde } from './utils/pathUtils';
 import log from './utils/logger';
@@ -42,12 +42,12 @@ import {
   deriveWindowsShimsPath,
   preflightWindowsStorageDirectory,
   preflightWindowsStorageRoot,
-  resolveDesktopGoosePathRoot,
+  resolveDesktopLuminaPathRoot,
   createStorageReadyGate,
   isAllowedRecipeDefaultName,
   isTrustedAppUrl,
 } from './utils/storageRootPolicy';
-import { isRetiredGooseChatApp } from './utils/retiredApps';
+import { isRetiredLuminaChatApp } from './utils/retiredApps';
 import type { Settings, SettingKey } from './utils/settings';
 import {
   defaultSettings,
@@ -58,31 +58,14 @@ import {
 import * as crypto from 'crypto';
 import * as yaml from 'yaml';
 import windowStateKeeper from 'electron-window-state';
-import {
-  getUpdateAvailable,
-  registerUpdateIpcHandlers,
-  setAutoDownloadDisabled,
-  setTrayRef,
-  setupAutoUpdater,
-  updateTrayMenu,
-} from './utils/autoUpdater';
-import { UPDATES_ENABLED } from './updates';
 import { getDistributionInfo } from './distribution';
 import './utils/recipeHash';
-import type { GooseApp } from './types/apps';
+import type { LuminaApp } from './types/apps';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { BLOCKED_PROTOCOLS, WEB_PROTOCOLS } from './utils/urlSecurity';
 import { buildCSP } from './utils/csp';
 
 app.setName('Lumina');
-
-function shouldSetupUpdater(): boolean {
-  // Setup updater if either the flag is enabled OR dev updates are enabled
-  return (
-    getDistributionInfo().mode !== 'portable' &&
-    (UPDATES_ENABLED || process.env.ENABLE_DEV_UPDATES === 'true')
-  );
-}
 
 // =======================================================================
 // Native menu localization
@@ -155,7 +138,7 @@ const MENU_TRANSLATIONS_ZH_CN: Record<string, string> = {
 };
 
 function detectMenuLocale(): string {
-  return getConfiguredGooseLocale() ?? 'en';
+  return getConfiguredLuminaLocale() ?? 'en';
 }
 
 function menuT(label: string): string {
@@ -191,22 +174,22 @@ function translateMenuLabels(items: MenuItem[]): void {
 }
 
 // Settings management
-let desktopGoosePathRoot: string | undefined;
+let desktopLuminaPathRoot: string | undefined;
 
 async function configureDesktopStorageRoot(): Promise<void> {
-  desktopGoosePathRoot = resolveDesktopGoosePathRoot();
+  desktopLuminaPathRoot = resolveDesktopLuminaPathRoot();
   if (process.platform === 'win32') {
-    if (!desktopGoosePathRoot) {
-      throw new Error('GOOSE_PATH_ROOT is required for Windows desktop storage');
+    if (!desktopLuminaPathRoot) {
+      throw new Error('LUMINA_PATH_ROOT is required for Windows desktop storage');
     }
-    await preflightWindowsStorageRoot(desktopGoosePathRoot);
+    await preflightWindowsStorageRoot(desktopLuminaPathRoot);
     await preflightWindowsStorageDirectory(
-      deriveDesktopUserDataPath(desktopGoosePathRoot, process.platform)
+      deriveDesktopUserDataPath(desktopLuminaPathRoot, process.platform)
     );
     await preflightWindowsStorageDirectory(
-      deriveWindowsShimsPath(desktopGoosePathRoot, process.platform)
+      deriveWindowsShimsPath(desktopLuminaPathRoot, process.platform)
     );
-    app.setPath('userData', deriveDesktopUserDataPath(desktopGoosePathRoot, process.platform));
+    app.setPath('userData', deriveDesktopUserDataPath(desktopLuminaPathRoot, process.platform));
   }
 }
 
@@ -255,9 +238,9 @@ function getSettings(): Settings {
     return {
       ...defaultSettings,
       ...stored,
-      externalGoosed: {
-        ...defaultSettings.externalGoosed,
-        ...(stored.externalGoosed ?? {}),
+      externalLuminad: {
+        ...defaultSettings.externalLuminad,
+        ...(stored.externalLuminad ?? {}),
       },
       keyboardShortcuts: {
         ...defaultSettings.keyboardShortcuts,
@@ -274,14 +257,14 @@ function updateSettings(modifier: (settings: Settings) => void): void {
   fsSync.writeFileSync(settingsFilePath(), JSON.stringify(settings, null, 2));
 }
 
-function getConfiguredGooseLocale(): string | undefined {
+function getConfiguredLuminaLocale(): string | undefined {
   const language = getSettings().language;
   if (isValidLanguageSetting(language) && language !== 'system') {
     return language;
   }
 
-  if (process.env.GOOSE_LOCALE) {
-    return process.env.GOOSE_LOCALE;
+  if (process.env.LUMINA_LOCALE) {
+    return process.env.LUMINA_LOCALE;
   }
 
   try {
@@ -417,7 +400,7 @@ const runWhenStorageReady = createStorageReadyGate(desktopStorageReady, (error) 
 });
 
 void runWhenStorageReady(() => {
-  appConfig.GOOSE_LOCALE = getConfiguredGooseLocale();
+  appConfig.LUMINA_LOCALE = getConfiguredLuminaLocale();
 });
 
 // Main-process net.fetch: pin to the exact cert once known.
@@ -443,13 +426,13 @@ if (process.env.ENABLE_PLAYWRIGHT) {
 // In production, register normally
 if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
   // Development mode - force registration
-  console.log('[Main] Development mode: Forcing protocol registration for goose://');
-  app.setAsDefaultProtocolClient('goose');
+  console.log('[Main] Development mode: Forcing protocol registration for lumina://');
+  app.setAsDefaultProtocolClient('lumina');
 
   if (process.platform === 'darwin') {
     try {
       // Reset the default handler to ensure dev version takes precedence
-      spawn('open', ['-a', process.execPath, '--args', '--reset-protocol-handler', 'goose'], {
+      spawn('open', ['-a', process.execPath, '--args', '--reset-protocol-handler', 'lumina'], {
         detached: true,
         stdio: 'ignore',
       });
@@ -459,7 +442,7 @@ if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
   }
 } else {
   // Production mode - normal registration
-  app.setAsDefaultProtocolClient('goose');
+  app.setAsDefaultProtocolClient('lumina');
 }
 
 // Apply single instance lock on Windows and Linux where it's needed for deep links
@@ -474,7 +457,7 @@ if (process.platform !== 'darwin') {
   } else {
     app.on('second-instance', (_event, commandLine) => {
       void runWhenStorageReady(async () => {
-        const protocolUrl = commandLine.find((arg) => arg.startsWith('goose://'));
+        const protocolUrl = commandLine.find((arg) => arg.startsWith('lumina://'));
         if (protocolUrl) {
           const parsedUrl = new URL(protocolUrl);
           // If it's a bot/recipe URL, handle it directly by creating a new window
@@ -534,7 +517,7 @@ if (process.platform !== 'darwin') {
   }
 
   // Handle protocol URLs on Windows and Linux startup
-  const protocolUrl = process.argv.find((arg) => arg.startsWith('goose://'));
+  const protocolUrl = process.argv.find((arg) => arg.startsWith('lumina://'));
   if (protocolUrl) {
     void runWhenStorageReady(async () => {
       let parsedUrl: URL;
@@ -572,54 +555,12 @@ function queuePendingDeepLink(windowId: number, url: string): void {
 
 const reactReadyWindows = new Set<number>();
 
-const DEEPLINK_BURST_DEDUP_MS = 2000;
-const recentSessionDeepLinkSends = new Map<string, number>();
-
-function pruneExpiredSessionDeepLinkSends(now: number): void {
-  for (const [url, sentAt] of recentSessionDeepLinkSends) {
-    if (now - sentAt >= DEEPLINK_BURST_DEDUP_MS) {
-      recentSessionDeepLinkSends.delete(url);
-    }
-  }
-}
-
-function isBurstDuplicateSessionDeepLink(url: string): boolean {
-  const now = Date.now();
-  pruneExpiredSessionDeepLinkSends(now);
-  const sentAt = recentSessionDeepLinkSends.get(url);
-  return sentAt !== undefined && now - sentAt < DEEPLINK_BURST_DEDUP_MS;
-}
-
-function recordSessionDeepLinkSend(url: string): void {
-  const now = Date.now();
-  recentSessionDeepLinkSends.set(url, now);
-  pruneExpiredSessionDeepLinkSends(now);
-}
-
-function sendOpenSharedSession(window: BrowserWindow, url: string): void {
-  if (isBurstDuplicateSessionDeepLink(url)) {
-    log.info('[Main] Ignoring burst duplicate session deep link');
-    return;
-  }
-  recordSessionDeepLinkSend(url);
-  window.webContents.send('open-shared-session', url);
-}
-
-function deliverExtensionOrSessionDeepLink(
-  url: string,
-  parsedUrl: URL,
-  targetWindow: BrowserWindow
-): void {
+function deliverExtensionDeepLink(url: string, targetWindow: BrowserWindow): void {
   if (!reactReadyWindows.has(targetWindow.id) || targetWindow.webContents.isLoadingMainFrame()) {
     queuePendingDeepLink(targetWindow.id, url);
     return;
   }
-
-  if (parsedUrl.hostname === 'extension') {
-    targetWindow.webContents.send('add-extension', url);
-  } else if (parsedUrl.hostname === 'sessions') {
-    sendOpenSharedSession(targetWindow, url);
-  }
+  targetWindow.webContents.send('add-extension', url);
 }
 
 function getResumeSessionId(parsedUrl: URL): string | null {
@@ -634,7 +575,7 @@ function getResumeSessionId(parsedUrl: URL): string | null {
 async function createResumeChatWindow(parsedUrl: URL, dir?: string): Promise<boolean> {
   const resumeSessionId = getResumeSessionId(parsedUrl);
   if (!resumeSessionId) {
-    log.warn('[Main] Ignoring goose://resume URL without a session id');
+    log.warn('[Main] Ignoring lumina://resume URL without a session id');
     return false;
   }
 
@@ -697,8 +638,6 @@ async function processProtocolUrl(url: string, parsedUrl: URL, window: BrowserWi
 
   if (parsedUrl.hostname === 'extension') {
     window.webContents.send('add-extension', url);
-  } else if (parsedUrl.hostname === 'sessions') {
-    sendOpenSharedSession(window, url);
   } else if (parsedUrl.hostname === 'bot' || parsedUrl.hostname === 'recipe') {
     const deeplinkData = parseRecipeDeeplink(url);
     const scheduledJobId = parsedUrl.searchParams.get('scheduledJob');
@@ -768,15 +707,17 @@ app.on('open-url', async (_event, url) => {
         return;
       }
 
-      // For extension/session URLs, send to existing window or store pending for new one
+      if (parsedUrl.hostname !== 'extension') {
+        log.warn('[Main] Ignoring unsupported protocol URL');
+        return;
+      }
+
       const existingWindows = BrowserWindow.getAllWindows();
       if (existingWindows.length > 0) {
         const targetWindow = existingWindows[0];
         if (targetWindow.isMinimized()) targetWindow.restore();
         targetWindow.focus();
-        if (parsedUrl.hostname === 'extension' || parsedUrl.hostname === 'sessions') {
-          deliverExtensionOrSessionDeepLink(url, parsedUrl, targetWindow);
-        }
+        deliverExtensionDeepLink(url, targetWindow);
       } else {
         openUrlHandledLaunch = true;
         const newWindow = await createChat(app, { dir: openDir || undefined });
@@ -892,13 +833,13 @@ interface BundledConfig {
 
 const getBundledConfig = (): BundledConfig => {
   //{env-macro-start}//
-  //needed when goose is bundled for a specific provider
+  //needed when lumina is bundled for a specific provider
   //{env-macro-end}//
   return {
-    defaultProvider: process.env.GOOSE_DEFAULT_PROVIDER,
-    defaultModel: process.env.GOOSE_DEFAULT_MODEL,
-    predefinedModels: process.env.GOOSE_PREDEFINED_MODELS,
-    version: process.env.GOOSE_VERSION,
+    defaultProvider: process.env.LUMINA_DEFAULT_PROVIDER,
+    defaultModel: process.env.LUMINA_DEFAULT_MODEL,
+    predefinedModels: process.env.LUMINA_PREDEFINED_MODELS,
+    version: process.env.LUMINA_VERSION,
     distributionMode: getDistributionInfo().mode,
   };
 };
@@ -916,16 +857,16 @@ interface ExternalBackend {
 }
 
 const getExternalBackendUrlFromEnv = (): string | null => {
-  if (!process.env.GOOSE_EXTERNAL_BACKEND) {
+  if (!process.env.LUMINA_EXTERNAL_BACKEND) {
     return null;
   }
 
-  const configuredUrl = process.env.GOOSE_EXTERNAL_BACKEND_URL?.trim();
+  const configuredUrl = process.env.LUMINA_EXTERNAL_BACKEND_URL?.trim();
   if (configuredUrl) {
     return configuredUrl;
   }
 
-  return `http://127.0.0.1:${process.env.GOOSE_PORT || '3000'}`;
+  return `http://127.0.0.1:${process.env.LUMINA_PORT || '3000'}`;
 };
 
 const getExternalBackendFromEnv = (): ExternalBackend | null => {
@@ -934,10 +875,10 @@ const getExternalBackendFromEnv = (): ExternalBackend | null => {
     return null;
   }
 
-  const secret = process.env.GOOSE_SERVER__SECRET_KEY;
+  const secret = process.env.LUMINA_SERVER__SECRET_KEY;
   if (!secret) {
     throw new Error(
-      'GOOSE_SERVER__SECRET_KEY must be set when using GOOSE_EXTERNAL_BACKEND. ' +
+      'LUMINA_SERVER__SECRET_KEY must be set when using LUMINA_EXTERNAL_BACKEND. ' +
         'Set it to the same value on both the server and the desktop client.'
     );
   }
@@ -950,8 +891,8 @@ const getExternalBackendFromEnv = (): ExternalBackend | null => {
 };
 
 const getServerSecret = (settings: Settings): string => {
-  if (settings.externalGoosed?.enabled && settings.externalGoosed.secret) {
-    return settings.externalGoosed.secret;
+  if (settings.externalLuminad?.enabled && settings.externalLuminad.secret) {
+    return settings.externalLuminad.secret;
   }
   return GENERATED_SECRET;
 };
@@ -962,12 +903,12 @@ const getActiveExternalBackend = (settings: Settings): ExternalBackend | null =>
     return envBackend;
   }
 
-  if (settings.externalGoosed?.enabled && settings.externalGoosed.url) {
+  if (settings.externalLuminad?.enabled && settings.externalLuminad.url) {
     return {
       source: 'settings',
-      url: settings.externalGoosed.url,
+      url: settings.externalLuminad.url,
       secret: getServerSecret(settings),
-      certFingerprint: settings.externalGoosed.certFingerprint,
+      certFingerprint: settings.externalLuminad.certFingerprint,
     };
   }
 
@@ -977,34 +918,33 @@ const getActiveExternalBackend = (settings: Settings): ExternalBackend | null =>
 const getExternalBackendForCsp = (settings: Settings) => {
   const envUrl = getExternalBackendUrlFromEnv();
   if (!envUrl) {
-    return settings.externalGoosed;
+    return settings.externalLuminad;
   }
 
   return {
-    ...settings.externalGoosed,
+    ...settings.externalLuminad,
     enabled: true,
     url: envUrl,
   };
 };
 
 let appConfig = {
-  GOOSE_DEFAULT_PROVIDER: defaultProvider,
-  GOOSE_DEFAULT_MODEL: defaultModel,
-  GOOSE_PREDEFINED_MODELS: predefinedModels,
-  GOOSE_PATH_ROOT: undefined as string | undefined,
-  GOOSE_WORKING_DIR: '',
+  LUMINA_DEFAULT_PROVIDER: defaultProvider,
+  LUMINA_DEFAULT_MODEL: defaultModel,
+  LUMINA_PREDEFINED_MODELS: predefinedModels,
+  LUMINA_PATH_ROOT: undefined as string | undefined,
+  LUMINA_WORKING_DIR: '',
   // Start with the env-var override; the OS region locale is filled in after app.ready
   // (see updateLocaleFromSystem below) since getSystemLocale() cannot be called earlier.
-  GOOSE_LOCALE: process.env.GOOSE_LOCALE || undefined,
-  // If GOOSE_ALLOWLIST_WARNING env var is not set, defaults to false (strict blocking mode)
-  GOOSE_ALLOWLIST_WARNING: process.env.GOOSE_ALLOWLIST_WARNING === 'true',
-  GOOSE_DISABLE_NOSTR_SHARING: process.env.GOOSE_DISABLE_NOSTR_SHARING === 'true',
+  LUMINA_LOCALE: process.env.LUMINA_LOCALE || undefined,
+  // If LUMINA_ALLOWLIST_WARNING env var is not set, defaults to false (strict blocking mode)
+  LUMINA_ALLOWLIST_WARNING: process.env.LUMINA_ALLOWLIST_WARNING === 'true',
 };
 
 const windowMap = new Map<number, BrowserWindow>();
 const appWindows = new Map<string, BrowserWindow>();
 
-const gooseServeLeases = new GooseServeLeaseRegistry(log);
+const luminaServeLeases = new LuminaServeLeaseRegistry(log);
 
 const windowPowerSaveBlockers = new Map<number, number>(); // windowId -> blockerId
 // Track pending initial messages per window
@@ -1028,7 +968,7 @@ const createChat = async (
   options: CreateChatOptions = {}
 ): Promise<BrowserWindow | undefined> => {
   if (!(await runWhenStorageReady(() => true))) return undefined;
-  appConfig.GOOSE_PATH_ROOT = desktopGoosePathRoot;
+  appConfig.LUMINA_PATH_ROOT = desktopLuminaPathRoot;
 
   const {
     initialMessage,
@@ -1081,8 +1021,8 @@ const createChat = async (
 
       if (response === 0) {
         updateSettings((s) => {
-          if (s.externalGoosed) {
-            s.externalGoosed.enabled = false;
+          if (s.externalLuminad) {
+            s.externalLuminad.enabled = false;
           }
         });
         return createChat(app, options);
@@ -1095,7 +1035,7 @@ const createChat = async (
 
   const serverSecret = externalBackend ? externalBackend.secret : GENERATED_SECRET;
   let workingDir = dir || os.homedir();
-  let gooseServeLease: GooseServeLease | null = null;
+  let luminaServeLease: LuminaServeLease | null = null;
 
   if (externalBackend) {
     let externalCertificateTrust: BackendCertificateTrustRegistration | null = null;
@@ -1123,7 +1063,7 @@ const createChat = async (
           title: 'External Backend Unreachable',
           message: `Could not connect to external backend at ${externalBaseUrl}`,
           detail:
-            'The external backend must be running and the configured secret must match GOOSE_SERVER__SECRET_KEY on the server.',
+            'The external backend must be running and the configured secret must match LUMINA_SERVER__SECRET_KEY on the server.',
           buttons: canDisableExternalBackend
             ? ['Disable External Backend & Retry', 'Quit']
             : ['Quit'],
@@ -1133,8 +1073,8 @@ const createChat = async (
 
         if (canDisableExternalBackend && response === 0) {
           updateSettings((s) => {
-            if (s.externalGoosed) {
-              s.externalGoosed.enabled = false;
+            if (s.externalLuminad) {
+              s.externalLuminad.enabled = false;
             }
           });
           return createChat(app, options);
@@ -1146,7 +1086,7 @@ const createChat = async (
 
       const leaseCertificateTrust = externalCertificateTrust;
       externalCertificateTrust = null;
-      gooseServeLease = gooseServeLeases.createExternal(
+      luminaServeLease = luminaServeLeases.createExternal(
         acpWebSocketUrlFromHttpBase(externalBaseUrl, serverSecret),
         serverSecret,
         leaseCertificateTrust ? async () => leaseCertificateTrust.release() : undefined
@@ -1169,8 +1109,8 @@ const createChat = async (
 
       if (canDisableExternalBackend && response === 0) {
         updateSettings((s) => {
-          if (s.externalGoosed) {
-            s.externalGoosed.enabled = false;
+          if (s.externalLuminad) {
+            s.externalLuminad.enabled = false;
           }
         });
         return createChat(app, options);
@@ -1182,14 +1122,14 @@ const createChat = async (
   } else {
     const localCertificateTrust = trustBackendCertificate('127.0.0.1', null);
 
-    let gooseServeResult: Awaited<ReturnType<typeof startGooseServe>>;
+    let luminaServeResult: Awaited<ReturnType<typeof startLuminaServe>>;
     try {
-      gooseServeResult = await startGooseServe({
+      luminaServeResult = await startLuminaServe({
         serverSecret,
         dir: workingDir,
         tls: true,
         env: {
-          GOOSE_PATH_ROOT: appConfig.GOOSE_PATH_ROOT as string | undefined,
+          LUMINA_PATH_ROOT: appConfig.LUMINA_PATH_ROOT as string | undefined,
         },
         isPackaged: app.isPackaged,
         resourcesPath: app.isPackaged ? process.resourcesPath : undefined,
@@ -1197,31 +1137,31 @@ const createChat = async (
         diagnosticsDir: startupLogsDirectory(),
         readinessFetch: net.fetch as unknown as typeof globalThis.fetch,
       });
-      if (!gooseServeResult.certFingerprint) {
-        await gooseServeResult.cleanup();
+      if (!luminaServeResult.certFingerprint) {
+        await luminaServeResult.cleanup();
         throw new Error(
-          'goose serve started with TLS but did not return a certificate fingerprint'
+          'lumina serve started with TLS but did not return a certificate fingerprint'
         );
       }
 
-      const localCertFingerprint = normalizeFingerprint(gooseServeResult.certFingerprint);
+      const localCertFingerprint = normalizeFingerprint(luminaServeResult.certFingerprint);
       if (
         localCertificateTrust.trust.fingerprint &&
         localCertificateTrust.trust.fingerprint !== localCertFingerprint
       ) {
-        await gooseServeResult.cleanup();
-        throw new Error('goose serve TLS certificate fingerprint did not match readiness probe');
+        await luminaServeResult.cleanup();
+        throw new Error('lumina serve TLS certificate fingerprint did not match readiness probe');
       }
       localCertificateTrust.trust.fingerprint = localCertFingerprint;
     } catch (error) {
       localCertificateTrust.release();
-      log.error('goose serve failed to start', error);
+      log.error('lumina serve failed to start', error);
       dialog.showMessageBoxSync({
         type: 'error',
         title: 'Lumina Failed to Start',
         message: 'The backend server failed to start.',
         detail: [
-          'Backend: goose serve',
+          'Backend: lumina serve',
           'Readiness check: HTTPS GET /status',
           `Startup error:\n${errorMessage(error)}`,
         ].join('\n\n'),
@@ -1231,26 +1171,26 @@ const createChat = async (
       return;
     }
 
-    workingDir = gooseServeResult.workingDir;
-    const cleanupGooseServe = gooseServeResult.cleanup;
-    gooseServeResult.cleanup = async () => {
+    workingDir = luminaServeResult.workingDir;
+    const cleanupLuminaServe = luminaServeResult.cleanup;
+    luminaServeResult.cleanup = async () => {
       try {
-        await cleanupGooseServe();
+        await cleanupLuminaServe();
       } finally {
         localCertificateTrust.release();
       }
     };
-    gooseServeLease = gooseServeLeases.create(gooseServeResult, serverSecret);
+    luminaServeLease = luminaServeLeases.create(luminaServeResult, serverSecret);
   }
 
-  const cleanupUnregisteredGooseServeLease = async () => {
-    if (!gooseServeLease) {
+  const cleanupUnregisteredLuminaServeLease = async () => {
+    if (!luminaServeLease) {
       return;
     }
 
-    const lease = gooseServeLease;
-    gooseServeLease = null;
-    await gooseServeLeases.cleanupLease(lease);
+    const lease = luminaServeLease;
+    luminaServeLease = null;
+    await luminaServeLeases.cleanupLease(lease);
   };
 
   let mainWindowState: ReturnType<typeof windowStateKeeper>;
@@ -1296,11 +1236,11 @@ const createChat = async (
         additionalArguments: [
           JSON.stringify({
             ...appConfig,
-            GOOSE_LOCALE: getConfiguredGooseLocale(),
-            GOOSE_WORKING_DIR: workingDir,
+            LUMINA_LOCALE: getConfiguredLuminaLocale(),
+            LUMINA_WORKING_DIR: workingDir,
             REQUEST_DIR: dir,
-            GOOSE_VERSION: version,
-            GOOSE_DISTRIBUTION_MODE: distributionMode,
+            LUMINA_VERSION: version,
+            LUMINA_DISTRIBUTION_MODE: distributionMode,
             recipeDeeplink: recipeDeeplink,
             recipeId: recipeId,
             recipeParameters: recipeParameters,
@@ -1311,21 +1251,21 @@ const createChat = async (
               process.env.SECURITY_COMMAND_CLASSIFIER_ENABLED_OVERRIDE,
           }),
         ],
-        partition: 'persist:goose',
+        partition: 'persist:lumina',
       },
     });
   } catch (error) {
-    await cleanupUnregisteredGooseServeLease();
+    await cleanupUnregisteredLuminaServeLease();
     throw error;
   }
 
-  if (gooseServeLease) {
-    const lease = gooseServeLease;
+  if (luminaServeLease) {
+    const lease = luminaServeLease;
     mainWindow.once('closed', () => {
-      void gooseServeLeases.releaseWindow(mainWindow.id);
+      void luminaServeLeases.releaseWindow(mainWindow.id);
     });
-    gooseServeLeases.attachWindow(mainWindow.id, lease);
-    gooseServeLease = null;
+    luminaServeLeases.attachWindow(mainWindow.id, lease);
+    luminaServeLease = null;
   }
 
   if (!app.isPackaged) {
@@ -1481,7 +1421,7 @@ const createChat = async (
     }
   }
 
-  // Goose's react app uses HashRouter, so the path + search params follow a #/
+  // Lumina's react app uses HashRouter, so the path + search params follow a #/
   url.hash = `${appPath}?${searchParams.toString()}`;
   let formattedUrl = formatUrl(url);
   log.info('Opening URL: ', formattedUrl);
@@ -1595,10 +1535,10 @@ const createLauncher = () => {
       additionalArguments: [
         JSON.stringify({
           ...appConfig,
-          GOOSE_LOCALE: getConfiguredGooseLocale(),
+          LUMINA_LOCALE: getConfiguredLuminaLocale(),
         }),
       ],
-      partition: 'persist:goose',
+      partition: 'persist:lumina',
     },
     skipTaskbar: true,
     alwaysOnTop: true,
@@ -1686,8 +1626,6 @@ const createTray = () => {
 
   try {
     tray = new Tray(iconPath);
-    setTrayRef(tray);
-    updateTrayMenu(getUpdateAvailable());
 
     if (process.platform === 'win32') {
       tray.on('click', showWindow);
@@ -1752,7 +1690,7 @@ const openDirectoryDialog = async (): Promise<OpenDialogReturnValue> => {
   if (currentWindow) {
     try {
       const currentWorkingDir = await currentWindow.webContents.executeJavaScript(
-        `window.appConfig ? window.appConfig.get('GOOSE_WORKING_DIR') : null`
+        `window.appConfig ? window.appConfig.get('LUMINA_WORKING_DIR') : null`
       );
 
       if (currentWorkingDir && typeof currentWorkingDir === 'string') {
@@ -1946,8 +1884,6 @@ ipcMain.on('react-ready', (event) => {
       const parsedUrl = new URL(deepLinkUrl);
       if (parsedUrl.hostname === 'extension') {
         window.webContents.send('add-extension', deepLinkUrl);
-      } else if (parsedUrl.hostname === 'sessions') {
-        sendOpenSharedSession(window, deepLinkUrl);
       }
     } catch (error) {
       log.error('Error processing pending deep link:', error);
@@ -2067,7 +2003,7 @@ const validSettingKeys: Set<string> = new Set([
   'enableWakelock',
   'enableNotifications',
   'spellcheckEnabled',
-  'externalGoosed',
+  'externalLuminad',
   'globalShortcut',
   'keyboardShortcuts',
   'theme',
@@ -2076,7 +2012,6 @@ const validSettingKeys: Set<string> = new Set([
   'responseStyle',
   'showPricing',
   'seenAnnouncementIds',
-  'disableAutoDownload',
 ]);
 
 ipcMain.handle('set-setting', (event, key: SettingKey, value: unknown) => {
@@ -2093,9 +2028,9 @@ ipcMain.handle('set-setting', (event, key: SettingKey, value: unknown) => {
   }
 
   const settings = getSettings();
-  if (key === 'externalGoosed' && typeof value === 'object' && value !== null) {
-    const incoming = value as Partial<Settings['externalGoosed']> & { clearSecret?: boolean };
-    value = mergeExternalBackendConfig(settings.externalGoosed, incoming);
+  if (key === 'externalLuminad' && typeof value === 'object' && value !== null) {
+    const incoming = value as Partial<Settings['externalLuminad']> & { clearSecret?: boolean };
+    value = mergeExternalBackendConfig(settings.externalLuminad, incoming);
     delete (value as { clearSecret?: boolean }).clearSecret;
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2103,16 +2038,12 @@ ipcMain.handle('set-setting', (event, key: SettingKey, value: unknown) => {
   fsSync.writeFileSync(settingsFilePath(), JSON.stringify(settings, null, 2));
 
   if (key === 'language') {
-    appConfig.GOOSE_LOCALE = getConfiguredGooseLocale();
+    appConfig.LUMINA_LOCALE = getConfiguredLuminaLocale();
   }
 
   // Re-register shortcuts if keyboard shortcuts changed
   if (key === 'keyboardShortcuts') {
     registerGlobalShortcuts();
-  }
-
-  if (key === 'disableAutoDownload') {
-    setAutoDownloadDisabled(value as boolean);
   }
 });
 
@@ -2122,7 +2053,7 @@ ipcMain.handle('get-secret-key', (event) => {
   if (!windowId) {
     return null;
   }
-  return gooseServeLeases.getSecretKey(windowId) ?? null;
+  return luminaServeLeases.getSecretKey(windowId) ?? null;
 });
 
 ipcMain.handle('get-acp-url', async (event) => {
@@ -2131,7 +2062,7 @@ ipcMain.handle('get-acp-url', async (event) => {
   if (!windowId) {
     return null;
   }
-  return gooseServeLeases.getAcpUrl(windowId) ?? null;
+  return luminaServeLeases.getAcpUrl(windowId) ?? null;
 });
 
 // Handle menu bar icon visibility
@@ -2444,7 +2375,7 @@ function isTrustedRendererSender(event: IpcMainInvokeEvent | IpcMainEvent): bool
 }
 
 function managedStorageRoot(): string {
-  return desktopGoosePathRoot ?? app.getPath('userData');
+  return desktopLuminaPathRoot ?? app.getPath('userData');
 }
 
 async function assertProjectRootStillSafe(root: string): Promise<void> {
@@ -2483,7 +2414,7 @@ async function openAuthorizedHints(root: string, flags: string): Promise<fs.File
     if (rootIdentity.nlink !== 1 || !sameFileIdentity(rootBefore, rootIdentity)) {
       throw new Error('Project root identity changed');
     }
-    const target = path.join(root, '.goosehints');
+    const target = path.join(root, '.luminahints');
     let before: FileIdentity;
     try {
       const stats = await fs.lstat(target);
@@ -2536,7 +2467,7 @@ async function writeAuthorizedProjectHints(root: string, content: string): Promi
   if (!handle) {
     throw new Error(
       process.platform === 'win32'
-        ? 'A new .goosehints file must be created explicitly outside Lumina before it can be edited.'
+        ? 'A new .luminahints file must be created explicitly outside Lumina before it can be edited.'
         : 'Project hints file does not exist'
     );
   }
@@ -2562,7 +2493,7 @@ ipcMain.handle('request-project-directory-access', async (event, directory: stri
     defaultId: 1,
     cancelId: 1,
     title: 'Allow project file access?',
-    message: `Allow Lumina to list files and read/write ${path.join(canonical, '.goosehints')}?`,
+    message: `Allow Lumina to list files and read/write ${path.join(canonical, '.luminahints')}?`,
   });
   if (result.response !== 0) return false;
   const window = BrowserWindow.fromWebContents(event.sender);
@@ -2588,7 +2519,7 @@ ipcMain.handle('list-project-files', async (_event, _token: unknown, _workingDir
   return [];
 });
 
-ipcMain.handle('read-project-goosehints', async (event, token: unknown, workingDir: unknown) => {
+ipcMain.handle('read-project-luminahints', async (event, token: unknown, workingDir: unknown) => {
   const root = await authorizedProjectDirectory(event, token, workingDir);
   if (!root) return { file: '', error: 'Project directory access is not authorized', found: false };
   try {
@@ -2604,7 +2535,7 @@ ipcMain.handle('read-project-goosehints', async (event, token: unknown, workingD
 });
 
 ipcMain.handle(
-  'write-project-goosehints',
+  'write-project-luminahints',
   async (event, content: string, token: unknown, workingDir: unknown) => {
     const root = await authorizedProjectDirectory(event, token, workingDir);
     if (!root || typeof content !== 'string' || content.length > 1024 * 1024) return false;
@@ -2731,12 +2662,10 @@ async function appMain() {
   await configureProxy();
 
   // Ensure Windows shims are available before any MCP processes are spawned
-  if (process.platform === 'win32' && desktopGoosePathRoot) {
-    const windowsMcpEnvironment = await ensureWinShims(desktopGoosePathRoot);
+  if (process.platform === 'win32' && desktopLuminaPathRoot) {
+    const windowsMcpEnvironment = await ensureWinShims(desktopLuminaPathRoot);
     setWindowsMcpEnvironment(windowsMcpEnvironment?.env);
   }
-
-  registerUpdateIpcHandlers();
 
   // Handle microphone permission requests
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
@@ -2794,22 +2723,6 @@ async function appMain() {
   } else {
     log.info('[Main] Skipping window creation in appMain - open-url already handled launch');
   }
-
-  // Setup auto-updater AFTER window is created and displayed (with delay to avoid blocking)
-  setTimeout(() => {
-    if (shouldSetupUpdater()) {
-      log.info('Setting up auto-updater after window creation...');
-      try {
-        const settings = getSettings();
-        if (settings.disableAutoDownload) {
-          setAutoDownloadDisabled(true);
-        }
-        setupAutoUpdater();
-      } catch (error) {
-        log.error('Error setting up auto-updater:', error);
-      }
-    }
-  }, 2000);
 
   if (process.platform === 'darwin') {
     const dockMenu = Menu.buildFromTemplate([
@@ -3271,7 +3184,7 @@ async function appMain() {
   });
 
   ipcMain.on('get-app-locale', (event) => {
-    event.returnValue = getConfiguredGooseLocale();
+    event.returnValue = getConfiguredLuminaLocale();
   });
 
   ipcMain.handle('open-directory-in-explorer', async (event, directoryPath: string) => {
@@ -3285,9 +3198,9 @@ async function appMain() {
     }
   });
 
-  ipcMain.handle('launch-app', async (event, gooseApp: GooseApp) => {
+  ipcMain.handle('launch-app', async (event, luminaApp: LuminaApp) => {
     try {
-      if (isRetiredGooseChatApp(gooseApp)) {
+      if (isRetiredLuminaChatApp(luminaApp)) {
         throw new Error('This built-in Chat app is no longer supported.');
       }
 
@@ -3297,17 +3210,17 @@ async function appMain() {
       }
 
       const launchingWindowId = launchingWindow.id;
-      const launchingGooseServeLease = gooseServeLeases.get(launchingWindowId);
-      if (!launchingGooseServeLease) {
+      const launchingLuminaServeLease = luminaServeLeases.get(launchingWindowId);
+      if (!launchingLuminaServeLease) {
         throw new Error('No backend lease found for launching window');
       }
 
       const workingDir = app.getPath('home');
       const appWindow = new BrowserWindow({
-        title: formatAppName(gooseApp.name),
-        width: gooseApp.width ?? 800,
-        height: gooseApp.height ?? 600,
-        resizable: gooseApp.resizable ?? true,
+        title: formatAppName(luminaApp.name),
+        width: luminaApp.width ?? 800,
+        height: luminaApp.height ?? 600,
+        resizable: luminaApp.resizable ?? true,
         useContentSize: true,
         webPreferences: {
           preload: path.join(__dirname, 'preload.js'),
@@ -3317,33 +3230,33 @@ async function appMain() {
           additionalArguments: [
             JSON.stringify({
               ...appConfig,
-              GOOSE_LOCALE: getConfiguredGooseLocale(),
-              GOOSE_WORKING_DIR: workingDir,
-              GOOSE_VERSION: version,
-              GOOSE_DISTRIBUTION_MODE: distributionMode,
+              LUMINA_LOCALE: getConfiguredLuminaLocale(),
+              LUMINA_WORKING_DIR: workingDir,
+              LUMINA_VERSION: version,
+              LUMINA_DISTRIBUTION_MODE: distributionMode,
             }),
           ],
-          partition: 'persist:goose',
+          partition: 'persist:lumina',
         },
       });
 
-      gooseServeLeases.attachWindow(appWindow.id, launchingGooseServeLease);
+      luminaServeLeases.attachWindow(appWindow.id, launchingLuminaServeLease);
 
-      appWindows.set(gooseApp.name, appWindow);
+      appWindows.set(luminaApp.name, appWindow);
 
       appWindow.on('closed', () => {
-        void gooseServeLeases.releaseWindow(appWindow.id);
-        appWindows.delete(gooseApp.name);
+        void luminaServeLeases.releaseWindow(appWindow.id);
+        appWindows.delete(luminaApp.name);
       });
 
-      const extensionName = gooseApp.mcpServers?.[0] ?? '';
+      const extensionName = luminaApp.mcpServers?.[0] ?? '';
 
       const url = getAppUrl();
 
       const searchParams = new URLSearchParams();
-      searchParams.set('resourceUri', gooseApp.uri);
+      searchParams.set('resourceUri', luminaApp.uri);
       searchParams.set('extensionName', extensionName);
-      searchParams.set('appName', gooseApp.name);
+      searchParams.set('appName', luminaApp.name);
       searchParams.set('workingDir', workingDir);
 
       url.hash = `/standalone-app?${searchParams.toString()}`;
@@ -3355,11 +3268,11 @@ async function appMain() {
     }
   });
 
-  ipcMain.handle('refresh-app', async (_event, gooseApp: GooseApp) => {
+  ipcMain.handle('refresh-app', async (_event, luminaApp: LuminaApp) => {
     try {
-      const appWindow = appWindows.get(gooseApp.name);
+      const appWindow = appWindows.get(luminaApp.name);
       if (!appWindow || appWindow.isDestroyed()) {
-        console.log(`App window for '${gooseApp.name}' not found or destroyed, skipping refresh`);
+        console.log(`App window for '${luminaApp.name}' not found or destroyed, skipping refresh`);
         return;
       }
 
@@ -3404,11 +3317,11 @@ void runWhenStorageReady(async () => {
 });
 
 async function getAllowList(): Promise<string[]> {
-  if (!process.env.GOOSE_ALLOWLIST) {
+  if (!process.env.LUMINA_ALLOWLIST) {
     return [];
   }
 
-  const response = await fetch(process.env.GOOSE_ALLOWLIST);
+  const response = await fetch(process.env.LUMINA_ALLOWLIST);
 
   if (!response.ok) {
     throw new Error(
@@ -3434,10 +3347,10 @@ async function getAllowList(): Promise<string[]> {
 }
 
 app.on('will-quit', async () => {
-  const gooseServeLeaseCount = gooseServeLeases.activeLeaseCount();
-  if (gooseServeLeaseCount > 0) {
-    log.info(`App quitting, cleaning up ${gooseServeLeaseCount} backend lease(s)`);
-    await gooseServeLeases.cleanupAll();
+  const luminaServeLeaseCount = luminaServeLeases.activeLeaseCount();
+  if (luminaServeLeaseCount > 0) {
+    log.info(`App quitting, cleaning up ${luminaServeLeaseCount} backend lease(s)`);
+    await luminaServeLeases.cleanupAll();
   }
 
   for (const [windowId, blockerId] of windowPowerSaveBlockers.entries()) {

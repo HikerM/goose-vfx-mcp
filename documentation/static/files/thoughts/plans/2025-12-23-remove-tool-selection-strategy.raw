@@ -4,7 +4,7 @@
 Complete removal of the "Tool Selection Strategy" feature (also known as "LLM Tool Router" or "Smart Tool Routing"). This experimental feature used a secondary LLM call to dynamically select which tools to present to the main LLM based on the user's query.
 
 ## Current State Analysis
-The feature is controlled by `GOOSE_ENABLE_ROUTER` config parameter (default: false). It consists of:
+The feature is controlled by `LUMINA_ENABLE_ROUTER` config parameter (default: false). It consists of:
 - Core implementation files (4 Rust modules + 1 prompt template)
 - Integration points in agent, prompt manager, and server routes
 - UI settings section in desktop app
@@ -20,7 +20,7 @@ The feature is controlled by `GOOSE_ENABLE_ROUTER` config parameter (default: fa
 
 ## Desired End State
 - All Tool Selection Strategy code removed from codebase
-- No `GOOSE_ENABLE_ROUTER` config handling (ignored if present in user config)
+- No `LUMINA_ENABLE_ROUTER` config handling (ignored if present in user config)
 - No `router__llm_search` tool
 - No `/agent/update_router_tool_selector` API endpoint
 - No UI settings for tool selection strategy
@@ -29,7 +29,7 @@ The feature is controlled by `GOOSE_ENABLE_ROUTER` config parameter (default: fa
 - All tests pass, linting passes
 
 ## What We're NOT Doing
-- Cleaning up existing `GOOSE_ENABLE_ROUTER` entries from user config files (will be ignored)
+- Cleaning up existing `LUMINA_ENABLE_ROUTER` entries from user config files (will be ignored)
 - Adding deprecation warnings
 - Keeping any stub code
 
@@ -47,14 +47,14 @@ Delete the core Rust modules that implement the router functionality.
 
 #### 1. Delete core router files
 **Files to delete:**
-- `crates/goose/src/agents/router_tool_selector.rs`
-- `crates/goose/src/agents/router_tools.rs`
-- `crates/goose/src/agents/tool_route_manager.rs`
-- `crates/goose/src/agents/tool_router_index_manager.rs`
-- `crates/goose/src/prompts/router_tool_selector.md`
+- `crates/lumina/src/agents/router_tool_selector.rs`
+- `crates/lumina/src/agents/router_tools.rs`
+- `crates/lumina/src/agents/tool_route_manager.rs`
+- `crates/lumina/src/agents/tool_router_index_manager.rs`
+- `crates/lumina/src/prompts/router_tool_selector.md`
 
 #### 2. Update module declarations
-**File**: `crates/goose/src/agents/mod.rs`
+**File**: `crates/lumina/src/agents/mod.rs`
 **Changes**: Remove module declarations for deleted files
 
 ```rust
@@ -69,7 +69,7 @@ mod tool_router_index_manager;
 
 #### Automated Verification:
 - [x] Files deleted
-- [x] `cargo build -p goose` compiles (will fail until Phase 2 completes)
+- [x] `cargo build -p lumina` compiles (will fail until Phase 2 completes)
 
 **Implementation Note**: Phase 1 will cause compilation errors. Proceed immediately to Phase 2.
 
@@ -83,7 +83,7 @@ Remove all router-related code from `agent.rs` and related files.
 ### Changes Required:
 
 #### 1. Update agent.rs
-**File**: `crates/goose/src/agents/agent.rs`
+**File**: `crates/lumina/src/agents/agent.rs`
 **Changes**:
 
 Remove imports:
@@ -202,19 +202,19 @@ self.tool_route_manager
 ```
 
 #### 2. Update extension.rs (PlatformExtensionContext)
-**File**: `crates/goose/src/agents/extension.rs`
+**File**: `crates/lumina/src/agents/extension.rs`
 **Changes**: Remove `tool_route_manager` field from `PlatformExtensionContext` if present
 
 Search for any references to `tool_route_manager` in this file and remove them.
 
 #### 3. Update extension_manager_extension.rs
-**File**: `crates/goose/src/agents/extension_manager_extension.rs`
+**File**: `crates/lumina/src/agents/extension_manager_extension.rs`
 **Changes**: Remove any references to `tool_route_manager`
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] `cargo build -p goose` compiles (may still fail until Phase 3)
+- [x] `cargo build -p lumina` compiles (may still fail until Phase 3)
 
 ---
 
@@ -226,7 +226,7 @@ Remove router-related prompt building logic.
 ### Changes Required:
 
 #### 1. Update prompt_manager.rs
-**File**: `crates/goose/src/agents/prompt_manager.rs`
+**File**: `crates/lumina/src/agents/prompt_manager.rs`
 **Changes**:
 
 Remove import:
@@ -270,7 +270,7 @@ router_enabled: false,
 ```
 
 #### 2. Update system.md template
-**File**: `crates/goose/src/prompts/system.md`
+**File**: `crates/lumina/src/prompts/system.md`
 **Changes**: Remove the `{{tool_selection_strategy}}` placeholder line
 
 ```markdown
@@ -279,7 +279,7 @@ router_enabled: false,
 ```
 
 #### 3. Update snapshot tests
-**File**: `crates/goose/src/agents/prompt_manager.rs` (tests section)
+**File**: `crates/lumina/src/agents/prompt_manager.rs` (tests section)
 **Changes**: Remove `.with_router_enabled(true)` from tests
 
 In `test_one_extension`:
@@ -296,16 +296,16 @@ In `test_typical_setup`:
 
 #### 4. Update/regenerate snapshots
 **Files to update:**
-- `crates/goose/src/agents/snapshots/goose__agents__prompt_manager__tests__one_extension.snap`
-- `crates/goose/src/agents/snapshots/goose__agents__prompt_manager__tests__typical_setup.snap`
+- `crates/lumina/src/agents/snapshots/lumina__agents__prompt_manager__tests__one_extension.snap`
+- `crates/lumina/src/agents/snapshots/lumina__agents__prompt_manager__tests__typical_setup.snap`
 
-Run `cargo test -p goose prompt_manager` with `INSTA_UPDATE=1` to regenerate snapshots, or manually remove the "LLM Tool Selection Instructions" section from each snapshot.
+Run `cargo test -p lumina prompt_manager` with `INSTA_UPDATE=1` to regenerate snapshots, or manually remove the "LLM Tool Selection Instructions" section from each snapshot.
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] `cargo build -p goose` compiles
-- [x] `cargo test -p goose` passes (after snapshot updates)
+- [x] `cargo build -p lumina` compiles
+- [x] `cargo test -p lumina` passes (after snapshot updates)
 
 ---
 
@@ -317,7 +317,7 @@ Remove the `/agent/update_router_tool_selector` endpoint.
 ### Changes Required:
 
 #### 1. Update agent.rs routes
-**File**: `crates/goose-server/src/routes/agent.rs`
+**File**: `crates/lumina-server/src/routes/agent.rs`
 **Changes**:
 
 Remove request struct:
@@ -356,8 +356,8 @@ Remove route from router:
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] `cargo build -p goose-server` compiles
-- [x] `cargo test -p goose-server` passes
+- [x] `cargo build -p lumina-server` compiles
+- [x] `cargo test -p lumina-server` passes
 
 ---
 
@@ -369,14 +369,14 @@ Remove the router configuration dialog from CLI.
 ### Changes Required:
 
 #### 1. Update configure.rs
-**File**: `crates/goose-cli/src/commands/configure.rs`
+**File**: `crates/lumina-cli/src/commands/configure.rs`
 **Changes**:
 
 Remove the router strategy menu item from `configure_settings_dialog`:
 ```rust
 // REMOVE this item:
 .item(
-    "goose_router_strategy",
+    "lumina_router_strategy",
     "Router Tool Selection Strategy",
     "Experimental: configure a strategy for auto selecting tools to use",
 )
@@ -385,15 +385,15 @@ Remove the router strategy menu item from `configure_settings_dialog`:
 Remove the match arm:
 ```rust
 // REMOVE:
-"goose_router_strategy" => {
-    configure_goose_router_strategy_dialog()?;
+"lumina_router_strategy" => {
+    configure_lumina_router_strategy_dialog()?;
 }
 ```
 
-Remove the entire `configure_goose_router_strategy_dialog` function:
+Remove the entire `configure_lumina_router_strategy_dialog` function:
 ```rust
 // REMOVE entire function:
-pub fn configure_goose_router_strategy_dialog() -> anyhow::Result<()> {
+pub fn configure_lumina_router_strategy_dialog() -> anyhow::Result<()> {
     ...
 }
 ```
@@ -401,8 +401,8 @@ pub fn configure_goose_router_strategy_dialog() -> anyhow::Result<()> {
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] `cargo build -p goose-cli` compiles
-- [x] `cargo test -p goose-cli` passes
+- [x] `cargo build -p lumina-cli` compiles
+- [x] `cargo test -p lumina-cli` passes
 
 ---
 
@@ -414,13 +414,13 @@ Remove router-related telemetry.
 ### Changes Required:
 
 #### 1. Update posthog.rs
-**File**: `crates/goose/src/posthog.rs`
+**File**: `crates/lumina/src/posthog.rs`
 **Changes**:
 
 Remove the router telemetry:
 ```rust
 // REMOVE this block:
-if let Ok(router_enabled) = config.get_param::<bool>("GOOSE_ENABLE_ROUTER") {
+if let Ok(router_enabled) = config.get_param::<bool>("LUMINA_ENABLE_ROUTER") {
     event
         .insert_prop("setting_router_enabled", router_enabled)
         .ok();
@@ -430,7 +430,7 @@ if let Ok(router_enabled) = config.get_param::<bool>("GOOSE_ENABLE_ROUTER") {
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] `cargo build -p goose` compiles
+- [x] `cargo build -p lumina` compiles
 
 ---
 
@@ -461,7 +461,7 @@ Remove the Card containing ToolSelectionStrategySection:
   <CardHeader className="pb-0">
     <CardTitle className="">Tool Selection Strategy (preview)</CardTitle>
     <CardDescription>
-      Experimental: configure how Goose selects tools for your requests, useful when there are
+      Experimental: configure how Lumina selects tools for your requests, useful when there are
       many tools. Only tested with Claude models currently.
     </CardDescription>
   </CardHeader>
@@ -517,26 +517,26 @@ Remove the Tool Selection Strategy card:
 **File**: `documentation/docs/guides/environment-variables.md`
 **Changes**:
 
-Remove the `GOOSE_ENABLE_ROUTER` row from the table:
+Remove the `LUMINA_ENABLE_ROUTER` row from the table:
 ```markdown
 <!-- REMOVE this row: -->
-| `GOOSE_ENABLE_ROUTER` | Enables [intelligent tool selection strategy](/docs/guides/managing-tools/tool-router) | "true", "false" | "false" |
+| `LUMINA_ENABLE_ROUTER` | Enables [intelligent tool selection strategy](/docs/guides/managing-tools/tool-router) | "true", "false" | "false" |
 ```
 
 Remove from the example section:
 ```bash
 # REMOVE:
 # Enable intelligent tool selection
-export GOOSE_ENABLE_ROUTER=true
+export LUMINA_ENABLE_ROUTER=true
 ```
 
 #### 4. Check for other documentation references
-Search for any other references to "tool selection", "router", or "GOOSE_ENABLE_ROUTER" in documentation and remove them.
+Search for any other references to "tool selection", "router", or "LUMINA_ENABLE_ROUTER" in documentation and remove them.
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] No remaining references to GOOSE_ENABLE_ROUTER in documentation
+- [x] No remaining references to LUMINA_ENABLE_ROUTER in documentation
 
 #### Manual Verification:
 - [ ] No references to Tool Selection Strategy in docs
@@ -551,7 +551,7 @@ Update any remaining tests that reference the removed functionality.
 ### Changes Required:
 
 #### 1. Update agent.rs tests
-**File**: `crates/goose/tests/agent.rs`
+**File**: `crates/lumina/tests/agent.rs`
 **Changes**:
 
 In `extension_manager_tests::setup_agent_with_extension_manager`, remove the `tool_route_manager` from context setup:
@@ -586,7 +586,7 @@ rg "router_tool" --type rust
 rg "RouterToolSelector" --type rust
 rg "ROUTER_LLM_SEARCH" --type rust
 rg "llm_search_tool" --type rust
-rg "GOOSE_ENABLE_ROUTER" --type rust
+rg "LUMINA_ENABLE_ROUTER" --type rust
 rg "tool_selection_strategy" --type rust
 rg "ToolSelectionStrategy" --type ts --type tsx
 ```
@@ -618,8 +618,8 @@ npm test
 - [x] UI lint/typecheck - passes
 
 #### Manual Verification:
-- [ ] Start goose CLI - works normally
-- [ ] Start goose desktop - works normally
+- [ ] Start lumina CLI - works normally
+- [ ] Start lumina desktop - works normally
 - [ ] Settings page loads without errors
 - [ ] No console errors related to removed feature
 
@@ -638,7 +638,7 @@ npm test
 ### Regression Testing:
 - Ensure normal tool calling still works
 - Ensure extension add/remove still works
-- Ensure all goose modes (auto, approve, smart_approve, chat) still work
+- Ensure all lumina modes (auto, approve, smart_approve, chat) still work
 
 ---
 
@@ -651,4 +651,4 @@ If issues are discovered:
 
 ## Notes
 - The research document at `thoughts/research/2025-12-22-llm-tool-selection-strategy.md` should be kept for historical reference
-- Users with `GOOSE_ENABLE_ROUTER=true` in their config will simply have the setting ignored
+- Users with `LUMINA_ENABLE_ROUTER=true` in their config will simply have the setting ignored

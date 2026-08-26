@@ -13,23 +13,14 @@ if (!appPath) {
   fail('Usage: node scripts/verify-mac-update-resources.js <path-to-app>');
 }
 
-const updateConfigPath = path.join(appPath, 'Contents', 'Resources', 'app-update.yml');
-if (!fs.existsSync(updateConfigPath)) {
-  fail(`Missing ${updateConfigPath}`);
-}
+const resourcesPath = path.join(appPath, 'Contents', 'Resources');
+const requiredFiles = ['LICENSE', 'NOTICE', 'MODIFICATIONS.md', 'THIRD_PARTY_NOTICES.md'];
 
-const updateConfig = fs.readFileSync(updateConfigPath, 'utf8');
-const requiredLines = [
-  'provider: github',
-  'owner: HikerM',
-  'repo: goose-vfx-mcp',
-  'updaterCacheDirName: goose-vfx-mcp-updater',
-];
-
-for (const line of requiredLines) {
-  if (!updateConfig.split(/\r?\n/).includes(line)) {
-    fail(`${updateConfigPath} is missing "${line}"`);
+for (const fileName of requiredFiles) {
+  const filePath = path.join(resourcesPath, fileName);
+  if (!fs.existsSync(filePath)) {
+    fail(`Missing ${filePath}`);
   }
 }
 
-console.log(`${updateConfigPath} is present and valid`);
+console.log(`${resourcesPath} contains the required Lumina legal notices`);

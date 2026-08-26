@@ -10,24 +10,24 @@
 
 set -e
 
-GOOSE_REPO=${GOOSE_REPO:-"$HOME/Development/goose"}
+LUMINA_REPO=${LUMINA_REPO:-"$HOME/Development/lumina"}
 
 # Function to get release tags using gh CLI
 get_latest_release() {
     if command -v gh &> /dev/null; then
-        gh release list --repo aaif-goose/goose --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null
+        gh release list --repo HikerM/lumina --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null
     else
         # Fallback: get latest version tag from git
-        cd "$GOOSE_REPO" && git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1
+        cd "$LUMINA_REPO" && git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1
     fi
 }
 
 get_previous_release() {
     if command -v gh &> /dev/null; then
-        gh release list --repo aaif-goose/goose --limit 2 --json tagName --jq '.[].tagName' 2>/dev/null | sed -n '2p'
+        gh release list --repo HikerM/lumina --limit 2 --json tagName --jq '.[].tagName' 2>/dev/null | sed -n '2p'
     else
         # Fallback: get second-latest version tag from git
-        cd "$GOOSE_REPO" && git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p'
+        cd "$LUMINA_REPO" && git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p'
     fi
 }
 
@@ -110,8 +110,8 @@ if [ "$HAS_CHANGES" = "true" ]; then
     echo ""
     echo "Step 4: Synthesizing CLI changes documentation..."
     
-    # Run goose and capture output, filtering out session logs
-    goose run --recipe ../recipes/synthesize-cli-changes.yaml 2>&1 | \
+    # Run lumina and capture output, filtering out session logs
+    lumina run --recipe ../recipes/synthesize-cli-changes.yaml 2>&1 | \
         sed -E 's/\x1B\[[0-9;]*[mK]//g' | \
         grep -v "^starting session" | \
         grep -v "^    session id:" | \
@@ -124,9 +124,9 @@ if [ "$HAS_CHANGES" = "true" ]; then
         grep -v "^Description:" | \
         cat -s > cli-changes.md.tmp
 
-    # If the pipeline fails, surface the goose error (grep can exit 1 when it matches nothing)
+    # If the pipeline fails, surface the lumina error (grep can exit 1 when it matches nothing)
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
-        echo "✗ Failed to synthesize CLI changes (goose run failed)" >&2
+        echo "✗ Failed to synthesize CLI changes (lumina run failed)" >&2
         exit 1
     fi
     
@@ -135,7 +135,7 @@ if [ "$HAS_CHANGES" = "true" ]; then
         mv cli-changes.md.tmp cli-changes.md
         echo "✓ Generated cli-changes.md ($(wc -l < cli-changes.md) lines)"
     elif [ -f cli-changes.md ] && [ -s cli-changes.md ]; then
-        # File was written directly by goose
+        # File was written directly by lumina
         rm -f cli-changes.md.tmp
         echo "✓ Generated cli-changes.md ($(wc -l < cli-changes.md) lines)"
     else
@@ -148,10 +148,10 @@ if [ "$HAS_CHANGES" = "true" ]; then
     echo "Step 5: Updating CLI commands documentation..."
     
     # Set environment variables for the update recipe
-    export CLI_COMMANDS_PATH="${GOOSE_REPO}/documentation/docs/guides/goose-cli-commands.md"
+    export CLI_COMMANDS_PATH="${LUMINA_REPO}/documentation/docs/guides/lumina-cli-commands.md"
     
     # Run the update recipe
-    goose run --recipe ../recipes/update-cli-commands.yaml 2>&1 | \
+    lumina run --recipe ../recipes/update-cli-commands.yaml 2>&1 | \
         sed -E 's/\x1B\[[0-9;]*[mK]//g' | \
         grep -v "^starting session" | \
         grep -v "^    session id:" | \
@@ -165,7 +165,7 @@ if [ "$HAS_CHANGES" = "true" ]; then
         cat -s
 
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
-        echo "✗ Failed to update documentation (goose run failed)" >&2
+        echo "✗ Failed to update documentation (lumina run failed)" >&2
         exit 1
     fi
     

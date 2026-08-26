@@ -4,8 +4,8 @@ import type {
   McpManagedSummary,
   McpPlanReview,
   McpTaskRef,
-} from '@aaif/goose-sdk';
-import { McpPlatformClient } from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
+import { McpPlatformClient } from '@hikerm/lumina-sdk';
 import {
   archiveMcpProfile,
   cancelMcpTask,
@@ -493,42 +493,42 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     const extMethod = async (method: string, params: Record<string, unknown>) => {
       calls.push({ method, params });
       const value =
-        method === 'goose.mcpCatalogDetail_unstable'
+        method === 'lumina.mcpCatalogDetail_unstable'
           ? catalogDetail
-          : method === 'goose.mcpCatalogList_unstable'
+          : method === 'lumina.mcpCatalogList_unstable'
             ? catalogPage
-            : method === 'goose.mcpSourcesPolicyGet_unstable'
+            : method === 'lumina.mcpSourcesPolicyGet_unstable'
               ? sourcesPolicy
-              : method === 'goose.mcpGovernedImport_unstable'
+              : method === 'lumina.mcpGovernedImport_unstable'
                 ? governedImportResult
-                : method === 'goose.mcpSourceRefresh_unstable'
+                : method === 'lumina.mcpSourceRefresh_unstable'
                   ? sourceRefreshResult
-                  : method === 'goose.mcpSourceProvisionPrepare_unstable'
+                  : method === 'lumina.mcpSourceProvisionPrepare_unstable'
                     ? sourceProvisionPrepareResult
-                    : method === 'goose.mcpSourceProvisionConfirm_unstable'
+                    : method === 'lumina.mcpSourceProvisionConfirm_unstable'
                       ? sourceProvisionConfirmResult
-                      : method === 'goose.mcpPlanCreate_unstable'
+                      : method === 'lumina.mcpPlanCreate_unstable'
                         ? plan
-                        : method === 'goose.mcpProfileApplyPlanCreate_unstable'
+                        : method === 'lumina.mcpProfileApplyPlanCreate_unstable'
                           ? profileApplyPlan
-                          : method === 'goose.mcpProfileApplyConfirm_unstable'
+                          : method === 'lumina.mcpProfileApplyConfirm_unstable'
                             ? profileApplicationToken
-                            : method === 'goose.mcpProfileConnectionTest_unstable'
+                            : method === 'lumina.mcpProfileConnectionTest_unstable'
                               ? profileConnectionTestResult
-                              : method === 'goose.mcpProfileList_unstable'
+                              : method === 'lumina.mcpProfileList_unstable'
                                 ? { items: [profileSummary] }
-                                : method === 'goose.mcpProfileGet_unstable'
+                                : method === 'lumina.mcpProfileGet_unstable'
                                   ? profileDetail
-                                  : method === 'goose.mcpProfileDraftCreate_unstable'
+                                  : method === 'lumina.mcpProfileDraftCreate_unstable'
                                     ? profileDraft
-                                    : method === 'goose.mcpProfileModelRecommend_unstable'
+                                    : method === 'lumina.mcpProfileModelRecommend_unstable'
                                       ? modelRecommendation
-                                      : method === 'goose.mcpSetDefaultEnabled_unstable'
+                                      : method === 'lumina.mcpSetDefaultEnabled_unstable'
                                         ? summary
-                                        : method === 'goose.mcpProfileCreate_unstable' ||
-                                            method === 'goose.mcpProfileUpdate_unstable' ||
-                                            method === 'goose.mcpProfileRestore_unstable' ||
-                                            method === 'goose.mcpProfileArchive_unstable'
+                                        : method === 'lumina.mcpProfileCreate_unstable' ||
+                                            method === 'lumina.mcpProfileUpdate_unstable' ||
+                                            method === 'lumina.mcpProfileRestore_unstable' ||
+                                            method === 'lumina.mcpProfileArchive_unstable'
                                           ? profileSummary
                                           : task;
       return { outcome: { status: 'success', value } };
@@ -575,19 +575,19 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     await recommendMcpProfileModels('Need research and browser tools', ['openai']);
 
     expect(calls.map(({ method }) => method)).toEqual([
-      'goose.mcpPlanCreate_unstable',
-      'goose.mcpInstallConfirm_unstable',
-      'goose.mcpSetDefaultEnabled_unstable',
-      'goose.mcpTaskCancel_unstable',
-      'goose.mcpTaskRetry_unstable',
-      'goose.mcpProfileList_unstable',
-      'goose.mcpProfileGet_unstable',
-      'goose.mcpProfileCreate_unstable',
-      'goose.mcpProfileUpdate_unstable',
-      'goose.mcpProfileRestore_unstable',
-      'goose.mcpProfileArchive_unstable',
-      'goose.mcpProfileDraftCreate_unstable',
-      'goose.mcpProfileModelRecommend_unstable',
+      'lumina.mcpPlanCreate_unstable',
+      'lumina.mcpInstallConfirm_unstable',
+      'lumina.mcpSetDefaultEnabled_unstable',
+      'lumina.mcpTaskCancel_unstable',
+      'lumina.mcpTaskRetry_unstable',
+      'lumina.mcpProfileList_unstable',
+      'lumina.mcpProfileGet_unstable',
+      'lumina.mcpProfileCreate_unstable',
+      'lumina.mcpProfileUpdate_unstable',
+      'lumina.mcpProfileRestore_unstable',
+      'lumina.mcpProfileArchive_unstable',
+      'lumina.mcpProfileDraftCreate_unstable',
+      'lumina.mcpProfileModelRecommend_unstable',
     ]);
     expect(calls[0].params).toMatchObject({
       intent: { type: 'update', managed_mcp_id: 'managed-a', target_version: '2.0.0' },
@@ -658,7 +658,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     });
 
     expect(calls[0]).toEqual({
-      method: 'goose.mcpProfileConnectionTest_unstable',
+      method: 'lumina.mcpProfileConnectionTest_unstable',
       params: { profileId: 'profile-a', providerId: 'openai', modelId: 'gpt-5' },
     });
     expect(JSON.stringify(calls[0].params)).not.toMatch(/credential|token|endpoint|command/i);
@@ -780,7 +780,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     await getMcpCatalogDetail('manifest-managed-a');
 
     expect(calls[0]).toEqual({
-      method: 'goose.mcpCatalogDetail_unstable',
+      method: 'lumina.mcpCatalogDetail_unstable',
       params: {
         catalog: {
           type: 'catalog_ref',
@@ -791,7 +791,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       },
     });
     expect(calls[1]).toEqual({
-      method: 'goose.mcpCatalogDetail_unstable',
+      method: 'lumina.mcpCatalogDetail_unstable',
       params: {
         catalog: {
           type: 'manifest_digest',
@@ -807,9 +807,9 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     await expect(getMcpSourcesPolicy()).resolves.toEqual(sourcesPolicy);
 
     expect(calls.map(({ method }) => method)).toEqual([
-      'goose.mcpCatalogList_unstable',
-      'goose.mcpCatalogDetail_unstable',
-      'goose.mcpSourcesPolicyGet_unstable',
+      'lumina.mcpCatalogList_unstable',
+      'lumina.mcpCatalogDetail_unstable',
+      'lumina.mcpSourcesPolicyGet_unstable',
     ]);
   });
 
@@ -899,7 +899,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
             type: 'git_dev',
             repository: 'https://git.example.test/mcp.git',
             commit: '0123456789abcdef',
-            adapter: 'goose-dev',
+            adapter: 'lumina-dev',
           },
         },
       },
@@ -971,7 +971,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
   it('fails closed on malformed catalog, detail, and source policy success payloads', async () => {
     const malformedResponses = [
       {
-        method: 'goose.mcpCatalogList_unstable',
+        method: 'lumina.mcpCatalogList_unstable',
         value: {
           ...catalogPage,
           cache: { ...catalogPage.cache, refreshState: 'network_refresh' },
@@ -979,7 +979,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
         call: () => listMcpCatalog({ pageSize: 24 }),
       },
       {
-        method: 'goose.mcpCatalogDetail_unstable',
+        method: 'lumina.mcpCatalogDetail_unstable',
         value: {
           ...catalogDetail,
           transport: {
@@ -990,7 +990,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
         call: () => getMcpCatalogDetail('manifest-managed-a'),
       },
       {
-        method: 'goose.mcpSourcesPolicyGet_unstable',
+        method: 'lumina.mcpSourcesPolicyGet_unstable',
         value: {
           ...sourcesPolicy,
           sources: [{ ...sourcesPolicy.sources[0], trustTiers: ['untrusted'] }],
@@ -998,7 +998,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
         call: () => getMcpSourcesPolicy(),
       },
       {
-        method: 'goose.mcpCatalogDetail_unstable',
+        method: 'lumina.mcpCatalogDetail_unstable',
         value: { ...catalogDetail, sourceId: 'catalog-b' },
         call: () =>
           getMcpCatalogDetail({
@@ -1041,7 +1041,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     ).resolves.toEqual(governedImportResult);
 
     expect(calls[0]).toEqual({
-      method: 'goose.mcpGovernedImport_unstable',
+      method: 'lumina.mcpGovernedImport_unstable',
       params: {
         source: {
           type: 'local_manifest',
@@ -1050,7 +1050,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       },
     });
     expect(calls[1]).toEqual({
-      method: 'goose.mcpGovernedImport_unstable',
+      method: 'lumina.mcpGovernedImport_unstable',
       params: {
         source: {
           type: 'local_directory',
@@ -1068,7 +1068,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     );
 
     expect(calls[0]).toEqual({
-      method: 'goose.mcpSourceRefresh_unstable',
+      method: 'lumina.mcpSourceRefresh_unstable',
       params: {
         sourceId: 'verified_source_catalog_source-alpha',
       },
@@ -1087,11 +1087,11 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     expect(confirmed).toEqual(sourceProvisionConfirmResult);
     expect(calls).toEqual([
       {
-        method: 'goose.mcpSourceProvisionPrepare_unstable',
+        method: 'lumina.mcpSourceProvisionPrepare_unstable',
         params: { localDirectory: 'D:/catalogs/source-alpha' },
       },
       {
-        method: 'goose.mcpSourceProvisionConfirm_unstable',
+        method: 'lumina.mcpSourceProvisionConfirm_unstable',
         params: {
           provisionId: 'source_provisioning_alpha',
           confirmationToken: 'source_provisioning_confirmation_alpha',
@@ -1111,7 +1111,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
   it('fails closed on malformed source provisioning responses and mismatched refresh source identities', async () => {
     const malformedResponses = [
       {
-        method: 'goose.mcpSourceProvisionPrepare_unstable',
+        method: 'lumina.mcpSourceProvisionPrepare_unstable',
         value: {
           ...sourceProvisionPrepareResult,
           preview: { ...sourceProvisionPreview, refreshTransport: 'untrusted_transport' },
@@ -1119,7 +1119,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
         call: () => prepareMcpSourceProvision('D:/catalogs/source-alpha'),
       },
       {
-        method: 'goose.mcpSourceProvisionConfirm_unstable',
+        method: 'lumina.mcpSourceProvisionConfirm_unstable',
         value: { ...sourceProvisionConfirmResult, provisionId: 'source_provisioning_other' },
         call: () =>
           confirmMcpSourceProvision({
@@ -1128,7 +1128,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
           }),
       },
       {
-        method: 'goose.mcpSourceRefresh_unstable',
+        method: 'lumina.mcpSourceRefresh_unstable',
         value: { ...sourceRefreshResult, sourceId: 'verified_source_catalog_other' },
         call: () => refreshMcpSource('verified_source_catalog_source-alpha'),
       },
@@ -1164,8 +1164,8 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     expect(review).toEqual(profileApplyPlan);
     expect(application).toEqual(profileApplicationToken);
     expect(calls.map(({ method }) => method)).toEqual([
-      'goose.mcpProfileApplyPlanCreate_unstable',
-      'goose.mcpProfileApplyConfirm_unstable',
+      'lumina.mcpProfileApplyPlanCreate_unstable',
+      'lumina.mcpProfileApplyConfirm_unstable',
     ]);
     expect(calls[0].params).toEqual({
       profileId: 'profile-a',
@@ -1211,7 +1211,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       },
       recovery: { code: 'policy_denied', retryable: false },
     });
-    expect(calls[0].method).toBe('goose.mcpPlanCreate_unstable');
+    expect(calls[0].method).toBe('lumina.mcpPlanCreate_unstable');
   });
 
   it('recognizes only the formal 4B profile phase envelope after wire parsing', async () => {
@@ -1228,7 +1228,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
             details: {
               type: 'phase_unavailable',
               phase: '4B',
-              operation: 'goose.mcpProfileList_unstable',
+              operation: 'lumina.mcpProfileList_unstable',
             },
           },
         },
@@ -1411,7 +1411,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     setBoundaryClient(async (method, params) => {
       calls.push({ method, params });
       const payload =
-        method === 'goose.mcpList_unstable'
+        method === 'lumina.mcpList_unstable'
           ? {
               outcome: {
                 status: 'success',
@@ -1421,14 +1421,14 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
                 },
               },
             }
-          : method === 'goose.mcpGet_unstable'
+          : method === 'lumina.mcpGet_unstable'
             ? {
                 outcome: {
                   status: 'success',
                   value: detail,
                 },
               }
-            : method === 'goose.mcpHealthGet_unstable'
+            : method === 'lumina.mcpHealthGet_unstable'
               ? {
                   outcome: {
                     status: 'success',
@@ -1457,7 +1457,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
 
   it('fails closed on malformed managed success payloads across the desktop wrappers', async () => {
     const malformedResponses: Record<string, Record<string, unknown>> = {
-      'goose.mcpList_unstable': {
+      'lumina.mcpList_unstable': {
         outcome: {
           status: 'success',
           value: {
@@ -1465,7 +1465,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
           },
         },
       },
-      'goose.mcpGet_unstable': {
+      'lumina.mcpGet_unstable': {
         outcome: {
           status: 'success',
           value: {
@@ -1477,7 +1477,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
           },
         },
       },
-      'goose.mcpSetDefaultEnabled_unstable': {
+      'lumina.mcpSetDefaultEnabled_unstable': {
         outcome: {
           status: 'success',
           value: {
@@ -1486,7 +1486,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
           },
         },
       },
-      'goose.mcpHealthGet_unstable': {
+      'lumina.mcpHealthGet_unstable': {
         outcome: {
           status: 'success',
           value: {
@@ -1532,43 +1532,43 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
 
   it('fails closed on malformed success payloads for every profile wrapper', async () => {
     const malformedResponseByMethod: Record<string, Record<string, unknown>> = {
-      'goose.mcpProfileList_unstable': {
+      'lumina.mcpProfileList_unstable': {
         outcome: { status: 'success', value: { items: 'nope' } },
       },
-      'goose.mcpProfileGet_unstable': {
+      'lumina.mcpProfileGet_unstable': {
         outcome: { status: 'success', value: { profile: profileSummary, history: 'nope' } },
       },
-      'goose.mcpProfileCreate_unstable': {
+      'lumina.mcpProfileCreate_unstable': {
         outcome: {
           status: 'success',
           value: { ...profileSummary, revision: '4' },
         },
       },
-      'goose.mcpProfileUpdate_unstable': {
+      'lumina.mcpProfileUpdate_unstable': {
         outcome: {
           status: 'success',
           value: { ...profileSummary, archived: 'false' },
         },
       },
-      'goose.mcpProfileRestore_unstable': {
+      'lumina.mcpProfileRestore_unstable': {
         outcome: {
           status: 'success',
           value: { ...profileSummary, entries: { managedMcpId: 'managed-a', ordinal: 0 } },
         },
       },
-      'goose.mcpProfileArchive_unstable': {
+      'lumina.mcpProfileArchive_unstable': {
         outcome: {
           status: 'success',
           value: { ...profileSummary, updatedAtMs: '11' },
         },
       },
-      'goose.mcpProfileDraftCreate_unstable': {
+      'lumina.mcpProfileDraftCreate_unstable': {
         outcome: {
           status: 'success',
           value: { ...profileDraft, persisted: 'false' },
         },
       },
-      'goose.mcpProfileModelRecommend_unstable': {
+      'lumina.mcpProfileModelRecommend_unstable': {
         outcome: {
           status: 'success',
           value: {
@@ -1598,9 +1598,9 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     const extMethod = async (method: string, params: Record<string, unknown>) => {
       calls.push({ method, params });
       const value =
-        method === 'goose.mcpProfileList_unstable'
+        method === 'lumina.mcpProfileList_unstable'
           ? { items: [profileSummary] }
-          : method === 'goose.mcpProfileGet_unstable'
+          : method === 'lumina.mcpProfileGet_unstable'
             ? profileDetail
             : profileSummary;
       return { outcome: { status: 'success', value } };
@@ -1623,7 +1623,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       const extMethod = async (method: string, params: Record<string, unknown>) => {
         calls.push({ method, params });
         const value =
-          method === 'goose.mcpProfileGet_unstable'
+          method === 'lumina.mcpProfileGet_unstable'
             ? {
                 profile: { ...profileSummary, credentialStatus },
                 history: profileDetail.history,
@@ -1645,13 +1645,13 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
 
   it('fails closed on unknown credentialStatus values in profile summaries and details', async () => {
     for (const method of [
-      'goose.mcpProfileList_unstable',
-      'goose.mcpProfileGet_unstable',
+      'lumina.mcpProfileList_unstable',
+      'lumina.mcpProfileGet_unstable',
     ] as const) {
       const extMethod = async (actualMethod: string, params: Record<string, unknown>) => {
         calls.push({ method: actualMethod, params });
         const value =
-          method === 'goose.mcpProfileGet_unstable'
+          method === 'lumina.mcpProfileGet_unstable'
             ? {
                 profile: { ...profileSummary, credentialStatus: 'credential_leaked' },
                 history: profileDetail.history,
@@ -1662,7 +1662,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       setBoundaryClient(extMethod);
 
       await expect(
-        method === 'goose.mcpProfileGet_unstable'
+        method === 'lumina.mcpProfileGet_unstable'
           ? getMcpProfile('profile-a')
           : listMcpProfiles(true)
       ).rejects.toThrow('The MCP Platform request could not be completed.');
@@ -1671,21 +1671,21 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
 
   it('preserves credentialStatus across every profile success wrapper', async () => {
     const credentialStatusByMethod = {
-      'goose.mcpProfileList_unstable': 'unconfigured',
-      'goose.mcpProfileGet_unstable': 're_registration_required',
-      'goose.mcpProfileCreate_unstable': 'trusted_state_conflict',
-      'goose.mcpProfileUpdate_unstable': 'temporarily_unavailable',
-      'goose.mcpProfileRestore_unstable': 'ready',
-      'goose.mcpProfileArchive_unstable': 'unconfigured',
+      'lumina.mcpProfileList_unstable': 'unconfigured',
+      'lumina.mcpProfileGet_unstable': 're_registration_required',
+      'lumina.mcpProfileCreate_unstable': 'trusted_state_conflict',
+      'lumina.mcpProfileUpdate_unstable': 'temporarily_unavailable',
+      'lumina.mcpProfileRestore_unstable': 'ready',
+      'lumina.mcpProfileArchive_unstable': 'unconfigured',
     } as const;
     const extMethod = async (method: string, params: Record<string, unknown>) => {
       calls.push({ method, params });
       const credentialStatus =
         credentialStatusByMethod[method as keyof typeof credentialStatusByMethod];
       const value =
-        method === 'goose.mcpProfileList_unstable'
+        method === 'lumina.mcpProfileList_unstable'
           ? { items: [{ ...profileSummary, credentialStatus }] }
-          : method === 'goose.mcpProfileGet_unstable'
+          : method === 'lumina.mcpProfileGet_unstable'
             ? {
                 profile: { ...profileSummary, credentialStatus },
                 history: profileDetail.history,
@@ -1768,7 +1768,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
             details: {
               type: 'phase_unavailable',
               phase: '4B',
-              operation: 'goose.mcpProfileList_unstable',
+              operation: 'lumina.mcpProfileList_unstable',
               extra: 'unexpected',
             },
           },
@@ -1848,7 +1848,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
           correlationId: 'phase-4b-inherited',
           details: Object.assign(Object.create({ type: 'phase_unavailable' }), {
             phase: '4B',
-            operation: 'goose.mcpProfileList_unstable',
+            operation: 'lumina.mcpProfileList_unstable',
           }),
         },
       },
@@ -1985,22 +1985,22 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     const invalidValues = [
       {
         label: 'array profile',
-        method: 'goose.mcpProfileList_unstable',
+        method: 'lumina.mcpProfileList_unstable',
         value: { items: [[profileSummary]] },
       },
       {
         label: 'date profile',
-        method: 'goose.mcpProfileGet_unstable',
+        method: 'lumina.mcpProfileGet_unstable',
         value: { profile: new Date('2026-07-23T00:00:00.000Z'), history: profileDetail.history },
       },
       {
         label: 'class profile',
-        method: 'goose.mcpProfileCreate_unstable',
+        method: 'lumina.mcpProfileCreate_unstable',
         value: new ProfileSummaryRecord(),
       },
       {
         label: 'date model candidate',
-        method: 'goose.mcpProfileModelRecommend_unstable',
+        method: 'lumina.mcpProfileModelRecommend_unstable',
         value: { ...modelRecommendation, candidates: [new Date('2026-07-23T00:00:00.000Z')] },
       },
     ] as const;
@@ -2014,11 +2014,11 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       });
 
       const call =
-        invalid.method === 'goose.mcpProfileList_unstable'
+        invalid.method === 'lumina.mcpProfileList_unstable'
           ? () => listMcpProfiles(true)
-          : invalid.method === 'goose.mcpProfileGet_unstable'
+          : invalid.method === 'lumina.mcpProfileGet_unstable'
             ? () => getMcpProfile('profile-a')
-            : invalid.method === 'goose.mcpProfileCreate_unstable'
+            : invalid.method === 'lumina.mcpProfileCreate_unstable'
               ? () =>
                   createMcpProfile({
                     name: 'Team MCPs',
@@ -2044,7 +2044,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     setBoundaryClient(async (method, params) => {
       calls.push({ method, params });
       const payload =
-        method === 'goose.mcpList_unstable'
+        method === 'lumina.mcpList_unstable'
           ? {
               outcome: {
                 status: 'success',
@@ -2054,7 +2054,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
                 },
               },
             }
-          : method === 'goose.mcpSetDefaultEnabled_unstable'
+          : method === 'lumina.mcpSetDefaultEnabled_unstable'
             ? {
                 outcome: {
                   status: 'success',
@@ -2072,7 +2072,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
                     details: {
                       type: 'phase_unavailable',
                       phase: '4B',
-                      operation: 'goose.mcpProfileList_unstable',
+                      operation: 'lumina.mcpProfileList_unstable',
                     },
                   },
                 },
@@ -2094,7 +2094,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
         details: {
           type: 'phase_unavailable',
           phase: '4B',
-          operation: 'goose.mcpProfileList_unstable',
+          operation: 'lumina.mcpProfileList_unstable',
         },
       },
     });
@@ -2109,7 +2109,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     const extMethod = async (method: string, params: Record<string, unknown>) => {
       calls.push({ method, params });
       const value =
-        method === 'goose.mcpProfileGet_unstable'
+        method === 'lumina.mcpProfileGet_unstable'
           ? {
               profile: {
                 ...profileSummary,
@@ -2120,7 +2120,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
               },
               history: profileDetail.history,
             }
-          : method === 'goose.mcpProfileModelRecommend_unstable'
+          : method === 'lumina.mcpProfileModelRecommend_unstable'
             ? {
                 ...modelRecommendation,
                 candidates: [
@@ -2133,7 +2133,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
                   },
                 ],
               }
-            : method === 'goose.mcpProfileList_unstable'
+            : method === 'lumina.mcpProfileList_unstable'
               ? {
                   items: [
                     { ...profileSummary, profileId: preservedProfileId, name: 'Team\u0000 MCPs' },
@@ -2185,11 +2185,11 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
     });
     await archiveMcpProfile({ profileId: preservedProfileId, expectedRevision: 4 });
 
-    expect(calls.find(({ method }) => method === 'goose.mcpProfileGet_unstable')?.params).toEqual({
+    expect(calls.find(({ method }) => method === 'lumina.mcpProfileGet_unstable')?.params).toEqual({
       profileId: preservedProfileId,
     });
     expect(
-      calls.find(({ method }) => method === 'goose.mcpProfileModelRecommend_unstable')?.params
+      calls.find(({ method }) => method === 'lumina.mcpProfileModelRecommend_unstable')?.params
     ).toEqual({
       text: 'Need research and browser tools',
       providerIds: [confusableProviderId],
@@ -2208,7 +2208,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       const extMethod = async (method: string, params: Record<string, unknown>) => {
         calls.push({ method, params });
         const value =
-          method === 'goose.mcpProfileGet_unstable'
+          method === 'lumina.mcpProfileGet_unstable'
             ? {
                 profile: { ...profileSummary, profileId: invalidProfileId },
                 history: profileDetail.history,
@@ -2235,7 +2235,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       const extMethod = async (method: string, params: Record<string, unknown>) => {
         calls.push({ method, params });
         const value =
-          method === 'goose.mcpProfileModelRecommend_unstable'
+          method === 'lumina.mcpProfileModelRecommend_unstable'
             ? {
                 ...modelRecommendation,
                 candidates: [{ ...modelRecommendation.candidates[0], ...candidate }],
@@ -2292,7 +2292,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
         dnsEvidenceDigest: 'dns-1',
         warnings: [],
       };
-      return method === 'goose.mcpHttpsManifestPrepare_unstable'
+      return method === 'lumina.mcpHttpsManifestPrepare_unstable'
         ? {
             outcome: {
               status: 'success',
@@ -2321,11 +2321,11 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       })
     ).resolves.toMatchObject({ manifestDigest: 'manifest-digest-1' });
     expect(calls[0]).toEqual({
-      method: 'goose.mcpHttpsManifestPrepare_unstable',
+      method: 'lumina.mcpHttpsManifestPrepare_unstable',
       params: { url: 'https://example.test/manifest' },
     });
     expect(calls[1]).toEqual({
-      method: 'goose.mcpHttpsManifestConfirm_unstable',
+      method: 'lumina.mcpHttpsManifestConfirm_unstable',
       params: { provisionId: 'provision-1', confirmationToken: token, confirm: true },
     });
   });
@@ -2376,7 +2376,7 @@ describe('Desktop adapter to formal ACP MCP Platform boundary', () => {
       },
     });
     expect(calls[0]).toEqual({
-      method: 'goose.mcpHttpsManifestConfirm_unstable',
+      method: 'lumina.mcpHttpsManifestConfirm_unstable',
       params: { provisionId: 'provision-1', confirmationToken: token, confirm: true },
     });
     expect(JSON.stringify(calls[0]?.params)).not.toContain('must-not-cross-boundary');

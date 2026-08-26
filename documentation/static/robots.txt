@@ -1,11 +1,11 @@
-# goose Documentation
-# https://goose-docs.ai/
+# lumina Documentation
+# https://hikerm.github.io/lumina/
 
 User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://goose-docs.ai/sitemap.xml
+Sitemap: https://hikerm.github.io/lumina/sitemap.xml
 
 # LLM context file available at /llms.txt
 

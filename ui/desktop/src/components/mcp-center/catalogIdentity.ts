@@ -1,4 +1,4 @@
-import type { McpCatalogDetail, McpCatalogPlanTarget, McpCatalogSummary, McpPlanReview } from '@aaif/goose-sdk';
+import type { McpCatalogDetail, McpCatalogPlanTarget, McpCatalogSummary, McpPlanReview } from '@hikerm/lumina-sdk';
 
 export function catalogPlanTargetFromItem(
   item: Pick<McpCatalogSummary, 'sourceId' | 'mcpId' | 'version' | 'manifestDigest'>

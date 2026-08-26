@@ -5,10 +5,10 @@ This directory contains Windows-specific scripts that are only included during W
 ## Components
 
 ### Node.js Runtime
-- `npx.cmd` - Fail-closed wrapper for the Goose-managed portable Node.js runtime
+- `npx.cmd` - Fail-closed wrapper for the Lumina-managed portable Node.js runtime
 
-`npx.cmd` resolves `GOOSE_PATH_ROOT` through the same Windows storage policy as
-the desktop app. When unset it uses `D:\Goose`; configured roots must be local
+`npx.cmd` resolves `LUMINA_PATH_ROOT` through the same Windows storage policy as
+the desktop app. When unset it uses `D:\Lumina`; configured roots must be local
 folders on the D drive. It uses only:
 
 ```text
@@ -39,7 +39,7 @@ runtime in `.node-previous`, and restores it after an interrupted publication.
 Windows directory moves are not an atomic replacement of a non-empty directory;
 the script therefore treats publication as a recoverable transaction. The
 PowerShell path audit cannot hold a no-follow executable handle across
-`CreateProcess`; protect `D:\Goose` with normal user ACLs and rerun prepare if
+`CreateProcess`; protect `D:\Lumina` with normal user ACLs and rerun prepare if
 an integrity check fails.
 
 ### Windows Binaries

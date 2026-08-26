@@ -2,22 +2,22 @@
 sidebar_position: 9
 title: ACP Providers
 sidebar_label: ACP Providers
-description: Use ACP agents like Claude Code and Codex as goose providers with extension support
+description: Use ACP agents like Claude Code and Codex as lumina providers with extension support
 ---
 
 # ACP Providers
 
-goose supports [Agent Client Protocol (ACP)](https://agentclientprotocol.com/) agents as providers. ACP is a standard protocol for communicating with coding agents, and there's a growing [registry](https://github.com/agentclientprotocol/registry) of agents that implement it.
+lumina supports [Agent Client Protocol (ACP)](https://agentclientprotocol.com/) agents as providers. ACP is a standard protocol for communicating with coding agents, and there's a growing [registry](https://github.com/agentclientprotocol/registry) of agents that implement it.
 
-ACP providers pass goose [extensions](/docs/getting-started/using-extensions) through to the agent as MCP servers, so the agent can call your extensions directly.
+ACP providers pass lumina [extensions](/docs/getting-started/using-extensions) through to the agent as MCP servers, so the agent can call your extensions directly.
 
 :::tip Use Your Existing Subscriptions
-ACP providers let you use goose with your existing Claude Code or ChatGPT Plus/Pro subscriptions — no per-token API costs. They are the recommended replacement for the deprecated [CLI providers](/docs/guides/cli-providers).
+ACP providers let you use lumina with your existing Claude Code or ChatGPT Plus/Pro subscriptions — no per-token API costs. They are the recommended replacement for the deprecated [CLI providers](/docs/guides/cli-providers).
 :::
 
 :::warning Limitations
-- **No session fork or resume**: You can start new sessions, but `goose session resume` and `goose session fork` are not supported yet.
-- **ACP session ID differs from goose session ID**: Telemetry fields may not correlate across the two.
+- **No session fork or resume**: You can start new sessions, but `lumina session resume` and `lumina session fork` are not supported yet.
+- **ACP session ID differs from lumina session ID**: Telemetry fields may not correlate across the two.
 :::
 
 ## Available ACP Providers
@@ -43,7 +43,7 @@ Wraps [claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp
 
 ### Codex ACP
 
-Wraps [codex-acp](https://github.com/zed-industries/codex-acp), an ACP adapter for OpenAI's Codex. Uses the same ChatGPT subscription as the deprecated `codex` CLI provider. Codex's sandbox blocks network by default; goose automatically enables network access when HTTP MCP servers are configured.
+Wraps [codex-acp](https://github.com/zed-industries/codex-acp), an ACP adapter for OpenAI's Codex. Uses the same ChatGPT subscription as the deprecated `codex` CLI provider. Codex's sandbox blocks network by default; lumina automatically enables network access when HTTP MCP servers are configured.
 
 **Requirements:**
 - Node.js and npm
@@ -79,14 +79,14 @@ Wraps `pi-acp`, an ACP adapter for Pi. Uses your existing Pi installation.
 
    Run `amp` and follow the authentication prompts.
 
-4. **Configure goose**
+4. **Configure lumina**
 
    Set the provider environment variable:
    ```bash
-   export GOOSE_PROVIDER=amp-acp
+   export LUMINA_PROVIDER=amp-acp
    ```
 
-   Or configure through the goose CLI using `goose configure`.
+   Or configure through the lumina CLI using `lumina configure`.
 
 ### Claude ACP
 
@@ -100,17 +100,17 @@ Wraps `pi-acp`, an ACP adapter for Pi. Uses your existing Pi installation.
 
    Ensure your Claude CLI is authenticated and working
 
-3. **Configure goose**
+3. **Configure lumina**
 
    Set the provider environment variable:
    ```bash
-   export GOOSE_PROVIDER=claude-acp
+   export LUMINA_PROVIDER=claude-acp
    ```
 
-   Or configure through the goose CLI using `goose configure`:
+   Or configure through the lumina CLI using `lumina configure`:
 
    ```bash
-   ┌   goose-configure
+   ┌   lumina-configure
    │
    ◇  What would you like to configure?
    │  Configure Providers
@@ -136,17 +136,17 @@ Wraps `pi-acp`, an ACP adapter for Pi. Uses your existing Pi installation.
 
    Run `codex` and follow the authentication prompts. You can use your ChatGPT account or API key.
 
-3. **Configure goose**
+3. **Configure lumina**
 
    Set the provider environment variable:
    ```bash
-   export GOOSE_PROVIDER=codex-acp
+   export LUMINA_PROVIDER=codex-acp
    ```
 
-   Or configure through the goose CLI using `goose configure`:
+   Or configure through the lumina CLI using `lumina configure`:
 
    ```bash
-   ┌   goose-configure
+   ┌   lumina-configure
    │
    ◇  What would you like to configure?
    │  Configure Providers
@@ -170,21 +170,21 @@ Wraps `pi-acp`, an ACP adapter for Pi. Uses your existing Pi installation.
 
    Run `pi` and follow the authentication prompts.
 
-3. **Configure goose**
+3. **Configure lumina**
 
    Set the provider environment variable:
    ```bash
-   export GOOSE_PROVIDER=pi-acp
+   export LUMINA_PROVIDER=pi-acp
    ```
 
-   Or configure through the goose CLI using `goose configure`.
+   Or configure through the lumina CLI using `lumina configure`.
 
 ## Usage Examples
 
 ### Basic Usage
 
 ```bash
-goose session
+lumina session
 ```
 
 ### Using with Extensions
@@ -192,13 +192,13 @@ goose session
 Extensions configured via `--with-extension` or `--with-streamable-http-extension` are passed through to the ACP agent:
 
 ```bash
-GOOSE_PROVIDER=claude-acp goose run \
+LUMINA_PROVIDER=claude-acp lumina run \
   --with-extension 'npx -y @modelcontextprotocol/server-everything' \
   -t 'Use the echo tool to say hello'
 ```
 
 ```bash
-GOOSE_PROVIDER=codex-acp goose run \
+LUMINA_PROVIDER=codex-acp lumina run \
   --with-streamable-http-extension 'https://mcp.kiwi.com' \
   -t 'Search for flights from BKI to SYD tomorrow'
 ```
@@ -209,24 +209,24 @@ GOOSE_PROVIDER=codex-acp goose run \
 
 | Environment Variable | Description       | Default   |
 |----------------------|-------------------|-----------|
-| `GOOSE_PROVIDER`     | Set to `amp-acp`  | None      |
-| `GOOSE_MODEL`        | Model to use      | `current` |
-| `GOOSE_MODE`         | Permission mode   | `auto`    |
+| `LUMINA_PROVIDER`     | Set to `amp-acp`  | None      |
+| `LUMINA_MODEL`        | Model to use      | `current` |
+| `LUMINA_MODE`         | Permission mode   | `auto`    |
 
 ### Claude ACP Configuration
 
 | Environment Variable | Description         | Default   |
 |----------------------|---------------------|-----------|
-| `GOOSE_PROVIDER`     | Set to `claude-acp` | None      |
-| `GOOSE_MODEL`        | Model to use        | `default` |
-| `GOOSE_MODE`         | Permission mode     | `auto`    |
+| `LUMINA_PROVIDER`     | Set to `claude-acp` | None      |
+| `LUMINA_MODEL`        | Model to use        | `default` |
+| `LUMINA_MODE`         | Permission mode     | `auto`    |
 
 **Known Models:**
 - `default` (opus)
 - `sonnet`
 - `haiku`
 
-**Permission Modes (`GOOSE_MODE`):**
+**Permission Modes (`LUMINA_MODE`):**
 
 | Mode            | Session Mode        | Behavior                                              |
 |-----------------|---------------------|-------------------------------------------------------|
@@ -241,9 +241,9 @@ See [claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp) 
 
 | Environment Variable | Description        | Default         |
 |----------------------|--------------------|-----------------|
-| `GOOSE_PROVIDER`     | Set to `codex-acp` | None            |
-| `GOOSE_MODEL`        | Model to use       | `gpt-5.2-codex` |
-| `GOOSE_MODE`         | Permission mode    | `auto`          |
+| `LUMINA_PROVIDER`     | Set to `codex-acp` | None            |
+| `LUMINA_MODEL`        | Model to use       | `gpt-5.2-codex` |
+| `LUMINA_MODE`         | Permission mode    | `auto`          |
 
 **Known Models:**
 - `gpt-5.2-codex`
@@ -251,7 +251,7 @@ See [claude-agent-acp](https://github.com/agentclientprotocol/claude-agent-acp) 
 - `gpt-5.1-codex-max`
 - `gpt-5.1-codex-mini`
 
-**Permission Modes (`GOOSE_MODE`):**
+**Permission Modes (`LUMINA_MODE`):**
 
 | Mode            | Approval / Sandbox          | Behavior                                                       |
 |-----------------|-----------------------------|----------------------------------------------------------------|
@@ -266,9 +266,9 @@ See [codex-acp](https://github.com/zed-industries/codex-acp) for approval policy
 
 | Environment Variable | Description      | Default   |
 |----------------------|------------------|-----------|
-| `GOOSE_PROVIDER`     | Set to `pi-acp`  | None      |
-| `GOOSE_MODEL`        | Model to use     | `current` |
-| `GOOSE_MODE`         | Permission mode  | `auto`    |
+| `LUMINA_PROVIDER`     | Set to `pi-acp`  | None      |
+| `LUMINA_MODEL`        | Model to use     | `current` |
+| `LUMINA_MODE`         | Permission mode  | `auto`    |
 
 ## Error Handling
 
@@ -279,4 +279,4 @@ ACP providers depend on external binaries, so ensure:
 - Subscription limits are not exceeded
 - Node.js and npm are installed (for npm-distributed adapters)
 
-If goose can't find the binary, session startup will fail with an error. Run `which <binary>` to verify installation.
+If lumina can't find the binary, session startup will fail with an error. Run `which <binary>` to verify installation.

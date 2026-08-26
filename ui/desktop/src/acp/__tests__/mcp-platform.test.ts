@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { McpPlatformOutcome } from '@aaif/goose-sdk';
+import type { McpPlatformOutcome } from '@hikerm/lumina-sdk';
 import { performance } from 'node:perf_hooks';
 const { getAcpClient } = vi.hoisted(() => ({
   getAcpClient: vi.fn(),
@@ -291,7 +291,7 @@ describe('MCP Platform outcome adapter', () => {
         phaseUnavailableServiceError({
           details: {
             type: 'phase_unavailable',
-            operation: 'goose.mcpProfileList_unstable',
+            operation: 'lumina.mcpProfileList_unstable',
             phase: '4B',
           },
         }),
@@ -315,7 +315,7 @@ describe('MCP Platform outcome adapter', () => {
         phaseUnavailableServiceError({
           details: {
             type: 'phase_unavailable',
-            operation: 'goose.mcpProfileList_unstable',
+            operation: 'lumina.mcpProfileList_unstable',
             phase: 'modelSuggestions',
           },
         }),
@@ -327,7 +327,7 @@ describe('MCP Platform outcome adapter', () => {
         phaseUnavailableServiceError({
           details: {
             type: 'phase_unavailable',
-            operation: 'goose.mcpProfileList_unstable',
+            operation: 'lumina.mcpProfileList_unstable',
             phase: '4B',
           },
         }),
@@ -341,7 +341,7 @@ describe('MCP Platform outcome adapter', () => {
       code: 'operation_not_supported',
       details: {
         type: 'phase_unavailable',
-        operation: 'goose.mcpProfileModelRecommend_unstable',
+        operation: 'lumina.mcpProfileModelRecommend_unstable',
         phase: '4B',
       },
     });

@@ -16,7 +16,7 @@ on:
 jobs:
   machete:
     runs-on: ubuntu-latest
-    if: github.repository == 'aaif-goose/goose'
+    if: github.repository == 'HikerM/lumina'
     permissions:
       contents: read
     steps:

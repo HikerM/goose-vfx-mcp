@@ -1,4 +1,4 @@
-"""Harbor agent that runs a caller-provided Goose binary inside the task container."""
+"""Harbor agent that runs a caller-provided Lumina binary inside the task container."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 import yaml
 
 from harbor.agents.installed.base import NonZeroAgentExitCodeError, with_prompt_template
-from harbor.agents.installed.goose import Goose
+from harbor.agents.installed.lumina import Lumina
 from harbor.environments.base import BaseEnvironment
 from harbor.models.agent.context import AgentContext
 
@@ -25,18 +25,18 @@ PROVIDER_SECRETS = {
     "openrouter": ["OPENROUTER_API_KEY"],
 }
 
-CONTAINER_GOOSE_PATH_ROOT = "/installed-agent/goose-profile"
-CONTAINER_CONFIG_PATH = f"{CONTAINER_GOOSE_PATH_ROOT}/config/config.yaml"
+CONTAINER_LUMINA_PATH_ROOT = "/installed-agent/lumina-profile"
+CONTAINER_CONFIG_PATH = f"{CONTAINER_LUMINA_PATH_ROOT}/config/config.yaml"
 CONTAINER_RECIPE_PATH = "/installed-agent/harbor-recipe.yaml"
 CONTAINER_CA_BUNDLE_PATH = "/installed-agent/ca-certificates.crt"
 
-FATAL_GOOSE_NOTIFICATIONS = ("creditsExhausted",)
+FATAL_LUMINA_NOTIFICATIONS = ("creditsExhausted",)
 
 
-class GooseBinaryAgent(Goose):
-    """Run a caller-provided Goose binary in the benchmark environment.
+class LuminaBinaryAgent(Lumina):
+    """Run a caller-provided Lumina binary in the benchmark environment.
 
-    Differs from harbor's vanilla ``Goose``:
+    Differs from harbor's vanilla ``Lumina``:
       * Uses a pre-built binary uploaded into the container (no curl install).
       * Generates ``config.yaml`` from ``config_template.yaml`` with a
         caller-specified set of enabled extensions.
@@ -46,25 +46,25 @@ class GooseBinaryAgent(Goose):
     def __init__(
         self,
         *args,
-        goose_binary: str,
+        lumina_binary: str,
         config_yaml: str,
         extension_entries: list[dict[str, str]],
-        install_goose_runtime_deps: bool = False,
+        install_lumina_runtime_deps: bool = False,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.goose_binary = Path(goose_binary).expanduser().resolve()
+        self.lumina_binary = Path(lumina_binary).expanduser().resolve()
         self.config_yaml = config_yaml
         self.extension_entries = extension_entries
-        self.install_goose_runtime_deps = install_goose_runtime_deps
+        self.install_lumina_runtime_deps = install_lumina_runtime_deps
         self.ca_bundle_env_path: str | None = None
 
     @staticmethod
     def name() -> str:
-        return "goose-binary"
+        return "lumina-binary"
 
     def get_version_command(self) -> str | None:
-        return "/installed-agent/goose --version"
+        return "/installed-agent/lumina --version"
 
     def _run_env(self) -> dict[str, str]:
         if not self.model_name or "/" not in self.model_name:
@@ -72,13 +72,13 @@ class GooseBinaryAgent(Goose):
 
         provider, model = self.model_name.split("/", 1)
         env = {
-            "GOOSE_MODEL": model,
-            "GOOSE_PROVIDER": provider,
-            "GOOSE_TELEMETRY_ENABLED": "false",
-            "GOOSE_TELEMETRY_OFF": "true",
+            "LUMINA_MODEL": model,
+            "LUMINA_PROVIDER": provider,
+            "LUMINA_TELEMETRY_ENABLED": "false",
+            "LUMINA_TELEMETRY_OFF": "true",
             "CONFIGURE": "false",
-            "GOOSE_PATH_ROOT": CONTAINER_GOOSE_PATH_ROOT,
-            "GOOSE_DISABLE_KEYRING": "true",
+            "LUMINA_PATH_ROOT": CONTAINER_LUMINA_PATH_ROOT,
+            "LUMINA_DISABLE_KEYRING": "true",
         }
         for key in PROVIDER_SECRETS.get(provider, []):
             value = os.environ.get(key)
@@ -121,12 +121,12 @@ class GooseBinaryAgent(Goose):
         )
         self.ca_bundle_env_path = CONTAINER_CA_BUNDLE_PATH
 
-    async def _install_goose_runtime_deps(self, environment: BaseEnvironment) -> None:
+    async def _install_lumina_runtime_deps(self, environment: BaseEnvironment) -> None:
         await self.exec_as_root(
             environment,
             command=(
                 "command -v apt-get >/dev/null 2>&1 || "
-                "(echo 'install_goose_runtime_deps requires apt-get in the task container' >&2; exit 1); "
+                "(echo 'install_lumina_runtime_deps requires apt-get in the task container' >&2; exit 1); "
                 "apt-get update && "
                 "DEBIAN_FRONTEND=noninteractive apt-get install -y libgomp1"
             ),
@@ -151,16 +151,16 @@ class GooseBinaryAgent(Goose):
         )
 
     async def install(self, environment: BaseEnvironment) -> None:
-        if not self.goose_binary.is_file():
-            raise FileNotFoundError(f"Goose binary does not exist: {self.goose_binary}")
+        if not self.lumina_binary.is_file():
+            raise FileNotFoundError(f"Lumina binary does not exist: {self.lumina_binary}")
 
-        await environment.upload_file(self.goose_binary, "/installed-agent/goose")
-        await self.exec_as_root(environment, command="chmod 755 /installed-agent/goose")
-        if self.install_goose_runtime_deps:
-            await self._install_goose_runtime_deps(environment)
+        await environment.upload_file(self.lumina_binary, "/installed-agent/lumina")
+        await self.exec_as_root(environment, command="chmod 755 /installed-agent/lumina")
+        if self.install_lumina_runtime_deps:
+            await self._install_lumina_runtime_deps(environment)
         await self._ensure_ca_bundle(environment)
 
-        config_dir = f"{CONTAINER_GOOSE_PATH_ROOT}/config"
+        config_dir = f"{CONTAINER_LUMINA_PATH_ROOT}/config"
         await self.exec_as_root(
             environment, command=f"mkdir -p {shlex.quote(config_dir)}"
         )
@@ -168,19 +168,19 @@ class GooseBinaryAgent(Goose):
             config_path = Path(tmp) / "config.yaml"
             config_path.write_text(self.config_yaml)
             await environment.upload_file(config_path, CONTAINER_CONFIG_PATH)
-        await self._chown_to_agent_user(environment, CONTAINER_GOOSE_PATH_ROOT, recursive=True)
+        await self._chown_to_agent_user(environment, CONTAINER_LUMINA_PATH_ROOT, recursive=True)
 
         await self.exec_as_agent(
             environment,
             command=(
                 "mkdir -p ~/.local/bin && "
-                "ln -sf /installed-agent/goose ~/.local/bin/goose && "
-                "~/.local/bin/goose --version"
+                "ln -sf /installed-agent/lumina ~/.local/bin/lumina && "
+                "~/.local/bin/lumina --version"
             ),
             env={
-                "GOOSE_DISABLE_KEYRING": "true",
-                "GOOSE_TELEMETRY_ENABLED": "false",
-                "GOOSE_TELEMETRY_OFF": "true",
+                "LUMINA_DISABLE_KEYRING": "true",
+                "LUMINA_TELEMETRY_ENABLED": "false",
+                "LUMINA_TELEMETRY_OFF": "true",
                 "CONFIGURE": "false",
             },
             timeout_sec=30,
@@ -225,24 +225,24 @@ class GooseBinaryAgent(Goose):
             environment,
             command=(
                 'export PATH="$HOME/.local/bin:$PATH" && '
-                f"goose run --recipe {shlex.quote(CONTAINER_RECIPE_PATH)} "
+                f"lumina run --recipe {shlex.quote(CONTAINER_RECIPE_PATH)} "
                 "--output-format stream-json "
                 + ((cli_flags + " ") if cli_flags else "")
-                + "2>&1 | stdbuf -oL tee /logs/agent/goose.txt"
+                + "2>&1 | stdbuf -oL tee /logs/agent/lumina.txt"
             ),
             env=env,
         )
-        self._raise_on_fatal_goose_notification()
+        self._raise_on_fatal_lumina_notification()
 
-    def _raise_on_fatal_goose_notification(self) -> None:
-        log_path = self.logs_dir / "goose.txt"
+    def _raise_on_fatal_lumina_notification(self) -> None:
+        log_path = self.logs_dir / "lumina.txt"
         if not log_path.is_file():
             return
         log_text = log_path.read_text(errors="replace")
-        for notification in FATAL_GOOSE_NOTIFICATIONS:
+        for notification in FATAL_LUMINA_NOTIFICATIONS:
             if f'"notificationType":"{notification}"' in log_text:
                 raise NonZeroAgentExitCodeError(
-                    f"Goose exited without running the task: {notification}. "
+                    f"Lumina exited without running the task: {notification}. "
                     f"See {log_path} for details."
                 )
 
@@ -286,7 +286,7 @@ class GooseBinaryAgent(Goose):
 
     def populate_context_post_run(self, context: AgentContext) -> None:
         super().populate_context_post_run(context)
-        txt_path = self.logs_dir / "goose.txt"
+        txt_path = self.logs_dir / "lumina.txt"
         if not txt_path.exists():
             return
         log_text = txt_path.read_text()

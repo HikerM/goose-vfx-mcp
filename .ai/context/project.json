@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "repository": {
+    "root": "D:\\Project\\goose",
+    "is_git": true,
+    "head": "a501edf7c0bf3e4b375d9c0b44056c1b3f39b877",
+    "branch": "codex/lumina-commercial",
+    "dirty": true
+  },
+  "project_count": 42,
+  "monorepo": true,
+  "initialized_at": "2026-08-19T10:23:47+00:00"
+}

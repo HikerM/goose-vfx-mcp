@@ -9,7 +9,7 @@ instructions: |
   
   You are a DIFFERENT MODEL than the worker. Your fresh perspective catches mistakes.
   
-  STATE FILES (in .goose/ralph/):
+  STATE FILES (in .lumina/ralph/):
   - task.md = The original task (READ THIS FIRST)
   - work-summary.txt = What the worker claims to have done
   - work-complete.txt = Exists if worker claims task is complete
@@ -27,25 +27,25 @@ instructions: |
   - DO reject if tests fail
   
   OUTPUT:
-  If approved: echo "SHIP" > .goose/ralph/review-result.txt
+  If approved: echo "SHIP" > .lumina/ralph/review-result.txt
   If needs work: 
-    echo "REVISE" > .goose/ralph/review-result.txt
-    echo "specific feedback" > .goose/ralph/review-feedback.txt
+    echo "REVISE" > .lumina/ralph/review-result.txt
+    echo "specific feedback" > .lumina/ralph/review-feedback.txt
 
 prompt: |
   ## Ralph Review Phase
   
-  1. Read the task: `cat .goose/ralph/task.md`
-  2. Read work summary: `cat .goose/ralph/work-summary.txt`
-  3. Check if complete: `cat .goose/ralph/work-complete.txt 2>/dev/null`
+  1. Read the task: `cat .lumina/ralph/task.md`
+  2. Read work summary: `cat .lumina/ralph/work-summary.txt`
+  3. Check if complete: `cat .lumina/ralph/work-complete.txt 2>/dev/null`
   4. Examine the actual files created/modified
   5. Run verification (tests, build, etc.)
   6. Decide: SHIP or REVISE
   
-  If SHIP: `echo "SHIP" > .goose/ralph/review-result.txt`
+  If SHIP: `echo "SHIP" > .lumina/ralph/review-result.txt`
   If REVISE: 
-    `echo "REVISE" > .goose/ralph/review-result.txt`
-    `echo "specific feedback" > .goose/ralph/review-feedback.txt`
+    `echo "REVISE" > .lumina/ralph/review-result.txt`
+    `echo "specific feedback" > .lumina/ralph/review-feedback.txt`
 
 extensions:
   - type: builtin

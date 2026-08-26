@@ -1197,7 +1197,7 @@
     "defaultMessage": "密鑰"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "在 Lumina 伺服器上設定的密鑰 (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "在 Lumina 伺服器上設定的密鑰 (LUMINA_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "輸入伺服器的密鑰"
@@ -1226,67 +1226,67 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "連線至在其他位置執行的 Lumina 伺服器（需要重新啟動應用程式）"
   },
-  "goosehintsModal.close": {
+  "luminahintsModal.close": {
     "defaultMessage": "關閉"
   },
-  "goosehintsModal.developer": {
+  "luminahintsModal.developer": {
     "defaultMessage": "開發者"
   },
-  "goosehintsModal.dialogDescription": {
+  "luminahintsModal.dialogDescription": {
     "defaultMessage": "提供有關您專案的額外內容，以改善與 Lumina 的溝通"
   },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "設定專案提示 (.goosehints)"
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "設定專案提示 (.luminahints)"
   },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": "讀取 .goosehints 檔案時發生錯誤：{error}"
+  "luminahintsModal.errorReading": {
+    "defaultMessage": "讀取 .luminahints 檔案時發生錯誤：{error}"
   },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": "無法存取 .goosehints 檔案"
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": "無法存取 .luminahints 檔案"
   },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": "無法儲存 .goosehints 檔案"
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": "無法儲存 .luminahints 檔案"
   },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "正在於此處建立新的 .goosehints 檔案：{filePath}"
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "正在於此處建立新的 .luminahints 檔案：{filePath}"
   },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": "在此處找到 .goosehints 檔案：{filePath}"
+  "luminahintsModal.fileFound": {
+    "defaultMessage": "在此處找到 .luminahints 檔案：{filePath}"
   },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints 是一個文字檔，用於提供有關您專案的額外內容，並改善與 Lumina 的溝通。"
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints 是一個文字檔，用於提供有關您專案的額外內容，並改善與 Lumina 的溝通。"
   },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "請確認擴充功能頁面中已啟用 {bold} 擴充功能。使用 .goosehints 需要此擴充功能。您需要重新啟動工作階段，.goosehints 的更新才會生效。"
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "請確認擴充功能頁面中已啟用 {bold} 擴充功能。使用 .luminahints 需要此擴充功能。您需要重新啟動工作階段，.luminahints 的更新才會生效。"
   },
-  "goosehintsModal.helpText3": {
+  "luminahintsModal.helpText3": {
     "defaultMessage": "如需更多資訊，請參閱 {link}。"
   },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": "使用 .goosehints"
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": "使用 .luminahints"
   },
-  "goosehintsModal.placeholder": {
+  "luminahintsModal.placeholder": {
     "defaultMessage": "在此輸入專案提示…"
   },
-  "goosehintsModal.save": {
+  "luminahintsModal.save": {
     "defaultMessage": "儲存"
   },
-  "goosehintsModal.savedSuccessfully": {
+  "luminahintsModal.savedSuccessfully": {
     "defaultMessage": "已成功儲存"
   },
-  "goosehintsModal.saving": {
+  "luminahintsModal.saving": {
     "defaultMessage": "正在儲存…"
   },
-  "goosehintsSection.configure": {
+  "luminahintsSection.configure": {
     "defaultMessage": "設定"
   },
-  "goosehintsSection.description": {
-    "defaultMessage": "設定您專案的 .goosehints 檔案，為 Lumina 提供額外內容"
+  "luminahintsSection.description": {
+    "defaultMessage": "設定您專案的 .luminahints 檔案，為 Lumina 提供額外內容"
   },
-  "goosehintsSection.title": {
-    "defaultMessage": "專案提示 (.goosehints)"
+  "luminahintsSection.title": {
+    "defaultMessage": "專案提示 (.luminahints)"
   },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "詢問 Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1422,10 +1422,10 @@
     "defaultMessage": "取消"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "貼上以「goose://recipe?config=」開頭的食譜深層連結"
+    "defaultMessage": "貼上以「lumina://recipe?config=」開頭的食譜深層連結"
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "在此貼上您的 goose://recipe?config=… 深層連結"
+    "defaultMessage": "在此貼上您的 lumina://recipe?config=… 深層連結"
   },
   "importRecipeForm.example": {
     "defaultMessage": "範例"
@@ -1700,32 +1700,29 @@
   "launcher.placeholder": {
     "defaultMessage": "向 Lumina 詢問任何問題…"
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina 正在壓縮對話…"
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina 正在處理…"
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "正在載入對話…"
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "正在重新啟動工作階段…"
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina 正在處理…"
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina 正在思考…"
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina 正在等待…"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "要刪除此模型嗎？您之後可以重新下載。"
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "下載並管理本機 LLM 模型，無需 API 金鑰即可進行推論。在 HuggingFace 搜尋 GGUF 或 MLX 模型，或使用下方的精選推薦。"
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "關閉"
@@ -1753,9 +1750,6 @@
   },
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "精選模型"
-  },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "登入以在搜尋與下載模型時提高速率上限，並存取私人或受限的 Hugging Face 儲存庫。"
   },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
@@ -2390,20 +2384,11 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "開始使用"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "瞭解更多"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "本機模型已就緒"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "匿名使用資料有助於改善 Lumina。我們絕不會收集您的對話、程式碼或個人資料。"
-  },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "隱私權"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "分享匿名使用資料"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "預設值"
@@ -2548,36 +2533,6 @@
   },
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "將傳遞給提供者的隱藏指示，用於引導並為您的回應補充背景資訊。"
-  },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "錯誤類型（例如「rate_limit」、「auth」－不含詳細資料）"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "擴充功能與工具使用次數（僅名稱）"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "作業系統、版本與架構"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "所使用的提供者與模型"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "工作階段指標（持續時間、互動次數、權杖用量）"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Lumina 版本與安裝方式"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "匿名使用資料有助於我們瞭解 Lumina 的使用情況並找出可改善的方面。"
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "我們絕不會收集您的對話、程式碼、工具引數、錯誤訊息或任何個人資料。您隨時可以在「設定」中變更此設定。"
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "隱私權詳細資料"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "我們收集的內容："
   },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "正在載入訊息... ({renderedCount}/{totalCount})"
@@ -3429,7 +3384,7 @@
     "defaultMessage": "深層連結"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "在此貼上 goose://recipe 連結…"
+    "defaultMessage": "在此貼上 lumina://recipe 連結…"
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "編輯排程"
@@ -3441,7 +3396,7 @@
     "defaultMessage": "無法讀取所選檔案。"
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "無效的深層連結。請使用 goose://recipe 連結。"
+    "defaultMessage": "無效的深層連結。請使用 lumina://recipe 連結。"
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "無效的檔案類型：請選擇 YAML 檔案（.yaml 或 .yml）"
@@ -3758,9 +3713,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "在新視窗中開啟"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "分享加密的 Nostr 連結"
-  },
   "sessions.cancel": {
     "defaultMessage": "取消"
   },
@@ -3769,9 +3721,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "檢視並搜尋您與 Lumina 過去的對話。{shortcut} 即可搜尋。"
-  },
-  "sessions.close": {
-    "defaultMessage": "關閉"
   },
   "sessions.delete.message": {
     "defaultMessage": "您確定要刪除工作階段「{name}」嗎？此動作無法復原。"
@@ -3800,21 +3749,6 @@
   "sessions.import": {
     "defaultMessage": "匯入工作階段"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "匯入連結"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "貼上 Lumina Nostr 分享連結，以擷取、解密並匯入該工作階段。"
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "匯入 Nostr 工作階段"
-  },
-  "sessions.importing": {
-    "defaultMessage": "正在匯入…"
-  },
   "sessions.loadingMore": {
     "defaultMessage": "正在載入更多工作階段…"
   },
@@ -3832,15 +3766,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "搜尋記錄..."
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "任何持有此連結的人都能擷取並解密該工作階段。請將其視為機密。"
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "加密的 Nostr 分享連結"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "已複製到剪貼簿"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "無法刪除工作階段「{name}」：{error}"
@@ -3862,12 +3787,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "已成功匯入工作階段"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "已建立加密的 Nostr 分享連結"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "無法建立 Nostr 分享連結：{error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "無法更新工作階段描述：{error}"
@@ -4034,12 +3953,6 @@
   "settings.theme.title": {
     "defaultMessage": "佈景主題"
   },
-  "settings.updates.description": {
-    "defaultMessage": "檢查並安裝更新，讓 Lumina 保持最佳運作狀態"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "更新"
-  },
   "settings.version.title": {
     "defaultMessage": "版本"
   },
@@ -4104,7 +4017,7 @@
     "defaultMessage": "找不到符合的技能"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "技能會從 ~/.config/agents/skills/、.goose/skills/ 或其他支援目錄中的 SKILL.md 檔案載入。"
+    "defaultMessage": "技能會從 ~/.config/agents/skills/、.lumina/skills/ 或其他支援目錄中的 SKILL.md 檔案載入。"
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "未安裝任何技能"
@@ -4364,45 +4277,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "使用其他提供者"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "您願意分享匿名使用資料以協助改善 Lumina 嗎？我們絕不會收集您的對話、程式碼或個人資料。"
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "協助改善 Lumina"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "瞭解詳情"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "好的，分享匿名使用資料"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "不用了，謝謝"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "設定錯誤"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "控制您的資料使用方式"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "瞭解詳情"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "無法載入遙測設定。"
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "隱私"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "分享匿名使用統計資料以協助改善 Lumina。"
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "匿名使用資料"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "無法更新遙測設定。"
-  },
   "themeSelector.dark": {
     "defaultMessage": "深色"
   },
@@ -4472,83 +4346,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "允許 {toolName}？"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina 想要呼叫 {toolName}。要允許嗎？"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "Lumina 會在背景下載更新，並於您下次結束或重新啟動時安裝。"
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "已透過 GOOSE_DISABLE_AUTO_DOWNLOAD 環境變數停用自動下載。"
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "已停用自動下載。請點選「立即下載」以手動下載。"
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "無需手動安裝。"
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "檢查更新"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "正在檢查更新..."
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "目前版本"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "停用自動下載更新"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "啟用後，Lumina 會通知您有新版本，但不會自動下載。"
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "立即下載"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "更新已下載完成並可供安裝！"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "正在下載更新... {percent}%"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "正在下載更新..."
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "安裝並重新啟動"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "請點選「安裝並重新啟動」以立即更新。"
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "您執行的是最新版本！"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "載入中..."
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "下載後，您需要手動安裝更新。"
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "此更新方式需要手動安裝。"
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ 更新已就緒。重新啟動 Lumina 即可完成安裝，或在您完成後結束。"
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ 更新已就緒！請點選「安裝並重新啟動」以取得安裝指示。"
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "（為最新版本）"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "有可用的更新！"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ 有可用的 {version}"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "{version} 版本已可使用"
   },
   "userMessage.cancel": {
     "defaultMessage": "取消"

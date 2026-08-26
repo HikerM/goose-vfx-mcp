@@ -8,6 +8,10 @@ const { execFileSync } = require('child_process');
 // Paths
 const srcBinDir = path.join(__dirname, '..', 'src', 'bin');
 const platformWinDir = path.join(__dirname, '..', 'src', 'platform', 'windows', 'bin');
+const repositoryRoot = path.resolve(__dirname, '..', '..', '..');
+const backendBinaryPath = path.join(srcBinDir, 'lumina.exe');
+const backendBuildStampPath = path.join(srcBinDir, 'lumina-backend-build.json');
+const acpSchemaPath = path.join(repositoryRoot, 'crates', 'lumina', 'acp-schema.json');
 const uvVersion = '0.11.11';
 const uvDownloadUrl = `https://github.com/astral-sh/uv/releases/download/${uvVersion}/uv-x86_64-pc-windows-msvc.zip`;
 const uvBinaryHashes = {
@@ -20,9 +24,11 @@ const windowsCudaRuntimeFiles = [
   'cudart64_12.dll',
   'curand64_10.dll',
 ];
+const allowedWindowsExecutables = new Set(['lumina.exe', 'uv.exe', 'uvx.exe']);
+const backendInputExtensions = new Set(['.json', '.rs', '.toml', '.yaml', '.yml']);
 
 // Platform-specific file patterns
-const windowsFiles = ['*.exe', '*.dll', '*.cmd', 'goose-npm/**/*'];
+const windowsFiles = ['*.exe', '*.dll', '*.cmd', 'lumina-npm/**/*'];
 
 // Helper function to check if file matches patterns
 function matchesPattern(filename, patterns) {
@@ -57,6 +63,82 @@ function sha256(filePath) {
 
 function hasExpectedHash(filePath, expectedHash) {
   return fs.existsSync(filePath) && sha256(filePath) === expectedHash;
+}
+
+function collectBackendInputFiles(targetPath, collected) {
+  const stat = fs.statSync(targetPath);
+  if (stat.isFile()) {
+    if (backendInputExtensions.has(path.extname(targetPath).toLowerCase())) {
+      collected.push(targetPath);
+    }
+    return;
+  }
+
+  for (const entry of fs.readdirSync(targetPath, { withFileTypes: true })) {
+    if (entry.name === 'target') continue;
+    collectBackendInputFiles(path.join(targetPath, entry.name), collected);
+  }
+}
+
+function backendInputsSha256() {
+  const files = [path.join(repositoryRoot, 'Cargo.toml'), path.join(repositoryRoot, 'Cargo.lock')];
+  for (const root of ['crates', 'vendor']) {
+    collectBackendInputFiles(path.join(repositoryRoot, root), files);
+  }
+  files.sort((left, right) => left.localeCompare(right, 'en'));
+
+  const hash = crypto.createHash('sha256');
+  for (const filePath of files) {
+    const relativePath = path.relative(repositoryRoot, filePath).replaceAll('\\', '/');
+    hash.update(relativePath);
+    hash.update('\0');
+    hash.update(fs.readFileSync(filePath));
+    hash.update('\0');
+  }
+  return hash.digest('hex');
+}
+
+function expectedBackendBuildStamp() {
+  if (!fs.existsSync(backendBinaryPath)) {
+    throw new Error(`Lumina backend binary is missing: ${backendBinaryPath}`);
+  }
+  if (!fs.existsSync(acpSchemaPath)) {
+    throw new Error(`Lumina ACP schema is missing: ${acpSchemaPath}`);
+  }
+
+  const packageVersion = require('../package.json').version;
+  return {
+    schemaVersion: 1,
+    product: 'Lumina',
+    packageVersion,
+    binarySha256: sha256(backendBinaryPath),
+    backendInputsSha256: backendInputsSha256(),
+    acpSchemaSha256: sha256(acpSchemaPath),
+  };
+}
+
+function writeOrValidateBackendBuildStamp() {
+  const expected = expectedBackendBuildStamp();
+  if (process.env.LUMINA_DESKTOP_WRITE_BACKEND_STAMP === '1') {
+    fs.writeFileSync(backendBuildStampPath, `${JSON.stringify(expected, null, 2)}\n`, 'utf8');
+    console.log('Wrote Lumina backend build stamp');
+    return;
+  }
+
+  if (!fs.existsSync(backendBuildStampPath)) {
+    throw new Error(
+      'Lumina backend build stamp is missing. Run scripts/build-windows.ps1 before packaging.'
+    );
+  }
+  const actual = JSON.parse(fs.readFileSync(backendBuildStampPath, 'utf8'));
+  for (const [key, value] of Object.entries(expected)) {
+    if (actual[key] !== value) {
+      throw new Error(
+        `Lumina backend build stamp mismatch for ${key}. Rebuild the backend before packaging.`
+      );
+    }
+  }
+  console.log('Verified Lumina backend binary and ACP schema are current');
 }
 
 function downloadFile(url, destPath, redirectsRemaining = 5) {
@@ -120,7 +202,7 @@ async function ensureWindowsUvBinaries() {
     return;
   }
 
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'goose-uv-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lumina-uv-'));
   const zipPath = path.join(tmpDir, 'uv.zip');
   const extractDir = path.join(tmpDir, 'extract');
   fs.mkdirSync(extractDir, { recursive: true });
@@ -152,7 +234,7 @@ async function ensureWindowsUvBinaries() {
 }
 
 function syncWindowsCudaRuntimeBinaries() {
-  const includeCuda = process.env.GOOSE_DESKTOP_CUDA === '1';
+  const includeCuda = process.env.LUMINA_DESKTOP_CUDA === '1';
 
   if (!includeCuda) {
     for (const name of windowsCudaRuntimeFiles) {
@@ -167,7 +249,7 @@ function syncWindowsCudaRuntimeBinaries() {
 
   const cudaPath = process.env.CUDA_PATH;
   if (!cudaPath) {
-    throw new Error('CUDA_PATH is required when GOOSE_DESKTOP_CUDA=1');
+    throw new Error('CUDA_PATH is required when LUMINA_DESKTOP_CUDA=1');
   }
 
   const cudaBinCandidates = [path.join(cudaPath, 'bin', 'x64'), path.join(cudaPath, 'bin')];
@@ -199,12 +281,11 @@ function cleanBinDirectory(targetPlatform) {
 
   files.forEach((file) => {
     const filePath = path.join(srcBinDir, file.name);
+    const normalizedName = file.name.toLowerCase();
 
     if (targetPlatform === 'darwin' || targetPlatform === 'linux') {
-      const isLegacyBackendBinary = file.name === 'goosed';
-      if (isLegacyBackendBinary || matchesPattern(file.name, windowsFiles)) {
-        const fileType = isLegacyBackendBinary ? 'legacy backend binary' : 'Windows file';
-        console.log(`Removing ${fileType}: ${file.name}`);
+      if (matchesPattern(file.name, windowsFiles)) {
+        console.log(`Removing Windows file: ${file.name}`);
         if (file.isDirectory()) {
           fs.rmSync(filePath, { recursive: true, force: true });
         } else {
@@ -212,6 +293,16 @@ function cleanBinDirectory(targetPlatform) {
         }
       }
     } else if (targetPlatform === 'win32') {
+      if (
+        file.isFile() &&
+        path.extname(normalizedName) === '.exe' &&
+        !allowedWindowsExecutables.has(normalizedName)
+      ) {
+        console.log(`Removing unapproved Windows executable: ${file.name}`);
+        fs.unlinkSync(filePath);
+        return;
+      }
+
       // For Windows, remove macOS-specific files (keep only Windows files and common files)
       if (
         !matchesPattern(file.name, windowsFiles) &&
@@ -277,6 +368,7 @@ async function copyPlatformFiles(targetPlatform) {
 
     await ensureWindowsUvBinaries();
     syncWindowsCudaRuntimeBinaries();
+    writeOrValidateBackendBuildStamp();
   }
 }
 

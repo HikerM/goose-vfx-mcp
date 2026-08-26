@@ -138,14 +138,14 @@ function getProviders(): ProviderConfig[] {
       models: ['gpt-4.1'],
       available: () =>
         hasEnv('GITHUB_COPILOT_TOKEN') ||
-        hasFile(path.join(os.homedir(), '.config/goose/github_copilot_token.json')),
+        hasFile(path.join(os.homedir(), '.config/lumina/github_copilot_token.json')),
     },
     {
       provider: 'chatgpt_codex',
       models: ['gpt-5.4'],
       available: () =>
         hasEnv('CHATGPT_CODEX_TOKEN') ||
-        hasFile(path.join(os.homedir(), '.config/goose/chatgpt_codex/tokens.json')),
+        hasFile(path.join(os.homedir(), '.config/lumina/chatgpt_codex/tokens.json')),
     },
     {
       provider: 'claude-code',
@@ -210,12 +210,12 @@ function shouldSkipProvider(provider: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Build goose binary
+// Build lumina binary
 // ---------------------------------------------------------------------------
 
-export function buildGoose(): string {
+export function buildLumina(): string {
   if (!process.env.SKIP_BUILD) {
-    console.error('Building goose...');
+    console.error('Building lumina...');
     if (process.platform === 'win32') {
       const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
       execFileSync('powershell.exe', [
@@ -227,19 +227,19 @@ export function buildGoose(): string {
         path.join(repoRoot, 'bin', 'cargo.ps1'),
         'build',
         '--bin',
-        'goose',
+        'lumina',
       ], {
         stdio: 'inherit',
       });
     } else {
-      execSync('cargo build --bin goose', { stdio: 'inherit' });
+      execSync('cargo build --bin lumina', { stdio: 'inherit' });
     }
     console.error('');
   } else {
     console.error('Skipping build (SKIP_BUILD is set)...');
     console.error('');
   }
-  const binaryName = process.platform === 'win32' ? 'goose.exe' : 'goose';
+  const binaryName = process.platform === 'win32' ? 'lumina.exe' : 'lumina';
   return path.resolve(process.cwd(), '..', '..', 'target', 'debug', binaryName);
 }
 
@@ -331,7 +331,7 @@ function registerTests(label: string, cases: TestCase[], fn: ProviderTestFn): vo
   }
 
   if (flaky.length > 0) {
-    // Use a longer vitest timeout (90s) so the internal runGoose timeout (55s)
+    // Use a longer vitest timeout (90s) so the internal runLumina timeout (55s)
     // fires first — that rejection is catchable and the test passes as "allowed".
     test.each(flaky)(
       `${label} — $provider / $model (flaky)`,
@@ -373,11 +373,11 @@ export function providerTest(cases: TestCase[]) {
 }
 
 // ---------------------------------------------------------------------------
-// Utility: run goose binary and capture output
+// Utility: run lumina binary and capture output
 // ---------------------------------------------------------------------------
 
-export function runGoose(
-  gooseBin: string,
+export function runLumina(
+  luminaBin: string,
   cwd: string,
   prompt: string,
   builtins: string,
@@ -387,7 +387,7 @@ export function runGoose(
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const child: ChildProcess = spawn(
-      gooseBin,
+      luminaBin,
       ['run', '--text', prompt, '--with-builtin', builtins],
       {
         cwd,
@@ -403,7 +403,7 @@ export function runGoose(
       if (!settled) {
         settled = true;
         child.kill('SIGKILL');
-        reject(new Error(`goose timed out after ${timeoutMs}ms\n\nPartial output:\n${output}`));
+        reject(new Error(`lumina timed out after ${timeoutMs}ms\n\nPartial output:\n${output}`));
       }
     }, timeoutMs);
 

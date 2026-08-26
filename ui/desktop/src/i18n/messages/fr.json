@@ -1197,7 +1197,7 @@
     "defaultMessage": "Clé secrète"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "La clé secrète configurée sur le serveur Lumina (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "La clé secrète configurée sur le serveur Lumina (LUMINA_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "Saisissez la clé secrète du serveur"
@@ -1226,67 +1226,67 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "Se connecter à un serveur Lumina exécuté ailleurs (nécessite le redémarrage de l'application)"
   },
-  "goosehintsModal.close": {
+  "luminahintsModal.close": {
     "defaultMessage": "Fermer"
   },
-  "goosehintsModal.developer": {
+  "luminahintsModal.developer": {
     "defaultMessage": "Développeur"
   },
-  "goosehintsModal.dialogDescription": {
+  "luminahintsModal.dialogDescription": {
     "defaultMessage": "Fournissez un contexte supplémentaire sur votre projet pour améliorer la communication avec Lumina"
   },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "Configurer les indices du projet (.goosehints)"
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "Configurer les indices du projet (.luminahints)"
   },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": "Erreur lors de la lecture du fichier .goosehints : {error}"
+  "luminahintsModal.errorReading": {
+    "defaultMessage": "Erreur lors de la lecture du fichier .luminahints : {error}"
   },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": "Échec de l'accès au fichier .goosehints"
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": "Échec de l'accès au fichier .luminahints"
   },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": "Échec de l'enregistrement du fichier .goosehints"
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": "Échec de l'enregistrement du fichier .luminahints"
   },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "Création d'un nouveau fichier .goosehints à l'emplacement : {filePath}"
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "Création d'un nouveau fichier .luminahints à l'emplacement : {filePath}"
   },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": "Fichier .goosehints trouvé à l'emplacement : {filePath}"
+  "luminahintsModal.fileFound": {
+    "defaultMessage": "Fichier .luminahints trouvé à l'emplacement : {filePath}"
   },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints est un fichier texte utilisé pour fournir un contexte supplémentaire sur votre projet et améliorer la communication avec Lumina."
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints est un fichier texte utilisé pour fournir un contexte supplémentaire sur votre projet et améliorer la communication avec Lumina."
   },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "Veuillez vous assurer que l'extension {bold} est activée sur la page des extensions. Cette extension est requise pour utiliser .goosehints. Vous devrez redémarrer votre session pour que les mises à jour de .goosehints prennent effet."
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "Veuillez vous assurer que l'extension {bold} est activée sur la page des extensions. Cette extension est requise pour utiliser .luminahints. Vous devrez redémarrer votre session pour que les mises à jour de .luminahints prennent effet."
   },
-  "goosehintsModal.helpText3": {
+  "luminahintsModal.helpText3": {
     "defaultMessage": "Consultez {link} pour plus d'informations."
   },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": "utilisation de .goosehints"
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": "utilisation de .luminahints"
   },
-  "goosehintsModal.placeholder": {
+  "luminahintsModal.placeholder": {
     "defaultMessage": "Saisissez les indices du projet ici..."
   },
-  "goosehintsModal.save": {
+  "luminahintsModal.save": {
     "defaultMessage": "Enregistrer"
   },
-  "goosehintsModal.savedSuccessfully": {
+  "luminahintsModal.savedSuccessfully": {
     "defaultMessage": "Enregistré avec succès"
   },
-  "goosehintsModal.saving": {
+  "luminahintsModal.saving": {
     "defaultMessage": "Enregistrement..."
   },
-  "goosehintsSection.configure": {
+  "luminahintsSection.configure": {
     "defaultMessage": "Configurer"
   },
-  "goosehintsSection.description": {
-    "defaultMessage": "Configurez le fichier .goosehints de votre projet pour fournir un contexte supplémentaire à Lumina"
+  "luminahintsSection.description": {
+    "defaultMessage": "Configurez le fichier .luminahints de votre projet pour fournir un contexte supplémentaire à Lumina"
   },
-  "goosehintsSection.title": {
-    "defaultMessage": "Indices du projet (.goosehints)"
+  "luminahintsSection.title": {
+    "defaultMessage": "Indices du projet (.luminahints)"
   },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "Demander à Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1422,10 +1422,10 @@
     "defaultMessage": "Annuler"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "Collez un lien profond de recette commençant par « goose://recipe?config= »"
+    "defaultMessage": "Collez un lien profond de recette commençant par « lumina://recipe?config= »"
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "Collez votre lien profond goose://recipe?config=... ici"
+    "defaultMessage": "Collez votre lien profond lumina://recipe?config=... ici"
   },
   "importRecipeForm.example": {
     "defaultMessage": "exemple"
@@ -1700,32 +1700,29 @@
   "launcher.placeholder": {
     "defaultMessage": "Demandez n'importe quoi à Lumina..."
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina compacte la conversation..."
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina y travaille…"
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "chargement de la conversation..."
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "redémarrage de la session..."
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina y travaille…"
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina réfléchit…"
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina patiente…"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "Supprimer ce modèle ? Vous pourrez le retélécharger plus tard."
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "Téléchargez et gérez des modèles LLM locaux pour l'inférence sans clés API. Recherchez des modèles GGUF ou MLX sur HuggingFace, ou utilisez les sélections présentées ci-dessous."
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "Ignorer"
@@ -1753,9 +1750,6 @@
   },
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "Modèles en vedette"
-  },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "Connectez-vous pour augmenter les limites de débit lors de la recherche et du téléchargement de modèles, et pour accéder aux dépôts Hugging Face privés ou à accès restreint."
   },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
@@ -2390,20 +2384,11 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "Commencer"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "En savoir plus"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "Modèle local prêt"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "Les données d'utilisation anonymes contribuent à améliorer Lumina. Nous ne collectons jamais vos conversations, votre code ni vos données personnelles."
-  },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "Confidentialité"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "Partager des données d'utilisation anonymes"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "Valeur par défaut"
@@ -2548,36 +2533,6 @@
   },
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "Instructions masquées qui seront transmises au fournisseur pour aider à orienter et à contextualiser vos réponses."
-  },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "Types d'erreurs (par ex. « rate_limit », « auth » - sans détails)"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "Nombre d'extensions et d'utilisations des outils (noms uniquement)"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "Système d'exploitation, version et architecture"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "Fournisseur et modèle utilisés"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "Indicateurs de session (durée, nombre d'interactions, utilisation des jetons)"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Version de Lumina et méthode d'installation"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "Les données d'utilisation anonymes nous aident à comprendre comment Lumina est utilisé et à identifier les points à améliorer."
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "Nous ne collectons jamais vos conversations, votre code, les arguments des outils, les messages d'erreur ni aucune donnée personnelle. Vous pouvez modifier ce paramètre à tout moment dans les Paramètres."
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "Détails sur la confidentialité"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "Ce que nous collectons :"
   },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "Chargement des messages... ({renderedCount}/{totalCount})"
@@ -3429,7 +3384,7 @@
     "defaultMessage": "Lien profond"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "Collez le lien goose://recipe ici..."
+    "defaultMessage": "Collez le lien lumina://recipe ici..."
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "Modifier la planification"
@@ -3441,7 +3396,7 @@
     "defaultMessage": "Échec de la lecture du fichier sélectionné."
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "Lien profond invalide. Veuillez utiliser un lien goose://recipe."
+    "defaultMessage": "Lien profond invalide. Veuillez utiliser un lien lumina://recipe."
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "Type de fichier invalide : veuillez sélectionner un fichier YAML (.yaml ou .yml)"
@@ -3758,9 +3713,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "Ouvrir dans une nouvelle fenêtre"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "Partager un lien Nostr chiffré"
-  },
   "sessions.cancel": {
     "defaultMessage": "Annuler"
   },
@@ -3769,9 +3721,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "Affichez et recherchez vos conversations passées avec Lumina. {shortcut} pour rechercher."
-  },
-  "sessions.close": {
-    "defaultMessage": "Fermer"
   },
   "sessions.delete.message": {
     "defaultMessage": "Voulez-vous vraiment supprimer la session « {name} » ? Cette action est irréversible."
@@ -3800,21 +3749,6 @@
   "sessions.import": {
     "defaultMessage": "Importer une session"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "Importer un lien"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "Collez un lien de partage Lumina Nostr pour récupérer, déchiffrer et importer la session."
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "Importer une session Nostr"
-  },
-  "sessions.importing": {
-    "defaultMessage": "Importation..."
-  },
   "sessions.loadingMore": {
     "defaultMessage": "Chargement de sessions supplémentaires..."
   },
@@ -3832,15 +3766,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "Rechercher dans l'historique..."
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "Toute personne disposant de ce lien peut récupérer et déchiffrer la session. Traitez-le comme un secret."
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "Lien de partage Nostr chiffré"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "Copié dans le presse-papiers"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "Échec de la suppression de la session « {name} » : {error}"
@@ -3862,12 +3787,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "Session importée avec succès"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "Lien de partage Nostr chiffré créé"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "Échec de la création du lien de partage Nostr : {error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "Échec de la mise à jour de la description de la session : {error}"
@@ -4034,12 +3953,6 @@
   "settings.theme.title": {
     "defaultMessage": "Thème"
   },
-  "settings.updates.description": {
-    "defaultMessage": "Recherchez et installez les mises à jour pour que Lumina fonctionne de manière optimale"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "Mises à jour"
-  },
   "settings.version.title": {
     "defaultMessage": "Version"
   },
@@ -4104,7 +4017,7 @@
     "defaultMessage": "Aucune compétence correspondante trouvée"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "Les compétences sont chargées à partir des fichiers SKILL.md dans ~/.config/agents/skills/, .goose/skills/ ou d'autres répertoires pris en charge."
+    "defaultMessage": "Les compétences sont chargées à partir des fichiers SKILL.md dans ~/.config/agents/skills/, .lumina/skills/ ou d'autres répertoires pris en charge."
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "Aucune compétence installée"
@@ -4364,45 +4277,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "Utiliser un autre fournisseur"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "Souhaitez-vous partager des données d'utilisation anonymes pour aider à améliorer Lumina ? Nous ne collectons jamais vos conversations, votre code ou vos données personnelles."
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Aidez à améliorer Lumina"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "En savoir plus"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "Oui, partager des données d'utilisation anonymes"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "Non merci"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "Erreur de configuration"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "Contrôlez la manière dont vos données sont utilisées"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "En savoir plus"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "Échec du chargement des paramètres de télémétrie."
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "Confidentialité"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "Aidez à améliorer Lumina en partageant des statistiques d'utilisation anonymes."
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "Données d'utilisation anonymes"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "Échec de la mise à jour des paramètres de télémétrie."
-  },
   "themeSelector.dark": {
     "defaultMessage": "Sombre"
   },
@@ -4472,83 +4346,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "Autoriser {toolName} ?"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina souhaite appeler {toolName}. Autoriser ?"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "Lumina téléchargera la mise à jour en arrière-plan et l'installera lors de votre prochaine fermeture ou redémarrage."
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "Les téléchargements automatiques sont désactivés via la variable d'environnement GOOSE_DISABLE_AUTO_DOWNLOAD."
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "Le téléchargement automatique est désactivé. Cliquez sur « Télécharger maintenant » pour télécharger manuellement."
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "Aucune installation manuelle n'est nécessaire."
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "Rechercher des mises à jour"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "Recherche de mises à jour..."
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "Version actuelle"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "Désactiver les téléchargements automatiques des mises à jour"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "Lorsque cette option est activée, Lumina vous informera des nouvelles versions mais ne les téléchargera pas automatiquement."
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "Télécharger maintenant"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "Mise à jour téléchargée et prête à être installée !"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "Téléchargement de la mise à jour... {percent} %"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "Téléchargement de la mise à jour..."
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "Installer et redémarrer"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "Cliquez sur « Installer et redémarrer » pour mettre à jour maintenant."
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "Vous utilisez la dernière version !"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "Chargement..."
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "Après le téléchargement, vous devrez installer la mise à jour manuellement."
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "Installation manuelle requise pour cette méthode de mise à jour."
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ La mise à jour est prête. Redémarrez Lumina pour terminer son installation, ou quittez lorsque vous avez terminé."
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ La mise à jour est prête ! Cliquez sur « Installer et redémarrer » pour obtenir les instructions d'installation."
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "(à jour)"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "Mise à jour disponible !"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ {version} disponible"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "La version {version} est disponible"
   },
   "userMessage.cancel": {
     "defaultMessage": "Annuler"

@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { McpManagedSummary, McpPlatformErrorEnvelope } from '@aaif/goose-sdk';
+import type { McpManagedSummary, McpPlatformErrorEnvelope } from '@hikerm/lumina-sdk';
 import { ProfilesTab, redactProfileApplyReview } from '../ProfilesTab';
 import {
   McpPlatformServiceError,
@@ -471,7 +471,7 @@ describe('ProfilesTab', () => {
 
   it('shows unavailable only when the profile RPC returns an explicit phase error', async () => {
     vi.mocked(listMcpProfiles).mockRejectedValue(
-      phaseUnavailableError('goose.mcpProfileList_unstable')
+      phaseUnavailableError('lumina.mcpProfileList_unstable')
     );
 
     renderProfilesTab();
@@ -479,7 +479,7 @@ describe('ProfilesTab', () => {
     expect(
       (await screen.findAllByText('Profiles are not available in this phase')).length
     ).toBeGreaterThan(0);
-    expect(screen.getAllByText('goose.mcpProfileList_unstable-ref').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('lumina.mcpProfileList_unstable-ref').length).toBeGreaterThan(0);
   });
 
   it('shows a retryable error instead of unavailable for unknown profile list failures and recovers on retry', async () => {
@@ -1309,7 +1309,7 @@ describe('ProfilesTab', () => {
     vi.mocked(listMcpProfiles).mockResolvedValue({ items: [] });
     vi.mocked(createMcpProfileDraft).mockResolvedValue(profileDraft);
     vi.mocked(recommendMcpProfileModels).mockRejectedValue(
-      phaseUnavailableError('goose.mcpProfileModelRecommend_unstable')
+      phaseUnavailableError('lumina.mcpProfileModelRecommend_unstable')
     );
     const user = userEvent.setup();
 

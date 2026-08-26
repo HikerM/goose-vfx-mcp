@@ -172,11 +172,11 @@ jobs:
           fi
 
           if [ "${{ matrix.variant }}" = "musl" ]; then
-            cargo build --release --target ${TARGET} -p goose-cli --bin goose \
+            cargo build --release --target ${TARGET} -p lumina-cli --bin lumina \
               --no-default-features \
               --features portable-default
           else
-            cargo build --release --target ${TARGET} -p goose-cli "${FEATURE_ARGS[@]}"
+            cargo build --release --target ${TARGET} -p lumina-cli "${FEATURE_ARGS[@]}"
           fi
 
       - name: Build CLI (manylinux container)
@@ -198,7 +198,7 @@ jobs:
           rustup toolchain install "$RUST_CHANNEL" --profile minimal \
             --component rustc,cargo --target "$TARGET"
           rustup show
-          cargo build --release --target "$TARGET" -p goose-cli
+          cargo build --release --target "$TARGET" -p lumina-cli
 
       - name: Setup Rust (Windows)
         if: matrix.platform == 'windows'
@@ -241,19 +241,19 @@ jobs:
         run: |
           Write-Output "Building Windows CLI executable..."
           if ("${{ matrix.variant }}" -eq "cuda") {
-            cargo build --release --target x86_64-pc-windows-msvc -p goose-cli --features cuda
+            cargo build --release --target x86_64-pc-windows-msvc -p lumina-cli --features cuda
           } else {
-            cargo build --release --target x86_64-pc-windows-msvc -p goose-cli
+            cargo build --release --target x86_64-pc-windows-msvc -p lumina-cli
           }
 
-          if (-not (Test-Path "./target/x86_64-pc-windows-msvc/release/goose.exe")) {
+          if (-not (Test-Path "./target/x86_64-pc-windows-msvc/release/lumina.exe")) {
             Write-Error "Windows CLI binary not found."
             Get-ChildItem ./target/x86_64-pc-windows-msvc/release/ -ErrorAction SilentlyContinue
             exit 1
           }
 
           Write-Output "Windows CLI binary found."
-          Get-Item ./target/x86_64-pc-windows-msvc/release/goose.exe
+          Get-Item ./target/x86_64-pc-windows-msvc/release/lumina.exe
 
       - name: Package CLI (Linux/macOS)
         if: matrix.platform != 'windows'
@@ -269,16 +269,16 @@ jobs:
           fi
 
           # Create a directory for the package contents
-          mkdir -p "target/${TARGET}/release/goose-package"
+          mkdir -p "target/${TARGET}/release/lumina-package"
 
-          # Copy the goose binary
-          cp "target/${TARGET}/release/goose" "target/${TARGET}/release/goose-package/"
+          # Copy the lumina binary
+          cp "target/${TARGET}/release/lumina" "target/${TARGET}/release/lumina-package/"
 
           cd "target/${TARGET}/release"
-          tar -cjf "goose-${TARGET}${VARIANT_SUFFIX}.tar.bz2" -C goose-package .
-          tar -czf "goose-${TARGET}${VARIANT_SUFFIX}.tar.gz" -C goose-package .
-          echo "ARTIFACT_BZ2=target/${TARGET}/release/goose-${TARGET}${VARIANT_SUFFIX}.tar.bz2" >> $GITHUB_ENV
-          echo "ARTIFACT_GZ=target/${TARGET}/release/goose-${TARGET}${VARIANT_SUFFIX}.tar.gz" >> $GITHUB_ENV
+          tar -cjf "lumina-${TARGET}${VARIANT_SUFFIX}.tar.bz2" -C lumina-package .
+          tar -czf "lumina-${TARGET}${VARIANT_SUFFIX}.tar.gz" -C lumina-package .
+          echo "ARTIFACT_BZ2=target/${TARGET}/release/lumina-${TARGET}${VARIANT_SUFFIX}.tar.bz2" >> $GITHUB_ENV
+          echo "ARTIFACT_GZ=target/${TARGET}/release/lumina-${TARGET}${VARIANT_SUFFIX}.tar.gz" >> $GITHUB_ENV
 
       - name: Package CLI (Windows)
         if: matrix.platform == 'windows'
@@ -290,18 +290,18 @@ jobs:
             VARIANT_SUFFIX="-cuda"
           fi
 
-          mkdir -p "target/${TARGET}/release/goose-package"
+          mkdir -p "target/${TARGET}/release/lumina-package"
 
-          cp "target/${TARGET}/release/goose.exe" "target/${TARGET}/release/goose-package/"
+          cp "target/${TARGET}/release/lumina.exe" "target/${TARGET}/release/lumina-package/"
 
           cd "target/${TARGET}/release"
-          7z a -tzip "goose-${TARGET}${VARIANT_SUFFIX}.zip" goose-package/
-          echo "ARTIFACT_ZIP=target/${TARGET}/release/goose-${TARGET}${VARIANT_SUFFIX}.zip" >> $GITHUB_ENV
+          7z a -tzip "lumina-${TARGET}${VARIANT_SUFFIX}.zip" lumina-package/
+          echo "ARTIFACT_ZIP=target/${TARGET}/release/lumina-${TARGET}${VARIANT_SUFFIX}.zip" >> $GITHUB_ENV
 
       - name: Upload CLI artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: goose-${{ matrix.architecture }}-${{ matrix.target-suffix }}${{ matrix.variant != 'standard' && matrix.variant != 'musl' && format('-{0}', matrix.variant) || '' }}
+          name: lumina-${{ matrix.architecture }}-${{ matrix.target-suffix }}${{ matrix.variant != 'standard' && matrix.variant != 'musl' && format('-{0}', matrix.variant) || '' }}
           path: |
             ${{ env.ARTIFACT_BZ2 }}
             ${{ env.ARTIFACT_GZ }}

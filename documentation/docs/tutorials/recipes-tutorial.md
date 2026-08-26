@@ -1,14 +1,14 @@
 ---
-description: Learn how to create and use goose recipes with this comprehensive tutorial covering prompts, parameters, and MCP servers
+description: Learn how to create and use lumina recipes with this comprehensive tutorial covering prompts, parameters, and MCP servers
 ---
 
 # Recipes
 
-goose recipes are files that contain all the details to allow goose to do one specific task. Since they are contained in just one file, they are easy to share through all the normal ways we share files, including version management systems like git. Let's get started with the simplest recipe possible.
+lumina recipes are files that contain all the details to allow lumina to do one specific task. Since they are contained in just one file, they are easy to share through all the normal ways we share files, including version management systems like git. Let's get started with the simplest recipe possible.
 
 ## The Simplest Recipe
 
-The simplest recipe is basically just a prompt. This might seem not all that useful—after all I can just share my prompt on Slack or email—but it turns out that the most important reason users can't get agents to do what they want is that their prompts are too short and that they don't iterate enough on those prompts. Keeping prompts in a text file helps with both these things. 
+The simplest recipe is basically just a prompt. This might seem not all that useful—after all I can just share my prompt on Slack or email—but it turns out that the most important reason users can't get agents to do what they want is that their prompts are too short and that they don't iterate enough on those prompts. Keeping prompts in a text file helps with both these things.
 
 Here's a recipe that will plan a trip to Europe:
 
@@ -27,14 +27,14 @@ prompt: |
 You can run it from the command line using:
 
 ```sh
-goose run --recipe trip.yaml
+lumina run --recipe trip.yaml
 ```
 
 ## Extensions
 
-goose recipes have a section where you can specify which [extensions](/docs/guides/recipes/recipe-reference#extensions) goose can use during execution. goose will only use the ones you specify. 
+lumina recipes have a section where you can specify which [extensions](/docs/guides/recipes/recipe-reference#extensions) lumina can use during execution. lumina will only use the ones you specify.
 
-Let's say we want to make sure we have good weather during our Europe trip. We can just add a weather extension (this example uses the [weather-mcp-server](https://github.com/TuanKiri/weather-mcp-server) by TuanKiri under the MIT License) to our recipe, modify the prompt a bit and now goose will check the weather before adding a city to our trip.
+Let's say we want to make sure we have good weather during our Europe trip. We can just add a weather extension (this example uses the [weather-mcp-server](https://github.com/TuanKiri/weather-mcp-server) by TuanKiri under the MIT License) to our recipe, modify the prompt a bit and now lumina will check the weather before adding a city to our trip.
 
 ```yaml
 title: Trip planner
@@ -76,29 +76,29 @@ parameters:
 Recipes use a template system that lets you insert variables like `{{ destination }}` which get filled in with the actual values you provide. Once you've updated the prompt with the right details, you can run your new recipe like this to get a plan for a 14 day trip to Africa:
 
 ```sh
-goose run --recipe trip.yaml --params destination=Africa --params duration=14
+lumina run --recipe trip.yaml --params destination=Africa --params duration=14
 ```
 
 
 ## Settings
 
-By default, goose uses the `temperature` and `model` you've already chosen, which usually works just fine. But sometimes you might want more control. For example, when performing a subjective task like planning a trip, it can help to turn up the `temperature` setting. Think of temperature like a creativity dial - the higher it is, the more varied and unexpected the results. If the first suggestion isn't quite right, the user can just run the recipe again to get a new one.
+By default, lumina uses the `temperature` and `model` you've already chosen, which usually works just fine. But sometimes you might want more control. For example, when performing a subjective task like planning a trip, it can help to turn up the `temperature` setting. Think of temperature like a creativity dial - the higher it is, the more varied and unexpected the results. If the first suggestion isn't quite right, the user can just run the recipe again to get a new one.
 
 You can also specify which AI provider and model to use for a specific recipe:
 
 ```yaml
 settings:
-  goose_provider: "anthropic"
-  goose_model: "claude-sonnet-4-20250514"
+  lumina_provider: "anthropic"
+  lumina_model: "claude-sonnet-4-20250514"
   temperature: 0.8
 ```
 
 The available settings are:
-- `goose_provider`: The AI provider (e.g., "anthropic", "openai")
-- `goose_model`: The specific model name
+- `lumina_provider`: The AI provider (e.g., "anthropic", "openai")
+- `lumina_model`: The specific model name
 - `temperature`: Controls creativity/randomness (0.0-1.0, higher = more creative)
 
-These settings will override your default goose configuration when this recipe runs.
+These settings will override your default lumina configuration when this recipe runs.
 
 ## External Files
 
@@ -110,7 +110,7 @@ Then we reference the file in our prompt like:
 
 ```yaml
 prompt: |
- You can use the \{\{ recipe_dir \}\}/unesco.csv file to 
+ You can use the \{\{ recipe_dir \}\}/unesco.csv file to
  check information on UNESCO world heritage sites to
  include in your travel plan.
 ```
@@ -282,4 +282,4 @@ This itinerary offers a perfect blend of history, culture, and cuisine across th
 :::
 
 ## Learn More
-Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master goose recipes.
+Check out the [Recipes](/docs/guides/recipes) guide for more docs, tools, and resources to help you master lumina recipes.

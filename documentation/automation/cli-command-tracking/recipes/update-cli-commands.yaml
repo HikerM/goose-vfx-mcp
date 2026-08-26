@@ -1,6 +1,6 @@
 version: "2"
 title: "Update CLI Commands Documentation"
-description: "Apply CLI changes to goose-cli-commands.md based on cli-changes.md"
+description: "Apply CLI changes to lumina-cli-commands.md based on cli-changes.md"
 
 extensions:
   - type: builtin
@@ -49,16 +49,16 @@ instructions: |
      - Located at: ./cli-changes.md
      - Contains: Command changes, option changes, breaking changes, migration guidance
   
-  2. **goose-cli-commands.md** - The target documentation file:
+  2. **lumina-cli-commands.md** - The target documentation file:
      - Located at: ${CLI_COMMANDS_PATH} (environment variable)
-     - Default: ${GOOSE_REPO}/documentation/docs/guides/goose-cli-commands.md
+     - Default: ${LUMINA_REPO}/documentation/docs/guides/lumina-cli-commands.md
      - Contains: Complete CLI reference documentation
   
   3. **update-summary.md** - Output file for change summary:
      - Located at: ./update-summary.md
      - You will create this file to document what was updated
   
-  ## Target Sections in goose-cli-commands.md
+  ## Target Sections in lumina-cli-commands.md
   
   The CLI Commands Guide has this structure:
   - Flag Naming Conventions
@@ -98,7 +98,7 @@ instructions: |
   
   ### 3. Documentation Style
   
-  Follow the existing style in goose-cli-commands.md:
+  Follow the existing style in lumina-cli-commands.md:
   
   - **Command headers**: Use #### for command names
   - **Options**: Use bullet lists with bold option names
@@ -119,10 +119,10 @@ instructions: |
   **Usage:**
   
       # Basic usage
-      goose command-name
+      lumina command-name
       
       # With options
-      goose command-name --format json --verbose
+      lumina command-name --format json --verbose
   
   ### 4. Verification
   
@@ -134,7 +134,7 @@ instructions: |
   
   ## Output Requirements
   
-  ### 1. Updated goose-cli-commands.md
+  ### 1. Updated lumina-cli-commands.md
   
   Apply all changes from cli-changes.md:
   - Add new commands in appropriate sections
@@ -150,7 +150,7 @@ instructions: |
   
   **Date**: {current_date}
   **Source**: cli-changes.md ({old_version} → {new_version})
-  **Target**: goose-cli-commands.md
+  **Target**: lumina-cli-commands.md
   
   ## Changes Applied
   
@@ -186,14 +186,14 @@ instructions: |
   ## File Locations Summary
   
   - Input 1: ./cli-changes.md (change documentation)
-  - Input 2: ${CLI_COMMANDS_PATH} or ${GOOSE_REPO}/documentation/docs/guides/goose-cli-commands.md
+  - Input 2: ${CLI_COMMANDS_PATH} or ${LUMINA_REPO}/documentation/docs/guides/lumina-cli-commands.md
   - Output 1: Same as Input 2 (updated in place)
   - Output 2: ./update-summary.md (change summary)
   
   ## Environment Variables
   
-  - CLI_COMMANDS_PATH: Full path to goose-cli-commands.md file (overrides default)
-  - GOOSE_REPO: Path to goose repository (used if CLI_COMMANDS_PATH not set)
+  - CLI_COMMANDS_PATH: Full path to lumina-cli-commands.md file (overrides default)
+  - LUMINA_REPO: Path to lumina repository (used if CLI_COMMANDS_PATH not set)
   
   Start by reading both input files, then apply the updates and generate the summary.
 
@@ -201,8 +201,8 @@ prompt: |
   Update the CLI Commands Guide based on cli-changes.md.
   
   IMPORTANT: You MUST use the text_editor tool to:
-  1. Read cli-changes.md and goose-cli-commands.md
-  2. Update goose-cli-commands.md with str_replace
+  1. Read cli-changes.md and lumina-cli-commands.md
+  2. Update lumina-cli-commands.md with str_replace
   3. Write update-summary.md
   
   Remember:

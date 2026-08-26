@@ -26,12 +26,12 @@ export function hasLocalInferenceCapability(
     return false;
   }
 
-  const goose = meta.goose;
-  if (!isRecord(goose)) {
+  const lumina = meta.lumina;
+  if (!isRecord(lumina)) {
     return false;
   }
 
-  return 'localInference' in goose;
+  return 'localInference' in lumina;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

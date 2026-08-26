@@ -1,25 +1,25 @@
 ---
 title: ElevenLabs Extension
-description: Add ElevenLabs MCP Server as a goose Extension
+description: Add ElevenLabs MCP Server as a lumina Extension
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructions';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/1Z8XtjQ9El0" />
 
 
-This tutorial covers how to add the [ElevenLabs MCP Server](https://github.com/elevenlabs/elevenlabs-mcp) as a goose extension to enable AI-powered voice generation, voice cloning, audio editing, and speech-to-text transcription.
+This tutorial covers how to add the [ElevenLabs MCP Server](https://github.com/elevenlabs/elevenlabs-mcp) as a lumina extension to enable AI-powered voice generation, voice cloning, audio editing, and speech-to-text transcription.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=uvx&arg=elevenlabs-mcp&id=elevenlabs&name=ElevenLabs&description=ElevenLabs%20voice%20synthesis%20server&env=ELEVENLABS_API_KEY)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=uvx&arg=elevenlabs-mcp&id=elevenlabs&name=ElevenLabs&description=ElevenLabs%20voice%20synthesis%20server&env=ELEVENLABS_API_KEY)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
   uvx elevenlabs-mcp
@@ -40,8 +40,8 @@ Note that you'll need [uv](https://docs.astral.sh/uv/#installation) installed on
 :::
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-    <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+    <LuminaDesktopInstaller
       extensionId="elevenlabs"
       extensionName="ElevenLabs"
       description="ElevenLabs voice synthesis server"
@@ -54,7 +54,7 @@ Note that you'll need [uv](https://docs.astral.sh/uv/#installation) installed on
       apiKeyLinkText="ElevenLabs API Key"
     />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     <CLIExtensionInstructions
       name="ElevenLabs"
       description="ElevenLabs voice synthesis server"
@@ -73,37 +73,37 @@ Note that you'll need [uv](https://docs.astral.sh/uv/#installation) installed on
 
 ## Example Usage
 
-In this example, I’ll show you how to use goose with the ElevenLabs Extension to create AI-generated voiceovers for a YouTube Short. goose will take a sample script I provided, generate a narrated version using different AI voices, and seamlessly switch tones mid-script to match the content flow.
+In this example, I’ll show you how to use lumina with the ElevenLabs Extension to create AI-generated voiceovers for a YouTube Short. lumina will take a sample script I provided, generate a narrated version using different AI voices, and seamlessly switch tones mid-script to match the content flow.
 
-By connecting to the ElevenLabs MCP server, goose can transform plain text into natural-sounding speech, offering multiple voice styles and character options — all without any manual recording or editing.
+By connecting to the ElevenLabs MCP server, lumina can transform plain text into natural-sounding speech, offering multiple voice styles and character options — all without any manual recording or editing.
 
-### goose Prompt
+### lumina Prompt
 
-> Hey goose, create a script for me for my youtube short video, I want there to be two different voices. The first voice should cut me off and be a human narrator style and then switch to a casual AI tone after I read the prompt. Here's an example of a YT short script I've done in the past: 
+> Hey lumina, create a script for me for my youtube short video, I want there to be two different voices. The first voice should cut me off and be a human narrator style and then switch to a casual AI tone after I read the prompt. Here's an example of a YT short script I've done in the past:
 
-Wait… Within Seconds, goose performed Security Audits Across Multiple Projects?! 🔥
+Wait… Within Seconds, lumina performed Security Audits Across Multiple Projects?! 🔥
 
-Lets, plug & play to find out how 
+Lets, plug & play to find out how
 
-Let’s provide goose with the command it needs to connect to the Filesystem MCP server extension…
+Let’s provide lumina with the command it needs to connect to the Filesystem MCP server extension…
 
-Now lets play 
-prompt:  "Hey goose, I need to perform a security audit across multiple projects. Let's check for…🔹 Hardcoded Credentials – API keys, passwords, and secrets left in the code.🔹 SQL Injection Risks – Unsafe queries that could expose data.🔹 Insecure Cryptographic Practices – Weak encryption methods that put data at risk.AND🔹 Exposed Config Files – Sensitive information that shouldn't be public.🔹 Outdated Dependencies – Security vulnerabilities in third-party libraries."
+Now lets play
+prompt:  "Hey lumina, I need to perform a security audit across multiple projects. Let's check for…🔹 Hardcoded Credentials – API keys, passwords, and secrets left in the code.🔹 SQL Injection Risks – Unsafe queries that could expose data.🔹 Insecure Cryptographic Practices – Weak encryption methods that put data at risk.AND🔹 Exposed Config Files – Sensitive information that shouldn't be public.🔹 Outdated Dependencies – Security vulnerabilities in third-party libraries."
 
-Go goose, go goose!
+Go lumina, go lumina!
 
-✅ goose scanned the entire codebase across 3 different projects, identified security risks, generated a detailed report with fixes and provided me with step by step instructions on how I can test and verify these code fixes! 
+✅ lumina scanned the entire codebase across 3 different projects, identified security risks, generated a detailed report with fixes and provided me with step by step instructions on how I can test and verify these code fixes!
 
 If that’s not amazing idk what is …
 
-🚀 to get started visit goose-docs.ai_
+🚀 to get started visit hikerm.github.io/lumina_
 
 
-### goose Output
+### lumina Output
 
 :::note Desktop
 
-I'll create your YouTube script for you using the given script as reference. 
+I'll create your YouTube script for you using the given script as reference.
 
 ───────────── Text To Speech ─────────────
 

@@ -1,6 +1,6 @@
 ---
 title: Kiwi Flight Search Extension
-description: Add Kiwi Flight Search MCP Server as a goose Extension
+description: Add Kiwi Flight Search MCP Server as a lumina Extension
 unlisted: true
 ---
 
@@ -8,23 +8,23 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
 import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructions';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
-import GooseBuiltinInstaller from '@site/src/components/GooseBuiltinInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
+import LuminaBuiltinInstaller from '@site/src/components/LuminaBuiltinInstaller';
 import { PanelLeft } from 'lucide-react';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/MhLU91zKE4M" />
 
 Server moved: https://apify.com/agentify/kiwi-mcp-server
 
-This tutorial covers how to add the [Kiwi Flight Search MCP Server](https://mcp.kiwi.com) as a goose extension to enable flight search and price comparison.
+This tutorial covers how to add the [Kiwi Flight Search MCP Server](https://mcp.kiwi.com) as a lumina extension to enable flight search and price comparison.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
   Use `Add custom extension` in Settings → Extensions to add a `Streamable HTTP` extension type with:
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
-  Use `goose configure` to add a `Remote Extension (Streaming HTTP)` extension type with:
+  <TabItem value="cli" label="lumina CLI">
+  Use `lumina configure` to add a `Remote Extension (Streaming HTTP)` extension type with:
   </TabItem>
 </Tabs>
 
@@ -37,7 +37,7 @@ This tutorial covers how to add the [Kiwi Flight Search MCP Server](https://mcp.
 ## Configuration
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
+  <TabItem value="ui" label="lumina Desktop" default>
     1. Click the <PanelLeft className="inline" size={16} /> button in the top-left to open the sidebar
     2. Click `Extensions`
     3. Click `Add custom extension`
@@ -49,7 +49,7 @@ This tutorial covers how to add the [Kiwi Flight Search MCP Server](https://mcp.
     6. Navigate to the chat
 
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     <CLIExtensionInstructions
       name="kiwi-flight-search"
       type="http"
@@ -64,13 +64,13 @@ This tutorial covers how to add the [Kiwi Flight Search MCP Server](https://mcp.
 
 Let's search for flights between any two locations on specific dates. You can search by city names or airport codes, and the extension will find available flights with pricing, duration, and booking links.
 
-### goose Prompt
+### lumina Prompt
 
 ```
 Can you help me search for a flight from Paris to Rome for August 9?
 ```
 
-### goose Output
+### lumina Output
 
 ```
 I'd be happy to help you search for flights from Paris to Rome for August 9th! Let me search for available options for you.

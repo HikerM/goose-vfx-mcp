@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
-import type { McpEventsPage, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpEventsPage, McpTaskRef } from '@hikerm/lumina-sdk';
 import type { McpCenterSafeError, PublicTask, PublicTaskEvent } from '../../public-types';
 import {
   __resetOpaqueReferenceStoreForTests,

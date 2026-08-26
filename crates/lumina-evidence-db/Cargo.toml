@@ -1,0 +1,19 @@
+[package]
+name = "lumina-evidence-db"
+version = "0.1.0-alpha.0"
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Standalone evidence.db for verified source evidence"
+
+[lints]
+workspace = true
+
+[dependencies]
+fs2.workspace = true
+lumina-verified-sources = { version = "1.43.0-mcp.14", path = "../lumina-verified-sources" }
+rusqlite = { version = "0.32.1", features = ["bundled"] }
+sha2.workspace = true
+thiserror.workspace = true

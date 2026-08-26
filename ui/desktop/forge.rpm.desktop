@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Lumina
-Exec=/usr/lib/Lumina/Lumina %U
+Exec=Lumina %U
 Icon=/usr/share/pixmaps/Lumina.png
 Terminal=false
 Type=Application
 Categories=Development;
-MimeType=x-scheme-handler/goose;
+MimeType=x-scheme-handler/lumina;

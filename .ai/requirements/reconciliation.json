@@ -1,0 +1,282 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "LUMINA-COMMERCIAL",
+  "baseline_updated_at": "2026-08-26T05:34:31+00:00",
+  "matrix": [
+    {
+      "requirement_id": "REQ-001",
+      "change_type": "modify",
+      "targets": [
+        "CAP-001",
+        "CAP-002"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina-providers",
+          "crates/lumina/src/config",
+          "crates/lumina/src/acp",
+          "ui/desktop/src/acp",
+          "ui/desktop/src/components/settings/providers"
+        ],
+        "apis": [
+          "provider configuration ACP methods",
+          "session config options"
+        ],
+        "data": [
+          "provider config",
+          "provider secrets",
+          "session provider/model state"
+        ],
+        "permissions": [
+          "provider network egress only after explicit configuration or connection test"
+        ],
+        "tests": [
+          "provider config persistence",
+          "custom provider CRUD",
+          "provider switching for existing sessions",
+          "live provider smoke test when credentials are supplied"
+        ],
+        "migrations": [
+          "preserve existing Lumina provider config and import supported legacy provider config"
+        ]
+      }
+    },
+    {
+      "requirement_id": "REQ-002",
+      "change_type": "modify",
+      "targets": [
+        "CAP-002",
+        "CAP-003",
+        "CAP-004"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina/src/session",
+          "crates/lumina/src/project",
+          "crates/lumina-legacy-migrator",
+          "ui/desktop/scripts"
+        ],
+        "apis": [
+          "session ACP methods",
+          "project workspace methods",
+          "legacy import command"
+        ],
+        "data": [
+          "sessions database",
+          "project tables",
+          "desktop settings",
+          "migration report"
+        ],
+        "permissions": [
+          "read-only access to legacy source",
+          "write access to Lumina staging and data directories"
+        ],
+        "tests": [
+          "fresh database",
+          "existing Lumina upgrade",
+          "legacy import",
+          "restart recovery",
+          "interrupted migration",
+          "custom install directory"
+        ],
+        "migrations": [
+          "Lumina schema 17 project tables",
+          "legacy session schema conversion",
+          "atomic staging activation"
+        ]
+      }
+    },
+    {
+      "requirement_id": "REQ-003",
+      "change_type": "replace",
+      "targets": [
+        "CAP-004"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina-cli",
+          "crates/lumina-legacy-migrator",
+          "crates/lumina/src/session",
+          "crates/lumina-evidence-db",
+          "crates/lumina/src/mcp_platform",
+          "ui/desktop"
+        ],
+        "apis": [
+          "lumina:// deep links",
+          "legacy import executable",
+          "Lumina-owned ACP extension methods"
+        ],
+        "data": [
+          "legacy source snapshot",
+          "Lumina schema baseline",
+          "evidence hashes and signatures",
+          "migration audit report"
+        ],
+        "permissions": [
+          "explicit user authorization for legacy import",
+          "deny non-loopback egress by default"
+        ],
+        "tests": [
+          "runtime banned-string scan",
+          "clean-VM packet capture",
+          "legacy import source immutability",
+          "hash/signature migration"
+        ],
+        "migrations": [
+          "separate legacy importer",
+          "Lumina schema baseline",
+          "legacy-to-Lumina ID mapping and re-issuance"
+        ]
+      }
+    },
+    {
+      "requirement_id": "REQ-004",
+      "change_type": "modify",
+      "targets": [
+        "CAP-009"
+      ],
+      "impact": {
+        "modules": [
+          "ui/desktop/src/i18n",
+          "ui/desktop/src/components",
+          "ui/desktop/src/main.ts",
+          "ui/desktop/installer",
+          "crates/lumina"
+        ],
+        "apis": [
+          "getLocale",
+          "loadMessages",
+          "desktop notification messages",
+          "runtime error mapping"
+        ],
+        "data": [
+          "Simplified Chinese message catalog",
+          "localized error catalog"
+        ],
+        "permissions": [],
+        "tests": [
+          "user-visible string scan",
+          "Simplified Chinese screenshot tests",
+          "missing-key production build failure",
+          "installer language acceptance"
+        ],
+        "migrations": [
+          "preserve user settings while forcing the commercial display baseline to zh-CN"
+        ]
+      }
+    },
+    {
+      "requirement_id": "REQ-005",
+      "change_type": "modify",
+      "targets": [
+        "CAP-002",
+        "CAP-003",
+        "CAP-005",
+        "CAP-008",
+        "CAP-012"
+      ],
+      "impact": {
+        "modules": [
+          "crates/lumina/src/project",
+          "crates/lumina/src/session",
+          "crates/lumina/src/agents",
+          "crates/lumina-local-inference",
+          "crates/lumina-mcp",
+          "ui/desktop/src/components/projects",
+          "ui/desktop/src/acp"
+        ],
+        "apis": [
+          "Lumina project task protocol",
+          "tool execution protocol",
+          "permission decisions",
+          "checkpoint and change-set methods"
+        ],
+        "data": [
+          "projects",
+          "work items",
+          "runs",
+          "steps",
+          "checkpoints",
+          "change sets",
+          "validation runs",
+          "artifacts",
+          "audit events"
+        ],
+        "permissions": [
+          "workspace roots",
+          "file operations",
+          "commands",
+          "network",
+          "browser",
+          "desktop",
+          "MCP"
+        ],
+        "tests": [
+          "multi-file project task",
+          "terminal cancellation",
+          "restart recovery",
+          "diff approval and rollback",
+          "Git conflict isolation",
+          "GPU execution",
+          "CPU fallback"
+        ],
+        "migrations": [
+          "versioned project task schema",
+          "artifact storage migration",
+          "audit event schema"
+        ]
+      }
+    },
+    {
+      "requirement_id": "REQ-006",
+      "change_type": "add",
+      "targets": [],
+      "impact": {
+        "modules": [
+          "crates/lumina",
+          "crates/lumina-evidence-db",
+          "crates/lumina-mcp",
+          "ui/desktop",
+          "ui/desktop/installer"
+        ],
+        "apis": [
+          "policy decision API",
+          "credential reference API",
+          "audit query and export API",
+          "signed extension manifest"
+        ],
+        "data": [
+          "policy rules",
+          "credential references",
+          "audit events",
+          "signed update metadata",
+          "extension provenance"
+        ],
+        "permissions": [
+          "deny by default",
+          "administrator-enforced policy",
+          "explicit high-risk approval"
+        ],
+        "tests": [
+          "permission bypass",
+          "secret scanning",
+          "clean-VM packet capture",
+          "tamper rejection",
+          "upgrade rollback",
+          "extension rollback"
+        ],
+        "migrations": [
+          "audit schema",
+          "credential reference migration",
+          "policy schema",
+          "extension provenance schema"
+        ]
+      }
+    }
+  ],
+  "blockers": [],
+  "checkpoint_required": true,
+  "checkpoint_mode": "automatic_non_blocking",
+  "status": "READY_FOR_PLANNING",
+  "updated_at": "2026-08-26T05:34:34+00:00"
+}

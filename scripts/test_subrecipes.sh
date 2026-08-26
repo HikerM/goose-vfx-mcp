@@ -6,8 +6,8 @@ if [ -f .env ]; then
 fi
 
 if [ -z "$SKIP_BUILD" ]; then
-  echo "Building goose..."
-  cargo build --bin goose
+  echo "Building lumina..."
+  cargo build --bin lumina
   echo ""
 else
   echo "Skipping build (SKIP_BUILD is set)..."
@@ -16,16 +16,16 @@ fi
 
 SCRIPT_DIR=$(pwd)
 
-# Add goose binary to PATH so subagents can find it when spawning
+# Add lumina binary to PATH so subagents can find it when spawning
 export PATH="$SCRIPT_DIR/target/debug:$PATH"
 
 # Set default provider and model if not already set
 # Use fast model for CI to speed up tests
-export GOOSE_PROVIDER="${GOOSE_PROVIDER:-anthropic}"
-export GOOSE_MODEL="${GOOSE_MODEL:-claude-haiku-4-5}"
+export LUMINA_PROVIDER="${LUMINA_PROVIDER:-anthropic}"
+export LUMINA_MODEL="${LUMINA_MODEL:-claude-haiku-4-5}"
 
-echo "Using provider: $GOOSE_PROVIDER"
-echo "Using model: $GOOSE_MODEL"
+echo "Using provider: $LUMINA_PROVIDER"
+echo "Using model: $LUMINA_MODEL"
 echo ""
 
 TESTDIR=$(mktemp -d)
@@ -98,7 +98,7 @@ check_recipe_output() {
 
 echo "Running recipe with parallel subrecipes..."
 TMPFILE=$(mktemp)
-if (cd "$TESTDIR" && "$SCRIPT_DIR/target/debug/goose" run --recipe project_analyzer_parallel.yaml --no-session 2>&1) | tee "$TMPFILE"; then
+if (cd "$TESTDIR" && "$SCRIPT_DIR/target/debug/lumina" run --recipe project_analyzer_parallel.yaml --no-session 2>&1) | tee "$TMPFILE"; then
   echo "✓ SUCCESS: Recipe completed successfully"
   RESULTS+=("✓ Recipe exit code")
   check_recipe_output "$TMPFILE" "parallel"

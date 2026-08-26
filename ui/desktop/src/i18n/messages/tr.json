@@ -1197,7 +1197,7 @@
     "defaultMessage": "Gizli Anahtar"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "Lumina sunucusunda yapılandırılan gizli anahtar (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "Lumina sunucusunda yapılandırılan gizli anahtar (LUMINA_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "Sunucunun gizli anahtarını girin"
@@ -1226,67 +1226,67 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "Başka bir yerde çalışan bir Lumina sunucusuna bağlanın (uygulamanın yeniden başlatılmasını gerektirir)"
   },
-  "goosehintsModal.close": {
+  "luminahintsModal.close": {
     "defaultMessage": "Kapat"
   },
-  "goosehintsModal.developer": {
+  "luminahintsModal.developer": {
     "defaultMessage": "Geliştirici"
   },
-  "goosehintsModal.dialogDescription": {
+  "luminahintsModal.dialogDescription": {
     "defaultMessage": "Lumina ile iletişimi geliştirmek için projeniz hakkında ek bağlam sağlayın"
   },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "Proje İpuçlarını Yapılandırma (.goosehints)"
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "Proje İpuçlarını Yapılandırma (.luminahints)"
   },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": ".goosehints dosyası okunurken hata oluştu: {error}"
+  "luminahintsModal.errorReading": {
+    "defaultMessage": ".luminahints dosyası okunurken hata oluştu: {error}"
   },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": ".goosehints dosyasına erişilemedi"
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": ".luminahints dosyasına erişilemedi"
   },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": ".goosehints dosyası kaydedilemedi"
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": ".luminahints dosyası kaydedilemedi"
   },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "Şu konumda yeni.goosehints dosyası oluşturuluyor: {filePath}"
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "Şu konumda yeni.luminahints dosyası oluşturuluyor: {filePath}"
   },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": ".goosehints dosyası şu konumda bulundu: {filePath}"
+  "luminahintsModal.fileFound": {
+    "defaultMessage": ".luminahints dosyası şu konumda bulundu: {filePath}"
   },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints, projeniz hakkında ek bağlam sağlamak ve Lumina ile iletişimi geliştirmek için kullanılan bir metin dosyasıdır."
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints, projeniz hakkında ek bağlam sağlamak ve Lumina ile iletişimi geliştirmek için kullanılan bir metin dosyasıdır."
   },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "Lütfen uzantılar sayfasında {bold} uzantısının etkinleştirildiğinden emin olun. Bu uzantı.goosehints'i kullanmak için gereklidir..goosehints güncellemelerinin etkili olması için oturumunuzu yeniden başlatmanız gerekir."
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "Lütfen uzantılar sayfasında {bold} uzantısının etkinleştirildiğinden emin olun. Bu uzantı.luminahints'i kullanmak için gereklidir..luminahints güncellemelerinin etkili olması için oturumunuzu yeniden başlatmanız gerekir."
   },
-  "goosehintsModal.helpText3": {
+  "luminahintsModal.helpText3": {
     "defaultMessage": "Daha fazla bilgi için {link}'ye bakın."
   },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": ".goosehints'i kullanma"
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": ".luminahints'i kullanma"
   },
-  "goosehintsModal.placeholder": {
+  "luminahintsModal.placeholder": {
     "defaultMessage": "Proje ipuçlarını buraya girin..."
   },
-  "goosehintsModal.save": {
+  "luminahintsModal.save": {
     "defaultMessage": "Kaydet"
   },
-  "goosehintsModal.savedSuccessfully": {
+  "luminahintsModal.savedSuccessfully": {
     "defaultMessage": "Başarıyla kaydedildi"
   },
-  "goosehintsModal.saving": {
+  "luminahintsModal.saving": {
     "defaultMessage": "Kaydediliyor..."
   },
-  "goosehintsSection.configure": {
+  "luminahintsSection.configure": {
     "defaultMessage": "Yapılandır"
   },
-  "goosehintsSection.description": {
-    "defaultMessage": "Lumina'a ek bağlam sağlamak için projenizin.goosehints dosyasını yapılandırın"
+  "luminahintsSection.description": {
+    "defaultMessage": "Lumina'a ek bağlam sağlamak için projenizin.luminahints dosyasını yapılandırın"
   },
-  "goosehintsSection.title": {
-    "defaultMessage": "Proje İpuçları (.goosehints)"
+  "luminahintsSection.title": {
+    "defaultMessage": "Proje İpuçları (.luminahints)"
   },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "Lumina'a sorun"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1422,10 +1422,10 @@
     "defaultMessage": "İptal"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "\"goose://recipe?config=\" ile başlayan bir tarif derin bağlantısı yapıştırın"
+    "defaultMessage": "\"lumina://recipe?config=\" ile başlayan bir tarif derin bağlantısı yapıştırın"
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "goose://recipe?config=... derin bağlantınızı buraya yapıştırın"
+    "defaultMessage": "lumina://recipe?config=... derin bağlantınızı buraya yapıştırın"
   },
   "importRecipeForm.example": {
     "defaultMessage": "örnek"
@@ -1700,32 +1700,29 @@
   "launcher.placeholder": {
     "defaultMessage": "Lumina'a herhangi bir şey sorun..."
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina konuşmayı sıkıştırıyor..."
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina bunun üzerinde çalışıyor…"
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "konuşma yükleniyor..."
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "oturum yeniden başlatılıyor..."
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina bunun üzerinde çalışıyor…"
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina düşünüyor…"
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina bekliyor…"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "Bu model silinsin mi? Daha sonra tekrar indirebilirsiniz."
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "API anahtarları olmadan çıkarım yapmak için yerel LLM modellerini indirin ve yönetin. Herhangi bir GGUF modeli için HuggingFace'yi arayın veya aşağıdaki öne çıkan seçimleri kullanın."
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "Kapat"
@@ -1753,9 +1750,6 @@
   },
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "Öne Çıkan Modeller"
-  },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "Model ararken ve indirirken hız sınırlarını artırmak ve özel ya da erişimi kısıtlı Hugging Face depolarına erişmek için oturum açın."
   },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
@@ -2390,20 +2384,11 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "Başlayın"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "Daha fazla bilgi edinin"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "Yerli model hazır"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "Anonim kullanım verileri Lumina'nin iyileştirilmesine yardımcı olur. Konuşmalarınızı, kodlarınızı veya kişisel verilerinizi asla toplamıyoruz."
-  },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "Gizlilik"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "Anonim kullanım verilerini paylaşın"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "Varsayılan Değer"
@@ -2548,36 +2533,6 @@
   },
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "Yanıtlarınızı yönlendirmeye ve bağlam eklemeye yardımcı olmak için sağlayıcıya iletilecek gizli talimatlar."
-  },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "Hata türleri (ör. \"rate_limit\", \"auth\" - ayrıntı yok)"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "Uzantılar ve araç kullanım sayıları (yalnızca adlar)"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "İşletim sistemi, sürümü ve mimarisi"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "Sağlayıcı ve kullanılan model"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "Oturum metrikleri (süre, etkileşim sayısı, belirteç kullanımı)"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Lumina sürümü ve yükleme yöntemi"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "Anonim kullanım verileri, Lumina'nin nasıl kullanıldığını anlamamıza ve iyileştirilecek alanları belirlememize yardımcı olur."
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "Konuşmalarınızı, kodunuzu, araç argümanlarınızı, hata mesajlarınızı veya herhangi bir kişisel verinizi asla toplamıyoruz. Bu ayarı istediğiniz zaman Ayarlar'dan değiştirebilirsiniz."
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "Gizlilik ayrıntıları"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "Ne topluyoruz:"
   },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "Mesajlar yükleniyor... ({renderedCount}/{totalCount})"
@@ -3429,7 +3384,7 @@
     "defaultMessage": "Derin bağlantı"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "goose://tarif bağlantısını buraya yapıştırın..."
+    "defaultMessage": "lumina://tarif bağlantısını buraya yapıştırın..."
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "Programı Düzenle"
@@ -3441,7 +3396,7 @@
     "defaultMessage": "Seçilen dosya okunamadı."
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "Geçersiz derin bağlantı. Lütfen goose://tarif bağlantısını kullanın."
+    "defaultMessage": "Geçersiz derin bağlantı. Lütfen lumina://tarif bağlantısını kullanın."
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "Geçersiz dosya türü: Lütfen bir YAML dosyası seçin (.yaml veya.yml)"
@@ -3758,9 +3713,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "Yeni pencerede aç"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "Şifrelenmiş Nostr bağlantısını paylaşın"
-  },
   "sessions.cancel": {
     "defaultMessage": "İptal"
   },
@@ -3769,9 +3721,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "Lumina ile geçmiş konuşmalarınızı görüntüleyin ve arayın. Aramak için {shortcut}."
-  },
-  "sessions.close": {
-    "defaultMessage": "Kapat"
   },
   "sessions.delete.message": {
     "defaultMessage": "\"{name}\" oturumunu silmek istediğinizden emin misiniz? Bu eylem geri alınamaz."
@@ -3800,21 +3749,6 @@
   "sessions.import": {
     "defaultMessage": "Oturumu İçe Aktar"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "Bağlantıyı İçe Aktar"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "Oturumu almak, şifresini çözmek ve içe aktarmak için bir Lumina Nostr paylaşım bağlantısını yapıştırın."
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "Nostr Oturumunu İçe Aktar"
-  },
-  "sessions.importing": {
-    "defaultMessage": "İçe aktarılıyor..."
-  },
   "sessions.loadingMore": {
     "defaultMessage": "Daha fazla oturum yükleniyor..."
   },
@@ -3832,15 +3766,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "Arama geçmişi..."
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "Bu bağlantıya sahip olan herkes oturumu alıp şifresini çözebilir. Buna bir sırmış gibi davran."
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "Şifreli Nostr Paylaşım Bağlantısı"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "Panoya kopyalandı"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "\"{name}\" oturumu silinemedi: {error}"
@@ -3862,12 +3787,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "Oturum başarıyla içe aktarıldı"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "Şifrelenmiş Nostr paylaşım bağlantısı oluşturuldu"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "Nostr paylaşım bağlantısı oluşturulamadı: {error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "Oturum açıklaması güncellenemedi: {error}"
@@ -4034,12 +3953,6 @@
   "settings.theme.title": {
     "defaultMessage": "Tema"
   },
-  "settings.updates.description": {
-    "defaultMessage": "Lumina'nin en iyi şekilde çalışmasını sağlamak için güncellemeleri kontrol edin ve yükleyin"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "Güncellemeler"
-  },
   "settings.version.title": {
     "defaultMessage": "Sürüm"
   },
@@ -4104,7 +4017,7 @@
     "defaultMessage": "Eşleşen beceri bulunamadı"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "Beceriler ~/.config/agents/skills/,.goose/skills/ veya desteklenen diğer dizinlerdeki SKILL.md dosyalarından yüklenir."
+    "defaultMessage": "Beceriler ~/.config/agents/skills/,.lumina/skills/ veya desteklenen diğer dizinlerdeki SKILL.md dosyalarından yüklenir."
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "Hiçbir beceri yüklü değil"
@@ -4364,45 +4277,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "Başka sağlayıcı kullan"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "Lumina'nin iyileştirilmesine yardımcı olmak için anonim kullanım verilerini paylaşmak ister misiniz? Konuşmalarınızı, kodlarınızı veya kişisel verilerinizi asla toplamıyoruz."
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Lumina'nin iyileştirilmesine yardımcı olun"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "Daha fazla bilgi edinin"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "Evet, anonim kullanım verilerini paylaş"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "Hayır teşekkürler"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "Yapılandırma Hatası"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "Verilerinizin nasıl kullanıldığını kontrol edin"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "Daha fazla bilgi edinin"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "Telemetri ayarları yüklenemedi."
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "Gizlilik"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "Anonim kullanım istatistiklerini paylaşarak Lumina'nin geliştirilmesine yardımcı olun."
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "Anonim kullanım verileri"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "Telemetri ayarları güncellenemedi."
-  },
   "themeSelector.dark": {
     "defaultMessage": "Karanlık"
   },
@@ -4472,83 +4346,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "{toolName}'ye izin verilsin mi?"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina, {toolName}'yi aramak istiyor. İzin vermek?"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "Güncelleme arka planda otomatik olarak indirilecektir."
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "Otomatik indirmeler GOOSE_DISABLE_AUTO_DOWNLOAD ortam değişkeni aracılığıyla devre dışı bırakılmıştır."
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "Otomatik indirme devre dışı. Manuel olarak indirmek için \"Şimdi İndir\"e tıklayın."
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "Uygulamadan çıktığınızda güncelleme otomatik olarak yüklenecektir."
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "Güncellemeleri Kontrol Et"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "Güncellemeler kontrol ediliyor..."
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "Güncel sürüm"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "Otomatik güncelleme indirmelerini devre dışı bırak"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "Etkinleştirildiğinde, Lumina yeni sürümleri bildirir ancak bunları otomatik olarak indirmez."
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "Şimdi İndir"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "Güncelleme indirildi ve kuruluma hazır!"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "Güncelleme indiriliyor... {percent}%"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "Güncelleme indiriliyor..."
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "Yükle ve Yeniden Başlat"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "Veya şimdi güncellemek için \"Yükle ve Yeniden Başlat\"ı tıklayın."
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "En son sürümü çalıştırıyorsunuz!"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "Yükleniyor..."
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "İndirdikten sonra güncellemeyi manuel olarak yüklemeniz gerekecektir."
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "Bu güncelleme yöntemi için manuel kurulum gereklidir."
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ Güncelleme hazır! Lumina'den çıktığınızda yüklenecektir."
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ Güncelleme hazır! Kurulum talimatları için \"Yükle ve Yeniden Başlat\"a tıklayın."
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "(güncel)"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "Güncelleme mevcut!"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ {version} mevcut"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "Sürüm {version} mevcut"
   },
   "userMessage.cancel": {
     "defaultMessage": "İptal"

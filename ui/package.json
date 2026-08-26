@@ -4,7 +4,7 @@
     "acp",
     "text",
     "desktop",
-    "goose-binary/*"
+    "lumina-binary/*"
   ],
   "scripts": {
     "changeset": "changeset",

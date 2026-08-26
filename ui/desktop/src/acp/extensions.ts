@@ -1,5 +1,5 @@
 import type { ExtensionConfig, ExtensionEntry } from '../types/extensions';
-import type { EnvVariable, GooseExtension, GooseExtensionEntry } from '@aaif/goose-sdk';
+import type { EnvVariable, LuminaExtension, LuminaExtensionEntry } from '@hikerm/lumina-sdk';
 import { getAcpClient } from './acpConnection';
 
 type ProcessEnvironment = typeof process.env;
@@ -12,7 +12,7 @@ export function setWindowsMcpEnvironment(environment: ProcessEnvironment | undef
 
 function mcpEnvironmentEntries(): EnvVariable[] {
   if (!windowsMcpEnvironment) return [];
-  const names = ['PATH', 'GOOSE_NODE_DIR', 'npm_config_cache', 'NPM_CONFIG_CACHE', 'TMP', 'TEMP'];
+  const names = ['PATH', 'LUMINA_NODE_DIR', 'npm_config_cache', 'NPM_CONFIG_CACHE', 'TMP', 'TEMP'];
   return names.flatMap((name) => {
     const value = windowsMcpEnvironment?.[name];
     return value === undefined ? [] : [{ name, value }];
@@ -21,7 +21,7 @@ function mcpEnvironmentEntries(): EnvVariable[] {
 
 const controlledWindowsEnvironmentNames = new Set([
   'PATH',
-  'GOOSE_NODE_DIR',
+  'LUMINA_NODE_DIR',
   'NPM_CONFIG_CACHE',
   'NPM_CONFIG_USERCONFIG',
   'NPM_CONFIG_PREFIX',
@@ -41,7 +41,7 @@ function mergeStdioEnvironment(existing: EnvVariable[]): EnvVariable[] {
   );
 }
 
-export function applyWindowsMcpEnvironment(extension: GooseExtension): GooseExtension {
+export function applyWindowsMcpEnvironment(extension: LuminaExtension): LuminaExtension {
   if (extension.type !== 'mcp' || !('command' in extension.server) || !windowsMcpEnvironment) {
     return extension;
   }
@@ -61,7 +61,7 @@ export interface ConfiguredExtensionsResponse {
   warnings: string[];
 }
 
-export function gooseExtensionName(extension: GooseExtension): string {
+export function luminaExtensionName(extension: LuminaExtension): string {
   return extension.type === 'mcp' ? extension.server.name : extension.name;
 }
 
@@ -73,7 +73,7 @@ function availableToolsOrUndefined(availableTools?: string[] | null): string[] |
   return availableTools?.length ? availableTools : undefined;
 }
 
-export function gooseExtensionToExtensionConfig(extension: GooseExtension): ExtensionConfig | null {
+export function luminaExtensionToExtensionConfig(extension: LuminaExtension): ExtensionConfig | null {
   switch (extension.type) {
     case 'builtin':
     case 'platform':
@@ -116,19 +116,19 @@ export function gooseExtensionToExtensionConfig(extension: GooseExtension): Exte
   }
 }
 
-function gooseExtensionEntryToExtensionEntry(
-  entry: GooseExtensionEntry
+function luminaExtensionEntryToExtensionEntry(
+  entry: LuminaExtensionEntry
 ): ConfiguredExtensionEntry | null {
-  const config = gooseExtensionToExtensionConfig(entry.extension);
+  const config = luminaExtensionToExtensionConfig(entry.extension);
   if (!config) {
     return null;
   }
   return { ...config, enabled: entry.enabled, configKey: entry.configKey ?? undefined };
 }
 
-export async function getConfiguredGooseExtensions(): Promise<GooseExtensionEntry[]> {
+export async function getConfiguredLuminaExtensions(): Promise<LuminaExtensionEntry[]> {
   const client = await getAcpClient();
-  const response = await client.goose.configExtensionsList_unstable({});
+  const response = await client.lumina.configExtensionsList_unstable({});
   return response.extensions.map((entry) => ({
     ...entry,
     extension: applyWindowsMcpEnvironment(entry.extension),
@@ -137,16 +137,16 @@ export async function getConfiguredGooseExtensions(): Promise<GooseExtensionEntr
 
 export async function getConfiguredExtensions(): Promise<ConfiguredExtensionsResponse> {
   const client = await getAcpClient();
-  const response = await client.goose.configExtensionsList_unstable({});
+  const response = await client.lumina.configExtensionsList_unstable({});
   return {
     extensions: response.extensions
-      .map(gooseExtensionEntryToExtensionEntry)
+      .map(luminaExtensionEntryToExtensionEntry)
       .filter((entry): entry is ConfiguredExtensionEntry => entry !== null),
     warnings: response.warnings ?? [],
   };
 }
 
-export function extensionConfigToGooseExtension(config: ExtensionConfig): GooseExtension | null {
+export function extensionConfigToLuminaExtension(config: ExtensionConfig): LuminaExtension | null {
   switch (config.type) {
     case 'builtin':
       return {
@@ -201,17 +201,17 @@ export function extensionConfigToGooseExtension(config: ExtensionConfig): GooseE
 }
 
 export async function addConfigExtension(config: ExtensionConfig, enabled: boolean): Promise<void> {
-  const extension = extensionConfigToGooseExtension(config);
+  const extension = extensionConfigToLuminaExtension(config);
   if (!extension) {
     throw new Error(`Unsupported extension type for ACP: ${config.type}`);
   }
   const client = await getAcpClient();
-  await client.goose.configExtensionsAdd_unstable({ extension, enabled });
+  await client.lumina.configExtensionsAdd_unstable({ extension, enabled });
 }
 
 export async function removeConfigExtension(configKey: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.configExtensionsRemove_unstable({ configKey });
+  await client.lumina.configExtensionsRemove_unstable({ configKey });
 }
 
 export async function setConfigExtensionEnabled(
@@ -219,5 +219,5 @@ export async function setConfigExtensionEnabled(
   enabled: boolean
 ): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.configExtensionsSetEnabled_unstable({ configKey, enabled });
+  await client.lumina.configExtensionsSetEnabled_unstable({ configKey, enabled });
 }

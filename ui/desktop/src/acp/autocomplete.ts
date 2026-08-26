@@ -1,4 +1,4 @@
-import type { AgentMention, AvailableCommand } from '@aaif/goose-sdk';
+import type { AgentMention, AvailableCommand } from '@hikerm/lumina-sdk';
 import type { DisplayItem } from '../components/MentionPopover';
 import { getAcpClient } from './acpConnection';
 
@@ -57,7 +57,7 @@ export function agentMentionToDisplayItem(agent: AgentMention): AutocompleteDisp
 
 export async function listSlashCommandItems(cwd: string): Promise<AutocompleteDisplayItem[]> {
   const client = await getAcpClient();
-  const response = await client.goose.slashCommandsList_unstable(cwdParam(cwd));
+  const response = await client.lumina.slashCommandsList_unstable(cwdParam(cwd));
   return response.availableCommands
     .map(availableCommandToDisplayItem)
     .filter((item): item is AutocompleteDisplayItem => item !== null);
@@ -68,7 +68,7 @@ export async function listAgentMentionItems(
   sessionId?: string
 ): Promise<AutocompleteDisplayItem[]> {
   const client = await getAcpClient();
-  const response = await client.goose.agentMentionsList_unstable({
+  const response = await client.lumina.agentMentionsList_unstable({
     ...cwdParam(cwd),
     ...(sessionId ? { sessionId } : {}),
   });

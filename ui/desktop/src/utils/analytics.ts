@@ -1,19 +1,15 @@
 /**
- * Frontend Analytics Module
+ * Local UI event compatibility layer.
  *
- * Compatibility layer for existing UI tracking call sites. Frontend telemetry is
- * disabled during the ACP migration, so events are intentionally not sent.
+ * These functions intentionally keep existing call sites type-safe. They never
+ * persist or transmit event data.
  */
-
-export function setTelemetryEnabled(_enabled: boolean): void {
-  // Frontend telemetry is disabled.
-}
 
 function sendEvent(
   _eventName: string,
   _properties: Record<string, unknown> = {}
 ): void {
-  // Frontend telemetry is disabled.
+  // Deliberate local no-op: no storage and no network transport.
 }
 
 // ============================================================================
@@ -21,16 +17,7 @@ function sendEvent(
 // ============================================================================
 
 /**
- * Frontend-specific analytics events.
- *
- * NOTE: The backend (posthog.rs) already tracks:
- * - session_started (extensions, provider, model, tokens, session count, etc.)
- * - error (provider errors like rate_limit, auth, etc.)
- *
- * Frontend events focus on what the backend can't see:
- * - UI navigation patterns
- * - Onboarding funnel (where users drop off during setup)
- * - Frontend-only crashes (React errors, unhandled rejections)
+ * UI event shapes retained for local component compatibility.
  */
 export type AnalyticsEvent =
   | { name: 'page_view'; properties: { page: string; referrer?: string } }
@@ -64,10 +51,6 @@ export type AnalyticsEvent =
   | { name: 'model_changed'; properties: { provider: string; model: string } }
   | { name: 'settings_tab_viewed'; properties: { tab: string } }
   | { name: 'setting_toggled'; properties: { setting: string; enabled: boolean } }
-  | {
-      name: 'telemetry_preference_set';
-      properties: { enabled: boolean; location: 'settings' | 'onboarding' | 'modal' };
-    }
   | {
       name: 'schedule_created';
       properties: { source_type: 'file' | 'deeplink'; success: boolean; error_details?: string };
@@ -142,56 +125,7 @@ export type AnalyticsEvent =
   | { name: 'input_mode_changed'; properties: { from_mode: string; to_mode: string } }
   | { name: 'input_diagnostics_opened'; properties: Record<string, never> }
   | { name: 'input_create_recipe_opened'; properties: Record<string, never> }
-  | { name: 'input_edit_recipe_opened'; properties: Record<string, never> }
-  // Auto-update tracking events
-  | {
-      name: 'update_check_started';
-      properties: { trigger: 'startup' | 'manual'; current_version: string };
-    }
-  | {
-      name: 'update_check_completed';
-      properties: {
-        result: 'available' | 'not_available' | 'error';
-        current_version: string;
-        latest_version?: string;
-        using_fallback: boolean;
-        error_type?: string;
-      };
-    }
-  | {
-      name: 'update_download_started';
-      properties: {
-        version: string;
-        method: 'electron-updater' | 'github-fallback';
-      };
-    }
-  | {
-      name: 'update_download_progress';
-      properties: {
-        milestone: 25 | 50 | 75 | 100;
-        version: string;
-        method: 'electron-updater' | 'github-fallback';
-      };
-    }
-  | {
-      name: 'update_download_completed';
-      properties: {
-        success: boolean;
-        version: string;
-        method: 'electron-updater' | 'github-fallback';
-        duration_seconds?: number;
-        error_type?: string;
-      };
-    }
-  | {
-      name: 'update_install_initiated';
-      properties: {
-        version: string;
-        method: 'electron-updater' | 'github-fallback';
-        action: 'quit_and_install' | 'open_folder_and_quit' | 'open_folder_only';
-      };
-    };
-// NOTE: slash_command_used is tracked by the backend (posthog.rs) with command_type info
+  | { name: 'input_edit_recipe_opened'; properties: Record<string, never> };
 
 export function trackEvent<T extends AnalyticsEvent>(event: T): void {
   sendEvent(event.name, event.properties);
@@ -300,13 +234,6 @@ export function trackSettingToggled(setting: string, enabled: boolean): void {
     name: 'setting_toggled',
     properties: { setting, enabled },
   });
-}
-
-export function trackTelemetryPreference(
-  enabled: boolean,
-  location: 'settings' | 'onboarding' | 'modal'
-): void {
-  sendEvent('telemetry_preference_set', { enabled, location });
 }
 
 export function getErrorType(error: unknown): string {
@@ -529,11 +456,6 @@ export function trackRecipeSlashCommandSet(
   });
 }
 
-// NOTE: slash_command_used is tracked by the backend (posthog.rs) with richer info:
-// - command_type: "builtin" | "recipe" | "unknown"
-// - command_name: only for builtin commands (e.g., "compact", "summarize")
-// - success: true for builtin/recipe, false for unknown
-
 // ============================================================================
 // Chat Input Bar Feature Tracking
 // ============================================================================
@@ -581,117 +503,5 @@ export function trackEditRecipeOpened(): void {
   trackEvent({
     name: 'input_edit_recipe_opened',
     properties: {},
-  });
-}
-
-// ============================================================================
-// Auto-Update Tracking
-// ============================================================================
-
-type UpdateMethod = 'electron-updater' | 'github-fallback';
-
-let updateDownloadStartTime: number | null = null;
-let currentUpdateVersion: string | null = null;
-let currentUpdateMethod: UpdateMethod | null = null;
-let reportedMilestones: Set<25 | 50 | 75 | 100> = new Set();
-
-export function trackUpdateCheckStarted(
-  trigger: 'startup' | 'manual',
-  currentVersion: string
-): void {
-  trackEvent({
-    name: 'update_check_started',
-    properties: { trigger, current_version: currentVersion },
-  });
-}
-
-export function trackUpdateCheckCompleted(
-  result: 'available' | 'not_available' | 'error',
-  currentVersion: string,
-  options: {
-    latestVersion?: string;
-    usingFallback: boolean;
-    errorType?: string;
-  }
-): void {
-  trackEvent({
-    name: 'update_check_completed',
-    properties: {
-      result,
-      current_version: currentVersion,
-      latest_version: options.latestVersion,
-      using_fallback: options.usingFallback,
-      error_type: options.errorType,
-    },
-  });
-}
-
-export function trackUpdateDownloadStarted(version: string, method: UpdateMethod): void {
-  updateDownloadStartTime = Date.now();
-  currentUpdateVersion = version;
-  currentUpdateMethod = method;
-  reportedMilestones = new Set();
-
-  trackEvent({
-    name: 'update_download_started',
-    properties: { version, method },
-  });
-}
-
-export function trackUpdateDownloadProgress(percent: number): void {
-  if (!currentUpdateVersion || !currentUpdateMethod) return;
-
-  const milestones: Array<25 | 50 | 75 | 100> = [25, 50, 75, 100];
-  for (const milestone of milestones) {
-    if (percent >= milestone && !reportedMilestones.has(milestone)) {
-      reportedMilestones.add(milestone);
-      trackEvent({
-        name: 'update_download_progress',
-        properties: {
-          milestone,
-          version: currentUpdateVersion,
-          method: currentUpdateMethod,
-        },
-      });
-    }
-  }
-}
-
-export function trackUpdateDownloadCompleted(
-  success: boolean,
-  version: string,
-  method: UpdateMethod,
-  errorType?: string
-): void {
-  const durationSeconds = updateDownloadStartTime
-    ? Math.round((Date.now() - updateDownloadStartTime) / 1000)
-    : undefined;
-
-  trackEvent({
-    name: 'update_download_completed',
-    properties: {
-      success,
-      version,
-      method,
-      duration_seconds: durationSeconds,
-      error_type: errorType,
-    },
-  });
-
-  // Reset state
-  updateDownloadStartTime = null;
-  currentUpdateVersion = null;
-  currentUpdateMethod = null;
-  reportedMilestones = new Set();
-}
-
-export function trackUpdateInstallInitiated(
-  version: string,
-  method: UpdateMethod,
-  action: 'quit_and_install' | 'open_folder_and_quit' | 'open_folder_only'
-): void {
-  trackEvent({
-    name: 'update_install_initiated',
-    properties: { version, method, action },
   });
 }

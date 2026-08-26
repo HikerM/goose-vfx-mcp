@@ -1,14 +1,14 @@
 {
-  "name": "@aaif/goose",
+  "name": "@hikerm/lumina",
   "version": "0.20.1",
-  "description": "Goose - an open-source AI agent",
+  "description": "Lumina - an open-source AI agent",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aaif-goose/goose.git"
+    "url": "git+https://github.com/HikerM/lumina.git"
   },
   "keywords": [
-    "goose",
+    "lumina",
     "ai",
     "agent",
     "cli",
@@ -16,7 +16,7 @@
   ],
   "type": "module",
   "bin": {
-    "goose-tui": "dist/tui.js"
+    "lumina-tui": "dist/tui.js"
   },
   "files": [
     "dist"
@@ -27,7 +27,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@aaif/goose-sdk": "0.20.2",
+    "@hikerm/lumina-sdk": "workspace:*",
     "@agentclientprotocol/sdk": "^0.19.0",
     "@inkjs/ui": "^2.0.0",
     "ink": "^6.8.0",

@@ -11,11 +11,11 @@ function initializeResponseWithMeta(meta?: unknown): Pick<InitializeResponse, 'a
 }
 
 describe('ACP capabilities', () => {
-  it('detects local inference support from Goose metadata', () => {
+  it('detects local inference support from Lumina metadata', () => {
     expect(
       hasLocalInferenceCapability(
         initializeResponseWithMeta({
-          goose: {
+          lumina: {
             localInference: {},
           },
         })
@@ -26,11 +26,11 @@ describe('ACP capabilities', () => {
   it('treats missing local inference metadata as unsupported', () => {
     expect(hasLocalInferenceCapability(initializeResponseWithMeta())).toBe(false);
     expect(hasLocalInferenceCapability(initializeResponseWithMeta({}))).toBe(false);
-    expect(hasLocalInferenceCapability(initializeResponseWithMeta({ goose: {} }))).toBe(false);
+    expect(hasLocalInferenceCapability(initializeResponseWithMeta({ lumina: {} }))).toBe(false);
   });
 
-  it('ignores malformed Goose metadata', () => {
-    expect(hasLocalInferenceCapability(initializeResponseWithMeta({ goose: true }))).toBe(false);
-    expect(hasLocalInferenceCapability(initializeResponseWithMeta({ goose: null }))).toBe(false);
+  it('ignores malformed Lumina metadata', () => {
+    expect(hasLocalInferenceCapability(initializeResponseWithMeta({ lumina: true }))).toBe(false);
+    expect(hasLocalInferenceCapability(initializeResponseWithMeta({ lumina: null }))).toBe(false);
   });
 });

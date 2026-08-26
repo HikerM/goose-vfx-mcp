@@ -1,24 +1,24 @@
 ---
 title: Google Maps Extension
-description: Add Google Maps MCP Server as a goose Extension
+description: Add Google Maps MCP Server as a lumina Extension
 unlisted: true
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 
 Server archived
 
-This tutorial covers how to add the [Google Maps MCP Server](https://www.pulsemcp.com/servers/google-maps-docs) as a goose extension to enable geocoding, place searching, distance calculations, elevation data retrieval, and directions.
+This tutorial covers how to add the [Google Maps MCP Server](https://www.pulsemcp.com/servers/google-maps-docs) as a lumina extension to enable geocoding, place searching, distance calculations, elevation data retrieval, and directions.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-google-maps&id=google-maps&name=Google%20Maps&description=Google%20Maps%20API%20integration&env=GOOGLE_MAPS_API_KEY%3DGoogle%20Maps%20API%20key)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=npx&arg=-y&arg=%40modelcontextprotocol%2Fserver-google-maps&id=google-maps&name=Google%20Maps&description=Google%20Maps%20API%20integration&env=GOOGLE_MAPS_API_KEY%3DGoogle%20Maps%20API%20key)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
   npx -y @modelcontextprotocol/server-google-maps
@@ -38,8 +38,8 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
 :::
 
 <Tabs groupId="interface" defaultValue="ui">
-  <TabItem value="ui" label="goose Desktop">
-  <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop">
+  <LuminaDesktopInstaller
     extensionId="google-maps"
     extensionName="Google Maps"
     description="Google Maps API integration"
@@ -52,54 +52,54 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     apiKeyLinkText="Google Maps API Key"
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   1. Run the `configure` command:
   ```sh
-  goose configure
+  lumina configure
   ```
 
   2. Choose to add a `Command-line Extension`
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◆  What type of extension would you like to add?
-    │  ○ Built-in Extension 
-    // highlight-start    
+    │  ○ Built-in Extension
+    // highlight-start
     │  ● Command-line Extension (Run a local command or script)
     // highlight-end
-    │  ○ Remote Extension (Streamable HTTP) 
-    └ 
+    │  ○ Remote Extension (Streamable HTTP)
+    └
   ```
 
   3. Give your extension a name
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     // highlight-start
     ◆  What would you like to call this extension?
     │  Google Maps
     // highlight-end
-    └ 
+    └
   ```
 
   4. Enter the command
   ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Google Maps
@@ -108,18 +108,18 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  What command should be run?
     │  npx -y @modelcontextprotocol/server-google-maps
     // highlight-end
-    └ 
-  ``` 
+    └
+  ```
 
-  5. Enter the number of seconds goose should wait for actions to complete before timing out. Default is 300s
+  5. Enter the number of seconds lumina should wait for actions to complete before timing out. Default is 300s
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Google Maps
@@ -131,18 +131,18 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     ◆  Please set the timeout for this tool (in secs):
     │  300
     // highlight-end
-    └ 
-  ``` 
+    └
+  ```
 
   6. Choose to add a description. If you select "Yes" here, you will be prompted to enter a description for the extension.
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Google Maps
@@ -158,19 +158,19 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │  No
     // highlight-end
     │
-    └ 
+    └
   ```
 
   7. Obtain a [Google Maps API Key](https://developers.google.com/maps/documentation/javascript/get-api-key) and paste it in.
 
    ```sh
-    ┌   goose-configure 
+    ┌   lumina-configure
     │
     ◇  What would you like to configure?
-    │  Add Extension (Connect to a new extension) 
+    │  Add Extension (Connect to a new extension)
     │
     ◇  What type of extension would you like to add?
-    │  Command-line Extension 
+    │  Command-line Extension
     │
     ◇  What would you like to call this extension?
     │  Google Maps
@@ -183,10 +183,10 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │
     ◇  Would you like to add a description?
     │  No
-    │   
+    │
     // highlight-start
     ◆  Would you like to add environment variables?
-    │  Yes 
+    │  Yes
     │
     ◇  Environment variable name:
     │  GOOGLE_MAPS_API_KEY
@@ -195,39 +195,39 @@ Note that you'll need [Node.js](https://nodejs.org/) installed on your system to
     │  ▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪
     │
     ◇  Add another environment variable?
-    │  No 
+    │  No
     // highlight-end
     └  Added github extension
-  ```  
+  ```
 
   </TabItem>
 </Tabs>
 
 ## Example Usage
 
-goose acts as an autonomous agent that tracks a delivery driver’s location, updates the customer in real-time, and adjusts ETAs dynamically based on Google Maps traffic data.
+lumina acts as an autonomous agent that tracks a delivery driver’s location, updates the customer in real-time, and adjusts ETAs dynamically based on Google Maps traffic data.
 
-goose can:
+lumina can:
 
 **Monitor Driver Location**
-* goose gets the driver’s GPS coordinates every few seconds.
-* If the driver’s location is significantly behind schedule, goose recalculates the ETA.
+* lumina gets the driver’s GPS coordinates every few seconds.
+* If the driver’s location is significantly behind schedule, lumina recalculates the ETA.
 
 **Traffic-Aware ETA Adjustments**
-* goose queries Google Maps for live traffic conditions.
-* If delays are detected, goose updates the customer’s tracker with a new estimated time.
+* lumina queries Google Maps for live traffic conditions.
+* If delays are detected, lumina updates the customer’s tracker with a new estimated time.
 
 **Dynamic Customer Notifications**
-* If the driver is stuck in traffic, goose sends an alert to the customer: “Your driver is running late due to traffic. Updated ETA: 7:25 PM.”
-* If the driver is ahead of schedule, goose notifies the restaurant to prepare the food earlier.
+* If the driver is stuck in traffic, lumina sends an alert to the customer: “Your driver is running late due to traffic. Updated ETA: 7:25 PM.”
+* If the driver is ahead of schedule, lumina notifies the restaurant to prepare the food earlier.
 
 
-### goose Prompt
+### lumina Prompt
 ```
 Track the live GPS location of driver ID #12345. Query Google Maps for real-time traffic data and adjust the estimated delivery time if delays exceed 5 minutes. If ETA changes, update the customer’s live tracker and send an SMS notification. If the delay is greater than 20 minutes, check if another driver within a 1-mile radius can take over the delivery.
 ```
 
-### goose Output
+### lumina Output
 
 :::note CLI
 Okay, I will track Driver #12345, query Google Maps for traffic data, adjust the ETA, and notify the customer.
@@ -294,7 +294,7 @@ Estimated arrival at: 08:45 AM
 
 There is no significant delay.
 
-*At 08:35 AM:* There's a traffic incident. 
+*At 08:35 AM:* There's a traffic incident.
 
 
 `─── maps_directions | googlemaps ──────────────────────────`

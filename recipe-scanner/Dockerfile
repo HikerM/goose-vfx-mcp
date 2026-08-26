@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim
 
 # Install essential tools for monitoring and security scanning
-# Also install X11 libraries needed by Goose CLI
+# Also install X11 libraries needed by Lumina CLI
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
@@ -45,10 +45,10 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
     chmod +x /usr/local/bin/uv /usr/local/bin/uvx && \
     uv --version && uvx --version
 
-# Pre-download and install Goose CLI to avoid network issues during runtime
-RUN curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | \
-    CONFIGURE=false GOOSE_BIN_DIR=/usr/local/bin bash && \
-    echo "✅ Goose CLI pre-installed: $(/usr/local/bin/goose --version)"
+# Pre-download and install Lumina CLI to avoid network issues during runtime
+RUN curl -fsSL https://github.com/HikerM/lumina/releases/download/stable/download_cli.sh | \
+    CONFIGURE=false LUMINA_BIN_DIR=/usr/local/bin bash && \
+    echo "✅ Lumina CLI pre-installed: $(/usr/local/bin/lumina --version)"
 
 # Create ClamAV configuration directory and basic config
 # Allow non-root 'scanner' to install packages via sudo without password
@@ -69,19 +69,19 @@ RUN freshclam || true
 
 # Create non-root user and setup directories
 RUN useradd -m -u 1000 scanner && \
-    mkdir -p /home/scanner/.config/goose && \
-    mkdir -p /home/scanner/.local/share/goose && \
+    mkdir -p /home/scanner/.config/lumina && \
+    mkdir -p /home/scanner/.local/share/lumina && \
     mkdir -p /output && \
-    mkdir -p /tmp/goose && \
-    mkdir -p /tmp/goose_home && \
+    mkdir -p /tmp/lumina && \
+    mkdir -p /tmp/lumina_home && \
     mkdir -p /tmp/training && \
-    chown -R scanner:scanner /home/scanner /output /tmp/goose /tmp/goose_home /tmp/training
+    chown -R scanner:scanner /home/scanner /output /tmp/lumina /tmp/lumina_home /tmp/training
 
 # Set capabilities on tcpdump to allow non-root network capture
 RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/tcpdump
 
-# Copy Goose configuration
-COPY config.yaml /home/scanner/.config/goose/config.yaml
+# Copy Lumina configuration
+COPY config.yaml /home/scanner/.config/lumina/config.yaml
 
 # Copy scanning script, base recipe, and training data decoder
 COPY scan-recipe.sh /usr/local/bin/scan-recipe.sh
@@ -90,7 +90,7 @@ COPY decode-training-data.py /usr/local/bin/decode-training-data.py
 RUN chmod +x /usr/local/bin/scan-recipe.sh /usr/local/bin/decode-training-data.py
 
 # Set proper ownership
-RUN chown scanner:scanner /home/scanner/.config/goose/config.yaml /docker/base_recipe.yaml
+RUN chown scanner:scanner /home/scanner/.config/lumina/config.yaml /docker/base_recipe.yaml
 
 # Switch to non-root user
 USER scanner

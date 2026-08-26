@@ -1,0 +1,887 @@
+{
+  "schema_version": "1.0.0",
+  "repository": {
+    "root": "D:\\Project\\goose",
+    "is_git": true,
+    "head": "a501edf7c0bf3e4b375d9c0b44056c1b3f39b877",
+    "branch": "codex/lumina-commercial",
+    "dirty": true
+  },
+  "scan_root": "D:\\Project\\goose",
+  "projects": [
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp",
+      "name": "fxhoudinimcp",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {
+        "changelog": "auto-changelog -p --unreleased"
+      },
+      "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp\\package.json"
+    },
+    {
+      "kind": "python",
+      "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp",
+      "name": "fxhoudinimcp",
+      "languages": [
+        {
+          "name": "Python",
+          "version": ">=3.10"
+        }
+      ],
+      "frameworks": [
+        "Pydantic"
+      ],
+      "dependencies": [
+        "mcp>=1.8.0",
+        "httpx>=0.27.0",
+        "pydantic>=2.0.0"
+      ],
+      "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\fxhoudinimcp\\pyproject.toml"
+    },
+    {
+      "kind": "python",
+      "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\nuke-mcp",
+      "name": "nuke-mcp",
+      "languages": [
+        {
+          "name": "Python",
+          "version": ">=3.10"
+        }
+      ],
+      "frameworks": [],
+      "dependencies": [
+        "fastmcp>=2.14,<3.0"
+      ],
+      "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\nuke-mcp\\pyproject.toml"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\.vfx-runtime\\sources\\Unreal_mcp",
+      "name": "unreal-engine-mcp-server",
+      "languages": [
+        {
+          "name": "TypeScript",
+          "version": "7.0.2"
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": ">=18"
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": "npm",
+        "version": null
+      },
+      "scripts": {
+        "build:core": "tsc -p tsconfig.json",
+        "build": "npm run clean && npm run build:core",
+        "build:watch": "tsc -p tsconfig.json --watch",
+        "start": "node dist/cli.js",
+        "dev": "ts-node-esm src/cli.ts",
+        "lint": "echo \"Lint: typescript/javascript, C, C++, C#\" && eslint .",
+        "lint:fix": "eslint . --fix",
+        "lint:cpp": "echo \"Running C/C++ lint (cpplint)\" && (python -m cpplint --recursive plugins || echo 'cpplint not found; skipping C/C++ lint')",
+        "lint:c": "echo \"Running C lint (cpplint)\" && (python -m cpplint --recursive plugins || echo 'cpplint not found; skipping C lint')",
+        "lint:csharp": "echo \"Running C# lint (dotnet format)\" && (dotnet tool run dotnet-format --verify-no-changes || echo 'dotnet-format not available or formatting required; skipping C# lint')",
+        "clean": "rimraf dist tsconfig.tsbuildinfo",
+        "prepare": "node -e \"const fs=require('fs');(fs.existsSync('dist')&&fs.existsSync('dist/cli.js')&&fs.existsSync('dist/index.js'))||require('child_process').execSync('npm run build',{stdio:'inherit'})\"",
+        "automation:sync": "node scripts/sync-mcp-plugin.js",
+        "clean:tmp": "node scripts/clean-tmp.js",
+        "test": "node tests/integration.mjs",
+        "test:unit": "vitest run",
+        "test:unit:watch": "vitest",
+        "test:unit:coverage": "vitest run --coverage",
+        "test:all": "node tests/integration.mjs",
+        "test:smoke": "node --loader ts-node/esm scripts/smoke-test.ts",
+        "test:native-parity": "node tests/native-mcp-parity-audit.mjs",
+        "test:params": "npm run test:native-parity && node tests/parameter-combination-audit.mjs --static --strict --optional-strict",
+        "type-check": "tsc --noEmit"
+      },
+      "manifest": "D:\\Project\\goose\\.vfx-runtime\\sources\\Unreal_mcp\\package.json"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose",
+      "name": "goose",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": null
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina",
+      "name": "lumina-agent",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-acp-macros",
+      "name": "lumina-acp-macros",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-acp-macros\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-cli",
+      "name": "lumina-agent-cli",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-cli\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-download-manager",
+      "name": "lumina-download-manager",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-download-manager\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-evidence-db",
+      "name": "lumina-evidence-db",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-evidence-db\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-legacy-migrator",
+      "name": "lumina-legacy-migrator",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-legacy-migrator\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-local-inference",
+      "name": "lumina-local-inference",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-local-inference\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-mcp",
+      "name": "lumina-mcp",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-mcp\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-provider-types",
+      "name": "lumina-provider-types",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-provider-types\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-providers",
+      "name": "lumina-providers",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-providers\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-sdk",
+      "name": "lumina-sdk",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\Cargo.toml"
+    },
+    {
+      "kind": "java-gradle",
+      "root": "D:\\Project\\goose\\crates\\lumina-sdk\\examples\\uniffi\\kotlin",
+      "name": "kotlin",
+      "languages": [
+        {
+          "name": "Java",
+          "version": "JavaVersion.VERSION_11"
+        }
+      ],
+      "frameworks": [],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\examples\\uniffi\\kotlin\\build.gradle.kts"
+    },
+    {
+      "kind": "java-gradle",
+      "root": "D:\\Project\\goose\\crates\\lumina-sdk\\maven",
+      "name": "maven",
+      "languages": [
+        {
+          "name": "Java",
+          "version": "JavaVersion.VERSION_11"
+        }
+      ],
+      "frameworks": [],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\maven\\build.gradle.kts"
+    },
+    {
+      "kind": "python",
+      "root": "D:\\Project\\goose\\crates\\lumina-sdk\\python",
+      "name": "python",
+      "languages": [
+        {
+          "name": "Python",
+          "version": ">=3.9"
+        }
+      ],
+      "frameworks": [],
+      "dependencies": [],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-sdk\\python\\pyproject.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-sdk-types",
+      "name": "lumina-sdk-types",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-sdk-types\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-test",
+      "name": "lumina-test",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-test\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-test-support",
+      "name": "lumina-test-support",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-test-support\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\crates\\lumina-verified-sources",
+      "name": "lumina-verified-sources",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": {
+            "workspace": true
+          }
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\crates\\lumina-verified-sources\\Cargo.toml"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\documentation",
+      "name": "lumina",
+      "languages": [
+        {
+          "name": "TypeScript",
+          "version": "5.6.3"
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": ">=18.0"
+        }
+      ],
+      "frameworks": [
+        {
+          "name": "React",
+          "package": "react",
+          "version": "19.2.8"
+        }
+      ],
+      "package_manager": {
+        "name": "npm",
+        "version": null
+      },
+      "scripts": {
+        "docusaurus": "docusaurus",
+        "start": "docusaurus start",
+        "build": "node scripts/generate-docs-map.js && node scripts/generate-skills-manifest.js && node scripts/generate-skills-zips.js && docusaurus build",
+        "swizzle": "docusaurus swizzle",
+        "deploy": "docusaurus deploy",
+        "clear": "docusaurus clear",
+        "serve": "docusaurus serve",
+        "write-translations": "docusaurus write-translations",
+        "write-heading-ids": "docusaurus write-heading-ids",
+        "test": "node --test scripts/*.test.js",
+        "typecheck": "tsc",
+        "serve-static": "node scripts/serve-static.js"
+      },
+      "manifest": "D:\\Project\\goose\\documentation\\package.json"
+    },
+    {
+      "kind": "python",
+      "root": "D:\\Project\\goose\\examples\\mcp-wiki",
+      "name": "mcp-wiki",
+      "languages": [
+        {
+          "name": "Python",
+          "version": "3.13"
+        }
+      ],
+      "frameworks": [],
+      "dependencies": [
+        "beautifulsoup4>=4.12.3",
+        "html2text>=2024.2.26",
+        "mcp[cli]>=1.2.0",
+        "requests>=2.32.3"
+      ],
+      "manifest": "D:\\Project\\goose\\examples\\mcp-wiki\\pyproject.toml"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\oidc-proxy",
+      "name": "oidc-proxy",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {
+        "dev": "wrangler dev",
+        "deploy": "wrangler deploy",
+        "test": "vitest run"
+      },
+      "manifest": "D:\\Project\\goose\\oidc-proxy\\package.json"
+    },
+    {
+      "kind": "python",
+      "root": "D:\\Project\\goose\\scripts\\provider-error-proxy",
+      "name": "provider-error-proxy",
+      "languages": [
+        {
+          "name": "Python",
+          "version": ">=3.11"
+        }
+      ],
+      "frameworks": [],
+      "dependencies": [
+        "aiohttp>=3.14.0",
+        "brotli>=1.1.0"
+      ],
+      "manifest": "D:\\Project\\goose\\scripts\\provider-error-proxy\\pyproject.toml"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\services\\ask-ai-bot",
+      "name": "lumina-ask-ai-bot",
+      "languages": [
+        {
+          "name": "TypeScript",
+          "version": "^7.0.2"
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": "bun",
+        "version": null
+      },
+      "scripts": {
+        "start": "discraft start",
+        "build": "discraft build",
+        "dev": "discraft dev"
+      },
+      "manifest": "D:\\Project\\goose\\services\\ask-ai-bot\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\desktop",
+      "name": "lumina-desktop",
+      "languages": [
+        {
+          "name": "TypeScript",
+          "version": "~5.9.3"
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": "^24.10.0"
+        }
+      ],
+      "frameworks": [
+        {
+          "name": "React",
+          "package": "react",
+          "version": "^19.2.4"
+        },
+        {
+          "name": "Vite",
+          "package": "vite",
+          "version": "^7.3.1"
+        },
+        {
+          "name": "Express",
+          "package": "express",
+          "version": "^5.2.1"
+        },
+        {
+          "name": "Electron",
+          "package": "electron",
+          "version": "41.0.0"
+        }
+      ],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {
+        "postinstall": "pnpm run build-lumina-sdk",
+        "typecheck": "tsc --noEmit",
+        "build-lumina-sdk": "pnpm --filter @hikerm/lumina-sdk run build && pnpm run clean-vite-cache",
+        "clean-vite-cache": "node scripts/clean-vite-cache.js",
+        "start-gui": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge start",
+        "start-gui-debug": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge start -- --inspect=9229",
+        "start": "node scripts/start-dev.js",
+        "start:test-error": "LUMINA_TEST_ERROR=true electron-forge start",
+        "package": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge package",
+        "make": "pnpm run build-lumina-sdk && pnpm run i18n:compile && electron-forge make",
+        "make:win:installer": "node scripts/build-windows-installer.js",
+        "bundle:default": "node scripts/prepare-platform-binaries.js && pnpm run make && BUNDLE_NAME=\"${LUMINA_BUNDLE_NAME:-Lumina}\" && APP_DIR=\"out/${BUNDLE_NAME}-darwin-arm64\" && APP_BUNDLE=\"${APP_DIR}/${BUNDLE_NAME}.app\" && (cd \"$APP_DIR\" && ditto -c -k --sequesterRsrc --keepParent \"${BUNDLE_NAME}.app\" \"${BUNDLE_NAME}.zip\")",
+        "bundle:intel": "node scripts/prepare-platform-binaries.js && pnpm run make --arch=x64 && BUNDLE_NAME=\"${LUMINA_BUNDLE_NAME:-Lumina}\" && APP_DIR=\"out/${BUNDLE_NAME}-darwin-x64\" && APP_BUNDLE=\"${APP_DIR}/${BUNDLE_NAME}.app\" && (cd \"$APP_DIR\" && ditto -c -k --sequesterRsrc --keepParent \"${BUNDLE_NAME}.app\" \"${BUNDLE_NAME}_intel_mac.zip\")",
+        "debug": "echo 'run --remote-debugging-port=8315' && BUNDLE_NAME=\"${LUMINA_BUNDLE_NAME:-Lumina}\" && lldb \"out/${BUNDLE_NAME}-darwin-arm64/${BUNDLE_NAME}.app\"",
+        "test-e2e": "playwright test",
+        "test-e2e:dev": "playwright test --reporter=list --retries=0 --max-failures=1",
+        "test-e2e:ui": "playwright test --ui",
+        "test-e2e:debug": "playwright test --debug",
+        "test-e2e:report": "playwright show-report",
+        "test-e2e:single": "playwright test -g",
+        "lint": "eslint \"src/**/*.{ts,tsx}\" --fix --no-warn-ignored",
+        "lint:check": "pnpm run typecheck && eslint \"src/**/*.{ts,tsx}\" --max-warnings 0 --no-warn-ignored && pnpm run i18n:check",
+        "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+        "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
+        "test": "vitest",
+        "test:run": "vitest run",
+        "test:ui": "vitest --ui",
+        "test:coverage": "vitest run --coverage",
+        "test:integration": "vitest run --config vitest.integration.config.ts",
+        "test:integration:providers": "vitest run --config vitest.integration.config.ts tests/integration/test_providers.test.ts",
+        "test:integration:providers-code-exec": "vitest run --config vitest.integration.config.ts tests/integration/test_providers_code_exec.test.ts",
+        "test:integration:watch": "vitest --config vitest.integration.config.ts",
+        "test:integration:debug": "DEBUG=1 vitest run --config vitest.integration.config.ts",
+        "i18n:extract": "formatjs extract 'src/**/*.{ts,tsx}' --ignore '**/*.d.ts' --out-file src/i18n/messages/en.json --flatten && pnpm run i18n:compile",
+        "i18n:check": "node scripts/i18n-check.js && node scripts/i18n-validate-locale.js",
+        "i18n:compile": "node scripts/i18n-compile.js",
+        "i18n:validate-es": "node scripts/i18n-validate-locale.js es",
+        "i18n:validate-ja": "node scripts/i18n-validate-locale.js ja",
+        "i18n:validate-locale": "node scripts/i18n-validate-locale.js"
+      },
+      "manifest": "D:\\Project\\goose\\ui\\desktop\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-arm64",
+      "name": "@hikerm/lumina-binary-darwin-arm64",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {},
+      "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-arm64\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-x64",
+      "name": "@hikerm/lumina-binary-darwin-x64",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {},
+      "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-darwin-x64\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-arm64",
+      "name": "@hikerm/lumina-binary-linux-arm64",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {},
+      "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-arm64\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-x64",
+      "name": "@hikerm/lumina-binary-linux-x64",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {},
+      "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-linux-x64\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-win32-x64",
+      "name": "@hikerm/lumina-binary-win32-x64",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {},
+      "manifest": "D:\\Project\\goose\\ui\\lumina-binary\\lumina-binary-win32-x64\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui",
+      "name": "ui",
+      "languages": [
+        {
+          "name": "JavaScript",
+          "version": null
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": "pnpm",
+        "version": null
+      },
+      "scripts": {
+        "changeset": "changeset",
+        "version": "changeset version",
+        "release": "changeset publish"
+      },
+      "manifest": "D:\\Project\\goose\\ui\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\sdk",
+      "name": "@hikerm/lumina-sdk",
+      "languages": [
+        {
+          "name": "TypeScript",
+          "version": "~5.9.3"
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {
+        "build": "npm run generate && npm run build:ts",
+        "build:ts": "tsc",
+        "build:native": "tsx scripts/build-native.ts",
+        "build:native:all": "tsx scripts/build-native.ts --all",
+        "generate": "tsx generate-schema.ts",
+        "lint": "tsc --noEmit",
+        "test": "node --import tsx --test tests/*.test.ts",
+        "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+        "format": "prettier --write src/",
+        "check:compat": "node scripts/check-binary-compat.mjs"
+      },
+      "manifest": "D:\\Project\\goose\\ui\\sdk\\package.json"
+    },
+    {
+      "kind": "web-node",
+      "root": "D:\\Project\\goose\\ui\\text",
+      "name": "@hikerm/lumina",
+      "languages": [
+        {
+          "name": "TypeScript",
+          "version": "^5.7.0"
+        }
+      ],
+      "runtimes": [
+        {
+          "name": "Node.js",
+          "version": null
+        }
+      ],
+      "frameworks": [
+        {
+          "name": "React",
+          "package": "react",
+          "version": "^19.2.4"
+        }
+      ],
+      "package_manager": {
+        "name": null,
+        "version": null
+      },
+      "scripts": {
+        "build": "tsc",
+        "start": "tsx src/tui.tsx",
+        "lint": "tsc --noEmit"
+      },
+      "manifest": "D:\\Project\\goose\\ui\\text\\package.json"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\vendor\\agent-client-protocol",
+      "name": "agent-client-protocol",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": null
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\vendor\\agent-client-protocol\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\vendor\\agent-client-protocol-derive",
+      "name": "agent-client-protocol-derive",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": "1.88.0"
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\vendor\\agent-client-protocol-derive\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\vendor\\agent-client-protocol-http",
+      "name": "agent-client-protocol-http",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": null
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\vendor\\agent-client-protocol-http\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\vendor\\lumina-v8-engine",
+      "name": "lumina-v8-engine",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": null
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\vendor\\lumina-v8-engine\\Cargo.toml"
+    },
+    {
+      "kind": "rust",
+      "root": "D:\\Project\\goose\\vendor\\v8",
+      "name": "v8",
+      "languages": [
+        {
+          "name": "Rust",
+          "version": null
+        }
+      ],
+      "manifest": "D:\\Project\\goose\\vendor\\v8\\Cargo.toml"
+    }
+  ],
+  "monorepo": true,
+  "unknown": false,
+  "uncertainties": [
+    "未安装依赖时框架版本可能保留声明范围"
+  ]
+}

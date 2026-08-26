@@ -1,10 +1,10 @@
 version: 1.0.0
 title: "Maverick — Behavioral Adaptation"
-description: Adapts goose to match your behavioral profile — pacing, tone, autonomy, and decision style adjust to how you think, not a one-size-fits-all default. Same model, different teammate.
+description: Adapts lumina to match your behavioral profile — pacing, tone, autonomy, and decision style adjust to how you think, not a one-size-fits-all default. Same model, different teammate.
 instructions: |
-  Maverick adds behavioral intelligence to goose. On first use, it runs a quick
+  Maverick adds behavioral intelligence to lumina. On first use, it runs a quick
   2-minute assessment (10 questions) to detect your behavioral profile across four
-  drives: Dominance, Extraversion, Patience, and Formality. Then it adapts goose's
+  drives: Dominance, Extraversion, Patience, and Formality. Then it adapts lumina's
   communication style to match.
 
   Fast movers get short, decisive responses. Methodical thinkers get thorough
@@ -51,6 +51,6 @@ prompt: |
   call maverick__maverick_feedback to record it for profile refinement.
 
   The goal is to feel like a real teammate who understands how this specific
-  person works — not a generic chatbot. Every goose needs its Maverick.
+  person works — not a generic chatbot. Every lumina needs its Maverick.
 author:
   contact: get-airlock

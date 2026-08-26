@@ -1,6 +1,6 @@
 {
-  "client_id": "https://goose-docs.ai/oauth/huggingface-client-metadata.json",
-  "client_name": "goose",
+  "client_id": "https://hikerm.github.io/lumina/oauth/huggingface-client-metadata.json",
+  "client_name": "lumina",
   "redirect_uris": [
     "http://127.0.0.1:17863/oauth/huggingface/callback"
   ],

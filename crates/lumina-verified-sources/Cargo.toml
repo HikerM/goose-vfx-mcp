@@ -1,0 +1,18 @@
+[package]
+name = "lumina-verified-sources"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Pure Rust verified source protocol v2 crate"
+
+[lints]
+workspace = true
+
+[dependencies]
+base64.workspace = true
+ed25519-dalek = { version = "3.0.0", features = ["signature"] }
+sha2.workspace = true
+thiserror.workspace = true

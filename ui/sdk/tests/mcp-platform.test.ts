@@ -243,7 +243,7 @@ function canonicalManagedDetail(
 
 function requestOpaqueResponse<T>(
   raw: Record<string, unknown>,
-  method = "goose.mcpOpaque_unstable",
+  method = "lumina.mcpOpaque_unstable",
 ) {
   const client = new McpPlatformClient({
     async extMethod(receivedMethod) {
@@ -289,7 +289,7 @@ test("MCP Platform client sends the typed catalog request to the formal method",
     pageSize: 24,
   });
 
-  assert.equal(receivedMethod, "goose.mcpCatalogList_unstable");
+  assert.equal(receivedMethod, "lumina.mcpCatalogList_unstable");
   assert.deepEqual(receivedParams, {
     query: "database",
     trustTiers: ["official"],
@@ -494,7 +494,7 @@ test("manual connection contracts never send secret-bearing or free-form process
   });
 
   assert.deepEqual(calls[0], {
-    method: "goose.mcpManualPlanCreate_unstable",
+    method: "lumina.mcpManualPlanCreate_unstable",
     params: {
       connection: {
         type: "remote_http",
@@ -505,7 +505,7 @@ test("manual connection contracts never send secret-bearing or free-form process
     },
   });
   assert.deepEqual(calls[1], {
-    method: "goose.mcpManualPlanCreate_unstable",
+    method: "lumina.mcpManualPlanCreate_unstable",
     params: {
       connection: { type: "stdio_provider", sourceId: "approved-source" },
       idempotencyKey: "stdio-plan",
@@ -594,7 +594,7 @@ test("catalog-backed plan contracts send explicit source-bound targets without f
   });
 
   assert.deepEqual(calls[0], {
-    method: "goose.mcpPlanCreate_unstable",
+    method: "lumina.mcpPlanCreate_unstable",
     params: {
       intent: {
         type: "install_catalog",
@@ -703,7 +703,7 @@ test("managed detail and set-default responses accept both formal phase capabili
   };
   const client = new McpPlatformClient({
     async extMethod(method) {
-      if (method === "goose.mcpGet_unstable") {
+      if (method === "lumina.mcpGet_unstable") {
         return {
           outcome: {
             status: "success",
@@ -750,7 +750,7 @@ test("managed parsers accept canonical managed wire payloads for list/get/set-de
   const canonicalDetail = canonicalManagedDetail();
   const client = new McpPlatformClient({
     async extMethod(method) {
-      if (method === "goose.mcpList_unstable") {
+      if (method === "lumina.mcpList_unstable") {
         return {
           outcome: {
             status: "success",
@@ -761,7 +761,7 @@ test("managed parsers accept canonical managed wire payloads for list/get/set-de
           },
         };
       }
-      if (method === "goose.mcpGet_unstable") {
+      if (method === "lumina.mcpGet_unstable") {
         return {
           outcome: {
             status: "success",
@@ -807,7 +807,7 @@ test("managed and health parsers accept the constrained credential status projec
   const expectedCredentialStatus: McpCredentialStatus = "trusted_state_conflict";
   const client = new McpPlatformClient({
     async extMethod(method) {
-      if (method === "goose.mcpGet_unstable") {
+      if (method === "lumina.mcpGet_unstable") {
         return {
           outcome: {
             status: "success",
@@ -819,7 +819,7 @@ test("managed and health parsers accept the constrained credential status projec
           },
         };
       }
-      if (method === "goose.mcpHealthGet_unstable") {
+      if (method === "lumina.mcpHealthGet_unstable") {
         return {
           outcome: {
             status: "success",
@@ -912,7 +912,7 @@ test("managed parsers accept Rust null and omission matrices across managed and 
 
   const client = new McpPlatformClient({
     async extMethod(method) {
-      if (method === "goose.mcpList_unstable") {
+      if (method === "lumina.mcpList_unstable") {
         return {
           outcome: {
             status: "success",
@@ -923,7 +923,7 @@ test("managed parsers accept Rust null and omission matrices across managed and 
           },
         };
       }
-      if (method === "goose.mcpGet_unstable") {
+      if (method === "lumina.mcpGet_unstable") {
         return {
           outcome: {
             status: "success",
@@ -931,7 +931,7 @@ test("managed parsers accept Rust null and omission matrices across managed and 
           },
         };
       }
-      if (method === "goose.mcpHealthGet_unstable") {
+      if (method === "lumina.mcpHealthGet_unstable") {
         return {
           outcome: {
             status: "success",
@@ -981,17 +981,17 @@ test("managed parsers accept Rust null and omission matrices across managed and 
 test("managed and health parsers reject unknown credential status values", async () => {
   for (const [method, value] of [
     [
-      "goose.mcpGet_unstable",
+      "lumina.mcpGet_unstable",
       canonicalManagedDetail({
         summary: canonicalManagedSummary({ credentialStatus: "secret" }),
       }),
     ],
     [
-      "goose.mcpHealthGet_unstable",
+      "lumina.mcpHealthGet_unstable",
       canonicalHealthStatus({ credentialStatus: "secret" }),
     ],
     [
-      "goose.mcpSetDefaultEnabled_unstable",
+      "lumina.mcpSetDefaultEnabled_unstable",
       canonicalManagedSummary({ credentialStatus: "secret" }),
     ],
   ] as const) {
@@ -1009,11 +1009,11 @@ test("managed and health parsers reject unknown credential status values", async
 
     await assert.rejects(
       async () => {
-        if (method === "goose.mcpGet_unstable") {
+        if (method === "lumina.mcpGet_unstable") {
           await client.mcpGet_unstable({ managedMcpId: "managed-a" });
           return;
         }
-        if (method === "goose.mcpHealthGet_unstable") {
+        if (method === "lumina.mcpHealthGet_unstable") {
           await client.mcpHealthGet_unstable({ managedMcpId: "managed-a" });
           return;
         }
@@ -1106,71 +1106,71 @@ test("managed parsers reject null and omission mismatches against the Rust wire 
   const invalidCases: Array<{
     label: string;
     method:
-      | "goose.mcpList_unstable"
-      | "goose.mcpGet_unstable"
-      | "goose.mcpSetDefaultEnabled_unstable"
-      | "goose.mcpHealthGet_unstable";
+      | "lumina.mcpList_unstable"
+      | "lumina.mcpGet_unstable"
+      | "lumina.mcpSetDefaultEnabled_unstable"
+      | "lumina.mcpHealthGet_unstable";
     value: unknown;
   }> = [
-    { label: "missing nextCursor", method: "goose.mcpList_unstable", value: missingNextCursor },
+    { label: "missing nextCursor", method: "lumina.mcpList_unstable", value: missingNextCursor },
     {
       label: "missing activeVersion",
-      method: "goose.mcpSetDefaultEnabled_unstable",
+      method: "lumina.mcpSetDefaultEnabled_unstable",
       value: missingActiveVersion,
     },
     {
       label: "missing availableVersion",
-      method: "goose.mcpSetDefaultEnabled_unstable",
+      method: "lumina.mcpSetDefaultEnabled_unstable",
       value: missingAvailableVersion,
     },
     {
       label: "missing availableManifestDigest",
-      method: "goose.mcpSetDefaultEnabled_unstable",
+      method: "lumina.mcpSetDefaultEnabled_unstable",
       value: missingAvailableManifestDigest,
     },
     {
       label: "missing currentTask",
-      method: "goose.mcpSetDefaultEnabled_unstable",
+      method: "lumina.mcpSetDefaultEnabled_unstable",
       value: missingCurrentTask,
     },
     {
       label: "null externalCapability",
-      method: "goose.mcpSetDefaultEnabled_unstable",
+      method: "lumina.mcpSetDefaultEnabled_unstable",
       value: nullExternalCapability,
     },
     {
       label: "null task outcome error",
-      method: "goose.mcpList_unstable",
+      method: "lumina.mcpList_unstable",
       value: { items: [nullTaskOutcomeError], nextCursor: null },
     },
     {
       label: "missing latestHealth",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: missingLatestHealth,
     },
     {
       label: "missing registrationTask",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: missingRegistrationTask,
     },
     {
       label: "null supplyChain",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: nullSupplyChain,
     },
     {
       label: "missing health latest",
-      method: "goose.mcpHealthGet_unstable",
+      method: "lumina.mcpHealthGet_unstable",
       value: missingHealthLatest,
     },
     {
       label: "missing health capabilitiesDigest",
-      method: "goose.mcpHealthGet_unstable",
+      method: "lumina.mcpHealthGet_unstable",
       value: missingHealthCapabilitiesDigest,
     },
     {
       label: "missing health toolsDigest",
-      method: "goose.mcpHealthGet_unstable",
+      method: "lumina.mcpHealthGet_unstable",
       value: missingHealthToolsDigest,
     },
   ];
@@ -1188,11 +1188,11 @@ test("managed parsers reject null and omission mismatches against the Rust wire 
     });
 
     const call =
-      invalidCase.method === "goose.mcpList_unstable"
+      invalidCase.method === "lumina.mcpList_unstable"
         ? () => client.mcpList_unstable({})
-        : invalidCase.method === "goose.mcpGet_unstable"
+        : invalidCase.method === "lumina.mcpGet_unstable"
           ? () => client.mcpGet_unstable({ managedMcpId: "managed-a" })
-          : invalidCase.method === "goose.mcpHealthGet_unstable"
+          : invalidCase.method === "lumina.mcpHealthGet_unstable"
             ? () => client.mcpHealthGet_unstable({ managedMcpId: "managed-a" })
             : () =>
                 client.mcpSetDefaultEnabled_unstable({
@@ -1239,7 +1239,7 @@ test("managed summary parsers reject missing and malformed required fields acros
 
       const client = new McpPlatformClient({
         async extMethod(method) {
-          if (method === "goose.mcpList_unstable") {
+          if (method === "lumina.mcpList_unstable") {
             return {
               outcome: {
                 status: "success",
@@ -1247,7 +1247,7 @@ test("managed summary parsers reject missing and malformed required fields acros
               },
             };
           }
-          if (method === "goose.mcpGet_unstable") {
+          if (method === "lumina.mcpGet_unstable") {
             const detail = canonicalManagedDetail({ summary: invalidSummary });
             return {
               outcome: {
@@ -1330,27 +1330,27 @@ test("managed detail parser rejects missing and malformed required detail fields
 test("managed parsers reject unexpected keys and malformed nested managed payloads", async () => {
   const invalidCases: Array<{
     label: string;
-    method: "goose.mcpList_unstable" | "goose.mcpGet_unstable" | "goose.mcpSetDefaultEnabled_unstable";
+    method: "lumina.mcpList_unstable" | "lumina.mcpGet_unstable" | "lumina.mcpSetDefaultEnabled_unstable";
     value: unknown;
   }> = [
     {
       label: "page extra key",
-      method: "goose.mcpList_unstable",
+      method: "lumina.mcpList_unstable",
       value: { items: [canonicalManagedSummary()], extra: true },
     },
     {
       label: "summary extra key",
-      method: "goose.mcpSetDefaultEnabled_unstable",
+      method: "lumina.mcpSetDefaultEnabled_unstable",
       value: { ...canonicalManagedSummary(), extra: true },
     },
     {
       label: "detail extra key",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: { ...canonicalManagedDetail(), extra: true },
     },
     {
       label: "malformed currentTask",
-      method: "goose.mcpList_unstable",
+      method: "lumina.mcpList_unstable",
       value: {
         items: [
           canonicalManagedSummary({
@@ -1361,7 +1361,7 @@ test("managed parsers reject unexpected keys and malformed nested managed payloa
     },
     {
       label: "malformed eligibility",
-      method: "goose.mcpSetDefaultEnabled_unstable",
+      method: "lumina.mcpSetDefaultEnabled_unstable",
       value: {
         ...canonicalManagedSummary(),
         eligibility: { update: true, repair: true, uninstall: true, reason: "eligible" },
@@ -1369,14 +1369,14 @@ test("managed parsers reject unexpected keys and malformed nested managed payloa
     },
     {
       label: "malformed latestHealth",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: canonicalManagedDetail({
         latestHealth: canonicalHealthObservation({ detailCode: "bogus" }),
       }),
     },
     {
       label: "malformed registrationTask",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: canonicalManagedDetail({
         registrationTask: canonicalTaskRef({
           outcome: {
@@ -1391,14 +1391,14 @@ test("managed parsers reject unexpected keys and malformed nested managed payloa
     },
     {
       label: "malformed supplyChain tag",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: canonicalManagedDetail({
         supplyChain: { type: "future_supply_chain" },
       }),
     },
     {
       label: "malformed supplyChain payload",
-      method: "goose.mcpGet_unstable",
+      method: "lumina.mcpGet_unstable",
       value: canonicalManagedDetail({
         supplyChain: {
           type: "docker",
@@ -1427,9 +1427,9 @@ test("managed parsers reject unexpected keys and malformed nested managed payloa
     });
 
     const call =
-      invalidCase.method === "goose.mcpList_unstable"
+      invalidCase.method === "lumina.mcpList_unstable"
         ? () => client.mcpList_unstable({})
-        : invalidCase.method === "goose.mcpGet_unstable"
+        : invalidCase.method === "lumina.mcpGet_unstable"
           ? () => client.mcpGet_unstable({ managedMcpId: "managed-a" })
           : () =>
               client.mcpSetDefaultEnabled_unstable({
@@ -1503,7 +1503,7 @@ test("managed phase capabilities fail closed for malformed values across every r
   for (const [label, phaseCapabilities] of invalidPhaseCapabilitiesCases) {
     const client = new McpPlatformClient({
       async extMethod(method) {
-        if (method === "goose.mcpGet_unstable") {
+        if (method === "lumina.mcpGet_unstable") {
           return {
             outcome: {
               status: "success",
@@ -1513,7 +1513,7 @@ test("managed phase capabilities fail closed for malformed values across every r
             },
           };
         }
-        if (method === "goose.mcpSetDefaultEnabled_unstable") {
+        if (method === "lumina.mcpSetDefaultEnabled_unstable") {
           return {
             outcome: {
               status: "success",
@@ -1758,7 +1758,7 @@ test("managed parsers reject class instances, dates, arrays, and inherited error
   const inheritedErrorDetails = Object.assign(
     Object.create({ type: "phase_unavailable" }),
     {
-      operation: "goose.mcpProfileModelRecommend_unstable",
+      operation: "lumina.mcpProfileModelRecommend_unstable",
       phase: "4B",
     },
   );
@@ -1796,7 +1796,7 @@ test("plain JSON responses preserve formal error details and both phase capabili
     async extMethod(method) {
       return JSON.parse(
         JSON.stringify(
-          method === "goose.mcpGet_unstable"
+          method === "lumina.mcpGet_unstable"
             ? {
                 outcome: {
                   status: "success",
@@ -1869,7 +1869,7 @@ test("plain JSON responses preserve formal error details and both phase capabili
       details: {
         type: "phase_unavailable",
         phase: "4B",
-        operation: "goose.mcpProfileModelRecommend_unstable",
+        operation: "lumina.mcpProfileModelRecommend_unstable",
       },
     },
   ] as const) {

@@ -1,24 +1,24 @@
 ---
 title: Blender Extension
-description: Add Blender MCP Server as a goose Extension
+description: Add Blender MCP Server as a lumina Extension
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import YouTubeShortEmbed from '@site/src/components/YouTubeShortEmbed';
-import GooseDesktopInstaller from '@site/src/components/GooseDesktopInstaller';
+import LuminaDesktopInstaller from '@site/src/components/LuminaDesktopInstaller';
 import CLIExtensionInstructions from '@site/src/components/CLIExtensionInstructions';
 
 <YouTubeShortEmbed videoUrl="https://www.youtube.com/embed/izoQatKtJ2I" />
 
-This tutorial covers how to add the [Blender MCP Server](https://github.com/ahujasid/blender-mcp) as a goose extension to create 3D scenes, control Blender with natural language, generate models, apply materials, and more.
+This tutorial covers how to add the [Blender MCP Server](https://github.com/ahujasid/blender-mcp) as a lumina extension to create 3D scenes, control Blender with natural language, generate models, apply materials, and more.
 
 :::tip Quick Install
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  [Launch the installer](goose://extension?cmd=uvx&arg=blender-mcp&id=blender&name=Blender&description=Blender%203D%20scene%20creation%20integration)
+  <TabItem value="ui" label="lumina Desktop" default>
+  [Launch the installer](lumina://extension?cmd=uvx&arg=blender-mcp&id=blender&name=Blender&description=Blender%203D%20scene%20creation%20integration)
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
   **Command**
   ```sh
   uvx blender-mcp
@@ -52,8 +52,8 @@ Note that you'll need [uv](https://docs.astral.sh/uv/#installation) installed on
 ### Add Blender MCP Server
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-  <GooseDesktopInstaller
+  <TabItem value="ui" label="lumina Desktop" default>
+  <LuminaDesktopInstaller
     extensionId="blender"
     extensionName="Blender"
     description="Blender 3D scene creation integration"
@@ -61,7 +61,7 @@ Note that you'll need [uv](https://docs.astral.sh/uv/#installation) installed on
     args={["blender-mcp"]}
   />
   </TabItem>
-  <TabItem value="cli" label="goose CLI">
+  <TabItem value="cli" label="lumina CLI">
     <CLIExtensionInstructions
       name="Blender"
       description="Blender 3D scene creation integration"
@@ -72,16 +72,16 @@ Note that you'll need [uv](https://docs.astral.sh/uv/#installation) installed on
 
 ## Example Usage
 
-In this example, I’ll show you how to use goose with the Blender Extension to build an entire 3D campfire scene from scratch. By automating Blender controls through natural language, goose can create objects like logs and fireballs, apply realistic materials, add lighting effects, generate particles for sparks, create subtle smoke, and even animate the fire to gently pulse over time.
+In this example, I’ll show you how to use lumina with the Blender Extension to build an entire 3D campfire scene from scratch. By automating Blender controls through natural language, lumina can create objects like logs and fireballs, apply realistic materials, add lighting effects, generate particles for sparks, create subtle smoke, and even animate the fire to gently pulse over time.
 
-In this example, I’ll show you how to use goose with the Blender Extension to build a full 3D campfire scene, including logs, fireballs, lighting, and subtle fire animation, just by describing what you want.
+In this example, I’ll show you how to use lumina with the Blender Extension to build a full 3D campfire scene, including logs, fireballs, lighting, and subtle fire animation, just by describing what you want.
 
-### goose Prompt
+### lumina Prompt
 
 > Build a cozy campfire scene. Add a ground plane, place a few logs in a circle, and add a glowing fireball in the middle. Set the lighting to a warm tone like a sunset, and angle the camera for a dramatic shot. Give the logs a rough wood texture and make the fireball emit light.
 
 
-### goose Output
+### lumina Output
 
 :::note CLI
 

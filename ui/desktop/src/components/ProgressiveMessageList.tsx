@@ -16,7 +16,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { defineMessages, useIntl } from '../i18n';
-import GooseMessage from './GooseMessage';
+import LuminaMessage from './LuminaMessage';
 import UserMessage from './UserMessage';
 import {
   SystemNotificationInline,
@@ -27,7 +27,7 @@ import {
   getCreditsExhaustedNotification,
 } from './context_management/CreditsExhaustedNotification';
 import type { Message, NotificationEvent, SystemNotificationContent } from '../types/message';
-import LoadingGoose from './LoadingGoose';
+import LoadingLumina from './LoadingLumina';
 import { ChatType } from '../types/chat';
 import { identifyConsecutiveToolCalls, isInChain } from '../utils/toolCallChaining';
 import { getModelDisplayName } from './settings/models/predefinedModelsUtils';
@@ -289,7 +289,7 @@ export default function ProgressiveMessageList({
                   <UserMessage message={message} onMessageUpdate={onMessageUpdate} />
                 )
               ) : (
-                <GooseMessage
+                <LuminaMessage
                   sessionId={chat.sessionId}
                   message={message}
                   messages={messages}
@@ -333,7 +333,7 @@ export default function ProgressiveMessageList({
       {/* Loading indicator when progressively rendering */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-8">
-          <LoadingGoose
+          <LoadingLumina
             message={intl.formatMessage(i18n.loadingMessages, {
               renderedCount,
               totalCount: messages.length,

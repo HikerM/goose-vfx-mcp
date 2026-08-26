@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useConfig } from '../ConfigContext';
 import { useModelAndProvider } from '../ModelAndProviderContext';
 import { acpListProviderDetails, acpReadDefaults, acpSaveDefaults } from '../../acp/providers';
 import LuminaLogo from '../LuminaLogo';
@@ -11,8 +10,6 @@ import {
   trackOnboardingStarted,
   trackOnboardingCompleted,
   trackOnboardingProviderSelected,
-  trackTelemetryPreference,
-  setTelemetryEnabled as setAnalyticsTelemetryEnabled,
 } from '../../utils/analytics';
 import { defineMessages, useIntl } from '../../i18n';
 
@@ -39,8 +36,6 @@ const i18n = defineMessages({
   },
 });
 
-const TELEMETRY_CONFIG_KEY = 'GOOSE_TELEMETRY_ENABLED';
-
 interface OnboardingGuardProps {
   children: React.ReactNode;
 }
@@ -48,7 +43,6 @@ interface OnboardingGuardProps {
 export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const intl = useIntl();
   const navigate = useNavigate();
-  const { upsert } = useConfig();
   const { getFallbackModelAndProvider, refreshCurrentModelAndProvider } = useModelAndProvider();
 
   const [isCheckingProvider, setIsCheckingProvider] = useState(true);
@@ -106,7 +100,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   }, []);
 
   useEffect(() => {
-    if (!isCheckingProvider && !hasProvider && !checkProviderError && !hasTrackedOnboardingStart.current) {
+    if (
+      !isCheckingProvider &&
+      !hasProvider &&
+      !checkProviderError &&
+      !hasTrackedOnboardingStart.current
+    ) {
       trackOnboardingStarted();
       hasTrackedOnboardingStart.current = true;
     }
@@ -124,18 +123,9 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     setConfiguredProviderDisplayName(matchedProvider?.metadata.display_name || providerName);
   };
 
-  const finishOnboarding = async (telemetryEnabled: boolean) => {
-    try {
-      await upsert(TELEMETRY_CONFIG_KEY, telemetryEnabled, false);
-    } catch (error) {
-      console.error('Failed to save telemetry preference:', error);
-    }
-    trackTelemetryPreference(telemetryEnabled, 'onboarding');
+  const finishOnboarding = () => {
     if (configuredProvider) {
       trackOnboardingCompleted(configuredProvider, configuredModel ?? undefined);
-    }
-    if (!telemetryEnabled) {
-      setAnalyticsTelemetryEnabled(false);
     }
     navigate('/', { replace: true });
     setHasProvider(true);
@@ -152,11 +142,13 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
           <div className="mb-4">
             <LuminaLogo size="small" className="mx-auto" hover={false} />
           </div>
-          <h1 className="text-xl font-light mb-3">{intl.formatMessage(i18n.checkProviderErrorTitle)}</h1>
-          <p className="text-text-muted mb-6">{intl.formatMessage(i18n.checkProviderErrorDescription)}</p>
-          <Button onClick={() => checkProvider()}>
-            {intl.formatMessage(i18n.retry)}
-          </Button>
+          <h1 className="text-xl font-light mb-3">
+            {intl.formatMessage(i18n.checkProviderErrorTitle)}
+          </h1>
+          <p className="text-text-muted mb-6">
+            {intl.formatMessage(i18n.checkProviderErrorDescription)}
+          </p>
+          <Button onClick={() => checkProvider()}>{intl.formatMessage(i18n.retry)}</Button>
         </div>
       </div>
     );
@@ -185,7 +177,9 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
               <div className="mb-4">
                 <LuminaLogo size="small" hover={false} />
               </div>
-              <h1 className="text-2xl sm:text-4xl font-light mb-3">{intl.formatMessage(i18n.welcomeTitle)}</h1>
+              <h1 className="text-2xl sm:text-4xl font-light mb-3">
+                {intl.formatMessage(i18n.welcomeTitle)}
+              </h1>
               <p className="text-text-muted text-base sm:text-lg">
                 {intl.formatMessage(i18n.welcomeDescription)}
               </p>

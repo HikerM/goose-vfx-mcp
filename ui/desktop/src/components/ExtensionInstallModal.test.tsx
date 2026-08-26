@@ -43,7 +43,7 @@ describe('ExtensionInstallModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockElectron.getConfig.mockReturnValue({
-      GOOSE_ALLOWLIST_WARNING: false,
+      LUMINA_ALLOWLIST_WARNING: false,
     });
   });
 
@@ -60,7 +60,7 @@ describe('ExtensionInstallModal', () => {
       const eventHandler = getAddExtensionEventHandler();
 
       await act(async () => {
-        await eventHandler({}, 'goose://extension?cmd=npx&arg=test-extension&name=TestExt');
+        await eventHandler({}, 'lumina://extension?cmd=npx&arg=test-extension&name=TestExt');
       });
 
       expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe('ExtensionInstallModal', () => {
       const eventHandler = getAddExtensionEventHandler();
 
       await act(async () => {
-        await eventHandler({}, 'goose://extension?cmd=npx&arg=test-extension&name=AllowedExt');
+        await eventHandler({}, 'lumina://extension?cmd=npx&arg=test-extension&name=AllowedExt');
       });
 
       expect(screen.getByText('Confirm Extension Installation')).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe('ExtensionInstallModal', () => {
 
     it('should handle warning mode', async () => {
       mockElectron.getConfig.mockReturnValue({
-        GOOSE_ALLOWLIST_WARNING: true,
+        LUMINA_ALLOWLIST_WARNING: true,
       });
       mockElectron.getAllowedExtensions.mockResolvedValue(['uvx allowed-package']);
 
@@ -97,7 +97,7 @@ describe('ExtensionInstallModal', () => {
       await act(async () => {
         await eventHandler(
           {},
-          'goose://extension?cmd=npx&arg=untrusted-extension&name=UntrustedExt'
+          'lumina://extension?cmd=npx&arg=untrusted-extension&name=UntrustedExt'
         );
       });
 
@@ -116,7 +116,7 @@ describe('ExtensionInstallModal', () => {
       await act(async () => {
         await eventHandler(
           {},
-          'goose://extension?cmd=i-ching-mcp-server&id=i-ching&name=I%20Ching&description=I%20Ching%20divination'
+          'lumina://extension?cmd=i-ching-mcp-server&id=i-ching&name=I%20Ching&description=I%20Ching%20divination'
         );
       });
 
@@ -133,7 +133,7 @@ describe('ExtensionInstallModal', () => {
       const eventHandler = getAddExtensionEventHandler();
 
       await act(async () => {
-        await eventHandler({}, 'goose://extension?cmd=npx&arg=blocked-extension&name=BlockedExt');
+        await eventHandler({}, 'lumina://extension?cmd=npx&arg=blocked-extension&name=BlockedExt');
       });
 
       expect(screen.getByText('Extension Installation Blocked')).toBeInTheDocument();
@@ -152,7 +152,7 @@ describe('ExtensionInstallModal', () => {
       const eventHandler = getAddExtensionEventHandler();
 
       await act(async () => {
-        await eventHandler({}, 'goose://extension?cmd=npx&arg=test&name=Test');
+        await eventHandler({}, 'lumina://extension?cmd=npx&arg=test&name=Test');
       });
 
       expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe('ExtensionInstallModal', () => {
       const eventHandler = getAddExtensionEventHandler();
 
       await act(async () => {
-        await eventHandler({}, 'goose://extension?cmd=npx&arg=test&name=Test');
+        await eventHandler({}, 'lumina://extension?cmd=npx&arg=test&name=Test');
       });
 
       await act(async () => {
@@ -181,7 +181,7 @@ describe('ExtensionInstallModal', () => {
       });
 
       expect(addExtensionFromDeepLink).toHaveBeenCalledWith(
-        'goose://extension?cmd=npx&arg=test&name=Test',
+        'lumina://extension?cmd=npx&arg=test&name=Test',
         mockAddExtension,
         expect.any(Function)
       );

@@ -8,8 +8,8 @@ import TabItem from '@theme/TabItem';
 import { PanelLeft } from 'lucide-react';
 
 <Tabs groupId="interface">
-  <TabItem value="ui" label="goose Desktop" default>
-Response Styles customize how tool interactions are displayed in the goose Desktop chat window. 
+  <TabItem value="ui" label="lumina Desktop" default>
+Response Styles customize how tool interactions are displayed in the lumina Desktop chat window.
 
 To change this setting:
 1. Click the <PanelLeft className="inline" size={16} /> button on the top-left to open the sidebar.
@@ -19,56 +19,56 @@ To change this setting:
 
 - **Concise** (Default)
     - Tool calls are collapsed by default
-    - Shows only which tool goose used
+    - Shows only which tool lumina used
     - Best for users focusing on results rather than technical details
 
 - **Detailed**
     - Tool calls are expanded by default
     - Shows the details of tool calls and their responses
-    - Best for debugging or learning how goose works
+    - Best for debugging or learning how lumina works
 
 This setting only affects the default state of tool calls in the conversation. You can always manually expand or collapse any tool call regardless of your chosen style.
 
 </TabItem>
-  <TabItem value="cli" label="goose CLI">
-When working with the goose CLI, you can control the verbosity of tool output.
+  <TabItem value="cli" label="lumina CLI">
+When working with the lumina CLI, you can control the verbosity of tool output.
 
 To adjust the tool output, run:
 
 ```sh
-goose configure
+lumina configure
 ```
 
 Then choose `Adjust Tool Output`
 
 ```sh
-┌   goose-configure 
+┌   lumina-configure
 │
 ◆  What would you like to configure?
-│  ○ Configure Providers 
-│  ○ Add Extension 
-│  ○ Toggle Extensions 
+│  ○ Configure Providers
+│  ○ Add Extension
+│  ○ Toggle Extensions
 │  ○ Remove Extension
 // highlight-next-line
 │  ● Adjust Tool Output (Show more or less tool output)
-└  
+└
 ```
 
 Next, choose one of the available modes:
 
 ```sh
-┌   goose-configure 
+┌   lumina-configure
 │
 ◇  What would you like to configure?
-│  Adjust Tool Output 
+│  Adjust Tool Output
 │
 // highlight-start
 ◆  Which tool output would you like to show?
-│  ○ High Importance 
-│  ○ Medium Importance 
-│  ○ All 
+│  ○ High Importance
+│  ○ Medium Importance
+│  ○ All
 // highlight-end
-└  
+└
 ```
 
 - **High Importance**

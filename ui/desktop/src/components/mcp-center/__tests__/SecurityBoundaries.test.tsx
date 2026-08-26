@@ -9,7 +9,7 @@ import type {
   McpPlanReview,
   McpSourcesPolicyState,
   McpTaskRef,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { ManualTab } from '../ManualTab';
 import { ManagedTab } from '../ManagedTab';
 import { SourcesPolicyTab } from '../SourcesPolicyTab';

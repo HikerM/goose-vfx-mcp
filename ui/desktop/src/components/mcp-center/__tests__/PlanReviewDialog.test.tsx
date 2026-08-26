@@ -2,7 +2,7 @@ import { IntlProvider } from 'react-intl';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { McpPlanReview, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpPlanReview, McpTaskRef } from '@hikerm/lumina-sdk';
 import type { McpHttpsProvisionPlanReview } from '../../../acp/mcp-platform';
 import { PlanReviewDialog } from '../PlanReviewDialog';
 import { confirmMcpPlan } from '../../../acp/mcp-platform';

@@ -1,43 +1,43 @@
 ---
-title: goose for VS Code Extension
+title: lumina for VS Code Extension
 sidebar_label: VS Code Extension
 sidebar_position: 4
 ---
 
-import IconGoose from "@site/src/components/icons/goose";
+import IconLumina from "@site/src/components/icons/lumina";
 
-The [goose for VS Code extension](https://marketplace.visualstudio.com/items?itemName=block.vscode-goose) lets you interact with goose directly within VS Code.
+The [lumina for VS Code extension](https://marketplace.visualstudio.com/items?itemName=block.vscode-lumina) lets you interact with lumina directly within VS Code.
 
 :::warning Experimental Feature
-goose for VS Code is in active development. Behavior and configuration may change in future releases.
+lumina for VS Code is in active development. Behavior and configuration may change in future releases.
 :::
 
-The extension uses the [Agent Client Protocol (ACP)](/docs/guides/acp-clients) to communicate with goose.
+The extension uses the [Agent Client Protocol (ACP)](/docs/guides/acp-clients) to communicate with lumina.
 
 ## Install the Extension
 
 :::info Prerequisites
 - [VS Code](https://code.visualstudio.com/) version 1.95.0 or higher
-- [goose CLI](/docs/getting-started/installation)
+- [lumina CLI](/docs/getting-started/installation)
 :::
 
-1. Go to [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=block.vscode-goose)
+1. Go to [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=block.vscode-lumina)
 2. Click `Install`
 3. On the popup window, click `Open Visual Studio Code`
 4. In Visual Studio Code, click `Install`
-5. Click the <IconGoose className="inline" size={16} /> icon in the Activity Bar to open the side panel and start chatting with goose
+5. Click the <IconLumina className="inline" size={16} /> icon in the Activity Bar to open the side panel and start chatting with lumina
 
-## Share Context with goose
+## Share Context with lumina
 
-There are two ways to provide context to goose.
+There are two ways to provide context to lumina.
 
 ### Send Selected Code
 
 1. Select the code you want to discuss in your editor
-2. Send the selection to goose:
+2. Send the selection to lumina:
    - macOS: `Cmd+Shift+G`
    - Windows/Linux: `Ctrl+Shift+G`
-   - Right-click and choose `Send to goose`
+   - Right-click and choose `Send to lumina`
 
 The selected code will appear as a context chip above the chat input.
 
@@ -52,21 +52,21 @@ The attached file will appear as a context chip above the chat input.
 
 ## Example Usage
 
-The goose for VS Code extension connects directly to your editor, letting you manage files, projects, and workflows with AI. It includes the following features:
+The lumina for VS Code extension connects directly to your editor, letting you manage files, projects, and workflows with AI. It includes the following features:
 
 - Interactive chat UI with streaming responses
-- Access to goose's AI capabilities and enabled extensions
+- Access to lumina's AI capabilities and enabled extensions
 - Session management with history replay
 - Context sharing and visual context chips in the chat UI
 - Clipboard tools to copy code snippets/responses for easy sharing
 
-### goose Prompt
+### lumina Prompt
 
 ```
-Update the contributing guide at /goose/CONTRIBUTING.md with instructions on how to start docusaurus dev server
+Update the contributing guide at /lumina/CONTRIBUTING.md with instructions on how to start docusaurus dev server
 ```
 
-### goose Output
+### lumina Output
 
 ```
 

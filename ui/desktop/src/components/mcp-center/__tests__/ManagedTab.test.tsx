@@ -8,7 +8,7 @@ import type {
   McpManagedSummary,
   McpPlanReview,
   McpTaskRef,
-} from '@aaif/goose-sdk';
+} from '@hikerm/lumina-sdk';
 import { ManagedTab } from '../ManagedTab';
 import {
   cancelMcpTask,

@@ -5,8 +5,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        💡 Before posting, please attach your **diagnostics zip** — it helps the Goose team debug faster and saves everyone time.  
-        [How to capture and share diagnostics](https://goose-docs.ai/docs/troubleshooting/diagnostics-and-reporting/)
+        💡 Before posting, please attach your **diagnostics zip** — it helps the Lumina team debug faster and saves everyone time.
+        [How to capture and share diagnostics](https://hikerm.github.io/lumina/docs/troubleshooting/diagnostics-and-reporting/)
   - type: textarea
     id: problem
     attributes:
@@ -22,5 +22,5 @@ body:
   - type: textarea
     id: version
     attributes:
-      label: Goose version and environment
-      description: Include your Goose version and operating system if known.
+      label: Lumina version and environment
+      description: Include your Lumina version and operating system if known.

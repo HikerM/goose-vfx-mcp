@@ -46,7 +46,7 @@ parameters:
     input_type: string
     requirement: required
     default: ""
-    description: "GitHub repository name (e.g., 'goose')"
+    description: "GitHub repository name (e.g., 'lumina')"
   
   - key: time_period
     input_type: string

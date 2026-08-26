@@ -5,14 +5,14 @@ import type {
   NewSessionRequest,
   SessionInfo,
 } from '@agentclientprotocol/sdk';
-import type { GooseExtension, SessionImportSource } from '@aaif/goose-sdk';
+import type { LuminaExtension, SessionImportSource } from '@hikerm/lumina-sdk';
 import { getAcpClient } from './acpConnection';
 import { DEFAULT_CHAT_TITLE } from '../contexts/ChatContext';
 import type { ExtensionLoadResult } from '../types/extensions';
 import type { Session } from '../types/session';
 import type { Recipe } from '../recipe';
 
-interface GooseSessionInfoMeta {
+interface LuminaSessionInfoMeta {
   messageCount?: number;
   createdAt?: string;
   lastMessageAt?: string;
@@ -76,8 +76,8 @@ export function parseLoadMeta(response: LoadSessionResponse): LoadSessionMeta {
   return parseSessionResponseMeta(response._meta);
 }
 
-function sessionInfoMeta(s: SessionInfo): GooseSessionInfoMeta {
-  return (s._meta ?? {}) as GooseSessionInfoMeta;
+function sessionInfoMeta(s: SessionInfo): LuminaSessionInfoMeta {
+  return (s._meta ?? {}) as LuminaSessionInfoMeta;
 }
 
 export function sessionInfoToSession(s: SessionInfo, loadMeta: LoadSessionMeta = {}): Session {
@@ -133,6 +133,8 @@ function sessionInfoToListItem(s: SessionInfo): SessionListItem {
 
 export interface SessionListFilter {
   keyword?: string;
+  cwd?: string;
+  includeEmpty?: boolean;
 }
 
 const SESSION_LIST_TYPES = ['user', 'scheduled'] as const;
@@ -146,10 +148,17 @@ export async function acpListSessions(
   if (cursor) {
     request.cursor = cursor;
   }
+  const cwd = filter?.cwd?.trim();
+  if (cwd) {
+    request.cwd = cwd;
+  }
   const meta: Record<string, unknown> = { types: SESSION_LIST_TYPES };
   const keyword = filter?.keyword?.trim();
   if (keyword) {
     meta.query = keyword;
+  }
+  if (filter?.includeEmpty) {
+    meta.lumina = { includeEmpty: true };
   }
   request._meta = meta;
   const response = await client.listSessions(request);
@@ -157,6 +166,22 @@ export async function acpListSessions(
     sessions: response.sessions.map(sessionInfoToListItem),
     nextCursor: response.nextCursor ?? null,
   };
+}
+
+export async function acpListProjectSessions(projectRoot: string): Promise<SessionListItem[]> {
+  const sessions: SessionListItem[] = [];
+  let cursor: string | null = null;
+
+  do {
+    const page = await acpListSessions(cursor, {
+      cwd: projectRoot,
+      includeEmpty: true,
+    });
+    sessions.push(...page.sessions);
+    cursor = page.nextCursor;
+  } while (cursor);
+
+  return sessions;
 }
 
 export async function acpListRecentSessions(maxSessions: number): Promise<SessionListItem[]> {
@@ -171,7 +196,7 @@ export async function acpListRecentSessions(maxSessions: number): Promise<Sessio
 
 export async function acpGetSessionListItem(sessionId: string): Promise<SessionListItem> {
   const client = await getAcpClient();
-  const response = await client.goose.sessionInfo_unstable({ sessionId });
+  const response = await client.lumina.sessionInfo_unstable({ sessionId });
   return sessionInfoToListItem(response.session);
 }
 
@@ -198,7 +223,7 @@ export function isAcpSessionLoadInFlight(sessionId: string): boolean {
 
 async function loadAcpSession(sessionId: string): Promise<AcpLoadSessionResult> {
   const client = await getAcpClient();
-  const initialSessionInfoResponse = await client.goose.sessionInfo_unstable({ sessionId });
+  const initialSessionInfoResponse = await client.lumina.sessionInfo_unstable({ sessionId });
   const initialSessionInfo = initialSessionInfoResponse.session;
   const response = await client.loadSession({
     sessionId,
@@ -206,7 +231,7 @@ async function loadAcpSession(sessionId: string): Promise<AcpLoadSessionResult> 
     mcpServers: [],
   });
   // Loading can populate missing provider/model metadata.
-  const sessionInfoResponse = await client.goose.sessionInfo_unstable({ sessionId });
+  const sessionInfoResponse = await client.lumina.sessionInfo_unstable({ sessionId });
 
   return {
     sessionInfo: sessionInfoResponse.session,
@@ -227,28 +252,39 @@ export interface AcpRecipeOptions {
   profileApplicationToken?: string;
 }
 
+export interface AcpNewSessionOptions extends AcpRecipeOptions {
+  projectId?: string;
+  workItemId?: string;
+}
+
 export async function acpNewSession(
   cwd: string,
-  gooseExtensions: GooseExtension[],
-  recipe?: AcpRecipeOptions
+  luminaExtensions: LuminaExtension[],
+  options?: AcpNewSessionOptions
 ): Promise<AcpNewSessionResult> {
   const client = await getAcpClient();
-  const meta: Record<string, unknown> = { client: 'goose-desktop' };
-  if (gooseExtensions.length > 0) {
-    meta.enabledExtensions = gooseExtensions;
+  const meta: Record<string, unknown> = { client: 'lumina-desktop' };
+  if (luminaExtensions.length > 0) {
+    meta.enabledExtensions = luminaExtensions;
   }
-  if (recipe?.recipeId) {
-    meta.recipeId = recipe.recipeId;
-  } else if (recipe?.recipeDeeplink) {
-    meta.recipeDeeplink = recipe.recipeDeeplink;
+  if (options?.recipeId) {
+    meta.recipeId = options.recipeId;
+  } else if (options?.recipeDeeplink) {
+    meta.recipeDeeplink = options.recipeDeeplink;
   }
-  if (recipe?.profileApplicationToken) {
-    meta.profileApplicationToken = recipe.profileApplicationToken;
+  if (options?.profileApplicationToken) {
+    meta.profileApplicationToken = options.profileApplicationToken;
+  }
+  if (options?.projectId) {
+    meta.projectId = options.projectId;
+  }
+  if (options?.workItemId) {
+    meta.workItemId = options.workItemId;
   }
   const request: NewSessionRequest = { cwd, mcpServers: [], _meta: meta };
   const response = await client.newSession(request);
   const sessionId = String(response.sessionId);
-  const sessionInfoResponse = await client.goose.sessionInfo_unstable({ sessionId });
+  const sessionInfoResponse = await client.lumina.sessionInfo_unstable({ sessionId });
 
   return {
     sessionId,
@@ -259,7 +295,7 @@ export async function acpNewSession(
 
 export async function acpDeleteSession(sessionId: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.sessionDelete({ sessionId });
+  await client.lumina.sessionDelete({ sessionId });
 }
 
 export async function acpCloseSession(sessionId: string): Promise<void> {
@@ -269,12 +305,12 @@ export async function acpCloseSession(sessionId: string): Promise<void> {
 
 export async function acpRenameSession(sessionId: string, title: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.sessionRename_unstable({ sessionId, title });
+  await client.lumina.sessionRename_unstable({ sessionId, title });
 }
 
 export async function acpUpdateWorkingDir(sessionId: string, workingDir: string): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.sessionWorkingDirUpdate_unstable({ sessionId, workingDir });
+  await client.lumina.sessionWorkingDirUpdate_unstable({ sessionId, workingDir });
 }
 
 export async function acpTruncateSessionConversation(
@@ -282,7 +318,7 @@ export async function acpTruncateSessionConversation(
   truncateFrom: number
 ): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.sessionConversationTruncate_unstable({ sessionId, truncateFrom });
+  await client.lumina.sessionConversationTruncate_unstable({ sessionId, truncateFrom });
 }
 
 export async function acpForkSession(
@@ -290,7 +326,7 @@ export async function acpForkSession(
   conversationBefore?: number
 ): Promise<string> {
   const client = await getAcpClient();
-  const sessionInfo = await client.goose.sessionInfo_unstable({ sessionId });
+  const sessionInfo = await client.lumina.sessionInfo_unstable({ sessionId });
   const { cwd } = sessionInfo.session;
   const request: ForkSessionRequest = { sessionId, cwd };
   if (conversationBefore !== undefined) {
@@ -302,19 +338,11 @@ export async function acpForkSession(
 
 export async function acpExportSession(sessionId: string): Promise<string> {
   const client = await getAcpClient();
-  const response = await client.goose.sessionExport_unstable({ sessionId });
+  const response = await client.lumina.sessionExport_unstable({ sessionId });
   return response.data;
 }
 
-export async function acpImportSession(
-  input: string,
-  source: SessionImportSource
-): Promise<void> {
+export async function acpImportSession(input: string, source: SessionImportSource): Promise<void> {
   const client = await getAcpClient();
-  await client.goose.sessionImport_unstable({ input, source });
-}
-
-export async function acpShareSessionNostr(sessionId: string, relays: string[]) {
-  const client = await getAcpClient();
-  return await client.goose.sessionShareNostr_unstable({ sessionId, relays });
+  await client.lumina.sessionImport_unstable({ input, source });
 }

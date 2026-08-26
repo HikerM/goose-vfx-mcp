@@ -10,7 +10,7 @@
  * class generation — it does NOT define values.
  *
  * These tokens serve two purposes:
- *  1. Goose desktop — applied to :root per resolved theme.
+ *  1. Lumina desktop — applied to :root per resolved theme.
  *  2. MCP apps — encoded as light-dark() in hostContext.styles.variables.
  */
 import type {
@@ -34,7 +34,7 @@ type ColorTokenKey = Exclude<McpUiStyleVariableKey, BaseTokenKey>;
 // ---------------------------------------------------------------------------
 const baseTokens: Pick<ThemeTokens, BaseTokenKey> = {
   // Typography — families
-  '--font-sans': "'Cash Sans', sans-serif",
+  '--font-sans': "system-ui, -apple-system, 'Segoe UI', sans-serif",
   '--font-mono': 'monospace',
 
   // Typography — weights
@@ -210,44 +210,12 @@ export const darkTokens: ThemeTokens = { ...baseTokens, ...darkColorTokens };
 // Helpers
 // ---------------------------------------------------------------------------
 
-// @font-face rules passed to MCP apps so sandboxed iframes can load host fonts.
-const HOST_FONT_CSS = `
-@font-face {
-  font-family: 'Cash Sans';
-  src: url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Light.woff2) format('woff2'),
-       url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Light.woff) format('woff');
-  font-weight: 300;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Cash Sans';
-  src: url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Regular.woff2) format('woff2'),
-       url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Regular.woff) format('woff');
-  font-weight: 400;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Cash Sans';
-  src: url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Medium.woff2) format('woff2'),
-       url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Medium.woff) format('woff');
-  font-weight: 500;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Cash Sans';
-  src: url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff2/CashSans-Bold.woff2) format('woff2'),
-       url(https://cash-f.squarecdn.com/static/fonts/cashsans/woff/CashSans-Bold.woff) format('woff');
-  font-weight: 700;
-  font-style: normal;
-}
-`.trim();
-
 /**
  * Build the McpUiHostStyles object for MCP apps.
  * Color keys use light-dark() so a single payload works for both themes.
  * Non-color keys (fonts, radii, shadows) use plain values from baseTokens
  * (or light as the default when values differ, e.g. shadows).
- * css.fonts provides @font-face rules so sandboxed apps can load host fonts.
+ * MCP apps inherit a system font stack and do not load remote font assets.
  */
 export function buildMcpHostStyles(): McpUiHostStyles {
   const variables: McpUiStyles = {} as McpUiStyles;
@@ -260,7 +228,7 @@ export function buildMcpHostStyles(): McpUiHostStyles {
       variables[key] = light;
     }
   }
-  return { variables, css: { fonts: HOST_FONT_CSS } };
+  return { variables, css: { fonts: '' } };
 }
 
 /**

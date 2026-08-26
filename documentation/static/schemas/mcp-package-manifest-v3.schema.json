@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://goose.ai/schemas/mcp-package-manifest-v3.schema.json",
+  "$id": "https://hikerm.github.io/lumina/schemas/mcp-package-manifest-v3.schema.json",
   "title": "Untrusted non-executable MCP package manifest v3",
   "description": "Structural prefilter for an untrusted, non-executable manifest. A schema match grants no trust or authorization and is not complete semantic validation; JSON Schema cannot inspect duplicate lexical JSON keys, and consumers must use the fail-closed Rust parser before relying on this document.",
   "type": "object",
   "additionalProperties": false,
   "required": ["document_type", "schema_version", "package", "adapter", "transport", "entrypoint", "platform_variants", "closure", "permissions", "config_schema", "owned_resource_ids"],
   "properties": {
-    "document_type": {"const": "goose.mcp.package-manifest"},
+    "document_type": {"const": "lumina.mcp.package-manifest"},
     "schema_version": {"const": 3},
     "package": {"$ref": "#/$defs/package"},
     "adapter": {"$ref": "#/$defs/adapter"},

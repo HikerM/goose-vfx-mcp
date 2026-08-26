@@ -142,7 +142,7 @@ prompt: |
      {% if backend_framework == "nodejs" %}
        Initialize Node.js backend with Express and TypeScript.
        Install express, cors, dotenv, helmet, morgan, and types.
-       {% if database == "postgresql" %}Install pg and @types/pg{% elif database == "mongodb" %}Install mongoose{% elif database == "mysql" %}Install mysql2{% elif database == "sqlite" %}Install better-sqlite3{% endif %}.
+       {% if database == "postgresql" %}Install pg and @types/pg{% elif database == "mongodb" %}Install monlumina{% elif database == "mysql" %}Install mysql2{% elif database == "sqlite" %}Install better-sqlite3{% endif %}.
        Create src/ with routes, controllers, models, middleware, config, utils directories.
        Create src/index.ts with Express server and health endpoint.
        Set up TypeScript, ESLint, Prettier, Jest, and Supertest.

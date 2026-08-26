@@ -1,5 +1,5 @@
-GOOSE_MODEL: gpt-4o
-GOOSE_PROVIDER: openai
+LUMINA_MODEL: gpt-4o
+LUMINA_PROVIDER: openai
 extensions:
   developer:
     bundled: true

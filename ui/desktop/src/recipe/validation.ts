@@ -1,4 +1,4 @@
-import { zRecipeDto } from '@aaif/goose-sdk';
+import { zRecipeDto } from '@hikerm/lumina-sdk';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 type JsonSchema = Record<string, unknown>;

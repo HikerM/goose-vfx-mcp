@@ -1197,7 +1197,7 @@
     "defaultMessage": "Khóa bí mật"
   },
   "externalBackendSection.secretKeyHelp": {
-    "defaultMessage": "Khóa bí mật được cấu hình trên máy chủ Lumina (GOOSE_SERVER__SECRET_KEY)"
+    "defaultMessage": "Khóa bí mật được cấu hình trên máy chủ Lumina (LUMINA_SERVER__SECRET_KEY)"
   },
   "externalBackendSection.secretKeyPlaceholder": {
     "defaultMessage": "Nhập khóa bí mật của máy chủ"
@@ -1226,67 +1226,67 @@
   "externalBackendSection.useExternalServerDescription": {
     "defaultMessage": "Kết nối tới một máy chủ Lumina đang chạy ở nơi khác (cần khởi động lại ứng dụng)"
   },
-  "goosehintsModal.close": {
+  "luminahintsModal.close": {
     "defaultMessage": "Đóng"
   },
-  "goosehintsModal.developer": {
+  "luminahintsModal.developer": {
     "defaultMessage": "Nhà phát triển"
   },
-  "goosehintsModal.dialogDescription": {
+  "luminahintsModal.dialogDescription": {
     "defaultMessage": "Cung cấp thêm ngữ cảnh về dự án của bạn để cải thiện giao tiếp với Lumina"
   },
-  "goosehintsModal.dialogTitle": {
-    "defaultMessage": "Cấu hình gợi ý dự án (.goosehints)"
+  "luminahintsModal.dialogTitle": {
+    "defaultMessage": "Cấu hình gợi ý dự án (.luminahints)"
   },
-  "goosehintsModal.errorReading": {
-    "defaultMessage": "Lỗi khi đọc tệp .goosehints: {error}"
+  "luminahintsModal.errorReading": {
+    "defaultMessage": "Lỗi khi đọc tệp .luminahints: {error}"
   },
-  "goosehintsModal.failedToAccess": {
-    "defaultMessage": "Không thể truy cập tệp .goosehints"
+  "luminahintsModal.failedToAccess": {
+    "defaultMessage": "Không thể truy cập tệp .luminahints"
   },
-  "goosehintsModal.failedToSave": {
-    "defaultMessage": "Không thể lưu tệp .goosehints"
+  "luminahintsModal.failedToSave": {
+    "defaultMessage": "Không thể lưu tệp .luminahints"
   },
-  "goosehintsModal.fileCreating": {
-    "defaultMessage": "Đang tạo tệp .goosehints mới tại: {filePath}"
+  "luminahintsModal.fileCreating": {
+    "defaultMessage": "Đang tạo tệp .luminahints mới tại: {filePath}"
   },
-  "goosehintsModal.fileFound": {
-    "defaultMessage": "Đã tìm thấy tệp .goosehints tại: {filePath}"
+  "luminahintsModal.fileFound": {
+    "defaultMessage": "Đã tìm thấy tệp .luminahints tại: {filePath}"
   },
-  "goosehintsModal.helpText1": {
-    "defaultMessage": ".goosehints là một tệp văn bản dùng để cung cấp thêm ngữ cảnh về dự án của bạn và cải thiện giao tiếp với Lumina."
+  "luminahintsModal.helpText1": {
+    "defaultMessage": ".luminahints là một tệp văn bản dùng để cung cấp thêm ngữ cảnh về dự án của bạn và cải thiện giao tiếp với Lumina."
   },
-  "goosehintsModal.helpText2": {
-    "defaultMessage": "Hãy đảm bảo tiện ích mở rộng {bold} được bật trong trang tiện ích mở rộng. Tiện ích mở rộng này là bắt buộc để sử dụng .goosehints. Bạn cần khởi động lại phiên để các cập nhật .goosehints có hiệu lực."
+  "luminahintsModal.helpText2": {
+    "defaultMessage": "Hãy đảm bảo tiện ích mở rộng {bold} được bật trong trang tiện ích mở rộng. Tiện ích mở rộng này là bắt buộc để sử dụng .luminahints. Bạn cần khởi động lại phiên để các cập nhật .luminahints có hiệu lực."
   },
-  "goosehintsModal.helpText3": {
+  "luminahintsModal.helpText3": {
     "defaultMessage": "Xem {link} để biết thêm thông tin."
   },
-  "goosehintsModal.helpTextLink": {
-    "defaultMessage": "cách sử dụng .goosehints"
+  "luminahintsModal.helpTextLink": {
+    "defaultMessage": "cách sử dụng .luminahints"
   },
-  "goosehintsModal.placeholder": {
+  "luminahintsModal.placeholder": {
     "defaultMessage": "Nhập gợi ý dự án ở đây..."
   },
-  "goosehintsModal.save": {
+  "luminahintsModal.save": {
     "defaultMessage": "Lưu"
   },
-  "goosehintsModal.savedSuccessfully": {
+  "luminahintsModal.savedSuccessfully": {
     "defaultMessage": "Đã lưu thành công"
   },
-  "goosehintsModal.saving": {
+  "luminahintsModal.saving": {
     "defaultMessage": "Đang lưu..."
   },
-  "goosehintsSection.configure": {
+  "luminahintsSection.configure": {
     "defaultMessage": "Cấu hình"
   },
-  "goosehintsSection.description": {
-    "defaultMessage": "Cấu hình tệp .goosehints của dự án để cung cấp thêm ngữ cảnh cho Lumina"
+  "luminahintsSection.description": {
+    "defaultMessage": "Cấu hình tệp .luminahints của dự án để cung cấp thêm ngữ cảnh cho Lumina"
   },
-  "goosehintsSection.title": {
-    "defaultMessage": "Gợi ý dự án (.goosehints)"
+  "luminahintsSection.title": {
+    "defaultMessage": "Gợi ý dự án (.luminahints)"
   },
-  "groupedExtensionLoadingToast.askGoose": {
+  "groupedExtensionLoadingToast.askLumina": {
     "defaultMessage": "Hỏi Lumina"
   },
   "groupedExtensionLoadingToast.collapseDetails": {
@@ -1422,10 +1422,10 @@
     "defaultMessage": "Hủy"
   },
   "importRecipeForm.deeplinkHint": {
-    "defaultMessage": "Dán một deeplink công thức bắt đầu bằng \"goose://recipe?config=\""
+    "defaultMessage": "Dán một deeplink công thức bắt đầu bằng \"lumina://recipe?config=\""
   },
   "importRecipeForm.deeplinkPlaceholder": {
-    "defaultMessage": "Dán deeplink goose://recipe?config=... của bạn vào đây"
+    "defaultMessage": "Dán deeplink lumina://recipe?config=... của bạn vào đây"
   },
   "importRecipeForm.example": {
     "defaultMessage": "ví dụ"
@@ -1700,32 +1700,29 @@
   "launcher.placeholder": {
     "defaultMessage": "Hỏi Lumina bất cứ điều gì..."
   },
-  "loadingGoose.compacting": {
+  "loadingLumina.compacting": {
     "defaultMessage": "Lumina đang nén cuộc trò chuyện..."
   },
-  "loadingGoose.idle": {
+  "loadingLumina.idle": {
     "defaultMessage": "Lumina đang xử lý…"
   },
-  "loadingGoose.loadingConversation": {
+  "loadingLumina.loadingConversation": {
     "defaultMessage": "đang tải cuộc trò chuyện..."
   },
-  "loadingGoose.restartingAgent": {
+  "loadingLumina.restartingAgent": {
     "defaultMessage": "đang khởi động lại phiên..."
   },
-  "loadingGoose.streaming": {
+  "loadingLumina.streaming": {
     "defaultMessage": "Lumina đang xử lý…"
   },
-  "loadingGoose.thinking": {
+  "loadingLumina.thinking": {
     "defaultMessage": "Lumina đang suy nghĩ…"
   },
-  "loadingGoose.waiting": {
+  "loadingLumina.waiting": {
     "defaultMessage": "Lumina đang chờ…"
   },
   "localInferenceSettings.deleteConfirm": {
     "defaultMessage": "Xóa mô hình này? Bạn có thể tải lại sau."
-  },
-  "localInferenceSettings.description": {
-    "defaultMessage": "Tải xuống và quản lý các mô hình LLM cục bộ để suy luận mà không cần khóa API. Tìm kiếm các mô hình GGUF hoặc MLX trên HuggingFace, hoặc sử dụng các lựa chọn nổi bật bên dưới."
   },
   "localInferenceSettings.dismiss": {
     "defaultMessage": "Bỏ qua"
@@ -1753,9 +1750,6 @@
   },
   "localInferenceSettings.featuredModels": {
     "defaultMessage": "Mô hình nổi bật"
-  },
-  "localInferenceSettings.huggingFaceSignInNote": {
-    "defaultMessage": "Đăng nhập để tăng giới hạn tốc độ khi tìm kiếm và tải xuống mô hình, và để truy cập các kho lưu trữ Hugging Face riêng tư hoặc bị giới hạn."
   },
   "localInferenceSettings.loadedInMemory": {
     "defaultMessage": "Loaded in memory"
@@ -2390,20 +2384,11 @@
   "onboardingSuccess.getStarted": {
     "defaultMessage": "Bắt đầu"
   },
-  "onboardingSuccess.learnMore": {
-    "defaultMessage": "Tìm hiểu thêm"
-  },
   "onboardingSuccess.localModelReady": {
     "defaultMessage": "Mô hình cục bộ đã sẵn sàng"
   },
-  "onboardingSuccess.privacyDescription": {
-    "defaultMessage": "Dữ liệu sử dụng ẩn danh giúp cải thiện Lumina. Chúng tôi không bao giờ thu thập cuộc trò chuyện, mã nguồn hoặc dữ liệu cá nhân của bạn."
-  },
   "onboardingSuccess.privacyTitle": {
     "defaultMessage": "Quyền riêng tư"
-  },
-  "onboardingSuccess.shareUsageData": {
-    "defaultMessage": "Chia sẻ dữ liệu sử dụng ẩn danh"
   },
   "parameterInput.defaultValue": {
     "defaultMessage": "Giá trị mặc định"
@@ -2548,36 +2533,6 @@
   },
   "permissionSetting.permissionRulesDescription": {
     "defaultMessage": "Các hướng dẫn ẩn sẽ được chuyển đến nhà cung cấp để giúp định hướng và bổ sung ngữ cảnh cho các phản hồi của bạn."
-  },
-  "privacyInfoModal.collectErrors": {
-    "defaultMessage": "Loại lỗi (ví dụ: \"rate_limit\", \"auth\" - không có chi tiết)"
-  },
-  "privacyInfoModal.collectExtensions": {
-    "defaultMessage": "Số lần sử dụng phần mở rộng và công cụ (chỉ tên)"
-  },
-  "privacyInfoModal.collectOs": {
-    "defaultMessage": "Hệ điều hành, phiên bản và kiến trúc"
-  },
-  "privacyInfoModal.collectProvider": {
-    "defaultMessage": "Nhà cung cấp và mô hình được sử dụng"
-  },
-  "privacyInfoModal.collectSession": {
-    "defaultMessage": "Số liệu phiên (thời lượng, số lần tương tác, lượng token sử dụng)"
-  },
-  "privacyInfoModal.collectVersion": {
-    "defaultMessage": "Phiên bản Lumina và phương thức cài đặt"
-  },
-  "privacyInfoModal.description": {
-    "defaultMessage": "Dữ liệu sử dụng ẩn danh giúp chúng tôi hiểu cách Lumina được sử dụng và xác định các lĩnh vực cần cải thiện."
-  },
-  "privacyInfoModal.neverCollect": {
-    "defaultMessage": "Chúng tôi không bao giờ thu thập cuộc trò chuyện, mã nguồn, đối số công cụ, thông báo lỗi hoặc bất kỳ dữ liệu cá nhân nào của bạn. Bạn có thể thay đổi cài đặt này bất cứ lúc nào trong Cài đặt."
-  },
-  "privacyInfoModal.title": {
-    "defaultMessage": "Chi tiết quyền riêng tư"
-  },
-  "privacyInfoModal.whatWeCollect": {
-    "defaultMessage": "Những gì chúng tôi thu thập:"
   },
   "progressiveMessageList.loadingMessages": {
     "defaultMessage": "Đang tải tin nhắn... ({renderedCount}/{totalCount})"
@@ -3429,7 +3384,7 @@
     "defaultMessage": "Liên kết sâu"
   },
   "scheduleModal.deepLinkPlaceholder": {
-    "defaultMessage": "Dán liên kết goose://recipe vào đây..."
+    "defaultMessage": "Dán liên kết lumina://recipe vào đây..."
   },
   "scheduleModal.editSchedule": {
     "defaultMessage": "Sửa lịch trình"
@@ -3441,7 +3396,7 @@
     "defaultMessage": "Không thể đọc tệp đã chọn."
   },
   "scheduleModal.invalidDeepLink": {
-    "defaultMessage": "Liên kết sâu không hợp lệ. Vui lòng dùng liên kết goose://recipe."
+    "defaultMessage": "Liên kết sâu không hợp lệ. Vui lòng dùng liên kết lumina://recipe."
   },
   "scheduleModal.invalidFileType": {
     "defaultMessage": "Loại tệp không hợp lệ: Vui lòng chọn tệp YAML (.yaml hoặc .yml)"
@@ -3758,9 +3713,6 @@
   "sessions.action.openNewWindow": {
     "defaultMessage": "Mở trong cửa sổ mới"
   },
-  "sessions.action.shareNostr": {
-    "defaultMessage": "Chia sẻ liên kết Nostr được mã hóa"
-  },
   "sessions.cancel": {
     "defaultMessage": "Hủy"
   },
@@ -3769,9 +3721,6 @@
   },
   "sessions.chatHistoryDesc": {
     "defaultMessage": "Xem và tìm kiếm các cuộc trò chuyện trước đây của bạn với Lumina. {shortcut} để tìm kiếm."
-  },
-  "sessions.close": {
-    "defaultMessage": "Đóng"
   },
   "sessions.delete.message": {
     "defaultMessage": "Bạn có chắc chắn muốn xóa phiên \"{name}\" không? Hành động này không thể hoàn tác."
@@ -3800,21 +3749,6 @@
   "sessions.import": {
     "defaultMessage": "Nhập phiên"
   },
-  "sessions.importNostr": {
-    "defaultMessage": "Nhập liên kết"
-  },
-  "sessions.importNostr.description": {
-    "defaultMessage": "Dán một liên kết chia sẻ Nostr của Lumina để tìm nạp, giải mã và nhập phiên."
-  },
-  "sessions.importNostr.placeholder": {
-    "defaultMessage": "goose://sessions/nostr?nevent=...&key=..."
-  },
-  "sessions.importNostr.title": {
-    "defaultMessage": "Nhập phiên Nostr"
-  },
-  "sessions.importing": {
-    "defaultMessage": "Đang nhập..."
-  },
   "sessions.loadingMore": {
     "defaultMessage": "Đang tải thêm phiên..."
   },
@@ -3832,15 +3766,6 @@
   },
   "sessions.searchPlaceholder": {
     "defaultMessage": "Tìm kiếm lịch sử..."
-  },
-  "sessions.shareNostr.description": {
-    "defaultMessage": "Bất kỳ ai có liên kết này đều có thể tải về và giải mã phiên làm việc. Hãy coi nó như một bí mật."
-  },
-  "sessions.shareNostr.title": {
-    "defaultMessage": "Liên kết chia sẻ Nostr được mã hóa"
-  },
-  "sessions.toast.copied": {
-    "defaultMessage": "Đã sao chép vào bộ nhớ tạm"
   },
   "sessions.toast.deleteFailed": {
     "defaultMessage": "Không thể xóa phiên làm việc \"{name}\": {error}"
@@ -3862,12 +3787,6 @@
   },
   "sessions.toast.imported": {
     "defaultMessage": "Đã nhập phiên làm việc thành công"
-  },
-  "sessions.toast.shareNostr": {
-    "defaultMessage": "Đã tạo liên kết chia sẻ Nostr được mã hóa"
-  },
-  "sessions.toast.shareNostrFailed": {
-    "defaultMessage": "Không thể tạo liên kết chia sẻ Nostr: {error}"
   },
   "sessions.toast.updateFailed": {
     "defaultMessage": "Không thể cập nhật mô tả phiên làm việc: {error}"
@@ -4034,12 +3953,6 @@
   "settings.theme.title": {
     "defaultMessage": "Chủ đề"
   },
-  "settings.updates.description": {
-    "defaultMessage": "Kiểm tra và cài đặt bản cập nhật để Lumina luôn hoạt động tốt nhất"
-  },
-  "settings.updates.title": {
-    "defaultMessage": "Cập nhật"
-  },
   "settings.version.title": {
     "defaultMessage": "Phiên bản"
   },
@@ -4104,7 +4017,7 @@
     "defaultMessage": "Không tìm thấy kỹ năng phù hợp"
   },
   "skillsView.noSkillsDescription": {
-    "defaultMessage": "Kỹ năng được tải từ các tệp SKILL.md trong ~/.config/agents/skills/, .goose/skills/, hoặc các thư mục được hỗ trợ khác."
+    "defaultMessage": "Kỹ năng được tải từ các tệp SKILL.md trong ~/.config/agents/skills/, .lumina/skills/, hoặc các thư mục được hỗ trợ khác."
   },
   "skillsView.noSkillsInstalled": {
     "defaultMessage": "Chưa cài đặt kỹ năng nào"
@@ -4364,45 +4277,6 @@
   "switchModelModal.useOtherProvider": {
     "defaultMessage": "Sử dụng nhà cung cấp khác"
   },
-  "telemetryConsentPrompt.description": {
-    "defaultMessage": "Bạn có muốn chia sẻ dữ liệu sử dụng ẩn danh để giúp cải thiện Lumina không? Chúng tôi không bao giờ thu thập các cuộc trò chuyện, mã hoặc dữ liệu cá nhân của bạn."
-  },
-  "telemetryConsentPrompt.heading": {
-    "defaultMessage": "Giúp cải thiện Lumina"
-  },
-  "telemetryConsentPrompt.learnMore": {
-    "defaultMessage": "Tìm hiểu thêm"
-  },
-  "telemetryConsentPrompt.optIn": {
-    "defaultMessage": "Có, chia sẻ dữ liệu sử dụng ẩn danh"
-  },
-  "telemetryConsentPrompt.optOut": {
-    "defaultMessage": "Không, cảm ơn"
-  },
-  "telemetrySettings.configErrorTitle": {
-    "defaultMessage": "Lỗi cấu hình"
-  },
-  "telemetrySettings.description": {
-    "defaultMessage": "Kiểm soát cách dữ liệu của bạn được sử dụng"
-  },
-  "telemetrySettings.learnMore": {
-    "defaultMessage": "Tìm hiểu thêm"
-  },
-  "telemetrySettings.loadError": {
-    "defaultMessage": "Không thể tải cài đặt đo từ xa."
-  },
-  "telemetrySettings.title": {
-    "defaultMessage": "Quyền riêng tư"
-  },
-  "telemetrySettings.toggleDescription": {
-    "defaultMessage": "Giúp cải thiện Lumina bằng cách chia sẻ số liệu thống kê sử dụng ẩn danh."
-  },
-  "telemetrySettings.toggleLabel": {
-    "defaultMessage": "Dữ liệu sử dụng ẩn danh"
-  },
-  "telemetrySettings.updateError": {
-    "defaultMessage": "Không thể cập nhật cài đặt đo từ xa."
-  },
   "themeSelector.dark": {
     "defaultMessage": "Tối"
   },
@@ -4472,83 +4346,8 @@
   "toolConfirmation.allowToolCallWithName": {
     "defaultMessage": "Cho phép {toolName}?"
   },
-  "toolConfirmation.gooseWouldLikeToCallWithName": {
+  "toolConfirmation.luminaWouldLikeToCallWithName": {
     "defaultMessage": "Lumina muốn gọi {toolName}. Cho phép?"
-  },
-  "updateSection.autoDownload": {
-    "defaultMessage": "Lumina sẽ tải bản cập nhật ở chế độ nền và cài đặt vào lần tiếp theo khi bạn thoát hoặc khởi động lại."
-  },
-  "updateSection.autoDownloadDisabledByEnv": {
-    "defaultMessage": "Tải xuống tự động đã bị tắt thông qua biến môi trường GOOSE_DISABLE_AUTO_DOWNLOAD."
-  },
-  "updateSection.autoDownloadDisabledNote": {
-    "defaultMessage": "Tải xuống tự động đã bị tắt. Nhấp vào \"Tải ngay\" để tải xuống theo cách thủ công."
-  },
-  "updateSection.autoInstallNote": {
-    "defaultMessage": "Không cần cài đặt thủ công."
-  },
-  "updateSection.checkForUpdates": {
-    "defaultMessage": "Kiểm tra bản cập nhật"
-  },
-  "updateSection.checking": {
-    "defaultMessage": "Đang kiểm tra bản cập nhật..."
-  },
-  "updateSection.currentVersion": {
-    "defaultMessage": "Phiên bản hiện tại"
-  },
-  "updateSection.disableAutoDownload": {
-    "defaultMessage": "Tắt tải xuống cập nhật tự động"
-  },
-  "updateSection.disableAutoDownloadDesc": {
-    "defaultMessage": "Khi được bật, Lumina sẽ thông báo cho bạn về các phiên bản mới nhưng sẽ không tự động tải xuống."
-  },
-  "updateSection.downloadNow": {
-    "defaultMessage": "Tải ngay"
-  },
-  "updateSection.downloadReady": {
-    "defaultMessage": "Bản cập nhật đã được tải về và sẵn sàng cài đặt!"
-  },
-  "updateSection.downloadingProgress": {
-    "defaultMessage": "Đang tải bản cập nhật... {percent}%"
-  },
-  "updateSection.downloadingUpdate": {
-    "defaultMessage": "Đang tải bản cập nhật..."
-  },
-  "updateSection.installAndRestart": {
-    "defaultMessage": "Cài đặt & khởi động lại"
-  },
-  "updateSection.installNowHint": {
-    "defaultMessage": "Nhấp vào \"Cài đặt & khởi động lại\" để cập nhật ngay."
-  },
-  "updateSection.latestVersion": {
-    "defaultMessage": "Bạn đang chạy phiên bản mới nhất!"
-  },
-  "updateSection.loading": {
-    "defaultMessage": "Đang tải..."
-  },
-  "updateSection.manualInstallNote": {
-    "defaultMessage": "Sau khi tải xuống, bạn sẽ cần cài đặt bản cập nhật theo cách thủ công."
-  },
-  "updateSection.manualInstallRequired": {
-    "defaultMessage": "Cần cài đặt thủ công cho phương thức cập nhật này."
-  },
-  "updateSection.readyInstallAuto": {
-    "defaultMessage": "✓ Bản cập nhật đã sẵn sàng. Khởi động lại Lumina để hoàn tất cài đặt, hoặc thoát khi bạn đã xong."
-  },
-  "updateSection.readyInstallManual": {
-    "defaultMessage": "✓ Bản cập nhật đã sẵn sàng! Nhấp vào \"Cài đặt & khởi động lại\" để xem hướng dẫn cài đặt."
-  },
-  "updateSection.upToDate": {
-    "defaultMessage": "(đã cập nhật)"
-  },
-  "updateSection.updateAvailable": {
-    "defaultMessage": "Có bản cập nhật!"
-  },
-  "updateSection.versionAvailable": {
-    "defaultMessage": "→ {version} có sẵn"
-  },
-  "updateSection.versionIsAvailable": {
-    "defaultMessage": "Đã có phiên bản {version}"
   },
   "userMessage.cancel": {
     "defaultMessage": "Hủy"

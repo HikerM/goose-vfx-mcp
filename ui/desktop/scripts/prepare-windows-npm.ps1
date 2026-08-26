@@ -10,11 +10,11 @@ $ExpectedHashes = @{
   'npx.cmd' = '4dd3574f4396fc3b45c52b6ac80fd52be2dd2660d2a153b4cc807dbbfeefa7a0'
 }
 $null = Add-Type -AssemblyName System.Net.Http
-$Root = if ($env:GOOSE_PATH_ROOT) { $env:GOOSE_PATH_ROOT } else { 'D:\Goose' }
+$Root = if ($env:LUMINA_PATH_ROOT) { $env:LUMINA_PATH_ROOT } else { 'D:\Lumina' }
 $Root = $Root.Replace('/', '\').TrimEnd('\')
 
 function Assert-DPath([string]$Path) {
-  if ($Path -notmatch '^D:\\[^.].*$' -or $Path.StartsWith('\\') -or $Path -match '[*?"<>|]' ) { throw "GOOSE_PATH_ROOT must be a local D: drive folder: $Path" }
+  if ($Path -notmatch '^D:\\[^.].*$' -or $Path.StartsWith('\\') -or $Path -match '[*?"<>|]' ) { throw "LUMINA_PATH_ROOT must be a local D: drive folder: $Path" }
   foreach ($part in $Path.Substring(3).Split('\')) {
     if (!$part -or $part -in '.', '..' -or $part.EndsWith('.') -or $part.EndsWith(' ') -or $part.Contains(':')) { throw "Unsafe D: path segment: $part" }
   }

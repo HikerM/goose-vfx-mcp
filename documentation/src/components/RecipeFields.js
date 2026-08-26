@@ -4,7 +4,7 @@ const RecipeFields = () => {
   return (
     <ul>
       <li><strong>Title</strong> and <strong>description</strong></li>
-      <li><strong>Instructions</strong> that tell goose what to do</li>
+      <li><strong>Instructions</strong> that tell lumina what to do</li>
       <li><strong>Initial prompt</strong> to pre-fill the chat input</li>
       <li><strong>Advanced Options</strong> (expand to access):
         <ul>

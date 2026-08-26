@@ -1,0 +1,37 @@
+[package]
+name = "lumina-legacy-migrator"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "One-time local migration into Lumina's independent storage and trust namespace"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow.workspace = true
+chrono = { workspace = true, features = ["clock"] }
+etcetera.workspace = true
+fs2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+sha2.workspace = true
+sqlx = { version = "0.8.5", default-features = false, features = ["runtime-tokio", "sqlite"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { workspace = true, features = ["windows-native"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { workspace = true, features = ["apple-native"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { workspace = true, features = ["sync-secret-service"] }
+
+[dev-dependencies]
+tempfile.workspace = true

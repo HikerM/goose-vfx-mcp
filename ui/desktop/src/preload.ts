@@ -1,6 +1,6 @@
 import Electron, { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { Recipe } from './recipe';
-import type { GooseApp } from './types/apps';
+import type { LuminaApp } from './types/apps';
 import type { Settings, SettingKey } from './utils/settings';
 import { defaultSettings } from './utils/settings';
 
@@ -88,7 +88,6 @@ const config = JSON.parse(process.argv.find((arg) => arg.startsWith('{')) || '{}
 
 const allowedRendererEvents = new Set([
   'system-resume',
-  'open-shared-session',
   'fatal-error',
   'set-view',
   'new-chat',
@@ -104,11 +103,6 @@ const allowedRendererEvents = new Set([
   'fullscreen-change',
   'mouse-back-button-clicked',
 ]);
-
-interface UpdaterEvent {
-  event: string;
-  data?: unknown;
-}
 
 export interface CreateChatWindowOptions {
   query?: string;
@@ -143,12 +137,19 @@ type ElectronAPI = {
   } | null>;
   getBinaryPath: (binaryName: string) => Promise<string>;
   requestProjectDirectoryAccess: (directory: string) => Promise<boolean>;
-  getProjectDirectoryAccess: () => Promise<{ authorized: boolean; directory: string | null; token: string | null }>;
+  getProjectDirectoryAccess: () => Promise<{
+    authorized: boolean;
+    directory: string | null;
+    token: string | null;
+  }>;
   listProjectFiles: (token: string, workingDir: string) => Promise<ProjectFileItem[]>;
-  readProjectGoosehints: (token: string, workingDir: string) => Promise<ProjectHintsResponse>;
-  writeProjectGoosehints: (content: string, token: string, workingDir: string) => Promise<boolean>;
+  readProjectLuminahints: (token: string, workingDir: string) => Promise<ProjectHintsResponse>;
+  writeProjectLuminahints: (content: string, token: string, workingDir: string) => Promise<boolean>;
   selectRecipeFile: () => Promise<{ filePath: string; contents: string; error?: string } | null>;
-  saveRecipeFile: (content: string, defaultPath?: string) => Promise<{
+  saveRecipeFile: (
+    content: string,
+    defaultPath?: string
+  ) => Promise<{
     status: 'saved' | 'cancelled' | 'failed';
     fileName?: string;
   }>;
@@ -186,23 +187,13 @@ type ElectronAPI = {
     tokensUpdated?: boolean;
   }) => void;
   openExternal: (url: string) => Promise<void>;
-  // Update-related functions
-  getVersion: () => string;
-  checkForUpdates: () => Promise<{ updateInfo: unknown; error: string | null }>;
-  downloadUpdate: () => Promise<{ success: boolean; error: string | null }>;
-  installUpdate: () => void;
-  restartApp: () => void;
-  onUpdaterEvent: (callback: (event: UpdaterEvent) => void) => void;
-  getUpdateState: () => Promise<{ updateAvailable: boolean; latestVersion?: string } | null>;
-  isUsingGitHubFallback: () => Promise<boolean>;
-  getAutoDownloadDisabled: () => Promise<boolean>;
   // Recipe warning functions
   closeWindow: () => void;
   hasAcceptedRecipeBefore: (recipe: Recipe) => Promise<boolean>;
   recordRecipeHash: (recipe: Recipe) => Promise<boolean>;
   openDirectoryInExplorer: (directoryPath: string) => Promise<boolean>;
-  launchApp: (app: GooseApp) => Promise<void>;
-  refreshApp: (app: GooseApp) => Promise<void>;
+  launchApp: (app: LuminaApp) => Promise<void>;
+  refreshApp: (app: LuminaApp) => Promise<void>;
   closeApp: (appName: string) => Promise<void>;
   addRecentDir: (dir: string) => Promise<boolean>;
   listRecentDirs: () => Promise<string[]>;
@@ -247,10 +238,10 @@ const electronAPI: ElectronAPI = {
   getProjectDirectoryAccess: () => ipcRenderer.invoke('get-project-directory-access'),
   listProjectFiles: (token: string, workingDir: string) =>
     ipcRenderer.invoke('list-project-files', token, workingDir),
-  readProjectGoosehints: (token: string, workingDir: string) =>
-    ipcRenderer.invoke('read-project-goosehints', token, workingDir),
-  writeProjectGoosehints: (content: string, token: string, workingDir: string) =>
-    ipcRenderer.invoke('write-project-goosehints', content, token, workingDir),
+  readProjectLuminahints: (token: string, workingDir: string) =>
+    ipcRenderer.invoke('read-project-luminahints', token, workingDir),
+  writeProjectLuminahints: (content: string, token: string, workingDir: string) =>
+    ipcRenderer.invoke('write-project-luminahints', content, token, workingDir),
   selectRecipeFile: () => ipcRenderer.invoke('select-recipe-file'),
   saveRecipeFile: (content: string, defaultPath?: string) =>
     ipcRenderer.invoke('save-recipe-file', content, defaultPath),
@@ -330,41 +321,14 @@ const electronAPI: ElectronAPI = {
   openExternal: (url: string): Promise<void> => {
     return ipcRenderer.invoke('open-external', url);
   },
-  getVersion: (): string => {
-    return config.GOOSE_VERSION || ipcRenderer.sendSync('get-app-version') || '';
-  },
-  checkForUpdates: (): Promise<{ updateInfo: unknown; error: string | null }> => {
-    return ipcRenderer.invoke('check-for-updates');
-  },
-  downloadUpdate: (): Promise<{ success: boolean; error: string | null }> => {
-    return ipcRenderer.invoke('download-update');
-  },
-  installUpdate: (): void => {
-    ipcRenderer.invoke('install-update');
-  },
-  restartApp: (): void => {
-    ipcRenderer.send('restart-app');
-  },
-  onUpdaterEvent: (callback: (event: UpdaterEvent) => void): void => {
-    ipcRenderer.on('updater-event', (_event, data) => callback(data));
-  },
-  getUpdateState: (): Promise<{ updateAvailable: boolean; latestVersion?: string } | null> => {
-    return ipcRenderer.invoke('get-update-state');
-  },
-  isUsingGitHubFallback: (): Promise<boolean> => {
-    return ipcRenderer.invoke('is-using-github-fallback');
-  },
-  getAutoDownloadDisabled: (): Promise<boolean> => {
-    return ipcRenderer.invoke('get-auto-download-disabled');
-  },
   closeWindow: () => ipcRenderer.send('close-window'),
   hasAcceptedRecipeBefore: (recipe: Recipe) =>
     ipcRenderer.invoke('has-accepted-recipe-before', recipe),
   recordRecipeHash: (recipe: Recipe) => ipcRenderer.invoke('record-recipe-hash', recipe),
   openDirectoryInExplorer: (directoryPath: string) =>
     ipcRenderer.invoke('open-directory-in-explorer', directoryPath),
-  launchApp: (app: GooseApp) => ipcRenderer.invoke('launch-app', app),
-  refreshApp: (app: GooseApp) => ipcRenderer.invoke('refresh-app', app),
+  launchApp: (app: LuminaApp) => ipcRenderer.invoke('launch-app', app),
+  refreshApp: (app: LuminaApp) => ipcRenderer.invoke('refresh-app', app),
   closeApp: (appName: string) => ipcRenderer.invoke('close-app', appName),
   addRecentDir: (dir: string) => ipcRenderer.invoke('add-recent-dir', dir),
   listRecentDirs: () => ipcRenderer.invoke('list-recent-dirs'),
@@ -376,15 +340,15 @@ const electronAPI: ElectronAPI = {
 
 function getAppLocale(): unknown {
   try {
-    return ipcRenderer.sendSync('get-app-locale') ?? config.GOOSE_LOCALE;
+    return ipcRenderer.sendSync('get-app-locale') ?? config.LUMINA_LOCALE;
   } catch {
-    return config.GOOSE_LOCALE;
+    return config.LUMINA_LOCALE;
   }
 }
 
 const appConfigAPI: AppConfigAPI = {
-  get: (key: string) => (key === 'GOOSE_LOCALE' ? getAppLocale() : config[key]),
-  getAll: () => ({ ...config, GOOSE_LOCALE: getAppLocale() }),
+  get: (key: string) => (key === 'LUMINA_LOCALE' ? getAppLocale() : config[key]),
+  getAll: () => ({ ...config, LUMINA_LOCALE: getAppLocale() }),
 };
 
 // Expose the APIs

@@ -27,8 +27,8 @@ const test = base.extend<TestFixtures>({
 
 let mainWindow: Page;
 
-test.beforeEach(async ({ goosePage }, testInfo) => {
-  mainWindow = goosePage;
+test.beforeEach(async ({ luminaPage }, testInfo) => {
+  mainWindow = luminaPage;
 
   const testName = testInfo.titlePath[testInfo.titlePath.length - 1];
 
@@ -572,7 +572,7 @@ test.describe('Lumina App', () => {
           await chatInput.press('Enter');
 
           // Get the latest response
-          const response = await mainWindow.waitForSelector('.goose-message-tool', { timeout: 5000 });
+          const response = await mainWindow.waitForSelector('.lumina-message-tool', { timeout: 5000 });
           expect(await response.isVisible()).toBe(true);
 
           // Click the Output dropdown to reveal the actual quote

@@ -3,15 +3,15 @@ import { createSession } from '../sessions';
 import type { ExtensionConfig } from '../types/extensions';
 import type { Session } from '../types/session';
 import type { FixedExtensionEntry } from '../components/ConfigContext';
-import type { GooseExtension, GooseExtensionEntry } from '@aaif/goose-sdk';
-import { getConfiguredGooseExtensions } from '../acp/extensions';
+import type { LuminaExtension, LuminaExtensionEntry } from '@hikerm/lumina-sdk';
+import { getConfiguredLuminaExtensions } from '../acp/extensions';
 import { acpChatSessionController } from '../acp/chatSessionController';
 
 vi.mock('../acp/extensions', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../acp/extensions')>();
   return {
     ...actual,
-    getConfiguredGooseExtensions: vi.fn(),
+    getConfiguredLuminaExtensions: vi.fn(),
   };
 });
 
@@ -42,26 +42,26 @@ const configuredExtension = (name: string, enabled: boolean): FixedExtensionEntr
   enabled,
 });
 
-const gooseExtension = (name: string): GooseExtension => ({
+const luminaExtension = (name: string): LuminaExtension => ({
   type: 'builtin',
   name,
   description: `${name} extension`,
 });
 
-const gooseExtensionEntry = (name: string): GooseExtensionEntry => ({
-  extension: gooseExtension(name),
+const luminaExtensionEntry = (name: string): LuminaExtensionEntry => ({
+  extension: luminaExtension(name),
   enabled: true,
 });
 
-const mockedGetConfiguredGooseExtensions = vi.mocked(getConfiguredGooseExtensions);
+const mockedGetConfiguredLuminaExtensions = vi.mocked(getConfiguredLuminaExtensions);
 const mockedCreateAcpSession = vi.mocked(acpChatSessionController.createSession);
 
 describe('createSession ACP session extensions', () => {
   beforeEach(() => {
-    mockedGetConfiguredGooseExtensions.mockReset();
-    mockedGetConfiguredGooseExtensions.mockResolvedValue([
-      gooseExtensionEntry('developer'),
-      gooseExtensionEntry('memory'),
+    mockedGetConfiguredLuminaExtensions.mockReset();
+    mockedGetConfiguredLuminaExtensions.mockResolvedValue([
+      luminaExtensionEntry('developer'),
+      luminaExtensionEntry('memory'),
     ]);
     mockedCreateAcpSession.mockReset();
     mockedCreateAcpSession.mockResolvedValue(testSession);
@@ -72,8 +72,8 @@ describe('createSession ACP session extensions', () => {
       extensionConfigs: [extensionConfig('developer')],
     });
 
-    expect(mockedGetConfiguredGooseExtensions).toHaveBeenCalledOnce();
-    expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [gooseExtension('developer')], {
+    expect(mockedGetConfiguredLuminaExtensions).toHaveBeenCalledOnce();
+    expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [luminaExtension('developer')], {
       profileApplicationToken: undefined,
       recipeDeeplink: undefined,
       recipeId: undefined,
@@ -86,8 +86,8 @@ describe('createSession ACP session extensions', () => {
       allExtensions: [configuredExtension('developer', true), configuredExtension('memory', false)],
     });
 
-    expect(mockedGetConfiguredGooseExtensions).toHaveBeenCalledOnce();
-    expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [gooseExtension('developer')], {
+    expect(mockedGetConfiguredLuminaExtensions).toHaveBeenCalledOnce();
+    expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [luminaExtension('developer')], {
       profileApplicationToken: undefined,
       recipeDeeplink: undefined,
       recipeId: undefined,
@@ -99,7 +99,7 @@ describe('createSession ACP session extensions', () => {
       allExtensions: [configuredExtension('developer', false)],
     });
 
-    expect(mockedGetConfiguredGooseExtensions).not.toHaveBeenCalled();
+    expect(mockedGetConfiguredLuminaExtensions).not.toHaveBeenCalled();
     expect(mockedCreateAcpSession).toHaveBeenCalledWith('/tmp', [], {
       profileApplicationToken: undefined,
       recipeDeeplink: undefined,

@@ -1,29 +1,29 @@
 # AGENTS Instructions
 
-goose is an AI agent framework in Rust with CLI and Electron desktop interfaces.
+lumina is an AI agent framework in Rust with CLI and Electron desktop interfaces.
 
 ## Windows Rust Entry
 For this Windows Codex workspace, use only these Rust entry points:
 
 ```powershell
-. .\bin\activate-goose-rust.ps1
+. .\bin\activate-lumina-rust.ps1
 & .\bin\cargo.cmd +1.94.1 --version
 & 'D:\DevTools\Rust\cargo\bin\cargo.exe' -V
 ```
 
 - On Windows PowerShell, use exactly one of these flows:
-- Dot-source `. .\bin\activate-goose-rust.ps1` in the current shell, then run `cargo ...`.
+- Dot-source `. .\bin\activate-lumina-rust.ps1` in the current shell, then run `cargo ...`.
 - Or run `& .\bin\cargo.cmd <args>` each time without changing the current shell.
 - Never run `source bin/activate-hermit` on Windows.
-- Never run `bin\cargo`, `.\bin\cargo`, or any extensionless `cargo` placeholder from this repository on Windows. `D:\Project\goose\bin\cargo` is a Unix-only placeholder, not an executable.
-- All Rust, rustup, and LLVM tools used on Windows must resolve from `D:\DevTools\...`, not from `D:\Project\goose\bin`.
+- Never run `bin\cargo`, `.\bin\cargo`, or any extensionless `cargo` placeholder from this repository on Windows. `D:\Project\lumina\bin\cargo` is a Unix-only placeholder, not an executable.
+- All Rust, rustup, and LLVM tools used on Windows must resolve from `D:\DevTools\...`, not from `D:\Project\lumina\bin`.
 - If Codex or PowerShell was started before the PATH was fixed, fully exit and reopen Codex before relying on bare `cargo` after activation.
 - Ignore the macOS/Linux-only POSIX setup below unless the user explicitly asks for Linux or macOS instructions.
 
 ## Setup
 ### Windows PowerShell
 ```powershell
-. .\bin\activate-goose-rust.ps1
+. .\bin\activate-lumina-rust.ps1
 cargo build
 # or, without activating the shell:
 & .\bin\cargo.cmd build
@@ -50,12 +50,12 @@ just release-binary           # release binary
 ### Test
 ```powershell
 cargo test
-cargo test -p goose
-cargo test --package goose --test mcp_integration_test
+cargo test -p lumina
+cargo test --package lumina --test mcp_integration_test
 # if the shell is not activated:
 & .\bin\cargo.cmd test
-& .\bin\cargo.cmd test -p goose
-& .\bin\cargo.cmd test --package goose --test mcp_integration_test
+& .\bin\cargo.cmd test -p lumina
+& .\bin\cargo.cmd test --package lumina --test mcp_integration_test
 just record-mcp-tests        # record MCP
 ```
 
@@ -78,19 +78,19 @@ cd ui/desktop && pnpm test   # test UI
 ## Structure
 ```
 crates/
-├── goose              # core logic
-├── goose-acp-macros   # ACP proc macros
-├── goose-cli          # CLI entry
-├── goose-mcp          # MCP extensions
-├── goose-test         # test utilities
-└── goose-test-support # test helpers
+├── lumina              # core logic
+├── lumina-acp-macros   # ACP proc macros
+├── lumina-cli          # CLI entry
+├── lumina-mcp          # MCP extensions
+├── lumina-test         # test utilities
+└── lumina-test-support # test helpers
 
 ui/desktop/            # Electron app
 ```
 
 ## Development Loop
 ```powershell
-# 1. . .\bin\activate-goose-rust.ps1
+# 1. . .\bin\activate-lumina-rust.ps1
 # 2. Make changes
 # 3. cargo fmt
 ```
@@ -104,11 +104,11 @@ ui/desktop/            # Electron app
 
 ## Rules
 
-- Test: Prefer tests/ folder, e.g. crates/goose/tests/
-- Test: When adding features, update goose-self-test.yaml, rebuild, then run `goose run --recipe goose-self-test.yaml` to validate
+- Test: Prefer tests/ folder, e.g. crates/lumina/tests/
+- Test: When adding features, update lumina-self-test.yaml, rebuild, then run `lumina run --recipe lumina-self-test.yaml` to validate
 - Error: Use anyhow::Result
 - Provider: Implement Provider trait see providers/base.rs
-- MCP: Extensions in crates/goose-mcp/
+- MCP: Extensions in crates/lumina-mcp/
 - UI Desktop: Use ACP SDK types or local `src/types/*` types. Do not import generated OpenAPI types/client code from `ui/desktop/src/api`
 
 ## Code Quality
@@ -149,6 +149,6 @@ remaining space for dynamic text.
 - Never: Comment self-evident operations (`// Initialize`, `// Return result`), getters/setters, constructors, or standard Rust idioms
 
 ## Entry Points
-- CLI: crates/goose-cli/src/main.rs
+- CLI: crates/lumina-cli/src/main.rs
 - UI: ui/desktop/src/main.ts
-- Agent: crates/goose/src/agents/agent.rs
+- Agent: crates/lumina/src/agents/agent.rs

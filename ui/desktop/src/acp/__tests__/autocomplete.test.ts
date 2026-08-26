@@ -1,4 +1,4 @@
-import type { AgentMention, AvailableCommand } from '@aaif/goose-sdk';
+import type { AgentMention, AvailableCommand } from '@hikerm/lumina-sdk';
 import { describe, expect, it } from 'vitest';
 import { agentMentionToDisplayItem, availableCommandToDisplayItem } from '../autocomplete';
 

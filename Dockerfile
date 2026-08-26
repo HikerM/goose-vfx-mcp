@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-# goose CLI and Server Docker Image
+# lumina CLI and Server Docker Image
 # Multi-stage build for minimal final image size
 
 # Build stage
@@ -31,7 +31,7 @@ ENV CARGO_PROFILE_RELEASE_LTO=true
 ENV CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
 ENV CARGO_PROFILE_RELEASE_OPT_LEVEL=z
 ENV CARGO_PROFILE_RELEASE_STRIP=true
-RUN cargo build --release --package goose-cli
+RUN cargo build --release --package lumina-cli
 
 # Runtime stage - minimal Debian
 FROM debian:bookworm-slim@sha256:b1a741487078b369e78119849663d7f1a5341ef2768798f7b7406c4240f86aef
@@ -50,27 +50,27 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
-COPY --from=builder /build/target/release/goose /usr/local/bin/goose
+COPY --from=builder /build/target/release/lumina /usr/local/bin/lumina
 
 # Create non-root user
-RUN useradd -m -u 1000 -s /bin/bash goose && \
-    mkdir -p /home/goose/.config/goose && \
-    chown -R goose:goose /home/goose
+RUN useradd -m -u 1000 -s /bin/bash lumina && \
+    mkdir -p /home/lumina/.config/lumina && \
+    chown -R lumina:lumina /home/lumina
 
 # Set up environment
 ENV PATH="/usr/local/bin:${PATH}"
-ENV HOME="/home/goose"
+ENV HOME="/home/lumina"
 
 # Switch to non-root user
-USER goose
-WORKDIR /home/goose
+USER lumina
+WORKDIR /home/lumina
 
-# Default to goose CLI
-ENTRYPOINT ["/usr/local/bin/goose"]
+# Default to lumina CLI
+ENTRYPOINT ["/usr/local/bin/lumina"]
 CMD ["--help"]
 
 # Labels for metadata
-LABEL org.opencontainers.image.title="goose"
-LABEL org.opencontainers.image.description="goose CLI"
+LABEL org.opencontainers.image.title="lumina"
+LABEL org.opencontainers.image.description="lumina CLI"
 LABEL org.opencontainers.image.vendor="AAIF"
-LABEL org.opencontainers.image.source="https://github.com/aaif-goose/goose"
+LABEL org.opencontainers.image.source="https://github.com/HikerM/lumina"

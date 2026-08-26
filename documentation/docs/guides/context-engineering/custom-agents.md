@@ -4,7 +4,7 @@ sidebar_position: 3
 sidebar_label: Custom Agents
 ---
 
-Custom agents are reusable goose configurations for specific roles, behaviors, or areas of expertise. Each agent packages a name, description, optional model preference, and instructions so you can quickly ask goose to work with a specialized role such as code reviewer, documentation writer, test planner, or release assistant.
+Custom agents are reusable lumina configurations for specific roles, behaviors, or areas of expertise. Each agent packages a name, description, optional model preference, and instructions so you can quickly ask lumina to work with a specialized role such as code reviewer, documentation writer, test planner, or release assistant.
 
 Use custom agents when you want the same role or behavior across multiple sessions without retyping the same instructions.
 
@@ -12,20 +12,20 @@ Use custom agents when you want the same role or behavior across multiple sessio
 
 Agents are stored as Markdown files with YAML frontmatter. You can create or edit these files directly in your editor.
 
-Global agents are available across goose sessions:
+Global agents are available across lumina sessions:
 
 ```text
 ~/.agents/agents/
 ```
 
-Project agents are available when goose is working in that project:
+Project agents are available when lumina is working in that project:
 
 ```text
 <project>/.agents/agents/
 ```
 
 :::note Compatibility paths
-goose also discovers agents from `.goose/agents/`, `.claude/agents/`, `~/.goose/agents/`, `~/.claude/agents/`, goose's platform-specific config agents directory, and project-local `.agents/agents/`. New shared agents should use `.agents/agents/` for project agents or `~/.agents/agents/` for global agents.
+lumina also discovers agents from `.lumina/agents/`, `.claude/agents/`, `~/.lumina/agents/`, `~/.claude/agents/`, lumina's platform-specific config agents directory, and project-local `.agents/agents/`. New shared agents should use `.agents/agents/` for project agents or `~/.agents/agents/` for global agents.
 :::
 
 Create the directory if it does not already exist, then add a Markdown file for your agent:
@@ -52,17 +52,17 @@ Only `name` is required in the frontmatter. `description` and `model` are option
 
 ## Use an Agent
 
-After you create an agent file, start goose from a working directory where the agent can be discovered. Project agents are discovered from the current working directory, while global agents are discovered from your home/config directories.
+After you create an agent file, start lumina from a working directory where the agent can be discovered. Project agents are discovered from the current working directory, while global agents are discovered from your home/config directories.
 
 ### List available agents
 
-In a goose chat session, ask goose to list available sources:
+In a lumina chat session, ask lumina to list available sources:
 
 ```text
 list available sources
 ```
 
-This is a prompt to goose, not a terminal command. When source loading is available, goose lists discoverable agents alongside recipes and subrecipes.
+This is a prompt to lumina, not a terminal command. When source loading is available, lumina lists discoverable agents alongside recipes and subrecipes.
 
 You can invoke an agent by mentioning it by name:
 
@@ -70,7 +70,7 @@ You can invoke an agent by mentioning it by name:
 @code-reviewer review the current diff
 ```
 
-Or ask goose to use it:
+Or ask lumina to use it:
 
 ```text
 Use the code-reviewer agent to review this pull request.
@@ -148,12 +148,12 @@ When writing docs:
 
 | Use | Best fit |
 |---|---|
-| Change goose's role, tone, or instructions for a task | Custom agent |
-| Teach goose a reusable workflow or domain-specific procedure it can load on demand | [Skill](/docs/guides/context-engineering/using-skills) |
+| Change lumina's role, tone, or instructions for a task | Custom agent |
+| Teach lumina a reusable workflow or domain-specific procedure it can load on demand | [Skill](/docs/guides/context-engineering/using-skills) |
 | Package a repeatable task with prompts, settings, extensions, and parameters | [Recipe](/docs/guides/recipes) |
-| Delegate work to another isolated goose instance | [Subagent](/docs/guides/context-engineering/subagents) |
+| Delegate work to another isolated lumina instance | [Subagent](/docs/guides/context-engineering/subagents) |
 
-Agents define who goose should be for a task. Skills and recipes define what goose should know or do.
+Agents define who lumina should be for a task. Skills and recipes define what lumina should know or do.
 
 ### Can custom agents be scheduled to run?
 
@@ -161,15 +161,15 @@ Not directly. Custom agents are reusable roles, not scheduled jobs. To run somet
 
 ### Do custom agents have workflows?
 
-No. A custom agent defines who goose should be for a task: its role, behavior, instructions, and optional model preference. It does not define a step-by-step workflow. Use a recipe when you need repeatable steps, parameters, extension configuration, or scheduled execution.
+No. A custom agent defines who lumina should be for a task: its role, behavior, instructions, and optional model preference. It does not define a step-by-step workflow. Use a recipe when you need repeatable steps, parameters, extension configuration, or scheduled execution.
 
 ### Can custom agents use skills?
 
-Yes. A custom agent can use skills that are available in the session. Skills are still discovered and loaded through goose's normal skill behavior, so the agent can use them when your request matches a skill or when you explicitly ask for one.
+Yes. A custom agent can use skills that are available in the session. Skills are still discovered and loaded through lumina's normal skill behavior, so the agent can use them when your request matches a skill or when you explicitly ask for one.
 
 ### Can custom agents run recipes?
 
-A custom agent does not contain or automatically run a recipe. You can start goose with a recipe, ask goose to load or delegate a recipe when the relevant tools are available, or create a recipe that uses custom-agent instructions as part of its workflow.
+A custom agent does not contain or automatically run a recipe. You can start lumina with a recipe, ask lumina to load or delegate a recipe when the relevant tools are available, or create a recipe that uses custom-agent instructions as part of its workflow.
 
 ### Can custom agents use MCP servers?
 
@@ -177,7 +177,7 @@ Yes. Custom agents can use the MCP servers and extensions that are enabled in th
 
 ### Can custom agents call subagents?
 
-Yes, when delegation tools are available in the session. A custom agent can ask goose to delegate work to a subagent just like the default goose agent can. Delegated subagents run in isolated sessions and do not automatically inherit the full parent conversation.
+Yes, when delegation tools are available in the session. A custom agent can ask lumina to delegate work to a subagent just like the default lumina agent can. Delegated subagents run in isolated sessions and do not automatically inherit the full parent conversation.
 
 ### Can one custom agent call another custom agent?
 

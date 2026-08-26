@@ -7,7 +7,7 @@ import {
   type AcpChatStateChange,
   type AdapterState,
   DEFAULT_VISIBLE_MESSAGE_METADATA,
-  getGooseMessageMeta,
+  getLuminaMessageMeta,
   messagesChange,
 } from './shared';
 
@@ -26,34 +26,34 @@ export function applyContentChunk(
     return [];
   }
 
-  const gooseMeta = getGooseMessageMeta(update);
-  const messageId = update.messageId ?? gooseMeta.messageId;
-  const existing = findMessageForChunk(state, role, messageId, gooseMeta.created);
+  const luminaMeta = getLuminaMessageMeta(update);
+  const messageId = update.messageId ?? luminaMeta.messageId;
+  const existing = findMessageForChunk(state, role, messageId, luminaMeta.created);
 
   if (existing) {
     const lastContent = existing.content[existing.content.length - 1];
-    if (reconcileLocalSteerTextChunk(state, existing, content, gooseMeta.steer)) {
-      return messagesChangeWithLocalSteerConfirmation(state, existing, gooseMeta.steer);
+    if (reconcileLocalSteerTextChunk(state, existing, content, luminaMeta.steer)) {
+      return messagesChangeWithLocalSteerConfirmation(state, existing, luminaMeta.steer);
     }
 
     if (lastContent?.type === 'text' && content.type === 'text') {
       lastContent.text += content.text;
     } else if (content.type === 'image' && hasImageContent(existing, content)) {
-      return messagesChangeWithLocalSteerConfirmation(state, existing, gooseMeta.steer);
+      return messagesChangeWithLocalSteerConfirmation(state, existing, luminaMeta.steer);
     } else {
       existing.content.push(content);
     }
 
-    return messagesChangeWithLocalSteerConfirmation(state, existing, gooseMeta.steer);
+    return messagesChangeWithLocalSteerConfirmation(state, existing, luminaMeta.steer);
   } else {
     state.messages.push({
       ...(messageId ? { id: messageId } : {}),
       role,
-      created: gooseMeta.created ?? Math.floor(Date.now() / 1000),
+      created: luminaMeta.created ?? Math.floor(Date.now() / 1000),
       content: [content],
       metadata: {
         ...DEFAULT_VISIBLE_MESSAGE_METADATA,
-        ...(gooseMeta.steer ? { steer: true } : {}),
+        ...(luminaMeta.steer ? { steer: true } : {}),
       },
     });
   }
@@ -69,9 +69,9 @@ export function applyThoughtChunk(
     return [];
   }
 
-  const gooseMeta = getGooseMessageMeta(update);
-  const messageId = update.messageId ?? gooseMeta.messageId;
-  const existing = findMessageForChunk(state, 'assistant', messageId, gooseMeta.created);
+  const luminaMeta = getLuminaMessageMeta(update);
+  const messageId = update.messageId ?? luminaMeta.messageId;
+  const existing = findMessageForChunk(state, 'assistant', messageId, luminaMeta.created);
 
   if (existing) {
     const lastContent = existing.content[existing.content.length - 1];
@@ -84,7 +84,7 @@ export function applyThoughtChunk(
     state.messages.push({
       ...(messageId ? { id: messageId } : {}),
       role: 'assistant',
-      created: gooseMeta.created ?? Math.floor(Date.now() / 1000),
+      created: luminaMeta.created ?? Math.floor(Date.now() / 1000),
       content: [{ type: 'thinking', thinking: update.content.text, signature: '' }],
       metadata: { ...DEFAULT_VISIBLE_MESSAGE_METADATA },
     });

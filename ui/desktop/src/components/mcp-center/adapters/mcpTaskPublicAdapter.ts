@@ -1,4 +1,4 @@
-import type { McpEventsPage, McpTaskRef } from '@aaif/goose-sdk';
+import type { McpEventsPage, McpTaskRef } from '@hikerm/lumina-sdk';
 import type {
   McpCenterSafeError,
   McpCenterSafeErrorCode,
