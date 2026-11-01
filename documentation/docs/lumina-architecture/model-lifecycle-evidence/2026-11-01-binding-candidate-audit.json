@@ -1,0 +1,130 @@
+{
+  "observedAt": "2026-11-01T10:14:26.683606+00:00",
+  "status": "SOURCE_AUDIT_ONLY",
+  "currentProductBinding": "0.1.146",
+  "candidate": "0.1.160",
+  "scope": "Exact registry sources in existing D: Cargo cache only; no extra project checkout, worktree, manifest update, candidate build or runtime acceptance",
+  "packages": [
+    {
+      "package": "llama-cpp-2",
+      "version": "0.1.160",
+      "archiveSha256": "b98e9f0971b7454a25a550f0bd4577f35b94570be32f8f8dc08d94f4cb2873fe",
+      "registryChecksumMatched": true,
+      "vcs": {
+        "git": {
+          "sha1": "0dd5814c9b061930965d144c1653cd4d05054873"
+        },
+        "path_in_vcs": "llama-cpp-2"
+      },
+      "files": [
+        {
+          "path": "src/context.rs",
+          "sha256": "ba03a44dff97beb2ca3a6137568024a0a1d04d88721f7da7d979dbec04601a80",
+          "bytes": 16517,
+          "extractedSourceMatchesArchive": true
+        },
+        {
+          "path": "src/speculative.rs",
+          "sha256": "0e8cd543578188e0d5e5089e28bde31f0afabfa4aaa59f8f6d618f51acaa1ae6",
+          "bytes": 7448,
+          "extractedSourceMatchesArchive": true
+        },
+        {
+          "path": "src/model/params.rs",
+          "sha256": "f03201c7780752f9b22be4accab2a3fd1367c37ec2cdd69be28e84e0961a479f",
+          "bytes": 30985,
+          "extractedSourceMatchesArchive": true
+        }
+      ]
+    },
+    {
+      "package": "llama-cpp-sys-2",
+      "version": "0.1.160",
+      "archiveSha256": "912d8a0522acec022ae07d099366234067c8af6a18570a603f0749b7bb927e9a",
+      "registryChecksumMatched": true,
+      "vcs": {
+        "git": {
+          "sha1": "0dd5814c9b061930965d144c1653cd4d05054873"
+        },
+        "path_in_vcs": "llama-cpp-sys-2"
+      },
+      "files": [
+        {
+          "path": "wrapper_common.cpp",
+          "sha256": "8aa31df849b7d2d0fc880dee910f8d4ad94ec5e09149e64197930ae458a13d46",
+          "bytes": 10753,
+          "extractedSourceMatchesArchive": true
+        },
+        {
+          "path": "llama.cpp/include/llama.h",
+          "sha256": "c9a5f025ad7dbf07eda6660c8ff2c32cd80c07ba440d80728707a9c9d13c1bc3",
+          "bytes": 89978,
+          "extractedSourceMatchesArchive": true
+        },
+        {
+          "path": "llama.cpp/src/models/dflash.cpp",
+          "sha256": "b91e39fabcb330156ba0325aad75793514fa4acde956611427f0ea31d46e4483",
+          "bytes": 50819,
+          "extractedSourceMatchesArchive": true
+        },
+        {
+          "path": "llama.cpp/common/speculative.cpp",
+          "sha256": "632c95729d52e258e7bec14db78b4acc2291d615ec9d803cb0acb7844a3f7dc4",
+          "bytes": 120705,
+          "extractedSourceMatchesArchive": true
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "area": "Embedding/Reranker output length",
+      "observed": "Candidate selects live RANK n_cls_out versus other pooling n_embd_out before constructing slice; current binding constructs n_embd",
+      "action": "Upgrade candidate requires actual ABI and runtime regression"
+    },
+    {
+      "area": "MTP",
+      "observed": "Candidate exposes same-model MtpSpeculative owner, begin/process/draft/accept, Mtp context type and load_mtp; wrapper_common.cpp supplies native entry points",
+      "action": "Probe exact model/MTP combination, correctness, cancellation and rollback against baseline; validate finite bounded params before wrapper"
+    },
+    {
+      "area": "DFlash",
+      "observed": "Native dflash.cpp and speculative.cpp bundled; no public DFlash wrapper found in candidate Rust src/*.rs",
+      "action": "Evaluate bounded native bridge or isolated helper, exact target/draft pairing and shared output-head ownership; ordinary draft is not equivalent"
+    }
+  ],
+  "references": [
+    "https://crates.io/crates/llama-cpp-2/0.1.160",
+    "https://crates.io/crates/llama-cpp-sys-2/0.1.160",
+    "https://github.com/ggml-org/llama.cpp/blob/dde879bc4f954b809892fd0d660515f42536394a/src/models/dflash.cpp"
+  ],
+  "decision": {
+    "observedAt": "2026-11-01T11:05:43.129692+00:00",
+    "productBinding": "RETAIN_0.1.146",
+    "nativeHelperRevision": "dde879bc4f954b809892fd0d660515f42536394a",
+    "reason": "0.1.160 removes OpenAIChatTemplateParams / ChatTemplateResult / oaicompat interfaces used by current native tool parsing; direct upgrade would break existing tool chain",
+    "implementation": "Preserve existing in-process runtime and verify pinned upstream helper for specific additional capabilities; no second Goose checkout or worktree",
+    "dependencyVersionsChanged": false,
+    "nativeHelperBuildEvidence": "2026-11-01-native-helper-build.json",
+    "productHelperAdapter": "PENDING"
+  },
+  "openAiInterfaceAudit": {
+    "0.1.146": {
+      "OpenAIChatTemplateParams": [
+        "model.rs",
+        "openai.rs"
+      ],
+      "ChatTemplateResult": [
+        "model.rs"
+      ],
+      "apply_chat_template_oaicompat": [
+        "model.rs"
+      ]
+    },
+    "0.1.160": {
+      "OpenAIChatTemplateParams": [],
+      "ChatTemplateResult": [],
+      "apply_chat_template_oaicompat": []
+    }
+  }
+}

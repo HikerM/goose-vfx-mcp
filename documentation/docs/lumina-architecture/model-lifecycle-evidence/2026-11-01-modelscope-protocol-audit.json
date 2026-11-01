@@ -1,0 +1,39 @@
+{
+  "observedAt": "2026-11-01T07:58:53.641564+00:00",
+  "primaryFiles": [
+    {
+      "url": "https://raw.githubusercontent.com/modelscope/modelscope_hub/main/src/modelscope_hub/constants.py",
+      "sha256": "5e5147a50d4797bc69bb3d98c7262f80527c45e8d0d17dda68147ad30b039e4a"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/modelscope/modelscope_hub/main/src/modelscope_hub/_legacy_api.py",
+      "sha256": "63b6efb73b2692d01788cae6b2949617f1a0eb3cb184ec28242e98acccd9ad77"
+    }
+  ],
+  "knownRepoFilesCap": 3000,
+  "apiBehaviour": "Recursive model file listing can be silently capped; fall back to scoped directory walks. A capped shallow directory is incomplete and cannot produce a trusted inventory.",
+  "legacyAuth": "Per-request Bearer plus m_session_id cookie; credentials never persisted in inventories. Real restricted-account access remains unverified.",
+  "actualScopedProbe": {
+    "repository": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+    "revision": "b67c55ca3cc63388e8fe22678d5988445bbf6484",
+    "root": "HighNoise",
+    "recursive": false,
+    "httpCode": 200,
+    "entries": 11,
+    "pathsIncludeRootPrefix": true
+  },
+  "smartHttpProbe": {
+    "observedAt": "2026-11-01T08:10:27.136626+00:00",
+    "url": "https://modelscope.cn/Qwen/Qwen3-1.7B-GGUF.git/info/refs?service=git-upload-pack",
+    "userAgent": "git/lumina-model-lifecycle",
+    "status": 200,
+    "responseBytes": 433,
+    "responseSha256": "51fe9ea9251349a9ec504f1a4cb42e6ac55a88de5a13e9a5196f1c79eb4a4b61",
+    "refs": {
+      "HEAD": "cdd105fbd3a69efc373ba5d0451f71335630920a",
+      "refs/heads/master": "cdd105fbd3a69efc373ba5d0451f71335630920a"
+    },
+    "implementationStatus": "Observed only. Production bounded packet parser and revision resolver still to implement.",
+    "finding": "A Git-compatible request returns full refs directly over ModelScope HTTPS without an installed git executable. Earlier generic-client 421 must not be treated as a permanent endpoint limitation."
+  }
+}

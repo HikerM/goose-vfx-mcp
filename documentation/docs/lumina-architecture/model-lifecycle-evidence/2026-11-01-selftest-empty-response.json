@@ -1,0 +1,20 @@
+{
+  "observedAt": "2026-11-01T09:13:24.359585+00:00",
+  "result": "FAIL",
+  "scope": "Actual CLI recipe execution; not a model capability acceptance result",
+  "identity": {
+    "cliSha256": "2714e334167b1f431bbf6e90386d37a5b533e2ee601e764eeb3ab7a18848b539",
+    "recipeSha256": "633f36dc771fbad19d46502874ed2f200a49a843078e980f7caaecd6b88fdd66",
+    "startedAt": "2026-11-01T08:55:49.2813621Z"
+  },
+  "observations": {
+    "foundationPassed": 65,
+    "foundationIgnored": 3,
+    "realInferenceExecuted": false,
+    "reportExists": false,
+    "modelFinalResponse": "The model returned an empty response. Please resend your message to continue.",
+    "cliExitCode": 0
+  },
+  "streamLogSha256": "0b53625c2df56bcc8cf0c51ef628424144071b95a193988f090176f50f25358d",
+  "nextAction": "Replace the long nested native command with the cross-runtime tested bin/test-lumina-real-text.ps1 entry, then rerun the recipe; retain this failed observation"
+}

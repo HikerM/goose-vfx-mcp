@@ -1,0 +1,96 @@
+{
+  "startedAt": "2026-11-01T12:00:51.719089+00:00",
+  "status": "PASS",
+  "identity": {
+    "cliSha256": "ad22f2e45ddd697aa706cfd27194f3ca3250b6eb8978f0264749f241365f7bf7",
+    "modelSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a"
+  },
+  "source": {
+    "scope": "validation asset only; not proof of lifecycle installation",
+    "repository": "Qwen/Qwen3-1.7B-GGUF",
+    "revision": "cdd105fbd3a69efc373ba5d0451f71335630920a",
+    "file": "Qwen3-1.7B-Q8_0.gguf",
+    "sizeBytes": 1834426016,
+    "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+    "result": "source size and computed SHA256 verified"
+  },
+  "requestedGpuLayers": 29,
+  "settings": {
+    "context_size": 4096,
+    "max_output_tokens": 32,
+    "sampling": {
+      "type": "Greedy"
+    },
+    "repeat_penalty": 1.0,
+    "repeat_last_n": 64,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0,
+    "n_batch": 512,
+    "n_gpu_layers": 29,
+    "use_mlock": false,
+    "flash_attention": null,
+    "n_threads": 4,
+    "tool_calling": "auto",
+    "chat_template": {
+      "type": "embedded"
+    },
+    "enable_thinking": false,
+    "vision_capable": false,
+    "image_token_estimate": 256,
+    "mmproj_size_bytes": 0
+  },
+  "scope": "Actual existing CLI CUDA text routing probe; not new lifecycle install, tools, vision, MTP or release acceptance",
+  "weightCopies": 0,
+  "originalRegistryModified": false,
+  "pid": 50228,
+  "argv": [
+    "D:\\Project\\goose\\target\\cuda-validation\\x86_64-pc-windows-msvc\\debug\\lumina.exe",
+    "run",
+    "--provider",
+    "local",
+    "--model",
+    "Qwen/Qwen3-1.7B-GGUF:q8_0",
+    "--no-session",
+    "--no-profile",
+    "--max-turns",
+    "1",
+    "--output-format",
+    "stream-json",
+    "--text",
+    "Compute 2 + 2. Respond only with the numeral."
+  ],
+  "cliExitCode": 0,
+  "actualOutput": "4",
+  "usage": {
+    "type": "complete",
+    "total_tokens": 2257,
+    "input_tokens": 2256,
+    "output_tokens": 1
+  },
+  "nativeOffloadLayers": [
+    [
+      29,
+      29
+    ]
+  ],
+  "nativeCudaModelBufferMiB": [
+    1743.77
+  ],
+  "selectedModes": [
+    {
+      "message": "Selected local inference execution mode",
+      "backend": "llamacpp",
+      "gpu_layers": 29,
+      "execution": "gpu"
+    }
+  ],
+  "logs": [
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\cuda-metadata-text-smoke-app\\state\\logs\\cli\\2026-11-01\\20261101_200100.log",
+      "sha256": "0a1c7561d9bad7284867fe581a8812bbacff9af4ed993ac6c2440c1ada7c32eb"
+    }
+  ],
+  "modelHashUnchanged": true,
+  "finishedAt": "2026-11-01T12:01:38.447669+00:00"
+}

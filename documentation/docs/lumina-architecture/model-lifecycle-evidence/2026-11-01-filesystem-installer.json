@@ -1,0 +1,79 @@
+{
+  "observedAt": "2026-11-01T08:55:11.138998+00:00",
+  "baseCommit": "4f62659052985d944b2b8a2a043fc4375218689e",
+  "workingTree": "Uncommitted implementation; no stage completion asserted",
+  "scope": "Real filesystem installer and SQLite integration using synthetic valid GGUF, including child process kill and recovery; not real model inference, network transfer or product ACP/CLI installation acceptance",
+  "result": "PASS",
+  "fullPackageRegression": {
+    "passed": 169,
+    "ignored": 5,
+    "command": "bin/cargo.cmd test -p lumina-local-inference --no-default-features",
+    "logSha256": "21c696a62771dd44a1e5af77c990ac7e79df69f31c8354b3e9f3cf06bf20fafe",
+    "note": "Before two lint-only corrections; final changed filesystem paths rechecked by focused suite"
+  },
+  "finalFocusedRegression": {
+    "passed": 10,
+    "failed": 0,
+    "command": "bin/cargo.cmd test -p lumina-local-inference --no-default-features --test lifecycle_contracts filesystem_installer",
+    "logSha256": "f36dfc07e52a550428266dfdc1ff644c182357053d423f76050f5a82cf8f09b8"
+  },
+  "clippy": {
+    "result": "PASS",
+    "command": "bin/cargo.cmd clippy -p lumina-local-inference --no-default-features --all-targets -- -D warnings",
+    "logSha256": "215b0eedc56794d05df0bf3bdc11aa796ccb27e96b4777361eaafb37f483410e",
+    "scope": "Own crate and all targets; vendor dependency retains three prior warnings; not workspace-wide approval"
+  },
+  "forcedProcessTermination": {
+    "test": "filesystem_installer_recovers_after_forced_process_termination_at_commit_boundaries",
+    "mechanism": "Parent waits for exact checkpoint marker, kills actual child OS process, waits for terminal status, reopens database and resumes through InstallationStore",
+    "checkpoints": [
+      "PREPARED",
+      "directory renamed before journal advancement",
+      "REGISTERED before caller response"
+    ],
+    "postRecoveryAssertions": [
+      "one immutable installation version",
+      "one content reference",
+      "job Completed at Installed stage",
+      "no pending installation commits"
+    ]
+  },
+  "otherVerifiedCases": [
+    "read-only content-addressed blobs and independent installed copies",
+    "same-size corrupted cache is preserved and rejected",
+    "unknown published directories are preserved",
+    "per-version lock contention rejects concurrent preparation",
+    "lease renewal during copying and hashing",
+    "pause fences writer and resume can reuse verified blob without original transfer file",
+    "Windows junction and broken published junction are rejected without writing outside store",
+    "failed SQL registration preserves committed directory for recovery",
+    "registered response replay validates actual content without duplicate registration"
+  ],
+  "sourceDigests": {
+    "src/lifecycle/installer.rs": "733eb36f7ba552ecff46d8b559fb104291d16c215d0ca4045408a8621305053c",
+    "src/lifecycle/files.rs": "62d52fd4219b5ccc85e0866aaff7906cd63254323a0f13ec1afc2cc7b144c528",
+    "src/lifecycle/installation.rs": "f15b299ccff8ea8546b41b572642b536f830686ac60971ab0e0ea03c9fd0e5ce",
+    "src/lifecycle/repository/installation.rs": "be864a1f8f73fa3205e8d259d4ca6ab570d04d2cbe8882ec2b7caf9e6d89c327",
+    "tests/lifecycle_contracts.rs": "61b78b3fa80b64c247e9b2333bd38157b235591c3cc02eb6767733e94eb540f0"
+  },
+  "remaining": [
+    "product PlanService and entrypoint integration",
+    "persistent network transfer worker",
+    "automatic startup recovery discovery and scheduling",
+    "running-session ownership, uninstall and blob garbage collection",
+    "legacy registry migration",
+    "actual complete model-category and product acceptance"
+  ],
+  "cliBuild": {
+    "result": "PASS",
+    "package": "lumina-agent-cli",
+    "command": "bin/cargo.cmd build -p lumina-agent-cli --bin lumina",
+    "logSha256": "d3520235f4380ab3643fe4958a1e41b4a01defb76f14ea38ce55eba020e44c31",
+    "binarySha256": "2714e334167b1f431bbf6e90386d37a5b533e2ee601e764eeb3ab7a18848b539",
+    "preexistingWarnings": {
+      "core": 605,
+      "cli": 6
+    },
+    "notWorkspaceClippyApproval": true
+  }
+}

@@ -1,0 +1,25 @@
+pub mod classification;
+pub mod domain;
+pub mod failure;
+pub mod files;
+pub mod gguf;
+pub mod installation;
+pub mod installer;
+pub mod metadata;
+pub mod modelscope;
+pub mod repository;
+pub mod state;
+
+pub use classification::*;
+pub use domain::*;
+pub use failure::*;
+pub use files::*;
+pub use gguf::*;
+pub use installation::*;
+pub use installer::*;
+pub use metadata::*;
+pub use modelscope::*;
+pub use repository::*;
+pub use state::*;
+pub mod catalog;
+pub use catalog::*;

@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-11-01T11:28:25.668750+00:00",
+  "status": "PASS",
+  "sourceCheckout": "D:\\Project\\goose",
+  "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina",
+  "binary": "target/debug/lumina.exe",
+  "binarySha256": "d7b2acc0d95d8e32e8e14f02adcec91f24a94314e400d20c0bd8537661a56302",
+  "log": "target/lifecycle-validation/cli-build-metadata-default.log",
+  "logSha256": "5250528c4ea919c89f79eda72d0bc27ff03affa22efda13ad8e7785abedff0d0",
+  "sourceSha256": {
+    "crates\\lumina-local-inference\\src\\lifecycle\\metadata.rs": "cbfc78b08321d1d74c22863d2cc752d7b513bbd75c7740a310a028fe78bc651f",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope.rs": "8738433367cef23dc59528191be9d0405c02e575f3b9510889154d4af1359343",
+    "lumina-self-test.yaml": "a20968136bc6b5c0c2bd6f7809dec694489b4cc39696bdee8630e140271e4ab2",
+    "bin\\test-lumina-real-text.ps1": "57837a0a7b41c8c27398fcc27ba9ec79e8151abebac1f3c176c0cf8fd657ff2d"
+  },
+  "knownWarnings": "605 core,6 CLI,1 MCP and existing dependency warnings; workspace-wide strict Clippy not passed",
+  "scope": "Actual full CPU CLI build containing metadata module; product lifecycle entry wiring and current recipe acceptance remain separate"
+}

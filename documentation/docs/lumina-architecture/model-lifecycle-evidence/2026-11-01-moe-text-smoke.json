@@ -1,0 +1,40 @@
+{
+  "observedAt": "2026-11-01T09:03:33.611517+00:00",
+  "result": "PASS",
+  "scope": "Actual existing runtime CPU MoE text smoke only; no lifecycle installer, tools, vision, MTP or full release acceptance",
+  "input": "Compute 2 + 2. Reply only with the numeral.",
+  "actualOutput": "4",
+  "usage": {
+    "type": "complete",
+    "total_tokens": 2317,
+    "input_tokens": 2316,
+    "output_tokens": 1
+  },
+  "identity": {
+    "startedAt": "2026-11-01T09:00:50.3812363Z",
+    "modelPath": "D:/Lumina/data/models/modelscope/Abiray__Qwen3.6-35B-A3B-Q4_K_M-GGUF/Qwen3.6-35B-A3B-Q4_K_M.gguf",
+    "sourceSha256": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f",
+    "modelBytes": 21166758336,
+    "lastWriteTimeUtc": "2026-10-31T09:17:32.1520403Z",
+    "availableHostMemoryBytes": 48448606208,
+    "cliSha256": "2714e334167b1f431bbf6e90386d37a5b533e2ee601e764eeb3ab7a18848b539",
+    "requestedThreads": 12,
+    "requestedGpuLayers": 0,
+    "contextLength": 8192,
+    "maxOutputTokens": 64,
+    "scope": "Actual existing runtime MoE text smoke; not lifecycle installation, vision, MTP or release capability acceptance"
+  },
+  "completion": {
+    "exitCode": 0,
+    "modelSha256After": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f",
+    "sourceUnchanged": true,
+    "finishedAt": "2026-11-01T09:02:43.9496811Z"
+  },
+  "repository": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF",
+  "pinnedRevision": "1f423dd35457209ba58aa7e154e5d7facd317431",
+  "modelHashVerifiedBeforeAndAfter": true,
+  "weightCopies": 0,
+  "originalRegistryModified": false,
+  "logSha256": "5c4dad00a2788e751770d94c68136d54e58c6aa89df23701b5f8e0fec63a27bb",
+  "priorObservation": "Earlier interrupted attempt stayed UNVERIFIED; this successful run uses explicit isolated CPU settings with 12 threads"
+}

@@ -1,0 +1,39 @@
+{
+  "observedAt": "2026-11-01T10:29:57.701003+00:00",
+  "status": "PASS",
+  "scope": "CPU and CUDA existing CLI build verification only; workspace-wide strict Clippy not passed",
+  "builds": [
+    {
+      "kind": "cpu",
+      "binary": "target/debug/lumina.exe",
+      "sha256": "0fd77e7d3019c7fc258666705350df161eeada7ccc17eba5706ab2af5687ad2b",
+      "log": "target\\lifecycle-validation\\cli-build-classification-components-final.log",
+      "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina"
+    },
+    {
+      "kind": "cuda",
+      "binary": "target/cuda-validation/x86_64-pc-windows-msvc/debug/lumina.exe",
+      "sha256": "f3540ae0e91ea03a0593270a39f93ad46c6356cd0f75265f223f3eb86a00ef05",
+      "log": "target\\lifecycle-validation\\cuda-build-msvc.log",
+      "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina --features cuda --target x86_64-pc-windows-msvc"
+    }
+  ],
+  "rustToolchain": "1.94.1",
+  "cudaEnvironment": {
+    "startedAt": "2026-11-01T10:04:44.6283011Z",
+    "sourceCheckout": "D:/Project/goose",
+    "targetDirectory": "D:\\Project\\goose\\target\\cuda-validation",
+    "cl": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\cl.exe",
+    "nvcc": "D:\\DevTools\\cuda-12.9\\bin\\nvcc.exe",
+    "llvm": "D:\\DevTools\\LLVM\\bin",
+    "cuda": "D:\\DevTools\\cuda-12.9",
+    "nativeEnvironmentImported": true,
+    "priorExitCode": 101,
+    "priorFailure": "Candle nvcc could not find cl.exe",
+    "scope": "Existing CUDA feature build; not GPU model acceptance"
+  },
+  "knownWarnings": "605 core and6CLI legacy warnings remain; dependency warnings also retained",
+  "sourceCheckout": "D:/Project/goose",
+  "additionalProjectCopies": 0,
+  "additionalWorktrees": 0
+}

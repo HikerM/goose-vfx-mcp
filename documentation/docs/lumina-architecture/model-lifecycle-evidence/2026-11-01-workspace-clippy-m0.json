@@ -1,0 +1,368 @@
+{
+  "observedAt": "2026-11-01T12:24:16.472490+00:00",
+  "command": "bin/cargo.cmd clippy --locked --offline --all-targets -- -D warnings",
+  "exitCode": 101,
+  "status": "FAILED",
+  "log": "D:\\Project\\goose\\target\\lifecycle-validation\\workspace-clippy-m0.log",
+  "logSha256": "a1a19a5936f837e04acf7c042111fb74fbb9f5e99c4f42164262905866dc1aee",
+  "compilerSummaries": [
+    "error: could not compile `lumina-mcp` (lib) due to 1 previous error",
+    "error: could not compile `lumina-agent` (lib) due to 697 previous errors"
+  ],
+  "diagnosticSourceFiles": [
+    {
+      "path": "crates/lumina-mcp/src/subprocess.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "2decf35f40953968a59eaf96367a95c64d51d60e76e9b94932d25f46755cc05d",
+      "headContentSha256": "0f950bd106645e1a551c8f36824a0a05321b9db8b3fe807637d2ac09ef9de6e8"
+    },
+    {
+      "path": "crates/lumina/src/acp/server.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "f172168cbbb163a8e4ab7660c7af46acc67238440773370d768311192e19d07d",
+      "headContentSha256": "f172168cbbb163a8e4ab7660c7af46acc67238440773370d768311192e19d07d"
+    },
+    {
+      "path": "crates/lumina/src/acp/server/mcp_platform.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "39d93711d7c7b554c58b8922106532124c5e61aa1dd5bee6dc925ec4931af586",
+      "headContentSha256": "39d93711d7c7b554c58b8922106532124c5e61aa1dd5bee6dc925ec4931af586"
+    },
+    {
+      "path": "crates/lumina/src/acp/server/new_session.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "9d70671bf43c27a92df8f42f38051184375e2a20b97074dcf5e9ebd041f5d3c1",
+      "headContentSha256": "9d70671bf43c27a92df8f42f38051184375e2a20b97074dcf5e9ebd041f5d3c1"
+    },
+    {
+      "path": "crates/lumina/src/acp/transport/json_safety.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "f0078f8f1b2a75451f10e0d4c184f7a266ffb5f547e7e3c97422af473af661d4",
+      "headContentSha256": "f0078f8f1b2a75451f10e0d4c184f7a266ffb5f547e7e3c97422af473af661d4"
+    },
+    {
+      "path": "crates/lumina/src/agents/agent.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "39c8afa283614d9fc7c6ae31f768dc7f809e197fcb5753af31318cc88a013140",
+      "headContentSha256": "39c8afa283614d9fc7c6ae31f768dc7f809e197fcb5753af31318cc88a013140"
+    },
+    {
+      "path": "crates/lumina/src/config/paths.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "0b4cdeb70fb9881cd3f38dfb7f9fdff16eade42a145158d8fd37ef5e61112434",
+      "headContentSha256": "0b4cdeb70fb9881cd3f38dfb7f9fdff16eade42a145158d8fd37ef5e61112434"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/adapter_capability_contract.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "1156bbb1b0d260a28ec02b265b0f4f3e0c7fa09b1f851a82ae0323dd9ac651e4",
+      "headContentSha256": "1156bbb1b0d260a28ec02b265b0f4f3e0c7fa09b1f851a82ae0323dd9ac651e4"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/credential_authority.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "d75c41755c4b78cc79b59cb6888f36f5f9c6ec2763e5bf9226f079f7ebe4262c",
+      "headContentSha256": "d75c41755c4b78cc79b59cb6888f36f5f9c6ec2763e5bf9226f079f7ebe4262c"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/credential_enrollment.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "81762ab94e45f8dd94b6371e10cee42fa76f78263d4d80fecf33466f15ac2a4b",
+      "headContentSha256": "81762ab94e45f8dd94b6371e10cee42fa76f78263d4d80fecf33466f15ac2a4b"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/credential_runtime_gate.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "142a5490c1b355846e047ada3fe0530040bab3252414709cef9e77f2e7d13426",
+      "headContentSha256": "142a5490c1b355846e047ada3fe0530040bab3252414709cef9e77f2e7d13426"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/effect_fence.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "9feab7ccb4a06ef2038ce27ad66ae6701645971a1ea61706d5ddf4c747c47be0",
+      "headContentSha256": "9feab7ccb4a06ef2038ce27ad66ae6701645971a1ea61706d5ddf4c747c47be0"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/external_distribution.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "1aaa4dee4a4c7ea877d3d487f3c2a3e6d845a2fc7baa8badae53775c6ef98079",
+      "headContentSha256": "1aaa4dee4a4c7ea877d3d487f3c2a3e6d845a2fc7baa8badae53775c6ef98079"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/fenced_projection_sink.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "9c311a8593b2526011fe701e5885be337d846e116a5e0081337603a0e5c8b79b",
+      "headContentSha256": "9c311a8593b2526011fe701e5885be337d846e116a5e0081337603a0e5c8b79b"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/https_manifest_fetcher.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "03cf243d4b67e9b69aa03c3f319e9625b2512d00e627f9743bcf0f1558b41b1a",
+      "headContentSha256": "03cf243d4b67e9b69aa03c3f319e9625b2512d00e627f9743bcf0f1558b41b1a"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/https_manifest_policy.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "db2cf70f1732056845805ecd18caf6c337889d94a67b50a3122d47f0ba348380",
+      "headContentSha256": "db2cf70f1732056845805ecd18caf6c337889d94a67b50a3122d47f0ba348380"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/intake.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "a7543a4e9c0589e239f8407b7eaa6858ee87c60cfdd984c3cdf8d62834e0deca",
+      "headContentSha256": "a7543a4e9c0589e239f8407b7eaa6858ee87c60cfdd984c3cdf8d62834e0deca"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/intake_inspection.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "f46d130389a0a1fe7b9a729a144f4807d8db303eca791334b3661c2ee7bb38ee",
+      "headContentSha256": "f46d130389a0a1fe7b9a729a144f4807d8db303eca791334b3661c2ee7bb38ee"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/intake_inspection_network.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "a06a405263b893a048d8e78742c180cfd3d0291cf2e8afad4dfc9873419bed80",
+      "headContentSha256": "a06a405263b893a048d8e78742c180cfd3d0291cf2e8afad4dfc9873419bed80"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/intake_remote_inspection.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "340a35e4241d23e73ee967ac45808d2257da4d5e0992d477a9e85d4ef2fa6513",
+      "headContentSha256": "340a35e4241d23e73ee967ac45808d2257da4d5e0992d477a9e85d4ef2fa6513"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/lifecycle.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "479f022b198ac4b7dcf23978aee53f81d160b2f9a28f73b4e7e04350d4c085c2",
+      "headContentSha256": "479f022b198ac4b7dcf23978aee53f81d160b2f9a28f73b4e7e04350d4c085c2"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/managed_distribution.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "c62f9100a2b4f5b872e47efd765cf77499dcc646eab1a0139cc3f96f91bd06ca",
+      "headContentSha256": "c62f9100a2b4f5b872e47efd765cf77499dcc646eab1a0139cc3f96f91bd06ca"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/manifest.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "19ec3f6b84fd389612b965ed57cc49fb3591c691ae8c4f97cd2b70a22b3b6ba8",
+      "headContentSha256": "19ec3f6b84fd389612b965ed57cc49fb3591c691ae8c4f97cd2b70a22b3b6ba8"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/mod.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "d2bb621460f505d3e2574bd0ad00a906197996e5a13bbacb91a5148ce1e59535",
+      "headContentSha256": "d2bb621460f505d3e2574bd0ad00a906197996e5a13bbacb91a5148ce1e59535"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/plan.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "5c0f5329c638039cc42050ab43aed0320443b3851459ded302a693e4d04bbac3",
+      "headContentSha256": "5c0f5329c638039cc42050ab43aed0320443b3851459ded302a693e4d04bbac3"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/profile.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "2dbc1aa0b6ebbfa83664d359515b13f41285a9ed2579d3e5b7ef4b6ef221a641",
+      "headContentSha256": "2dbc1aa0b6ebbfa83664d359515b13f41285a9ed2579d3e5b7ef4b6ef221a641"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/projection_runtime.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "77f15e3920851d9402cf7d63dcaa9a84e1cee3f133cefa0be7ced40e5ef15408",
+      "headContentSha256": "77f15e3920851d9402cf7d63dcaa9a84e1cee3f133cefa0be7ced40e5ef15408"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/mod.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "ea67008464cd80a5d6d8f7b48b888b0a4352d51eac19948bb6cd4e9616f5a6b9",
+      "headContentSha256": "ea67008464cd80a5d6d8f7b48b888b0a4352d51eac19948bb6cd4e9616f5a6b9"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/anchor/mod.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "8df683dcab6d3ba51db04b00b2e1652b8c5ddd603e0b96281a3f575cdad1a16e",
+      "headContentSha256": "8df683dcab6d3ba51db04b00b2e1652b8c5ddd603e0b96281a3f575cdad1a16e"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/intake_repository.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "b50a44dc0bd47b0033390524cfd73bbc104611ea5098eef9ff655f6dab1078a2",
+      "headContentSha256": "b50a44dc0bd47b0033390524cfd73bbc104611ea5098eef9ff655f6dab1078a2"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/integrity.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "e66bcb60c69d859bf97c959287a47767f004a2d39df741ea9c6bb8d9033bf27d",
+      "headContentSha256": "e66bcb60c69d859bf97c959287a47767f004a2d39df741ea9c6bb8d9033bf27d"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/lifecycle_repository.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "33ce73aae6ef6410c44c95ef70fd3dee6a8cca76d9034cef37b534fcc65e7eaf",
+      "headContentSha256": "33ce73aae6ef6410c44c95ef70fd3dee6a8cca76d9034cef37b534fcc65e7eaf"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/managed_enrollment_repository.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "12b3c79eb59959892639ae1384728f9c93285473f6bdca24d469f6ee9302a85b",
+      "headContentSha256": "12b3c79eb59959892639ae1384728f9c93285473f6bdca24d469f6ee9302a85b"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/migrations.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "d580b256254bfa2183272d14d5200ce50f0716bc8d0c931577241a5efc675202",
+      "headContentSha256": "d580b256254bfa2183272d14d5200ce50f0716bc8d0c931577241a5efc675202"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/mod.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "18a5ccd733addfdec0c798c3016f5090229a78a7af182d11e81dd14d5fdcdfe7",
+      "headContentSha256": "18a5ccd733addfdec0c798c3016f5090229a78a7af182d11e81dd14d5fdcdfe7"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/profile_repository.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "3cc3ca7eacfd215df9bec51a68b7187e634115cf32dc9a225831881aaa7570dd",
+      "headContentSha256": "3cc3ca7eacfd215df9bec51a68b7187e634115cf32dc9a225831881aaa7570dd"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/records.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "f629d33a9d1c8e859c9a2bf5193c4785e1f8b18b4254daa72249b4e46c6c3e5d",
+      "headContentSha256": "f629d33a9d1c8e859c9a2bf5193c4785e1f8b18b4254daa72249b4e46c6c3e5d"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/repository/sqlite/task_repository.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "ae4a57f8d3cc1d858fa9963c0ff57120980df9df50ec58e4ceaab412b1e01f92",
+      "headContentSha256": "ae4a57f8d3cc1d858fa9963c0ff57120980df9df50ec58e4ceaab412b1e01f92"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/runtime_catalog_contract.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "c5f346da56be54065012c17fbab3a8eb07c62ea19e78b85eb16973fb5d34918e",
+      "headContentSha256": "c5f346da56be54065012c17fbab3a8eb07c62ea19e78b85eb16973fb5d34918e"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/runtime_fenced_sink_registry.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "89a7e4e5c8af5d5376c4ae9ef35c524d52a269dd38c6feff9d2e93817492818f",
+      "headContentSha256": "89a7e4e5c8af5d5376c4ae9ef35c524d52a269dd38c6feff9d2e93817492818f"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/service/application.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "e50a0da02fb1c66936fe00ed4fe8a79e26da362db069a7bf12c9e1bf244bba3c",
+      "headContentSha256": "e50a0da02fb1c66936fe00ed4fe8a79e26da362db069a7bf12c9e1bf244bba3c"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/service/dto.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "8c1151e15c2082b3ec29d3bcd742978e487517ca172fed94ea75a89bbf77c45e",
+      "headContentSha256": "8c1151e15c2082b3ec29d3bcd742978e487517ca172fed94ea75a89bbf77c45e"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/service/port.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "d7b37c4a601e4acf68100b64d27f250516715599eeb4a79ae937226a4ab18fec",
+      "headContentSha256": "d7b37c4a601e4acf68100b64d27f250516715599eeb4a79ae937226a4ab18fec"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/service/profile.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "dcd11e43df6455b3e8622b910d6ab957a56374e6ec1095fb3c0ba5f926c7df12",
+      "headContentSha256": "dcd11e43df6455b3e8622b910d6ab957a56374e6ec1095fb3c0ba5f926c7df12"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/service/source_adapter.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "c0a0dfa12781d4b1d9cc18f3e31827f796e58f1ec76807fb3e1f87b9b6718693",
+      "headContentSha256": "c0a0dfa12781d4b1d9cc18f3e31827f796e58f1ec76807fb3e1f87b9b6718693"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/source_provisioning.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "f3fa177ae912a51f02fb1dfb500c6e8540768dd3a60bf34bc536f140dce4d1fb",
+      "headContentSha256": "f3fa177ae912a51f02fb1dfb500c6e8540768dd3a60bf34bc536f140dce4d1fb"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/storage_domain.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "ecd737f28dabd8db6f94b01d7e96b2640ed7fe4d215c9cb9724c067d465c7dcb",
+      "headContentSha256": "ecd737f28dabd8db6f94b01d7e96b2640ed7fe4d215c9cb9724c067d465c7dcb"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/storage_preflight.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "fcab973c8db4da13afb302934598bd37dc565e0f3555d60f990105e7a669bc83",
+      "headContentSha256": "fcab973c8db4da13afb302934598bd37dc565e0f3555d60f990105e7a669bc83"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/task_runner.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "cb28a9f13cf96aabd9ed616374b3ac75a0c69a97c2e2f9ba094b7eed89435d16",
+      "headContentSha256": "cb28a9f13cf96aabd9ed616374b3ac75a0c69a97c2e2f9ba094b7eed89435d16"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/task_runner/enrollment_runtime_binding_resolver.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "85b9c618c7805a6a8e053413b19085044b305055ed2234fce822e0495156c8d9",
+      "headContentSha256": "85b9c618c7805a6a8e053413b19085044b305055ed2234fce822e0495156c8d9"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/v3_contract.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "54e849b512e8077f794500093f7a28e7d9d6b3e54820b29926cb6b312dc58c0a",
+      "headContentSha256": "54e849b512e8077f794500093f7a28e7d9d6b3e54820b29926cb6b312dc58c0a"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/windows_managed_writer.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "2ab9490c7d09d8d0a5bd180c629a6f5a704501e447161c627e52d37a8d2a6bd9",
+      "headContentSha256": "2ab9490c7d09d8d0a5bd180c629a6f5a704501e447161c627e52d37a8d2a6bd9"
+    },
+    {
+      "path": "crates/lumina/src/mcp_platform/windows_storage_preflight.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "50a909391ce29132d0651986b6c7ae42658551a775f9877ee810d077866b2836",
+      "headContentSha256": "50a909391ce29132d0651986b6c7ae42658551a775f9877ee810d077866b2836"
+    },
+    {
+      "path": "crates/lumina/src/scheduler.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "f6f7e40f7a3dfe6beb9059e56ee314ceda03e6ffd2c6a42acaba74f5188bb677",
+      "headContentSha256": "f6f7e40f7a3dfe6beb9059e56ee314ceda03e6ffd2c6a42acaba74f5188bb677"
+    },
+    {
+      "path": "crates/lumina/src/session/session_manager.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "959d6860e7d049186fd1524f8104be47f765b2032a5c4fd6d9a0bc45f539c6b0",
+      "headContentSha256": "959d6860e7d049186fd1524f8104be47f765b2032a5c4fd6d9a0bc45f539c6b0"
+    },
+    {
+      "path": "crates/lumina/src/verified_source_catalog/dao.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "cac8b356c4a0e04b4895f6f27205f1af66ff6fb37095de39c24e34caba6b7a9b",
+      "headContentSha256": "cac8b356c4a0e04b4895f6f27205f1af66ff6fb37095de39c24e34caba6b7a9b"
+    },
+    {
+      "path": "crates/lumina/src/verified_source_catalog/json.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "6c4f127741c61ec0bf1661ace2e65aa8f16f574a04ff308afee8941df1a013be",
+      "headContentSha256": "6c4f127741c61ec0bf1661ace2e65aa8f16f574a04ff308afee8941df1a013be"
+    },
+    {
+      "path": "crates/lumina/src/verified_source_catalog/model.rs",
+      "unchangedFromHeadIgnoringLineEndings": true,
+      "workingFileSha256": "c15020e741f82cfc100c289108924107cc2dda07d0ded3d66c5d87cee665cb8b",
+      "headContentSha256": "c15020e741f82cfc100c289108924107cc2dda07d0ded3d66c5d87cee665cb8b"
+    }
+  ],
+  "conclusion": "All diagnostic source files are unchanged from planning HEAD; this proves source-location provenance, not a clean full-workspace baseline run. Full-workspace strict Clippy remains failed and unresolved.",
+  "localCrateStrictClippy": {
+    "status": "PASS",
+    "log": "target/lifecycle-validation/source-inspector-clippy.log",
+    "scope": "lumina-local-inference no-default-features all-targets only"
+  }
+}

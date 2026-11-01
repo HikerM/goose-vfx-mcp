@@ -1,0 +1,215 @@
+{
+  "startedAt": "2026-11-01T11:59:48.470357+00:00",
+  "status": "QUALITY_FAILED",
+  "engineRevision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+  "binarySha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043",
+  "sources": [
+    {
+      "repository": "calcuis/wan-1.3b-gguf",
+      "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+      "file": "wan2.1_t2v_1.3b-q8_0.gguf",
+      "sha256": "e6db35de304f0b5b4b4689d41b95fa853fff747581bea75adac25939a73dbead",
+      "sizeBytes": 1587083488,
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\calcuis__wan-1.3b-gguf\\wan2.1_t2v_1.3b-q8_0.gguf",
+      "elapsedSeconds": 96.23399999999674,
+      "sourceUrl": "https://modelscope.cn/api/v1/models/calcuis/wan-1.3b-gguf/repo?Revision=e31361f52972a8341cfc4a8deb295e4f1028f3b7&FilePath=wan2.1_t2v_1.3b-q8_0.gguf",
+      "redirectCount": 1,
+      "allowedOrigins": [
+        "modelscope.cn",
+        "cdn-lfs-cn-1.modelscope.cn"
+      ],
+      "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+      "status": "PASS",
+      "inventoryOrigin": "Actual public source preflight via git read-only refs and bounded ModelScope file API; production provider recheck required before product use; not an installation or runtime claim",
+      "productionInventoryVerified": false,
+      "inventoryFilesDigest": null
+    },
+    {
+      "repository": "calcuis/wan-1.3b-gguf",
+      "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+      "file": "umt5-xxl-encoder-q4_k_m.gguf",
+      "sha256": "17cf97a5bbbc60a646d6105b832b6f657ce904a8a1ad970e4b59df0c67584a40",
+      "sizeBytes": 3655145312,
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\calcuis__wan-1.3b-gguf\\umt5-xxl-encoder-q4_k_m.gguf",
+      "elapsedSeconds": 215.09299999999348,
+      "sourceUrl": "https://modelscope.cn/api/v1/models/calcuis/wan-1.3b-gguf/repo?Revision=e31361f52972a8341cfc4a8deb295e4f1028f3b7&FilePath=umt5-xxl-encoder-q4_k_m.gguf",
+      "redirectCount": 1,
+      "allowedOrigins": [
+        "modelscope.cn",
+        "cdn-lfs-cn-1.modelscope.cn"
+      ],
+      "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+      "status": "PASS",
+      "inventoryOrigin": "Actual public source preflight via git read-only refs and bounded ModelScope file API; production provider recheck required before product use; not an installation or runtime claim",
+      "productionInventoryVerified": false,
+      "inventoryFilesDigest": null
+    },
+    {
+      "repository": "calcuis/wan-1.3b-gguf",
+      "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+      "file": "pig_wan_vae_fp32-f16.gguf",
+      "sha256": "290e463b9d6680146cfd06e5740adb918b239ac8aef1f64f9d4d35fa11747bcd",
+      "sizeBytes": 253875904,
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\calcuis__wan-1.3b-gguf\\pig_wan_vae_fp32-f16.gguf",
+      "elapsedSeconds": 25.34399999998277,
+      "sourceUrl": "https://modelscope.cn/api/v1/models/calcuis/wan-1.3b-gguf/repo?Revision=e31361f52972a8341cfc4a8deb295e4f1028f3b7&FilePath=pig_wan_vae_fp32-f16.gguf",
+      "redirectCount": 1,
+      "allowedOrigins": [
+        "modelscope.cn",
+        "cdn-lfs-cn-1.modelscope.cn"
+      ],
+      "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+      "status": "PASS",
+      "inventoryOrigin": "Actual public source preflight via git read-only refs and bounded ModelScope file API; production provider recheck required before product use; not an installation or runtime claim",
+      "productionInventoryVerified": false,
+      "inventoryFilesDigest": null
+    }
+  ],
+  "argv": [
+    "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cpu\\bin\\Release\\sd-cli.exe",
+    "-M",
+    "vid_gen",
+    "--diffusion-model",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\calcuis__wan-1.3b-gguf\\wan2.1_t2v_1.3b-q8_0.gguf",
+    "--t5xxl",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\calcuis__wan-1.3b-gguf\\umt5-xxl-encoder-q4_k_m.gguf",
+    "--vae",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\calcuis__wan-1.3b-gguf\\pig_wan_vae_fp32-f16.gguf",
+    "-p",
+    "A small brown dog runs from left to right across green grass in daylight, fixed camera, realistic video.",
+    "-n",
+    "static, still frame, blurry, low quality, distorted anatomy",
+    "--sampling-method",
+    "euler",
+    "--steps",
+    "20",
+    "--cfg-scale",
+    "6.0",
+    "--flow-shift",
+    "3.0",
+    "-s",
+    "42",
+    "-W",
+    "256",
+    "-H",
+    "256",
+    "--video-frames",
+    "17",
+    "--fps",
+    "8",
+    "-t",
+    "12",
+    "--rng",
+    "cpu",
+    "-o",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\video-runtime-results\\wan13b-dog-seed42.avi"
+  ],
+  "expected": {
+    "width": 256,
+    "height": 256,
+    "frames": 17,
+    "fps": 8,
+    "content": "A recognizable dog on grass with coherent visible movement"
+  },
+  "scope": "M0 native video feasibility from three actual fixed-source GGUF files; raw source inventory only because production verifier rejects six unused preview paths; not a passed install plan, full Video Adapter, quality suite or release acceptance",
+  "sourcePolicyLimitation": "See2026-11-01-source-unportable-preview-paths.json; no path normalization or omission claimed as a complete production inventory",
+  "visualReview": {
+    "reviewedAt": "2026-11-01T12:11:36.949042+00:00",
+    "method": "Agent inspected actual decoded frames0,8,16 through view_image",
+    "status": "FAIL",
+    "checks": {
+      "recognizableDog": true,
+      "grassVisible": true,
+      "actualTemporalChange": true,
+      "requestedLeftToRightMotion": false,
+      "noSevereBlockArtifacts": false
+    },
+    "observation": "The dog is recognizable on grass and moves toward the left across the sampled frames, opposite to the requested left-to-right direction. Block artifacts are visible, especially across the ground and lower-right in the last frame.",
+    "scope": "One low-resolution CPU feasibility probe; decode success and distinct frames do not satisfy content quality"
+  },
+  "decoder": {
+    "opencvVersion": "5.0.0",
+    "numpyVersion": "2.2.6"
+  },
+  "pid": 33132,
+  "exitCode": 0,
+  "generationElapsedSeconds": 509.64000000001397,
+  "output": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\video-runtime-results\\wan13b-dog-seed42.avi",
+    "sha256": "3b37e0f447aa25fbc0fdaa9ffa73054e23c61bbe4ffd40c6aad295dec4e221a7",
+    "sizeBytes": 252184,
+    "frames": 17,
+    "fps": 8,
+    "width": 256,
+    "height": 256,
+    "container": "AVI",
+    "decodedFrameSha256": [
+      "b5d9301fcd76dfe613426e2072a75a6951a2a7778b86f6bc931a3403111fb186",
+      "9b04708019340e9ce44d5ff0e506553e11a7cee36d954670560c354e70d43e22",
+      "6c9aa0ae4c17a93b8d2a0c6b0de59ae994527493a9e7a5c26e9977a4de19e683",
+      "15fc884b17855c3ca3fcf59bc955c455efcdbf68b3d0cc0bd731d1cd16c04c8e",
+      "b364fd19b3a2e907ea76289827d7ea040a7265ba99d3589ce579ae4c8831ee49",
+      "344171c08d3bb58d1e27414f3d74bea5df56fa269fb34c5d754dcdb0b18d6b43",
+      "f168b123b841ea12795f856ae224aee32e5edf3873a113a230c9ede4b07096aa",
+      "4025e34037f78f1029268390551f6864fcad966cae924927b8c152c8fd032294",
+      "2bf85037f7ab46dae30aa04a85fc2bb7c03666769455ae3bf7f01de06ae8aa97",
+      "cc07ccd5fce44a47be77fdc5eb2f0a4c1f3ef74945109c0f112da88beb9c6dc7",
+      "efbc2e4429934a5ef311d05d517598cea668997aa727146258cc7fb9a55f3fab",
+      "c0c7cf69dff2daf060caef1d449392ff177a6332b2b384700be4a11b64ff6bb2",
+      "c3b11b317eb826cb9b561efcb2a0ed759aa64f904b474e71ed227b9266b96d46",
+      "548456bd4f12a855c2d1fac0fc8b2f3a7d8b50e843826174d9d44d2ba0b751f3",
+      "7b1a883e5837906ef7c38ecef9e73e7db2cdafdd84238af08e6c619520936db3",
+      "3cd3c46e6c8361103a80c50fccfb45dbd9a2f858d2dadcb184844f173567201a",
+      "d1359df1d0116ca24da15c0aea054f3f1f49cfb55e19219a9d19f2c7b9a05906"
+    ],
+    "distinctDecodedFrames": 17,
+    "consecutiveMeanAbsoluteDifference": [
+      0.05557340756058693,
+      0.0365602970123291,
+      0.023006783798336983,
+      0.08898132294416428,
+      0.07961410284042358,
+      0.03477667644619942,
+      0.024896958842873573,
+      0.025502223521471024,
+      0.02482255920767784,
+      0.028794750571250916,
+      0.03108925372362137,
+      0.020899595692753792,
+      0.08015818893909454,
+      0.03977898508310318,
+      0.047912098467350006,
+      0.032288871705532074
+    ],
+    "meanFrameDifference": 0.04216600477229804,
+    "reviewFrames": [
+      {
+        "index": 0,
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\video-runtime-results\\frame-000.png",
+        "sha256": "f12d79d3f00cc21592863e5b5123c8633b155b1c43a8bf139b84a09e43c83ddf"
+      },
+      {
+        "index": 8,
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\video-runtime-results\\frame-008.png",
+        "sha256": "f9333dfd01cc09ae81ada6f69805bd88411ec366d8ef85aee2b8922dfeeda5a5"
+      },
+      {
+        "index": 16,
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\video-runtime-results\\frame-016.png",
+        "sha256": "4b0fdce600b820cd9e10cc685dedd7019dfd2d7c29a24956bef07b39046cfc55"
+      }
+    ]
+  },
+  "finishedAt": "2026-11-01T12:08:27.768830+00:00",
+  "logSha256": "4d151cd31a4e0038617cca6731b06b52422a4019881f4c0aabca9a9a972ac442",
+  "probeSourceSha256": "a9a3deaf27159a3fb276f03fd72d1c5c68390f1ca4733dc86ceb8a42610fccdc",
+  "executionStatus": "PASS",
+  "readiness": "EXPERIMENTAL_NOT_READY",
+  "nextValidation": [
+    "Compare standard Wan training-resolution preset against this256x256 smoke without changing the recorded failed input/output",
+    "Isolate VAE precision and temporal decoder state against a known reference using the same GGUF sources",
+    "Compare CPU flash-attention and segmented graph modes with explicit runtime identity and memory budget",
+    "Resolve production repository raw-name versus portable-path handling in ML-08/09",
+    "Only register READY after the complete ML-32 content/temporal/seed/boundary validation passes"
+  ]
+}

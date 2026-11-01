@@ -1,0 +1,132 @@
+{
+  "observedAt": "2026-11-01T07:05:39.811189+00:00",
+  "sourceBaseCommit": "fa7bb0a4d38a22f9e2cc26f307b304965f88a74c",
+  "scope": "Pinned dependency interface audit; interface presence is not runtime/model acceptance.",
+  "bindingVersion": "0.1.146",
+  "nativePackageChecksum": "9b291e4bc2d10c43cd8dec16d49b6104cb3cb125f596ec380a753a5db1d965dd",
+  "bindingRepositoryCommit": "4afdaf0782ef7f3254a186a7ff67a1c7491c6dce",
+  "sourceFiles": {
+    "embeddings": {
+      "package": "llama-cpp-2@0.1.146",
+      "path": "src/context.rs",
+      "sha256": "af34076c27cb308adeaea945c5431d746c3e84edcd0c2243b482d3364ebe9349"
+    },
+    "pooling": {
+      "package": "llama-cpp-2@0.1.146",
+      "path": "src/context/params.rs",
+      "sha256": "4cfc0b3c4fe3ea678e4174a5889462f2305580f09cd67a61c188ed49002781e6"
+    },
+    "multimodal": {
+      "package": "llama-cpp-2@0.1.146",
+      "path": "src/mtmd.rs",
+      "sha256": "5e025366cfcad4d980fe72a67f5200ec8f5a3e914f716e7f63ecbbdbdd7fbb60"
+    }
+  },
+  "mtp": {
+    "status": "ignored_by_pinned_engine",
+    "evidence": [
+      {
+        "line": 757,
+        "text": "// NextN/MTP tensors are currently ignored (reserved for future MTP support)"
+      }
+    ],
+    "nativeArchitectureFileSha256": "1e2161fb6374921ce038a6884776445d045fd59290ebea57e8a6f8c7abc0d5ef"
+  },
+  "dflash": {
+    "integration": "not implemented in application",
+    "scanScope": "pinned llama.cpp src/common and Rust wrapper src",
+    "matches": []
+  },
+  "categories": [
+    {
+      "category": "LLM",
+      "currentEvidence": "actual qwen2 CPU text smoke passed",
+      "nextWorkPackage": "ML-25/ML-26"
+    },
+    {
+      "category": "MoE",
+      "currentEvidence": "qwen35moe metadata and engine architecture entry observed; no real MoE inference yet",
+      "nextWorkPackage": "ML-25/ML-26"
+    },
+    {
+      "category": "VLM",
+      "currentEvidence": "mtmd interfaces and actual projector metadata observed; no real image inference yet",
+      "nextWorkPackage": "ML-25/ML-26"
+    },
+    {
+      "category": "Embedding",
+      "currentEvidence": "embeddings_seq_ith and with_embeddings present; no task adapter or model acceptance",
+      "nextWorkPackage": "ML-27"
+    },
+    {
+      "category": "Reranker",
+      "currentEvidence": "Rank pooling present; no task adapter or model acceptance",
+      "nextWorkPackage": "ML-28"
+    },
+    {
+      "category": "ASR",
+      "currentEvidence": "existing Candle Whisper GGUF code; source migration and actual audio acceptance pending",
+      "nextWorkPackage": "ML-29"
+    },
+    {
+      "category": "TTS",
+      "currentEvidence": "no current application runtime adapter; candidate component verification pending",
+      "nextWorkPackage": "ML-30"
+    },
+    {
+      "category": "Audio",
+      "currentEvidence": "from_audio_data and support_audio present; service and actual audio validation pending",
+      "nextWorkPackage": "ML-33"
+    },
+    {
+      "category": "Image Diffusion",
+      "currentEvidence": "no current runtime adapter; engine and component verification pending",
+      "nextWorkPackage": "ML-31"
+    },
+    {
+      "category": "Video Diffusion",
+      "currentEvidence": "no current runtime adapter; engine and component verification pending",
+      "nextWorkPackage": "ML-32"
+    },
+    {
+      "category": "MTP",
+      "currentEvidence": "pinned engine ignores NextN/MTP tensors; engine upgrade or separate adapter required",
+      "nextWorkPackage": "ML-34"
+    },
+    {
+      "category": "DFlash",
+      "currentEvidence": "no application implementation; engine route requires verification",
+      "nextWorkPackage": "ML-35"
+    }
+  ],
+  "bindingSafetyFindings": [
+    {
+      "id": "rank-output-length",
+      "bindingVersion": "0.1.146",
+      "wrapperEvidence": {
+        "package": "llama-cpp-2",
+        "file": "src/context.rs",
+        "method": "embeddings_seq_ith",
+        "lines": [
+          135,
+          140,
+          150
+        ],
+        "lengthUsed": "model.n_embd"
+      },
+      "nativeEvidence": {
+        "file": "include/llama.h",
+        "sha256": "263ce59dfd82ab1f839cfe90fe4f77e01cd1ad9fe338f032438fb3609040653a",
+        "line": 1027,
+        "rankOutputLength": "n_cls_out",
+        "availableLengthFunctions": [
+          "llama_model_n_cls_out",
+          "llama_model_n_embd_out"
+        ]
+      },
+      "finding": "The current wrapper forms an embedding slice using n_embd. Native rank pooling returns n_cls_out elements, so this wrapper cannot safely be used for rank output unless equal lengths are proved. Projected embeddings also require n_embd_out verification.",
+      "requiredImplementation": "Use an owned native context with exact output lengths through existing llama-cpp-sys-2, or correct and pin the wrapper before implementing ML-27/ML-28. Do not call the mismatched slice method and then take only its first element.",
+      "runtimeTest": "NOT_RUN: no rank inference performed through this method"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "observedAt": "2026-11-01T12:24:16.795398+00:00",
+  "head": "4f62659052985d944b2b8a2a043fc4375218689e",
+  "filesReviewed": 109,
+  "jsonParsed": 63,
+  "secretPatternFindings": [],
+  "secretScanScope": "Narrow private-key/GitHub/HuggingFace token signatures; no claim of exhaustive credential detection",
+  "diffWhitespaceCheck": "PASS",
+  "worktrees": "worktree D:/Project/goose\nHEAD 4f62659052985d944b2b8a2a043fc4375218689e\nbranch refs/heads/testing\n\n",
+  "stageCompletion": "NOT_SET_BY_STATIC_AUDIT"
+}

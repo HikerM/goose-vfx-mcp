@@ -26,7 +26,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, advanced"
+    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle"
 
   - key: test_depth
     input_type: string
@@ -53,6 +53,15 @@ parameters:
     description: "Clean up test artifacts after completion"
 
 instructions: |
+  {% if test_phases == "model-lifecycle" %}
+  Validate the model lifecycle foundation through actual developer tools, following the prompt
+  steps in order. The caller supplies an isolated application root and any real model variables.
+  Use the validation entry's actual exit code, individual test counts and report read-back.
+  Record a nonzero exit as FAIL and preserve its error. Do not repeat a failed invocation.
+  Missing model variables mean actual inference is UNVERIFIED. A skipped test is never a pass.
+  Use the inherited D:/E: cache and temporary directories. The entry creates and reads the factual
+  report. Finish with a concise summary of its JSON, including the real evidence and report paths.
+  {% else %}
   You are testing yourself - a running lumina instance validating its own capabilities through meta-testing.
   This is true first-person integration testing where you use your own tools to test your own functionality.
 
@@ -123,6 +132,7 @@ instructions: |
   - Phase success: ≥80% tests pass
   - Suite success: All phases complete, critical features work
   - Each test logs: setup → execute → validate → result → cleanup
+  {% endif %}
 
 extensions:
   - type: builtin
@@ -139,11 +149,30 @@ extensions:
     name: extensionmanager
 
 prompt: |
+  {% if test_phases == "model-lifecycle" %}
+  Execute the model lifecycle checks now using your developer shell tool. Your first action
+  must be a tool call, not a description of a plan. Use only D:/Project/goose, do not delegate
+  or create worktrees, and keep all output, caches and temporary data on D: or E:.
+  On Windows the developer shell executes cmd.exe commands. Invoke PowerShell explicitly
+  with powershell.exe -NoProfile -Command when using PowerShell syntax. bin\cargo.cmd can
+  be invoked directly from cmd.exe. Do not repeat a failed command without correcting it.
+
+  1. Run exactly once `powershell.exe -NoProfile -File bin\test-lumina-real-text.ps1 -IncludeFoundation -ReportPath "{{ workspace_dir }}/model_lifecycle_foundation.md"`.
+     This entry runs the contracts, GGUF, ModelScope, revisions, classification and metadata Cargo targets,
+     then actual text inference in a separate child registry. It preserves logs and creates,
+     reads back and hashes a factual report. Its JSON includes all observed results and the
+     actual report content. Do not write or rewrite the report yourself.
+  2. Summarize only the returned JSON: status, foundation passed/failed/ignored counts, actual
+     output and output tokens, and report path. Missing configuration is UNVERIFIED with exit 2;
+     every other nonzero exit, missing report or missing actual inference is FAIL. Do not retry.
+     Do not claim model capabilities beyond the checks that ran, or rewrite user model files.
+  {% else %}
   Execute the Lumina Self-Testing Integration Suite in {{ workspace_dir }}.
   Test phases: {{ test_phases }}, Depth: {{ test_depth }}, Parallel: {{ parallel_tests }}
 
   ## 🚀 INITIALIZATION
-  Create test workspace using `mkdir -p {{ workspace_dir }}/archive` for all test artifacts and reports.
+  Create the test workspace and archive directory for all artifacts and reports.
+  On Windows use PowerShell New-Item and keep all paths on D: or E:; use POSIX commands only on POSIX hosts.
 
   Track your progress using the todo extension. Start with:
   - [ ] Initialize test workspace
@@ -392,6 +421,27 @@ prompt: |
   Log results to: {{ workspace_dir }}/phase4_advanced.md
   {% endif %}
 
+  {% if test_phases == "all" or "model-lifecycle" in test_phases %}
+  ## Model Lifecycle Foundation Validation
+
+  Use only the existing checkout. Do not create worktrees or project copies, do not use summon,
+  and keep all application data, downloads, caches and temporary output on D: or E:.
+
+  In a Windows development checkout, use the repository Rust entry point to run:
+  `bin\cargo.cmd test -p lumina-local-inference --no-default-features --test lifecycle_contracts`.
+  Verify that mutable revisions, unsafe paths, forbidden weight formats, missing components,
+  expired plans, illegal state transitions, reused idempotency keys with different plans,
+  database corruption, and expired worker writes are rejected. Verify persistent recovery
+  across separate SQLite connections and process restarts.
+
+  If an actual GGUF is available, run the ignored `lifecycle_real_inference` integration test
+  with an isolated LUMINA_PATH_ROOT and the actual LUMINA_REAL_GGUF_PATH, LUMINA_REAL_MODEL_ID,
+  and LUMINA_REAL_REPO_ID. All application data and test outputs must remain on D: or E:.
+  Record the actual generated answer and token count. A skipped model test is UNVERIFIED.
+  This text smoke test does not prove complete model installation, visual, audio, or tool support.
+  Record findings at {{ workspace_dir }}/model_lifecycle_foundation.md.
+  {% endif %}
+
   ## 📊 PHASE 5: Final Report Generation
 
   Create TWO reports:
@@ -468,3 +518,4 @@ prompt: |
   Be thorough but efficient based on the test_depth parameter.
 
   This is true first-person integration testing. Execute with precision and document with clarity.
+  {% endif %}

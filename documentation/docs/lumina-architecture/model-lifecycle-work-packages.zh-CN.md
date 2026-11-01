@@ -131,7 +131,7 @@ Runtime 与 GGUF 专用逻辑默认不进入 AGENT；UI 不直接调用 DL。数
 
 ## 后续实施的检查命令
 
-本次只交付计划，不执行以下构建和测试。实现阶段按用户的构建测试授权和仓库 AGENTS 执行；发生实际合并前必须满足其中的 Windows Clippy 要求。Rust 代码改动必须完成规定格式化。
+规划基线提交时没有执行以下构建和测试。当前用户已授权七阶段实施、验证及阶段提交推送；实际执行记录见[实施进度](./model-lifecycle-progress.zh-CN.md)。实现按仓库 AGENTS 执行，发生实际合并前必须满足其中的 Windows Clippy 要求，Rust 代码改动必须完成规定格式化。
 
 ```powershell
 & .\bin\cargo.cmd fmt

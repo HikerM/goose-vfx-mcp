@@ -1,0 +1,64 @@
+{
+  "observedAt": "2026-11-01T10:18:55.024684+00:00",
+  "engine": "0xShug0/audio.cpp",
+  "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+  "status": "SOURCE_OBSERVATION_ONLY",
+  "files": [
+    {
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/0xShug0/audio.cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/README.md",
+      "sha256": "df5ace67d249a0e28c1c231df69d6be99482c60ce99ac66285469581f27fab79",
+      "bytes": 76444
+    },
+    {
+      "path": "docs/gguf.md",
+      "url": "https://raw.githubusercontent.com/0xShug0/audio.cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/docs/gguf.md",
+      "sha256": "3b50c1579975e9daf12fc10ae3098a1e4922163fd4c12523228b31df113fd09d",
+      "bytes": 23529
+    },
+    {
+      "path": "CMakeLists.txt",
+      "url": "https://raw.githubusercontent.com/0xShug0/audio.cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/CMakeLists.txt",
+      "sha256": "095a8514bf4f125b5d61c56d32490f1d859cd921b2c75328302794c4b8d5ffbf",
+      "bytes": 243130
+    }
+  ],
+  "scope": "Pinned candidate documentation and build definition only; no build, embedded source execution, model runtime or license clearance",
+  "findings": [
+    {
+      "area": "Container compatibility",
+      "observed": "Upstream explicitly requires audio.cpp-native tensor names, embedded metadata and family package spec; arbitrary llama.cpp/whisper.cpp GGUF is not a valid substitute",
+      "action": "Dedicated Audio/TTS Adapter and source-bound family/asset rules"
+    },
+    {
+      "area": "Contract selection",
+      "observed": "Package-resource and option-contract selection orders differ; option contract can be discovered from working directory and parent directories",
+      "action": "Use pinned controlled spec override or validated embedded schema-v1 override, controlled working directory and component roots; audit actual loader before launch"
+    },
+    {
+      "area": "Model-source policy",
+      "observed": "CMake offers AUDIOCPP_BUILD_NATIVE_MODEL_MANAGER and an optional model manager",
+      "action": "Disable native model manager; all managed model files must come from the central ModelScope plan and transfer worker"
+    },
+    {
+      "area": "Deployment",
+      "observed": "AUDIOCPP_DEPLOYMENT_BUILD can compile family specs; optional static eSpeak flag is disabled by default and explicitly labeled GPL-3.0-or-later",
+      "action": "Pin engine/spec versions and record optional dependency license facts; do not infer commercial clearance"
+    },
+    {
+      "area": "Embedded assets",
+      "observed": "Actual GGUF samples contain source-file assets and package metadata; no embedded content has been executed",
+      "action": "Inspect native asset loader and reject executable discovery; test complete all-GGUF components with actual output before approval"
+    }
+  ],
+  "candidateBuildConfiguration": {
+    "ENGINE_ENABLE_CUDA": "OFF for initial CPU probe",
+    "AUDIOCPP_BUILD_NATIVE_MODEL_MANAGER": "OFF",
+    "AUDIOCPP_DEPLOYMENT_BUILD": "ON with pinned catalog",
+    "AUDIOCPP_STATIC_ESPEAK": "OFF"
+  },
+  "references": [
+    "https://github.com/0xShug0/audio.cpp/blob/c0cd77fa80285f8113883e0de06ffc781cf502f6/docs/gguf.md",
+    "https://github.com/0xShug0/audio.cpp/blob/c0cd77fa80285f8113883e0de06ffc781cf502f6/CMakeLists.txt"
+  ]
+}

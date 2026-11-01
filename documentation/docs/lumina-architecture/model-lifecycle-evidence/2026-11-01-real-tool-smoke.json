@@ -1,0 +1,55 @@
+{
+  "suite": "existing-cli-tool-smoke-v1",
+  "modelId": "Qwen/Qwen3-1.7B-GGUF:q8_0",
+  "modelSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+  "runtimeBinarySha256": "be67a2fd727da906643b3ed8275164f470061b31074499f89d47934e9f6e4a01",
+  "execution": "cpu",
+  "challengeMarker": "lumina-tool-a05534137bef4aef896d6bc2e2f118e2",
+  "actualToolRoundtrip": [
+    {
+      "request": {
+        "type": "toolRequest",
+        "id": "JT45SKu3qUC8FaiWBN3MJjTFzkTroJ82",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "shell",
+            "arguments": {
+              "command": "powershell.exe -NoProfile -Command \"Write-Output 'lumina-tool-a05534137bef4aef896d6bc2e2f118e2'; Write-Output (41 + 17)\""
+            }
+          }
+        },
+        "_meta": {
+          "lumina_extension": "developer"
+        }
+      },
+      "response": {
+        "type": "toolResponse",
+        "id": "JT45SKu3qUC8FaiWBN3MJjTFzkTroJ82",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "lumina-tool-a05534137bef4aef896d6bc2e2f118e2\r\n58\r",
+                "annotations": {
+                  "priority": 0.0
+                }
+              }
+            ],
+            "structuredContent": {
+              "stdout": "lumina-tool-a05534137bef4aef896d6bc2e2f118e2\r\n58\r",
+              "stderr": "",
+              "exit_code": 0
+            },
+            "isError": false
+          }
+        }
+      }
+    }
+  ],
+  "assistantReply": "The tool response indicates that the marker is `lumina-tool-a05534137bef4aef896d6bc2e2f118e2` and the numeric result is `58`.",
+  "result": "PASS",
+  "scope": "existing CLI tool roundtrip; not lifecycle installation or complete capability profile acceptance"
+}

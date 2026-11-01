@@ -49,6 +49,8 @@ tempfile = { workspace = true }
 safemlx = { default-features = false, features = ["accelerate", "metal", "safetensors"], optional = true, version = "0.1.2" }
 safemlx-lm = { optional = true, version = "0.1.5" }
 safemlx-lm-utils = { optional = true, version = "0.1.2" }
+sha2.workspace = true
+rusqlite = { version = "0.32.1", features = ["bundled"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 llama-cpp-2 = { workspace = true, features = ["sampler", "metal", "mtmd"] }

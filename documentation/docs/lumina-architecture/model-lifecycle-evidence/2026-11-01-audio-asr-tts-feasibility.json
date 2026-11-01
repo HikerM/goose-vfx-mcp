@@ -1,0 +1,156 @@
+{
+  "observedAt": "2026-11-01T11:19:54.147888+00:00",
+  "status": "ASR_AND_TTS_FEASIBILITY_PASS",
+  "scope": "M0 real CPU GGUF ASR and TTS feasibility with independent neural transcript check; not product installation, complete capability suite, generic Audio generation or GPU validation",
+  "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+  "engineBinary": "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\build-cpu\\bin\\Release\\audiocpp_cli.exe",
+  "binarySha256": "da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787",
+  "versionOutput": "audio.cpp c0cd77fa80285f8113883e0de06ffc781cf502f6\ngit:  \nbuild: unknown, msvc 19.44.35226.0, Windows AMD64\nbackends: cpu",
+  "sourceProvenance": {
+    "observedAt": "2026-11-01T11:07:52.560745+00:00",
+    "engine": "0xShug0/audio.cpp",
+    "revision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+    "sourceUrl": "https://codeload.github.com/0xShug0/audio.cpp/tar.gz/c0cd77fa80285f8113883e0de06ffc781cf502f6",
+    "archiveBytes": 119336257,
+    "archiveSha256": "5203660c882af6ec21f370de18dcb91d1260eb0dc3fa6fe7c26cfd6339aa4788",
+    "sourceDirectory": "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\source",
+    "extractedFiles": 5718,
+    "extractedBytes": 193273924,
+    "skippedWeightFiles": 40,
+    "skippedLinks": 0,
+    "scope": "Pinned native engine build dependency only; model weights are not extracted or installed; no extra Goose checkout or Git worktree",
+    "status": "SOURCE_PREPARED",
+    "runtimeAcceptance": "NOT_RUN"
+  },
+  "models": [
+    {
+      "family": "pocket_tts",
+      "source": {
+        "repository": "audio-cpp/audio.cpp-gguf",
+        "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+        "file": "PocketTTS-GGUF/english/pocket-tts-english-q8_0.gguf",
+        "sha256": "3f71cf6a51f93c2f2e554e98970a3f49fb9a98d0c64bed5a815e65be3d2ff588",
+        "sizeBytes": 127867968,
+        "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\audio-cpp__audio.cpp-gguf\\PocketTTS-GGUF\\english\\pocket-tts-english-q8_0.gguf",
+        "elapsedSeconds": 8.89100000000326,
+        "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=PocketTTS-GGUF%2Fenglish%2Fpocket-tts-english-q8_0.gguf",
+        "redirectCount": 1,
+        "allowedOrigins": [
+          "modelscope.cn",
+          "cdn-lfs-cn-1.modelscope.cn"
+        ],
+        "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+        "status": "PASS"
+      },
+      "sourceVerificationSha256": "42e07f484d8f8409881487e691f7c1d5b79b130c2931cc9d4d8ad2ac7122a4ca",
+      "afterRuntimeModelSha256": "3f71cf6a51f93c2f2e554e98970a3f49fb9a98d0c64bed5a815e65be3d2ff588",
+      "explicitSpec": "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\source\\model_specs\\pocket_tts.json",
+      "specSha256": "dd430cdc4c54ef04899c88272ba5b3561ffb121b9be4a1d9829c8fa0478750e8",
+      "specMatchesPinnedArchive": true
+    },
+    {
+      "family": "qwen3_asr",
+      "source": {
+        "repository": "audio-cpp/audio.cpp-gguf",
+        "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+        "file": "Qwen3-ASR-0.6B-GGUF/qwen3-asr-0.6b-q8_0.gguf",
+        "sha256": "5c53bbb9a6b2ade85c16c290c560658ca18b78a23c323378528f1f945683fcbe",
+        "sizeBytes": 1151279968,
+        "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\audio-cpp__audio.cpp-gguf\\Qwen3-ASR-0.6B-GGUF\\qwen3-asr-0.6b-q8_0.gguf",
+        "elapsedSeconds": 88.21900000004098,
+        "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=Qwen3-ASR-0.6B-GGUF%2Fqwen3-asr-0.6b-q8_0.gguf",
+        "redirectCount": 1,
+        "allowedOrigins": [
+          "modelscope.cn",
+          "cdn-lfs-cn-1.modelscope.cn"
+        ],
+        "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+        "status": "PASS"
+      },
+      "sourceVerificationSha256": "239a93e0cd7f172b552f24e5fe4495c4e874acf4e09a2861aca4ab35d5792333",
+      "afterRuntimeModelSha256": "5c53bbb9a6b2ade85c16c290c560658ca18b78a23c323378528f1f945683fcbe",
+      "explicitSpec": "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\source\\model_specs\\qwen3_asr.json",
+      "specSha256": "0cdc4bc56a2c11d092fff7a5ebe08612ecfc09d0310f845de26ea800b5bb5465",
+      "specMatchesPinnedArchive": true
+    }
+  ],
+  "asrInput": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.wav",
+    "sha256": "b29307e631d805d7079910c8c9c5ee14777549954b737e15a5770db7ac2da2e9",
+    "sampleRate": 16000,
+    "channels": 1,
+    "frames": 82480,
+    "durationSeconds": 5.155,
+    "rms": 0.09173235659476223,
+    "clippedFraction": 0.0
+  },
+  "asrExpected": "We are testing local speech recognition. The blue door is open.",
+  "asrActual": "We are testing local speech recognition. The blue door is open.",
+  "asrWordErrorRate": 0.0,
+  "ttsText": "The red apple is on the wooden table.",
+  "ttsOutput": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\audio-runtime-results\\pocket-tts-english.wav",
+    "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+    "sampleRate": 24000,
+    "channels": 1,
+    "frames": 57600,
+    "durationSeconds": 2.4,
+    "rms": 0.08223599887355712,
+    "clippedFraction": 0.0
+  },
+  "ttsIndependentAsr": "The red apple is on the wooden table.",
+  "ttsWordErrorRate": 0.0,
+  "metrics": {
+    "pocket-tts-english.log": {
+      "metrics.wall_ms": 1752.54,
+      "metrics.memory.peak_rss_mb": 433.0,
+      "metrics.memory.peak_footprint_mb": 1672.0,
+      "metrics.audio_duration_ms": 2400.0,
+      "metrics.rtf": 0.730226,
+      "metrics.x_realtime": 1.36944,
+      "metrics.sample_rate": 24000.0,
+      "metrics.channels": 1.0
+    },
+    "qwen3-asr-english.log": {
+      "metrics.wall_ms": 1984.23,
+      "metrics.memory.peak_rss_mb": 2247.0,
+      "metrics.memory.peak_footprint_mb": 2472.0,
+      "metrics.audio_duration_ms": 5155.0,
+      "metrics.rtf": 0.384914,
+      "metrics.x_realtime": 2.59798,
+      "metrics.sample_rate": 16000.0,
+      "metrics.channels": 1.0
+    },
+    "pocket-tts-asr-validation.log": {
+      "metrics.wall_ms": 1102.11,
+      "metrics.memory.peak_rss_mb": 2247.0,
+      "metrics.memory.peak_footprint_mb": 2367.0,
+      "metrics.audio_duration_ms": 2400.0,
+      "metrics.rtf": 0.459213,
+      "metrics.x_realtime": 2.17764,
+      "metrics.sample_rate": 24000.0,
+      "metrics.channels": 1.0
+    }
+  },
+  "logs": {
+    "target\\lifecycle-validation\\audio-native-configure.log": "a024b3351139defbb96314b5fc97a2b0b42495bf6892b3f681867c115f63f221",
+    "target\\lifecycle-validation\\audio-native-build.log": "feb9a8dec06b61de04447996dea8f4f34e6cc41baf1084b6bd8d5d07fb369340",
+    "target\\lifecycle-validation\\audio-runtime-results\\pocket-tts-english.log": "211b79890332c971c6752e1a9efd6f480f772d35f628c3b73083b1434b8108a3",
+    "target\\lifecycle-validation\\audio-runtime-results\\qwen3-asr-english.log": "f591f158a8fe6464c271ca90e4f596ab1235739f2bc67f34b22bebf4ef179935",
+    "target\\lifecycle-validation\\audio-runtime-results\\pocket-tts-asr-validation.log": "cdfbd9095c3c440a2c118ca36849a489c45d1c6507100afa322c945331faefe7"
+  },
+  "fixtureScope": "ASR input and TTS voice reference were generated by existing local Windows speech API; this is test data, not Lumina TTS capability evidence",
+  "weightFormatScope": "Only the two listed source GGUF weight files were downloaded for these probes; no Safetensors preset voice state was downloaded; actual TTS used the fixed WAV voice reference",
+  "remaining": [
+    "Existing Candle Whisper loader tensor-layout compatibility and old dictation regression",
+    "All product source/install/adapter/lifecycle wiring",
+    "General Audio understanding/generation remain separate unfinished capabilities",
+    "Multilingual/noise/streaming/cancellation/boundary suites and release packaging"
+  ],
+  "probeSourceSha256": "d96b19dcef409d1a6fc8e255de85ca8a40038090b5a56233426705db11e0eaf1",
+  "archivedBinary": {
+    "path": "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\validated-binaries\\da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787\\audiocpp_cli.exe",
+    "sha256": "da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787",
+    "scope": "Exact validated static runtime executable retained before expanding compiled model families; historical observed execution path is unchanged in the record"
+  }
+}

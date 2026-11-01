@@ -7,6 +7,7 @@ pub mod provider_utils;
 
 mod backend;
 pub mod hf_models;
+pub mod lifecycle;
 mod llamacpp;
 pub mod local_model_registry;
 pub mod management;

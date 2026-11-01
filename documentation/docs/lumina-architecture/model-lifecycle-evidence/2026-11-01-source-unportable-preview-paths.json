@@ -1,0 +1,33 @@
+{
+  "observedAt": "2026-11-01T11:50:11.995391+00:00",
+  "status": "PRODUCTION_REPOSITORY_INSPECTION_REJECTED",
+  "repository": "calcuis/wan-1.3b-gguf",
+  "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+  "actualProviderError": "Invalid repository file path",
+  "rawPreflight": {
+    "repository": "calcuis/wan-1.3b-gguf",
+    "scope": "Actual public source preflight via git read-only refs and bounded ModelScope file API; production provider recheck required before product use; not an installation or runtime claim",
+    "status": "OBSERVED",
+    "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+    "filesApiUrl": "https://modelscope.cn/api/v1/models/calcuis/wan-1.3b-gguf/repo/files?Revision=e31361f52972a8341cfc4a8deb295e4f1028f3b7&Recursive=true",
+    "responseSha256": "c1de0a7158f1ba52fd537aa865a646ccf052f82d7b0bb579c51b400b23625af9",
+    "fileCount": 63,
+    "modelCard": {
+      "path": "README.md",
+      "sha256": "bb0283f78095c7f263aa42fd2975e14ef5f009e02bb98d13f6a00f2879944897",
+      "sizeBytes": 3213
+    }
+  },
+  "unmaterializablePreviewPaths": [
+    "samples\\ComfyUI_00001_.webp",
+    "samples\\ComfyUI_00002_.webp",
+    "samples\\ComfyUI_00003_.webp",
+    "samples\\ComfyUI_00004_.webp",
+    "samples\\ComfyUI_00005_.webp",
+    "samples\\ComfyUI_00006_.webp"
+  ],
+  "cause": "RepositoryInventory currently uses portable local RepositoryPath for every remote file, so Git filenames with literal backslashes reject the whole inventory",
+  "nextImplementation": "ML-08/09 must separate observed remote file names from portable install paths, retain all entries in snapshot digest, expose per-file unsupported-path diagnostics and preserve strict selected artifact path rejection; never normalize backslashes into slashes or silently drop entries",
+  "probeScope": "M0 native video exploration may use the raw bounded fixed inventory and only individually portable explicit GGUF file names with complete SHA256 verification; this is not a passed production repository inspection or executable product install plan",
+  "dependencyFailure": "Three dependent fixture commands were started after rejected inspection and exited on empty JSON; no model files were downloaded by those failed attempts"
+}

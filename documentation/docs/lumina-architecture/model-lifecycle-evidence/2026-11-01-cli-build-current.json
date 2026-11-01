@@ -1,0 +1,29 @@
+{
+  "observedAt": "2026-11-01T12:19:41.589377+00:00",
+  "status": "PASS",
+  "sourceCheckout": "D:\\Project\\goose",
+  "builds": [
+    {
+      "kind": "cpu",
+      "binary": "target/debug/lumina.exe",
+      "sha256": "d7b2acc0d95d8e32e8e14f02adcec91f24a94314e400d20c0bd8537661a56302",
+      "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina",
+      "log": "target/lifecycle-validation/cli-build-metadata-default.log",
+      "elapsed": "18m39s",
+      "currentRecipe": "2026-11-01-selftest-metadata-moe-cpu.json"
+    },
+    {
+      "kind": "cuda",
+      "binary": "target/cuda-validation/x86_64-pc-windows-msvc/debug/lumina.exe",
+      "sha256": "ad22f2e45ddd697aa706cfd27194f3ca3250b6eb8978f0264749f241365f7bf7",
+      "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina --features cuda --target x86_64-pc-windows-msvc",
+      "log": "target/lifecycle-validation/cuda-build-metadata.log",
+      "elapsed": "35m34s",
+      "currentGpuTextProof": "2026-11-01-cuda-metadata-text-smoke.json"
+    }
+  ],
+  "scope": "Actual current CPU/CUDA CLI builds; current CUDA Qwen1.7 actual29/29layer offload and CPU full6/84+1 recipe separately passed; not all-type application integration or workspace strict lint pass",
+  "knownWarnings": "605 core,6 CLI,1 MCP and existing dependency warnings; workspace-wide strict Clippy not passed",
+  "additionalProjectCopies": 0,
+  "additionalWorktrees": 0
+}

@@ -1,0 +1,158 @@
+{
+  "observedAt": "2026-11-01T07:32:36.816976+00:00",
+  "scope": "Validation asset and existing runtime only; not lifecycle installation acceptance",
+  "source": {
+    "scope": "validation asset only; not proof of lifecycle installation",
+    "repository": "Qwen/Qwen3-1.7B-GGUF",
+    "revision": "cdd105fbd3a69efc373ba5d0451f71335630920a",
+    "file": "Qwen3-1.7B-Q8_0.gguf",
+    "sizeBytes": 1834426016,
+    "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+    "result": "source size and computed SHA256 verified"
+  },
+  "parser": {
+    "architecture": "qwen3",
+    "tensorCount": 310,
+    "storedTensorElements": 1720574976,
+    "headerSha256": "2c502985caebfe85563efd588fefbab412dfd764a119cb4177d7ffa8989530be"
+  },
+  "actualText": {
+    "test": "installed_gguf_generates_actual_text",
+    "input": "Compute 2 + 2. Respond only with the numeral.",
+    "output": "4",
+    "outputTokens": 1,
+    "execution": "cpu",
+    "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+  },
+  "tools": {
+    "result": "FAIL: complete arithmetic scenario; PASS: one genuine shell marker roundtrip",
+    "observedToolEvents": [
+      {
+        "type": "toolRequest",
+        "id": "6XLDZgUf55Q9yWdLCoJUHImXvGyShLuI",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "shell",
+            "arguments": {
+              "command": "echo lumina-tool-44bfdd23d6b743e58cfe8b982c6df7fe",
+              "timeout_secs": 10
+            }
+          }
+        },
+        "_meta": {
+          "lumina_extension": "developer"
+        }
+      },
+      {
+        "type": "toolResponse",
+        "id": "6XLDZgUf55Q9yWdLCoJUHImXvGyShLuI",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "lumina-tool-44bfdd23d6b743e58cfe8b982c6df7fe\r",
+                "annotations": {
+                  "priority": 0.0
+                }
+              }
+            ],
+            "structuredContent": {
+              "stdout": "lumina-tool-44bfdd23d6b743e58cfe8b982c6df7fe\r",
+              "stderr": "",
+              "exit_code": 0
+            },
+            "isError": false
+          }
+        }
+      },
+      {
+        "type": "toolRequest",
+        "id": "OkvOkIoSlqaU7feB83dT41KAqUjZapUQ",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "shell",
+            "arguments": {
+              "command": "41 + 17",
+              "timeout_secs": 10
+            }
+          }
+        },
+        "_meta": {
+          "lumina_extension": "developer"
+        }
+      },
+      {
+        "type": "toolResponse",
+        "id": "OkvOkIoSlqaU7feB83dT41KAqUjZapUQ",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "'41' is not recognized as an internal or external command,\r\noperable program or batch file.\r\n\nCommand exited with code 1",
+                "annotations": {
+                  "priority": 0.0
+                }
+              }
+            ],
+            "structuredContent": {
+              "stdout": "",
+              "stderr": "'41' is not recognized as an internal or external command,\r\noperable program or batch file.\r",
+              "exit_code": 1
+            },
+            "isError": true
+          }
+        }
+      },
+      {
+        "type": "toolRequest",
+        "id": "quGjgS6EQVECShQl9e3vojpujuZYBjVU",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "shell",
+            "arguments": {
+              "command": "41 + 17",
+              "timeout_secs": 10
+            }
+          }
+        },
+        "_meta": {
+          "lumina_extension": "developer"
+        }
+      },
+      {
+        "type": "toolResponse",
+        "id": "quGjgS6EQVECShQl9e3vojpujuZYBjVU",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "'41' is not recognized as an internal or external command,\r\noperable program or batch file.\r\n\nCommand exited with code 1",
+                "annotations": {
+                  "priority": 0.0
+                }
+              }
+            ],
+            "structuredContent": {
+              "stdout": "",
+              "stderr": "'41' is not recognized as an internal or external command,\r\noperable program or batch file.\r",
+              "exit_code": 1
+            },
+            "isError": true
+          }
+        }
+      }
+    ],
+    "reason": "Default developer shell is cmd.exe. The model twice submitted a bare PowerShell expression, which returned exit code 1. No computed result was produced.",
+    "nextValidation": "New ignored test requires exact explicit PowerShell invocation, matching request/response IDs, random marker and real output 58. It is not yet run."
+  }
+}

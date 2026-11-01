@@ -1,0 +1,34 @@
+{
+  "observedAt": "2026-11-01T09:29:47.096217+00:00",
+  "result": "FAIL",
+  "termination": "Stopped after confirmed default-parameter failure and successful recovered actual text test, to run the fixed frozen entry cleanly; not an observation timeout",
+  "scope": "CLI recipe execution with an entry bug corrected during the run; not a clean acceptance run",
+  "identityAtStart": {
+    "startedAt": "2026-11-01T09:20:11.1882091Z",
+    "cliSha256": "2714e334167b1f431bbf6e90386d37a5b533e2ee601e764eeb3ab7a18848b539",
+    "recipeSha256": "9f1570ec139d8cd9d441a23cc72bd5b5bffccea950624ada3e1151175cdf7ed9",
+    "helperSha256": "b22754c4476b449d3c5fbb4e74766ed3a0e83dc4e0b17d5a1b2cfea906bc5f2b",
+    "requestedCpuThreads": 12,
+    "requestedContext": 16384
+  },
+  "currentHelperSha256": "a6f78e11991db970fda848bb6c949c88b9fa93fa9038bed51f23940f30a87260",
+  "initialFailure": {
+    "toolResponseId": "9I3HzBmWB8aSWgQcdptZQFDOKalcnUyY",
+    "exitCode": 1,
+    "reason": "RepositoryRoot default evaluated empty PSScriptRoot during parameter binding"
+  },
+  "recoveredActualText": {
+    "toolResponseId": "CARNYAeR5kndkyG1PG9QteYJoVyZcU45",
+    "result": {
+      "test": "installed_gguf_generates_actual_text",
+      "input": "Compute 2 + 2. Respond only with the numeral.",
+      "output": "4",
+      "outputTokens": 1,
+      "execution": "cpu",
+      "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+    }
+  },
+  "streamLogSha256": "d0baeaad8385bfca65fa1a9e126dbb7a31677ba27a28146121eba78393afa4ba",
+  "reportWasAcceptance": false,
+  "nextAction": "Fresh root, fixed helper hash and full report write/read checks"
+}

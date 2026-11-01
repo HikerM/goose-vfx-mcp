@@ -1,0 +1,26 @@
+{
+  "observedAt": "2026-11-01T08:37:59.039474+00:00",
+  "scope": "Actual ModelScope HTTPS smart HTTP ref resolution followed by pinned inventory; no external git executable; not model runtime or private repository validation",
+  "result": "PASS",
+  "revision": {
+    "repository": "Qwen/Qwen3-1.7B-GGUF",
+    "requested_revision": "master",
+    "resolved_revision": "cdd105fbd3a69efc373ba5d0451f71335630920a",
+    "proof": {
+      "kind": "advertised_ref",
+      "reference": "refs/heads/master",
+      "advertisement_sha256": "51fe9ea9251349a9ec504f1a4cb42e6ac55a88de5a13e9a5196f1c79eb4a4b61"
+    },
+    "observed_at": 1793521649
+  },
+  "snapshot": {
+    "repository": "Qwen/Qwen3-1.7B-GGUF",
+    "requested_revision": "master",
+    "resolved_revision": "cdd105fbd3a69efc373ba5d0451f71335630920a",
+    "files_digest": "817f7fd2f24ff7700a3048a116eb553461304ab85ad9186fb15cbb3a8795d9a8",
+    "fetched_at": 1793521649
+  },
+  "inventoryEntries": 6,
+  "originalEvidenceSha256": "4acacf87e7ec9bbfcaddc5e694e062c0b1587e575d7c900ad24d3ae0b6cdf423",
+  "sourceSha256": "41ed8e66832e146c21c070c2275818c7540602c340dfe45960cf11f4639c4683"
+}

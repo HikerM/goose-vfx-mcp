@@ -1,0 +1,85 @@
+{
+  "observedAt": "2026-11-01T09:55:07.185406+00:00",
+  "status": "FAIL",
+  "reason": "Report copied instructions rather than actual results; repeated entry calls were rejected after evidence root existed. Known failing run explicitly stopped; no observation timeout used.",
+  "identities": {
+    "startedAt": "2026-11-01T09:30:06.0754813Z",
+    "cliSha256": "2714e334167b1f431bbf6e90386d37a5b533e2ee601e764eeb3ab7a18848b539",
+    "recipeSha256": "9f1570ec139d8cd9d441a23cc72bd5b5bffccea950624ada3e1151175cdf7ed9",
+    "helperSha256": "a6f78e11991db970fda848bb6c949c88b9fa93fa9038bed51f23940f30a87260",
+    "helperGateSha256": "2cd3bb77a6e373719888a31baf04b830d7e83e0e0a394ac9f59b339de9bff047",
+    "requestedCpuThreads": 12,
+    "requestedContext": 16384
+  },
+  "logSha256": "b8596d220c6dbc011d32bf2ab6373827b21f2c8cbb50d2971a651c9356c5496d",
+  "reportSha256": "4f2e1fca9735d941c7fc32cbf3c0c1c54cf29f4cc1a9158b6ae09ad63f949e3b",
+  "reportContent": "1. Run `bin\\cargo.cmd test --quiet -p lumina-local-inference --no-default-features --offline --locked --test lifecycle_contracts --test lifecycle_gguf --test lifecycle_modelscope --test lifecycle_revisions`.\n2. Inspect the actual exit code and test output. Report the number passed, failed and ignored.\n3. Run exactly `powershell.exe -NoProfile -File bin\\test-lumina-real-text.ps1`.\n4. Create D:\\Project\\goose\\target\\lifecycle-validation\\selftest-clean-entry-app\\inference-app\\evidence\\text-smoke.json with the commands and observed results, including failures and ignored counts. Read the created report back using your developer tool.\n5. Print a concise PASS/FAIL summary and the report path. Do not claim any model capability beyond the specific tests that actually ran. Do not rewrite or delete user model files.",
+  "responses": [
+    {
+      "id": "aVwOr3gJiY9JTyPfYk9tAzNoEvBlABji",
+      "isError": false,
+      "structuredContent": {
+        "stdout": "\nrunning 45 tests\n.............................................\ntest result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.20s\n\n\nrunning 11 tests\ni..........\ntest result: ok. 10 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.10s\n\n\nrunning 6 tests\ni.....\ntest result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.05s\n\n\nrunning 6 tests\ni.....\ntest result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s\n",
+        "stderr": "warning: unused variable: `method`\n   --> vendor\\agent-client-protocol\\src\\jsonrpc\\incoming_actor.rs:440:21\n    |\n440 |                 let method = dispatch.method().to_string();\n    |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_method`\n    |\n    = note: `-W unused-variables` implied by `-W unused`\n    = help: to override `-W unused` add `#[allow(unused_variables)]`\n\nwarning: unused variable: `error`\n    --> vendor\\agent-client-protocol\\src\\jsonrpc.rs:3635:20\n     |\n3635 |         if let Err(error) = self.send() {\n     |                    ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`\n\nwarning: unused variable: `error`\n    --> vendor\\agent-client-protocol\\src\\jsonrpc.rs:3672:20\n     |\n3672 |         if let Err(error) = cancellation.send() {\n     |                    ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`\n",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "Z5V4PNIoV4xsguBEh2HC6ZbuZxdPmQg9",
+      "isError": false,
+      "structuredContent": {
+        "stdout": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMRT000\",\"exitCode\":0,\"passed\":1,\"failed\":0,\"ignored\":0,\"result\":{\"test\":\"installed_gguf_generates_actual_text\",\"input\":\"Compute 2 + 2. Respond only with the numeral.\",\"output\":\"4\",\"outputTokens\":1,\"execution\":\"cpu\",\"scope\":\"existing runtime text smoke, not lifecycle installation acceptance\"},\"evidencePath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-clean-entry-app\\\\inference-app\\\\evidence\\\\text-smoke.json\",\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-clean-entry-app\\\\inference-app\\\\inference-run.log\",\"scope\":\"Actual existing runtime text smoke; not complete lifecycle or release acceptance.\"}\r",
+        "stderr": "",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "SQZiQ4h1Bx5Hrbe0teP3uDj0HEqiSdOh",
+      "isError": false,
+      "structuredContent": null
+    },
+    {
+      "id": "swRCGV6WoJDN0uqy7ntWXY3MEsejh1Ha",
+      "isError": false,
+      "structuredContent": null
+    },
+    {
+      "id": "opQlFGQrP8jBbn1F52cW8qZKMLmSVmwO",
+      "isError": false,
+      "structuredContent": null
+    },
+    {
+      "id": "FyvV47ikRObhFXToLvFlrcGg7XSRgruP",
+      "isError": false,
+      "structuredContent": null
+    },
+    {
+      "id": "9ENWN2kT1aOXpln3Gff1HJrQpciMUmyg",
+      "isError": true,
+      "structuredContent": {
+        "stdout": "{\"schemaVersion\":1,\"status\":\"FAIL\",\"ruleId\":\"LMRT003\",\"exitCode\":1,\"message\":\"Use a fresh validation root; existing evidence is preserved.\"}\r",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "H3m8LWGTiIBpjcZrmC6OnQacnWbQXCE2",
+      "isError": true,
+      "structuredContent": {
+        "stdout": "{\"schemaVersion\":1,\"status\":\"FAIL\",\"ruleId\":\"LMRT003\",\"exitCode\":1,\"message\":\"Use a fresh validation root; existing evidence is preserved.\"}\r",
+        "stderr": "",
+        "exit_code": 1
+      }
+    },
+    {
+      "id": "3UGrS3xhMIV9FOg4P5I9KQNt5N7RLJeH",
+      "isError": true,
+      "structuredContent": {
+        "stdout": "{\"schemaVersion\":1,\"status\":\"FAIL\",\"ruleId\":\"LMRT003\",\"exitCode\":1,\"message\":\"Use a fresh validation root; existing evidence is preserved.\"}\r",
+        "stderr": "",
+        "exit_code": 1
+      }
+    }
+  ],
+  "scope": "Foundation and actual text results remain individually preserved, but overall recipe is FAIL."
+}

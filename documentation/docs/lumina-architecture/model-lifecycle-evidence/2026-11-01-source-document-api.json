@@ -1,0 +1,56 @@
+{
+  "observedAt": "2026-11-01T10:50:18.367691+00:00",
+  "status": "PASS",
+  "scope": "Task source-document API/module tests and real pinned metadata observation only; not product integration or stage completion",
+  "passed": 188,
+  "ignored": 6,
+  "commands": [
+    "bin/cargo.cmd fmt --all",
+    "bin/cargo.cmd test --locked --offline -p lumina-local-inference --no-default-features",
+    "bin/cargo.cmd clippy --locked --offline -p lumina-local-inference --no-default-features --all-targets -- -D warnings"
+  ],
+  "sourceSha256": {
+    "crates/lumina-local-inference/src/lifecycle/metadata.rs": "cbfc78b08321d1d74c22863d2cc752d7b513bbd75c7740a310a028fe78bc651f",
+    "crates/lumina-local-inference/src/lifecycle/modelscope.rs": "8738433367cef23dc59528191be9d0405c02e575f3b9510889154d4af1359343",
+    "crates/lumina-local-inference/src/lifecycle/classification.rs": "ddc4433e5f764352101f87d2d5737210df27a4a0bd2d0eca2f7e103a9559db25",
+    "crates/lumina-local-inference/tests/lifecycle_metadata.rs": "87db259cba28556e7ca21f2fcf62909bd8808a6e847b993644b09929e0d34633"
+  },
+  "logs": {
+    "target\\lifecycle-validation\\metadata-all-tests.log": "b1a110f04a83a589909baa4570c80481a51654d8db20beecee1419a006f2ba9a",
+    "target\\lifecycle-validation\\metadata-final-clippy.log": "e6190a15bf86b4ac54197d3ec249a08908b77d871f21b98ce89eac5729ce8d09",
+    "target\\lifecycle-validation\\metadata-real-document.log": "8da1e1228c9ef89c5062aeb7cf9b8a9d0a8c26538dd8170b922f7062790779a0"
+  },
+  "realDocumentObservation": {
+    "rules_version": "source-task-fields-v1",
+    "document": {
+      "schema_version": 1,
+      "snapshot_digest": "4df8ed2ebaab7a5e1a9f8d46df3135f785c66b038e7bfefe5a081597623c59f0",
+      "path": "README.md",
+      "kind": "model_card",
+      "size_bytes": 12943,
+      "source_sha256": "8d41121288f9b542549a9ccb8d220db5667e8882ffd26235fa8d329a43824c06",
+      "computed_sha256": "8d41121288f9b542549a9ccb8d220db5667e8882ffd26235fa8d329a43824c06"
+    },
+    "scope": "document",
+    "task_families": [
+      "tts"
+    ],
+    "unrecognized_tags": [],
+    "issues": []
+  },
+  "limitations": [
+    "Document claims are not bound to individual GGUF artifacts or runtime capability",
+    "Signed support profiles, classification persistence and product service wiring remain pending",
+    "Dependency vendor warnings retained; workspace-wide strict Clippy not passed"
+  ],
+  "windowsGate": {
+    "status": "PASS",
+    "record": "2026-11-01-real-text-powershell-gate.json",
+    "expectedFoundation": {
+      "suites": 6,
+      "passed": 84,
+      "ignored": 4
+    },
+    "latestRebuiltCliRecipe": "PASS:2026-11-01-selftest-metadata-moe-cpu.json"
+  }
+}

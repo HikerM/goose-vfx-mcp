@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-11-01T08:41:21.637266+00:00",
+  "baseCommit": "4f62659052985d944b2b8a2a043fc4375218689e",
+  "workingTree": "implementation changes are uncommitted; not a stage completion",
+  "scope": "Deterministic installation journal and immutable version validation with synthetic GGUF, actual filesystem operations and SQLite reopen; not full product installer, process termination acceptance or runtime capability evidence",
+  "databaseSchema": 4,
+  "package": "lumina-local-inference",
+  "passed": 159,
+  "ignored": 5,
+  "testCommand": "bin/cargo.cmd test -p lumina-local-inference --no-default-features",
+  "testLogSha256": "3c8ddb247795d2cf5db0dfab30836cd1e10031419a80e57d02d136d54ddc2393",
+  "clippyCommand": "bin/cargo.cmd clippy -p lumina-local-inference --no-default-features --all-targets -- -D warnings",
+  "clippy": "PASS; dependency agent-client-protocol retains three preexisting warnings; not workspace-wide Clippy approval",
+  "clippyLogSha256": "1faf5f1b4af32bc04ce52c17cd7f5c1ddf230c56918f4079b5e9d63147b4e754",
+  "sourceDigests": {
+    "domain.rs": "bcba7dd98aeb3a252919a7707d8533c4c38ae1ce01ea220941405b989748da57",
+    "installation.rs": "1f80c0385342ef8b3d9c0044c32d4715cf7bd5deb50f8ed09dbc3d84e6dbeda9",
+    "files.rs": "6ac6f3c80e1759f5f6db7d5f1660c514f9b58ab4b00c6fc7dc18fafbf421a235",
+    "repository.rs": "79f910bcf08f7725ba2159887aa8e44b64ad29b941fb80f7ddfa844ec01f0937",
+    "repository/installation.rs": "be864a1f8f73fa3205e8d259d4ca6ab570d04d2cbe8882ec2b7caf9e6d89c327",
+    "repository/migrations/0004.sql": "823c45142c086a60f9ea5a9335a86ff6284ff93b6a7a4936bfcfaca7ec116400",
+    "modelscope/revisions.rs": "41ed8e66832e146c21c070c2275818c7540602c340dfe45960cf11f4639c4683"
+  },
+  "verifiedBoundaries": [
+    "unregistered staging and renamed directories stay out of installed list",
+    "journal survives database reopen across prepare and file commit",
+    "accepted job resumes after plan expiry while stale worker is fenced",
+    "opaque witness verifies manifest and every physical artifact",
+    "same-size corruption and wrong version identity rejected",
+    "Windows verification handles reject concurrent file writes",
+    "transaction failure rolls back installation, activation, references and job completion",
+    "updates preserve prior active version until explicit compare-and-swap activation",
+    "old immutable installed version remains readable after switch and database reopen",
+    "schema upgrade collision rolls back without losing historical jobs",
+    "launch binding rejects retargeted version/runtime, unplanned capabilities and missing/extra/duplicate component files"
+  ],
+  "remaining": [
+    "no product transfer/installer orchestration connected",
+    "no physical content-addressed blob store yet",
+    "no actual process termination injection yet",
+    "no running-session or uninstall ownership integration yet"
+  ]
+}

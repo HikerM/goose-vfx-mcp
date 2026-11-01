@@ -1,0 +1,204 @@
+{
+  "startedAt": "2026-11-01T11:03:23.971449+00:00",
+  "status": "PASS",
+  "task": "reranker",
+  "source": {
+    "repository": "gpustack/bge-reranker-v2-m3-GGUF",
+    "revision": "ee922fb06dd877ddf5019d0fa366072a7be36b16",
+    "file": "bge-reranker-v2-m3-Q4_K_M.gguf",
+    "sha256": "e186a244ed455b4ab66ec64339ce7427a6ae13f5c0b5e544de96e50f0f8b3673",
+    "sizeBytes": 438376864,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__bge-reranker-v2-m3-GGUF\\bge-reranker-v2-m3-Q4_K_M.gguf",
+    "elapsedSeconds": 37.34399999998277,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/gpustack/bge-reranker-v2-m3-GGUF/repo?Revision=ee922fb06dd877ddf5019d0fa366072a7be36b16&FilePath=bge-reranker-v2-m3-Q4_K_M.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "binary": "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+  "binarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+  "engineRevision": "dde879bc4f954b809892fd0d660515f42536394a",
+  "versionOutput": "version: 0.8.0 (build 0, commit dde879bc4f954b809892fd0d660515f42536394a)\nbuilt with MSVC 19.44.35226.0 for x64",
+  "documents": [
+    "Paris is the capital and largest city of France.",
+    "To sort a Python list in place, call its sort method or use sorted to create a new list.",
+    "光合作用是绿色植物利用阳光把二氧化碳和水转化为有机物并释放氧气的过程。",
+    "Saturn is a planet surrounded by prominent rings made of ice and rock.",
+    "Bread dough rises because yeast produces carbon dioxide during fermentation.",
+    "A bicycle has two wheels and is powered by its rider pedaling."
+  ],
+  "queries": [
+    [
+      "What is the capital of France?",
+      0
+    ],
+    [
+      "How can I arrange a Python list in ascending order?",
+      1
+    ],
+    [
+      "植物怎样利用太阳能制造养分？",
+      2
+    ]
+  ],
+  "scope": "M0 actual native helper feasibility; not product install, adapter lifecycle, GPU or complete capability acceptance",
+  "argv": [
+    "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+    "-m",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__bge-reranker-v2-m3-GGUF\\bge-reranker-v2-m3-Q4_K_M.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "49989",
+    "--threads",
+    "4",
+    "--threads-batch",
+    "4",
+    "--ctx-size",
+    "512",
+    "--batch-size",
+    "512",
+    "--ubatch-size",
+    "512",
+    "--parallel",
+    "1",
+    "--gpu-layers",
+    "0",
+    "--no-webui",
+    "--no-warmup",
+    "--reranking"
+  ],
+  "pid": 18212,
+  "unauthenticatedStatus": 401,
+  "actualResponses": [
+    {
+      "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__bge-reranker-v2-m3-GGUF\\bge-reranker-v2-m3-Q4_K_M.gguf",
+      "object": "list",
+      "usage": {
+        "prompt_tokens": 169,
+        "total_tokens": 169
+      },
+      "results": [
+        {
+          "index": 0,
+          "relevance_score": 7.2738847732543945
+        },
+        {
+          "index": 5,
+          "relevance_score": -10.828600883483887
+        },
+        {
+          "index": 1,
+          "relevance_score": -10.950065612792969
+        },
+        {
+          "index": 3,
+          "relevance_score": -11.00072193145752
+        },
+        {
+          "index": 2,
+          "relevance_score": -11.001511573791504
+        },
+        {
+          "index": 4,
+          "relevance_score": -11.006195068359375
+        }
+      ]
+    },
+    {
+      "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__bge-reranker-v2-m3-GGUF\\bge-reranker-v2-m3-Q4_K_M.gguf",
+      "object": "list",
+      "usage": {
+        "prompt_tokens": 199,
+        "total_tokens": 199
+      },
+      "results": [
+        {
+          "index": 1,
+          "relevance_score": 0.31998512148857117
+        },
+        {
+          "index": 0,
+          "relevance_score": -10.967960357666016
+        },
+        {
+          "index": 3,
+          "relevance_score": -11.0033540725708
+        },
+        {
+          "index": 2,
+          "relevance_score": -11.007675170898438
+        },
+        {
+          "index": 5,
+          "relevance_score": -11.008962631225586
+        },
+        {
+          "index": 4,
+          "relevance_score": -11.009624481201172
+        }
+      ]
+    },
+    {
+      "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__bge-reranker-v2-m3-GGUF\\bge-reranker-v2-m3-Q4_K_M.gguf",
+      "object": "list",
+      "usage": {
+        "prompt_tokens": 181,
+        "total_tokens": 181
+      },
+      "results": [
+        {
+          "index": 2,
+          "relevance_score": -1.02392578125
+        },
+        {
+          "index": 4,
+          "relevance_score": -10.953254699707031
+        },
+        {
+          "index": 1,
+          "relevance_score": -10.973637580871582
+        },
+        {
+          "index": 5,
+          "relevance_score": -10.994071006774902
+        },
+        {
+          "index": 3,
+          "relevance_score": -10.996922492980957
+        },
+        {
+          "index": 0,
+          "relevance_score": -11.008350372314453
+        }
+      ]
+    }
+  ],
+  "scoreSemantics": "Raw scalar classifier logit for this exact BGE model/build; higher means more relevant; not a calibrated probability",
+  "cases": [
+    {
+      "query": "What is the capital of France?",
+      "expectedDocument": 0,
+      "passed": true
+    },
+    {
+      "query": "How can I arrange a Python list in ascending order?",
+      "expectedDocument": 1,
+      "passed": true
+    },
+    {
+      "query": "植物怎样利用太阳能制造养分？",
+      "expectedDocument": 2,
+      "passed": true
+    }
+  ],
+  "inferenceElapsedSeconds": 1.4059999999590218,
+  "finishedAt": "2026-11-01T11:03:28.718339+00:00",
+  "helperExitCode": 1,
+  "logSha256": "c5436b6053d527bfd2fb305526d1e1e593875be20d981cd7e2e7899783a1eb9f",
+  "probeSourceSha256": "5c1daa1a15ac58405121c46e5f1d290145968f66e052f0e9775445f7b04715a2"
+}

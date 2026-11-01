@@ -1,0 +1,537 @@
+{
+  "observedAt": "2026-11-01T06:32:42.947542+00:00",
+  "sourceCommit": "fa7bb0a4d38a22f9e2cc26f307b304965f88a74c",
+  "productVersion": "1.43.0-mcp.14",
+  "scope": "Real ModelScope discovery and pinned file inventories. Does not prove complete dependencies, GGUF content, runtime support or installation readiness.",
+  "candidates": [
+    {
+      "category": "llm",
+      "repository": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "4537f71740dd2c56a15ffa12e5fbb9f15095f20c",
+      "fileCount": 13,
+      "ggufCount": 9,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "0e98e4d769d8189358653745ed878da6896490b54b29dd4497067eb5d0b8f49e",
+      "ggufExamples": [
+        {
+          "path": "qwen2.5-0.5b-instruct-fp16.gguf",
+          "size": 1266425696,
+          "sha256": "8e0ae26000627ed62de0e78e41860af70094558b9d2913385c842a6aa06cf3fc",
+          "fileRevision": "cbee0850956aeb6fd9ac074a0270da820788ada7"
+        },
+        {
+          "path": "qwen2.5-0.5b-instruct-q2_k.gguf",
+          "size": 415182688,
+          "sha256": "9ee36184e616dfc76df4f5dd66f908dbde6979524ae36e6cefb67f532f798cb8",
+          "fileRevision": "2e50b77b0eee3083842019e257b74854323d880a"
+        },
+        {
+          "path": "qwen2.5-0.5b-instruct-q3_k_m.gguf",
+          "size": 432041824,
+          "sha256": "590d2479d401db206fe12a4562294d2de6211e06338a6e34fbad64b32f1469d0",
+          "fileRevision": "2e50b77b0eee3083842019e257b74854323d880a"
+        },
+        {
+          "path": "qwen2.5-0.5b-instruct-q4_0.gguf",
+          "size": 428730208,
+          "sha256": "7671c0c304e6ce5a7fc577bcb12aba01e2c155cc2efd29b2213c95b18edaf6ed",
+          "fileRevision": "2e50b77b0eee3083842019e257b74854323d880a"
+        },
+        {
+          "path": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+          "size": 491400032,
+          "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+          "fileRevision": "2e50b77b0eee3083842019e257b74854323d880a"
+        },
+        {
+          "path": "qwen2.5-0.5b-instruct-q5_0.gguf",
+          "size": 490475360,
+          "sha256": "925946ab27801fea3eead42933f857b6449c6d299f062e374cee2ac48426f2a5",
+          "fileRevision": "2e50b77b0eee3083842019e257b74854323d880a"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "moe-vlm",
+      "repository": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "1f423dd35457209ba58aa7e154e5d7facd317431",
+      "fileCount": 7,
+      "ggufCount": 4,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "8cd6fd4af34d72df240471c2d7b0bb618bd6be64df9b5df161d87b06737bd4ab",
+      "ggufExamples": [
+        {
+          "path": "Qwen3.6-35B-A3B-Q4_K_M.gguf",
+          "size": 21166758336,
+          "sha256": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f",
+          "fileRevision": "1f423dd35457209ba58aa7e154e5d7facd317431"
+        },
+        {
+          "path": "mmproj-BF16.gguf",
+          "size": 902822624,
+          "sha256": "356dfaa3111376a4f7165e32e8749713378d1700b37cf52e0c50d9f23322334d",
+          "fileRevision": "1f423dd35457209ba58aa7e154e5d7facd317431"
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "size": 899283680,
+          "sha256": "8971ee4f331ff0a4c609374f32984b3d4e6dc086c0aa35f1d637fad1829e887f",
+          "fileRevision": "1f423dd35457209ba58aa7e154e5d7facd317431"
+        },
+        {
+          "path": "mmproj-F32.gguf",
+          "size": 1786305248,
+          "sha256": "0a1c1cd2772ae6de5e87e023cea454720924675f11fe2b0e7bb7648e48debdc0",
+          "fileRevision": "1f423dd35457209ba58aa7e154e5d7facd317431"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "embedding GGUF",
+      "repository": "Qwen/Qwen3-Embedding-0.6B-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "61ae123505fc6fa7f36d372fae1a30bc384241ea",
+      "fileCount": 5,
+      "ggufCount": 2,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "2aa6ad918b835c089374219731f347caba872179522236f79b5f54408206a301",
+      "ggufExamples": [
+        {
+          "path": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+          "size": 639150592,
+          "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+          "fileRevision": "a6804f0dece24ece939f52ffa3316fd650ca1839"
+        },
+        {
+          "path": "Qwen3-Embedding-0.6B-f16.gguf",
+          "size": 1197629632,
+          "sha256": "421a27e58d165478cc7acb984a688c2aa41404968b0203e7cd743ece44c54340",
+          "fileRevision": "a6804f0dece24ece939f52ffa3316fd650ca1839"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "reranker GGUF",
+      "repository": "gpustack/bge-reranker-v2-m3-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "ee922fb06dd877ddf5019d0fa366072a7be36b16",
+      "fileCount": 17,
+      "ggufCount": 9,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "6c97f328413babaf74321702fe6369e2bae5814811d03ca65a1669938a43242e",
+      "ggufExamples": [
+        {
+          "path": "bge-reranker-v2-m3-FP16.gguf",
+          "size": 1159776896,
+          "sha256": "5df93be121c09c43432102ad2b9569d369ccb85c209ca7583e8ccd28f0e41b88",
+          "fileRevision": "d49f7d400a3f5fa38ebd1ffe116b2ef15ffefbc2"
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q2_K.gguf",
+          "size": 366467488,
+          "sha256": "f12135b80de836cbf94c1169dc8efda57c81040c1dfd9dedc20709d2e1725e39",
+          "fileRevision": "d49f7d400a3f5fa38ebd1ffe116b2ef15ffefbc2"
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q3_K_M.gguf",
+          "size": 402749856,
+          "sha256": "1b9a8990c7ebb14511aecbc9df90d1e956132be64d5ce62783431fa1abb339a3",
+          "fileRevision": "d49f7d400a3f5fa38ebd1ffe116b2ef15ffefbc2"
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q4_0.gguf",
+          "size": 422156704,
+          "sha256": "6d9e23b0765d4e250b697657ddaef1ca0b1fd7d150d910940eb35f673590e267",
+          "fileRevision": "d49f7d400a3f5fa38ebd1ffe116b2ef15ffefbc2"
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q4_K_M.gguf",
+          "size": 438376864,
+          "sha256": "e186a244ed455b4ab66ec64339ce7427a6ae13f5c0b5e544de96e50f0f8b3673",
+          "fileRevision": "d49f7d400a3f5fa38ebd1ffe116b2ef15ffefbc2"
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q5_0.gguf",
+          "size": 460036512,
+          "sha256": "e232e93920b96cb144370deac915e00b8f2377ced7c40ee3ac7f6881a0f9f987",
+          "fileRevision": "d49f7d400a3f5fa38ebd1ffe116b2ef15ffefbc2"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "whisper GGUF",
+      "repository": "OllmOne/whisper-large-v3-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "4aa52cf18e1ba46f789e1916b04a5579c979b5d6",
+      "fileCount": 6,
+      "ggufCount": 1,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "8efd6b0c7645a35fc9d12412aadd5fde77dfde0851dbc213d3da472683bfc1a2",
+      "ggufExamples": [
+        {
+          "path": "model-q4k.gguf",
+          "size": 891009248,
+          "sha256": "ad9b891580aebfca0a7360beb0197e1b2e1b38ea935fad4af03bb345515ee2af",
+          "fileRevision": "4aa52cf18e1ba46f789e1916b04a5579c979b5d6"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "TTS GGUF",
+      "repository": "OuteAI/Llama-OuteTTS-1.0-1B-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "e17251825ca43b1dfff055a46c82ebed61ba024e",
+      "fileCount": 19,
+      "ggufCount": 15,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "12390326d06acffda0b0636873cc550ef478aa8f5c4cb9f6255c4033b1532915",
+      "ggufExamples": [
+        {
+          "path": "Llama-OuteTTS-1.0-1B-FP16.gguf",
+          "size": 2504913888,
+          "sha256": "0ffaf33f7f360837c2136ab503037206a3b0c8e8f46108e14b15ddd262db77f5",
+          "fileRevision": "7f21e0b3d5fdca3ac9bcdc401ea3c005726bcfd3"
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q2_K.gguf",
+          "size": 591348704,
+          "sha256": "23cc2aaeaa805ed3af8fcc682e781b8302a0b59f9de2efac84674f97b2513aea",
+          "fileRevision": "7f21e0b3d5fdca3ac9bcdc401ea3c005726bcfd3"
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q3_K_L.gguf",
+          "size": 742999008,
+          "sha256": "df4aac8206b4e612f2e6a5cd9d780018758d3e27a2eec8132b4e7f3989aa7e87",
+          "fileRevision": "7f21e0b3d5fdca3ac9bcdc401ea3c005726bcfd3"
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q3_K_M.gguf",
+          "size": 701318112,
+          "sha256": "559fd185f2e0e6b4bd26a955de93b50a6c9dbd74337c3575e4964415e8dac8c7",
+          "fileRevision": "7f21e0b3d5fdca3ac9bcdc401ea3c005726bcfd3"
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q3_K_S.gguf",
+          "size": 652166112,
+          "sha256": "97930b5b2cff47f0492ef39c64dbff50e14637731f458b105423575c06937e8c",
+          "fileRevision": "7f21e0b3d5fdca3ac9bcdc401ea3c005726bcfd3"
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q4_0.gguf",
+          "size": 781403104,
+          "sha256": "d09c2faaba63ddba694bb9f6ae0d9a75502b98e0db45dbaafaee3351a3b57afd",
+          "fileRevision": "7f21e0b3d5fdca3ac9bcdc401ea3c005726bcfd3"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "audio GGUF",
+      "repository": "audio-cpp/audio.cpp-gguf",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+      "fileCount": 466,
+      "ggufCount": 247,
+      "otherWeightCandidates": [
+        "PocketTTS-GGUF/english/embeddings/alba.safetensors",
+        "PocketTTS-GGUF/english/embeddings/anna.safetensors",
+        "PocketTTS-GGUF/english/embeddings/azelma.safetensors",
+        "PocketTTS-GGUF/english/embeddings/bill_boerst.safetensors",
+        "PocketTTS-GGUF/english/embeddings/caro_davy.safetensors",
+        "PocketTTS-GGUF/english/embeddings/charles.safetensors",
+        "PocketTTS-GGUF/english/embeddings/cosette.safetensors",
+        "PocketTTS-GGUF/english/embeddings/eponine.safetensors",
+        "PocketTTS-GGUF/english/embeddings/estelle.safetensors",
+        "PocketTTS-GGUF/english/embeddings/eve.safetensors",
+        "PocketTTS-GGUF/english/embeddings/fantine.safetensors",
+        "PocketTTS-GGUF/english/embeddings/george.safetensors",
+        "PocketTTS-GGUF/english/embeddings/giovanni.safetensors",
+        "PocketTTS-GGUF/english/embeddings/jane.safetensors",
+        "PocketTTS-GGUF/english/embeddings/javert.safetensors",
+        "PocketTTS-GGUF/english/embeddings/jean.safetensors",
+        "PocketTTS-GGUF/english/embeddings/juergen.safetensors",
+        "PocketTTS-GGUF/english/embeddings/lola.safetensors",
+        "PocketTTS-GGUF/english/embeddings/marius.safetensors",
+        "PocketTTS-GGUF/english/embeddings/mary.safetensors"
+      ],
+      "fileInventorySha256": "181b9da401131be94845cc96caaf90c1bbc8c8308c8e57bdf399d0ef57098401",
+      "ggufExamples": [
+        {
+          "path": "ACE-Step1.5-GGUF/base/ace-step-1.5-base-bf16.gguf",
+          "size": 10090405184,
+          "sha256": "d5bb61554bd8669ba5498054422e7a771414257d77acc47b3953e5da8c98836f",
+          "fileRevision": ""
+        },
+        {
+          "path": "ACE-Step1.5-GGUF/base/ace-step-1.5-base-q8_0.gguf",
+          "size": 6185466944,
+          "sha256": "2fb7bc3627c79bc99486510619d4264da22d40814edff0415dd3337164336e4a",
+          "fileRevision": ""
+        },
+        {
+          "path": "ACE-Step1.5-GGUF/turbo/ace-step-1.5-turbo-bf16.gguf",
+          "size": 10090406336,
+          "sha256": "7aa8cc911bb7e47647bba619cf25afc22a42e35c568a102cd9a3b28a54b94013",
+          "fileRevision": ""
+        },
+        {
+          "path": "ACE-Step1.5-GGUF/turbo/ace-step-1.5-turbo-q8_0.gguf",
+          "size": 6185468096,
+          "sha256": "1f0015f81c10a1182531e6207c7aeaa060b8cad3470a2f88daa3cb74ed636e63",
+          "fileRevision": ""
+        },
+        {
+          "path": "AST-AudioSet-GGUF/ast-audioset-f32.gguf",
+          "size": 346437760,
+          "sha256": "b1ad5f36591f9e38d16cb3544d6b3b27a0c61cbcb00de171df78ed179c789b56",
+          "fileRevision": ""
+        },
+        {
+          "path": "Apollo-GGUF/apollo-orig.gguf",
+          "size": 66398592,
+          "sha256": "41ee9eb6c5c265f126c1baaa3aca94d506dd604f4750f6da46d3cec00310df00",
+          "fileRevision": ""
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "diffusion GGUF",
+      "repository": "gpustack/stable-diffusion-v3-5-large-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c",
+      "fileCount": 12,
+      "ggufCount": 6,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "66c699b8268cae21409b5667d76c33b3ec4b2717ffddb6c42f460b00e4977627",
+      "ggufExamples": [
+        {
+          "path": "stable-diffusion-v3-5-large-FP16.gguf",
+          "size": 27883767040,
+          "sha256": "d2a229439cee98592fe0d8ec3f6525de74eaa26ca036248ca48d1bb679aeedcf",
+          "fileRevision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c"
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-Q4_0.gguf",
+          "size": 11942648448,
+          "sha256": "b1fcabab3af5dbb828c020281e93090bfb0aad29a4b065eb0d847988a94190f0",
+          "fileRevision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c"
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-Q4_1.gguf",
+          "size": 12443543168,
+          "sha256": "d8990a0635a301c2487a58641585357ab79945b815862ee31aee19db7a270563",
+          "fileRevision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c"
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-Q8_0.gguf",
+          "size": 15949811072,
+          "sha256": "69f4297a8c8e48187486c603ac47f6919dddd49bc0a869553afd4784982406fe",
+          "fileRevision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c"
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-pure-Q4_0.gguf",
+          "size": 8321019840,
+          "sha256": "25a06aa87f6cfa311cbcdafc5a46b241dcc1fa5af2854a2ea9840643001d7dba",
+          "fileRevision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c"
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-pure-Q8_0.gguf",
+          "size": 15183719104,
+          "sha256": "476f5e26686ba6877db6f1ddd2198bbdec4c36fe4325d11c98c728154f8c4cbf",
+          "fileRevision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "Wan GGUF",
+      "repository": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "b67c55ca3cc63388e8fe22678d5988445bbf6484",
+      "fileCount": 28,
+      "ggufCount": 24,
+      "otherWeightCandidates": [
+        "VAE/Wan2.1_VAE.safetensors"
+      ],
+      "fileInventorySha256": "7dddc49114e7e05dffa08c860c74f997a329f6ace43fbeda6d54b317eb11caa3",
+      "ggufExamples": [
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q2_K.gguf",
+          "size": 5300957696,
+          "sha256": "8426c0c02a2878f4f20c28a620a1516787045a7a56301f5b6a1d91198c15a8c1",
+          "fileRevision": "f9f98c6c3915df773deb4beccaceb7f1b0339ef0"
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q3_K_M.gguf",
+          "size": 7176106496,
+          "sha256": "ac3a72d74330e030fe2ded047b0ef9afc21dd90afc4f300c7aa79e1b0f9dd940",
+          "fileRevision": "f9f98c6c3915df773deb4beccaceb7f1b0339ef0"
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q3_K_S.gguf",
+          "size": 6515012096,
+          "sha256": "2708962c357537c9f517fa49edd8397f3024057b059c3e8df827c774271e1161",
+          "fileRevision": "f9f98c6c3915df773deb4beccaceb7f1b0339ef0"
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q4_K_M.gguf",
+          "size": 9651728896,
+          "sha256": "836250abfaa3411694e2c9cf3a0cc18265329d5156d81aa116d5366b0f8f02e7",
+          "fileRevision": "f9f98c6c3915df773deb4beccaceb7f1b0339ef0"
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q4_K_S.gguf",
+          "size": 8748151296,
+          "sha256": "8fc5f726ccf1214e43c6a599bdef1e63daf7fab06e71fb74081416c4b9ce200b",
+          "fileRevision": "f9f98c6c3915df773deb4beccaceb7f1b0339ef0"
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q5_0.gguf",
+          "size": 10314461696,
+          "sha256": "7856fbfbeacd110993fb400547b51a5acb22fe27633bb3c49da88a057cf14e1c",
+          "fileRevision": "f9f98c6c3915df773deb4beccaceb7f1b0339ef0"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "MTP GGUF",
+      "repository": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "1031a64225845ac4f098662a951df2ac69affb7a",
+      "fileCount": 30,
+      "ggufCount": 26,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "e2df9c706400845698faad89cc2d7ce85e782b0a893c4e857c54bfbf3156a00e",
+      "ggufExamples": [
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf",
+          "size": 49913715456,
+          "sha256": "a172dfea1fe8bb29132ea2f250c74cdc7d619d518d3f072d3816e31a69ce44a2",
+          "fileRevision": "397c5577db6c013d8578b2ea692cd2b200145a87"
+        },
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00002-of-00002.gguf",
+          "size": 21152227104,
+          "sha256": "b90b4d07e1be4967aec932e2501e7476ec5f44de772c7eb082d6e9c3ac105161",
+          "fileRevision": "397c5577db6c013d8578b2ea692cd2b200145a87"
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-MXFP4_MOE.gguf",
+          "size": 22182574368,
+          "sha256": "e1a4925d2ea132576daa9cb980b1102b970d919d896936b7b6e681ef5bc3d3f6",
+          "fileRevision": "1eec59919f5a5ce480263015ba34ff99ef085b60"
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-Q8_0.gguf",
+          "size": 37801097504,
+          "sha256": "c1283d8b80c3e38b2735ddbc9766d3b3126f44d6c484be419d4e101d09a76131",
+          "fileRevision": "1eec59919f5a5ce480263015ba34ff99ef085b60"
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-UD-IQ1_M.gguf",
+          "size": 11366414624,
+          "sha256": "223db8b347ebe3d75f43a0fd998eb86148c9744635066c6782662208ddc14867",
+          "fileRevision": "1eec59919f5a5ce480263015ba34ff99ef085b60"
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-UD-IQ2_M.gguf",
+          "size": 11882969376,
+          "sha256": "b989da14b63b29bd469cb1fab5bd16b422ab921787569b4b2bb4fd61e26129b8",
+          "fileRevision": "90583320962633e5223b65829f43aeae13d968f3"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    },
+    {
+      "category": "DFlash GGUF",
+      "repository": "Merkyor/Qwen3.8-27B-EfficientThink-K3-Opus5-Grok4.6-GPT5.6Sol-SFT-SimPO-DFlash2-GGUF",
+      "status": "remote-file-list-observed",
+      "initialAdvertisementError": "HTTP Error 421: Misdirected Request",
+      "revisionResolver": "ModelScope git ls-remote",
+      "resolvedRevision": "e2a9d0c12aa4ab1dc15585104f38bd7de7e311d5",
+      "fileCount": 58,
+      "ggufCount": 40,
+      "otherWeightCandidates": [],
+      "fileInventorySha256": "f558452b5196cff42802309ca9c4c539e0f082eb905cd05d7e0ab2a1e4018021",
+      "ggufExamples": [
+        {
+          "path": "Q2-LynnStyle/Qwen3.8-27B-EfficientThink-SimPO-Q2-LynnStyle.gguf",
+          "size": 12999977600,
+          "sha256": "8a84f7ef93b01c6376a19fc80fd9df849d23d5785e5953bd3e4fc278d5d21922",
+          "fileRevision": "b92400bb467c88b97c5517d28f4d3967b76cd38a"
+        },
+        {
+          "path": "Q2-LynnStyle/dflash2-qwen38-27b-Q4_K_M.gguf",
+          "size": 1143006720,
+          "sha256": "e83676f81b6604331d02e004a50689eded7fa905c7e83468e5a376cc27abcad4",
+          "fileRevision": "15520abc8970aeb1f6895e3a16d168606dbb1f59"
+        },
+        {
+          "path": "Q2-LynnStyle/dflash2-qwen38-27b-Q8_0.gguf",
+          "size": 2056414720,
+          "sha256": "1086ea5d44e9d7b3ee1978ce322c01f96d9c1086bd5e73d89397be7a2af1335a",
+          "fileRevision": "cf5b4eae656c651fac653a11a2b6f2fd100d9051"
+        },
+        {
+          "path": "Q2-LynnStyle/mmproj-Qwen3.8-27B-Q4_K_M.gguf",
+          "size": 522293024,
+          "sha256": "0d22c439a59fb0ffb784530babc4f03a10581484b7ac68d9a5707fc0d7675d48",
+          "fileRevision": "b92400bb467c88b97c5517d28f4d3967b76cd38a"
+        },
+        {
+          "path": "Q2-LynnStyle/mtp-Qwen3.8-27B-Q4_0.gguf",
+          "size": 1680271648,
+          "sha256": "051a1764cff8c4f3ee6ae8b00593a0364c7539c67fa50ffc58f3f96509fca38e",
+          "fileRevision": "4cafaf996c71e7bf933f78e111dc3b44db8b440a"
+        },
+        {
+          "path": "Q2-LynnStyle/mtp-Qwen3.8-27B-Q8_0.gguf",
+          "size": 3164006688,
+          "sha256": "cbf60a0c48b431bb61f1d49b8948dc88ac29c398d6dbdbbb2e6e89ef77eacc9a",
+          "fileRevision": "4cafaf996c71e7bf933f78e111dc3b44db8b440a"
+        }
+      ],
+      "componentCompatibility": "unverified",
+      "runtimeValidation": "not-run"
+    }
+  ]
+}

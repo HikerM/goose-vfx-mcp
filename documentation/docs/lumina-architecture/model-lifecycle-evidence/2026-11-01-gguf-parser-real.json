@@ -1,0 +1,80 @@
+{
+  "observedAt": "2026-11-01T07:27:35.632119+00:00",
+  "sourceBaseCommit": "4f6265905",
+  "implementationState": "uncommitted lifecycle implementation; phase not complete",
+  "parserSourceSha256": "63a2d5c79616ba50f63c74e8a37edbb79c5bba0cde247f104a57da231f5cf0d9",
+  "scope": "Actual local GGUF files; no weight copying; not proof of installation, component pairing, or inference capabilities",
+  "cases": [
+    {
+      "category": "text",
+      "architecture": "qwen2",
+      "fileBytes": 428730208,
+      "headerBytes": 5947741,
+      "headerSha256": "3a8cf5b0f21659dc00d5a503798676916ed358223c5c5f1fb0d10c5b22b577aa",
+      "dataOffset": 5947744,
+      "tensorCount": 291,
+      "storedTensorElements": 630167424,
+      "encodedTensorBytes": 422782464,
+      "tensorQuantizations": {
+        "q8_0": 1,
+        "q4_0": 169,
+        "f32": 121
+      },
+      "expertCount": null,
+      "activeExperts": null,
+      "result": "PASS: bounded metadata and tensor layout inspection",
+      "runtimeCapabilityValidation": "not performed by this test"
+    },
+    {
+      "category": "moe",
+      "architecture": "qwen35moe",
+      "fileBytes": 21166758336,
+      "headerBytes": 10989499,
+      "headerSha256": "14ef8a80621a3570d468e33ab5b814729561a5483b96e85f6c437702603eebbe",
+      "dataOffset": 10989504,
+      "tensorCount": 733,
+      "storedTensorElements": 34660610688,
+      "encodedTensorBytes": 21155768832,
+      "tensorQuantizations": {
+        "q6_k": 61,
+        "f32": 301,
+        "q4_k": 371
+      },
+      "expertCount": 256,
+      "activeExperts": 8,
+      "result": "PASS: bounded metadata and tensor layout inspection",
+      "runtimeCapabilityValidation": "not performed by this test"
+    },
+    {
+      "category": "projector",
+      "architecture": "clip",
+      "fileBytes": 902822624,
+      "headerBytes": 20242,
+      "headerSha256": "9e2fea603e0f6ef6c5b77972191c727662d342d6f5169a557f932ce7c4b2e926",
+      "dataOffset": 20256,
+      "tensorCount": 334,
+      "storedTensorElements": 446571248,
+      "encodedTensorBytes": 902802368,
+      "tensorQuantizations": {
+        "bf16": 110,
+        "f32": 224
+      },
+      "expertCount": null,
+      "activeExperts": null,
+      "result": "PASS: bounded metadata and tensor layout inspection",
+      "runtimeCapabilityValidation": "not performed by this test"
+    }
+  ],
+  "modelscopeProvider": {
+    "result": "PASS",
+    "repository": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+    "revision": "4537f71740dd2c56a15ffa12e5fbb9f15095f20c",
+    "fileCount": 13,
+    "inventoryDigest": "eb67aa84ca984a578598a11b7cd0cc41742b31f40851c81f58e4e66f6395bb3b"
+  },
+  "moeTextAttempt": {
+    "result": "INTERRUPTED_UNVERIFIED",
+    "reason": "Process stopped after startup and prolonged absence of generated output; no inference success recorded",
+    "log": "target/lifecycle-validation/moe-first-run.log"
+  }
+}

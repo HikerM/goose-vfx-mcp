@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "profileVersion": "m0-runtime-baseline-v1",
+  "observedAt": "2026-11-01T12:19:41.589377+00:00",
+  "scope": "M0 technical baseline and concrete handoff; PASS means scoped actual probe only, never product capability READY",
+  "platform": "Windows x86_64 MSVC",
+  "hardwareEvidence": "2026-11-01-hardware-tools.json",
+  "minimumHardwarePolicy": "Only current tested hardware and measured buffers/peaks are evidence. Unmeasured minimum/other devices remain UNKNOWN; ML-15 must budget full weights,KV,activation,components and concurrent reservations before install/launch admission.",
+  "runtimes": [
+    {
+      "id": "llama-rust146-cpu",
+      "adapter": "existing in-process llama.cpp",
+      "engineRevision": "llama-cpp-sys-2=0.1.146",
+      "bindingVersion": "llama-cpp-2=0.1.146",
+      "binarySha256": "d7b2acc0d95d8e32e8e14f02adcec91f24a94314e400d20c0bd8537661a56302",
+      "features": [
+        "cpu",
+        "sampler",
+        "mtmd"
+      ],
+      "evidence": "2026-11-01-selftest-metadata-moe-cpu.json"
+    },
+    {
+      "id": "llama-rust146-cuda",
+      "adapter": "existing in-process llama.cpp",
+      "engineRevision": "llama-cpp-sys-2=0.1.146",
+      "bindingVersion": "llama-cpp-2=0.1.146",
+      "binarySha256": "ad22f2e45ddd697aa706cfd27194f3ca3250b6eb8978f0264749f241365f7bf7",
+      "features": [
+        "cuda",
+        "sampler",
+        "mtmd"
+      ],
+      "evidence": "2026-11-01-cuda-metadata-text-smoke.json"
+    },
+    {
+      "id": "llama-helper-dde-cpu",
+      "adapter": "pinned native HTTP helper candidate",
+      "engineRevision": "dde879bc4f954b809892fd0d660515f42536394a",
+      "bindingVersion": "native-server protocol;product Adapter pending",
+      "binarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+      "features": [
+        "cpu",
+        "mtmd",
+        "embedding",
+        "rerank",
+        "native MTP",
+        "native DFlash"
+      ],
+      "evidence": "2026-11-01-native-helper-build.json"
+    },
+    {
+      "id": "audio-helper-c0-cpu",
+      "adapter": "pinned native CLI helper candidate",
+      "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+      "bindingVersion": "native CLI/spec schema;product Adapter pending",
+      "binarySha256": "350f7d1e03e7ea01592796a8989c8c60bd07a442bff2648ea0218e587b8fec7b",
+      "features": [
+        "cpu",
+        "pocket_tts",
+        "qwen3_asr",
+        "ace_step",
+        "ast_audioset",
+        "stable_audio",
+        "manager disabled",
+        "explicit pinned spec"
+      ],
+      "evidence": "2026-11-01-audio-generation-feasibility.json"
+    },
+    {
+      "id": "diffusion-helper-c6-cpu",
+      "adapter": "pinned native CLI helper candidate",
+      "engineRevision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+      "coupledGgmlRevision": "c57b71a3448809d07d49360273201bb5a5e7cafb",
+      "bindingVersion": "native CLI;product Adapter pending",
+      "binarySha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043",
+      "features": [
+        "cpu",
+        "Image",
+        "Video",
+        "web UI/download frontend disabled"
+      ],
+      "evidence": "2026-11-01-native-image-feasibility.json"
+    }
+  ],
+  "cases": [
+    {
+      "family": "LLM",
+      "runtimeId": "llama-rust146-cuda",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-cuda-metadata-text-smoke.json",
+      "evidenceSha256": "644e195d56a09d40d1c4c72535817d7cf31729525bf0ad1c527e6e5b03200078",
+      "observed": "Qwen3-1.7B actual output4,positive token,29/29 GPU layers and1743.77MiB CUDA model buffer",
+      "remaining": "ML-25/26 complete multi-turn/tool suites and product admission",
+      "productReady": false
+    },
+    {
+      "family": "MoE",
+      "runtimeId": "llama-rust146-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-selftest-metadata-moe-cpu.json",
+      "evidenceSha256": "9783a0d56c4eca6e80eeeb0543aa7e6f820c3eec613906b7d1a110dcf1193332",
+      "observed": "Qwen3.6-35B-A3B executes actual validation tool,6 suites84pass/4ignored,1 real text smoke and correct report summary",
+      "remaining": "All256 experts count toward residency; ML-15 budget,ML-25/26 full validation",
+      "productReady": false
+    },
+    {
+      "family": "VLM",
+      "runtimeId": "llama-helper-dde-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-native-helper-vision.json",
+      "evidenceSha256": "34d472d350aa67015c16736ca7ead16c5b4bd3998f5e59d01e275b32c3b26f64",
+      "observed": "Actual0.8B main+projector identifies3distinct image colors",
+      "remaining": "ML-13 pairing profiles,ML-25/26 complex images and visual multi-turn",
+      "productReady": false
+    },
+    {
+      "family": "Embedding",
+      "runtimeId": "llama-helper-dde-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-native-helper-embedding.json",
+      "evidenceSha256": "e93c1b1252ff8c2986c5129f66ab776620c70f4f4eb9931ab2b81f84b4ffd5e7",
+      "observed": "9 actual1024D finite normalized vectors;3 fixed retrieval top1 correct",
+      "remaining": "ML-27 complete install,batched input/bounds and Adapter",
+      "productReady": false
+    },
+    {
+      "family": "Reranker",
+      "runtimeId": "llama-helper-dde-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-native-helper-reranker.json",
+      "evidenceSha256": "4f2b2bdde9c77bdd88d0b95f87834253b56e6ebfcbcf47566b8b80e774dbe603",
+      "observed": "3 fixed query/document rankings correct;real scalar logit output",
+      "remaining": "Old binding width unsafe for Rank; ML-28 typed raw-score semantics and boundaries",
+      "productReady": false
+    },
+    {
+      "family": "ASR",
+      "runtimeId": "audio-helper-c0-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-audio-asr-tts-feasibility.json",
+      "evidenceSha256": "27735fab2848496ddd8573fee43562b127e97ab79427a8bd23155e77eeb446de",
+      "observed": "Qwen3-ASR actual fixed speech transcript,W ER0",
+      "remaining": "Speech proof used archived3family binary; expanded build inherits no automatic READY; Candle layout gap separately recorded,ML-29 unfinished",
+      "productReady": false
+    },
+    {
+      "family": "TTS",
+      "runtimeId": "audio-helper-c0-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-audio-asr-tts-feasibility.json",
+      "evidenceSha256": "27735fab2848496ddd8573fee43562b127e97ab79427a8bd23155e77eeb446de",
+      "observed": "PocketTTS generates2.4s24kHz mono actual speech;independent ASR exact",
+      "remaining": "Speech proof used archived3family binary;ML-30 full install/stream/language/quality and spec/assets boundary",
+      "productReady": false
+    },
+    {
+      "family": "Audio understanding",
+      "runtimeId": "audio-helper-c0-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-audio-understanding-feasibility.json",
+      "evidenceSha256": "91109c95088fc149289b1a1662840b0660895a45c675f36fdbdf251dc36e87fe",
+      "observed": "AST returns native typed scores,Speech top1=0.8546876",
+      "remaining": "ML-33 per-task schemas/negative classes and product service",
+      "productReady": false
+    },
+    {
+      "family": "Audio generation",
+      "runtimeId": "audio-helper-c0-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-audio-generation-feasibility.json",
+      "evidenceSha256": "7cee82a20ae8face36422736371359aa2c1385510efa7f9a4a1fda19e2048f9c",
+      "observed": "4s44.1kHz stereo music;independent ASTMusic top1 andPiano top3",
+      "remaining": "ML-33 genres/seeds/duration/quality and product service",
+      "productReady": false
+    },
+    {
+      "family": "Image",
+      "runtimeId": "diffusion-helper-c6-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-native-image-feasibility.json",
+      "evidenceSha256": "eaaa3503e3f6cbdc41b05dd2c35e925184c1e3eb56c2bc45c7e09908b836c3f6",
+      "observed": "Actual512x512 red apple on wooden table;PNGdecode andvisual review pass",
+      "remaining": "ML-31 full install/seeds/content suite and GPU",
+      "productReady": false
+    },
+    {
+      "family": "Video",
+      "runtimeId": "diffusion-helper-c6-cpu",
+      "observationStatus": "QUALITY_FAILED",
+      "evidence": "2026-11-01-native-video-feasibility.json",
+      "evidenceSha256": "0aea7355dea638cc02fb4ce552a0bf11550a6125d4b7d7c5a14ccab1dc94ff44",
+      "observed": "3GGUF files produce17 distinct decodable256x256 frames;actual movement,wrongdirection andblockartifacts",
+      "remaining": "ML-32 quality gate blocks READY;standard resolution,VAE/precision/temporal-state isolation required;ML-08/09 raw preview path issue",
+      "productReady": false
+    },
+    {
+      "family": "MTP",
+      "runtimeId": "llama-helper-dde-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-native-mtp-feasibility.json",
+      "evidenceSha256": "1693f0d09056a0ac077a90f91eb4943bc4f22788c1474318b3b82a80d43f7caa",
+      "observed": "Native same-model draft-mtp,143draft/105accepted,3 exact greedy output/token comparisons",
+      "remaining": "ML-34 statistical correctness/performance,cancellation,tools and product profile",
+      "productReady": false
+    },
+    {
+      "family": "DFlash",
+      "runtimeId": "llama-helper-dde-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-native-dflash-feasibility.json",
+      "evidenceSha256": "81551aed86e3633b01b8416773d8b2a18850fb0a0fb629450281a9345572cfcd",
+      "observed": "Dedicateddflash69tensor draft,tokenizer/width/layers checked,129draft/107accepted,3 exact comparisons",
+      "remaining": "ML-35 training lineage/quality/performance/fallback/tools; no ordinary draft substitution",
+      "productReady": false
+    },
+    {
+      "family": "Specialized extension",
+      "runtimeId": "audio-helper-c0-cpu",
+      "observationStatus": "PASS",
+      "evidence": "2026-11-01-audio-understanding-feasibility.json",
+      "evidenceSha256": "91109c95088fc149289b1a1662840b0660895a45c675f36fdbdf251dc36e87fe",
+      "observed": "Native ast_audioset.classification.v1 structured scores",
+      "remaining": "ML-36 trusted extension registry and typed service integration",
+      "productReady": false
+    }
+  ],
+  "architectureDecisions": [
+    "Retain existing0.1.146 native tool chain;0.1.160 removes required OpenAI template APIs",
+    "Use exact native helpers for new task families and acceleration; controlled process lifecycle/resource/admission still ML-23/24/37",
+    "Only ModelScope GGUF weights; components/metadata/tokenizer/rules must be source and build bound",
+    "Native Audio specs explicit,pinned;model manager disabled;embedded assets require bounded path/type checks and no embedded source execution",
+    "Video stays not ready after actual quality failure; raw complete source inventory cannot be represented by the current portable-only provider for six unused previews"
+  ],
+  "requiredHandoffs": {
+    "ML-08/09": "Separate remote Git names from portable artifact paths;preserve all source entries in digest and expose unsupported-file diagnostics",
+    "ML-23/24": "Typed helper protocols,private loopback/auth,cancel/reap/resource leases,controlled environment/CWD/temp and cache identity",
+    "ML-29": "Versioned enc/dec tensor-name bridge and exact config/tokenizer validation for existing Candle path;keep legacy behavior",
+    "ML-32": "Fix actualVideo content/temporal quality at validated standard preset before claiming support",
+    "ML-47/48": "Reproducible builds,resource/OS/codec/Unicode matrix,dependency/embedded component license facts and actual packaging"
+  },
+  "stageCompletion": "NOT_SET_BY_THIS_FACT_CONSOLIDATION"
+}

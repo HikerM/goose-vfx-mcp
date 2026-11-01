@@ -1,0 +1,197 @@
+{
+  "observedAt": "2026-11-01T12:19:41.589377+00:00",
+  "status": "OBSERVED",
+  "cases": [
+    {
+      "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+      "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+      "cardSha256": "7dbc33b81b72ddb17eb6014164c86a843610e6ae76e6f42df3d7a374ff22ab60",
+      "literalFrontMatterDeclarations": [
+        "license: apache-2.0",
+        "license_link: https://huggingface.co/Qwen/Qwen3.5-0.8B/blob/main/LICENSE"
+      ],
+      "licenseDocumentInventory": [],
+      "transitiveComponentLicenseStatus": "UNVERIFIED",
+      "scope": "Literal pinned source-card fields and file presence only; no commercial-use or transitive license conclusion"
+    },
+    {
+      "repository": "cloudlnk/whisper-base-gguf",
+      "revision": "1a564799fb1c4db24c3aaea0c2649a204365fdfb",
+      "cardSha256": "43d4848e91326f945828e33cc9f96918943ac110934390bfd448644f697b9afb",
+      "literalFrontMatterDeclarations": [
+        "license: Apache-2.0"
+      ],
+      "licenseDocumentInventory": [],
+      "transitiveComponentLicenseStatus": "UNVERIFIED",
+      "scope": "Literal pinned source-card fields and file presence only; no commercial-use or transitive license conclusion"
+    },
+    {
+      "repository": "audio-cpp/audio.cpp-gguf",
+      "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+      "cardSha256": "04929afd935991044666e190b06c6b363c67a68dfceac10b1d6ab9a4244920dd",
+      "literalFrontMatterDeclarations": [
+        "license: other"
+      ],
+      "licenseDocumentInventory": [
+        {
+          "path": "Breeze-TTS-2-GGUF/LICENSE",
+          "sizeBytes": 18718,
+          "sourceSha256": "44c5d53ee309bc36b5ea3ec2144abc6f3996ce431dedbe262f302a85956bc94b"
+        },
+        {
+          "path": "CED-GGUF/LICENSE",
+          "sizeBytes": 11359,
+          "sourceSha256": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac"
+        },
+        {
+          "path": "Canary-180M-Flash-GGUF/LICENSE",
+          "sizeBytes": 424,
+          "sourceSha256": "3af248cbf115b710a6ca32c033b95fcbd9154caf1f8560393aa7c6e6d25c2bd5"
+        },
+        {
+          "path": "CrisperWhisper2.0-GGUF/LICENSE.md",
+          "sizeBytes": 17784,
+          "sourceSha256": "42f43bf4dc72ef422f91f6ca143f4514e21a68b353940d99091c1addcd0aee79"
+        },
+        {
+          "path": "KittenTTS-GGUF/LICENSE",
+          "sizeBytes": 10394,
+          "sourceSha256": "787aa312b93eee80b636f35652469df29efdb7582239d6a9c088467555a3c7fd"
+        },
+        {
+          "path": "KugelAudio-0-Open-GGUF/LICENSE",
+          "sizeBytes": 1074,
+          "sourceSha256": "e67302834d31847388e447eed25edb00af495347cfd8ea1d84d110cc40d64420"
+        },
+        {
+          "path": "MMS-Forced-Aligner-GGUF/LICENSE.CC-BY-NC-4.0.txt",
+          "sizeBytes": 19347,
+          "sourceSha256": "41003d4a74749c0220e33dd415042164b5a1093ed401f36277234f772d22d3d0"
+        },
+        {
+          "path": "MOSS-Transcribe-Diarize-GGUF/LICENSE",
+          "sizeBytes": 11357,
+          "sourceSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "Maya1-GGUF/LICENSE-MAYA1",
+          "sizeBytes": 11358,
+          "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "Maya1-GGUF/LICENSE-SNAC",
+          "sizeBytes": 1101,
+          "sourceSha256": "e6c5718026b1bdac3adf655e6b3640dd2c9f060d6f7fc40ad47dfa79f085566e"
+        },
+        {
+          "path": "MicroWakeWord-GGUF/LICENSE",
+          "sizeBytes": 11357,
+          "sourceSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "MossFormer2-GGUF/LICENSE",
+          "sizeBytes": 11357,
+          "sourceSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "Niagara-ASR-GGUF/LICENSE",
+          "sizeBytes": 3394,
+          "sourceSha256": "0f601a0c7aee237b8fceae05493120d78041833ccde276a68c0cb7da8b35b594"
+        },
+        {
+          "path": "Phonon-2-GGUF/LICENSE-CODE-Apache-2.0.txt",
+          "sizeBytes": 11358,
+          "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "Phonon-2-GGUF/LICENSE-WEIGHTS-CC-BY-4.0.txt",
+          "sizeBytes": 18657,
+          "sourceSha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+        },
+        {
+          "path": "Piper-TTS-GGUF/LICENSE",
+          "sizeBytes": 1071,
+          "sourceSha256": "4cd71dece7037f1d6d93cce7570c57ab75ea9ac566fd4990be2f3ab08d15b47f"
+        },
+        {
+          "path": "PulseVAD-GGUF/LICENSE",
+          "sizeBytes": 1068,
+          "sourceSha256": "38850c88bdcaba5c183e060e966d10b1eb0d5637ccb71cea96374ff094a7329e"
+        },
+        {
+          "path": "Sherpa-KWS-GGUF/LICENSE",
+          "sizeBytes": 11358,
+          "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "Sidon-GGUF/LICENSE",
+          "sizeBytes": 1071,
+          "sourceSha256": "fc78c2303c7ba55060bc1f16528b9f3efaa9243882ce9567910d57fa27ab276b"
+        },
+        {
+          "path": "Smart-Turn-v3-GGUF/LICENSE",
+          "sizeBytes": 1301,
+          "sourceSha256": "0d66364067f678c08586ebb60a16a2aed4fa081ec11057df35585759ce0e774f"
+        },
+        {
+          "path": "Tone-Color-VC-GGUF/LICENSE",
+          "sizeBytes": 1057,
+          "sourceSha256": "bb3541f421e6273d3a3e3dd5bdba2bd3b79a3c2eadca65cde9c62c2467903ac0"
+        },
+        {
+          "path": "Voxtral-4B-TTS-2603-GGUF/LICENSE",
+          "sizeBytes": 19347,
+          "sourceSha256": "41003d4a74749c0220e33dd415042164b5a1093ed401f36277234f772d22d3d0"
+        }
+      ],
+      "transitiveComponentLicenseStatus": "UNVERIFIED",
+      "scope": "Literal pinned source-card fields and file presence only; no commercial-use or transitive license conclusion"
+    },
+    {
+      "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+      "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f",
+      "cardSha256": "c1d0d560fb10ad1dda4304bb29a77131145e1b3c638b755a6cb6a3f21a11e501",
+      "literalFrontMatterDeclarations": [
+        "license: creativeml-openrail-m"
+      ],
+      "licenseDocumentInventory": [],
+      "transitiveComponentLicenseStatus": "UNVERIFIED",
+      "scope": "Literal pinned source-card fields and file presence only; no commercial-use or transitive license conclusion"
+    },
+    {
+      "repository": "AtomicChat/Qwen3.5-4B-GGUF",
+      "revision": "3ba229851bf643577ee703364116751f3ac120b8",
+      "cardSha256": "47b260c94555c8690e1f6123de57a75bfb9390ad8cee7c7a4afd6f4333fb0935",
+      "literalFrontMatterDeclarations": [
+        "license: apache-2.0",
+        "license_link: https://huggingface.co/Qwen/Qwen3.5-4B/blob/main/LICENSE"
+      ],
+      "licenseDocumentInventory": [],
+      "transitiveComponentLicenseStatus": "UNVERIFIED",
+      "scope": "Literal pinned source-card fields and file presence only; no commercial-use or transitive license conclusion"
+    },
+    {
+      "repository": "AtomicChat/Qwen3.5-4B-DFlash-GGUF",
+      "revision": "5f573f835b526aa79788ad1a733c66d08f5fe5a9",
+      "cardSha256": "b618b794754e6bfb056577db3afe2263d0d0955a67ce20e270c67cf9cfb0d302",
+      "literalFrontMatterDeclarations": [
+        "license: apache-2.0"
+      ],
+      "licenseDocumentInventory": [],
+      "transitiveComponentLicenseStatus": "UNVERIFIED",
+      "scope": "Literal pinned source-card fields and file presence only; no commercial-use or transitive license conclusion"
+    },
+    {
+      "repository": "calcuis/wan-1.3b-gguf",
+      "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+      "cardSha256": "bb0283f78095c7f263aa42fd2975e14ef5f009e02bb98d13f6a00f2879944897",
+      "literalFrontMatterDeclarations": [
+        "license: apache-2.0"
+      ],
+      "licenseDocumentInventory": [],
+      "transitiveComponentLicenseStatus": "UNVERIFIED",
+      "scope": "Literal pinned source-card fields and file presence only; no commercial-use or transitive license conclusion"
+    }
+  ],
+  "scope": "M0 literal source facts only; per-component/embedded/transitive release review remains ML-47/48"
+}

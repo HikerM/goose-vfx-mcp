@@ -1,0 +1,560 @@
+{
+  "observedAt": "2026-11-01T08:51:45.649410+00:00",
+  "sourceEvidenceSha256": "47aa8ec9113b7b80060333a9e1f645a51ac3be7a4799897f20648e4a4ad209cf",
+  "scope": "Pinned ModelScope document presence, content hashes and literal model-card declarations only; no legal interpretation, commercial-use approval, transitive license clearance or runtime support claim",
+  "networkPolicy": "HTTPS ModelScope API only, no redirects, no credentials, three concurrent repositories, bounded inventories and documents",
+  "status": "OBSERVATION_COMPLETE",
+  "cases": [
+    {
+      "category": "llm",
+      "repository": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+      "revision": "4537f71740dd2c56a15ffa12e5fbb9f15095f20c",
+      "documents": [
+        {
+          "path": "LICENSE",
+          "kind": "license_document",
+          "sourceSha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+          "status": "OBSERVED",
+          "bytes": 11343,
+          "computedSha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/Qwen/Qwen2.5-0.5B-Instruct-GGUF/repo?Revision=4537f71740dd2c56a15ffa12e5fbb9f15095f20c&FilePath=LICENSE",
+          "frontMatterDeclarations": []
+        },
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "fa1fede7f775a20f111cc098c00900092020572ce78976970a5b0ad9ca211999",
+          "status": "OBSERVED",
+          "bytes": 4856,
+          "computedSha256": "fa1fede7f775a20f111cc098c00900092020572ce78976970a5b0ad9ca211999",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/Qwen/Qwen2.5-0.5B-Instruct-GGUF/repo?Revision=4537f71740dd2c56a15ffa12e5fbb9f15095f20c&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "apache-2.0"
+            },
+            {
+              "line": 3,
+              "field": "license_link",
+              "rawValue": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/blob/main/LICENSE"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "2e9b71547f436accbdae2420d9cf3cbb887c85b6a6f3353cf07c8edf994c0bb9",
+      "listedLicenseDocuments": [
+        {
+          "path": "LICENSE",
+          "sizeBytes": 11343,
+          "sourceSha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+        }
+      ],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": false,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "moe-vlm",
+      "repository": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF",
+      "revision": "1f423dd35457209ba58aa7e154e5d7facd317431",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "5a685d656c2067bfef7f979f74bf84de217aa409210cd1a90a531715fca30f58",
+          "status": "OBSERVED",
+          "bytes": 1639,
+          "computedSha256": "5a685d656c2067bfef7f979f74bf84de217aa409210cd1a90a531715fca30f58",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF/repo?Revision=1f423dd35457209ba58aa7e154e5d7facd317431&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 3,
+              "field": "license",
+              "rawValue": "apache-2.0"
+            },
+            {
+              "line": 4,
+              "field": "license_link",
+              "rawValue": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/LICENSE"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "66eb9ecf6096cf5253637870d75aba7b8b4063df51fa6512ab6a1f0f74d704db",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "embedding GGUF",
+      "repository": "Qwen/Qwen3-Embedding-0.6B-GGUF",
+      "revision": "61ae123505fc6fa7f36d372fae1a30bc384241ea",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "5dc596e802ce79342678281d42ec4b98fbee2fee241758df330cdc35cc15d29f",
+          "status": "OBSERVED",
+          "bytes": 11889,
+          "computedSha256": "5dc596e802ce79342678281d42ec4b98fbee2fee241758df330cdc35cc15d29f",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/Qwen/Qwen3-Embedding-0.6B-GGUF/repo?Revision=61ae123505fc6fa7f36d372fae1a30bc384241ea&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "apache-2.0"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "55545d1170d9e61aaba2a2ee16d83e275c992c69151c1a85fa3c333d20eabbec",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "reranker GGUF",
+      "repository": "gpustack/bge-reranker-v2-m3-GGUF",
+      "revision": "ee922fb06dd877ddf5019d0fa366072a7be36b16",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "e94e1d32deeea7b9b1704c615b02ed6794d6784d3ae6e900120e52ed6825c4de",
+          "status": "OBSERVED",
+          "bytes": 17562,
+          "computedSha256": "e94e1d32deeea7b9b1704c615b02ed6794d6784d3ae6e900120e52ed6825c4de",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/gpustack/bge-reranker-v2-m3-GGUF/repo?Revision=ee922fb06dd877ddf5019d0fa366072a7be36b16&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "apache-2.0"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "ec21e9605da10fb9b1b9f8a7a4c1c8be99801251204d0714353f85f58c624cee",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "whisper GGUF",
+      "repository": "OllmOne/whisper-large-v3-GGUF",
+      "revision": "4aa52cf18e1ba46f789e1916b04a5579c979b5d6",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "c0ffb911d72de0b087a92638a2268c19fba44882c218f7e2718f70862894e9af",
+          "status": "OBSERVED",
+          "bytes": 1427,
+          "computedSha256": "c0ffb911d72de0b087a92638a2268c19fba44882c218f7e2718f70862894e9af",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/OllmOne/whisper-large-v3-GGUF/repo?Revision=4aa52cf18e1ba46f789e1916b04a5579c979b5d6&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 4,
+              "field": "license",
+              "rawValue": "Apache License 2.0"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "b5ce6c40060fa5a26cb4fd31864a74b8ace0c19b7b5707158f5bf1ec74c94a97",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "TTS GGUF",
+      "repository": "OuteAI/Llama-OuteTTS-1.0-1B-GGUF",
+      "revision": "e17251825ca43b1dfff055a46c82ebed61ba024e",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "8d41121288f9b542549a9ccb8d220db5667e8882ffd26235fa8d329a43824c06",
+          "status": "OBSERVED",
+          "bytes": 12943,
+          "computedSha256": "8d41121288f9b542549a9ccb8d220db5667e8882ffd26235fa8d329a43824c06",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/OuteAI/Llama-OuteTTS-1.0-1B-GGUF/repo?Revision=e17251825ca43b1dfff055a46c82ebed61ba024e&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "cc-by-nc-sa-4.0"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "990c1e3f811444669049395600cba8cc521b63b6883433d8ca5aae4141ad8d3f",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "audio GGUF",
+      "repository": "audio-cpp/audio.cpp-gguf",
+      "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+      "documents": [
+        {
+          "path": "Breeze-TTS-2-GGUF/LICENSE",
+          "kind": "license_document",
+          "sourceSha256": "44c5d53ee309bc36b5ea3ec2144abc6f3996ce431dedbe262f302a85956bc94b",
+          "status": "OBSERVED",
+          "bytes": 18718,
+          "computedSha256": "44c5d53ee309bc36b5ea3ec2144abc6f3996ce431dedbe262f302a85956bc94b",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=Breeze-TTS-2-GGUF%2FLICENSE",
+          "frontMatterDeclarations": []
+        },
+        {
+          "path": "Breeze-TTS-2-GGUF/NOTICE",
+          "kind": "license_document",
+          "sourceSha256": "c03e2ed6cde7844a6b4336f548b362a7bd28fa1d72b9d8f4ce886e9f0a72d8d5",
+          "status": "OBSERVED",
+          "bytes": 146,
+          "computedSha256": "c03e2ed6cde7844a6b4336f548b362a7bd28fa1d72b9d8f4ce886e9f0a72d8d5",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=Breeze-TTS-2-GGUF%2FNOTICE",
+          "frontMatterDeclarations": []
+        },
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "04929afd935991044666e190b06c6b363c67a68dfceac10b1d6ab9a4244920dd",
+          "status": "OBSERVED",
+          "bytes": 12911,
+          "computedSha256": "04929afd935991044666e190b06c6b363c67a68dfceac10b1d6ab9a4244920dd",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "other"
+            }
+          ]
+        },
+        {
+          "path": "AST-AudioSet-GGUF/README.md",
+          "kind": "model_card",
+          "sourceSha256": "9ff4d92de30828c184ed14643f6bd9bdbc92398d14cc5e496b4281dbf692a0bb",
+          "status": "OBSERVED",
+          "bytes": 826,
+          "computedSha256": "9ff4d92de30828c184ed14643f6bd9bdbc92398d14cc5e496b4281dbf692a0bb",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=AST-AudioSet-GGUF%2FREADME.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "bsd-3-clause"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "51b93042fcd5b501d5c2f60ba7441cfef2b908f48cce6689199e1dfc3922f502",
+      "listedLicenseDocuments": [
+        {
+          "path": "Breeze-TTS-2-GGUF/LICENSE",
+          "sizeBytes": 18718,
+          "sourceSha256": "44c5d53ee309bc36b5ea3ec2144abc6f3996ce431dedbe262f302a85956bc94b"
+        },
+        {
+          "path": "Breeze-TTS-2-GGUF/NOTICE",
+          "sizeBytes": 146,
+          "sourceSha256": "c03e2ed6cde7844a6b4336f548b362a7bd28fa1d72b9d8f4ce886e9f0a72d8d5"
+        },
+        {
+          "path": "CED-GGUF/LICENSE",
+          "sizeBytes": 11359,
+          "sourceSha256": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac"
+        },
+        {
+          "path": "Canary-180M-Flash-GGUF/LICENSE",
+          "sizeBytes": 424,
+          "sourceSha256": "3af248cbf115b710a6ca32c033b95fcbd9154caf1f8560393aa7c6e6d25c2bd5"
+        },
+        {
+          "path": "CrisperWhisper2.0-GGUF/LICENSE.md",
+          "sizeBytes": 17784,
+          "sourceSha256": "42f43bf4dc72ef422f91f6ca143f4514e21a68b353940d99091c1addcd0aee79"
+        },
+        {
+          "path": "Hviske-v6-GGUF/NOTICE",
+          "sizeBytes": 2355,
+          "sourceSha256": "fcf962286327ec7ac5d554835dee54beb7ce03d1a6add1defc75d4c966c19fec"
+        },
+        {
+          "path": "KittenTTS-GGUF/LICENSE",
+          "sizeBytes": 10394,
+          "sourceSha256": "787aa312b93eee80b636f35652469df29efdb7582239d6a9c088467555a3c7fd"
+        },
+        {
+          "path": "KugelAudio-0-Open-GGUF/LICENSE",
+          "sizeBytes": 1074,
+          "sourceSha256": "e67302834d31847388e447eed25edb00af495347cfd8ea1d84d110cc40d64420"
+        },
+        {
+          "path": "MOSS-Transcribe-Diarize-GGUF/LICENSE",
+          "sizeBytes": 11357,
+          "sourceSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "MicroWakeWord-GGUF/LICENSE",
+          "sizeBytes": 11357,
+          "sourceSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "MossFormer2-GGUF/LICENSE",
+          "sizeBytes": 11357,
+          "sourceSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "path": "Niagara-ASR-GGUF/LICENSE",
+          "sizeBytes": 3394,
+          "sourceSha256": "0f601a0c7aee237b8fceae05493120d78041833ccde276a68c0cb7da8b35b594"
+        },
+        {
+          "path": "Phonon-2-GGUF/NOTICE",
+          "sizeBytes": 2741,
+          "sourceSha256": "00624a5043e7ce74029317b024132ca5286116d6fbf3191d226374bc8273789f"
+        },
+        {
+          "path": "Piper-TTS-GGUF/LICENSE",
+          "sizeBytes": 1071,
+          "sourceSha256": "4cd71dece7037f1d6d93cce7570c57ab75ea9ac566fd4990be2f3ab08d15b47f"
+        },
+        {
+          "path": "PulseVAD-GGUF/LICENSE",
+          "sizeBytes": 1068,
+          "sourceSha256": "38850c88bdcaba5c183e060e966d10b1eb0d5637ccb71cea96374ff094a7329e"
+        },
+        {
+          "path": "Sherpa-KWS-GGUF/LICENSE",
+          "sizeBytes": 11358,
+          "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "Sidon-GGUF/LICENSE",
+          "sizeBytes": 1071,
+          "sourceSha256": "fc78c2303c7ba55060bc1f16528b9f3efaa9243882ce9567910d57fa27ab276b"
+        },
+        {
+          "path": "Smart-Turn-v3-GGUF/LICENSE",
+          "sizeBytes": 1301,
+          "sourceSha256": "0d66364067f678c08586ebb60a16a2aed4fa081ec11057df35585759ce0e774f"
+        },
+        {
+          "path": "Tone-Color-VC-GGUF/LICENSE",
+          "sizeBytes": 1057,
+          "sourceSha256": "bb3541f421e6273d3a3e3dd5bdba2bd3b79a3c2eadca65cde9c62c2467903ac0"
+        },
+        {
+          "path": "Voxtral-4B-TTS-2603-GGUF/LICENSE",
+          "sizeBytes": 19347,
+          "sourceSha256": "41003d4a74749c0220e33dd415042164b5a1093ed401f36277234f772d22d3d0"
+        }
+      ],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": false,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "diffusion GGUF",
+      "repository": "gpustack/stable-diffusion-v3-5-large-GGUF",
+      "revision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c",
+      "documents": [
+        {
+          "path": "LICENSE.md",
+          "kind": "license_document",
+          "sourceSha256": "9b60b9d0411f54d4087484ad4acf28ca6fd9f6a84c30ddacb04de2c623254749",
+          "status": "OBSERVED",
+          "bytes": 11726,
+          "computedSha256": "9b60b9d0411f54d4087484ad4acf28ca6fd9f6a84c30ddacb04de2c623254749",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/gpustack/stable-diffusion-v3-5-large-GGUF/repo?Revision=2b2154fb02dcc19ac54e4bec8878f1608d63ef1c&FilePath=LICENSE.md",
+          "frontMatterDeclarations": []
+        },
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "0eef0209fe27226688daf9692b211af922e1108c0e00f861f3257005678366c6",
+          "status": "OBSERVED",
+          "bytes": 11403,
+          "computedSha256": "0eef0209fe27226688daf9692b211af922e1108c0e00f861f3257005678366c6",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/gpustack/stable-diffusion-v3-5-large-GGUF/repo?Revision=2b2154fb02dcc19ac54e4bec8878f1608d63ef1c&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "other"
+            },
+            {
+              "line": 3,
+              "field": "license_name",
+              "rawValue": "stabilityai-ai-community"
+            },
+            {
+              "line": 4,
+              "field": "license_link",
+              "rawValue": "LICENSE.md"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "58686d83fb63e88da72199346c0451449f743c657d7ff298b7104026e5054117",
+      "listedLicenseDocuments": [
+        {
+          "path": "LICENSE.md",
+          "sizeBytes": 11726,
+          "sourceSha256": "9b60b9d0411f54d4087484ad4acf28ca6fd9f6a84c30ddacb04de2c623254749"
+        }
+      ],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": false,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "Wan GGUF",
+      "repository": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+      "revision": "b67c55ca3cc63388e8fe22678d5988445bbf6484",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "6189f88fb801a768b18953d011482f8d6feb484a86f194a03de61400304c4791",
+          "status": "OBSERVED",
+          "bytes": 617,
+          "computedSha256": "6189f88fb801a768b18953d011482f8d6feb484a86f194a03de61400304c4791",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/QuantStack/Wan2.2-I2V-A14B-GGUF/repo?Revision=b67c55ca3cc63388e8fe22678d5988445bbf6484&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "apache-2.0"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "8ae62b3e1608af3262763a86898ca36f444a2208382a4fa074a48ef83c91791b",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "MTP GGUF",
+      "repository": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+      "revision": "1031a64225845ac4f098662a951df2ac69affb7a",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "03b88d9a26d2c06644e8620f0ee0a3fbb98749321344a4e7e40805ffdaf49e6e",
+          "status": "OBSERVED",
+          "bytes": 67529,
+          "computedSha256": "03b88d9a26d2c06644e8620f0ee0a3fbb98749321344a4e7e40805ffdaf49e6e",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/repo?Revision=1031a64225845ac4f098662a951df2ac69affb7a&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 3,
+              "field": "license",
+              "rawValue": "apache-2.0"
+            },
+            {
+              "line": 4,
+              "field": "license_link",
+              "rawValue": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/LICENSE"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "5e142143a27f6c27cef0e10d410c9afc8286d3765813559f36269dd9b74da261",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    },
+    {
+      "category": "DFlash GGUF",
+      "repository": "Merkyor/Qwen3.8-27B-EfficientThink-K3-Opus5-Grok4.6-GPT5.6Sol-SFT-SimPO-DFlash2-GGUF",
+      "revision": "e2a9d0c12aa4ab1dc15585104f38bd7de7e311d5",
+      "documents": [
+        {
+          "path": "README.md",
+          "kind": "model_card",
+          "sourceSha256": "97203d3b49e722cc3cd426643176c756a2cfc0bc6f5b760b3a1e81c74ef4360d",
+          "status": "OBSERVED",
+          "bytes": 50379,
+          "computedSha256": "97203d3b49e722cc3cd426643176c756a2cfc0bc6f5b760b3a1e81c74ef4360d",
+          "sourceHashMatched": true,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/Merkyor/Qwen3.8-27B-EfficientThink-K3-Opus5-Grok4.6-GPT5.6Sol-SFT-SimPO-DFlash2-GGUF/repo?Revision=e2a9d0c12aa4ab1dc15585104f38bd7de7e311d5&FilePath=README.md",
+          "frontMatterDeclarations": [
+            {
+              "line": 2,
+              "field": "license",
+              "rawValue": "apache-2.0"
+            }
+          ]
+        }
+      ],
+      "permissionsDecision": "NOT_ASSESSED",
+      "transitiveComponentLicenses": "UNVERIFIED",
+      "inventoryResponseSha256": "f77b347d65767971ad7737fda3d14498c301296cd338e9ee4e8b867bb692264c",
+      "listedLicenseDocuments": [],
+      "selection": "At most two listed license/notice files and two model cards; no upstream links followed",
+      "status": "OBSERVED",
+      "noStandaloneLicenseListed": true,
+      "absenceMeaning": "No standalone file listed does not establish absence of a license or permission to use the model"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "repository": "gpustack/bge-reranker-v2-m3-GGUF",
+  "revision": "ee922fb06dd877ddf5019d0fa366072a7be36b16",
+  "file": "bge-reranker-v2-m3-Q4_K_M.gguf",
+  "sha256": "e186a244ed455b4ab66ec64339ce7427a6ae13f5c0b5e544de96e50f0f8b3673",
+  "sizeBytes": 438376864,
+  "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__bge-reranker-v2-m3-GGUF\\bge-reranker-v2-m3-Q4_K_M.gguf",
+  "elapsedSeconds": 37.34399999998277,
+  "sourceUrl": "https://modelscope.cn/api/v1/models/gpustack/bge-reranker-v2-m3-GGUF/repo?Revision=ee922fb06dd877ddf5019d0fa366072a7be36b16&FilePath=bge-reranker-v2-m3-Q4_K_M.gguf",
+  "redirectCount": 1,
+  "allowedOrigins": [
+    "modelscope.cn",
+    "cdn-lfs-cn-1.modelscope.cn"
+  ],
+  "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+  "status": "PASS"
+}

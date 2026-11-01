@@ -1,0 +1,22 @@
+{
+  "test": "installed_gguf_generates_actual_text",
+  "input": "Compute 2 + 2. Respond only with the numeral.",
+  "output": "4",
+  "outputTokens": 1,
+  "execution": "cpu",
+  "scope": "existing runtime text smoke, not lifecycle installation acceptance",
+  "observedAt": "2026-11-01T06:38:32.230588+00:00",
+  "sourceBaseCommit": "fa7bb0a4d38a22f9e2cc26f307b304965f88a74c",
+  "sourceState": "uncommitted lifecycle foundation",
+  "repository": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+  "revision": "4537f71740dd2c56a15ffa12e5fbb9f15095f20c",
+  "filename": "qwen2.5-0.5b-instruct-q4_0.gguf",
+  "sizeBytes": 428730208,
+  "sha256": "7671c0c304e6ce5a7fc577bcb12aba01e2c155cc2efd29b2213c95b18edaf6ed",
+  "sourceHashVerified": true,
+  "rustVersion": "1.94.1",
+  "adapter": "llamacpp",
+  "bindingVersion": "0.1.146",
+  "features": [],
+  "passed": true
+}

@@ -1,0 +1,117 @@
+[
+  {
+    "file": "qwen2.5-0.5b-instruct-q4_0.gguf",
+    "sizeBytes": 428730208,
+    "ggufVersion": 3,
+    "tensorCount": 291,
+    "metadataCount": 26,
+    "metadata": {
+      "general.architecture": "qwen2",
+      "general.type": "model",
+      "general.name": "qwen2.5-0.5b-instruct",
+      "general.version": "v0.1",
+      "general.finetune": "qwen2.5-0.5b-instruct",
+      "general.size_label": "630M",
+      "qwen2.block_count": 24,
+      "qwen2.context_length": 32768,
+      "qwen2.embedding_length": 896,
+      "qwen2.attention.head_count": 14,
+      "qwen2.attention.head_count_kv": 2,
+      "general.file_type": 2,
+      "general.quantization_version": 2
+    },
+    "scope": "header and metadata observation only; no tensor bounds, dependency compatibility or runtime acceptance"
+  },
+  {
+    "file": "Qwen3.6-35B-A3B-Q4_K_M.gguf",
+    "sizeBytes": 21166758336,
+    "ggufVersion": 3,
+    "tensorCount": 733,
+    "metadataCount": 46,
+    "metadata": {
+      "general.architecture": "qwen35moe",
+      "general.type": "model",
+      "general.sampling.top_k": 20,
+      "general.sampling.top_p": 0.949999988079071,
+      "general.sampling.temp": 1.0,
+      "general.name": "Qwen3.6-35B-A3B",
+      "general.basename": "Qwen3.6-35B-A3B",
+      "general.quantized_by": "Unsloth",
+      "general.size_label": "35B-A3B",
+      "general.license": "apache-2.0",
+      "general.license.link": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/LICENSE",
+      "general.repo_url": "https://huggingface.co/unsloth",
+      "general.tags": {
+        "elementType": 8,
+        "count": 1
+      },
+      "qwen35moe.block_count": 40,
+      "qwen35moe.context_length": 262144,
+      "qwen35moe.embedding_length": 2048,
+      "qwen35moe.attention.head_count": 16,
+      "qwen35moe.attention.head_count_kv": 2,
+      "qwen35moe.expert_count": 256,
+      "qwen35moe.expert_used_count": 8,
+      "general.quantization_version": 2,
+      "general.file_type": 15
+    },
+    "scope": "header and metadata observation only; no tensor bounds, dependency compatibility or runtime acceptance"
+  },
+  {
+    "file": "mmproj-BF16.gguf",
+    "sizeBytes": 902822624,
+    "ggufVersion": 3,
+    "tensorCount": 334,
+    "metadataCount": 35,
+    "metadata": {
+      "general.architecture": "clip",
+      "general.type": "mmproj",
+      "general.sampling.top_k": 20,
+      "general.sampling.top_p": 0.949999988079071,
+      "general.sampling.temp": 1.0,
+      "general.name": "Qwen3.6-35B-A3B",
+      "general.finetune": "35b",
+      "general.basename": "Qwen3.6-35B-A3B",
+      "general.quantized_by": "Unsloth",
+      "general.size_label": "A3B",
+      "general.license": "apache-2.0",
+      "general.license.link": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/LICENSE",
+      "general.repo_url": "https://huggingface.co/unsloth",
+      "general.base_model.count": 1,
+      "general.base_model.0.name": "Qwen3.6 35B A3B",
+      "general.base_model.0.organization": "Qwen",
+      "general.base_model.0.repo_url": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
+      "general.tags": {
+        "elementType": 8,
+        "count": 3
+      },
+      "general.file_type": 32,
+      "clip.has_vision_encoder": true,
+      "clip.vision.projection_dim": 2048,
+      "clip.vision.image_size": 768,
+      "clip.vision.patch_size": 16,
+      "clip.vision.embedding_length": 1152,
+      "clip.vision.feed_forward_length": 4304,
+      "clip.vision.block_count": 27,
+      "clip.vision.attention.head_count": 16,
+      "clip.vision.image_mean": {
+        "elementType": 6,
+        "count": 3
+      },
+      "clip.vision.image_std": {
+        "elementType": 6,
+        "count": 3
+      },
+      "clip.projector_type": "qwen3vl_merger",
+      "clip.use_gelu": true,
+      "clip.vision.spatial_merge_size": 2,
+      "clip.vision.attention.layer_norm_epsilon": 9.999999974752427e-07,
+      "clip.vision.is_deepstack_layers": {
+        "elementType": 7,
+        "count": 27
+      },
+      "general.quantization_version": 2
+    },
+    "scope": "header and metadata observation only; no tensor bounds, dependency compatibility or runtime acceptance"
+  }
+]

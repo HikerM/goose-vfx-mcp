@@ -1,0 +1,25 @@
+{
+  "observedAt": "2026-11-01T08:40:39.260509+00:00",
+  "test": "CLI recipe model-lifecycle with explicit developer,todo builtins",
+  "cliExited": true,
+  "cliSha256": "c5b53416cdbcbc2474a401dd63e98262896d08b0b0d904b4754b569eb86e59f9",
+  "result": "FAIL",
+  "scope": "Actual tool execution and a report were produced; full self-test requirements were not met",
+  "observations": {
+    "foundationPassed": 43,
+    "foundationIgnored": 2,
+    "realInferencePassed": 0,
+    "realInferenceIgnored": 1,
+    "nonexistentTargetFailures": 2,
+    "failedToolResponseIds": [
+      "hCNb6psgvKvFguXvn6crc9n0idgAdylB",
+      "sQLiBFLuLolYne4R0nMGYaL9amy6ZsOd"
+    ],
+    "reportExists": true,
+    "reportReadBackByAgent": false
+  },
+  "reason": "Real inference omitted --ignored; two shell calls targeted nonexistent lifecycle_validation; report omitted those failures; model final summary is not acceptance evidence",
+  "streamLogSha256": "92cb9532a7fd48e459f281a0c2c0592a4b4b044043fa592d2f1cb355cbf91a32",
+  "reportSha256": "a220921b2b4c4ec7a765d3831db3b4312197e5c63b2dc0792e9954e04e754781",
+  "nextAction": "Rebuild latest source and run corrected recipe with exact test commands and actual report read-back; do not create a fake test target to make failed commands pass"
+}

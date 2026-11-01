@@ -1,0 +1,121 @@
+{
+  "observedAt": "2026-11-01T11:52:43.134263+00:00",
+  "status": "PASS",
+  "scope": "M0 actual general Audio music generation with independent AST semantic classification; not TTS, full prompt-quality suite, product install or release acceptance",
+  "source": {
+    "repository": "audio-cpp/audio.cpp-gguf",
+    "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+    "file": "Stable-Audio-3-Small-Music-GGUF/stable-audio-3-small-music-q8_0.gguf",
+    "sha256": "a6d9176e11b857409b28cf5a69f4fefd8f3e61907b3b10d867f1f4c0a7eb9418",
+    "sizeBytes": 1683576608,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\audio-cpp__audio.cpp-gguf\\Stable-Audio-3-Small-Music-GGUF\\stable-audio-3-small-music-q8_0.gguf",
+    "elapsedSeconds": 800.0929999999935,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=Stable-Audio-3-Small-Music-GGUF%2Fstable-audio-3-small-music-q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "productionFilesDigest": "bb654385a3f242f8c555c81e82f89b9c7967124222cd0984f63cd8dd6ac71370",
+  "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+  "binarySha256": "350f7d1e03e7ea01592796a8989c8c60bd07a442bff2648ea0218e587b8fec7b",
+  "explicitSpec": "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\source\\model_specs\\stable_audio.json",
+  "specSha256": "433dec2415fdd85f6685e6d982b801935b4cc5389232deb51949ccc978af9bf2",
+  "input": {
+    "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+    "seed": 42,
+    "durationSeconds": 4,
+    "steps": 8,
+    "guidanceScale": 1,
+    "backend": "cpu",
+    "threads": 4
+  },
+  "output": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\audio-runtime-results\\stable-audio-piano-seed42.wav",
+    "sha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+    "sampleRate": 44100,
+    "channels": 2,
+    "frames": 176400,
+    "durationSeconds": 4.0,
+    "rms": 0.12434202523208183,
+    "clippedFraction": 0.0
+  },
+  "independentClassification": {
+    "schema": "ast_audioset.classification.v1",
+    "data": {
+      "scores": [
+        {
+          "index": 137,
+          "label": "Music",
+          "score": 0.630849540233612,
+          "logit": 0.5358631014823914
+        },
+        {
+          "index": 138,
+          "label": "Musical instrument",
+          "score": 0.22755953669548035,
+          "logit": -1.2221430540084839
+        },
+        {
+          "index": 153,
+          "label": "Piano",
+          "score": 0.14558713138103485,
+          "logit": -1.7696397304534912
+        },
+        {
+          "index": 152,
+          "label": "Keyboard (musical)",
+          "score": 0.12422314286231995,
+          "logit": -1.9530318975448608
+        },
+        {
+          "index": 180,
+          "label": "Marimba, xylophone",
+          "score": 0.0701097473502159,
+          "logit": -2.5850048065185547
+        },
+        {
+          "index": 154,
+          "label": "Electric piano",
+          "score": 0.06663528084754944,
+          "logit": -2.639561891555786
+        },
+        {
+          "index": 182,
+          "label": "Vibraphone",
+          "score": 0.04478611424565315,
+          "logit": -3.060037136077881
+        },
+        {
+          "index": 161,
+          "label": "Percussion",
+          "score": 0.042029671370983124,
+          "logit": -3.12644100189209
+        },
+        {
+          "index": 179,
+          "label": "Mallet percussion",
+          "score": 0.03396767005324364,
+          "logit": -3.347788095474243
+        },
+        {
+          "index": 181,
+          "label": "Glockenspiel",
+          "score": 0.03261170908808708,
+          "logit": -3.3899285793304443
+        }
+      ]
+    }
+  },
+  "classificationModelSha256": "b1ad5f36591f9e38d16cb3544d6b3b27a0c61cbcb00de171df78ed179c789b56",
+  "logSha256": "f1c45300b03dae55aad9e0c231884f7c26e4f470fecf08d46a1394da1c4ea2b2",
+  "classificationLogSha256": "aa0a9b5eb477b61042853bfe362e1028ff30c976894cd96e0042b66339b72f81",
+  "remaining": [
+    "Full language/genre/seed/duration and audio-quality suite",
+    "Product source/install/runtime and typed Audio task wiring",
+    "GPU and resource queue acceptance"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "observedAt": "2026-11-01T12:24:02.521546+00:00",
+  "stage": "M0",
+  "status": "VERIFIED_WITH_RECORDED_BASELINE_LINT_FAILURE",
+  "workPackages": [
+    "ML-01",
+    "ML-02",
+    "ML-03",
+    "ML-04",
+    "ML-05",
+    "ML-06",
+    "ML-07"
+  ],
+  "exitScope": "Source/version/entry inventory, exact runtime decisions, actual representative executions for all task categories, source/component/license facts, domain/SQLite/state foundation and explicit handoff. Product adapters and full category acceptance belong to later stages.",
+  "tests": {
+    "command": "bin/cargo.cmd test --locked --offline -p lumina-local-inference --no-default-features",
+    "passed": 188,
+    "failed": 0,
+    "ignored": 6,
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m0-exit-tests.log"
+  },
+  "format": "cargo fmt --all -- --check PASS",
+  "localStrictClippy": "PASS; source-inspector-clippy.log",
+  "workspaceStrictClippy": {
+    "status": "FAILED",
+    "evidence": "2026-11-01-workspace-clippy-m0.json",
+    "unchangedDiagnosticFiles": 58,
+    "releaseGate": "UNRESOLVED; cannot claim full workspace clean"
+  },
+  "currentBuilds": "2026-11-01-cli-build-current.json",
+  "actualRecipe": "2026-11-01-selftest-metadata-moe-cpu.json",
+  "windowsGate": "2026-11-01-real-text-powershell-gate.json",
+  "runtimeMatrix": "2026-11-01-m0-runtime-support-matrix.json",
+  "sourceEntries": "2026-11-01-model-entry-inventory.json",
+  "changeAudit": "2026-11-01-m0-change-audit.json",
+  "retainedFailures": [
+    {
+      "case": "Video content quality",
+      "evidence": "2026-11-01-native-video-feasibility.json",
+      "handoff": "ML-32; direction and frame artifacts, remains not ready"
+    },
+    {
+      "case": "Candle Whisper tensor naming",
+      "evidence": "2026-11-01-candle-whisper-layout-gap.json",
+      "handoff": "ML-29; implement exact naming/layout bridge and legacy dictation regression"
+    },
+    {
+      "case": "Raw repository preview paths",
+      "evidence": "2026-11-01-source-unportable-preview-paths.json",
+      "handoff": "ML-08/09; preserve full observed Git inventory while enforcing portable selected artifact paths"
+    }
+  ],
+  "productReady": false,
+  "laterStagesCompleted": false,
+  "commitAndPush": "Record actual Git SHA after successful commit and remote verification; this JSON does not assert a remote write.",
+  "sqlWhitespaceCleanupRegression": {
+    "status": "PASS",
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m0-final-sql-contracts.log",
+    "sha256": "238207e2664b86400c658c2d668ebba4056390126b49818ec540184835ac860a"
+  },
+  "finalLocalStrictClippy": {
+    "status": "PASS",
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m0-final-local-clippy.log",
+    "sha256": "d06e13f1ac725624c91d2f5c0b6dc0c89147553434f089ca0995ef527531bf6a"
+  },
+  "buildEvidenceScope": "Actual CPU/CUDA builds and recipe predate removal of trailing blank lines in SQL 0001/0002 only; final SQL is separately covered by 47 database/contract regressions. No product-ready claim."
+}

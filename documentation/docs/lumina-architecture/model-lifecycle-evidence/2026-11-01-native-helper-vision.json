@@ -1,0 +1,228 @@
+{
+  "startedAt": "2026-11-01T11:13:07.491694+00:00",
+  "status": "PASS",
+  "engineRevision": "dde879bc4f954b809892fd0d660515f42536394a",
+  "binarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+  "sources": [
+    {
+      "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+      "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+      "file": "Qwen3.5-0.8B-Q8_0.gguf",
+      "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+      "sizeBytes": 833592736,
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+      "elapsedSeconds": 84.03100000001723,
+      "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+      "redirectCount": 1,
+      "allowedOrigins": [
+        "modelscope.cn",
+        "cdn-lfs-cn-1.modelscope.cn"
+      ],
+      "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+      "status": "PASS"
+    },
+    {
+      "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+      "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+      "file": "mmproj-F16.gguf",
+      "sha256": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798",
+      "sizeBytes": 204987104,
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+      "elapsedSeconds": 21.70400000002701,
+      "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=mmproj-F16.gguf",
+      "redirectCount": 1,
+      "allowedOrigins": [
+        "modelscope.cn",
+        "cdn-lfs-cn-1.modelscope.cn"
+      ],
+      "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+      "status": "PASS"
+    }
+  ],
+  "cases": [
+    {
+      "expectedColor": "blue",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\vision-color-fixtures\\blue.png",
+      "sha256": "0d7a776c27ff08ec7b355d5db3e629b589f1dd153f367d71c1eb4e95f76e229a",
+      "dimensions": [
+        256,
+        256
+      ]
+    },
+    {
+      "expectedColor": "red",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\vision-color-fixtures\\red.png",
+      "sha256": "4f55763bbb5f30e77c6a573b1c56d42126c2febfa2686da24fc32e2e76d99ce0",
+      "dimensions": [
+        256,
+        256
+      ]
+    },
+    {
+      "expectedColor": "green",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\vision-color-fixtures\\green.png",
+      "sha256": "e6993f06828aaccf07726f70cc5faded17149d2f73c7781b6d4bf748c3ba1476",
+      "dimensions": [
+        256,
+        256
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "imageSha256": "0d7a776c27ff08ec7b355d5db3e629b589f1dd153f367d71c1eb4e95f76e229a",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"color\": \"blue\"\n}"
+            }
+          }
+        ],
+        "created": 1793531590,
+        "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 12,
+          "prompt_tokens": 96,
+          "total_tokens": 108,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-waVZ4PZbtWT4aIJai9zbSBUYrSoBGx42",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 96,
+          "prompt_ms": 896.664,
+          "prompt_per_token_ms": 9.34025,
+          "prompt_per_second": 107.06351543052916,
+          "predicted_n": 12,
+          "predicted_ms": 642.981,
+          "predicted_per_token_ms": 58.45281818181818,
+          "predicted_per_second": 17.10781500542007
+        }
+      },
+      "elapsedSeconds": 1.547000000020489
+    },
+    {
+      "imageSha256": "4f55763bbb5f30e77c6a573b1c56d42126c2febfa2686da24fc32e2e76d99ce0",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"color\": \"red\"\n}"
+            }
+          }
+        ],
+        "created": 1793531592,
+        "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 12,
+          "prompt_tokens": 96,
+          "total_tokens": 108,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-M64J1m91XqLJhNAbi3wGcCtgz3T1EXCO",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 96,
+          "prompt_ms": 936.198,
+          "prompt_per_token_ms": 9.7520625,
+          "prompt_per_second": 102.54241090025829,
+          "predicted_n": 12,
+          "predicted_ms": 687.572,
+          "predicted_per_token_ms": 62.50654545454545,
+          "predicted_per_second": 15.998324539102812
+        }
+      },
+      "elapsedSeconds": 1.6560000000172295
+    },
+    {
+      "imageSha256": "e6993f06828aaccf07726f70cc5faded17149d2f73c7781b6d4bf748c3ba1476",
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"color\": \"green\"\n}"
+            }
+          }
+        ],
+        "created": 1793531594,
+        "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 12,
+          "prompt_tokens": 96,
+          "total_tokens": 108,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-B1tVvY1kKOAxme1FSvEKOORASH5WJccQ",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 96,
+          "prompt_ms": 1162.573,
+          "prompt_per_token_ms": 12.110135416666667,
+          "prompt_per_second": 82.57545977757955,
+          "predicted_n": 12,
+          "predicted_ms": 886.996,
+          "predicted_per_token_ms": 80.636,
+          "predicted_per_second": 12.401408800039686
+        }
+      },
+      "elapsedSeconds": 2.0790000000270084
+    }
+  ],
+  "scope": "M0 actual paired VLM loading and three image-conditioned color identifications; not complete vision/multiturn/product lifecycle acceptance; MTP disabled for vision",
+  "argv": [
+    "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+    "-m",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "--mmproj",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "62405",
+    "--threads",
+    "4",
+    "--threads-batch",
+    "4",
+    "--ctx-size",
+    "4096",
+    "--batch-size",
+    "512",
+    "--ubatch-size",
+    "512",
+    "--parallel",
+    "1",
+    "--gpu-layers",
+    "0",
+    "--no-webui",
+    "--no-warmup",
+    "--spec-type",
+    "none"
+  ],
+  "pid": 54844,
+  "helperExitCode": 1,
+  "finishedAt": "2026-11-01T11:13:16.417254+00:00",
+  "logSha256": "112c6aef040fee1794198ba2cbb1115a7cfa647c0d36a569d7097fcacd5967db",
+  "probeSourceSha256": "23c3f6e62ee900a3532d25c3623b21ea9708a978441887895f0d93f46b2f7849"
+}

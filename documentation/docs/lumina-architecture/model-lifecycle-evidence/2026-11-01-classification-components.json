@@ -1,0 +1,40 @@
+{
+  "observedAt": "2026-11-01T10:17:06.219620+00:00",
+  "status": "PASS",
+  "gitHead": "4f62659052985d944b2b8a2a043fc4375218689e",
+  "scope": "Local inference foundation crate, all targets, no default features; not workspace-wide Clippy or complete lifecycle acceptance",
+  "passed": 181,
+  "failed": 0,
+  "ignored": 5,
+  "commands": [
+    "bin/cargo.cmd fmt --all",
+    "bin/cargo.cmd test --locked --offline -p lumina-local-inference --no-default-features",
+    "bin/cargo.cmd clippy --locked --offline -p lumina-local-inference --no-default-features --all-targets -- -D warnings"
+  ],
+  "observations": [
+    "GGUF classification does not grant runtime capability; source declarations separate from content candidates",
+    "Physical installation witness revalidates complete consistent shard groups per component",
+    "Valid individual hashes do not admit missing or duplicate shard indices, repeated tensor names or unrelated unsplit files",
+    "Scalar classifier output stored with omitted trailing unit dimension follows locked native tensor shape",
+    "Primary shard is selected by split.no=0 regardless of input order; later shards may omit model metadata, but any stated conflicting architecture is rejected"
+  ],
+  "sourceSha256": {
+    "crates/lumina-local-inference/src/lifecycle/classification.rs": "e339228b81b3cd78d3b7e4626defb50245ec62820215be2e7a3092fd9882a492",
+    "crates/lumina-local-inference/src/lifecycle/files.rs": "dfe2d623dda3080430145793549b45de65ac704993afefadff79e121a2cda812",
+    "crates/lumina-local-inference/src/lifecycle/installation.rs": "d1519b8f440baf9b7a0907b20ed3fe3f7bcca07721239819e282b0d7d8afc922",
+    "crates/lumina-local-inference/tests/lifecycle_classification.rs": "aec91a67a0ed2fdacb1e1262ff764d352e4fc9946ff3a53deae1490224124645",
+    "crates/lumina-local-inference/tests/lifecycle_contracts.rs": "e2a8d106a1912e223758e27ca00e54f1e255f31b82457e91efcd2e73229c7425",
+    "crates/lumina-local-inference/src/lifecycle/gguf.rs": "4b04a7cc0acbeb6982e46ba8e9aa37c8ee5d21b0af0ec055743a015291ec80b7",
+    "crates/lumina-local-inference/tests/lifecycle_gguf.rs": "6a6d326af53f03713b133cb7ca004c5a397b87a48c7498dfa9b6c4565980344a",
+    "crates/lumina-local-inference/examples/probe_embedding_runtime.rs": "0745d819b8771a9a1dec7e9fbf4937c1966934fbe264b4a6da09b6f08e4e6e8e"
+  },
+  "logs": {
+    "target/lifecycle-validation/classification-components-final-tests.log": "8a877bb2e0d8d060ba3980ca018d13435dae56d6b102608b43ebdf3938d67e10",
+    "target/lifecycle-validation/classification-components-final-clippy.log": "773cd56ee18f5ae57b626e0fcfadc00ec7dd0258796af4a10f4c10f538c6960b"
+  },
+  "limitations": [
+    "Component architecture pairing and source rule producers remain incomplete",
+    "Five real-environment cases are ignored by default; this aggregate does not count them as passes",
+    "Three dependency vendor warnings remain; no claim of workspace-wide -D warnings success"
+  ]
+}

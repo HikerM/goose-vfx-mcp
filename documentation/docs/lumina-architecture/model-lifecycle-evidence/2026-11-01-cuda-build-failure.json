@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-11-01T10:06:07.949086+00:00",
+  "status": "FAIL",
+  "exitCode": 101,
+  "log": "target/lifecycle-validation/cuda-build-isolated.log",
+  "reason": "Candle nvcc compiler invocation could not find cl.exe in PATH; native llama-cpp CUDA build artifacts preserved",
+  "nativeCachedObjects": 132,
+  "retry": "Same target/cuda-validation artifact cache, full existing MSVC vcvars64 environment imported and NVCC_CCBIN explicitly set; no additional source checkout",
+  "gpuInference": "NOT_RUN"
+}

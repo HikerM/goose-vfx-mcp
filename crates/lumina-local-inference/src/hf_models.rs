@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Context, Result};
 use futures::StreamExt;
 use hf_hub::progress::{DownloadEvent, FileStatus, ProgressEvent, ProgressHandler};
 use hf_hub::repository::{ModelInfo, RepoSibling};
@@ -1111,7 +1111,7 @@ mod tests {
             files: vec![HfGgufFile {
                 filename: "model.gguf".to_string(),
                 size_bytes,
-                quantization: "Q4_K_M".to_string(),
+                quantization: "F32".to_string(),
                 download_url: "https://example.test/model.gguf".to_string(),
                 sha256: None,
             }],
@@ -1124,10 +1124,21 @@ mod tests {
     fn verifies_downloaded_gguf_artifact() {
         let temp = tempfile::tempdir().unwrap();
         let model_path = temp.path().join("model.gguf");
-        std::fs::write(&model_path, b"GGUFdata").unwrap();
+        let mut bytes = b"GGUF".to_vec();
+        bytes.extend(3u32.to_le_bytes());
+        bytes.extend(1u64.to_le_bytes());
+        bytes.extend(0u64.to_le_bytes());
+        bytes.extend(1u64.to_le_bytes());
+        bytes.push(b'x');
+        bytes.extend(1u32.to_le_bytes());
+        bytes.extend(1u64.to_le_bytes());
+        bytes.extend(0u32.to_le_bytes());
+        bytes.extend(0u64.to_le_bytes());
+        bytes.resize(68, 0);
+        std::fs::write(&model_path, &bytes).unwrap();
 
         verify_downloaded_gguf_artifacts(
-            &resolved_test_model(8),
+            &resolved_test_model(bytes.len() as u64),
             std::slice::from_ref(&model_path),
             None,
         )
@@ -1147,7 +1158,20 @@ mod tests {
         )
         .unwrap_err();
 
-        assert!(error.to_string().contains("not a GGUF artifact"));
+        assert_eq!(error.root_cause().to_string(), "File is not GGUF");
+    }
+
+    #[test]
+    fn rejects_truncated_gguf_even_with_valid_magic() {
+        let temp = tempfile::tempdir().unwrap();
+        let model_path = temp.path().join("model.gguf");
+        std::fs::write(&model_path, b"GGUFdata").unwrap();
+        assert!(verify_downloaded_gguf_artifacts(
+            &resolved_test_model(8),
+            std::slice::from_ref(&model_path),
+            None,
+        )
+        .is_err());
     }
 
     #[test]
@@ -2516,6 +2540,7 @@ fn verify_downloaded_gguf_artifacts(
         );
     }
 
+    let mut inspections = Vec::new();
     for (file, path) in resolved.files.iter().zip(paths) {
         let metadata = std::fs::metadata(path).map_err(|error| {
             anyhow::anyhow!(
@@ -2537,12 +2562,13 @@ fn verify_downloaded_gguf_artifacts(
                 file.size_bytes
             );
         }
+        inspections.push(inspect_downloaded_gguf(path)?);
     }
-
-    let primary_path = paths.first().ok_or_else(|| {
-        anyhow::anyhow!("Model download verification failed: no GGUF file was downloaded")
-    })?;
-    verify_gguf_header(primary_path, "model")?;
+    crate::lifecycle::validate_gguf_shard_set(&inspections)?;
+    ensure!(
+        resolved.mmproj.is_some() == mmproj_path.is_some(),
+        "Model download verification failed: vision file selection mismatch"
+    );
 
     if let (Some(mmproj), Some(path)) = (&resolved.mmproj, mmproj_path) {
         let metadata = std::fs::metadata(path).map_err(|error| {
@@ -2565,22 +2591,23 @@ fn verify_downloaded_gguf_artifacts(
                 mmproj.size_bytes
             );
         }
-        verify_gguf_header(path, "vision")?;
+        inspect_downloaded_gguf(path)?;
     }
 
     Ok(())
 }
 
-fn verify_gguf_header(path: &std::path::Path, label: &str) -> Result<()> {
-    use std::io::Read;
-
-    let mut file = std::fs::File::open(path)?;
-    let mut header = [0_u8; 4];
-    file.read_exact(&mut header)?;
-    if &header != b"GGUF" {
-        bail!("Model download verification failed: {label} file is not a GGUF artifact");
-    }
-    Ok(())
+fn inspect_downloaded_gguf(path: &std::path::Path) -> Result<crate::lifecycle::GgufInspection> {
+    let inspection = crate::lifecycle::GgufInspection::inspect_file(
+        path,
+        crate::lifecycle::GgufReadLimits::for_llama_cpp(),
+    )
+    .with_context(|| format!("Model download verification failed: {}", path.display()))?;
+    ensure!(
+        !inspection.tensors.is_empty(),
+        "Model download verification failed: weights contain no tensors"
+    );
+    Ok(inspection)
 }
 
 pub async fn resolve_local_model_spec(spec: &str) -> Result<ResolvedLocalModel> {

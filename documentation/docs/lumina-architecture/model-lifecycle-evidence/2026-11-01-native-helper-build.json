@@ -1,0 +1,39 @@
+{
+  "startedAt": "2026-11-01T10:58:01.5514167Z",
+  "engineRevision": "dde879bc4f954b809892fd0d660515f42536394a",
+  "source": "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\source",
+  "build": "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu",
+  "sourceArchiveSha256": "83f099b6bbb531ca72d22cdd76d86641438469a214fd49a38f026c6a868598ed",
+  "cmake": "D:\\DevTools\\CMake\\PFiles64\\CMake\\bin\\cmake.exe",
+  "cl": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\cl.exe",
+  "gitCeiling": "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a",
+  "scope": "Pinned native helper CPU build, exact binary/version and source archive only; not product packaging, full adapter lifecycle or stage completion",
+  "observedAt": "2026-11-01T11:05:43.129692+00:00",
+  "status": "BUILD_AND_VERSION_PASS",
+  "binary": "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+  "binarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+  "versionOutput": "version: 0.8.0 (build 0, commit dde879bc4f954b809892fd0d660515f42536394a)\nbuilt with MSVC 19.44.35226.0 for x64",
+  "logs": {
+    "target\\lifecycle-validation\\native-helper-configure.log": "826f2969f30e351adeef3daec521733135d8b3c0be8cb7e2c930689dad89b009",
+    "target\\lifecycle-validation\\native-helper-build.log": "5280436e281946921c860428124f2f1d7366116b6084f246e0e572687fb51e60",
+    "target\\lifecycle-validation\\native-helper-build-confirm.log": "b95eaa6f2bd6999de1c8c6111175324f5e513edc1746289aead2fd2fd598c3bd"
+  },
+  "buildFlags": {
+    "BUILD_SHARED_LIBS:BOOL": "OFF",
+    "GGML_CUDA:BOOL": "OFF",
+    "GGML_NATIVE:BOOL": "OFF",
+    "GGML_OPENMP:BOOL": "OFF",
+    "LLAMA_BUILD_APP:BOOL": "OFF",
+    "LLAMA_BUILD_COMMIT:UNINITIALIZED": "dde879bc4f954b809892fd0d660515f42536394a",
+    "LLAMA_BUILD_EXAMPLES:BOOL": "OFF",
+    "LLAMA_BUILD_NUMBER:UNINITIALIZED": "0",
+    "LLAMA_BUILD_SERVER:BOOL": "ON",
+    "LLAMA_BUILD_TESTS:BOOL": "OFF",
+    "LLAMA_BUILD_TOOLS:BOOL": "ON",
+    "LLAMA_BUILD_UI:BOOL": "OFF",
+    "LLAMA_CONNECT:BOOL": "OFF",
+    "LLAMA_OPENSSL:BOOL": "OFF",
+    "LLAMA_SUBPROCESS:BOOL": "OFF",
+    "LLAMA_USE_PREBUILT_UI:BOOL": "OFF"
+  }
+}

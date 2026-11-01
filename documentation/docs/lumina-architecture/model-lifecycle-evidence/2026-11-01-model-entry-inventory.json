@@ -1,0 +1,234 @@
+{
+  "observedAt": "2026-11-01T12:24:02.518095+00:00",
+  "scope": "ML-02 source entry and legacy boundary inventory; observations do not claim policy enforcement",
+  "entries": [
+    {
+      "id": "desktop-search",
+      "file": "ui/desktop/src/acp/local-inference.ts",
+      "symbolOrLiteral": "search",
+      "observedLines": [
+        85
+      ],
+      "currentBehavior": "ACP -> management -> ModelScope search",
+      "handoff": "ML-08/10/40/41",
+      "policyIntegrated": false
+    },
+    {
+      "id": "acp-local-download",
+      "file": "crates/lumina/src/acp/server/local_inference.rs",
+      "symbolOrLiteral": "download_model",
+      "observedLines": [
+        32
+      ],
+      "currentBehavior": "management::download_model -> spec/selection resolver",
+      "handoff": "ML-16/17/19/40",
+      "policyIntegrated": false
+    },
+    {
+      "id": "cli-local-model",
+      "file": "crates/lumina-cli/src/cli.rs",
+      "symbolOrLiteral": "resolve_local_model_spec",
+      "observedLines": [
+        2072
+      ],
+      "currentBehavior": "CLI model selection directly resolves/downloads local model spec",
+      "handoff": "ML-16/17/19/40",
+      "policyIntegrated": false
+    },
+    {
+      "id": "main-spec-resolution",
+      "file": "crates/lumina-local-inference/src/hf_models.rs",
+      "symbolOrLiteral": "resolve_local_model_spec",
+      "observedLines": [
+        2613
+      ],
+      "currentBehavior": "ModelScope GGUF and legacy backend selection",
+      "handoff": "ML-08/09/16",
+      "policyIntegrated": false
+    },
+    {
+      "id": "explicit-selection",
+      "file": "crates/lumina-local-inference/src/hf_models.rs",
+      "symbolOrLiteral": "resolve_local_model_selection",
+      "observedLines": [
+        2408
+      ],
+      "currentBehavior": "Explicit llamacpp/MLX request bypasses generic search",
+      "handoff": "ML-16",
+      "policyIntegrated": false
+    },
+    {
+      "id": "gguf-cache-download",
+      "file": "crates/lumina-local-inference/src/hf_models.rs",
+      "symbolOrLiteral": "download_gguf_to_modelscope_cache",
+      "observedLines": [
+        2440,
+        2451
+      ],
+      "currentBehavior": "Legacy cache download; new structural check only, not lifecycle-managed installation",
+      "handoff": "ML-09/16/17/19",
+      "policyIntegrated": false
+    },
+    {
+      "id": "legacy-mlx",
+      "file": "crates/lumina-local-inference/src/hf_models.rs",
+      "symbolOrLiteral": "mlx_download_filenames",
+      "observedLines": [
+        1390,
+        1409,
+        2149,
+        2240,
+        2657
+      ],
+      "currentBehavior": "HF snapshot / Safetensors legacy download remains; close new installs without deleting owned historical assets",
+      "handoff": "ML-16/22",
+      "policyIntegrated": false
+    },
+    {
+      "id": "featured-fallback",
+      "file": "crates/lumina-local-inference/src/management.rs",
+      "symbolOrLiteral": "ensure_featured_models_current",
+      "observedLines": [
+        264
+      ],
+      "currentBehavior": "Resolution failure synthesizes file metadata; replace with source diagnostic and no executable file",
+      "handoff": "ML-10/16",
+      "policyIntegrated": false
+    },
+    {
+      "id": "featured-projector",
+      "file": "crates/lumina-local-inference/src/management.rs",
+      "symbolOrLiteral": "mmproj_downloads_needed",
+      "observedLines": [
+        265,
+        297,
+        382,
+        393
+      ],
+      "currentBehavior": "Separate mmproj repair download using mutable ModelScope URL and exists checks",
+      "handoff": "ML-13/14/16/19",
+      "policyIntegrated": false
+    },
+    {
+      "id": "dictation-download",
+      "file": "crates/lumina/src/acp/server/dictation.rs",
+      "symbolOrLiteral": "on_dictation_model_download",
+      "observedLines": [
+        187,
+        242
+      ],
+      "currentBehavior": "Direct generic download manager using Whisper URL; preserve selected-model settings through migration",
+      "handoff": "ML-16/22/29",
+      "policyIntegrated": false
+    },
+    {
+      "id": "whisper-static-source",
+      "file": "crates/lumina/src/dictation/whisper.rs",
+      "symbolOrLiteral": "huggingface.co",
+      "observedLines": [
+        61,
+        67,
+        73,
+        79
+      ],
+      "currentBehavior": "Four hardcoded HF GGUF URLs, separate tokenizer/config and Candle naming boundary",
+      "handoff": "ML-04/16/22/29",
+      "policyIntegrated": false
+    },
+    {
+      "id": "registry-cache-import",
+      "file": "crates/lumina-local-inference/src/local_model_registry.rs",
+      "symbolOrLiteral": "load",
+      "observedLines": [
+        1,
+        227,
+        228,
+        278,
+        323,
+        351,
+        382,
+        395,
+        396,
+        397,
+        398,
+        401,
+        402,
+        403,
+        406,
+        407,
+        408,
+        410,
+        412,
+        416,
+        417,
+        418,
+        423,
+        430,
+        433,
+        436,
+        439,
+        440,
+        441,
+        443,
+        445,
+        449,
+        453,
+        465,
+        466,
+        467,
+        469,
+        473,
+        486,
+        521,
+        535,
+        586,
+        701,
+        723,
+        724,
+        727,
+        740,
+        741,
+        742,
+        744,
+        745,
+        747,
+        748,
+        750,
+        751,
+        753,
+        757
+      ],
+      "currentBehavior": "registry.json, existing file/path discovery and featured enrichment rely on exists, not validation evidence",
+      "handoff": "ML-16/20/22",
+      "policyIntegrated": false
+    },
+    {
+      "id": "legacy-mlx-runtime",
+      "file": "crates/lumina-local-inference/src/mlx.rs",
+      "symbolOrLiteral": "exists()",
+      "observedLines": [
+        53
+      ],
+      "currentBehavior": "Existing local MLX runtime compatibility boundary; no automatic legacy asset deletion",
+      "handoff": "ML-16/22/46",
+      "policyIntegrated": false
+    },
+    {
+      "id": "raw-transport",
+      "file": "crates/lumina-download-manager/src/lib.rs",
+      "symbolOrLiteral": "download_model",
+      "observedLines": [
+        370,
+        377,
+        381,
+        389,
+        399,
+        406,
+        416
+      ],
+      "currentBehavior": "Generic byte transport remains separate from model source/format policy; route model callers through lifecycle plans",
+      "handoff": "ML-16/17/18",
+      "policyIntegrated": false
+    }
+  ]
+}

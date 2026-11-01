@@ -1,0 +1,22 @@
+{
+  "repository": "Qwen/Qwen3-Embedding-0.6B-GGUF",
+  "revision": "61ae123505fc6fa7f36d372fae1a30bc384241ea",
+  "file": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+  "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+  "sizeBytes": 639150592,
+  "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-Embedding-0.6B-GGUF\\Qwen3-Embedding-0.6B-Q8_0.gguf",
+  "elapsedSeconds": 53.84299999999348,
+  "sourceUrl": "https://modelscope.cn/api/v1/models/Qwen/Qwen3-Embedding-0.6B-GGUF/repo?Revision=61ae123505fc6fa7f36d372fae1a30bc384241ea&FilePath=Qwen3-Embedding-0.6B-Q8_0.gguf",
+  "redirectCount": 1,
+  "allowedOrigins": [
+    "modelscope.cn",
+    "cdn-lfs-cn-1.modelscope.cn"
+  ],
+  "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+  "status": "PASS",
+  "observedAt": "2026-11-01T10:04:52.802870+00:00",
+  "priorAttempt": {
+    "result": "HTTP302 rejected by no-redirect probe",
+    "followup": "Actual Location origin cdn-lfs-cn-1.modelscope.cn observed; only that ModelScope CDN allowed, max3 HTTPS redirects, no credential forwarding, exact size and SHA checked"
+  }
+}

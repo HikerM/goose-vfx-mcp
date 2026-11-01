@@ -1,0 +1,35 @@
+{
+  "observedAt": "2026-11-01T08:10:27.137145+00:00",
+  "parserSourceSha256": "e6cb59759fc3c7790ff4d4d8d64a5982f6fbd768c914652e91197e74eb4d7940",
+  "oldProfileObservations": [
+    {
+      "category": "audio",
+      "field": "audiocpp.embedded_files.data",
+      "wireType": "uint8 array",
+      "elements": 63022030
+    },
+    {
+      "category": "image",
+      "tensorNameBytes": 76
+    },
+    {
+      "category": "video",
+      "tensor": "patch_embedding.weight",
+      "rank": 5
+    }
+  ],
+  "generalReadBounds": {
+    "headerBytes": 67108864,
+    "arrayElements": 67108864,
+    "tensorNameBytes": 1024,
+    "tensorRank": 8,
+    "retainedArrayElements": 256
+  },
+  "llamaCppReadBounds": {
+    "tensorNameBytes": 63,
+    "tensorRank": 4
+  },
+  "numericArrayHandling": "Hash all encoded bytes in bounded chunks, retaining only a small prefix; validate all boolean elements.",
+  "embeddedAudioFiles": "Observed JSON/tokenizer/template metadata plus Python source files. Container parsing does not authorize extraction or execution of embedded source. Adapter policy and complete components remain unverified.",
+  "acceptanceScope": "Container structure only; no runtime/model capability implied"
+}

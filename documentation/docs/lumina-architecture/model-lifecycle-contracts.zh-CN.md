@@ -5,7 +5,7 @@ sidebar_position: 11
 
 # lumina 模型生命周期架构和接口契约
 
-本契约是[完整升级计划](./model-lifecycle-master-plan.zh-CN.md)的实现约束。下文数据类型、API 和新目录均为待实施设计；原有接口和文件在专门的迁移条目中列明。服务端是来源、状态、安装准入和能力准入的唯一权威。
+本契约是[完整升级计划](./model-lifecycle-master-plan.zh-CN.md)的实现约束。下文描述完整目标契约；已经实现或接入的部分以[实施进度](./model-lifecycle-progress.zh-CN.md)和实际源码为准，其余仍待交付。原有接口和文件在专门的迁移条目中列明。服务端是来源、状态、安装准入和能力准入的唯一权威。
 
 ## 模块和调用边界
 
@@ -36,6 +36,8 @@ ModelScope Provider 暴露 `search`、`readRepository`、`resolveRevision`、`li
 
 对大小写、双重扩展名、文件内容伪装和跨目录路径进行归一化与检查。Provider 校验重定向来源：ModelScope 官方下载设施可使用经维护和验证的 CDN 映射，第三方模型平台不是允许的回退来源；变更该映射须有真实响应依据。令牌只注入其作用域内的请求，不写入计划、数据库 URL 或日志。
 
+2026-11-01 的真实固定版本 GGUF 下载观察到 `modelscope.cn` 返回 302，目标为 `cdn-lfs-cn-1.modelscope.cn`。ML-17 下载流实现必须支持有版本和真实证据的官方 CDN 映射：仅 HTTPS/443、最多三次跳转，禁止 URL 用户名/密码及向 CDN 转发来源凭据；签名下载 URL 不写入计划、事件或日志。文件仍绑定原 ModelScope 仓库、完整 Revision、文件路径、大小及来源哈希，CDN 不成为另一个模型来源。当前验证资产已按此约束核对完整 SHA256；生产 Provider 的清单请求仍禁止跳转，产品下载 worker 和受限账号跳转验证尚未接入。
+
 ## 数据契约和身份
 
 全部时间为 UTC，展示使用用户时区。业务 ID 使用不可变内部 ID；`owner/repo:quant` 只作为旧模型别名，不再承担安装版本身份。布尔值有明确默认值；UNKNOWN 用枚举表达，不能用缺省 false 冒充不支持。
@@ -49,7 +51,8 @@ ModelScope Provider 暴露 `search`、`readRepository`、`resolveRevision`、`li
 | `Component` | role；artifactIds；模型归属；兼容元数据；同仓库或跨仓库来源；关联规则版本与验证证据 |
 | `DependencyEdge` | fromComponent；toComponent；requirement；条件表达式；证据；匹配结果；失败原因；禁止环 |
 | `InstallPlan` | schemaVersion；planId；model/variant；目标能力；完整组件图；快照；Runtime build；兼容分析；空间预算；planDigest；规则版本；有效期 |
-| `Installation` | installationId；planDigest；manifestDigest；正式目录；安装版本；引用的 blob；提交状态；installedAt；旧 ID 别名 |
+| `Installation` | 稳定 installationId；明确的 activeVersionId；旧 ID 别名；不绑定单个不可变目录快照 |
+| `InstalledVersion` | 全局不可变 versionId；installationId；plan/model/variant；manifestDigest；正式版本目录；引用的 blob；提交状态；installedAt；历史版本保留 |
 | `Job` | jobId；操作；installation/plan；幂等键；阶段；generation；状态版本；lease；heartbeat；事件序号；错误；恢复检查点 |
 | `FileJob` | jobId；artifactId；目标；逐文件状态；分段检查点；重试；expected/actual bytes；computedSha256；速度及 ETA |
 | `RuntimeBuild` | adapterId；引擎版本和源码提交；绑定版本；平台架构；features；二进制摘要；能力声明版本 |
@@ -120,6 +123,8 @@ BLOCKED、FAILED 是任务结果，并保存失败阶段；PAUSED、CANCELLING�
 6. 提交日志写 PREPARED，完成目录原子重命名，日志写 FILES_COMMITTED；数据库事务登记安装和引用后写 REGISTERED，最后收尾。
 7. 只有登记成功的 installation 出现在正式已安装列表；待下载项目和任务单独展示。INSTALLED 后运行 Validator，不改变文件提交事实。
 
+Manifest 显式包含 installationId 和 versionId。版本目录按两者分别派生，更新生成新版本而不覆盖旧目录；首次登记可建立默认活动版本，之后的更新保留现有 activeVersionId。切换必须带 expectedActiveVersion，冲突拒绝；运行会话持有原 versionId 和 manifestDigest，不因默认项变化而替换。安装日志和引用以 versionId 关联，跨版本相同摘要的文件仍各自保留引用。
+
 文件系统和数据库没有共同原子事务。不得把“数据库 transaction + rename”描述成整体原子提交。
 
 | 重启时检查点 | 恢复动作 |
@@ -138,7 +143,7 @@ BLOCKED、FAILED 是任务结果，并保存失败阶段；PAUSED、CANCELLING�
 
 `RuntimeDescriptor` 至少声明 adapterId、RuntimeBuild、任务类型、架构、GGUF 版本、Tensor 量化类型、分片、视觉、音频、工具、GPU、混合模式、最小引擎版本、组件角色和验证档案。支持状态区分 DECLARED、VERIFIED、UNSUPPORTED、UNKNOWN。
 
-`LaunchConfig` 固定 installation、目标能力、完整组件路径和分片、Runtime build、模板来源与摘要、Context、GPU 层、CPU 线程、KV key/value 类型与预算、Batch、Flash Attention、设备分配、运行模式、输出限制和取消策略。进程内运行不要求端口；helper 模式使用受控本机端口和进程句柄。禁止模板字段混入 projector 路径。
+`LaunchConfig` 固定 installation/version、Manifest 摘要、目标能力、完整组件路径和分片、Runtime build、模板来源与摘要、Context、GPU 层、CPU 线程、KV key/value 类型与预算、Batch、Flash Attention、设备分配、运行模式、输出限制和取消策略。进程内运行不要求端口；helper 模式使用受控本机端口和进程句柄。禁止模板字段混入 projector 路径。
 
 参数先由规则和资源分析生成，再合并经过验证的用户配置。不能支持的参数明确拒绝，不能静默丢弃。GPU 回退 CPU 必须重新确认资源、报告实际配置；mtmd 失败单独使视觉失败，文本目标是否继续由 profile 决定。
 

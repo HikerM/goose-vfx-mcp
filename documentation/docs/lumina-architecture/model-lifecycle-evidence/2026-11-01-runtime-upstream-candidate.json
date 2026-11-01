@@ -1,0 +1,96 @@
+{
+  "observedAt": "2026-11-01T10:12:19.919147+00:00",
+  "engineRevision": "dde879bc4f954b809892fd0d660515f42536394a",
+  "scope": "Pinned upstream candidate source observation only; current native binding remains0.1.146, not built or runtime-verified",
+  "metadata": {
+    "observedAt": "2026-11-01T10:11:33.173580+00:00",
+    "scope": "Upstream candidate metadata only; current product dependency unchanged, no build or capability acceptance",
+    "results": {
+      "llamaHead": {
+        "status": "OBSERVED",
+        "source": "https://api.github.com/repos/ggml-org/llama.cpp/commits/master",
+        "bytes": 8817,
+        "sha256": "dd14bca90b89c8f094a871eab2b9983a1b20334604a2541cfdaf69ffdc34124b",
+        "sha": "dde879bc4f954b809892fd0d660515f42536394a",
+        "committedAt": "2026-11-01T06:46:43Z",
+        "url": "https://github.com/ggml-org/llama.cpp/commit/dde879bc4f954b809892fd0d660515f42536394a"
+      },
+      "rustBinding": {
+        "status": "OBSERVED",
+        "source": "https://crates.io/api/v1/crates/llama-cpp-2",
+        "bytes": 256346,
+        "sha256": "29a1647964d036a462b7b7895df572d0732b33b961022d1700ab6ba5e8d13adc",
+        "newestVersion": "0.1.160",
+        "maxStableVersion": "0.1.160",
+        "updatedAt": "2026-10-15T21:26:10.706760Z"
+      }
+    }
+  },
+  "files": [
+    {
+      "path": "src/models/dflash.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/dde879bc4f954b809892fd0d660515f42536394a/src/models/dflash.cpp",
+      "bytes": 95237,
+      "sha256": "3d7c35d0dd12a9d2c9cbae976f59bedea580635da4d714abc719e893106ae498",
+      "status": "OBSERVED",
+      "symbols": {
+        "DFlash": true,
+        "draft-dflash": false,
+        "draft-mtp": false,
+        "target_layers": true,
+        "ctx_other": true,
+        "LLAMA_CONTEXT_TYPE_MTP": false,
+        "common_speculative_impl_draft_mtp": false
+      }
+    },
+    {
+      "path": "common/speculative.cpp",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/dde879bc4f954b809892fd0d660515f42536394a/common/speculative.cpp",
+      "bytes": 126737,
+      "sha256": "667f3e71026a4701d4c3e6338ca25ba38b7f83d6a41ae9f9c33763beb12a64ad",
+      "status": "OBSERVED",
+      "symbols": {
+        "DFlash": true,
+        "draft-dflash": true,
+        "draft-mtp": true,
+        "target_layers": false,
+        "ctx_other": true,
+        "LLAMA_CONTEXT_TYPE_MTP": true,
+        "common_speculative_impl_draft_mtp": true
+      }
+    },
+    {
+      "path": "include/llama.h",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/dde879bc4f954b809892fd0d660515f42536394a/include/llama.h",
+      "bytes": 91030,
+      "sha256": "f07ffbabd3fbe9ef21d97b4d4ce8328d9c2a123ccbf5266f04a3146d70ce4f91",
+      "status": "OBSERVED",
+      "symbols": {
+        "DFlash": false,
+        "draft-dflash": false,
+        "draft-mtp": false,
+        "target_layers": false,
+        "ctx_other": true,
+        "LLAMA_CONTEXT_TYPE_MTP": true,
+        "common_speculative_impl_draft_mtp": false
+      }
+    },
+    {
+      "path": "tools/server/README.md",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/dde879bc4f954b809892fd0d660515f42536394a/tools/server/README.md",
+      "bytes": 135916,
+      "sha256": "05df881b170f3ae15877aefac55190e2b53ad455e147251e252ca3867ed901ce",
+      "status": "OBSERVED",
+      "symbols": {
+        "DFlash": false,
+        "draft-dflash": true,
+        "draft-mtp": true,
+        "target_layers": false,
+        "ctx_other": false,
+        "LLAMA_CONTEXT_TYPE_MTP": false,
+        "common_speculative_impl_draft_mtp": false
+      }
+    }
+  ],
+  "decision": "Audit exact0.1.160 native/API delta and compare with this pinned upstream before choosing upgrade or isolated helper; never substitute ordinary draft for MTP/DFlash or declare READY from symbols"
+}

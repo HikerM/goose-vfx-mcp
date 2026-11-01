@@ -1,0 +1,83 @@
+{
+  "observedAt": "2026-11-01T11:36:47.663314+00:00",
+  "status": "PASS",
+  "scope": "M0 general Audio understanding via actual AST AudioSet classification and a typed extension schema; not ASR, product installation, full specialized Adapter or final validation",
+  "source": {
+    "repository": "audio-cpp/audio.cpp-gguf",
+    "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+    "file": "AST-AudioSet-GGUF/ast-audioset-f32.gguf",
+    "sha256": "b1ad5f36591f9e38d16cb3544d6b3b27a0c61cbcb00de171df78ed179c789b56",
+    "sizeBytes": 346437760,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\audio-cpp__audio.cpp-gguf\\AST-AudioSet-GGUF\\ast-audioset-f32.gguf",
+    "elapsedSeconds": 96.84399999998277,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/audio-cpp/audio.cpp-gguf/repo?Revision=459bd958d533fc2530e985e6bdf8cdfa2a5df3a6&FilePath=AST-AudioSet-GGUF%2Fast-audioset-f32.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+  "binarySha256": "350f7d1e03e7ea01592796a8989c8c60bd07a442bff2648ea0218e587b8fec7b",
+  "explicitSpec": "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\source\\model_specs\\ast_audioset.json",
+  "specSha256": "932666255efbd38263c3d0eaa5e46486bee22d0ee338425ee72c1669bd21bbb8",
+  "input": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.wav",
+    "sha256": "b29307e631d805d7079910c8c9c5ee14777549954b737e15a5770db7ac2da2e9",
+    "expectedClass": "Speech"
+  },
+  "output": {
+    "schema": "ast_audioset.classification.v1",
+    "data": {
+      "scores": [
+        {
+          "index": 0,
+          "label": "Speech",
+          "score": 0.8546875715255737,
+          "logit": 1.7718499898910522
+        },
+        {
+          "index": 7,
+          "label": "Speech synthesizer",
+          "score": 0.32811468839645386,
+          "logit": -0.7167245149612427
+        },
+        {
+          "index": 5,
+          "label": "Narration, monologue",
+          "score": 0.14038391411304474,
+          "logit": -1.8121049404144287
+        },
+        {
+          "index": 1,
+          "label": "Male speech, man speaking",
+          "score": 0.056956660002470016,
+          "logit": -2.806821584701538
+        },
+        {
+          "index": 2,
+          "label": "Female speech, woman speaking",
+          "score": 0.033470723778009415,
+          "logit": -3.3630404472351074
+        }
+      ]
+    }
+  },
+  "log": "D:\\Project\\goose\\target\\lifecycle-validation\\audio-runtime-results\\ast-speech-classification.log",
+  "logSha256": "fccf70b923b731e78eb66a57da5cf7ba4b86d44ec26b3ce370ac9c0af82206bf",
+  "extensionSchema": "ast_audioset.classification.v1",
+  "scoreSemantics": "sigmoid of each raw label logit; independent multi-label scores, not a normalized class distribution",
+  "execution": {
+    "backend": "cpu",
+    "threads": 4,
+    "topK": 5,
+    "mode": "offline"
+  },
+  "remaining": [
+    "Product source/install/runtime/task schema wiring",
+    "Other audio classes, controlled negative inputs and boundary suites",
+    "Separate general Audio generation validation"
+  ]
+}

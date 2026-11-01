@@ -1,0 +1,51 @@
+{
+  "observedAt": "2026-11-01T12:19:41.589377+00:00",
+  "status": "LOAD_FAILED",
+  "source": {
+    "repository": "cloudlnk/whisper-base-gguf",
+    "revision": "1a564799fb1c4db24c3aaea0c2649a204365fdfb",
+    "file": "whisper-base-Q8_0.gguf",
+    "sha256": "81c069428bc8a24551a8169cf31cf09bcfd9d4cf50389ae281323c9aa9648c81",
+    "sizeBytes": 84962880,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\cloudlnk__whisper-base-gguf\\whisper-base-Q8_0.gguf",
+    "elapsedSeconds": 6.14100000000326,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/cloudlnk/whisper-base-gguf/repo?Revision=1a564799fb1c4db24c3aaea0c2649a204365fdfb&FilePath=whisper-base-Q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "binding": "candle-transformers0.11.0",
+  "example": "crates/lumina/examples/test_whisper.rs",
+  "exampleBinarySha256": "a0e1f2a63c51356b06700a2874f523c6c4040c5cf741005bf32c817fd1780615",
+  "build": "PASS,limited2jobs,24m18s",
+  "actualExitCode": 1,
+  "actualError": "cannot find tensor model.encoder.conv1.weight",
+  "observedArchitecture": "whisper",
+  "observedTensorCount": 247,
+  "actualSourceTensor": {
+    "name": "enc.conv.0.weight",
+    "dimensions": [
+      3,
+      80,
+      512
+    ],
+    "type_id": 0,
+    "quantization": "f32",
+    "relative_offset": 65920,
+    "encoded_bytes": 491520,
+    "elements": 122880
+  },
+  "scope": "Real existing Candle loader boundary; not an ASR transcription pass",
+  "implementationRoute": [
+    "ML-29 retain legacy model.encoder.* loading and old settings/aliases",
+    "Add a versioned native enc.*/dec.* to Candle model.encoder.*/model.decoder.* tensor-name adapter after exact model configuration, dimensions and tokenizer checks",
+    "Keep downloaded source GGUF/hash immutable; prefer an in-memory quantized GGUF view and record transform version in Runtime/validation identity",
+    "Retest actual Whisper transcription, noise/length/cancellation and old dictation before closing ML-29"
+  ],
+  "alternativeVerifiedAsr": "Qwen3-ASR0.6B via exact audio.cpp build; does not close Candle/legacy ML-29 work",
+  "logSha256": "cb01665b98b5ded76bf13fca925c36d873e67debff1309b704a263d9b6fc0b13"
+}

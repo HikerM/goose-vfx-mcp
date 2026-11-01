@@ -1,0 +1,118 @@
+{
+  "startedAt": "2026-11-01T10:20:10.041704+00:00",
+  "identities": {
+    "D:\\Project\\goose\\target\\debug\\lumina.exe": "0fd77e7d3019c7fc258666705350df161eeada7ccc17eba5706ab2af5687ad2b",
+    "D:\\Project\\goose\\lumina-self-test.yaml": "e204ca0fd5ba9340ed56344b3abde22b49c0358f1e5c62aeb7323f67bdb7618d",
+    "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1": "b4468310aecef8f5df741630d38daa870f750eebd6fe638b18861f76f13ad56d",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\real-text-powershell-gate.json": "dde12da9ceb6640b6a247537bfd56ec7902adb7fbd082a2c077b2db238fc3211",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a"
+  },
+  "status": "FAIL",
+  "scope": "Actual rebuilt existing CLI recipe; not complete architecture, installation lifecycle, GPU or all-type acceptance",
+  "argv": [
+    "D:\\Project\\goose\\target\\debug\\lumina.exe",
+    "run",
+    "--recipe",
+    "D:\\Project\\goose\\lumina-self-test.yaml",
+    "--params",
+    "test_phases=model-lifecycle",
+    "--params",
+    "workspace_dir=D:/Project/goose/target/lifecycle-validation/recipe-factual-report-results",
+    "--params",
+    "parallel_tests=false",
+    "--params",
+    "cleanup_after=false",
+    "--provider",
+    "local",
+    "--model",
+    "Qwen/Qwen3-1.7B-GGUF:q8_0",
+    "--no-session",
+    "--no-profile",
+    "--with-builtin",
+    "developer",
+    "--max-turns",
+    "3",
+    "--output-format",
+    "stream-json"
+  ],
+  "pid": 56204,
+  "cliExitCode": 0,
+  "failure": "Traceback (most recent call last):\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\run-factual-report-recipe.py\", line 43, in <module>\n    assert len(requests)==1,'Recipe must use one deterministic validation tool call'\nAssertionError: Recipe must use one deterministic validation tool call\n",
+  "finishedAt": "2026-11-01T10:23:24.286295+00:00",
+  "actualEntryObservation": {
+    "request": {
+      "type": "toolRequest",
+      "id": "gy8Ul4kVWJs2IscabUsioOK8ikkJzsBe",
+      "toolCall": {
+        "status": "success",
+        "value": {
+          "name": "shell",
+          "arguments": {
+            "command": "powershell.exe -NoProfile -File bin\\test-lumina-real-text.ps1 -IncludeFoundation -ReportPath \"D:\\Project\\goose\\target\\lifecycle-validation\\recipe-factual-report-results\\model_lifecycle_foundation.md\""
+          }
+        }
+      },
+      "_meta": {
+        "lumina_extension": "developer"
+      }
+    },
+    "response": {
+      "type": "toolResponse",
+      "id": "gy8Ul4kVWJs2IscabUsioOK8ikkJzsBe",
+      "toolResult": {
+        "status": "success",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMRT000\",\"exitCode\":0,\"passed\":1,\"failed\":0,\"ignored\":0,\"foundation\":{\"targets\":[\"lifecycle_contracts\",\"lifecycle_gguf\",\"lifecycle_modelscope\",\"lifecycle_revisions\",\"lifecycle_classification\"],\"suites\":5,\"passed\":77,\"failed\":0,\"ignored\":3,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\foundation-app\\\\foundation-run.log\"},\"result\":{\"test\":\"installed_gguf_generates_actual_text\",\"input\":\"Compute 2 + 2. Respond only with the numeral.\",\"output\":\"4\",\"outputTokens\":1,\"execution\":\"cpu\",\"scope\":\"existing runtime text smoke, not lifecycle installation acceptance\"},\"evidencePath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\evidence\\\\text-smoke.json\",\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\inference-run.log\",\"scope\":\"Actual existing runtime text smoke; not complete lifecycle or release acceptance.\",\"report\":{\"path\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\recipe-factual-report-results\\\\model_lifecycle_foundation.md\",\"sha256\":\"2e997d24b93a498b467030fe4bc5786b830863f8b18972f4cf738db2d4a717c9\",\"content\":\"# lumina model lifecycle validation\\n\\nStatus: PASS\\nScope: foundation and actual existing-runtime text smoke; not full product acceptance.\\n\\nFoundation targets: lifecycle_contracts, lifecycle_gguf, lifecycle_modelscope, lifecycle_revisions, lifecycle_classification\\nFoundation passed: 77\\nFoundation failed: 0\\nFoundation ignored: 3\\nFoundation log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\foundation-app\\\\foundation-run.log\\nActual text test passed: 1\\nActual output: 4\\nActual output tokens: 1\\nInference evidence: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\evidence\\\\text-smoke.json\\nInference log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\inference-run.log\\n\"}}\r",
+              "annotations": {
+                "priority": 0.0
+              }
+            }
+          ],
+          "structuredContent": {
+            "stdout": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMRT000\",\"exitCode\":0,\"passed\":1,\"failed\":0,\"ignored\":0,\"foundation\":{\"targets\":[\"lifecycle_contracts\",\"lifecycle_gguf\",\"lifecycle_modelscope\",\"lifecycle_revisions\",\"lifecycle_classification\"],\"suites\":5,\"passed\":77,\"failed\":0,\"ignored\":3,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\foundation-app\\\\foundation-run.log\"},\"result\":{\"test\":\"installed_gguf_generates_actual_text\",\"input\":\"Compute 2 + 2. Respond only with the numeral.\",\"output\":\"4\",\"outputTokens\":1,\"execution\":\"cpu\",\"scope\":\"existing runtime text smoke, not lifecycle installation acceptance\"},\"evidencePath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\evidence\\\\text-smoke.json\",\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\inference-run.log\",\"scope\":\"Actual existing runtime text smoke; not complete lifecycle or release acceptance.\",\"report\":{\"path\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\recipe-factual-report-results\\\\model_lifecycle_foundation.md\",\"sha256\":\"2e997d24b93a498b467030fe4bc5786b830863f8b18972f4cf738db2d4a717c9\",\"content\":\"# lumina model lifecycle validation\\n\\nStatus: PASS\\nScope: foundation and actual existing-runtime text smoke; not full product acceptance.\\n\\nFoundation targets: lifecycle_contracts, lifecycle_gguf, lifecycle_modelscope, lifecycle_revisions, lifecycle_classification\\nFoundation passed: 77\\nFoundation failed: 0\\nFoundation ignored: 3\\nFoundation log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\foundation-app\\\\foundation-run.log\\nActual text test passed: 1\\nActual output: 4\\nActual output tokens: 1\\nInference evidence: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\evidence\\\\text-smoke.json\\nInference log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-factual-report-app\\\\inference-app\\\\inference-run.log\\n\"}}\r",
+            "stderr": "",
+            "exit_code": 0
+          },
+          "isError": false
+        }
+      }
+    },
+    "reportReadbackMatches": true,
+    "foundationPassed": 77,
+    "foundationIgnored": 3,
+    "actualTextPassed": 1,
+    "actualTextOutput": "4",
+    "scope": "Entry checks passed, but enclosing agent recipe remains FAIL"
+  },
+  "actualToolCalls": [
+    {
+      "id": "gy8Ul4kVWJs2IscabUsioOK8ikkJzsBe",
+      "name": "shell",
+      "arguments": {
+        "command": "powershell.exe -NoProfile -File bin\\test-lumina-real-text.ps1 -IncludeFoundation -ReportPath \"D:\\Project\\goose\\target\\lifecycle-validation\\recipe-factual-report-results\\model_lifecycle_foundation.md\""
+      },
+      "isError": false
+    },
+    {
+      "id": "CGoI6ACbuz7Gp7alUjrBV1doTmEmcFVn",
+      "name": "read_image",
+      "arguments": {
+        "source": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-factual-report-app\\foundation-app\\foundation-run.log",
+        "crop": null
+      },
+      "isError": true
+    },
+    {
+      "id": "ADEDNv88hFD0QyByoiIZRoURqQm5Da8F",
+      "name": "shell",
+      "arguments": {
+        "command": "powershell.exe -NoProfile -File bin\\test-lumina-real-text.ps1 -IncludeFoundation -ReportPath \"D:\\Project\\goose\\target\\lifecycle-validation\\recipe-factual-report-results\\model_lifecycle_foundation.md\""
+      },
+      "isError": true
+    }
+  ],
+  "actualFailure": "After successful deterministic entry, agent called read_image on foundation-run.log and got unsupported image format; no final factual summary"
+}

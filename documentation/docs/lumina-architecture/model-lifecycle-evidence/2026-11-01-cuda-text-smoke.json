@@ -1,0 +1,72 @@
+{
+  "startedAt": "2026-11-01T10:24:19.797212+00:00",
+  "status": "PASS",
+  "identity": {
+    "cliSha256": "f3540ae0e91ea03a0593270a39f93ad46c6356cd0f75265f223f3eb86a00ef05",
+    "modelSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a"
+  },
+  "source": {
+    "scope": "validation asset only; not proof of lifecycle installation",
+    "repository": "Qwen/Qwen3-1.7B-GGUF",
+    "revision": "cdd105fbd3a69efc373ba5d0451f71335630920a",
+    "file": "Qwen3-1.7B-Q8_0.gguf",
+    "sizeBytes": 1834426016,
+    "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+    "result": "source size and computed SHA256 verified"
+  },
+  "requestedGpuLayers": 99,
+  "scope": "Actual existing CLI CUDA text routing probe; not new lifecycle install, tools, vision, MTP or release acceptance",
+  "weightCopies": 0,
+  "originalRegistryModified": false,
+  "pid": 50268,
+  "argv": [
+    "D:\\Project\\goose\\target\\cuda-validation\\x86_64-pc-windows-msvc\\debug\\lumina.exe",
+    "run",
+    "--provider",
+    "local",
+    "--model",
+    "Qwen/Qwen3-1.7B-GGUF:q8_0",
+    "--no-session",
+    "--no-profile",
+    "--max-turns",
+    "1",
+    "--output-format",
+    "stream-json",
+    "--text",
+    "Compute 2 + 2. Respond only with the numeral."
+  ],
+  "cliExitCode": 0,
+  "actualOutput": "4",
+  "usage": {
+    "type": "complete",
+    "total_tokens": 2257,
+    "input_tokens": 2256,
+    "output_tokens": 1
+  },
+  "nativeOffloadLayers": [
+    [
+      29,
+      29
+    ]
+  ],
+  "nativeCudaModelBufferMiB": [
+    1743.77
+  ],
+  "selectedModes": [
+    {
+      "message": "Selected local inference execution mode",
+      "backend": "llamacpp",
+      "gpu_layers": 99,
+      "execution": "gpu"
+    }
+  ],
+  "logs": [
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\cuda-text-smoke-app\\state\\logs\\cli\\2026-11-01\\20261101_182425.log",
+      "sha256": "dfd5d3a00f01e6fdd6f77e36a0e1a8318f481ce0184c515bc5d8798f84f49ec5"
+    }
+  ],
+  "modelHashUnchanged": true,
+  "finishedAt": "2026-11-01T10:24:33.062774+00:00"
+}

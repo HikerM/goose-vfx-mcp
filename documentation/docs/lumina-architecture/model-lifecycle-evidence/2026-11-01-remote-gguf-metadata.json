@@ -1,0 +1,1284 @@
+{
+  "observedAt": "2026-11-01T08:06:43.048104+00:00",
+  "scope": "Bounded actual ModelScope metadata observations, not complete dependency, runtime or installation acceptance",
+  "parserSourceSha256": "e6cb59759fc3c7790ff4d4d8d64a5982f6fbd768c914652e91197e74eb4d7940",
+  "cases": [
+    {
+      "category": "embedding GGUF",
+      "repository": "Qwen/Qwen3-Embedding-0.6B-GGUF",
+      "revision": "61ae123505fc6fa7f36d372fae1a30bc384241ea",
+      "files": [
+        {
+          "path": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+          "sourceFileBytes": 639150592,
+          "sourceSha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+          "status": "PARSED",
+          "architecture": "qwen3",
+          "declaredType": "model",
+          "tensorCount": 310,
+          "storedTensorElements": 595776512,
+          "headerBytes": 5945533,
+          "headerSha256": "ef71038b9b306ad2a72729e40c3b82c91264b9f17af72440eb2d13c304d19ed2",
+          "tensorTypeIds": [
+            0,
+            8
+          ]
+        },
+        {
+          "path": "Qwen3-Embedding-0.6B-f16.gguf",
+          "sourceFileBytes": 1197629632,
+          "sourceSha256": "421a27e58d165478cc7acb984a688c2aa41404968b0203e7cd743ece44c54340",
+          "status": "PARSED",
+          "architecture": "qwen3",
+          "declaredType": "model",
+          "tensorCount": 310,
+          "storedTensorElements": 595776512,
+          "headerBytes": 5945533,
+          "headerSha256": "c9b420927289bbbda5bdbef2d5881016a8d44adc95b27348a7b980549ad49601",
+          "tensorTypeIds": [
+            0,
+            1
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 5,
+      "licenseFileFacts": [],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "reranker GGUF",
+      "repository": "gpustack/bge-reranker-v2-m3-GGUF",
+      "revision": "ee922fb06dd877ddf5019d0fa366072a7be36b16",
+      "files": [
+        {
+          "path": "bge-reranker-v2-m3-FP16.gguf",
+          "sourceFileBytes": 1159776896,
+          "sourceSha256": "5df93be121c09c43432102ad2b9569d369ccb85c209ca7583e8ccd28f0e41b88",
+          "status": "PARSED",
+          "architecture": "bert",
+          "declaredType": "model",
+          "tensorCount": 393,
+          "storedTensorElements": 567753729,
+          "headerBytes": 6842951,
+          "headerSha256": "632ae8dbfcf1c646d94abac156295b45e94741e716b4c0a034489286b496d189",
+          "tensorTypeIds": [
+            0,
+            1
+          ]
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q2_K.gguf",
+          "sourceFileBytes": 366467488,
+          "sourceSha256": "f12135b80de836cbf94c1169dc8efda57c81040c1dfd9dedc20709d2e1725e39",
+          "status": "PARSED",
+          "architecture": "bert",
+          "declaredType": "model",
+          "tensorCount": 393,
+          "storedTensorElements": 567753729,
+          "headerBytes": 6842951,
+          "headerSha256": "497917bf0043c46f321df8719a12533eca89f24fda716968155c7267754a1577",
+          "tensorTypeIds": [
+            0,
+            10,
+            11,
+            14
+          ]
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q3_K_M.gguf",
+          "sourceFileBytes": 402749856,
+          "sourceSha256": "1b9a8990c7ebb14511aecbc9df90d1e956132be64d5ce62783431fa1abb339a3",
+          "status": "PARSED",
+          "architecture": "bert",
+          "declaredType": "model",
+          "tensorCount": 393,
+          "storedTensorElements": 567753729,
+          "headerBytes": 6842951,
+          "headerSha256": "37753f4eca399ea14e101d3fa76de38b3f5acd539092c1204f7972bc28767397",
+          "tensorTypeIds": [
+            0,
+            11,
+            12,
+            13,
+            14
+          ]
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q4_0.gguf",
+          "sourceFileBytes": 422156704,
+          "sourceSha256": "6d9e23b0765d4e250b697657ddaef1ca0b1fd7d150d910940eb35f673590e267",
+          "status": "PARSED",
+          "architecture": "bert",
+          "declaredType": "model",
+          "tensorCount": 393,
+          "storedTensorElements": 567753729,
+          "headerBytes": 6842951,
+          "headerSha256": "50f18bb7072df67e324601cf5d0e572e230fc26797742ac2ab2600dbab6aeb77",
+          "tensorTypeIds": [
+            0,
+            2,
+            14
+          ]
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q4_K_M.gguf",
+          "sourceFileBytes": 438376864,
+          "sourceSha256": "e186a244ed455b4ab66ec64339ce7427a6ae13f5c0b5e544de96e50f0f8b3673",
+          "status": "PARSED",
+          "architecture": "bert",
+          "declaredType": "model",
+          "tensorCount": 393,
+          "storedTensorElements": 567753729,
+          "headerBytes": 6842951,
+          "headerSha256": "3e8c8150423afc2cf5b3cdb61737551ae65b39a368f26cd3b24d6d3ca067c2a9",
+          "tensorTypeIds": [
+            0,
+            12,
+            14
+          ]
+        },
+        {
+          "path": "bge-reranker-v2-m3-Q5_0.gguf",
+          "sourceFileBytes": 460036512,
+          "sourceSha256": "e232e93920b96cb144370deac915e00b8f2377ced7c40ee3ac7f6881a0f9f987",
+          "status": "PARSED",
+          "architecture": "bert",
+          "declaredType": "model",
+          "tensorCount": 393,
+          "storedTensorElements": 567753729,
+          "headerBytes": 6842951,
+          "headerSha256": "3ae10123afe01c765be3b71762ef4b154339918dd2d876ef1bc69ca31f7549a1",
+          "tensorTypeIds": [
+            0,
+            6,
+            14
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 18,
+      "licenseFileFacts": [],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "whisper GGUF",
+      "repository": "OllmOne/whisper-large-v3-GGUF",
+      "revision": "4aa52cf18e1ba46f789e1916b04a5579c979b5d6",
+      "files": [
+        {
+          "path": "model-q4k.gguf",
+          "sourceFileBytes": 891009248,
+          "sourceSha256": "ad9b891580aebfca0a7360beb0197e1b2e1b38ea935fad4af03bb345515ee2af",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 1259,
+          "storedTensorElements": 1543490560,
+          "headerBytes": 100591,
+          "headerSha256": "29695d822e0cefa7bb6759bc3f012f3b6103d3dd22e473f7b0b76d5403973988",
+          "tensorTypeIds": [
+            0,
+            12
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 6,
+      "licenseFileFacts": [],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "TTS GGUF",
+      "repository": "OuteAI/Llama-OuteTTS-1.0-1B-GGUF",
+      "revision": "e17251825ca43b1dfff055a46c82ebed61ba024e",
+      "files": [
+        {
+          "path": "Llama-OuteTTS-1.0-1B-FP16.gguf",
+          "sourceFileBytes": 2504913888,
+          "sourceSha256": "0ffaf33f7f360837c2136ab503037206a3b0c8e8f46108e14b15ddd262db77f5",
+          "status": "PARSED",
+          "architecture": "llama",
+          "declaredType": "model",
+          "tensorCount": 147,
+          "storedTensorElements": 1248397344,
+          "headerBytes": 7983947,
+          "headerSha256": "ee1e1729463123d57d757827a755649b13745e5a5b67312ebc9574dd0014c3c6",
+          "tensorTypeIds": [
+            0,
+            1
+          ]
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q2_K.gguf",
+          "sourceFileBytes": 591348704,
+          "sourceSha256": "23cc2aaeaa805ed3af8fcc682e781b8302a0b59f9de2efac84674f97b2513aea",
+          "status": "PARSED",
+          "architecture": "llama",
+          "declaredType": "model",
+          "tensorCount": 147,
+          "storedTensorElements": 1248397344,
+          "headerBytes": 7983947,
+          "headerSha256": "4e5de739d685575bfeaa1392e3d49b784cf20b37badf08ce427b92a8fd9c5e76",
+          "tensorTypeIds": [
+            0,
+            10,
+            11,
+            12,
+            14
+          ]
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q3_K_L.gguf",
+          "sourceFileBytes": 742999008,
+          "sourceSha256": "df4aac8206b4e612f2e6a5cd9d780018758d3e27a2eec8132b4e7f3989aa7e87",
+          "status": "PARSED",
+          "architecture": "llama",
+          "declaredType": "model",
+          "tensorCount": 147,
+          "storedTensorElements": 1248397344,
+          "headerBytes": 7983947,
+          "headerSha256": "c982ae6153c910c15cbed9733e31f7c7051a095d97f1b2bc5e006dd3890f7c9f",
+          "tensorTypeIds": [
+            0,
+            11,
+            13,
+            14
+          ]
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q3_K_M.gguf",
+          "sourceFileBytes": 701318112,
+          "sourceSha256": "559fd185f2e0e6b4bd26a955de93b50a6c9dbd74337c3575e4964415e8dac8c7",
+          "status": "PARSED",
+          "architecture": "llama",
+          "declaredType": "model",
+          "tensorCount": 147,
+          "storedTensorElements": 1248397344,
+          "headerBytes": 7983947,
+          "headerSha256": "bb9a704194e8ba7e6a0be8ebd8457bebdf2a8a19cbab0d3d6dca148ea64dde96",
+          "tensorTypeIds": [
+            0,
+            11,
+            12,
+            13,
+            14
+          ]
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q3_K_S.gguf",
+          "sourceFileBytes": 652166112,
+          "sourceSha256": "97930b5b2cff47f0492ef39c64dbff50e14637731f458b105423575c06937e8c",
+          "status": "PARSED",
+          "architecture": "llama",
+          "declaredType": "model",
+          "tensorCount": 147,
+          "storedTensorElements": 1248397344,
+          "headerBytes": 7983947,
+          "headerSha256": "f9d864fac329e140574ac5c9cc1e396a23ca0a6ad9ce096a7b2dfe82d29c431f",
+          "tensorTypeIds": [
+            0,
+            11,
+            14
+          ]
+        },
+        {
+          "path": "Llama-OuteTTS-1.0-1B-Q4_0.gguf",
+          "sourceFileBytes": 781403104,
+          "sourceSha256": "d09c2faaba63ddba694bb9f6ae0d9a75502b98e0db45dbaafaee3351a3b57afd",
+          "status": "PARSED",
+          "architecture": "llama",
+          "declaredType": "model",
+          "tensorCount": 147,
+          "storedTensorElements": 1248397344,
+          "headerBytes": 7983947,
+          "headerSha256": "fe35db065af56cf72cd3b528cd356efee277f33542bd7bb9db5e1d49dbbc50a0",
+          "tensorTypeIds": [
+            0,
+            2,
+            14
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 20,
+      "licenseFileFacts": [],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "audio GGUF",
+      "repository": "audio-cpp/audio.cpp-gguf",
+      "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+      "files": [
+        {
+          "path": "ACE-Step1.5-GGUF/base/ace-step-1.5-base-bf16.gguf",
+          "sourceFileBytes": 10090405184,
+          "sourceSha256": "d5bb61554bd8669ba5498054422e7a771414257d77acc47b3953e5da8c98836f",
+          "rangeSupported": true,
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 1663,
+          "storedTensorElements": 5013548296,
+          "headerBytes": 63308513,
+          "headerSha256": "a621a14665d7143011cb42f1c7c0e74d0be675a5d675caf4efddfdce1a78a326",
+          "tensorTypeIds": [
+            30
+          ]
+        },
+        {
+          "path": "ACE-Step1.5-GGUF/base/ace-step-1.5-base-q8_0.gguf",
+          "sourceFileBytes": 6185466944,
+          "sourceSha256": "2fb7bc3627c79bc99486510619d4264da22d40814edff0415dd3337164336e4a",
+          "rangeSupported": true,
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 1663,
+          "storedTensorElements": 5013548296,
+          "headerBytes": 63308513,
+          "headerSha256": "4da891b36f38045fc79e2f56b8e272831d076cda38e49e2b7017dbf749441b01",
+          "tensorTypeIds": [
+            0,
+            1,
+            8,
+            30
+          ]
+        },
+        {
+          "path": "ACE-Step1.5-GGUF/turbo/ace-step-1.5-turbo-bf16.gguf",
+          "sourceFileBytes": 10090406336,
+          "sourceSha256": "7aa8cc911bb7e47647bba619cf25afc22a42e35c568a102cd9a3b28a54b94013",
+          "rangeSupported": true,
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 1663,
+          "storedTensorElements": 5013548296,
+          "headerBytes": 63309670,
+          "headerSha256": "6a66523ab67b061aa314c873638dba14f57d6f2e97b40a397d9eecac11c47cd7",
+          "tensorTypeIds": [
+            30
+          ]
+        },
+        {
+          "path": "ACE-Step1.5-GGUF/turbo/ace-step-1.5-turbo-q8_0.gguf",
+          "sourceFileBytes": 6185468096,
+          "sourceSha256": "1f0015f81c10a1182531e6207c7aeaa060b8cad3470a2f88daa3cb74ed636e63",
+          "rangeSupported": true,
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 1663,
+          "storedTensorElements": 5013548296,
+          "headerBytes": 63309670,
+          "headerSha256": "a4ca7dbcfcd847538a065fc7aa2e7fb8f633e104c2d38e1ac9d2336d3b69794b",
+          "tensorTypeIds": [
+            0,
+            1,
+            8,
+            30
+          ]
+        },
+        {
+          "path": "AST-AudioSet-GGUF/ast-audioset-f32.gguf",
+          "sourceFileBytes": 346437760,
+          "sourceSha256": "b1ad5f36591f9e38d16cb3544d6b3b27a0c61cbcb00de171df78ed179c789b56",
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 203,
+          "storedTensorElements": 86594063,
+          "headerBytes": 61481,
+          "headerSha256": "994c0fe78225df621dc31da1ee3f3a726e48ec7c417a736893e6006ddc5e8c64",
+          "tensorTypeIds": [
+            0
+          ]
+        },
+        {
+          "path": "Apollo-GGUF/apollo-orig.gguf",
+          "sourceFileBytes": 66398592,
+          "sourceSha256": "41ee9eb6c5c265f126c1baaa3aca94d506dd604f4750f6da46d3cec00310df00",
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 655,
+          "storedTensorElements": 16578590,
+          "headerBytes": 81342,
+          "headerSha256": "7a38235eed919bcc462b7c86eb231bfa123bfd2bda5ae09ccb36dfdc3e8b78de",
+          "tensorTypeIds": [
+            0
+          ]
+        },
+        {
+          "path": "MOSS-VoiceGenerator-GGUF/moss_voicegen_bf16_codec_f16_decode.gguf",
+          "sourceFileBytes": 6022982624,
+          "sourceSha256": "6c69ba22816917ed16ef6991a7c0c848d86cde7071e9f6554ad867b47b268769",
+          "rangeSupported": true,
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 1258,
+          "storedTensorElements": 3002075136,
+          "headerBytes": 18831321,
+          "headerSha256": "4861c303e5a6234c6e180f7b9b55f6576060df66253dcf9d7fd98efa29f1f605",
+          "tensorTypeIds": [
+            1,
+            30
+          ]
+        },
+        {
+          "path": "MiniMax-H3-Q4-GGUF/audio_vae.gguf",
+          "sourceFileBytes": 296126496,
+          "sourceSha256": "0b24bff24fd5e2ff97cb9ec6a8353bde90b5baeeb4df465d0847c54b93725cad",
+          "rangeSupported": true,
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 1089,
+          "storedTensorElements": 151326649,
+          "headerBytes": 11662230,
+          "headerSha256": "773cd0cf176adc3042787b6ebcd347975d668b9d0b305b740d50f3febe4e651d",
+          "tensorTypeIds": [
+            0,
+            2,
+            12,
+            30
+          ]
+        },
+        {
+          "path": "MiniMax-H3-Q4-GGUF/audio_vae_folded_f16.gguf",
+          "sourceFileBytes": 284562816,
+          "sourceSha256": "8b7ddc1acb542d5168bf0944890f27f57e32b46e1c7f5918b0ca35a7e85bca05",
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 954,
+          "storedTensorElements": 151305304,
+          "headerBytes": 141555,
+          "headerSha256": "1169e292a54d0be9e89c0eba405d4a71effd36162199798da70592cc0c0a754f",
+          "tensorTypeIds": [
+            0,
+            1,
+            2,
+            12,
+            30
+          ]
+        },
+        {
+          "path": "MiniMax-H3-Q4-GGUF/text_encoder_q4_k.gguf",
+          "sourceFileBytes": 15270376000,
+          "sourceSha256": "82985a5b59d83ab20cd5ba66195a1af380d9b66c76211e3bda9292a95830e55b",
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 551,
+          "storedTensorElements": 25157829120,
+          "headerBytes": 93739,
+          "headerSha256": "6b9604b4e77bc7e1d02bb2d7bc96e95eddba0e80395c31dced8268c9a531d010",
+          "tensorTypeIds": [
+            12,
+            30
+          ]
+        },
+        {
+          "path": "MiniMax-H3-Q4-GGUF/video_vae.gguf",
+          "sourceFileBytes": 1374245472,
+          "sourceSha256": "5e98a348d9d9357af7b32625a4bc43e7df85aab4236b1ba14635f8d724c27e24",
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 442,
+          "storedTensorElements": 2423533144,
+          "headerBytes": 62854,
+          "headerSha256": "127bc7d146013182d1d49272441861dc5f8dc8f66e44206b34bf214d268a6cbd",
+          "tensorTypeIds": [
+            2,
+            30
+          ]
+        },
+        {
+          "path": "MioCodec-25Hz-44.1kHz-v2-GGUF/miocodec-25hz-44khz-v2-f16.gguf",
+          "sourceFileBytes": 452912544,
+          "sourceSha256": "6b921c62f66839ca6849e53252987a76b44950f1f3e2e0c03bcd34526a4558f4",
+          "status": "PARSED",
+          "architecture": "audiocpp",
+          "declaredType": null,
+          "tensorCount": 598,
+          "storedTensorElements": 226398335,
+          "headerBytes": 115529,
+          "headerSha256": "72aabe6425093171d310c31929be69e446a521d0fce1542cad3a671cd2d72b90",
+          "tensorTypeIds": [
+            1
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 591,
+      "licenseFileFacts": [
+        {
+          "Path": "Hviske-v6-GGUF/LICENSES",
+          "Size": 0,
+          "Sha256": ""
+        },
+        {
+          "Path": "Breeze-TTS-2-GGUF/LICENSE",
+          "Size": 18718,
+          "Sha256": "44c5d53ee309bc36b5ea3ec2144abc6f3996ce431dedbe262f302a85956bc94b"
+        },
+        {
+          "Path": "CED-GGUF/LICENSE",
+          "Size": 11359,
+          "Sha256": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac"
+        },
+        {
+          "Path": "Canary-180M-Flash-GGUF/LICENSE",
+          "Size": 424,
+          "Sha256": "3af248cbf115b710a6ca32c033b95fcbd9154caf1f8560393aa7c6e6d25c2bd5"
+        },
+        {
+          "Path": "CrisperWhisper2.0-GGUF/LICENSE.md",
+          "Size": 17784,
+          "Sha256": "42f43bf4dc72ef422f91f6ca143f4514e21a68b353940d99091c1addcd0aee79"
+        },
+        {
+          "Path": "KittenTTS-GGUF/LICENSE",
+          "Size": 10394,
+          "Sha256": "787aa312b93eee80b636f35652469df29efdb7582239d6a9c088467555a3c7fd"
+        },
+        {
+          "Path": "KugelAudio-0-Open-GGUF/LICENSE",
+          "Size": 1074,
+          "Sha256": "e67302834d31847388e447eed25edb00af495347cfd8ea1d84d110cc40d64420"
+        },
+        {
+          "Path": "MMS-Forced-Aligner-GGUF/LICENSE.CC-BY-NC-4.0.txt",
+          "Size": 19347,
+          "Sha256": "41003d4a74749c0220e33dd415042164b5a1093ed401f36277234f772d22d3d0"
+        },
+        {
+          "Path": "MOSS-Transcribe-Diarize-GGUF/LICENSE",
+          "Size": 11357,
+          "Sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "Path": "Maya1-GGUF/LICENSE-MAYA1",
+          "Size": 11358,
+          "Sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "Path": "Maya1-GGUF/LICENSE-SNAC",
+          "Size": 1101,
+          "Sha256": "e6c5718026b1bdac3adf655e6b3640dd2c9f060d6f7fc40ad47dfa79f085566e"
+        },
+        {
+          "Path": "MicroWakeWord-GGUF/LICENSE",
+          "Size": 11357,
+          "Sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "Path": "MossFormer2-GGUF/LICENSE",
+          "Size": 11357,
+          "Sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "Path": "Niagara-ASR-GGUF/LICENSE",
+          "Size": 3394,
+          "Sha256": "0f601a0c7aee237b8fceae05493120d78041833ccde276a68c0cb7da8b35b594"
+        },
+        {
+          "Path": "Phonon-2-GGUF/LICENSE-CODE-Apache-2.0.txt",
+          "Size": 11358,
+          "Sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "Path": "Phonon-2-GGUF/LICENSE-WEIGHTS-CC-BY-4.0.txt",
+          "Size": 18657,
+          "Sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+        },
+        {
+          "Path": "Piper-TTS-GGUF/LICENSE",
+          "Size": 1071,
+          "Sha256": "4cd71dece7037f1d6d93cce7570c57ab75ea9ac566fd4990be2f3ab08d15b47f"
+        },
+        {
+          "Path": "PulseVAD-GGUF/LICENSE",
+          "Size": 1068,
+          "Sha256": "38850c88bdcaba5c183e060e966d10b1eb0d5637ccb71cea96374ff094a7329e"
+        },
+        {
+          "Path": "Sherpa-KWS-GGUF/LICENSE",
+          "Size": 11358,
+          "Sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "Path": "Sidon-GGUF/LICENSE",
+          "Size": 1071,
+          "Sha256": "fc78c2303c7ba55060bc1f16528b9f3efaa9243882ce9567910d57fa27ab276b"
+        },
+        {
+          "Path": "Smart-Turn-v3-GGUF/LICENSE",
+          "Size": 1301,
+          "Sha256": "0d66364067f678c08586ebb60a16a2aed4fa081ec11057df35585759ce0e774f"
+        },
+        {
+          "Path": "Tone-Color-VC-GGUF/LICENSE",
+          "Size": 1057,
+          "Sha256": "bb3541f421e6273d3a3e3dd5bdba2bd3b79a3c2eadca65cde9c62c2467903ac0"
+        },
+        {
+          "Path": "Voxtral-4B-TTS-2603-GGUF/LICENSE",
+          "Size": 19347,
+          "Sha256": "41003d4a74749c0220e33dd415042164b5a1093ed401f36277234f772d22d3d0"
+        }
+      ],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "diffusion GGUF",
+      "repository": "gpustack/stable-diffusion-v3-5-large-GGUF",
+      "revision": "2b2154fb02dcc19ac54e4bec8878f1608d63ef1c",
+      "files": [
+        {
+          "path": "stable-diffusion-v3-5-large-FP16.gguf",
+          "sourceFileBytes": 27883767040,
+          "sourceSha256": "d2a229439cee98592fe0d8ec3f6525de74eaa26ca036248ca48d1bb679aeedcf",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 2100,
+          "storedTensorElements": 13941727715,
+          "headerBytes": 219335,
+          "headerSha256": "0d35bb75628885affbd686bf34725feaaa6830ffb3bd7648802c5586664f7778",
+          "tensorTypeIds": [
+            0,
+            1
+          ]
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-Q4_0.gguf",
+          "sourceFileBytes": 11942648448,
+          "sourceSha256": "b1fcabab3af5dbb828c020281e93090bfb0aad29a4b065eb0d847988a94190f0",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 2100,
+          "storedTensorElements": 13941727715,
+          "headerBytes": 219335,
+          "headerSha256": "a33e4d8a885219fcc7d0835dcc08fa42ab86bd80f84e73e350aa83fbc9c9af42",
+          "tensorTypeIds": [
+            0,
+            1,
+            2,
+            8
+          ]
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-Q4_1.gguf",
+          "sourceFileBytes": 12443543168,
+          "sourceSha256": "d8990a0635a301c2487a58641585357ab79945b815862ee31aee19db7a270563",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 2100,
+          "storedTensorElements": 13941727715,
+          "headerBytes": 219335,
+          "headerSha256": "af21ce053fdaf38e61ca78b807402efc2fea0ad02bfc41c4c42d36a1507124e6",
+          "tensorTypeIds": [
+            0,
+            1,
+            3,
+            8
+          ]
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-Q8_0.gguf",
+          "sourceFileBytes": 15949811072,
+          "sourceSha256": "69f4297a8c8e48187486c603ac47f6919dddd49bc0a869553afd4784982406fe",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 2100,
+          "storedTensorElements": 13941727715,
+          "headerBytes": 219335,
+          "headerSha256": "f89ff93482cbb672fd2d9eaebf4ef563c62a8062debcd74a69b3327a90900473",
+          "tensorTypeIds": [
+            0,
+            1,
+            8
+          ]
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-pure-Q4_0.gguf",
+          "sourceFileBytes": 8321019840,
+          "sourceSha256": "25a06aa87f6cfa311cbcdafc5a46b241dcc1fa5af2854a2ea9840643001d7dba",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 2100,
+          "storedTensorElements": 13941727715,
+          "headerBytes": 219335,
+          "headerSha256": "2a49a1d2062d19ffc7165458d645bfa83139d87caed1797faf55f20e22d5d707",
+          "tensorTypeIds": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "path": "stable-diffusion-v3-5-large-pure-Q8_0.gguf",
+          "sourceFileBytes": 15183719104,
+          "sourceSha256": "476f5e26686ba6877db6f1ddd2198bbdec4c36fe4325d11c98c728154f8c4cbf",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 2100,
+          "storedTensorElements": 13941727715,
+          "headerBytes": 219335,
+          "headerSha256": "8f29a30667e98192437a23fc4592501c1317d4e7f3038465da1986b75e34b80f",
+          "tensorTypeIds": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 12,
+      "licenseFileFacts": [
+        {
+          "Path": "LICENSE.md",
+          "Size": 11726,
+          "Sha256": "9b60b9d0411f54d4087484ad4acf28ca6fd9f6a84c30ddacb04de2c623254749"
+        }
+      ],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "Wan GGUF",
+      "repository": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+      "revision": "b67c55ca3cc63388e8fe22678d5988445bbf6484",
+      "files": [
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q2_K.gguf",
+          "sourceFileBytes": 5300957696,
+          "sourceSha256": "8426c0c02a2878f4f20c28a620a1516787045a7a56301f5b6a1d91198c15a8c1",
+          "status": "PARSED",
+          "architecture": "wan",
+          "declaredType": null,
+          "tensorCount": 1095,
+          "storedTensorElements": 14288901184,
+          "headerBytes": 67959,
+          "headerSha256": "2ea8ed6a85e8be2ba4fc61a74488b703aadea3810064a989c5edce04d4f16281",
+          "tensorTypeIds": [
+            0,
+            1,
+            10,
+            11
+          ]
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q3_K_M.gguf",
+          "sourceFileBytes": 7176106496,
+          "sourceSha256": "ac3a72d74330e030fe2ded047b0ef9afc21dd90afc4f300c7aa79e1b0f9dd940",
+          "status": "PARSED",
+          "architecture": "wan",
+          "declaredType": null,
+          "tensorCount": 1095,
+          "storedTensorElements": 14288901184,
+          "headerBytes": 67959,
+          "headerSha256": "a3bfe88f4025e2651e71fe009458ffbd69c59a8e554708cafe213a77f4aa1917",
+          "tensorTypeIds": [
+            0,
+            1,
+            11,
+            12,
+            13
+          ]
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q3_K_S.gguf",
+          "sourceFileBytes": 6515012096,
+          "sourceSha256": "2708962c357537c9f517fa49edd8397f3024057b059c3e8df827c774271e1161",
+          "status": "PARSED",
+          "architecture": "wan",
+          "declaredType": null,
+          "tensorCount": 1095,
+          "storedTensorElements": 14288901184,
+          "headerBytes": 67959,
+          "headerSha256": "5cf94cbd11c9f15d90d17d4965b96b2469d75a595a14b6d1671e4b8f460999d9",
+          "tensorTypeIds": [
+            0,
+            1,
+            11
+          ]
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q4_K_M.gguf",
+          "sourceFileBytes": 9651728896,
+          "sourceSha256": "836250abfaa3411694e2c9cf3a0cc18265329d5156d81aa116d5366b0f8f02e7",
+          "status": "PARSED",
+          "architecture": "wan",
+          "declaredType": null,
+          "tensorCount": 1095,
+          "storedTensorElements": 14288901184,
+          "headerBytes": 67959,
+          "headerSha256": "2f41994d338f2933152cff7c0b597e295543d99ba099167d9b20880dbf27c0c9",
+          "tensorTypeIds": [
+            0,
+            1,
+            12,
+            14
+          ]
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q4_K_S.gguf",
+          "sourceFileBytes": 8748151296,
+          "sourceSha256": "8fc5f726ccf1214e43c6a599bdef1e63daf7fab06e71fb74081416c4b9ce200b",
+          "status": "PARSED",
+          "architecture": "wan",
+          "declaredType": null,
+          "tensorCount": 1095,
+          "storedTensorElements": 14288901184,
+          "headerBytes": 67959,
+          "headerSha256": "15f9b18a7cc81595d63355c762d79019a137c0318773918aaf915ad210afe766",
+          "tensorTypeIds": [
+            0,
+            1,
+            12,
+            13
+          ]
+        },
+        {
+          "path": "HighNoise/Wan2.2-I2V-A14B-HighNoise-Q5_0.gguf",
+          "sourceFileBytes": 10314461696,
+          "sourceSha256": "7856fbfbeacd110993fb400547b51a5acb22fe27633bb3c49da88a057cf14e1c",
+          "status": "PARSED",
+          "architecture": "wan",
+          "declaredType": null,
+          "tensorCount": 1095,
+          "storedTensorElements": 14288901184,
+          "headerBytes": 67959,
+          "headerSha256": "62a574a907455ae776bce41342eea46cb65689733151e9228e359630f6ba577b",
+          "tensorTypeIds": [
+            0,
+            1,
+            6,
+            7
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 31,
+      "licenseFileFacts": [],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "MTP GGUF",
+      "repository": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+      "revision": "1031a64225845ac4f098662a951df2ac69affb7a",
+      "files": [
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf",
+          "sourceFileBytes": 49913715456,
+          "sourceSha256": "a172dfea1fe8bb29132ea2f250c74cdc7d619d518d3f072d3816e31a69ce44a2",
+          "status": "PARSED",
+          "architecture": "qwen35moe",
+          "declaredType": "model",
+          "tensorCount": 534,
+          "storedTensorElements": 24935257728,
+          "headerBytes": 10977536,
+          "headerSha256": "e8e3b305fe97c60b810a67b3354ccce7c98e2844b6c3aa9bacbd617839eff4a2",
+          "tensorTypeIds": [
+            0,
+            30
+          ]
+        },
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00002-of-00002.gguf",
+          "sourceFileBytes": 21152227104,
+          "sourceSha256": "b90b4d07e1be4967aec932e2501e7476ec5f44de772c7eb082d6e9c3ac105161",
+          "status": "PARSED",
+          "architecture": null,
+          "declaredType": null,
+          "tensorCount": 219,
+          "storedTensorElements": 10569993728,
+          "headerBytes": 14088,
+          "headerSha256": "e1c4aec700b5fc362f1465c72d018c45e0b690888e64427d724ab81a82726e8e",
+          "tensorTypeIds": [
+            0,
+            30
+          ]
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-MXFP4_MOE.gguf",
+          "sourceFileBytes": 22182574368,
+          "sourceSha256": "e1a4925d2ea132576daa9cb980b1102b970d919d896936b7b6e681ef5bc3d3f6",
+          "status": "PARSED",
+          "architecture": "qwen35moe",
+          "declaredType": "model",
+          "tensorCount": 753,
+          "storedTensorElements": 35505251456,
+          "headerBytes": 10991364,
+          "headerSha256": "d050011961b8d916b815af4faa39b212dc127ec14376d5396b2c0a0e029d64f7",
+          "tensorTypeIds": [
+            0,
+            8,
+            13,
+            14,
+            30,
+            39
+          ]
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-Q8_0.gguf",
+          "sourceFileBytes": 37801097504,
+          "sourceSha256": "c1283d8b80c3e38b2735ddbc9766d3b3126f44d6c484be419d4e101d09a76131",
+          "status": "PARSED",
+          "architecture": "qwen35moe",
+          "declaredType": "model",
+          "tensorCount": 753,
+          "storedTensorElements": 35505251456,
+          "headerBytes": 10991364,
+          "headerSha256": "0c35942a06d024d97122945e3218a656f132dcf8be0ac6115c43915d44d0e864",
+          "tensorTypeIds": [
+            0,
+            8,
+            30
+          ]
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-UD-IQ1_M.gguf",
+          "sourceFileBytes": 11366414624,
+          "sourceSha256": "223db8b347ebe3d75f43a0fd998eb86148c9744635066c6782662208ddc14867",
+          "status": "PARSED",
+          "architecture": "qwen35moe",
+          "declaredType": "model",
+          "tensorCount": 753,
+          "storedTensorElements": 35505251456,
+          "headerBytes": 10991364,
+          "headerSha256": "c27fd9b294b085277561ca2c30274d9850fb6b3bca250f6d78bc4fc16d863a9d",
+          "tensorTypeIds": [
+            0,
+            8,
+            10,
+            11,
+            12,
+            13,
+            14,
+            16,
+            18,
+            23,
+            29,
+            30
+          ]
+        },
+        {
+          "path": "Qwen3.6-35B-A3B-UD-IQ2_M.gguf",
+          "sourceFileBytes": 11882969376,
+          "sourceSha256": "b989da14b63b29bd469cb1fab5bd16b422ab921787569b4b2bb4fd61e26129b8",
+          "status": "PARSED",
+          "architecture": "qwen35moe",
+          "declaredType": "model",
+          "tensorCount": 753,
+          "storedTensorElements": 35505251456,
+          "headerBytes": 10991364,
+          "headerSha256": "055e87b7b8f7da45d0d6163e5e71b8644105e63bb1c367f916ad7e2ef2b2d857",
+          "tensorTypeIds": [
+            0,
+            8,
+            10,
+            11,
+            12,
+            13,
+            14,
+            16,
+            18,
+            22,
+            23,
+            30
+          ]
+        },
+        {
+          "path": "mmproj-BF16.gguf",
+          "sourceFileBytes": 902822528,
+          "sourceSha256": "da63cb47a76763c712393f8a017070188a304fa39f8aeea6edc629ed7b975cfa",
+          "status": "PARSED",
+          "architecture": "clip",
+          "declaredType": "mmproj",
+          "tensorCount": 334,
+          "storedTensorElements": 446571248,
+          "headerBytes": 20129,
+          "headerSha256": "e24156e8bf84d91035461cb12249f737ee3bc79492fee3c89d538c08e57b3e0f",
+          "tensorTypeIds": [
+            0,
+            30
+          ]
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "sourceFileBytes": 899283584,
+          "sourceSha256": "71f3cbc1f7cc0f30d09d41cfa924c0060827ebc33bf15ace7e86661e856f0160",
+          "status": "PARSED",
+          "architecture": "clip",
+          "declaredType": "mmproj",
+          "tensorCount": 334,
+          "storedTensorElements": 446571248,
+          "headerBytes": 20129,
+          "headerSha256": "4f6d1d5022f6de0052929faf76d27edb0e2d2aaf1446c9386620748b50b71c35",
+          "tensorTypeIds": [
+            0,
+            1
+          ]
+        },
+        {
+          "path": "mmproj-F32.gguf",
+          "sourceFileBytes": 1786305152,
+          "sourceSha256": "2c52a4ccbc8f0fdb716fb526bfee9506ed0092b2e6dc5d593759f7d200146663",
+          "status": "PARSED",
+          "architecture": "clip",
+          "declaredType": "mmproj",
+          "tensorCount": 334,
+          "storedTensorElements": 446571248,
+          "headerBytes": 20129,
+          "headerSha256": "3e51a16a62e137f7d4f52fb0c24531f0efa05f5a792bab990ec844d5b13c2854",
+          "tensorTypeIds": [
+            0
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 31,
+      "licenseFileFacts": [],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    },
+    {
+      "category": "DFlash GGUF",
+      "repository": "Merkyor/Qwen3.8-27B-EfficientThink-K3-Opus5-Grok4.6-GPT5.6Sol-SFT-SimPO-DFlash2-GGUF",
+      "revision": "e2a9d0c12aa4ab1dc15585104f38bd7de7e311d5",
+      "files": [
+        {
+          "path": "Q2-LynnStyle/Qwen3.8-27B-EfficientThink-SimPO-Q2-LynnStyle.gguf",
+          "sourceFileBytes": 12999977600,
+          "sourceSha256": "8a84f7ef93b01c6376a19fc80fd9df849d23d5785e5953bd3e4fc278d5d21922",
+          "status": "PARSED",
+          "architecture": "qwen35",
+          "declaredType": "model",
+          "tensorCount": 851,
+          "storedTensorElements": 26895998464,
+          "headerBytes": 10994293,
+          "headerSha256": "78ac56f39d41e9cceb8b8bf78c4aa5f65aafdc6a8077ca478a1ba3fbbf33f074",
+          "tensorTypeIds": [
+            0,
+            10,
+            12,
+            13,
+            18,
+            21,
+            22,
+            23
+          ]
+        },
+        {
+          "path": "Q2-LynnStyle/dflash2-qwen38-27b-Q4_K_M.gguf",
+          "sourceFileBytes": 1143006720,
+          "sourceSha256": "e83676f81b6604331d02e004a50689eded7fa905c7e83468e5a376cc27abcad4",
+          "status": "PARSED",
+          "architecture": "dflash",
+          "declaredType": "model",
+          "tensorCount": 81,
+          "storedTensorElements": 1924404480,
+          "headerBytes": 10949094,
+          "headerSha256": "aa5b6b54cebceb058c47e96b4ec2d62b23be238e0bb9e20db6415d32c0badfb4",
+          "tensorTypeIds": [
+            0,
+            12,
+            14
+          ]
+        },
+        {
+          "path": "Q2-LynnStyle/dflash2-qwen38-27b-Q8_0.gguf",
+          "sourceFileBytes": 2056414720,
+          "sourceSha256": "1086ea5d44e9d7b3ee1978ce322c01f96d9c1086bd5e73d89397be7a2af1335a",
+          "status": "PARSED",
+          "architecture": "dflash",
+          "declaredType": "model",
+          "tensorCount": 81,
+          "storedTensorElements": 1924404480,
+          "headerBytes": 10949094,
+          "headerSha256": "7b8f04df3a9b1f186fb8298991568de1690a19997c9db68b996c4b94811738e6",
+          "tensorTypeIds": [
+            0,
+            8
+          ]
+        },
+        {
+          "path": "Q2-LynnStyle/mmproj-Qwen3.8-27B-Q4_K_M.gguf",
+          "sourceFileBytes": 522293024,
+          "sourceSha256": "0d22c439a59fb0ffb784530babc4f03a10581484b7ac68d9a5707fc0d7675d48",
+          "status": "PARSED",
+          "architecture": "clip",
+          "declaredType": "mmproj",
+          "tensorCount": 334,
+          "storedTensorElements": 460730096,
+          "headerBytes": 19655,
+          "headerSha256": "28e32fd3a1d5ef5f5f7987a4485a7c35b13eb738fc06bf879eeb7c6ef9adcf9b",
+          "tensorTypeIds": [
+            0,
+            1,
+            6,
+            8,
+            12
+          ]
+        },
+        {
+          "path": "Q2-LynnStyle/mtp-Qwen3.8-27B-Q4_0.gguf",
+          "sourceFileBytes": 1680271648,
+          "sourceSha256": "051a1764cff8c4f3ee6ae8b00593a0364c7539c67fa50ffc58f3f96509fca38e",
+          "status": "PARSED",
+          "architecture": "qwen35",
+          "declaredType": "model",
+          "tensorCount": 18,
+          "storedTensorElements": 2967501312,
+          "headerBytes": 10944777,
+          "headerSha256": "5ac2d6b78b3be904cedf019fa01ea76ba2454c432fa23d8bf4e9e34e41249071",
+          "tensorTypeIds": [
+            0,
+            2
+          ]
+        },
+        {
+          "path": "Q2-LynnStyle/mtp-Qwen3.8-27B-Q8_0.gguf",
+          "sourceFileBytes": 3164006688,
+          "sourceSha256": "cbf60a0c48b431bb61f1d49b8948dc88ac29c398d6dbdbbb2e6e89ef77eacc9a",
+          "status": "PARSED",
+          "architecture": "qwen35",
+          "declaredType": "model",
+          "tensorCount": 18,
+          "storedTensorElements": 2967501312,
+          "headerBytes": 10944777,
+          "headerSha256": "b1e488be82593eeab90acca07780f7120b55c021207b67b596ec4e16f5450404",
+          "tensorTypeIds": [
+            0,
+            8
+          ]
+        },
+        {
+          "path": "Q3-LynnStyle/dflash2-qwen38-27b-Q4_K_M.gguf",
+          "sourceFileBytes": 1143006720,
+          "sourceSha256": "e83676f81b6604331d02e004a50689eded7fa905c7e83468e5a376cc27abcad4",
+          "status": "PARSED",
+          "architecture": "dflash",
+          "declaredType": "model",
+          "tensorCount": 81,
+          "storedTensorElements": 1924404480,
+          "headerBytes": 10949094,
+          "headerSha256": "aa5b6b54cebceb058c47e96b4ec2d62b23be238e0bb9e20db6415d32c0badfb4",
+          "tensorTypeIds": [
+            0,
+            12,
+            14
+          ]
+        },
+        {
+          "path": "Q3-LynnStyle/dflash2-qwen38-27b-Q8_0.gguf",
+          "sourceFileBytes": 2056414720,
+          "sourceSha256": "1086ea5d44e9d7b3ee1978ce322c01f96d9c1086bd5e73d89397be7a2af1335a",
+          "status": "PARSED",
+          "architecture": "dflash",
+          "declaredType": "model",
+          "tensorCount": 81,
+          "storedTensorElements": 1924404480,
+          "headerBytes": 10949094,
+          "headerSha256": "7b8f04df3a9b1f186fb8298991568de1690a19997c9db68b996c4b94811738e6",
+          "tensorTypeIds": [
+            0,
+            8
+          ]
+        },
+        {
+          "path": "Q3-LynnStyle/mmproj-Qwen3.8-27B-Q4_K_M.gguf",
+          "sourceFileBytes": 522293024,
+          "sourceSha256": "0d22c439a59fb0ffb784530babc4f03a10581484b7ac68d9a5707fc0d7675d48",
+          "status": "PARSED",
+          "architecture": "clip",
+          "declaredType": "mmproj",
+          "tensorCount": 334,
+          "storedTensorElements": 460730096,
+          "headerBytes": 19655,
+          "headerSha256": "28e32fd3a1d5ef5f5f7987a4485a7c35b13eb738fc06bf879eeb7c6ef9adcf9b",
+          "tensorTypeIds": [
+            0,
+            1,
+            6,
+            8,
+            12
+          ]
+        },
+        {
+          "path": "Q3-LynnStyle/mmproj-Qwen3.8-27B-Q6_K.gguf",
+          "sourceFileBytes": 618390560,
+          "sourceSha256": "4b83ea6e065484a8188288513fe15d5a862e01fa6d32c83fa66655b1cbfdcb77",
+          "status": "PARSED",
+          "architecture": "clip",
+          "declaredType": "mmproj",
+          "tensorCount": 334,
+          "storedTensorElements": 460730096,
+          "headerBytes": 19655,
+          "headerSha256": "4049d635bd416f7cf99dbade74510fe9bb8eb5e52b389646b9ec35194c5feb6e",
+          "tensorTypeIds": [
+            0,
+            1,
+            8,
+            14
+          ]
+        },
+        {
+          "path": "Q3-LynnStyle/mtp-Qwen3.8-27B-Q4_0.gguf",
+          "sourceFileBytes": 1680271648,
+          "sourceSha256": "051a1764cff8c4f3ee6ae8b00593a0364c7539c67fa50ffc58f3f96509fca38e",
+          "status": "PARSED",
+          "architecture": "qwen35",
+          "declaredType": "model",
+          "tensorCount": 18,
+          "storedTensorElements": 2967501312,
+          "headerBytes": 10944777,
+          "headerSha256": "5ac2d6b78b3be904cedf019fa01ea76ba2454c432fa23d8bf4e9e34e41249071",
+          "tensorTypeIds": [
+            0,
+            2
+          ]
+        },
+        {
+          "path": "Q3-LynnStyle/mtp-Qwen3.8-27B-Q8_0.gguf",
+          "sourceFileBytes": 3164006688,
+          "sourceSha256": "cbf60a0c48b431bb61f1d49b8948dc88ac29c398d6dbdbbb2e6e89ef77eacc9a",
+          "status": "PARSED",
+          "architecture": "qwen35",
+          "declaredType": "model",
+          "tensorCount": 18,
+          "storedTensorElements": 2967501312,
+          "headerBytes": 10944777,
+          "headerSha256": "b1e488be82593eeab90acca07780f7120b55c021207b67b596ec4e16f5450404",
+          "tensorTypeIds": [
+            0,
+            8
+          ]
+        }
+      ],
+      "componentCompatibility": "UNVERIFIED",
+      "runtimeCapability": "NOT_RUN",
+      "inventoryEntries": 65,
+      "licenseFileFacts": [],
+      "sampling": "Previously discovered GGUF examples plus named auxiliary candidates; names only select samples, never prove their role or compatibility"
+    }
+  ]
+}

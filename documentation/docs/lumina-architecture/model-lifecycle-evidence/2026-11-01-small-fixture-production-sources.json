@@ -1,0 +1,150 @@
+{
+  "observedAt": "2026-11-01T11:22:15.997909+00:00",
+  "status": "PASS",
+  "providerExampleBinarySha256": "a4b4108c588ddb1662c162fbfa4d64b6cb4d6780e1a66a07c7b264b7ae74b65b",
+  "sourceExampleSha256": "896ca6f1dbbca650dbd33634e1c1edb88154fe7914bac7ff1787bb556548ff78",
+  "results": [
+    {
+      "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+      "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+      "fileCount": 28,
+      "filesDigest": "67f4695c610cd7c7476296ee0fe4daa9a2929c6bc336d916b8deaaec0053f693",
+      "productionInspection": "D:\\Project\\goose\\target\\lifecycle-validation\\small-fixture-sources\\unsloth__Qwen3.5-0.8B-MTP-GGUF-production.json",
+      "sha256": "92ff238733c3e2ef86f4d11e2b37b7a1c19acb98263f528ad4116697b291019e",
+      "status": "PASS",
+      "documentObservations": [
+        {
+          "rules_version": "source-task-fields-v1",
+          "document": {
+            "schema_version": 1,
+            "snapshot_digest": "eeb436645f43fd0f3d2a23558869666025a3bc641536e468903a0abadf9ab176",
+            "path": "README.md",
+            "kind": "model_card",
+            "size_bytes": 64409,
+            "source_sha256": "7dbc33b81b72ddb17eb6014164c86a843610e6ae76e6f42df3d7a374ff22ab60",
+            "computed_sha256": "7dbc33b81b72ddb17eb6014164c86a843610e6ae76e6f42df3d7a374ff22ab60"
+          },
+          "scope": "document",
+          "task_families": [
+            "vision_language"
+          ],
+          "unrecognized_tags": [],
+          "issues": []
+        }
+      ]
+    },
+    {
+      "repository": "cloudlnk/whisper-base-gguf",
+      "revision": "1a564799fb1c4db24c3aaea0c2649a204365fdfb",
+      "fileCount": 3,
+      "filesDigest": "c1219b4a3afd37c042a7be7e2567b8812c056d0bdbbb388f16ce7b66adf4c4c6",
+      "productionInspection": "D:\\Project\\goose\\target\\lifecycle-validation\\small-fixture-sources\\cloudlnk__whisper-base-gguf-production.json",
+      "sha256": "7fe3d229c513bdc8bb80a8a17ca7a98c71276fc3ba6a262e320b5209032b8be0",
+      "status": "PASS",
+      "documentObservations": [
+        {
+          "rules_version": "source-task-fields-v1",
+          "document": {
+            "schema_version": 1,
+            "snapshot_digest": "9dc0d89f65a5186bc2c6ccb0137bf86d9d5a1fdba2fe701abfda502a71a05c29",
+            "path": "README.md",
+            "kind": "model_card",
+            "size_bytes": 1369,
+            "source_sha256": "43d4848e91326f945828e33cc9f96918943ac110934390bfd448644f697b9afb",
+            "computed_sha256": "43d4848e91326f945828e33cc9f96918943ac110934390bfd448644f697b9afb"
+          },
+          "scope": "document",
+          "task_families": [],
+          "unrecognized_tags": [],
+          "issues": []
+        }
+      ]
+    },
+    {
+      "repository": "AtomicChat/Qwen3.5-4B-DFlash-GGUF",
+      "revision": "5f573f835b526aa79788ad1a733c66d08f5fe5a9",
+      "fileCount": 9,
+      "filesDigest": "329b7e3960a50d90a0234b5ad6370d5a46ff3d7985be1c160a91a9d321c26691",
+      "productionInspection": "D:\\Project\\goose\\target\\lifecycle-validation\\small-fixture-sources\\AtomicChat__Qwen3.5-4B-DFlash-GGUF-production.json",
+      "sha256": "2ac3f0565c4bd1124013db41d1768c815943775034ea526adea5527093231abc",
+      "status": "PASS",
+      "documentObservations": [
+        {
+          "rules_version": "source-task-fields-v1",
+          "document": {
+            "schema_version": 1,
+            "snapshot_digest": "2f31fed5bac20611edb2ce46c61b445ef929201d1c5819085c0b211fcc2315f7",
+            "path": "README.md",
+            "kind": "model_card",
+            "size_bytes": 4503,
+            "source_sha256": "b618b794754e6bfb056577db3afe2263d0d0955a67ce20e270c67cf9cfb0d302",
+            "computed_sha256": "b618b794754e6bfb056577db3afe2263d0d0955a67ce20e270c67cf9cfb0d302"
+          },
+          "scope": "document",
+          "task_families": [
+            "language"
+          ],
+          "unrecognized_tags": [],
+          "issues": []
+        }
+      ]
+    },
+    {
+      "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+      "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f",
+      "fileCount": 7,
+      "filesDigest": "230aba0d0f5c48f42e65e2b44214881b7fa1296d90124696d8964d96356e73c2",
+      "productionInspection": "D:\\Project\\goose\\target\\lifecycle-validation\\small-fixture-sources\\gpustack__stable-diffusion-v1-5-GGUF-production.json",
+      "sha256": "be0373e7ad13143df01755b169cdb89186fa43cdd431910e2c8922b2d689959f",
+      "status": "PASS",
+      "documentObservations": [
+        {
+          "rules_version": "source-task-fields-v1",
+          "document": {
+            "schema_version": 1,
+            "snapshot_digest": "da34aec0d5dc475dd10a20fd858ac60feb4752c47fecdbc5c20f1b9c001c9e8e",
+            "path": "README.md",
+            "kind": "model_card",
+            "size_bytes": 15049,
+            "source_sha256": "c1d0d560fb10ad1dda4304bb29a77131145e1b3c638b755a6cb6a3f21a11e501",
+            "computed_sha256": "c1d0d560fb10ad1dda4304bb29a77131145e1b3c638b755a6cb6a3f21a11e501"
+          },
+          "scope": "document",
+          "task_families": [],
+          "unrecognized_tags": [],
+          "issues": []
+        }
+      ]
+    },
+    {
+      "repository": "audio-cpp/audio.cpp-gguf",
+      "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+      "fileCount": 466,
+      "filesDigest": "bb654385a3f242f8c555c81e82f89b9c7967124222cd0984f63cd8dd6ac71370",
+      "productionInspection": "D:\\Project\\goose\\target\\lifecycle-validation\\small-fixture-sources\\audio-cpp__audio.cpp-gguf-production.json",
+      "sha256": "ecdd6d429decada23c933583cd67c75d507dd529fc46f4a3985bbae2429de335",
+      "status": "PASS",
+      "documentObservations": [
+        {
+          "rules_version": "source-task-fields-v1",
+          "document": {
+            "schema_version": 1,
+            "snapshot_digest": "0795274dc7dde2c955b6012053cbdb11cb3b4f8a3654095dfd15cd99f32db7f7",
+            "path": "README.md",
+            "kind": "model_card",
+            "size_bytes": 12911,
+            "source_sha256": "04929afd935991044666e190b06c6b363c67a68dfceac10b1d6ab9a4244920dd",
+            "computed_sha256": "04929afd935991044666e190b06c6b363c67a68dfceac10b1d6ab9a4244920dd"
+          },
+          "scope": "document",
+          "task_families": [
+            "tts"
+          ],
+          "unrecognized_tags": [],
+          "issues": []
+        }
+      ]
+    }
+  ],
+  "scope": "Production HTTPS fixed inventory and allowed source-document recheck only; not installation or model capability acceptance"
+}

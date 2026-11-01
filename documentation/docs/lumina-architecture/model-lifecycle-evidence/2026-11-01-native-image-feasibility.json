@@ -1,0 +1,85 @@
+{
+  "startedAt": "2026-11-01T11:29:49.014718+00:00",
+  "status": "PASS",
+  "source": {
+    "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+    "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f",
+    "file": "stable-diffusion-v1-5-FP16.gguf",
+    "sha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+    "sizeBytes": 2132584864,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__stable-diffusion-v1-5-GGUF\\stable-diffusion-v1-5-FP16.gguf",
+    "elapsedSeconds": 152.18800000002375,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/gpustack/stable-diffusion-v1-5-GGUF/repo?Revision=fb1a638177b8e4ae384ac9fe972c4643492f590f&FilePath=stable-diffusion-v1-5-FP16.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "engineRevision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+  "binarySha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043",
+  "versionOutput": "stable-diffusion.cpp version pinned-c6dfa9d, commit c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+  "argv": [
+    "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cpu\\bin\\Release\\sd-cli.exe",
+    "-m",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__stable-diffusion-v1-5-GGUF\\stable-diffusion-v1-5-FP16.gguf",
+    "-p",
+    "a photograph of a red apple on a wooden table, studio lighting, high quality",
+    "-n",
+    "blurry, distorted, low quality",
+    "--sampling-method",
+    "euler_a",
+    "--steps",
+    "20",
+    "--cfg-scale",
+    "7.0",
+    "-s",
+    "42",
+    "-W",
+    "512",
+    "-H",
+    "512",
+    "-t",
+    "12",
+    "--rng",
+    "cpu",
+    "-o",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\image-runtime-results\\sd15-red-apple-seed42.png"
+  ],
+  "expected": {
+    "format": "PNG",
+    "width": 512,
+    "height": 512,
+    "content": "A recognizable red apple on a wooden table"
+  },
+  "visualReview": {
+    "reviewedAt": "2026-11-01T11:38:03.399240+00:00",
+    "method": "Agent inspected the actual generated local PNG through view_image",
+    "checks": {
+      "decodable": true,
+      "dimensions512x512": true,
+      "recognizableRedApple": true,
+      "woodenTableVisible": true,
+      "matchesFixedPrompt": true
+    },
+    "observation": "A clearly recognizable glossy red apple with stem rests on a wooden tabletop against a warm wooden background.",
+    "scope": "One M0 feasibility image; no general quality or reproducibility claim"
+  },
+  "scope": "M0 actual native CPU image generation only; final content review separate; not product install, Image Adapter, GPU, quality benchmark or release acceptance",
+  "pid": 54248,
+  "exitCode": 0,
+  "elapsedSeconds": 353.26499999995576,
+  "output": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\image-runtime-results\\sd15-red-apple-seed42.png",
+    "sha256": "2370e2963c2bbf8186f899684d7b60985f0196ac5c620c08c6e7522d1d49a034",
+    "sizeBytes": 467603,
+    "width": 512,
+    "height": 512,
+    "pngChunksAndDeflateVerified": true
+  },
+  "finishedAt": "2026-11-01T11:35:47.591686+00:00",
+  "logSha256": "ca35117a64ed5061a4ebc33134248c3a2455bd1c49b72d6280efc9693279845e",
+  "probeSourceSha256": "d3c73aedc316a56459388b0597cae2c8b5796c40d26c194afdaf5a485049e2e1"
+}

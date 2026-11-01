@@ -1,0 +1,461 @@
+{
+  "startedAt": "2026-11-01T10:48:21.106537+00:00",
+  "source": "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1",
+  "sourceSha256": "57837a0a7b41c8c27398fcc27ba9ec79e8151abebac1f3c176c0cf8fd657ff2d",
+  "skill": "E:/Codex/home/skills/powershell-code-quality/SKILL.md",
+  "gitHead": "4f62659052985d944b2b8a2a043fc4375218689e",
+  "runtimeVersions": {
+    "powershell.exe": "5.1.26100.9711",
+    "pwsh": "7.6.9"
+  },
+  "staticChecks": [
+    {
+      "schema_version": 1,
+      "runtime": "5.1.26100.9711",
+      "path": "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1",
+      "finding_count": 0,
+      "findings": []
+    },
+    {
+      "schema_version": 1,
+      "runtime": "7.6.9",
+      "path": "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1",
+      "finding_count": 0,
+      "findings": []
+    }
+  ],
+  "units": [
+    {
+      "runtime": "powershell.exe",
+      "status": "PASS",
+      "checks": 12
+    },
+    {
+      "runtime": "pwsh",
+      "status": "PASS",
+      "checks": 12
+    }
+  ],
+  "executionMatrix": [
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "LF",
+      "fixtureSha256": "57837a0a7b41c8c27398fcc27ba9ec79e8151abebac1f3c176c0cf8fd657ff2d",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": null,
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-LF-[app]\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-LF-[app]\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance."
+      },
+      "callerRegistrySentinelUnchanged": true
+    },
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "CRLF",
+      "fixtureSha256": "cb1f80cdd32b59c15fba67778a38f86317fc578d36d0a2ed451aa708e1ad2a60",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": null,
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-CRLF-[app]\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-CRLF-[app]\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance."
+      },
+      "callerRegistrySentinelUnchanged": true
+    },
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "source-default-repository-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": null,
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-default-root\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-default-root\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "full-foundation-and-report",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": {
+          "targets": [
+            "lifecycle_contracts",
+            "lifecycle_gguf",
+            "lifecycle_modelscope",
+            "lifecycle_revisions",
+            "lifecycle_classification",
+            "lifecycle_metadata"
+          ],
+          "suites": 6,
+          "passed": 84,
+          "failed": 0,
+          "ignored": 4,
+          "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-full-foundation\\foundation-app\\foundation-run.log"
+        },
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-full-foundation\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-full-foundation\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance.",
+        "report": {
+          "path": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-full-foundation\\report [data]\\model_lifecycle_foundation.md",
+          "sha256": "7cf43c907b80f6fad0d60433518a562a3537dbbd8402d9ee6f1fe3ed01f5279f",
+          "content": "# lumina model lifecycle validation\n\nStatus: PASS\nScope: foundation and actual existing-runtime text smoke; not full product acceptance.\n\nFoundation targets: lifecycle_contracts, lifecycle_gguf, lifecycle_modelscope, lifecycle_revisions, lifecycle_classification, lifecycle_metadata\nFoundation passed: 84\nFoundation failed: 0\nFoundation ignored: 4\nFoundation log: E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-full-foundation\\foundation-app\\foundation-run.log\nActual text test passed: 1\nActual output: 4\nActual output tokens: 1\nInference evidence: E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-full-foundation\\inference-app\\evidence\\text-smoke.json\nInference log: E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-full-foundation\\inference-app\\inference-run.log\n"
+        }
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "LF",
+      "fixtureSha256": "57837a0a7b41c8c27398fcc27ba9ec79e8151abebac1f3c176c0cf8fd657ff2d",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": null,
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-LF-[app]\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-LF-[app]\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance."
+      },
+      "callerRegistrySentinelUnchanged": true
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "CRLF",
+      "fixtureSha256": "cb1f80cdd32b59c15fba67778a38f86317fc578d36d0a2ed451aa708e1ad2a60",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": null,
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-CRLF-[app]\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-CRLF-[app]\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance."
+      },
+      "callerRegistrySentinelUnchanged": true
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "source-default-repository-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": null,
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-default-root\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-default-root\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "full-foundation-and-report",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMRT000",
+        "exitCode": 0,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "foundation": {
+          "targets": [
+            "lifecycle_contracts",
+            "lifecycle_gguf",
+            "lifecycle_modelscope",
+            "lifecycle_revisions",
+            "lifecycle_classification",
+            "lifecycle_metadata"
+          ],
+          "suites": 6,
+          "passed": 84.0,
+          "failed": 0.0,
+          "ignored": 4.0,
+          "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-full-foundation\\foundation-app\\foundation-run.log"
+        },
+        "result": {
+          "test": "installed_gguf_generates_actual_text",
+          "input": "Compute 2 + 2. Respond only with the numeral.",
+          "output": "4",
+          "outputTokens": 1,
+          "execution": "cpu",
+          "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+        },
+        "evidencePath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-full-foundation\\inference-app\\evidence\\text-smoke.json",
+        "logPath": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-full-foundation\\inference-app\\inference-run.log",
+        "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance.",
+        "report": {
+          "path": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-full-foundation\\report [data]\\model_lifecycle_foundation.md",
+          "sha256": "a4c0dce24ba69c0ed63ade470d8ce48725c971537207ffdcf1b63907d7519b9a",
+          "content": "# lumina model lifecycle validation\n\nStatus: PASS\nScope: foundation and actual existing-runtime text smoke; not full product acceptance.\n\nFoundation targets: lifecycle_contracts, lifecycle_gguf, lifecycle_modelscope, lifecycle_revisions, lifecycle_classification, lifecycle_metadata\nFoundation passed: 84\nFoundation failed: 0\nFoundation ignored: 4\nFoundation log: E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-full-foundation\\foundation-app\\foundation-run.log\nActual text test passed: 1\nActual output: 4\nActual output tokens: 1\nInference evidence: E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-full-foundation\\inference-app\\evidence\\text-smoke.json\nInference log: E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-full-foundation\\inference-app\\inference-run.log\n"
+        }
+      }
+    }
+  ],
+  "negativeCases": [
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "LF",
+      "case": "existing-evidence-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Use a fresh validation root; existing evidence is preserved."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "CRLF",
+      "case": "existing-evidence-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Use a fresh validation root; existing evidence is preserved."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "missing-configuration",
+      "result": {
+        "schemaVersion": 1,
+        "status": "UNVERIFIED",
+        "ruleId": "LMRT001",
+        "exitCode": 2,
+        "missingVariables": [
+          "LUMINA_REAL_GGUF_PATH",
+          "LUMINA_REAL_MODEL_ID",
+          "LUMINA_REAL_REPO_ID"
+        ],
+        "message": "Supply actual model variables and an isolated LUMINA_PATH_ROOT."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "disallowed-output-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "actual-native-test-failure",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT004",
+        "exitCode": 1,
+        "message": "Cargo validation failed; inspect E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\powershell-native-failure\\inference-app\\inference-run.log"
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "immutable-report",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Existing report is preserved; use a fresh report path."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "disallowed-report-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "LF",
+      "case": "existing-evidence-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Use a fresh validation root; existing evidence is preserved."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "CRLF",
+      "case": "existing-evidence-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Use a fresh validation root; existing evidence is preserved."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "missing-configuration",
+      "result": {
+        "schemaVersion": 1,
+        "status": "UNVERIFIED",
+        "ruleId": "LMRT001",
+        "exitCode": 2,
+        "missingVariables": [
+          "LUMINA_REAL_GGUF_PATH",
+          "LUMINA_REAL_MODEL_ID",
+          "LUMINA_REAL_REPO_ID"
+        ],
+        "message": "Supply actual model variables and an isolated LUMINA_PATH_ROOT."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "disallowed-output-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "actual-native-test-failure",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT004",
+        "exitCode": 1,
+        "message": "Cargo validation failed; inspect E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5\\pwsh-native-failure\\inference-app\\inference-run.log"
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "immutable-report",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Existing report is preserved; use a fresh report path."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "disallowed-report-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    }
+  ],
+  "psScriptAnalyzer": "NOT_AVAILABLE in either runtime; not installed",
+  "fixtureRoot": "E:\\Codex\\temp\\lumina-real-text-gate-20261101-r5",
+  "status": "PASS",
+  "finishedAt": "2026-11-01T10:49:24.959660+00:00"
+}

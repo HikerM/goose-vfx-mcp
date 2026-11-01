@@ -5,7 +5,7 @@ sidebar_position: 13
 
 # lumina 模型生命周期验收和需求追踪
 
-本清单约束[完整升级计划](./model-lifecycle-master-plan.zh-CN.md)的真实交付。下列用例当前全部为 NOT_RUN，需在对应工作包实施后执行。计划覆盖率与功能通过率分别记录；存在计划不代表模型已验证。
+本清单约束[完整升级计划](./model-lifecycle-master-plan.zh-CN.md)的真实交付。规划基线中下列用例初始为 NOT_RUN；执行结果和局部证据见[实施进度](./model-lifecycle-progress.zh-CN.md)，完整用例仍须在对应工作包接入后执行。计划覆盖率与功能通过率分别记录；存在计划不代表模型已验证。
 
 ## 证据规则
 
