@@ -351,6 +351,84 @@ pub(crate) fn open_for_verification(path: &Path) -> Result<std::fs::File> {
     Ok(options.open(path)?)
 }
 
+pub(crate) fn open_exclusive_transfer(path: &Path) -> Result<std::fs::File> {
+    let mut options = std::fs::OpenOptions::new();
+    options.read(true).write(true).create(true).truncate(false);
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+        options.share_mode(0).custom_flags(0x0020_0000);
+    }
+    let file = options.open(path)?;
+    require_single_link_file(&file)?;
+    Ok(file)
+}
+
+pub(crate) fn require_single_link_file(file: &std::fs::File) -> Result<()> {
+    ensure!(
+        file.metadata()?.is_file(),
+        "Managed content is not a regular file"
+    );
+    #[cfg(windows)]
+    let links = {
+        use std::os::windows::io::AsRawHandle;
+
+        #[repr(C)]
+        struct FileInformation {
+            attributes: u32,
+            creation_time: [u32; 2],
+            access_time: [u32; 2],
+            write_time: [u32; 2],
+            volume_serial_number: u32,
+            file_size_high: u32,
+            file_size_low: u32,
+            links: u32,
+            file_index_high: u32,
+            file_index_low: u32,
+        }
+
+        #[link(name = "kernel32")]
+        unsafe extern "system" {
+            fn GetFileInformationByHandle(
+                handle: *mut std::ffi::c_void,
+                information: *mut FileInformation,
+            ) -> i32;
+        }
+
+        // The pinned stable Rust does not expose Windows link counts through MetadataExt.
+        let mut information = std::mem::MaybeUninit::<FileInformation>::uninit();
+        let result =
+            unsafe { GetFileInformationByHandle(file.as_raw_handle(), information.as_mut_ptr()) };
+        if result == 0 {
+            return Err(std::io::Error::last_os_error().into());
+        }
+        let information = unsafe { information.assume_init() };
+        ensure!(
+            information.attributes & 0x400 == 0,
+            super::ModelSourceError {
+                code: LifecycleErrorCode::DestinationLocked,
+                http_status: None,
+            }
+        );
+        u64::from(information.links)
+    };
+    #[cfg(unix)]
+    let links = {
+        use std::os::unix::fs::MetadataExt;
+        file.metadata()?.nlink()
+    };
+    #[cfg(not(any(windows, unix)))]
+    let links = 0u64;
+    ensure!(
+        links == 1,
+        super::ModelSourceError {
+            code: LifecycleErrorCode::DestinationLocked,
+            http_status: None,
+        }
+    );
+    Ok(())
+}
+
 #[cfg(windows)]
 fn is_redirect(metadata: &std::fs::Metadata) -> bool {
     use std::os::windows::fs::MetadataExt;

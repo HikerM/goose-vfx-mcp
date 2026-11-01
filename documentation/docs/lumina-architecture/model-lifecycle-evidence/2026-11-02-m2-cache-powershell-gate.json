@@ -1,0 +1,290 @@
+{
+  "startedAt": "2026-11-01T16:21:47.868003+00:00",
+  "status": "PASS",
+  "target": "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1",
+  "targetSha256": "bd6ccaf46a1bbde4f04d01e79158e71df1a06b93c4610eab237a286c8133a2c8",
+  "support": "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1",
+  "supportSha256": "64b78250d3a0011417d68a5d256406c82c827f0e9c5064ba59e27dcdae0ea240",
+  "skill": "E:/Codex/home/skills/powershell-code-quality/SKILL.md",
+  "gitHead": "8da22cf34f1b89c846d93cbbd45b95b439040e61",
+  "runtimeVersions": {
+    "powershell.exe": "5.1.26100.9711",
+    "pwsh": "7.6.9"
+  },
+  "static": [
+    {
+      "schema_version": 1,
+      "runtime": "5.1.26100.9711",
+      "path": "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1",
+      "finding_count": 0,
+      "findings": []
+    },
+    {
+      "schema_version": 1,
+      "runtime": "7.6.9",
+      "path": "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1",
+      "finding_count": 0,
+      "findings": []
+    }
+  ],
+  "units": [
+    {
+      "runtime": "powershell.exe",
+      "status": "PASS",
+      "checks": 9
+    },
+    {
+      "runtime": "pwsh",
+      "status": "PASS",
+      "checks": 9
+    }
+  ],
+  "matrix": [
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "LF",
+      "fixtureSha256": "bd6ccaf46a1bbde4f04d01e79158e71df1a06b93c4610eab237a286c8133a2c8",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "lifecycle_cache_install",
+        "passed": 12,
+        "failed": 0,
+        "ignored": 0,
+        "logPath": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\powershell-LF-[app]\\cache-install-app\\cache-install-run.log",
+        "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance.",
+        "report": {
+          "path": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\powershell-LF-[app]\\reports [data]\\cache-install.json",
+          "sha256": "7e54e1ddcb01b64394b946c11fa15c8096ce933485ee946c52ebbf6a5b5618ab",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"lifecycle_cache_install\",\"passed\":12,\"failed\":0,\"ignored\":0,\"logPath\":\"E:\\\\Codex\\\\temp\\\\lumina-cache-install-gate-20261102-r1\\\\powershell-LF-[app]\\\\cache-install-app\\\\cache-install-run.log\",\"scope\":\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\"}\n"
+        }
+      },
+      "callerRegistryUnchanged": true
+    },
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "CRLF",
+      "fixtureSha256": "085f707ce562d685732f3af3c3b483f996a9ae9d606b7bfd198d2b14816cd3fc",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "lifecycle_cache_install",
+        "passed": 12,
+        "failed": 0,
+        "ignored": 0,
+        "logPath": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\powershell-CRLF-[app]\\cache-install-app\\cache-install-run.log",
+        "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance.",
+        "report": {
+          "path": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\powershell-CRLF-[app]\\reports [data]\\cache-install.json",
+          "sha256": "f3f12fb766c172863de85ed1812a6f8d059ede784f64724208ca39f480fa1a8f",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"lifecycle_cache_install\",\"passed\":12,\"failed\":0,\"ignored\":0,\"logPath\":\"E:\\\\Codex\\\\temp\\\\lumina-cache-install-gate-20261102-r1\\\\powershell-CRLF-[app]\\\\cache-install-app\\\\cache-install-run.log\",\"scope\":\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\"}\n"
+        }
+      },
+      "callerRegistryUnchanged": true
+    },
+    {
+      "runtime": "powershell.exe",
+      "lineEnding": "source-default-repository",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "lifecycle_cache_install",
+        "passed": 12,
+        "failed": 0,
+        "ignored": 0,
+        "logPath": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\powershell-default-root\\cache-install-app\\cache-install-run.log",
+        "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "LF",
+      "fixtureSha256": "bd6ccaf46a1bbde4f04d01e79158e71df1a06b93c4610eab237a286c8133a2c8",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "lifecycle_cache_install",
+        "passed": 12,
+        "failed": 0,
+        "ignored": 0,
+        "logPath": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\pwsh-LF-[app]\\cache-install-app\\cache-install-run.log",
+        "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance.",
+        "report": {
+          "path": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\pwsh-LF-[app]\\reports [data]\\cache-install.json",
+          "sha256": "7a3483ebd411eed9f3e286b108f451bf0693d0350b3b9d62da45ab63e63c3ba0",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"lifecycle_cache_install\",\"passed\":12,\"failed\":0,\"ignored\":0,\"logPath\":\"E:\\\\Codex\\\\temp\\\\lumina-cache-install-gate-20261102-r1\\\\pwsh-LF-[app]\\\\cache-install-app\\\\cache-install-run.log\",\"scope\":\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\"}\n"
+        }
+      },
+      "callerRegistryUnchanged": true
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "CRLF",
+      "fixtureSha256": "085f707ce562d685732f3af3c3b483f996a9ae9d606b7bfd198d2b14816cd3fc",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "lifecycle_cache_install",
+        "passed": 12,
+        "failed": 0,
+        "ignored": 0,
+        "logPath": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\pwsh-CRLF-[app]\\cache-install-app\\cache-install-run.log",
+        "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance.",
+        "report": {
+          "path": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\pwsh-CRLF-[app]\\reports [data]\\cache-install.json",
+          "sha256": "60f6c7e90ca55a2227924a08f81b1cc6ac715a1e013752f55fb7d45f5002cc2f",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"lifecycle_cache_install\",\"passed\":12,\"failed\":0,\"ignored\":0,\"logPath\":\"E:\\\\Codex\\\\temp\\\\lumina-cache-install-gate-20261102-r1\\\\pwsh-CRLF-[app]\\\\cache-install-app\\\\cache-install-run.log\",\"scope\":\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\"}\n"
+        }
+      },
+      "callerRegistryUnchanged": true
+    },
+    {
+      "runtime": "pwsh",
+      "lineEnding": "source-default-repository",
+      "result": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "lifecycle_cache_install",
+        "passed": 12,
+        "failed": 0,
+        "ignored": 0,
+        "logPath": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1\\pwsh-default-root\\cache-install-app\\cache-install-run.log",
+        "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance."
+      }
+    }
+  ],
+  "negatives": [
+    {
+      "runtime": "powershell.exe",
+      "case": "repeat-preserves-evidence",
+      "lineEnding": "LF",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Existing report is preserved; use a fresh report path."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "repeat-preserves-evidence",
+      "lineEnding": "CRLF",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Existing report is preserved; use a fresh report path."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "missing-application-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "UNVERIFIED",
+        "ruleId": "LMCI001",
+        "exitCode": 2,
+        "message": "Supply an isolated ApplicationRoot or LUMINA_PATH_ROOT."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "disallowed-application-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    },
+    {
+      "runtime": "powershell.exe",
+      "case": "disallowed-report-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "repeat-preserves-evidence",
+      "lineEnding": "LF",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Existing report is preserved; use a fresh report path."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "repeat-preserves-evidence",
+      "lineEnding": "CRLF",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT003",
+        "exitCode": 1,
+        "message": "Existing report is preserved; use a fresh report path."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "missing-application-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "UNVERIFIED",
+        "ruleId": "LMCI001",
+        "exitCode": 2,
+        "message": "Supply an isolated ApplicationRoot or LUMINA_PATH_ROOT."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "disallowed-application-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    },
+    {
+      "runtime": "pwsh",
+      "case": "disallowed-report-root",
+      "result": {
+        "schemaVersion": 1,
+        "status": "FAIL",
+        "ruleId": "LMRT002",
+        "exitCode": 1,
+        "message": "This workspace validation writes only to D: or E:."
+      }
+    }
+  ],
+  "fixtureRoot": "E:\\Codex\\temp\\lumina-cache-install-gate-20261102-r1",
+  "psScriptAnalyzer": {
+    "powershell.exe": "NOT_INSTALLED",
+    "pwsh": "NOT_INSTALLED"
+  },
+  "finishedAt": "2026-11-01T16:22:12.481972+00:00"
+}

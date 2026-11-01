@@ -1,0 +1,154 @@
+{
+  "startedAt": "2026-11-01T16:26:10.985743+00:00",
+  "status": "PASS",
+  "identities": {
+    "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m2-cache-install-r2-binary\\390e39e7521a9620e8f708d06c35ea81ca538ab2bf760e42ade7d83d2e021ac5\\lumina.exe": "390e39e7521a9620e8f708d06c35ea81ca538ab2bf760e42ade7d83d2e021ac5",
+    "D:\\Project\\goose\\lumina-self-test.yaml": "d76bf94c210f6de0b41dbb1ad25628f5577fcef732df14e790c687c296a091bd",
+    "D:\\Project\\goose\\Cargo.lock": "5497732db98d183131cd3ec8b380967751016d55086aec73b30b8ba1acd68ab5",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m2-cache-install-r2-app\\data\\models\\registry.json": "eaa8819324277be63a194d2a732dc749a25073ec70b76fcb21033a39218f2618",
+    "D:\\Lumina\\data\\models\\modelscope\\Abiray__Qwen3.6-35B-A3B-Q4_K_M-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\moe-cuda-source.json": "01fe7201f4fdd3b199a941851b41539c86e6a25a5005b924ec55ba8338b5501e",
+    "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1": "bd6ccaf46a1bbde4f04d01e79158e71df1a06b93c4610eab237a286c8133a2c8",
+    "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1": "64b78250d3a0011417d68a5d256406c82c827f0e9c5064ba59e27dcdae0ea240",
+    "D:\\Project\\goose\\documentation\\docs\\lumina-architecture\\model-lifecycle-evidence\\2026-11-02-m2-cache-powershell-gate.json": "35433de9fff9958390aeede6bd9363da161efe8f8df6f0c50e40933dc4ac8395",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\cache_worker.rs": "e40b39bbf4fc3ef4c724358d69571af2c2ecefc477845df5aea5588ca20ee555",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\catalog.rs": "3b625eb86298f41cde0302a1e586c92b9c93e8e280e87b05296abe4d2f0b3c2c",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\classification.rs": "52f6b3809052f5062baa75b29969be12217d26154c1f951f3d3d5c3d05852967",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\compatibility.rs": "20529c35d782733574832fb40f34a05565605e9913d378bbbe71101a2eee223b",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\domain.rs": "16e433201db02e6c6adf13d56766a9252f82be63fdea8cbb47c77ed7932e5a9e",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\failure.rs": "d066311c93433b78007adbf8fc00554423cdab3cb2f4e36f1d95da1cdcff5824",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\files.rs": "e8e4d2b056016eec29a17e43a8a6168d93b52895c1eb4a437787bd5c01ab6c73",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\gguf.rs": "4b04a7cc0acbeb6982e46ba8e9aa37c8ee5d21b0af0ec055743a015291ec80b7",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\installation.rs": "d1519b8f440baf9b7a0907b20ed3fe3f7bcca07721239819e282b0d7d8afc922",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\installer.rs": "256d5334430bc21de0dfcbbe9083b456a672322e41e6dd4eb30151b32b1e76a0",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\metadata.rs": "3b09cef3444f232abbd80c1c5de0df17f1690cb8a36afd4c33086b13c78635a7",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\mod.rs": "98c3e9f2a838c759e61f74b807a537bf28153febfb338cdb8826a5abcc598b19",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope.rs": "429aa7204dd488e52d18dbe1417f010dfe47956e22cf7f2651bacd0f0ae84afa",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\planning.rs": "b19cb1a6f706c552222e4c4534928ed823ec3db34fa22eac3827876c8831de3f",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\policy.rs": "ea69cde581404019ead123b952445be8777559765342990a6f498ea94c6f17ff",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\repository.rs": "adef3fafc636c2fc010c03de2d7d7f62f0854411ac5d44b9bdfc31c56d777f4d",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\resources.rs": "57109660d1f6949d3975101541012cc1d99795de00e48796ee77fbb9a6c7cd34",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\state.rs": "b80df6aa1b1ecf24d398f9e07c396266a6ce210c764f3a05ab917e713e3ce7d4",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\compatibility\\profiles.rs": "04d1a607a71dd0217f1036894c396c2391b92cf74133ac486aebf31945cbeab1",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\compatibility\\tokenizer.rs": "744ce154914fe2b404b4834b4d0830a6f26fde0877e270f58cfabd9dd44f19f4",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\components.rs": "8182a30335452d4b27524d7a48c12eb3052648d54d392605978e32aef6b3a229",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\discovery.rs": "cb27654776e3321a2260e775c925b70a4ca51614569ca8a61106677d54977495",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\paths.rs": "1f12418889ed0bf945d0d78b27cf66117e1d60fc18ca21dace5997c4afc25098",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\remote_gguf.rs": "bb8a30038dae22644687f611c51c7b91926edabde541460a84d33a058c92ec2b",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\revisions.rs": "41ed8e66832e146c21c070c2275818c7540602c340dfe45960cf11f4639c4683",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\search.rs": "18ce2cbbc5aaf41087ee9c43a742a6dd04acd44a1c917e766a8823ade11517a5",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\variants.rs": "2536276c3bd202acc13f2428e7123e627c9d8a2036615ed8e7cd942963e3f03c",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\repository\\catalog.rs": "5b74956a01c59b00b1a135f9ad865ca90f1ff3d5307bbd67a17452dd8a65156f",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\repository\\files.rs": "d0e59c2ea36f66eab9f278c858152a93d9e9f495166cab4c1667ea5a3e8e15a9",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\repository\\installation.rs": "3d4e6defbd1e57973dfc834aa5ccb559da250d8493f71b0e1022e40caa8886d9",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\repository\\observations.rs": "d6283da04dc153b2aa87859cd70eb91f5b18818d1de0400550b6bdcb24d65dba",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\src\\lifecycle\\repository\\plan_observations.rs": "8995c9a219a5966c69deb4344df96e190844072b74308b7dc96e657be502357f",
+    "D:\\Project\\goose\\crates\\lumina-local-inference\\tests\\lifecycle_cache_install.rs": "5989f37920468401c4857f02f1e5770829ed7bb5783140a6d1a8f0555d49e8ce"
+  },
+  "parentModel": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:q4_k_m",
+  "expectedTests": [
+    "cache_import_without_pinned_hash_or_exact_source_selection_does_not_claim_job",
+    "cache_install_publishes_verified_content_without_changing_original_or_claiming_ready",
+    "cache_install_rejects_external_blob_alias_without_changing_its_permissions",
+    "cache_install_rejects_same_size_wrong_content_and_retains_failed_file_code",
+    "cache_resume_verifies_saved_prefix_and_explicitly_restarts_corrupt_checkpoint",
+    "cache_transfer_rejects_hardlink_to_external_content_without_changing_it",
+    "cancellation_fences_worker_and_keeps_user_source",
+    "completed_replay_rejects_different_version_and_rechecks_installed_files",
+    "durable_job_pages_find_queued_and_expired_workers_without_resuming_paused_or_cancelled_jobs",
+    "pause_after_download_preserves_completed_bytes_and_resumes_without_external_source",
+    "restart_acknowledges_pending_cancellation_without_importing_content",
+    "transfer_lock_prevents_expired_worker_reclaim_from_writing_or_failing_job"
+  ],
+  "scope": "Actual rebuilt CLI recipe invokes cache-install boundary tests; separate real GGUF installation evidence is required. Not full M2, network transfer or capability READY acceptance.",
+  "argv": [
+    "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m2-cache-install-r2-binary\\390e39e7521a9620e8f708d06c35ea81ca538ab2bf760e42ade7d83d2e021ac5\\lumina.exe",
+    "run",
+    "--recipe",
+    "D:\\Project\\goose\\lumina-self-test.yaml",
+    "--params",
+    "test_phases=model-cache-install",
+    "--params",
+    "workspace_dir=D:/Project/goose/target/lifecycle-validation/recipe-m2-cache-install-r2-results",
+    "--params",
+    "parallel_tests=false",
+    "--params",
+    "cleanup_after=false",
+    "--provider",
+    "local",
+    "--model",
+    "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:q4_k_m",
+    "--no-session",
+    "--no-profile",
+    "--with-builtin",
+    "developer",
+    "--max-turns",
+    "3",
+    "--output-format",
+    "stream-json"
+  ],
+  "pid": 24080,
+  "cliExitCode": 0,
+  "toolRequest": {
+    "type": "toolRequest",
+    "id": "SL38vBteJd110MMqcoUbZZlrO3fjjtUw",
+    "toolCall": {
+      "status": "success",
+      "value": {
+        "name": "shell",
+        "arguments": {
+          "command": "powershell.exe -NoProfile -File bin/test-lumina-cache-install.ps1 -ReportPath \"D:/Project/goose/target/lifecycle-validation/recipe-m2-cache-install-r2-results/cache_install_validation.json\"",
+          "timeout_secs": 120
+        }
+      }
+    },
+    "_meta": {
+      "lumina_extension": "developer"
+    }
+  },
+  "toolResponse": {
+    "type": "toolResponse",
+    "id": "SL38vBteJd110MMqcoUbZZlrO3fjjtUw",
+    "toolResult": {
+      "status": "success",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"lifecycle_cache_install\",\"passed\":12,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m2-cache-install-r2-app\\\\cache-install-app\\\\cache-install-run.log\",\"scope\":\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\",\"report\":{\"path\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\recipe-m2-cache-install-r2-results\\\\cache_install_validation.json\",\"sha256\":\"a32838eff1d2d94890363063825e708776118433cba3b0acd4dc4aa0f03b9aff\",\"content\":\"{\\\"schemaVersion\\\":1,\\\"status\\\":\\\"PASS\\\",\\\"ruleId\\\":\\\"LMCI000\\\",\\\"exitCode\\\":0,\\\"target\\\":\\\"lifecycle_cache_install\\\",\\\"passed\\\":12,\\\"failed\\\":0,\\\"ignored\\\":0,\\\"logPath\\\":\\\"D:\\\\\\\\Project\\\\\\\\goose\\\\\\\\target\\\\\\\\lifecycle-validation\\\\\\\\selftest-m2-cache-install-r2-app\\\\\\\\cache-install-app\\\\\\\\cache-install-run.log\\\",\\\"scope\\\":\\\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\\\"}\\n\"}}\r",
+            "annotations": {
+              "priority": 0.0
+            }
+          }
+        ],
+        "structuredContent": {
+          "stdout": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"lifecycle_cache_install\",\"passed\":12,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m2-cache-install-r2-app\\\\cache-install-app\\\\cache-install-run.log\",\"scope\":\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\",\"report\":{\"path\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\recipe-m2-cache-install-r2-results\\\\cache_install_validation.json\",\"sha256\":\"a32838eff1d2d94890363063825e708776118433cba3b0acd4dc4aa0f03b9aff\",\"content\":\"{\\\"schemaVersion\\\":1,\\\"status\\\":\\\"PASS\\\",\\\"ruleId\\\":\\\"LMCI000\\\",\\\"exitCode\\\":0,\\\"target\\\":\\\"lifecycle_cache_install\\\",\\\"passed\\\":12,\\\"failed\\\":0,\\\"ignored\\\":0,\\\"logPath\\\":\\\"D:\\\\\\\\Project\\\\\\\\goose\\\\\\\\target\\\\\\\\lifecycle-validation\\\\\\\\selftest-m2-cache-install-r2-app\\\\\\\\cache-install-app\\\\\\\\cache-install-run.log\\\",\\\"scope\\\":\\\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\\\"}\\n\"}}\r",
+          "stderr": "",
+          "exit_code": 0
+        },
+        "isError": false
+      }
+    }
+  },
+  "assistantReply": "Executing the frozen-plan cache installation validation as instructed.\n\n## Cache Installation Validation Summary\n\n| Field | Value |\n|---|---|\n| **Status** | **PASS** |\n| **Rule ID** | LMCI000 |\n| **Passed** | 12 |\n| **Failed** | 0 |\n| **Ignored** | 0 |\n| **Exit Code** | 0 |\n| **Report Path** | `D:/Project/goose/target/lifecycle-validation/recipe-m2-cache-install-r2-results/cache_install_validation.json` |\n| **SHA-256** | `a32838eff1d2d94890363063825e708776118433cba3b0acd4dc4aa0f03b9aff` |\n| **Log Path** | `D:/Project/goose/target/lifecycle-validation/selftest-m2-cache-install-r2-app/cache-install-app/cache-install-run.log` |\n\n### Scope Clarification\n\nThese are **cache installation boundary tests** — they verify that the local cache layout, file integrity, and directory structure are correct and usable. They do **not** prove:\n\n- **Network transfer capability** — whether artifacts can be fetched from remote repositories.\n- **Runtime readiness** — whether the runtime can actually load and execute models from the cache.\n\nThose capabilities require separate acceptance evidence and dedicated test suites.",
+  "observed": {
+    "schemaVersion": 1,
+    "status": "PASS",
+    "ruleId": "LMCI000",
+    "exitCode": 0,
+    "target": "lifecycle_cache_install",
+    "passed": 12,
+    "failed": 0,
+    "ignored": 0,
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m2-cache-install-r2-app\\cache-install-app\\cache-install-run.log",
+    "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance.",
+    "report": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\recipe-m2-cache-install-r2-results\\cache_install_validation.json",
+      "sha256": "a32838eff1d2d94890363063825e708776118433cba3b0acd4dc4aa0f03b9aff",
+      "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"lifecycle_cache_install\",\"passed\":12,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m2-cache-install-r2-app\\\\cache-install-app\\\\cache-install-run.log\",\"scope\":\"Cache installation boundary tests; not network transfer or Runtime READY acceptance.\"}\n"
+    }
+  },
+  "nativeTestLogSha256": "c902d3839db8fc0b160214407a7501d972aabd59bb03e1be3673d0b1842eea8b",
+  "rawOutputSha256": "3433f35bd2a716af3b784df823b5e9507148bf6cf6ba8b6f596ceca756a0b72a",
+  "finishedAt": "2026-11-01T16:30:55.004534+00:00"
+}

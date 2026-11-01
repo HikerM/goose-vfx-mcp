@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-11-01T16:05:51.760174+00:00",
+  "status": "FAIL",
+  "command": "bin/cargo.cmd clippy --all-targets -- -D warnings",
+  "exitCode": 101,
+  "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-workspace-clippy-r2.log",
+  "logSha256": "fb146b5d5f2a73a9af0e5ccf54b7a12bcce899998c6ce6267377211e99331317",
+  "summaries": [
+    {
+      "package": "lumina-verified-sources",
+      "target": "test \"golden_vectors\"",
+      "diagnostics": 3
+    }
+  ],
+  "diagnosticSourceFiles": [
+    {
+      "path": "crates/lumina-verified-sources/tests/common/mod.rs",
+      "sha256": "7be0a35d874054b699c1f783a17c61d0abaa1ab7084ae2a6846acc5a6fd32c96",
+      "unchangedFromHeadIgnoringLineEndings": true
+    }
+  ],
+  "scope": "Actual post-ownership-guard workspace check. Listed diagnostic files are unchanged from pushed HEAD. This failed attempt proves these reported issues, not an exhaustive count of all remaining downstream failures. No workspace clean or release pass claim."
+}

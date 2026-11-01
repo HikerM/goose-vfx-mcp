@@ -308,6 +308,57 @@ impl LifecycleRepository {
         Self::read_job_by(&connection, "id", id)
     }
 
+    pub fn list_jobs(&self, after_id: Option<&str>, limit: u32) -> Result<Vec<LifecycleJob>> {
+        self.query_jobs(after_id, limit, None)
+    }
+
+    pub fn recoverable_jobs(
+        &self,
+        now: i64,
+        after_id: Option<&str>,
+        limit: u32,
+    ) -> Result<Vec<LifecycleJob>> {
+        self.query_jobs(after_id, limit, Some(now))
+    }
+
+    fn query_jobs(
+        &self,
+        after_id: Option<&str>,
+        limit: u32,
+        recovery_at: Option<i64>,
+    ) -> Result<Vec<LifecycleJob>> {
+        ensure!(
+            (1..=1000).contains(&limit),
+            "Job page size must be 1..=1000"
+        );
+        let connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let mut statement = connection.prepare(
+            "SELECT id FROM lifecycle_jobs WHERE (?1 IS NULL OR id > ?1) AND (?2 IS NULL OR status = ?3 OR (status = ?4 AND lease_until <= ?2) OR status = ?5) ORDER BY id LIMIT ?6"
+        )?;
+        let ids = statement
+            .query_map(
+                params![
+                    after_id,
+                    recovery_at,
+                    serde_json::to_string(&JobStatus::Queued)?,
+                    serde_json::to_string(&JobStatus::Running)?,
+                    serde_json::to_string(&JobStatus::Cancelling)?,
+                    limit
+                ],
+                |row| row.get::<_, String>(0),
+            )?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        ids.iter()
+            .map(|id| {
+                Self::read_job_by(&connection, "id", id)?
+                    .ok_or_else(|| anyhow!("Listed job disappeared"))
+            })
+            .collect()
+    }
+
     fn read_job_by(
         connection: &Connection,
         column: &str,

@@ -1,0 +1,151 @@
+{
+  "observedAt": "2026-11-01T16:06:59.060480+00:00",
+  "status": "PASS_CURRENT_OWNERSHIP_GUARDS_AND_SECOND_VERSION_CACHE_INSTALL_NOT_COMPLETE_M2",
+  "source": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+  "sourceRevision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+  "sourceBefore": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "sizeBytes": 833592736,
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+  },
+  "sourceAfter": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "sizeBytes": 833592736,
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+  },
+  "database": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-real-plan-checks-20261101-r1\\models.db",
+  "managedRoot": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed",
+  "before": {
+    "registeredVersions": 1,
+    "activations": [
+      [
+        "m2-baseline-qwen35-0.8b",
+        "m2-baseline-qwen35-0.8b-r1"
+      ]
+    ],
+    "blobRows": [
+      [
+        "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        833592736
+      ]
+    ],
+    "blobRefs": 1,
+    "capabilityEvidenceRows": 0,
+    "oldManifestDigest": "88083173c2b2c1142ba9bba06ddd77b02dd73245c844555d4956eeb794b98ecc",
+    "oldManifestPayloadSha256": "88083173c2b2c1142ba9bba06ddd77b02dd73245c844555d4956eeb794b98ecc"
+  },
+  "after": {
+    "registeredVersions": 2,
+    "activations": [
+      [
+        "m2-baseline-qwen35-0.8b",
+        "m2-baseline-qwen35-0.8b-r1"
+      ]
+    ],
+    "blobRows": [
+      [
+        "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        833592736
+      ]
+    ],
+    "blobRefs": 2,
+    "capabilityEvidenceRows": 0,
+    "oldManifestDigest": "88083173c2b2c1142ba9bba06ddd77b02dd73245c844555d4956eeb794b98ecc",
+    "oldManifestPayloadSha256": "88083173c2b2c1142ba9bba06ddd77b02dd73245c844555d4956eeb794b98ecc"
+  },
+  "oldVersionFileBefore": {
+    "path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed\\installations\\11e414ae7e8c0933cb796999c6a71a922b9bfb8dafc73d5236df21f119a444c1\\a3bf3169bfe8f79ec7d28036ceb9dd77610aa65d6613a31f18ee2c7dd732f8be\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+    "sizeBytes": 833592736,
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+  },
+  "oldVersionFileAfter": {
+    "path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed\\installations\\11e414ae7e8c0933cb796999c6a71a922b9bfb8dafc73d5236df21f119a444c1\\a3bf3169bfe8f79ec7d28036ceb9dd77610aa65d6613a31f18ee2c7dd732f8be\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+    "sizeBytes": 833592736,
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+  },
+  "newVersionFiles": [
+    {
+      "path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed\\installations\\11e414ae7e8c0933cb796999c6a71a922b9bfb8dafc73d5236df21f119a444c1\\207d1eeefd7f465f3b629a2cacc4c4caa96b2991b5a309ebf0fef40c372e104b\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+      "sizeBytes": 833592736,
+      "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+    }
+  ],
+  "binaries": {
+    "plan": {
+      "path": "D:\\Project\\goose\\target\\debug\\examples\\cache_recorded_component.exe",
+      "sizeBytes": 14737408,
+      "sha256": "c13ca9a3dbf31083d868ea71d77741b4ff1ca5d4a501c80123cfd560fbe6aac6"
+    },
+    "worker": {
+      "path": "D:\\Project\\goose\\target\\debug\\examples\\install_cached_plan.exe",
+      "sizeBytes": 14967296,
+      "sha256": "35603cd2fc4c13ab19cf1ea8bab81755c2f47551cacbaa02ed01f3339c06712c"
+    }
+  },
+  "existingDatabaseWithoutOptIn": {
+    "exitCode": 1,
+    "unchanged": true
+  },
+  "newPlanId": "plan:d1bcac68-a0f0-4e5c-b70d-7bfd870169f7",
+  "newJobBefore": {
+    "id": "job:78acc1cb-17ff-474b-a884-b2ba22760f8c",
+    "idempotency_key": "baseline-install:plan:d1bcac68-a0f0-4e5c-b70d-7bfd870169f7",
+    "plan_id": "plan:d1bcac68-a0f0-4e5c-b70d-7bfd870169f7",
+    "plan_digest": "b0190ae6aab2d302c2c4f53890bde396c1c88916d8da0013b5ef72ec7dea4e55",
+    "stage": "ready_to_install",
+    "status": "queued",
+    "version": 0,
+    "generation": 0,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793549052,
+    "updated_at": 1793549052
+  },
+  "newJobAfter": {
+    "id": "job:78acc1cb-17ff-474b-a884-b2ba22760f8c",
+    "idempotency_key": "baseline-install:plan:d1bcac68-a0f0-4e5c-b70d-7bfd870169f7",
+    "plan_id": "plan:d1bcac68-a0f0-4e5c-b70d-7bfd870169f7",
+    "plan_digest": "b0190ae6aab2d302c2c4f53890bde396c1c88916d8da0013b5ef72ec7dea4e55",
+    "stage": "installed",
+    "status": "completed",
+    "version": 23,
+    "generation": 2,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793549052,
+    "updated_at": 1793549196
+  },
+  "newManifestDigest": "aba4cb776aa6b98a74278e1917a3a1737cc500dc787123e94634181fc5dfda88",
+  "replayVerified": true,
+  "distinctPhysicalVersionFiles": true,
+  "physicalBlobRows": 1,
+  "versionReferences": 2,
+  "rawOutputs": {
+    "prepare-plan.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r2\\prepare-plan.stdout.json",
+      "sizeBytes": 9024,
+      "sha256": "7638f5186aeeee5d3627e5508a065c4d6daa8270e4c7c70f03552248aefc4ae1"
+    },
+    "prepare-plan.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r2\\prepare-plan.stderr.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "install.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r2\\install.stdout.json",
+      "sizeBytes": 13544,
+      "sha256": "eb096d6da7e27d5323afeb6ecbf22a11d6ef7a2733948bf137b41c21046603ad"
+    },
+    "install.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r2\\install.stderr.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "without-reuse-opt-in.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r2\\without-reuse-opt-in.stderr.log",
+      "sizeBytes": 93,
+      "sha256": "bb121ec61e1e37195d270727cdd4b38246d12a2414b5c7ea9682958d94cdffd0"
+    }
+  },
+  "scope": "Actual current worker with handle-level single-link checks: fresh source-bound plan, second cache installation in the same database and managed root, shared blob reuse, separate read-only version files, immutable old version and unchanged active selection. No network transport, automatic startup worker, runtime invocation, capability READY, uninstall or migration acceptance."
+}

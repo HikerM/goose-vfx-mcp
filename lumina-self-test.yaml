@@ -19,6 +19,7 @@ activities:
   - Test load tool for knowledge injection and discovery
   - Test delegate tool for task delegation (sync and async)
   - Test error boundaries including nested delegation prevention
+  - Validate frozen-plan cache installation, checkpoint recovery, cancellation, and original-file ownership
   - Generate comprehensive test report
 
 parameters:
@@ -26,7 +27,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle"
+    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, model-cache-install"
 
   - key: test_depth
     input_type: string
@@ -53,7 +54,14 @@ parameters:
     description: "Clean up test artifacts after completion"
 
 instructions: |
-  {% if test_phases == "model-lifecycle" %}
+  {% if test_phases == "model-cache-install" %}
+  Validate frozen-plan local cache installation using the actual developer shell tool.
+  Invoke the fixed PowerShell validation entry once, then summarize its returned JSON.
+  The entry supplies the Cargo argument list and preserves logs and a factual report.
+  Keep cache-install results separate from model-lifecycle foundation counts. A skipped test
+  is never a pass. This phase does not prove network transfer or Runtime capability readiness.
+  Preserve all model sources and use the inherited D:/E: cache and temporary directories.
+  {% elif test_phases == "model-lifecycle" %}
   Validate the model lifecycle foundation through actual developer tools, following the prompt
   steps in order. The caller supplies an isolated application root and any real model variables.
   Use the validation entry's actual exit code, individual test counts and report read-back.
@@ -149,7 +157,18 @@ extensions:
     name: extensionmanager
 
 prompt: |
-  {% if test_phases == "model-lifecycle" %}
+  {% if test_phases == "model-cache-install" %}
+  Execute the frozen-plan cache installation tests now using your developer shell tool.
+  The working directory is already D:/Project/goose. Your first action must be the validation
+  shell call below, not a plan or directory inspection. Work only in D:/Project/goose,
+  preserve inherited D:/E: caches and temporary directories, and do not delegate or create worktrees.
+  Run exactly once `powershell.exe -NoProfile -File bin\test-lumina-cache-install.ps1 -ReportPath "{{ workspace_dir }}/cache_install_validation.json"`.
+  Do not add cd, directory listing, pipes, redirection, or a manual Cargo invocation.
+  Summarize only its returned JSON: status, passed/failed/ignored counts and report path.
+  A nonzero exit is FAIL; do not retry, repair the invocation or manufacture output.
+  Explain that these are cache installation boundary tests,
+  while full network installation and Runtime readiness need their separate acceptance evidence.
+  {% elif test_phases == "model-lifecycle" %}
   Execute the model lifecycle checks now using your developer shell tool. Your first action
   must be a tool call, not a description of a plan. Use only D:/Project/goose, do not delegate
   or create worktrees, and keep all output, caches and temporary data on D: or E:.

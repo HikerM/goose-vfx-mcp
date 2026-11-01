@@ -1,0 +1,28 @@
+{
+  "observedAt": "2026-11-01T15:23:56Z",
+  "status": "VERIFIED_INCREMENT_PUSHED_NOT_STAGE_COMPLETE",
+  "branch": "testing",
+  "commit": "8da22cf34f1b89c846d93cbbd45b95b439040e61",
+  "parent": "7aa6cfbe9fad627faf705a389b24369a3c2a5daa",
+  "remote": "https://github.com/HikerM/goose-vfx-mcp.git",
+  "push": {
+    "command": "git push origin testing",
+    "exitCode": 0,
+    "result": "7aa6cfbe9..8da22cf34 testing -> testing"
+  },
+  "remoteVerification": {
+    "command": "git ls-remote origin refs/heads/testing",
+    "commit": "8da22cf34f1b89c846d93cbbd45b95b439040e61"
+  },
+  "review": {
+    "stagedFiles": 70,
+    "parsedJsonFiles": 21,
+    "stagedWhitespaceCheck": "PASS",
+    "validation": "2026-11-01-m1-verified-increment.json"
+  },
+  "stageComplete": false,
+  "productComplete": false,
+  "scope": "Verified M1 source, discovery, observations and frozen-plan foundation; remaining M1 requirements and full M2-M6 remain open. M2 cache worker draft and M4 video diagnostics were outside this commit.",
+  "checkout": "D:/Project/goose",
+  "worktreeCount": 1
+}

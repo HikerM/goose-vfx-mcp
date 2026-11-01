@@ -11,13 +11,15 @@ sidebar_position: 14
 
 M0 技术基线提交为 `7aa6cfbe9fad627faf705a389b24369a3c2a5daa`，已推送到 `origin/testing` 并核对远程 SHA 完全一致；提交后工作区干净。当前继续实施 M1，不以 M0 提交作为整体任务结束。
 
+M1 已验证的来源、观察存储和冻结计划基础增量提交为 `8da22cf34f1b89c846d93cbbd45b95b439040e61`，已推送并通过 `git ls-remote` 核对远端 SHA；见[推送记录](./model-lifecycle-evidence/2026-11-01-m1-foundation-push.json)。M1 整体仍在实施。M2 已在同一数据库和受管目录中实际安装两个 0.8B GGUF 版本，完成内容复用和旧活动版本保留复核；最新 CLI 构建及固定入口的实际新配方验收已通过，该增量正进行提交和推送复核。
+
 ## 阶段状态
 
 | 阶段 | 当前状态 | 已取得证据 | 尚需完成 |
 | --- | --- | --- | --- |
 | M0 全量契约和技术验证 | VERIFIED，完整工作区 lint 失败保留 | ML-01～07、全类别真实试验、确切引擎/来源/组件/许可证事实、SQLite v4、状态契约、最新 CPU/CUDA 和完整 recipe；见阶段退出复核 | 产品接入属于 M1～M6；视频质量、旧 Whisper 和完整工作区 lint 仍未通过 |
-| M1 来源解析和完整依赖 | IN_PROGRESS | 有界 GGUF、固定版本清单、真实 HTTPS 分支解析、远程原名与安装路径分离、Wan 63 文件完整复核和真实两页 85 个搜索结果 | 搜索发现服务实际调用、远程元数据、依赖、资源预算和全部入口准入 |
-| M2 可靠安装和数据迁移 | IN_PROGRESS，产品入口未接入 | 逐文件、检查点、只读内容存储与独立目录提交、版本和引用；三处真实子进程强制终止后恢复通过 | 实际传输、启动恢复调度、产品服务接入、引用使用保护、卸载、迁移 |
+| M1 来源解析和完整依赖 | IN_PROGRESS，基础增量已推送 | 实际发现服务、远程 GGUF、已知组件配对、SQLite v6 观察绑定、CPU 资源预算、不可变计划与入队；基础增量 246 项回归和 CPU/CUDA 实测通过 | 更完整的组件角色与档案、GPU/多模态预算、全部入口和受管安装交接；受限账号正例由用户延期 |
+| M2 可靠安装和数据迁移 | IN_PROGRESS，产品入口未接入 | 逐文件、检查点、只读内容与目录提交、版本和引用、三处进程终止恢复；实际 0.8B 双版本缓存安装、blob 复用、幂等重放、硬链接所有权检查、258 项回归、最新 CLI 和固定入口实际配方 | 网络传输、启动恢复调度与产品服务接入、运行引用保护、卸载、迁移及完整阶段验收 |
 | M3 Runtime 和核心真实验收 | PLANNED | 既有 Dense/MoE CPU 文本 smoke 与小模型一次严格工具闭环可运行 | 新 LaunchConfig 和 Runtime 接入、完整文本/工具/视觉验收 |
 | M4 全部类型和加速 | PLANNED，M0 探针已交接 | 全类别实际 Runtime 技术记录；Embedding、Reranker、音频、图像、MTP/DFlash 探针通过；视频内容与旧 Whisper 失败保留 | 产品 Adapter、受管安装、类型化服务、质量与边界验收、视频和 Whisper 修复 |
 | M5 完整模型中心 | PLANNED | 完整界面与服务契约已编写 | 实际页面、SDK、任务及能力状态接入和尺寸验收 |
@@ -244,3 +246,31 @@ M1 后续仍需收尾重建后的 CLI 实际 recipe、必要的 CUDA 复核、�
 [本次增量验证](./model-lifecycle-evidence/2026-11-01-m1-verified-increment.json)记录最新 CPU 完整构建通过（10m51s）及 35B 父模型实际 recipe 通过：10 套检查、131 项通过、4 项跳过、1 次实际文本生成和报告/输入摘要核对。最新 CUDA 完整构建通过（18m20s），实际 Qwen3-1.7B offload 29/29 层、原生缓冲 1743.77 MiB，生成 4，未发现 CPU 回退。听写入口曾有三处错误 crate 引用，修正后重建通过，失败日志保留。
 
 本次提交仅交付已验证基础增量，M1 不标记为整体完成：具体组件角色/档案解析、GPU 与多模态资源档案、全部受管下载和缓存导入切换仍需接续。M2～M6 的原始范围保留。用户延期的受限仓库账号正例继续待验收。[本阶段完整工作区 Clippy](./model-lifecycle-evidence/2026-11-01-m1-workspace-clippy.json)先被未修改的 MCP OnceLock 导入阻止，未证明下游检查通过，保持全局质量门槛未解决。
+
+## M2 缓存安装执行增量
+
+`cache_worker.rs` 将已接受的冻结计划接到逐文件账本和正式安装事务。外部缓存只读打开，不移动或覆盖原文件；本地导入必须具有固定来源完整 SHA256。受管传输目录按 job 摘要分配并持有进程文件锁，租约过期不能产生两个字节写入者；复制和校验期间逐块检查 fencing 与续期。恢复先核对已保存前缀摘要，损坏检查点明确重启；已完成文件重验后继续，暂停保留进度。取消请求由停止写入的 worker 确认，重启后也可收敛待取消任务。
+
+持久化任务新增有界分页和恢复查询，分别返回完整历史或排队、过期租约、待确认取消任务，不自动恢复暂停或已取消任务。完成重放核对 job、计划、安装和版本身份，并重新检查正式目录、只读属性及共享内容摘要，不增加安装或任务事件。
+
+[真实缓存安装](./model-lifecycle-evidence/2026-11-01-m2-real-cache-install-r1.json)使用前阶段已接受的 Qwen3.5-0.8B 冻结计划，原始来源为固定 ModelScope 提交 `3bec95a4bc613f19c4a38afd2cec6383aa2535ad`。833,592,736 字节原文件运行前后完整 SHA256 相同，正式模型及 blob 的独立摘要均一致，发布文件只读；数据库登记 1 个版本，任务为 installed/completed，重复执行幂等，能力证据为 0。该结果只证明实际缓存安装，不表示网络下载、产品入口或 Runtime READY 已交付。
+
+冻结源码后的 crate 全 targets 严格 Clippy 通过；库和集成测试合计 14 套、256 项通过、0 失败、6 项明确跳过，其中新增缓存安装目标为 10 项通过。首轮整包编译期间源码仍有变更，结果包含两项取消用例失败；失败日志保留，未计为通过。最新 CPU CLI 重建和 `model-cache-install` 配方仍待完成。MCP 的 Windows 未使用 OnceLock 导入已按实际使用平台限定，完整工作区重查已暴露既有 Agent lint 和 evidence-db 编译问题，全局质量门槛继续未通过。
+
+### 缓存所有权和真实双版本复核
+
+后续回归用例实际复现旧 `.part` 写入通过硬链接修改外部文件。修复后，传输文件独占打开，在任何截断或续写前核对句柄的普通文件属性及唯一硬链接；blob、staging 和 Manifest 设为只读前执行相同检查，正式版本及完成重放也拒绝共享文件别名。Windows 使用稳定系统句柄 API 获取链接数，未使用 Rust 1.94.1 尚未稳定的 `MetadataExt::number_of_links`。外部 blob 的权限保持不变反例也已通过。
+
+所有权修复后的[最终局部验证](./model-lifecycle-evidence/2026-11-01-m2-cache-validation.json)为 14 套、258 项通过、0 失败、6 项明确跳过，新增缓存安装目标为 12 项通过，crate 全 targets 严格 Clippy 和 Windows 格式检查通过。原始硬链接失败及此前失败日志均保留。修复前 CPU CLI 构建通过但不作为最终验证；修复后最新 CLI 构建通过，实际 `model-cache-install` 配方另行记录。
+
+[第二次真实安装](./model-lifecycle-evidence/2026-11-01-m2-real-cache-install-r2.json)在同一数据库和受管根目录接受新冻结计划，保留旧正式版本并登记第二个版本。结果为 2 个版本、1 个实际 blob、2 条版本引用；两个版本文件具有不同文件身份、单一硬链接并保持只读。原始模型、旧版本文件及旧 Manifest 摘要相同，活动版本未自动切换，能力证据仍为 0。验证入口默认继续拒绝修改既有数据库，只有显式 `--reuse-database` 才进行该诊断；未提供选项的真实调用被拒绝且数据库未改变。该开关只用于诊断 example，不构成产品安装 API。
+
+[第二轮完整工作区检查](./model-lifecycle-evidence/2026-11-01-m2-workspace-clippy-r2.json)被既有 `lumina-verified-sources` golden_vectors 目标的 3 项检查阻止，未证明其余工作区通过；前一轮的 Agent 697 项和 evidence-db 32 项仍是未解决记录。M2 的网络传输、后台恢复服务、卸载、引用运行保护及迁移范围保持完整，尚未达到阶段退出条件。
+
+### 固定 Windows 验证入口和实际配方
+
+首轮 `model-cache-install` 实际配方先查看目录，随后将目录切换和重定向加到 Cargo CMD 命令，受到 shim 拒绝，又自行改用其他入口；[该轮失败记录](./model-lifecycle-evidence/2026-11-01-selftest-m2-cache-install-r1.json)保留，不计为规范流程通过。
+
+新增 `bin/test-lumina-cache-install.ps1` 复用既有 Windows 验证入口的路径、UTF-8、计数解析、哈希和 Cargo 执行规则，以固定参数运行缓存安装目标并创建不可覆盖的事实报告。未修改原有真实文本入口及其十套 foundation 的统计口径。[脚本质量矩阵](./model-lifecycle-evidence/2026-11-02-m2-cache-powershell-gate.json)在 PowerShell 5.1.26100.9711 和 7.6.9 上通过两次静态检查、各 9 项单元检查、LF/CRLF 与默认仓库路径合计 6 次实际执行、10 个失败反例；每次实际执行均为 12 项通过、无失败或跳过。可选 PSScriptAnalyzer 未安装，未计为执行通过。
+
+修正后的配方及入口重建后，[第二轮实际 CLI 配方](./model-lifecycle-evidence/2026-11-01-selftest-m2-cache-install-r2.json)通过。最新 CLI SHA256 为 `390e39e7521a9620e8f708d06c35ea81ca538ab2bf760e42ade7d83d2e021ac5`；35B 父模型实际调用一次固定 PowerShell 入口，工具退出 0，读取 12/0/0 的结果及报告，最终摘要、报告摘要和全部冻结输入前后核对通过。该结果验证本次安装边界增量，不表示网络安装、Runtime READY 或完整 M2 已完成。

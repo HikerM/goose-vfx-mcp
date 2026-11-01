@@ -77,6 +77,40 @@ impl InstallationStore {
         &self.root
     }
 
+    pub(crate) fn transfer_lock(&self, job_id: &str) -> Result<File> {
+        self.lock("transfers", job_id)
+    }
+
+    pub(crate) fn transfer_directory(&self, job_id: &str) -> Result<PathBuf> {
+        self.directory(&RepositoryPath::parse(format!(
+            "transfers/{}",
+            Sha256Digest::of_bytes(job_id.as_bytes()).as_str()
+        ))?)
+    }
+
+    pub(crate) fn transfer_file_path(
+        &self,
+        job_id: &str,
+        relative: &RepositoryPath,
+    ) -> Result<PathBuf> {
+        self.target(&RepositoryPath::parse(format!(
+            "transfers/{}/{}",
+            Sha256Digest::of_bytes(job_id.as_bytes()).as_str(),
+            relative.as_str()
+        ))?)
+    }
+
+    pub(crate) fn verify_installed_version(&self, installed: &InstalledVersion) -> Result<()> {
+        let manifest = &installed.manifest;
+        ensure!(
+            Sha256Digest::of_serializable(manifest)? == installed.manifest_digest,
+            "Installed manifest digest differs from its version"
+        );
+        super::verify_installation_directory(&self.root, manifest, true)?;
+        self.verify_blobs(manifest, |_| Ok(()))?;
+        self.verify_read_only_version(manifest)
+    }
+
     pub fn blob_path(digest: &Sha256Digest) -> Result<RepositoryPath> {
         RepositoryPath::parse(format!(
             "blobs/sha256/{}/{}",
@@ -159,7 +193,9 @@ impl InstallationStore {
     }
 
     fn make_read_only(path: &Path) -> Result<()> {
-        let mut permissions = std::fs::metadata(path)?.permissions();
+        let file = open_for_verification(path)?;
+        super::files::require_single_link_file(&file)?;
+        let mut permissions = file.metadata()?.permissions();
         if !permissions.readonly() {
             permissions.set_readonly(true);
             std::fs::set_permissions(path, permissions)?;
@@ -387,9 +423,7 @@ impl InstallationStore {
                 "Shared installation blob is corrupt"
             );
             ensure!(
-                std::fs::metadata(checked_local_path(&self.root, &blob)?)?
-                    .permissions()
-                    .readonly(),
+                Self::require_owned_read_only(&checked_local_path(&self.root, &blob)?)?,
                 "Shared installation blob is writable"
             );
         }
@@ -406,13 +440,17 @@ impl InstallationStore {
         files.push(RepositoryPath::parse("manifest.json")?);
         for relative in files {
             ensure!(
-                std::fs::metadata(checked_local_path(&directory, &relative)?)?
-                    .permissions()
-                    .readonly(),
+                Self::require_owned_read_only(&checked_local_path(&directory, &relative)?)?,
                 "Published installation content is writable"
             );
         }
         Ok(())
+    }
+
+    fn require_owned_read_only(path: &Path) -> Result<bool> {
+        let file = open_for_verification(path)?;
+        super::files::require_single_link_file(&file)?;
+        Ok(file.metadata()?.permissions().readonly())
     }
 
     pub fn commit(

@@ -1,3 +1,4 @@
+pub mod cache_worker;
 pub mod classification;
 pub mod compatibility;
 pub mod domain;
@@ -14,6 +15,7 @@ pub mod repository;
 pub mod resources;
 pub mod state;
 
+pub use cache_worker::*;
 pub use classification::*;
 pub use compatibility::*;
 pub use domain::*;

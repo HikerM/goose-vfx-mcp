@@ -112,19 +112,20 @@ fn prepare_native_text_plan(
         "Plan acceptance did not persist"
     );
     Ok(
-        serde_json::json!({"profile":profile,"envelope":envelope,"hardware":hardware,"assessment":assessment,"queued_job":job,"scope":"Exact measured baseline content only; one immutable installation plan and queued job in a fresh diagnostic database. No download worker, installation, runtime adapter or product READY was created."}),
+        serde_json::json!({"profile":profile,"envelope":envelope,"hardware":hardware,"assessment":assessment,"queued_job":job,"scope":"Exact measured baseline content only; one immutable installation plan and queued job in a diagnostic database. No download worker, installation, runtime adapter or product READY was created."}),
     )
 }
 
 fn main() -> Result<()> {
     let arguments: Vec<_> = std::env::args().skip(1).collect();
+    let reuse_database = arguments.len() == 5 && arguments[4] == "--reuse-database";
     ensure!(
-        arguments.len() == 2 || (arguments.len() == 4 && arguments[2] == "--prepare-native-text-plan"),
-        "Usage: cache_recorded_component component-json new-database-path [--prepare-native-text-plan native-binary]"
+        arguments.len() == 2 || ((arguments.len() == 4 || reuse_database) && arguments[2] == "--prepare-native-text-plan"),
+        "Usage: cache_recorded_component component-json database-path [--prepare-native-text-plan native-binary [--reuse-database]]"
     );
     ensure!(
-        !Path::new(&arguments[1]).exists(),
-        "Existing model database is preserved; use a fresh path"
+        !Path::new(&arguments[1]).exists() || reuse_database,
+        "Existing model database is preserved; use a fresh path or explicitly --reuse-database"
     );
     let mut bytes = Vec::new();
     std::fs::File::open(&arguments[0])?
@@ -235,7 +236,7 @@ fn main() -> Result<()> {
             "Reopened observation differs"
         );
     }
-    let plan_preparation = if arguments.len() == 4 {
+    let plan_preparation = if arguments.len() >= 4 {
         Some(prepare_native_text_plan(
             &reopened,
             &catalog,
@@ -249,7 +250,7 @@ fn main() -> Result<()> {
     println!(
         "{}",
         serde_json::to_string(
-            &serde_json::json!({"database_schema_version":MODEL_DATABASE_SCHEMA_VERSION,"observation_ids":stored.iter().map(|record|&record.id).collect::<Vec<_>>(),"records_reopened":stored.len(),"plan_preparation":plan_preparation,"scope":"Actual source/header persistence; optional exact-baseline plan acceptance is reported separately. No installed version or runtime capability was created."})
+            &serde_json::json!({"database_schema_version":MODEL_DATABASE_SCHEMA_VERSION,"observation_ids":stored.iter().map(|record|&record.id).collect::<Vec<_>>(),"records_reopened":stored.len(),"existing_database_reuse_requested":reuse_database,"plan_preparation":plan_preparation,"scope":"Actual source/header persistence; optional exact-baseline plan acceptance is reported separately. No installed version or runtime capability was created."})
         )?
     );
     Ok(())

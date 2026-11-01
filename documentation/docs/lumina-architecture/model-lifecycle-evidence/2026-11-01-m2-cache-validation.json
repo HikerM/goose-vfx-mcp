@@ -1,0 +1,215 @@
+{
+  "observedAt": "2026-11-01T16:34:02.736767+00:00",
+  "status": "VERIFIED_CACHE_INSTALL_INCREMENT_NOT_COMPLETE_M2_OR_PRODUCT",
+  "regression": {
+    "command": "bin/cargo.cmd test -p lumina-local-inference --no-default-features --lib --tests",
+    "suites": 14,
+    "passed": 258,
+    "failed": 0,
+    "ignored": 6,
+    "log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-all-tests-r3.log",
+      "bytes": 27005,
+      "sha256": "d5c411d72b809d8d56d028ac3c0d4ca12745c3ce8337385789c9de5f95c18499"
+    }
+  },
+  "cacheInstallTarget": {
+    "passed": 12,
+    "failed": 0,
+    "ignored": 0,
+    "log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-ownership-tests-r1.log",
+      "bytes": 2547,
+      "sha256": "2e1a275e449f8960597a8d6074df5226fdef0b6b9881e24d778f543fe762b476"
+    }
+  },
+  "format": {
+    "status": "PASS",
+    "log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-format-r2.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "crateStrictClippy": {
+    "status": "PASS",
+    "command": "bin/cargo.cmd clippy -p lumina-local-inference --all-targets --no-default-features -- -D warnings",
+    "log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-clippy-r6.log",
+      "bytes": 1265,
+      "sha256": "40bc4e7d516f7d36d50af5698802928df0220c2db3f0eeecbbec99ebbe15eb4a"
+    }
+  },
+  "retainedFailures": [
+    {
+      "log": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-clippy-r2.log",
+        "bytes": 2162,
+        "sha256": "88505e5084e486e274ae7640d3ed0b1eaf728552d8db968edde17ae2c563406f"
+      },
+      "scope": "Windows-only permission reset test needs a platform-specific lint reason; added before final gate"
+    },
+    {
+      "log": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-all-tests-r1.log",
+        "bytes": 13247,
+        "sha256": "0f78ae8f290f68b1431dff84ba97741e930cdbae6c9b557bae51723d597fa7ae"
+      },
+      "scope": "Source changed during compilation; first new cache-install target had 8 passes and 2 cancellation failures. Final frozen rerun above passed; failed attempt remains preserved."
+    },
+    {
+      "log": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-hardlink-before-fix-r1.log",
+        "bytes": 5755,
+        "sha256": "cb29892e90f88ad1ed9c1a71c12c5484b42e32a2c185acd98fd10cc471854f07"
+      },
+      "scope": "Reproduced external-content modification through a managed partial-file hardlink. Handle-level single-link checks and exclusive transfer opens now pass both content and external-blob permission regression cases."
+    }
+  ],
+  "realCacheInstallation": "2026-11-01-m2-real-cache-install-r2.json",
+  "workspaceStrictClippy": "2026-11-01-m2-workspace-clippy-r2.json",
+  "cliBuild": {
+    "status": "PASS",
+    "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina",
+    "elapsed": "2m37s",
+    "binaryPath": "D:\\Project\\goose\\target\\debug\\lumina.exe",
+    "binarySha256": "390e39e7521a9620e8f708d06c35ea81ca538ab2bf760e42ade7d83d2e021ac5",
+    "log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cli-cpu-build-r2.log",
+      "bytes": 233462,
+      "sha256": "bdfa145fdbf67d4f6c311ce7f669378dbf9da6c25439aae106c3b63a98a858e0"
+    }
+  },
+  "cliRecipe": {
+    "status": "PASS",
+    "evidence": "2026-11-01-selftest-m2-cache-install-r2.json",
+    "phase": "model-cache-install",
+    "toolCalls": 1,
+    "passed": 12,
+    "failed": 0,
+    "ignored": 0,
+    "frozenInputsVerified": true
+  },
+  "openScope": [
+    "Network transfer, bounded concurrent jobs and production worker service",
+    "Ownership-aware cache/import handoff including unknown-source-checksum provenance",
+    "Running-component references, uninstall, garbage collection and historical migration",
+    "Remaining M1 and complete M3-M6 requirements"
+  ],
+  "recipeTemplateValidation": {
+    "status": "PASS",
+    "binaryScope": "Previously archived M1 CLI; template parsing only, not latest rebuilt CLI execution",
+    "command": "lumina recipe validate D:/Project/goose/lumina-self-test.yaml",
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-recipe-template-validation-r1.log",
+    "logSha256": "6c17f807dc309be0f43b6d7ccd9e235c4531dd35f717f403ab9c7edc7d3b6076"
+  },
+  "previousRegression": {
+    "command": "bin/cargo.cmd test -p lumina-local-inference --no-default-features --lib --tests",
+    "suites": 14,
+    "passed": 256,
+    "failed": 0,
+    "ignored": 6,
+    "log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-all-tests-r2.log",
+      "bytes": 26832,
+      "sha256": "5c7fb3ad23b729ed5a6b7d90adb0cdfd707d5795294d3063e7e1fac3cf252153"
+    }
+  },
+  "ownershipGuard": {
+    "status": "PASS_TARGET_AND_REGRESSION",
+    "scope": "Managed transfer writes, blob/staging read-only transitions, published file checks and completed replay",
+    "windowsApi": "https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-by_handle_file_information",
+    "stableRust": "1.94.1"
+  },
+  "preOwnershipGuardCliBuild": {
+    "status": "PASS_BEFORE_OWNERSHIP_FIX_NOT_FINAL_VALIDATION",
+    "elapsedIncludingArtifactLockWait": "18m40s",
+    "log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cli-cpu-build-r1.log",
+      "bytes": 233598,
+      "sha256": "ccf092ded07d4a0ef34f01cbbe97e1df5418872e524d1902fc067c5580b27ab2"
+    }
+  },
+  "previousRealCacheInstallation": "2026-11-01-m2-real-cache-install-r1.json",
+  "previousWorkspaceStrictClippy": "2026-11-01-m2-workspace-clippy.json",
+  "planExampleGate": {
+    "status": "PASS",
+    "clippy": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-plan-example-clippy-r1.log",
+      "bytes": 1265,
+      "sha256": "215b0eedc56794d05df0bf3bdc11aa796ccb27e96b4777361eaafb37f483410e"
+    },
+    "build": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cache-plan-example-build-r4.log",
+      "bytes": 1256,
+      "sha256": "e7e59a1ec81b784da6b5139dba0ed444604cd5a54f2450dddbd8a9890baba6ac"
+    }
+  },
+  "powershellGate": {
+    "status": "PASS",
+    "evidence": "2026-11-02-m2-cache-powershell-gate.json",
+    "runtimes": {
+      "powershell.exe": "5.1.26100.9711",
+      "pwsh": "7.6.9"
+    },
+    "staticFindings": [
+      0,
+      0
+    ],
+    "unitChecksPerRuntime": [
+      9,
+      9
+    ],
+    "executionCases": 6,
+    "negativeCases": 10,
+    "optionalScriptAnalyzer": {
+      "powershell.exe": "NOT_INSTALLED",
+      "pwsh": "NOT_INSTALLED"
+    }
+  },
+  "retainedSelftestFlowFailure": {
+    "status": "FAIL",
+    "evidence": "2026-11-01-selftest-m2-cache-install-r1.json",
+    "scope": "Original direct Cargo recipe allowed extra inspection, encountered CMD shim rejection of shell metacharacters and a corrective alternate entry. Strict one-call flow failed. Replaced with fixed shared PowerShell validator, then reran successfully in a fresh app."
+  },
+  "postRecipeFixBuild": {
+    "status": "PASS",
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-cli-post-recipe-fix-build-r3.log",
+    "elapsed": "1.62s",
+    "scope": "Rebuild after recipe and wrapper change; Rust source unchanged from ownership-fixed CLI build"
+  },
+  "sourceIdentities": [
+    {
+      "path": "bin/test-lumina-cache-install.ps1",
+      "sha256": "bd6ccaf46a1bbde4f04d01e79158e71df1a06b93c4610eab237a286c8133a2c8"
+    },
+    {
+      "path": "bin/test-lumina-real-text.ps1",
+      "sha256": "64b78250d3a0011417d68a5d256406c82c827f0e9c5064ba59e27dcdae0ea240"
+    },
+    {
+      "path": "lumina-self-test.yaml",
+      "sha256": "d76bf94c210f6de0b41dbb1ad25628f5577fcef732df14e790c687c296a091bd"
+    },
+    {
+      "path": "crates/lumina-local-inference/src/lifecycle/cache_worker.rs",
+      "sha256": "e40b39bbf4fc3ef4c724358d69571af2c2ecefc477845df5aea5588ca20ee555"
+    },
+    {
+      "path": "crates/lumina-local-inference/src/lifecycle/files.rs",
+      "sha256": "e8e4d2b056016eec29a17e43a8a6168d93b52895c1eb4a437787bd5c01ab6c73"
+    },
+    {
+      "path": "crates/lumina-local-inference/src/lifecycle/installer.rs",
+      "sha256": "256d5334430bc21de0dfcbbe9083b456a672322e41e6dd4eb30151b32b1e76a0"
+    },
+    {
+      "path": "crates/lumina-local-inference/src/lifecycle/repository.rs",
+      "sha256": "adef3fafc636c2fc010c03de2d7d7f62f0854411ac5d44b9bdfc31c56d777f4d"
+    },
+    {
+      "path": "crates/lumina-local-inference/tests/lifecycle_cache_install.rs",
+      "sha256": "5989f37920468401c4857f02f1e5770829ed7bb5783140a6d1a8f0555d49e8ce"
+    }
+  ]
+}

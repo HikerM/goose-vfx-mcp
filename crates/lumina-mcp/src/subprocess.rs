@@ -1,3 +1,4 @@
+#[cfg(not(windows))]
 use std::sync::OnceLock;
 use tokio::process::Command;
 
