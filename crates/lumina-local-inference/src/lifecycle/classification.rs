@@ -8,7 +8,7 @@ use super::{
     RepositorySnapshot, Sha256Digest, MODEL_LIFECYCLE_SCHEMA_VERSION,
 };
 
-pub const CLASSIFICATION_RULES_VERSION: &str = "gguf-content-v1";
+pub const CLASSIFICATION_RULES_VERSION: &str = "gguf-content-v2";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SourceTaskDeclaration {
@@ -63,6 +63,16 @@ pub struct GgufModelFacts {
     pub shard: Option<GgufShard>,
     pub has_expert_tensors: bool,
     pub has_chat_template: bool,
+    pub packaged_runtime_family: Option<String>,
+    pub packaged_spec_version: Option<u64>,
+    #[serde(default)]
+    pub tensor_layout_hints: BTreeSet<GgufTensorLayoutHint>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GgufTensorLayoutHint {
+    PackedLatentDiffusion,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -248,7 +258,7 @@ fn model_structure(
     }
     if matches!(
         architecture,
-        Some("llama" | "qwen2" | "qwen3" | "qwen35" | "bert")
+        Some("llama" | "qwen2" | "qwen3" | "qwen35" | "bert" | "whisper")
     ) {
         return ModelStructure::Dense;
     }
@@ -309,7 +319,31 @@ pub fn classify_gguf(
                 || tensor.name.ends_with("ffn_up_exps.weight")
         }),
         has_chat_template: false,
+        packaged_runtime_family: None,
+        packaged_spec_version: None,
+        tensor_layout_hints: BTreeSet::new(),
     };
+    if architecture.as_deref() == Some("audiocpp") {
+        facts.packaged_runtime_family = text(inspection, "audiocpp.model_spec.family", &mut issues);
+        facts.packaged_spec_version =
+            unsigned(inspection, "audiocpp.model_spec.version", &mut issues);
+    }
+    if [
+        "model.diffusion_model.",
+        "first_stage_model.",
+        "cond_stage_model.",
+    ]
+    .iter()
+    .all(|prefix| {
+        inspection
+            .tensors
+            .iter()
+            .any(|tensor| tensor.name.starts_with(prefix))
+    }) {
+        facts
+            .tensor_layout_hints
+            .insert(GgufTensorLayoutHint::PackedLatentDiffusion);
+    }
     facts.has_chat_template = text(inspection, "tokenizer.chat_template", &mut issues).is_some();
     let structure = model_structure(inspection, architecture.as_deref(), &facts, &mut issues);
     let mut task_candidates = BTreeSet::new();
@@ -341,6 +375,26 @@ pub fn classify_gguf(
     }
     if architecture.as_deref() == Some("audiocpp") {
         task_candidates.insert(ModelTaskFamily::Audio);
+        if facts.packaged_spec_version == Some(1) {
+            match facts.packaged_runtime_family.as_deref() {
+                Some("pocket_tts") => {
+                    task_candidates.insert(ModelTaskFamily::Tts);
+                }
+                Some("qwen3_asr") => {
+                    task_candidates.insert(ModelTaskFamily::Asr);
+                }
+                _ => {}
+            }
+        }
+    }
+    if architecture.as_deref() == Some("whisper") {
+        task_candidates.insert(ModelTaskFamily::Asr);
+    }
+    if facts
+        .tensor_layout_hints
+        .contains(&GgufTensorLayoutHint::PackedLatentDiffusion)
+    {
+        task_candidates.insert(ModelTaskFamily::ImageDiffusion);
     }
     if architecture.as_deref() == Some("dflash") {
         role_hints.insert(ComponentRole::Dflash);
@@ -358,8 +412,13 @@ pub fn classify_gguf(
             issues.push(ClassificationIssue::InvalidProjectorDeclaration);
         }
     }
-    if text(inspection, "general.type", &mut issues).as_deref() == Some("model")
-        && role_hints.is_empty()
+    let declared_type = text(inspection, "general.type", &mut issues);
+    if role_hints.is_empty()
+        && (declared_type.as_deref() == Some("model")
+            || (declared_type.is_none()
+                && facts
+                    .tensor_layout_hints
+                    .contains(&GgufTensorLayoutHint::PackedLatentDiffusion)))
     {
         role_hints.insert(ComponentRole::Main);
     }

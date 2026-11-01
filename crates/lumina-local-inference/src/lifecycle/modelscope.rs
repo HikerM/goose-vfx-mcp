@@ -7,7 +7,8 @@ use std::fmt::{Display, Formatter};
 use std::time::Duration;
 
 use super::{
-    LifecycleErrorCode, ModelScopeRepository, RepositoryPath, RepositorySnapshot, Sha256Digest,
+    classify_gguf, Artifact, FilePurpose, GgufClassification, LifecycleErrorCode,
+    ModelScopeRepository, RepositoryPath, RepositorySnapshot, Sha256Digest,
 };
 
 const API_BASE: &str = "https://modelscope.cn/api/v1/models";
@@ -18,10 +19,34 @@ const MAX_LISTING_REQUESTS: usize = 1000;
 
 mod revisions;
 pub use revisions::*;
+mod paths;
+pub use paths::*;
+mod search;
+pub use search::*;
+mod discovery;
+pub use discovery::*;
+mod remote_gguf;
+pub use remote_gguf::*;
+mod variants;
+pub use variants::*;
+mod components;
+pub use components::*;
+
+fn source_artifact_id(
+    snapshot_id: &str,
+    path: &RepositoryPath,
+    purpose: FilePurpose,
+) -> Result<String> {
+    Ok(
+        Sha256Digest::of_serializable(&(snapshot_id, path, purpose))?
+            .as_str()
+            .to_string(),
+    )
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RepositoryFile {
-    pub path: RepositoryPath,
+    pub path: ObservedRepositoryPath,
     pub size_bytes: Option<u64>,
     pub sha256: Option<Sha256Digest>,
 }
@@ -33,6 +58,59 @@ pub struct RepositoryInventory {
 }
 
 impl RepositoryInventory {
+    pub fn artifact(&self, path: &RepositoryPath, purpose: FilePurpose) -> Result<Artifact> {
+        self.validate()?;
+        let file = self.files.get(path.as_str()).context(ModelSourceError {
+            code: LifecycleErrorCode::SourceNotFound,
+            http_status: None,
+        })?;
+        let snapshot_id = self.snapshot.content_digest()?.as_str().to_string();
+        let artifact = Artifact {
+            id: source_artifact_id(&snapshot_id, path, purpose)?,
+            snapshot_id,
+            path: path.clone(),
+            purpose,
+            size_bytes: file.size_bytes,
+            source_sha256: file.sha256.clone(),
+        };
+        artifact.validate()?;
+        Ok(artifact)
+    }
+
+    pub fn classify_observation(
+        &self,
+        observation: &RemoteGgufInspection,
+    ) -> Result<GgufClassification> {
+        self.validate()?;
+        ensure!(
+            observation.snapshot_digest == self.snapshot.content_digest()?,
+            "GGUF observation belongs to a different source snapshot"
+        );
+        let artifact = self.artifact(&observation.path, FilePurpose::GgufWeight)?;
+        ensure!(
+            artifact.source_sha256 == observation.source_sha256,
+            "GGUF observation source file hash changed"
+        );
+        classify_gguf(
+            &artifact,
+            &artifact.snapshot_id,
+            &self.snapshot,
+            &observation.inspection,
+            &[],
+        )
+    }
+
+    pub fn path_diagnostics(&self) -> Vec<RepositoryPathDiagnostic> {
+        self.files
+            .values()
+            .filter(|file| file.path.materializable_path().is_err())
+            .map(|file| RepositoryPathDiagnostic {
+                path: file.path.clone(),
+                issue: RepositoryPathIssue::NonPortable,
+            })
+            .collect()
+    }
+
     pub fn validate(&self) -> Result<()> {
         self.snapshot.validate()?;
         ensure!(
@@ -66,7 +144,7 @@ impl RepositoryInventory {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModelSourceError {
     pub code: LifecycleErrorCode,
     pub http_status: Option<u16>,
@@ -351,10 +429,10 @@ fn inventory_from_entries(
     let mut files = BTreeMap::new();
     let mut seen = BTreeSet::new();
     for file in entries {
-        let path = RepositoryPath::parse(file.path)?;
+        let path = ObservedRepositoryPath::parse(file.path)?;
         ensure!(
-            seen.insert(path.as_str().to_lowercase()),
-            "Duplicate or colliding ModelScope file path"
+            seen.insert(path.as_str().to_string()),
+            "Duplicate ModelScope file path"
         );
         if file.entry_type == "tree" {
             continue;
@@ -391,7 +469,7 @@ fn inventory_from_entries(
 
 #[derive(Debug, Clone)]
 struct TreeRequest {
-    root: Option<RepositoryPath>,
+    root: Option<ObservedRepositoryPath>,
     recursive: bool,
 }
 
@@ -425,7 +503,7 @@ impl FileTreeWalk {
         let root = scope
             .root
             .as_ref()
-            .map_or("", RepositoryPath::as_str)
+            .map_or("", ObservedRepositoryPath::as_str)
             .to_string();
         ensure!(
             self.requested.insert((root, scope.recursive)),
@@ -443,7 +521,10 @@ impl FileTreeWalk {
                 scope.recursive,
                 anyhow::Error::new(partial_error()).context(format!(
                     "ModelScope directory '{}' reached its unpageable listing cap",
-                    scope.root.as_ref().map_or("/", RepositoryPath::as_str)
+                    scope
+                        .root
+                        .as_ref()
+                        .map_or("/", ObservedRepositoryPath::as_str)
                 ))
             );
             self.queue.push_front(TreeRequest {
@@ -463,7 +544,7 @@ impl FileTreeWalk {
             .map(|root| format!("{}/", root.as_str()));
         let mut seen = BTreeSet::new();
         for file in page.files {
-            let path = RepositoryPath::parse(file.path.clone())?;
+            let path = ObservedRepositoryPath::parse(file.path.clone())?;
             let local = match &prefix {
                 Some(prefix) => path
                     .as_str()
@@ -475,11 +556,8 @@ impl FileTreeWalk {
                 !local.is_empty() && (scope.recursive || !local.contains('/')),
                 partial_error()
             );
-            let key = path.as_str().to_lowercase();
-            ensure!(
-                seen.insert(key.clone()),
-                "Duplicate or colliding ModelScope file path"
-            );
+            let key = path.as_str().to_string();
+            ensure!(seen.insert(key.clone()), "Duplicate ModelScope file path");
             if let Some(previous) = self.entries.get(&key) {
                 ensure!(
                     previous == &file,
@@ -567,7 +645,7 @@ mod tests {
             LifecycleErrorCode::SourcePartialFailure
         );
         let scope = TreeRequest {
-            root: Some(RepositoryPath::parse("a").unwrap()),
+            root: Some(ObservedRepositoryPath::parse("a").unwrap()),
             recursive: true,
         };
         assert!(FileTreeWalk::new(3)
@@ -586,5 +664,35 @@ mod tests {
         for token in ["bad\r\nvalue", "bad; cookie=1", "bad value"] {
             assert!(scoped_auth_headers(Some(token)).is_err());
         }
+    }
+
+    #[test]
+    fn complete_directory_walk_preserves_unmaterializable_git_directory_names() {
+        let mut walk = FileTreeWalk::new(3);
+        let root = walk.next_request().unwrap().unwrap();
+        walk.accept(root, page(&[("a", "tree"), ("b", "tree"), ("c", "tree")]))
+            .unwrap();
+        let shallow = walk.next_request().unwrap().unwrap();
+        walk.accept(
+            shallow,
+            page(&[("raw\\directory", "tree"), ("main.gguf", "blob")]),
+        )
+        .unwrap();
+        let child = walk.next_request().unwrap().unwrap();
+        assert_eq!(child.root.as_ref().unwrap().as_str(), "raw\\directory");
+        walk.accept(child, page(&[("raw\\directory/preview.png", "blob")]))
+            .unwrap();
+        assert!(walk.next_request().unwrap().is_none());
+        let snapshot = RepositorySnapshot {
+            repository: ModelScopeRepository::parse("owner/model").unwrap(),
+            requested_revision: "master".into(),
+            resolved_revision: "a".repeat(40),
+            files_digest: Sha256Digest::of_bytes(b"placeholder"),
+            fetched_at: 1,
+        };
+        let inventory = inventory_from_entries(walk.finish().unwrap(), snapshot).unwrap();
+        assert_eq!(inventory.files.len(), 2);
+        assert_eq!(inventory.path_diagnostics().len(), 1);
+        assert!(inventory.files.contains_key("raw\\directory/preview.png"));
     }
 }

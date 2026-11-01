@@ -1,0 +1,66 @@
+{
+  "observedAt": "2026-11-01T12:59:55.984972+00:00",
+  "stage": "M1",
+  "status": "IN_PROGRESS",
+  "m0CommitAndRemote": "7aa6cfbe9fad627faf705a389b24369a3c2a5daa",
+  "checks": [
+    {
+      "name": "full-package-before-later-source-increments",
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-discovery-all-tests.log",
+      "sha256": "37b42c3ab0320deda1ede63dfb2af2f83fb00ae9191e12ac645445f66df37f8a",
+      "status": "PASS"
+    },
+    {
+      "name": "strict-local-current",
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-source-documents-clippy.log",
+      "sha256": "e1034017e1681eb6701c14db3908657d2e5ae1396ca345ee0e0fb8d288b378d0",
+      "status": "PASS"
+    },
+    {
+      "name": "source-documents",
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-source-documents-tests.log",
+      "sha256": "fab56f9fb19578f938c835b63feb2a1f62218c4988274c29deb76a333e89e239",
+      "status": "PASS"
+    },
+    {
+      "name": "source-artifact-binding",
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-observation-source-tests.log",
+      "sha256": "a890054546815d7ef37aaa0bfc2f1f7b9593e419ad0feb62c6a850829eab6e88",
+      "status": "PASS"
+    },
+    {
+      "name": "classification-v2",
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-classifier-v2-tests.log",
+      "sha256": "2489bc34c8f68c79b336f9dd2b6200da475bfe4f40359e1b04445324cebc82d6",
+      "status": "PASS"
+    },
+    {
+      "name": "range-policy",
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-remote-gguf-unit-r2.log",
+      "sha256": "3eb4a7fe2735e67865c499bb8f9f66ca4119403abda6708786f84801352d140d",
+      "status": "PASS"
+    }
+  ],
+  "fullPackageRegression": {
+    "passed": 202,
+    "ignored": 6,
+    "scope": "Before later range/classification/artifact/document increments; do not claim a final full M1 regression"
+  },
+  "actualProductionEvidence": [
+    "2026-11-01-m1-production-sources.json",
+    "2026-11-01-m1-discovery-service.json",
+    "2026-11-01-m1-remote-gguf.json",
+    "2026-11-01-m1-classifier-v2.json",
+    "2026-11-01-m1-source-documents.json"
+  ],
+  "remaining": [
+    "authenticated restricted repository validation",
+    "dependency pairing and cross-repository evidence",
+    "runtime-specific resource budgets",
+    "executable install plan assembly",
+    "all legacy model download entry source/format policy",
+    "stage self-test update/rebuild/actual recipe",
+    "final phase audit/commit/push"
+  ],
+  "productReady": false
+}

@@ -91,6 +91,7 @@ impl LifecycleRepository {
     }
 
     fn validate_manifest_catalog(connection: &Connection, manifest: &ModelManifest) -> Result<()> {
+        Self::validate_plan_observations_by(connection, &manifest.plan)?;
         let catalog = Self::read_catalog_by(connection, &manifest.plan.model_id)?
             .context("Installation model is absent from the catalog")?;
         let variant = catalog

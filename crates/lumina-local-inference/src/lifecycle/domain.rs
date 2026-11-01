@@ -1,4 +1,4 @@
-use anyhow::{bail, ensure, Result};
+use anyhow::{bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
@@ -53,6 +53,19 @@ impl From<ModelScopeRepository> for String {
 #[serde(try_from = "String", into = "String")]
 pub struct Sha256Digest(String);
 
+struct SerializedDigestWriter(Sha256);
+
+impl std::io::Write for SerializedDigestWriter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.0.update(bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 impl Sha256Digest {
     pub fn parse(value: impl Into<String>) -> Result<Self> {
         let value = value.into();
@@ -76,7 +89,9 @@ impl Sha256Digest {
     }
 
     pub fn of_serializable(value: &impl Serialize) -> Result<Self> {
-        Ok(Self::of_bytes(&serde_json::to_vec(value)?))
+        let mut writer = SerializedDigestWriter(Sha256::new());
+        serde_json::to_writer(&mut writer, value)?;
+        Ok(Self::from_sha256(writer.0))
     }
 
     pub fn as_str(&self) -> &str {
@@ -732,6 +747,8 @@ pub struct InstallPlan {
     pub required_disk_bytes: u64,
     pub rules_version: String,
     pub expires_at: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub admission: Option<super::PlanAdmission>,
 }
 
 impl InstallPlan {
@@ -820,6 +837,12 @@ impl InstallPlan {
             seen_files.len() == self.artifacts.len(),
             "Plan includes unassigned artifacts"
         );
+        if self.rules_version == super::PREPARED_GGUF_PLAN_RULES_VERSION {
+            self.admission
+                .as_ref()
+                .context("Prepared plan has no frozen admission profile")?
+                .validate(self, now)?;
+        }
         Ok(())
     }
 }

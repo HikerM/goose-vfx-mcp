@@ -1,0 +1,16 @@
+{
+  "stage": "M0",
+  "commit": "7aa6cfbe9fad627faf705a389b24369a3c2a5daa",
+  "remote": "https://github.com/HikerM/goose-vfx-mcp.git",
+  "branch": "testing",
+  "pushStatus": "PASS",
+  "remoteReadbackStatus": "PASS",
+  "remoteReadbackCommit": "7aa6cfbe9fad627faf705a389b24369a3c2a5daa",
+  "workingTreeAfterCommit": "CLEAN",
+  "scope": "Actual M0 baseline push and ls-remote readback; later stages remain unfinished",
+  "retainedFailures": [
+    "Full workspace strict Clippy failed; diagnostic sources unchanged from planning HEAD",
+    "Video content quality failed",
+    "Legacy Candle Whisper GGUF tensor names failed"
+  ]
+}

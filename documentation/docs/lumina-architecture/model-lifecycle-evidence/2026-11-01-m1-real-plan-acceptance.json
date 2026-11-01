@@ -1,0 +1,363 @@
+{
+  "observedAt": "2026-11-01T14:13:00.768550+00:00",
+  "status": "EXACT_BASELINE_SOURCE_TO_PLAN_AND_QUEUE_PASS",
+  "scope": "One actual fixed ModelScope repository/header, measured native CPU profile, immutable plan persistence/recomputation and queued job. No download worker, installed product version, app runtime adapter or product READY acceptance.",
+  "sourceProcess": {
+    "binarySha256": "b68a0474943652986de03dea2051bbd4f5873545e3b50eb83f80d5f690ffea4d",
+    "exitCode": 0,
+    "outputPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-real-plan-checks-20261101-r1\\inspect_modelscope_component.stdout.json"
+  },
+  "planProcess": {
+    "binarySha256": "62a1868900d88766dd96f4f96aa51a292119259ccf08fceda37b03e5ee91da52",
+    "exitCode": 0,
+    "outputPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-real-plan-checks-20261101-r1\\cache_recorded_component.stdout.json"
+  },
+  "sourceArtifact": {
+    "id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+    "snapshot_id": "eeb436645f43fd0f3d2a23558869666025a3bc641536e468903a0abadf9ab176",
+    "path": "Qwen3.5-0.8B-Q8_0.gguf",
+    "purpose": "gguf_weight",
+    "size_bytes": 833592736,
+    "source_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+  },
+  "sourceHeaderDigest": "872b80438a93d5cdf6a79edd4dcd57c620f24b40fe9314f1bd6ac335ae6a7508",
+  "rangeReads": [
+    {
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "path": "Qwen3.5-0.8B-Q8_0.gguf",
+      "header_digest": "872b80438a93d5cdf6a79edd4dcd57c620f24b40fe9314f1bd6ac335ae6a7508",
+      "bytes_fetched": 16777216,
+      "range_http_requests": 16
+    }
+  ],
+  "nativeBinarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+  "localFixtureSha256BeforeAfter": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+  "databaseSchemaVersion": 6,
+  "databaseRowCounts": {
+    "gguf_observations": 1,
+    "installation_plans": 1,
+    "plan_gguf_observations": 1,
+    "lifecycle_jobs": 1,
+    "installation_versions": 0
+  },
+  "result": {
+    "database_schema_version": 6,
+    "observation_ids": [
+      "f2ae1004f07b07e9566dbbc820add1c232362619cb6094e1cce65db2c506a9ce"
+    ],
+    "records_reopened": 1,
+    "plan_preparation": {
+      "profile": {
+        "id": "measured-qwen35-08b-text-cpu",
+        "rules_version": "runtime-install-profile-v1",
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "architectures": [
+          "qwen35"
+        ],
+        "capabilities": [
+          "text"
+        ],
+        "required_roles": [
+          "main"
+        ],
+        "evidence_ids": [
+          "m1:2026-11-01-m1-native-resource-measurements.json:bounded-exact-workload"
+        ]
+      },
+      "envelope": {
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "component_digests": [
+          "a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc"
+        ],
+        "workload": {
+          "context_tokens": 2048,
+          "batch_tokens": 512,
+          "parallel_sequences": 1,
+          "recurrent_rollback_slots": 0,
+          "kv_key_type": "f16",
+          "kv_value_type": "f16",
+          "prompt_cache_bytes": 0,
+          "context_checkpoint_slots": 0
+        },
+        "compute_buffer_bytes": 67108864,
+        "auxiliary_buffer_bytes": 268435456,
+        "evidence_id": "m1:native-resource-measurements:r2:37.02MiB-compute-0.95MiB-output-with-explicit-headroom"
+      },
+      "hardware": {
+        "observed_at": 1793542379,
+        "devices": [
+          {
+            "index": 0,
+            "backend": "CPU",
+            "name": "CPU",
+            "description": "Intel(R) Core(TM) i7-14700F",
+            "kind": "cpu",
+            "total_bytes": 102904569856,
+            "free_bytes": 55838068736
+          }
+        ],
+        "storage_volume": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m1-real-plan-checks-20261101-r1",
+        "disk_free_bytes": 337124577280
+      },
+      "assessment": {
+        "plan": {
+          "schema_version": 1,
+          "id": "plan:f19730e0-91ae-4a96-b8ea-e8353cf03855",
+          "model_id": "observed-model:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+          "variant_id": "observed-variant:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+          "target_capabilities": [
+            "text"
+          ],
+          "snapshots": {
+            "eeb436645f43fd0f3d2a23558869666025a3bc641536e468903a0abadf9ab176": {
+              "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+              "requested_revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+              "resolved_revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+              "files_digest": "67f4695c610cd7c7476296ee0fe4daa9a2929c6bc336d916b8deaaec0053f693",
+              "fetched_at": 1793542374
+            }
+          },
+          "artifacts": {
+            "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e": {
+              "id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+              "snapshot_id": "eeb436645f43fd0f3d2a23558869666025a3bc641536e468903a0abadf9ab176",
+              "path": "Qwen3.5-0.8B-Q8_0.gguf",
+              "purpose": "gguf_weight",
+              "size_bytes": 833592736,
+              "source_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+            }
+          },
+          "dependencies": {
+            "root": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+            "components": {
+              "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc": {
+                "id": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+                "role": "main",
+                "artifact_ids": [
+                  "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e"
+                ],
+                "compatibility": "verified",
+                "evidence_ids": [
+                  "gguf-header:c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e:872b80438a93d5cdf6a79edd4dcd57c620f24b40fe9314f1bd6ac335ae6a7508",
+                  "gguf-observation:f2ae1004f07b07e9566dbbc820add1c232362619cb6094e1cce65db2c506a9ce",
+                  "m1:2026-11-01-m1-native-resource-measurements.json:bounded-exact-workload",
+                  "resource-budget:e599b10cc2eae7bc155e20a6f1bc8bf1bd937ad735dca70ec360357aa256b27f",
+                  "runtime-install-profile:a2e785129c25cad78e0a59db9b09d59fca036c4982f77f75e3bc57fa6975b74b"
+                ]
+              }
+            },
+            "edges": []
+          },
+          "runtime": {
+            "adapter_id": "llama-helper",
+            "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+            "binding_version": "native-http-v1",
+            "platform": "x86_64-pc-windows-msvc",
+            "features": [
+              "cpu",
+              "dflash",
+              "embedding",
+              "mtmd",
+              "mtp",
+              "reranking"
+            ],
+            "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+          },
+          "runtime_verified": true,
+          "hardware": "runnable",
+          "required_disk_bytes": 2517555424,
+          "rules_version": "modelscope-gguf-plan-v2",
+          "expires_at": 1793542679,
+          "admission": {
+            "runtime_profile": {
+              "id": "measured-qwen35-08b-text-cpu",
+              "rules_version": "runtime-install-profile-v1",
+              "runtime": {
+                "adapter_id": "llama-helper",
+                "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+                "binding_version": "native-http-v1",
+                "platform": "x86_64-pc-windows-msvc",
+                "features": [
+                  "cpu",
+                  "dflash",
+                  "embedding",
+                  "mtmd",
+                  "mtp",
+                  "reranking"
+                ],
+                "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+              },
+              "architectures": [
+                "qwen35"
+              ],
+              "capabilities": [
+                "text"
+              ],
+              "required_roles": [
+                "main"
+              ],
+              "evidence_ids": [
+                "m1:2026-11-01-m1-native-resource-measurements.json:bounded-exact-workload"
+              ]
+            },
+            "envelope": {
+              "runtime": {
+                "adapter_id": "llama-helper",
+                "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+                "binding_version": "native-http-v1",
+                "platform": "x86_64-pc-windows-msvc",
+                "features": [
+                  "cpu",
+                  "dflash",
+                  "embedding",
+                  "mtmd",
+                  "mtp",
+                  "reranking"
+                ],
+                "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+              },
+              "component_digests": [
+                "a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc"
+              ],
+              "workload": {
+                "context_tokens": 2048,
+                "batch_tokens": 512,
+                "parallel_sequences": 1,
+                "recurrent_rollback_slots": 0,
+                "kv_key_type": "f16",
+                "kv_value_type": "f16",
+                "prompt_cache_bytes": 0,
+                "context_checkpoint_slots": 0
+              },
+              "compute_buffer_bytes": 67108864,
+              "auxiliary_buffer_bytes": 268435456,
+              "evidence_id": "m1:native-resource-measurements:r2:37.02MiB-compute-0.95MiB-output-with-explicit-headroom"
+            },
+            "hardware": {
+              "observed_at": 1793542379,
+              "devices": [
+                {
+                  "index": 0,
+                  "backend": "CPU",
+                  "name": "CPU",
+                  "description": "Intel(R) Core(TM) i7-14700F",
+                  "kind": "cpu",
+                  "total_bytes": 102904569856,
+                  "free_bytes": 55838068736
+                }
+              ],
+              "storage_volume": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m1-real-plan-checks-20261101-r1",
+              "disk_free_bytes": 337124577280
+            },
+            "budget": {
+              "rules_version": "local-resource-budget-v2",
+              "binding_digest": "e599b10cc2eae7bc155e20a6f1bc8bf1bd937ad735dca70ec360357aa256b27f",
+              "compatibility": "runnable",
+              "weight_bytes": 833592736,
+              "kv_cache_bytes": 29360128,
+              "recurrent_cache_bytes": 20201472,
+              "dynamic_cache_bytes": 0,
+              "compute_buffer_bytes": 67108864,
+              "auxiliary_buffer_bytes": 268435456,
+              "host_memory_required_bytes": 1218698656,
+              "host_memory_available_bytes": 55838068736,
+              "peak_incremental_disk_bytes": 2517555424,
+              "blocking_reasons": []
+            }
+          }
+        },
+        "observation_bindings": {
+          "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e": "f2ae1004f07b07e9566dbbc820add1c232362619cb6094e1cce65db2c506a9ce"
+        },
+        "resource_budget": {
+          "rules_version": "local-resource-budget-v2",
+          "binding_digest": "e599b10cc2eae7bc155e20a6f1bc8bf1bd937ad735dca70ec360357aa256b27f",
+          "compatibility": "runnable",
+          "weight_bytes": 833592736,
+          "kv_cache_bytes": 29360128,
+          "recurrent_cache_bytes": 20201472,
+          "dynamic_cache_bytes": 0,
+          "compute_buffer_bytes": 67108864,
+          "auxiliary_buffer_bytes": 268435456,
+          "host_memory_required_bytes": 1218698656,
+          "host_memory_available_bytes": 55838068736,
+          "peak_incremental_disk_bytes": 2517555424,
+          "blocking_reasons": []
+        },
+        "dependencies": {
+          "root": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+          "components": {
+            "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc": {
+              "id": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+              "role": "main",
+              "artifact_ids": [
+                "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e"
+              ],
+              "compatibility": "verified",
+              "evidence_ids": [
+                "gguf-header:c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e:872b80438a93d5cdf6a79edd4dcd57c620f24b40fe9314f1bd6ac335ae6a7508",
+                "gguf-observation:f2ae1004f07b07e9566dbbc820add1c232362619cb6094e1cce65db2c506a9ce",
+                "m1:2026-11-01-m1-native-resource-measurements.json:bounded-exact-workload",
+                "resource-budget:e599b10cc2eae7bc155e20a6f1bc8bf1bd937ad735dca70ec360357aa256b27f",
+                "runtime-install-profile:a2e785129c25cad78e0a59db9b09d59fca036c4982f77f75e3bc57fa6975b74b"
+              ]
+            }
+          },
+          "edges": []
+        },
+        "blocking_reasons": []
+      },
+      "queued_job": {
+        "id": "job:85ac0b55-e3dd-40c8-87cb-c188513e4284",
+        "idempotency_key": "baseline-install:plan:f19730e0-91ae-4a96-b8ea-e8353cf03855",
+        "plan_id": "plan:f19730e0-91ae-4a96-b8ea-e8353cf03855",
+        "plan_digest": "85ffe75adbbe7f02248a5ae33f1f378553cb300960b79f77a04955f309df399d",
+        "stage": "ready_to_install",
+        "status": "queued",
+        "version": 0,
+        "generation": 0,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793542379,
+        "updated_at": 1793542379
+      },
+      "scope": "Exact measured baseline content only; one immutable installation plan and queued job in a fresh diagnostic database. No download worker, installation, runtime adapter or product READY was created."
+    },
+    "scope": "Actual source/header persistence; optional exact-baseline plan acceptance is reported separately. No installed version or runtime capability was created."
+  },
+  "remaining": [
+    "Application service and jobs/download cutover",
+    "GPU and non-text resource/runtime profiles",
+    "Authenticated restricted-repository positive evidence",
+    "M1 final tests, CLI rebuild, Windows gates and stage commit/push",
+    "M2 through M6 original complete scope"
+  ]
+}

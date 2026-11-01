@@ -12,9 +12,15 @@ use super::{
 mod catalog;
 mod files;
 mod installation;
+mod observations;
+mod plan_observations;
 pub use files::FileTransferEvent;
+pub use observations::{GgufObservationRecord, GGUF_OBSERVATION_VERSION};
+pub use plan_observations::{
+    gguf_header_evidence_id, gguf_observation_evidence_id, OBSERVED_GGUF_PLAN_RULES_VERSION,
+};
 
-pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 4;
+pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 6;
 
 const SCHEMA: &str = include_str!("repository/migrations/0001.sql");
 
@@ -105,6 +111,12 @@ impl LifecycleRepository {
         if version < 4 {
             tx.execute_batch(installation::SCHEMA)?;
         }
+        if version < 5 {
+            tx.execute_batch(observations::SCHEMA)?;
+        }
+        if version < 6 {
+            tx.execute_batch(plan_observations::SCHEMA)?;
+        }
         tx.commit()?;
         Ok(Self {
             connection: Mutex::new(connection),
@@ -117,6 +129,10 @@ impl LifecycleRepository {
         now: i64,
         available_disk_bytes: u64,
     ) -> Result<Sha256Digest> {
+        ensure!(
+            !plan_observations::requires_gguf_observations(plan),
+            "Observed GGUF plans require save_observed_plan"
+        );
         plan.validate_for_install(now, available_disk_bytes)?;
         let digest = plan.digest()?;
         let payload = serde_json::to_string(plan)?;
@@ -125,7 +141,18 @@ impl LifecycleRepository {
             .lock()
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let existing: Option<(String, String)> = tx
+        Self::store_plan_by(&tx, plan, &digest, &payload)?;
+        tx.commit()?;
+        Ok(digest)
+    }
+
+    fn store_plan_by(
+        connection: &Connection,
+        plan: &InstallPlan,
+        digest: &Sha256Digest,
+        payload: &str,
+    ) -> Result<()> {
+        let existing: Option<(String, String)> = connection
             .query_row(
                 "SELECT digest, payload FROM installation_plans WHERE id = ?1",
                 [&plan.id],
@@ -135,23 +162,22 @@ impl LifecycleRepository {
         if let Some((existing, stored_payload)) = existing {
             let stored: InstallPlan = serde_json::from_str(&stored_payload)?;
             ensure!(
-                existing == digest.as_str() && stored.digest()? == digest,
+                existing == digest.as_str() && stored.digest()? == *digest,
                 "Installation plan ID already contains different or corrupted content"
             );
-            return Ok(digest);
+            return Ok(());
         }
         for (id, snapshot) in &plan.snapshots {
-            Self::store_snapshot(&tx, id, snapshot)?;
+            Self::store_snapshot(connection, id, snapshot)?;
         }
-        tx.execute("INSERT INTO installation_plans (id, digest, payload, expires_at) VALUES (?1, ?2, ?3, ?4)", params![plan.id, digest.as_str(), payload, plan.expires_at])?;
+        connection.execute("INSERT INTO installation_plans (id, digest, payload, expires_at) VALUES (?1, ?2, ?3, ?4)", params![plan.id, digest.as_str(), payload, plan.expires_at])?;
         for id in plan.snapshots.keys() {
-            tx.execute(
+            connection.execute(
                 "INSERT INTO plan_snapshots (plan_id, snapshot_id) VALUES (?1, ?2)",
                 params![plan.id, id],
             )?;
         }
-        tx.commit()?;
-        Ok(digest)
+        Ok(())
     }
 
     pub fn read_plan(&self, id: &str) -> Result<Option<InstallPlan>> {
@@ -172,6 +198,7 @@ impl LifecycleRepository {
                 plan.id == id && plan.digest()?.as_str() == digest,
                 "Stored installation plan integrity check failed"
             );
+            Self::validate_plan_observations_by(&connection, &plan)?;
             Ok(plan)
         })
         .transpose()
@@ -263,6 +290,7 @@ impl LifecycleRepository {
             "Installation plan digest does not match"
         );
         plan.validate_for_install(now, available_disk_bytes)?;
+        Self::validate_plan_observations_by(&tx, &plan)?;
         tx.execute("INSERT INTO lifecycle_jobs (id, idempotency_key, plan_id, plan_digest, stage, status, accepted_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)", params![id, idempotency_key, plan_id, expected_digest.as_str(), serde_json::to_string(&LifecycleStage::ReadyToInstall)?, serde_json::to_string(&JobStatus::Queued)?, now])?;
         let job =
             Self::read_job_by(&tx, "id", id)?.ok_or_else(|| anyhow!("Accepted job is missing"))?;

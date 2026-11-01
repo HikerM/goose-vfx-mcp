@@ -1,0 +1,158 @@
+{
+  "observedAt": "2026-11-01T12:32:07.638238+00:00",
+  "status": "PASS",
+  "scope": "Actual production Provider search/listing only; no managed install or runtime capability acceptance",
+  "wan": {
+    "repository": "calcuis/wan-1.3b-gguf",
+    "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+    "fileCount": 63,
+    "allRawFileFactsMatch": true,
+    "inventoryFilesDigest": "ea96ce40e58c3c18d82fe021ae3fe5c50e7c7dce5ecf4024fa2355dda29b8962",
+    "pathDiagnostics": [
+      {
+        "path": "samples\\ComfyUI_00001_.webp",
+        "issue": "non_portable"
+      },
+      {
+        "path": "samples\\ComfyUI_00002_.webp",
+        "issue": "non_portable"
+      },
+      {
+        "path": "samples\\ComfyUI_00003_.webp",
+        "issue": "non_portable"
+      },
+      {
+        "path": "samples\\ComfyUI_00004_.webp",
+        "issue": "non_portable"
+      },
+      {
+        "path": "samples\\ComfyUI_00005_.webp",
+        "issue": "non_portable"
+      },
+      {
+        "path": "samples\\ComfyUI_00006_.webp",
+        "issue": "non_portable"
+      }
+    ],
+    "selectedWeightRehashes": [
+      {
+        "file": "wan2.1_t2v_1.3b-q8_0.gguf",
+        "sizeBytes": 1587083488,
+        "sha256": "e6db35de304f0b5b4b4689d41b95fa853fff747581bea75adac25939a73dbead"
+      },
+      {
+        "file": "umt5-xxl-encoder-q4_k_m.gguf",
+        "sizeBytes": 3655145312,
+        "sha256": "17cf97a5bbbc60a646d6105b832b6f657ce904a8a1ad970e4b59df0c67584a40"
+      },
+      {
+        "file": "pig_wan_vae_fp32-f16.gguf",
+        "sizeBytes": 253875904,
+        "sha256": "290e463b9d6680146cfd06e5740adb918b239ac8aef1f64f9d4d35fa11747bcd"
+      }
+    ],
+    "providerBinarySha256": "6c338e040f3e5f617d3f5839f4e98de9a39d3e70b4130f1b282ffa47c06757d4"
+  },
+  "portableDigestCompatibility": {
+    "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+    "status": "PASS",
+    "digest": "230aba0d0f5c48f42e65e2b44214881b7fa1296d90124696d8964d96356e73c2"
+  },
+  "catalog": {
+    "query": "Wan GGUF",
+    "pages": 2,
+    "pageSize": 50,
+    "totalCount": 85,
+    "uniqueIds": 85,
+    "allRowsObserved": true,
+    "binarySha256": "096b1139311ec891ade44f2913b8729287f46ad3abfdd9f84746f998fcfbe1be",
+    "repositoryIds": [
+      "QuantStack/Wan2.2-I2V-A14B-GGUF",
+      "QuantStack/Wan2.2-T2V-A14B-GGUF",
+      "QuantStack/Wan2.2-TI2V-5B-GGUF",
+      "bullerwins/Wan2.2-I2V-A14B-GGUF",
+      "city96/Wan2.1-I2V-14B-480P-gguf",
+      "QuantStack/Wan2.2-Animate-14B-GGUF",
+      "calcuis/wan-gguf",
+      "bullerwins/Wan2.2-T2V-A14B-GGUF",
+      "befox/WAN2.2-14B-Rapid-AllInOne-GGUF",
+      "city96/Wan2.1-I2V-14B-720P-gguf",
+      "city96/Wan2.1-T2V-14B-gguf",
+      "Kijai/WanVideo_comfy_GGUF",
+      "calcuis/wan-1.3b-gguf",
+      "unsloth/Wan2.2-TI2V-5B-GGUF",
+      "QuantStack/Wan2.1-VACE-14B-GGUF",
+      "QuantStack/Wan2.1_I2V_14B_FusionX-GGUF",
+      "QuantStack/Wan2.2-S2V-14B-GGUF",
+      "calcuis/wan2-gguf",
+      "city96/Wan2.1-FLF2V-14B-720P-gguf",
+      "city96/Wan2.1-Fun-14B-InP-gguf",
+      "wsbagnsv1/Wan2.2-Animate-14B-GGUF",
+      "QuantStack/Wan2.1_T2V_14B_FusionX_VACE-GGUF",
+      "city96/Wan2.1-Fun-14B-Control-gguf",
+      "QuantStack/Wan2.2-Fun-A14B-InP-GGUF",
+      "AI-ModelScope/WAN2.2-14B-Rapid-AllInOne-GGUF",
+      "jayn7/WAN2.2-I2V_A14B-DISTILL-LIGHTX2V-4STEP-GGUF",
+      "AI-ModelScope/Wan2.1_T2V_1.3B_SelfForcing_VACE-GGUF",
+      "QuantStack/Wan2.1-14B-T2V-FusionX-GGUF",
+      "QuantStack/Wan2.2-VACE-Fun-A14B-gguf",
+      "QuantStack/Wan2.2-Fun-A14B-Control-GGUF",
+      "QuantStack/Wan2.1_14B_VACE-GGUF",
+      "QuantStack/Wan2.1-14B-T2V-FusionX-VACE-GGUF",
+      "calcuis/wan-s2v-gguf",
+      "QuantStack/Wan2.2-Fun-5B-InP-GGUF",
+      "QuantStack/Wan2.2-Fun-A14B-Control-Camera-GGUF",
+      "AI-ModelScope/MAGREF_Wan2.1_I2V_14B-GGUF",
+      "AI-ModelScope/Wan2.2-Animate-14B-GGUF",
+      "QuantStack/Wan-14B-T2V-FusionX-VACE-GGUF",
+      "QuantStack/Wan2.1_T2V_14B_LightX2V_StepCfgDistill_VACE-GGUF",
+      "hf/Arunk25-WAN2.2-14B-Rapid-AllInOne_v12.2-GGUF",
+      "QuantStack/Phantom_Wan_14B_FusionX-GGUF",
+      "QuantStack/Wan2.1-14B-I2V-FusionX-FP8-GGUF",
+      "QuantStack/Wan2.2-Fun-5B-Control-GGUF",
+      "QuantStack/Wan2.1_T2V_14B_FusionX-GGUF",
+      "QuantStack/Wan2.2-Fun-5B-Control-Camera-GGUF",
+      "realrebelai/Wan-Animate-2_GGUFs",
+      "QuantStack/Phantom_Wan_14B-GGUF",
+      "QuantStack/Wan2.2_T2V_A14B_4steps_25-09-28_Dyno_High_lightx2v-GGUF",
+      "RealmSky/wan-1.3b-gguf-oss-20250327",
+      "AI-ModelScope/Wan2.1_T2V_14B_LightX2V_StepCfgDistill_VACE-GGUF",
+      "QuantStack/Wan2.1-Fun-V1.1-1.3B-Control-Camera-GGUF",
+      "QuantStack/Phantom-Wan-1.3B-GGUF",
+      "AI-ModelScope/Wan2_1-HuMo_17B-GGUF",
+      "QuantStack/Wan2.1-Fun-V1.1-14B-Control-Camera-GGUF",
+      "befox/Wan2.2-Animate-14B-GGUF",
+      "QuantStack/Phantom_Wan_1.3B-GGUF",
+      "realrebelai/Wan_Dancer_GGUFs",
+      "QuantStack/MAGREF_Wan2.1_I2V_14B-GGUF",
+      "Alissonerdx/Wan2.1-HuMo-GGUF",
+      "vantagewithai/TurboWan2.2-I2V-A14B-720P-ComfyUI-GGUF",
+      "DesignerAZ/AniWan_I2V_14B_480P_NEW_GGUF",
+      "wsbagnsv1/Wan2.2-VACE-Fun-A14B-gguf",
+      "DesignerAZ/AniWan_I2V_14B_720P_GGUF",
+      "AI-ModelScope/WAN22.XX_Palingenesis-GGUF",
+      "silveroxides/Wan2.2_TI2V_5B-GGUF",
+      "RealmSky/jayn7-WAN2.2-I2V_A14B-DISTILL-LIGHTX2V-4STEP-GGUF",
+      "Abiray/Wan2.2-LightX2V-260412-4STEP-GGUF",
+      "RealmSky/wan-1.3b-gguf-oss",
+      "RealmSky/wan-1.3b-gguf-nas",
+      "liu19750505/Wan2.2-TI2V-5B.gguf",
+      "AI-ModelScope/Magic-Wan-Image-v1.0-GGUF",
+      "RealmSky/wan-1.3b-gguf-ecs-20250329",
+      "vantagewithai/Magic-Wan-Image-V2-GGUF",
+      "befox/Magic-Wan-Image-v1.0-GGUF",
+      "orabazes/wan-14B_vace_phantom_v2_GGUF",
+      "QuantStack/Phantom-Wan-14B-FusionX-V1-FP8-GGUF",
+      "AI-ModelScope/Wan2-IceCannon-GGUF",
+      "befox/WAN22.XX_Palingenesis-GGUF",
+      "AI-ModelScope/WAN2.1-IceCannon-GGUF",
+      "befox/Wan2-IceCannon-GGUF",
+      "befox/WAN2.1-IceCannon-GGUF",
+      "svjack/WAN_GGUF",
+      "vantagewithai/TurboWan2.1-T2V-14B-720P-ComfyUI-GGUF",
+      "vantagewithai/Wan-Move-14B-480P-GGUF",
+      "dengcao/Wan2.1_14B_VACE-GGUF"
+    ]
+  },
+  "outputDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-source-checks-20261101-r1"
+}

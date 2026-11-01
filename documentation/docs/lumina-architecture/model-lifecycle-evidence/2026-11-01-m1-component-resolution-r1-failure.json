@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-11-01T13:29:45.551445+00:00",
+  "status": "FAILED",
+  "binarySha256": "a7b960016b10c02e4376ea5f84bae7af52bd014b1bd3a3c91b58a048d647b87c",
+  "scope": "Actual source-bound complete GGUF shard metadata only. Large weights were not fully downloaded or executed; no install or runtime READY.",
+  "cases": [],
+  "error": "",
+  "outputDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-component-checks-20261101-r1"
+}

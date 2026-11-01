@@ -233,6 +233,27 @@ pub(crate) fn verify_artifact_file_with_progress(
             !inspection.tensors.is_empty(),
             "GGUF weight contains no tensors"
         );
+        if matches!(
+            plan.rules_version.as_str(),
+            super::OBSERVED_GGUF_PLAN_RULES_VERSION | super::PREPARED_GGUF_PLAN_RULES_VERSION
+        ) {
+            let evidence = super::gguf_header_evidence_id(artifact_id, &inspection.header_digest);
+            ensure!(
+                plan.dependencies
+                    .components
+                    .values()
+                    .any(|component| component.artifact_ids.contains(artifact_id)),
+                "Observed GGUF artifact is not assigned to a component"
+            );
+            ensure!(
+                plan.dependencies
+                    .components
+                    .values()
+                    .filter(|component| component.artifact_ids.contains(artifact_id))
+                    .all(|component| component.evidence_ids.contains(&evidence)),
+                "Downloaded GGUF header differs from the accepted source observation"
+            );
+        }
         Some(inspection)
     } else {
         file.rewind()?;

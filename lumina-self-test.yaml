@@ -428,11 +428,14 @@ prompt: |
   and keep all application data, downloads, caches and temporary output on D: or E:.
 
   In a Windows development checkout, use the repository Rust entry point to run:
-  `bin\cargo.cmd test -p lumina-local-inference --no-default-features --test lifecycle_contracts`.
+  `& .\bin\cargo.cmd test -p lumina-local-inference --no-default-features --test lifecycle_contracts --test lifecycle_gguf --test lifecycle_modelscope --test lifecycle_revisions --test lifecycle_classification --test lifecycle_metadata --test lifecycle_search --test lifecycle_compatibility --test lifecycle_variants --test lifecycle_observations`.
   Verify that mutable revisions, unsafe paths, forbidden weight formats, missing components,
   expired plans, illegal state transitions, reused idempotency keys with different plans,
   database corruption, and expired worker writes are rejected. Verify persistent recovery
   across separate SQLite connections and process restarts.
+  Verify paged search completeness, fixed source/header bindings, non-fabricated shard candidates,
+  exact component-pairing provenance, unknown hardware rejection, full-weight and KV/state/cache
+  budgets, frozen resource configuration, and rejection of corrupted observation or plan records.
 
   If an actual GGUF is available, run the ignored `lifecycle_real_inference` integration test
   with an isolated LUMINA_PATH_ROOT and the actual LUMINA_REAL_GGUF_PATH, LUMINA_REAL_MODEL_ID,

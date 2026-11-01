@@ -1,0 +1,131 @@
+{
+  "observedAt": "2026-11-01T14:02:10.314249+00:00",
+  "status": "INCREMENT_VERIFIED_STAGE_M1_STILL_OPEN",
+  "scope": "Source observation persistence, plan binding, CPU resource accounting and legacy source-policy increment; no phase exit, product adapter or READY assertion",
+  "crateRegression": {
+    "passed": 244,
+    "failed": 0,
+    "ignored": 6,
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-admission-all-tests-r2.log",
+    "logSha256": "7dc9fc59d0a83daf4136cf9d61fa9057e5278ab645ea087af5c72bcbce13d02b"
+  },
+  "crateStrictClippy": {
+    "status": "PASS",
+    "scope": "lumina-local-inference all targets, no default features",
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-admission-clippy-r2.log",
+    "logSha256": "b9684286043515dedc4243f41cd1d7fcd337a1f2a0d90fefcd8a91ad0e4a633b"
+  },
+  "database": {
+    "schemaVersion": 6,
+    "reopenedObservations": 2,
+    "planBindings": 0,
+    "result": {
+      "database_schema_version": 6,
+      "observation_ids": [
+        "ff90b0382a1c35d22067c50bef63a7a6b45a1adf4c08bc925a11d6d4f87a7970",
+        "f4dd3517c71d3c383b5edc04e3de8879276f6ec0972fb474c27135c401b79fcc"
+      ],
+      "records_reopened": 2,
+      "scope": "Actual source/header metadata persistence only; no installed version, job or runtime capability was created"
+    },
+    "process": {
+      "binarySha256": "4ae29a56dc1e22ffed7ffcf7cec51e013c4a9c263220e65ed31b249305af0ba3",
+      "exitCode": 0,
+      "outputPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-admission-checks-20261101-r1\\cache_recorded_component.stdout.json"
+    },
+    "scope": "Two actual BF16 shard observations survive reopen. No executable installation plan is created from this diagnostic catalog."
+  },
+  "cpuResourceScenario": {
+    "result": {
+      "hardware": {
+        "observed_at": 1793541730,
+        "devices": [
+          {
+            "index": 0,
+            "backend": "CPU",
+            "name": "CPU",
+            "description": "Intel(R) Core(TM) i7-14700F",
+            "kind": "cpu",
+            "total_bytes": 102904569856,
+            "free_bytes": 55402745856
+          }
+        ],
+        "storage_volume": "\\\\?\\D:\\Project\\goose\\target",
+        "disk_free_bytes": 337053577216
+      },
+      "envelope": {
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "component_digests": [
+          "fe12801d8284ac6311492a960d857dcedb88bd9d1bafd840eb205c7f43bf8201"
+        ],
+        "workload": {
+          "context_tokens": 2048,
+          "batch_tokens": 512,
+          "parallel_sequences": 1,
+          "recurrent_rollback_slots": 0
+        },
+        "compute_buffer_bytes": 536870912,
+        "auxiliary_buffer_bytes": 268435456,
+        "evidence_id": "diagnostic-explicit-buffer-scenario-not-a-verified-runtime-profile"
+      },
+      "budget": {
+        "rules_version": "local-resource-budget-v1",
+        "binding_digest": "0f353a7cf83df70d0134132aac562ceae756a9b7801dab9f908b13d0e9b19d98",
+        "compatibility": "incompatible",
+        "weight_bytes": 71065942560,
+        "kv_cache_bytes": 46137344,
+        "recurrent_cache_bytes": 65863680,
+        "compute_buffer_bytes": 536870912,
+        "auxiliary_buffer_bytes": 268435456,
+        "host_memory_required_bytes": 71983249952,
+        "host_memory_available_bytes": 55402745856,
+        "peak_incremental_disk_bytes": 213214604896,
+        "blocking_reasons": [
+          "Insufficient host memory for complete weights and runtime buffers"
+        ]
+      },
+      "scope": "Actual source headers and native hardware; explicit buffer scenario only, no measured compute envelope, installation admission, runtime acceptance or product READY"
+    },
+    "process": {
+      "binarySha256": "029d8ec426ba569155fe04e08b93b8bb08a360236bbf5ade10d6df0588c3bffd",
+      "exitCode": 0,
+      "outputPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-admission-checks-20261101-r1\\assess_recorded_resources.stdout.json"
+    },
+    "computeEnvelopeVerified": false,
+    "scope": "Real fixed-revision GGUF headers and actual ggml hardware/disk observation; explicit F16 KV/F32 recurrent-state formula and operator-specified scratch scenario. Host memory is insufficient for all BF16 weights even before adding buffers. No GPU, partial-offload or modality memory admission claim."
+  },
+  "sourcePolicyChanges": [
+    "No fabricated featured file on resolution failure",
+    "No automatic mutable projector repair download",
+    "Legacy GGUF resolution pins HEAD to a commit and materializes revision-specific cache paths",
+    "Language entry inspects actual remote GGUF headers and complete shard set before transfer, rejects other task candidates and unverified projector selections, and rechecks downloaded header digests",
+    "Explicit new HF/MLX and old HF dictation download routes reject under ModelScope-only managed-weight policy; historical model files/settings are retained"
+  ],
+  "retainedFailedAttempts": [
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m1-admission-all-tests-r1.log",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m1-resources-clippy-r1.log",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m1-resources-clippy-r2.log"
+  ],
+  "remaining": [
+    "Runtime-provided measured compute envelopes and GPU/multimodal profiles",
+    "Plan assembly and application-facing service integration",
+    "Managed download/jobs cutover, immutable cache/import witnesses and legacy data migration",
+    "Real authenticated restricted-repository positive acceptance",
+    "Full CPU/CUDA CLI rebuild, Windows gates, final phase verification and commit/push",
+    "M2 through M6 full original scope; old Whisper layout and Video quality failures; workspace Clippy baseline failures"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "observedAt": "2026-11-01T12:59:55.973818+00:00",
+  "status": "OBSERVED",
+  "repository": "audio-cpp/audio.cpp-gguf",
+  "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+  "file": "PocketTTS-GGUF/english/pocket-tts-english-q8_0.gguf",
+  "headerDigest": "57cad352de584602e5b1222b808d9fd3864f353badc6343616f6290595c65485",
+  "family": "pocket_tts",
+  "specVersion": 1,
+  "embeddedSpecSha256": "d1a53a2c9a55eadaf6d7db40a3f2d3bad72570dc5541ba8b100a11869cbbb3e8",
+  "embeddedSourceFormats": [
+    "gguf",
+    "safetensors"
+  ],
+  "embeddedDefaultDownloadKind": "huggingface_snapshot",
+  "productionClassificationRule": "gguf-content-v2 reads bounded family/version fields as candidates only; embedded source/download/package directives are not executed",
+  "nativeProbeBoundary": "M0 used manager-disabled audio.cpp build and explicit pinned local model spec; product adapter asset/spec enforcement remains ML-30/33/36/47 work",
+  "scope": "Observed embedded metadata only; no new download, script execution or commercial conclusion"
+}

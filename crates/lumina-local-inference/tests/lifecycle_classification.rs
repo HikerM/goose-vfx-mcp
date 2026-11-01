@@ -72,6 +72,118 @@ fn classify(inspection: &GgufInspection) -> GgufClassification {
 }
 
 #[test]
+fn whisper_metadata_produces_asr_candidate_without_a_runtime_claim() {
+    let result = classify(&inspection(Some("whisper")));
+    assert_eq!(result.structure, ModelStructure::Dense);
+    assert_eq!(
+        result.task_candidates,
+        BTreeSet::from([ModelTaskFamily::Asr])
+    );
+    assert!(result.declared_tasks.is_empty());
+    assert!(result.acceleration_hints.is_empty());
+}
+
+#[test]
+fn audio_package_family_requires_its_namespace_and_known_spec_version() {
+    let mut model = inspection(Some("audiocpp"));
+    model.metadata.insert(
+        "audiocpp.model_spec.family".into(),
+        scalar(GgufScalar::String("pocket_tts".into())),
+    );
+    model.metadata.insert(
+        "audiocpp.model_spec.version".into(),
+        scalar(GgufScalar::Unsigned(1)),
+    );
+    model.metadata.insert(
+        "audiocpp.model_spec.json".into(),
+        scalar(GgufScalar::String(
+            r#"{"download":{"kind":"huggingface_snapshot"},"family":"untrusted-json-hint"}"#.into(),
+        )),
+    );
+    let result = classify(&model);
+    assert_eq!(
+        result.task_candidates,
+        BTreeSet::from([ModelTaskFamily::Audio, ModelTaskFamily::Tts])
+    );
+    assert_eq!(
+        result.facts.packaged_runtime_family.as_deref(),
+        Some("pocket_tts")
+    );
+    model.metadata.insert(
+        "audiocpp.model_spec.version".into(),
+        scalar(GgufScalar::Unsigned(2)),
+    );
+    assert_eq!(
+        classify(&model).task_candidates,
+        BTreeSet::from([ModelTaskFamily::Audio])
+    );
+    model.metadata.insert(
+        "general.architecture".into(),
+        scalar(GgufScalar::String("qwen3".into())),
+    );
+    let unrelated = classify(&model);
+    assert_eq!(unrelated.facts.packaged_runtime_family, None);
+    assert!(!unrelated.task_candidates.contains(&ModelTaskFamily::Tts));
+}
+
+#[test]
+fn packed_diffusion_tensor_groups_are_candidates_while_missing_architecture_stays_unknown() {
+    let mut model = inspection(None);
+    model.metadata.clear();
+    model.tensors = vec![
+        tensor(
+            "model.diffusion_model.input_blocks.0.0.weight",
+            vec![3, 3, 4, 320],
+        ),
+        tensor(
+            "first_stage_model.encoder.conv_in.weight",
+            vec![3, 3, 3, 128],
+        ),
+        tensor(
+            "cond_stage_model.transformer.text_model.embeddings.token_embedding.weight",
+            vec![768, 49408],
+        ),
+    ];
+    let result = classify(&model);
+    assert_eq!(result.architecture, ArchitectureKnowledge::Unknown);
+    assert_eq!(result.structure, ModelStructure::Unknown);
+    assert_eq!(
+        result.task_candidates,
+        BTreeSet::from([ModelTaskFamily::ImageDiffusion])
+    );
+    assert!(result
+        .facts
+        .tensor_layout_hints
+        .contains(&GgufTensorLayoutHint::PackedLatentDiffusion));
+    assert_eq!(result.role_hints, BTreeSet::from([ComponentRole::Main]));
+    model.tensors.pop();
+    assert!(!classify(&model)
+        .task_candidates
+        .contains(&ModelTaskFamily::ImageDiffusion));
+}
+
+#[test]
+fn older_classification_documents_keep_their_rules_version_and_unknown_new_facts() {
+    let result = classify(&inspection(None));
+    let mut json = serde_json::to_value(&result).unwrap();
+    json["rules_version"] = serde_json::json!("gguf-content-v1");
+    let facts = json["facts"].as_object_mut().unwrap();
+    for key in [
+        "packaged_runtime_family",
+        "packaged_spec_version",
+        "tensor_layout_hints",
+    ] {
+        facts.remove(key);
+    }
+    let old: GgufClassification = serde_json::from_value(json).unwrap();
+    assert_eq!(old.rules_version, "gguf-content-v1");
+    assert_ne!(old.rules_version, CLASSIFICATION_RULES_VERSION);
+    assert_eq!(old.facts.packaged_runtime_family, None);
+    assert_eq!(old.facts.packaged_spec_version, None);
+    assert!(old.facts.tensor_layout_hints.is_empty());
+}
+
+#[test]
 fn names_and_chat_templates_do_not_grant_task_or_runtime_capabilities() {
     let mut original = inspection(Some("qwen3"));
     let before = classify(&original);

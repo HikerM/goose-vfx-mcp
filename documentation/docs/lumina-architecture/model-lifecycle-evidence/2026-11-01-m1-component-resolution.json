@@ -1,0 +1,106 @@
+{
+  "observedAt": "2026-11-01T13:30:22.570365+00:00",
+  "status": "PASS",
+  "binarySha256": "a7b960016b10c02e4376ea5f84bae7af52bd014b1bd3a3c91b58a048d647b87c",
+  "scope": "Actual source-bound complete GGUF shard metadata only. Large weights were not fully downloaded or executed; no install or runtime READY.",
+  "cases": [
+    {
+      "case": "automatic-from-first",
+      "files": [
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf",
+          "sizeBytes": 49913715456,
+          "declaredSourceSha256": "a172dfea1fe8bb29132ea2f250c74cdc7d619d518d3f072d3816e31a69ce44a2",
+          "headerDigest": "e8e3b305fe97c60b810a67b3354ccce7c98e2844b6c3aa9bacbd617839eff4a2",
+          "tensorCount": 534,
+          "shard": {
+            "index": 0,
+            "count": 2,
+            "total_tensors": 753
+          }
+        },
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00002-of-00002.gguf",
+          "sizeBytes": 21152227104,
+          "declaredSourceSha256": "b90b4d07e1be4967aec932e2501e7476ec5f44de772c7eb082d6e9c3ac105161",
+          "headerDigest": "e1c4aec700b5fc362f1465c72d018c45e0b690888e64427d724ab81a82726e8e",
+          "tensorCount": 219,
+          "shard": {
+            "index": 1,
+            "count": 2,
+            "total_tensors": 753
+          }
+        }
+      ],
+      "headerReads": [
+        {
+          "artifact_id": "feaaae4e33a80631901baa050a2a88ab3254f3bdb32b97fc7fd0ce44dd63a0de",
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf",
+          "header_digest": "e8e3b305fe97c60b810a67b3354ccce7c98e2844b6c3aa9bacbd617839eff4a2",
+          "bytes_fetched": 16777216,
+          "range_http_requests": 16
+        },
+        {
+          "artifact_id": "6d1269cec929ebed5f3f3a282c2f6f9d37dc714251c0824654b66b4de4677dc1",
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00002-of-00002.gguf",
+          "header_digest": "e1c4aec700b5fc362f1465c72d018c45e0b690888e64427d724ab81a82726e8e",
+          "bytes_fetched": 131072,
+          "range_http_requests": 2
+        }
+      ],
+      "storedTensorElements": 35505251456,
+      "status": "PASS"
+    },
+    {
+      "case": "automatic-from-second",
+      "files": [
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf",
+          "sizeBytes": 49913715456,
+          "declaredSourceSha256": "a172dfea1fe8bb29132ea2f250c74cdc7d619d518d3f072d3816e31a69ce44a2",
+          "headerDigest": "e8e3b305fe97c60b810a67b3354ccce7c98e2844b6c3aa9bacbd617839eff4a2",
+          "tensorCount": 534,
+          "shard": {
+            "index": 0,
+            "count": 2,
+            "total_tensors": 753
+          }
+        },
+        {
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00002-of-00002.gguf",
+          "sizeBytes": 21152227104,
+          "declaredSourceSha256": "b90b4d07e1be4967aec932e2501e7476ec5f44de772c7eb082d6e9c3ac105161",
+          "headerDigest": "e1c4aec700b5fc362f1465c72d018c45e0b690888e64427d724ab81a82726e8e",
+          "tensorCount": 219,
+          "shard": {
+            "index": 1,
+            "count": 2,
+            "total_tensors": 753
+          }
+        }
+      ],
+      "headerReads": [
+        {
+          "artifact_id": "feaaae4e33a80631901baa050a2a88ab3254f3bdb32b97fc7fd0ce44dd63a0de",
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf",
+          "header_digest": "e8e3b305fe97c60b810a67b3354ccce7c98e2844b6c3aa9bacbd617839eff4a2",
+          "bytes_fetched": 16777216,
+          "range_http_requests": 16
+        },
+        {
+          "artifact_id": "6d1269cec929ebed5f3f3a282c2f6f9d37dc714251c0824654b66b4de4677dc1",
+          "path": "BF16/Qwen3.6-35B-A3B-BF16-00002-of-00002.gguf",
+          "header_digest": "e1c4aec700b5fc362f1465c72d018c45e0b690888e64427d724ab81a82726e8e",
+          "bytes_fetched": 131072,
+          "range_http_requests": 2
+        }
+      ],
+      "storedTensorElements": 35505251456,
+      "status": "PASS"
+    }
+  ],
+  "expectedHeaderBaselineSha256": "55db5ef48b0997eda2af9c9f5b3be84a1262a9a8b5e74dd052ba1a9a6831ae82",
+  "priorHarnessFailure": "R1 incorrectly reused 733 from another quantized model; the committed M0 BF16 source baseline has 534+219=753 and matching per-file header digests. Original failure retained.",
+  "missingShardRejected": true,
+  "outputDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-component-checks-20261101-r2"
+}

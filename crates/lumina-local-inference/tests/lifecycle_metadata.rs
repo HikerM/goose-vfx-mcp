@@ -27,6 +27,54 @@ fn observe(path: &str, text: &str) -> DocumentTaskObservation {
 }
 
 #[test]
+fn license_and_notice_documents_remain_source_facts_without_task_declarations() {
+    for filename in [
+        "LICENSE",
+        "LICENSE.txt",
+        "LICENSE.md",
+        "COPYING",
+        "NOTICE",
+        "legal/NOTICE.md",
+    ] {
+        let bytes = b"---\npipeline_tag: text-generation\n---\nLicense notice text.\n";
+        let path = RepositoryPath::parse(filename).unwrap();
+        let document =
+            verify_source_document(&inventory(filename, bytes), &path, bytes.to_vec()).unwrap();
+        assert_eq!(document.evidence().kind, SourceDocumentKind::LicenseNotice);
+        let observation = observe_document_tasks(&document);
+        assert!(observation.task_families.is_empty());
+        assert!(observation.unrecognized_tags.is_empty());
+    }
+}
+
+#[test]
+fn text_documents_do_not_accept_binary_control_bytes_under_allowed_names() {
+    for bytes in [
+        b"MZ\0binary".as_slice(),
+        b"PK\x03\x04archive".as_slice(),
+        b"text\x1b[31mterminal".as_slice(),
+    ] {
+        let source = inventory("README.md", bytes);
+        let error = verify_source_document(
+            &source,
+            &RepositoryPath::parse("README.md").unwrap(),
+            bytes.to_vec(),
+        )
+        .unwrap_err();
+        assert_eq!(
+            error.downcast_ref::<ModelSourceError>().unwrap().code,
+            LifecycleErrorCode::FormatForbidden
+        );
+    }
+    assert!(verify_source_document(
+        &inventory("NOTICE", b"line\nnext\tvalue\r\n"),
+        &RepositoryPath::parse("NOTICE").unwrap(),
+        b"line\nnext\tvalue\r\n".to_vec()
+    )
+    .is_ok());
+}
+
+#[test]
 fn document_proof_binds_exact_snapshot_path_bytes_and_hash_without_debug_content() {
     let bytes = b"---\npipeline_tag: text-to-speech\n---\nprivate-card-body";
     let path = RepositoryPath::parse("README.md").unwrap();

@@ -1,0 +1,289 @@
+{
+  "observedAt": "2026-11-01T12:55:17.311705+00:00",
+  "status": "PASS",
+  "binarySha256": "13c5678b4e84e7aa59eeb1f0761cfb7a9e724c9447d4d71914a11ac17f77ec30",
+  "scope": "Content classification of actual production Provider records and actual remote/local matched GGUF headers; candidates and unknowns only, never Runtime READY",
+  "cases": [
+    {
+      "sourceRecordSha256": "7fe3d229c513bdc8bb80a8a17ca7a98c71276fc3ba6a262e320b5209032b8be0",
+      "headerRecordSha256": "c87fdee82625005a0927d9dfd5ea527bd28a1386a44bc75b9d0b664c04c2404f",
+      "classification": {
+        "schema_version": 1,
+        "rules_version": "gguf-content-v2",
+        "artifact_id": "3664f14227f162d932f812bde5c1310550f719ce1baabcf3e6fa2e412a9a6aa8",
+        "source_path": "whisper-base-Q8_0.gguf",
+        "source_sha256": "81c069428bc8a24551a8169cf31cf09bcfd9d4cf50389ae281323c9aa9648c81",
+        "file_bytes": 84962880,
+        "snapshot_digest": "9dc0d89f65a5186bc2c6ccb0137bf86d9d5a1fdba2fe701abfda502a71a05c29",
+        "header_digest": "97e80cdae434e45dda3788ffb7f6713d7fd1a8c31111661b94170065bf160017",
+        "architecture": {
+          "state": "observed",
+          "architecture": "whisper",
+          "evidence_ids": [
+            "gguf-header:97e80cdae434e45dda3788ffb7f6713d7fd1a8c31111661b94170065bf160017"
+          ]
+        },
+        "structure": "dense",
+        "facts": {
+          "stored_tensor_elements": 72610400,
+          "encoded_tensor_bytes": 83068576,
+          "tensor_count": 247,
+          "tensor_types": [
+            0,
+            8
+          ],
+          "expert_count": null,
+          "experts_used": null,
+          "embedding_length": null,
+          "pooling_type": null,
+          "classifier_output_width": null,
+          "embedded_nextn_layers": null,
+          "vision_encoder": "unknown",
+          "projector_type": null,
+          "projection_length": null,
+          "shard": null,
+          "has_expert_tensors": false,
+          "has_chat_template": false,
+          "packaged_runtime_family": null,
+          "packaged_spec_version": null,
+          "tensor_layout_hints": []
+        },
+        "task_candidates": [
+          "asr"
+        ],
+        "declared_tasks": [],
+        "role_hints": [],
+        "acceleration_hints": [],
+        "source_declarations": [],
+        "issues": []
+      },
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "sourceRecordSha256": "f38a226aaa58c160fb7a6046db81f4c38a0768b10a67de9807e9079a0176ebbc",
+      "headerRecordSha256": "ff4f0ed7f49ba1955ee105ab5946cf774f9d6317ff88e977ef3bd373132aeb38",
+      "classification": {
+        "schema_version": 1,
+        "rules_version": "gguf-content-v2",
+        "artifact_id": "779ca6d275eb6bcd4d7cd811e24dc071e7c545ab33b755eed1a316633227ace5",
+        "source_path": "stable-diffusion-v1-5-FP16.gguf",
+        "source_sha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+        "file_bytes": 2132584864,
+        "snapshot_digest": "da34aec0d5dc475dd10a20fd858ac60feb4752c47fecdbc5c20f1b9c001c9e8e",
+        "header_digest": "fd52cc611796e161ed9fd27222252829c143b8521e84e9ac6f0434f885efb079",
+        "architecture": {
+          "state": "unknown"
+        },
+        "structure": "unknown",
+        "facts": {
+          "stored_tensor_elements": 1066235307,
+          "encoded_tensor_bytes": 2132470614,
+          "tensor_count": 1130,
+          "tensor_types": [
+            1
+          ],
+          "expert_count": null,
+          "experts_used": null,
+          "embedding_length": null,
+          "pooling_type": null,
+          "classifier_output_width": null,
+          "embedded_nextn_layers": null,
+          "vision_encoder": "unknown",
+          "projector_type": null,
+          "projection_length": null,
+          "shard": null,
+          "has_expert_tensors": false,
+          "has_chat_template": false,
+          "packaged_runtime_family": null,
+          "packaged_spec_version": null,
+          "tensor_layout_hints": [
+            "packed_latent_diffusion"
+          ]
+        },
+        "task_candidates": [
+          "image_diffusion"
+        ],
+        "declared_tasks": [],
+        "role_hints": [
+          "main"
+        ],
+        "acceleration_hints": [],
+        "source_declarations": [],
+        "issues": []
+      },
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "sourceRecordSha256": "6969f66de292c3cb819d3a7883022c0a3440d0a253f401de761c652f8225d378",
+      "headerRecordSha256": "95cae01e8545a0cde85538be4e398fac6872317b59e4b3180d08ffc64e85e9fa",
+      "classification": {
+        "schema_version": 1,
+        "rules_version": "gguf-content-v2",
+        "artifact_id": "572f516029a0391daeb26aee29b3413079fb7fabd67ca300246470e6463689c6",
+        "source_path": "pig_wan_vae_fp32-f16.gguf",
+        "source_sha256": "290e463b9d6680146cfd06e5740adb918b239ac8aef1f64f9d4d35fa11747bcd",
+        "file_bytes": 253875904,
+        "snapshot_digest": "8ca630f3471bd8562e046cde155405cc29d2dc219495edc56fc0baa71c063bf8",
+        "header_digest": "25b408902c26ecd212711018259b6d24b5f1a99dd79bb51c7c68a67436e77a0b",
+        "architecture": {
+          "state": "observed",
+          "architecture": "pig",
+          "evidence_ids": [
+            "gguf-header:25b408902c26ecd212711018259b6d24b5f1a99dd79bb51c7c68a67436e77a0b"
+          ]
+        },
+        "structure": "unknown",
+        "facts": {
+          "stored_tensor_elements": 126892531,
+          "encoded_tensor_bytes": 253859404,
+          "tensor_count": 194,
+          "tensor_types": [
+            0,
+            1
+          ],
+          "expert_count": null,
+          "experts_used": null,
+          "embedding_length": null,
+          "pooling_type": null,
+          "classifier_output_width": null,
+          "embedded_nextn_layers": null,
+          "vision_encoder": "unknown",
+          "projector_type": null,
+          "projection_length": null,
+          "shard": null,
+          "has_expert_tensors": false,
+          "has_chat_template": false,
+          "packaged_runtime_family": null,
+          "packaged_spec_version": null,
+          "tensor_layout_hints": []
+        },
+        "task_candidates": [],
+        "declared_tasks": [],
+        "role_hints": [],
+        "acceleration_hints": [],
+        "source_declarations": [],
+        "issues": []
+      },
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "sourceRecordSha256": "ecdd6d429decada23c933583cd67c75d507dd529fc46f4a3985bbae2429de335",
+      "headerRecordSha256": "50ad8a69c24cd6590027031cf107dd9f8d8930741957c27d8f72266f3536a108",
+      "classification": {
+        "schema_version": 1,
+        "rules_version": "gguf-content-v2",
+        "artifact_id": "5604ab1651534e8b949f7652be49133345617754fb98d95de539843e3966c448",
+        "source_path": "PocketTTS-GGUF/english/pocket-tts-english-q8_0.gguf",
+        "source_sha256": "3f71cf6a51f93c2f2e554e98970a3f49fb9a98d0c64bed5a815e65be3d2ff588",
+        "file_bytes": 127867968,
+        "snapshot_digest": "0795274dc7dde2c955b6012053cbdb11cb3b4f8a3654095dfd15cd99f32db7f7",
+        "header_digest": "57cad352de584602e5b1222b808d9fd3864f353badc6343616f6290595c65485",
+        "architecture": {
+          "state": "observed",
+          "architecture": "audiocpp",
+          "evidence_ids": [
+            "gguf-header:57cad352de584602e5b1222b808d9fd3864f353badc6343616f6290595c65485"
+          ]
+        },
+        "structure": "unknown",
+        "facts": {
+          "stored_tensor_elements": 109502146,
+          "encoded_tensor_bytes": 127764932,
+          "tensor_count": 214,
+          "tensor_types": [
+            1,
+            8,
+            30
+          ],
+          "expert_count": null,
+          "experts_used": null,
+          "embedding_length": null,
+          "pooling_type": null,
+          "classifier_output_width": null,
+          "embedded_nextn_layers": null,
+          "vision_encoder": "unknown",
+          "projector_type": null,
+          "projection_length": null,
+          "shard": null,
+          "has_expert_tensors": false,
+          "has_chat_template": false,
+          "packaged_runtime_family": "pocket_tts",
+          "packaged_spec_version": 1,
+          "tensor_layout_hints": []
+        },
+        "task_candidates": [
+          "tts",
+          "audio"
+        ],
+        "declared_tasks": [],
+        "role_hints": [],
+        "acceleration_hints": [],
+        "source_declarations": [],
+        "issues": []
+      },
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "sourceRecordSha256": "2ac3f0565c4bd1124013db41d1768c815943775034ea526adea5527093231abc",
+      "headerRecordSha256": "7a9818443fc0d9c04e834ee2d5bbeb3efcf977cd0ce7e5ed57bab19d133b129d",
+      "classification": {
+        "schema_version": 1,
+        "rules_version": "gguf-content-v2",
+        "artifact_id": "567bf6dc3e511a036c02d61a3ca4b8803a305baeed8c25f96d0c93f1a5f84c32",
+        "source_path": "Qwen3.5-4B-DFlash.Q8_0.gguf",
+        "source_sha256": "f0689eadab0d46468bc2629bb2706f4aba7f794b63e1c9f6eb291269d572a52b",
+        "file_bytes": 685133984,
+        "snapshot_digest": "2f31fed5bac20611edb2ce46c61b445ef929201d1c5819085c0b211fcc2315f7",
+        "header_digest": "b77ee8223fc38adc0e3a82b9e556b39ba82c4b6f2989c0276462a85c0cf8c9f4",
+        "architecture": {
+          "state": "observed",
+          "architecture": "dflash",
+          "evidence_ids": [
+            "gguf-header:b77ee8223fc38adc0e3a82b9e556b39ba82c4b6f2989c0276462a85c0cf8c9f4"
+          ]
+        },
+        "structure": "unknown",
+        "facts": {
+          "stored_tensor_elements": 634425856,
+          "encoded_tensor_bytes": 674187264,
+          "tensor_count": 69,
+          "tensor_types": [
+            0,
+            8
+          ],
+          "expert_count": null,
+          "experts_used": null,
+          "embedding_length": 2560,
+          "pooling_type": null,
+          "classifier_output_width": null,
+          "embedded_nextn_layers": null,
+          "vision_encoder": "unknown",
+          "projector_type": null,
+          "projection_length": null,
+          "shard": null,
+          "has_expert_tensors": false,
+          "has_chat_template": true,
+          "packaged_runtime_family": null,
+          "packaged_spec_version": null,
+          "tensor_layout_hints": []
+        },
+        "task_candidates": [],
+        "declared_tasks": [],
+        "role_hints": [
+          "dflash"
+        ],
+        "acceleration_hints": [
+          "dflash"
+        ],
+        "source_declarations": [],
+        "issues": []
+      },
+      "capabilityReadiness": "UNVERIFIED"
+    }
+  ],
+  "rejectedNegativeCases": [
+    "cross-snapshot remote observation",
+    "changed declared source file hash"
+  ],
+  "outputDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-classification-checks-20261101-r1"
+}

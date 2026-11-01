@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-11-01T12:59:55.953385+00:00",
+  "status": "PASS",
+  "repository": "Qwen/Qwen3-1.7B-GGUF",
+  "revision": "cdd105fbd3a69efc373ba5d0451f71335630920a",
+  "documents": [
+    {
+      "rules_version": "source-task-fields-v1",
+      "document": {
+        "schema_version": 1,
+        "snapshot_digest": "7af92eebd7192cbf4877cd1636f52b9320c74e900bcc21abcbb7bef3c56a3575",
+        "path": "LICENSE",
+        "kind": "license_notice",
+        "size_bytes": 11544,
+        "source_sha256": "5de36594c10839788a8c589443a8ef9d8b8d17c65a1b5807206ae037fc36c6bd",
+        "computed_sha256": "5de36594c10839788a8c589443a8ef9d8b8d17c65a1b5807206ae037fc36c6bd"
+      },
+      "scope": "document",
+      "task_families": [],
+      "unrecognized_tags": [],
+      "issues": []
+    },
+    {
+      "rules_version": "source-task-fields-v1",
+      "document": {
+        "schema_version": 1,
+        "snapshot_digest": "7af92eebd7192cbf4877cd1636f52b9320c74e900bcc21abcbb7bef3c56a3575",
+        "path": "README.md",
+        "kind": "model_card",
+        "size_bytes": 6235,
+        "source_sha256": "60706b0c6aa38e0d1e73a7b21f98e50cad82ee1eaea636fd1f3a49617bccdb0d",
+        "computed_sha256": "60706b0c6aa38e0d1e73a7b21f98e50cad82ee1eaea636fd1f3a49617bccdb0d"
+      },
+      "scope": "document",
+      "task_families": [
+        "language"
+      ],
+      "unrecognized_tags": [],
+      "issues": []
+    }
+  ],
+  "sourceRecordSha256": "8d9f0a072aeaa01c41d8490069f4249c3e62440b2380c1ae4766758f6ec8d8d9",
+  "binarySha256": "195c085c37fb387e51e590e71c6991b486ee8767b4c01f38166fa9dc710c7a54",
+  "scope": "Actual pinned source documents and exact size/hash only; license interpretation, commercial approval and runtime acceptance were not performed"
+}

@@ -1,0 +1,207 @@
+{
+  "observedAt": "2026-11-01T13:15:19.588106+00:00",
+  "status": "PASS",
+  "binarySha256": "8513915491423b3b45764def99f0f71e37f4f4c464ddbbba283faf5a0764c39f",
+  "scope": "Actual source/header rule evaluation using M0 recorded native provenance. No new inference, installation or product READY; unknown pairs outside the three recorded profiles remain unverified.",
+  "cases": [
+    {
+      "case": "actual-vision",
+      "expected": "verified",
+      "actual": "verified",
+      "decision": {
+        "rules_version": "component-pairing-v1",
+        "profile_digest": "9baa56d84edb218bcba3cdb43829f934b1ab642af3e709ae4803744fe3fa8ac8",
+        "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+        "main_observation_digest": "a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+        "dependency_observation_digest": "f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4",
+        "compatibility": "verified",
+        "issues": []
+      },
+      "profileId": "qwen35-08b-vision-content-baseline",
+      "mainSourceRecordSha256": "92ff238733c3e2ef86f4d11e2b37b7a1c19acb98263f528ad4116697b291019e",
+      "dependencySourceRecordSha256": "92ff238733c3e2ef86f4d11e2b37b7a1c19acb98263f528ad4116697b291019e",
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "case": "actual-embedded-mtp",
+      "expected": "verified",
+      "actual": "verified",
+      "decision": {
+        "rules_version": "component-pairing-v1",
+        "profile_digest": "77a947b921cbbc255a37b7f878dd099366fb1b6aa0db185567827e422e9b00fe",
+        "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+        "main_observation_digest": "a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+        "dependency_observation_digest": "607bc612d76c84dc7734454c14fc27cf6045567412663a8f8cff233695493deb",
+        "compatibility": "verified",
+        "issues": []
+      },
+      "profileId": "qwen35-08b-embedded-mtp-content-baseline",
+      "mainSourceRecordSha256": "92ff238733c3e2ef86f4d11e2b37b7a1c19acb98263f528ad4116697b291019e",
+      "dependencySourceRecordSha256": "92ff238733c3e2ef86f4d11e2b37b7a1c19acb98263f528ad4116697b291019e",
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "case": "actual-dflash",
+      "expected": "verified",
+      "actual": "verified",
+      "decision": {
+        "rules_version": "component-pairing-v1",
+        "profile_digest": "378682f370022ab25361165d1e191e233c5b037e7b6cc783c8f01088dc4c6c6f",
+        "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+        "main_observation_digest": "dd15dc65c4da70e900523f5d4665c6201438482dc7f82cd13509fa20c5c3c164",
+        "dependency_observation_digest": "ea36ff5a40118c401ff924e6059b0c36630959ae6fa9c292689f5a014e1bd556",
+        "compatibility": "verified",
+        "issues": []
+      },
+      "profileId": "qwen35-4b-dflash-content-baseline",
+      "mainSourceRecordSha256": "6df39ac8bccb453139ca1ca80958f096c29176ae370babcef10519f0b396ba04",
+      "dependencySourceRecordSha256": "2ac3f0565c4bd1124013db41d1768c815943775034ea526adea5527093231abc",
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "case": "wrong-vision-target",
+      "expected": "incompatible",
+      "actual": "incompatible",
+      "decision": {
+        "rules_version": "component-pairing-v1",
+        "profile_digest": "9baa56d84edb218bcba3cdb43829f934b1ab642af3e709ae4803744fe3fa8ac8",
+        "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+        "main_observation_digest": "dd15dc65c4da70e900523f5d4665c6201438482dc7f82cd13509fa20c5c3c164",
+        "dependency_observation_digest": "f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4",
+        "compatibility": "incompatible",
+        "issues": [
+          {
+            "kind": "content_relationship_unverified"
+          },
+          {
+            "kind": "value_mismatch",
+            "key": "qwen35.embedding_length=clip.vision.projection_dim"
+          },
+          {
+            "kind": "value_mismatch",
+            "key": "mm.2.weight"
+          }
+        ]
+      },
+      "profileId": "qwen35-08b-vision-content-baseline",
+      "mainSourceRecordSha256": "6df39ac8bccb453139ca1ca80958f096c29176ae370babcef10519f0b396ba04",
+      "dependencySourceRecordSha256": "92ff238733c3e2ef86f4d11e2b37b7a1c19acb98263f528ad4116697b291019e",
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "case": "wrong-dflash-target",
+      "expected": "incompatible",
+      "actual": "incompatible",
+      "decision": {
+        "rules_version": "component-pairing-v1",
+        "profile_digest": "378682f370022ab25361165d1e191e233c5b037e7b6cc783c8f01088dc4c6c6f",
+        "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+        "main_observation_digest": "a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+        "dependency_observation_digest": "ea36ff5a40118c401ff924e6059b0c36630959ae6fa9c292689f5a014e1bd556",
+        "compatibility": "incompatible",
+        "issues": [
+          {
+            "kind": "content_relationship_unverified"
+          },
+          {
+            "kind": "value_mismatch",
+            "key": "qwen35.embedding_length=dflash.embedding_length"
+          },
+          {
+            "kind": "invalid_metadata",
+            "side": "dependency",
+            "key": "dflash.target_layers"
+          },
+          {
+            "kind": "tokenizer_mismatch",
+            "key": "tokenizer.ggml.padding_token_id"
+          }
+        ]
+      },
+      "profileId": "qwen35-4b-dflash-content-baseline",
+      "mainSourceRecordSha256": "92ff238733c3e2ef86f4d11e2b37b7a1c19acb98263f528ad4116697b291019e",
+      "dependencySourceRecordSha256": "2ac3f0565c4bd1124013db41d1768c815943775034ea526adea5527093231abc",
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "case": "ordinary-model-is-not-dflash",
+      "expected": "incompatible",
+      "actual": "incompatible",
+      "decision": {
+        "rules_version": "component-pairing-v1",
+        "profile_digest": "378682f370022ab25361165d1e191e233c5b037e7b6cc783c8f01088dc4c6c6f",
+        "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+        "main_observation_digest": "dd15dc65c4da70e900523f5d4665c6201438482dc7f82cd13509fa20c5c3c164",
+        "dependency_observation_digest": "bfd40bccd25e719bc667dcfbc9efe08d9f06e3d7d291bd642b67d68e053dd8fb",
+        "compatibility": "incompatible",
+        "issues": [
+          {
+            "kind": "content_relationship_unverified"
+          },
+          {
+            "kind": "value_mismatch",
+            "key": "general.architecture"
+          },
+          {
+            "kind": "missing_metadata",
+            "side": "dependency",
+            "key": "dflash.embedding_length"
+          },
+          {
+            "kind": "missing_metadata",
+            "side": "dependency",
+            "key": "dflash.block_size"
+          },
+          {
+            "kind": "missing_metadata",
+            "side": "dependency",
+            "key": "dflash.target_layers"
+          },
+          {
+            "kind": "invalid_metadata",
+            "side": "dependency",
+            "key": "general.architecture"
+          }
+        ]
+      },
+      "profileId": "qwen35-4b-dflash-content-baseline",
+      "mainSourceRecordSha256": "6df39ac8bccb453139ca1ca80958f096c29176ae370babcef10519f0b396ba04",
+      "dependencySourceRecordSha256": "6df39ac8bccb453139ca1ca80958f096c29176ae370babcef10519f0b396ba04",
+      "capabilityReadiness": "UNVERIFIED"
+    },
+    {
+      "case": "no-embedded-mtp-proof",
+      "expected": "unverified",
+      "actual": "unverified",
+      "decision": {
+        "rules_version": "component-pairing-v1",
+        "profile_digest": "77a947b921cbbc255a37b7f878dd099366fb1b6aa0db185567827e422e9b00fe",
+        "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+        "main_observation_digest": "dd15dc65c4da70e900523f5d4665c6201438482dc7f82cd13509fa20c5c3c164",
+        "dependency_observation_digest": "b91ea877918da01b7d97ee32a9c0e0221a3d161dfaee44222f5e53f5af45a3e2",
+        "compatibility": "unverified",
+        "issues": [
+          {
+            "kind": "content_relationship_unverified"
+          },
+          {
+            "kind": "missing_metadata",
+            "side": "main",
+            "key": "qwen35.nextn_predict_layers"
+          },
+          {
+            "kind": "missing_metadata",
+            "side": "dependency",
+            "key": "qwen35.nextn_predict_layers"
+          }
+        ]
+      },
+      "profileId": "qwen35-08b-embedded-mtp-content-baseline",
+      "mainSourceRecordSha256": "6df39ac8bccb453139ca1ca80958f096c29176ae370babcef10519f0b396ba04",
+      "dependencySourceRecordSha256": "6df39ac8bccb453139ca1ca80958f096c29176ae370babcef10519f0b396ba04",
+      "capabilityReadiness": "UNVERIFIED"
+    }
+  ],
+  "actualNativeHelperSha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+  "outputDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-pairing-checks-20261101-r1"
+}

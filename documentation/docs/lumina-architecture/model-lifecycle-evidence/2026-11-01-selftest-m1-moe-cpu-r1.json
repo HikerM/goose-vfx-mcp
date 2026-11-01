@@ -1,0 +1,140 @@
+{
+  "startedAt": "2026-11-01T14:49:35.232588+00:00",
+  "identities": {
+    "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-binary\\919729e95c0a26d424fbf9134ce12e39698f3eaed7489f70908f3d0d37855fc6\\lumina.exe": "919729e95c0a26d424fbf9134ce12e39698f3eaed7489f70908f3d0d37855fc6",
+    "D:\\Project\\goose\\lumina-self-test.yaml": "ad948e45c7db4455f6488301adc94fd74e0614ddcbdb311b6e6dba506acd3250",
+    "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1": "64b78250d3a0011417d68a5d256406c82c827f0e9c5064ba59e27dcdae0ea240",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\real-text-powershell-gate.json": "aa4eb5d5bf8eeaefd3e2574b55a2dd1897e893f35695e6fb1e30687c7c7c542f",
+    "D:\\Lumina\\data\\models\\modelscope\\Abiray__Qwen3.6-35B-A3B-Q4_K_M-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\data\\models\\registry.json": "eaa8819324277be63a194d2a732dc749a25073ec70b76fcb21033a39218f2618",
+    "target\\lifecycle-validation\\moe-cuda-source.json": "01fe7201f4fdd3b199a941851b41539c86e6a25a5005b924ec55ba8338b5501e",
+    "D:\\Project\\goose\\Cargo.lock": "5497732db98d183131cd3ec8b380967751016d55086aec73b30b8ba1acd68ab5"
+  },
+  "status": "PASS",
+  "parentModel": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:q4_k_m",
+  "textSmokeModel": "Qwen/Qwen3-1.7B-GGUF:q8_0",
+  "requestedGpuLayers": 0,
+  "expectedFoundation": {
+    "suites": 10,
+    "passed": 131,
+    "ignored": 4
+  },
+  "scope": "Actual rebuilt CLI recipe with explicit parent model and unchanged CPU text-smoke model; not new lifecycle install or all-type/release acceptance",
+  "argv": [
+    "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-binary\\919729e95c0a26d424fbf9134ce12e39698f3eaed7489f70908f3d0d37855fc6\\lumina.exe",
+    "run",
+    "--recipe",
+    "D:\\Project\\goose\\lumina-self-test.yaml",
+    "--params",
+    "test_phases=model-lifecycle",
+    "--params",
+    "workspace_dir=D:/Project/goose/target/lifecycle-validation/recipe-m1-moe-cpu-r1-results",
+    "--params",
+    "parallel_tests=false",
+    "--params",
+    "cleanup_after=false",
+    "--provider",
+    "local",
+    "--model",
+    "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:q4_k_m",
+    "--no-session",
+    "--no-profile",
+    "--with-builtin",
+    "developer",
+    "--max-turns",
+    "3",
+    "--output-format",
+    "stream-json"
+  ],
+  "pid": 48524,
+  "cliExitCode": 0,
+  "toolRequest": {
+    "type": "toolRequest",
+    "id": "6IDJZQkTZ7oroaEAHwX0aoA2Oz6SVs4A",
+    "toolCall": {
+      "status": "success",
+      "value": {
+        "name": "shell",
+        "arguments": {
+          "command": "powershell.exe -NoProfile -File D:/Project/goose/bin/test-lumina-real-text.ps1 -IncludeFoundation -ReportPath \"D:/Project/goose/target/lifecycle-validation/recipe-m1-moe-cpu-r1-results/model_lifecycle_foundation.md\"",
+          "timeout_secs": 600
+        }
+      }
+    },
+    "_meta": {
+      "lumina_extension": "developer"
+    }
+  },
+  "toolResponse": {
+    "type": "toolResponse",
+    "id": "6IDJZQkTZ7oroaEAHwX0aoA2Oz6SVs4A",
+    "toolResult": {
+      "status": "success",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMRT000\",\"exitCode\":0,\"passed\":1,\"failed\":0,\"ignored\":0,\"foundation\":{\"targets\":[\"lifecycle_contracts\",\"lifecycle_gguf\",\"lifecycle_modelscope\",\"lifecycle_revisions\",\"lifecycle_classification\",\"lifecycle_metadata\",\"lifecycle_search\",\"lifecycle_compatibility\",\"lifecycle_variants\",\"lifecycle_observations\"],\"suites\":10,\"passed\":131,\"failed\":0,\"ignored\":4,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\foundation-app\\\\foundation-run.log\"},\"result\":{\"test\":\"installed_gguf_generates_actual_text\",\"input\":\"Compute 2 + 2. Respond only with the numeral.\",\"output\":\"4\",\"outputTokens\":1,\"execution\":\"cpu\",\"scope\":\"existing runtime text smoke, not lifecycle installation acceptance\"},\"evidencePath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\evidence\\\\text-smoke.json\",\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\inference-run.log\",\"scope\":\"Actual existing runtime text smoke; not complete lifecycle or release acceptance.\",\"report\":{\"path\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\recipe-m1-moe-cpu-r1-results\\\\model_lifecycle_foundation.md\",\"sha256\":\"2f28fae50449474fa52d12d6913198b98040e9d5cbec284940404c0e8c2e23e5\",\"content\":\"# lumina model lifecycle validation\\n\\nStatus: PASS\\nScope: foundation and actual existing-runtime text smoke; not full product acceptance.\\n\\nFoundation targets: lifecycle_contracts, lifecycle_gguf, lifecycle_modelscope, lifecycle_revisions, lifecycle_classification, lifecycle_metadata, lifecycle_search, lifecycle_compatibility, lifecycle_variants, lifecycle_observations\\nFoundation passed: 131\\nFoundation failed: 0\\nFoundation ignored: 4\\nFoundation log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\foundation-app\\\\foundation-run.log\\nActual text test passed: 1\\nActual output: 4\\nActual output tokens: 1\\nInference evidence: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\evidence\\\\text-smoke.json\\nInference log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\inference-run.log\\n\"}}\r",
+            "annotations": {
+              "priority": 0.0
+            }
+          }
+        ],
+        "structuredContent": {
+          "stdout": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMRT000\",\"exitCode\":0,\"passed\":1,\"failed\":0,\"ignored\":0,\"foundation\":{\"targets\":[\"lifecycle_contracts\",\"lifecycle_gguf\",\"lifecycle_modelscope\",\"lifecycle_revisions\",\"lifecycle_classification\",\"lifecycle_metadata\",\"lifecycle_search\",\"lifecycle_compatibility\",\"lifecycle_variants\",\"lifecycle_observations\"],\"suites\":10,\"passed\":131,\"failed\":0,\"ignored\":4,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\foundation-app\\\\foundation-run.log\"},\"result\":{\"test\":\"installed_gguf_generates_actual_text\",\"input\":\"Compute 2 + 2. Respond only with the numeral.\",\"output\":\"4\",\"outputTokens\":1,\"execution\":\"cpu\",\"scope\":\"existing runtime text smoke, not lifecycle installation acceptance\"},\"evidencePath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\evidence\\\\text-smoke.json\",\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\inference-run.log\",\"scope\":\"Actual existing runtime text smoke; not complete lifecycle or release acceptance.\",\"report\":{\"path\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\recipe-m1-moe-cpu-r1-results\\\\model_lifecycle_foundation.md\",\"sha256\":\"2f28fae50449474fa52d12d6913198b98040e9d5cbec284940404c0e8c2e23e5\",\"content\":\"# lumina model lifecycle validation\\n\\nStatus: PASS\\nScope: foundation and actual existing-runtime text smoke; not full product acceptance.\\n\\nFoundation targets: lifecycle_contracts, lifecycle_gguf, lifecycle_modelscope, lifecycle_revisions, lifecycle_classification, lifecycle_metadata, lifecycle_search, lifecycle_compatibility, lifecycle_variants, lifecycle_observations\\nFoundation passed: 131\\nFoundation failed: 0\\nFoundation ignored: 4\\nFoundation log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\foundation-app\\\\foundation-run.log\\nActual text test passed: 1\\nActual output: 4\\nActual output tokens: 1\\nInference evidence: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\evidence\\\\text-smoke.json\\nInference log: D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\selftest-m1-moe-cpu-r1-app\\\\inference-app\\\\inference-run.log\\n\"}}\r",
+          "stderr": "",
+          "exit_code": 0
+        },
+        "isError": false
+      }
+    }
+  },
+  "observed": {
+    "schemaVersion": 1,
+    "status": "PASS",
+    "ruleId": "LMRT000",
+    "exitCode": 0,
+    "passed": 1,
+    "failed": 0,
+    "ignored": 0,
+    "foundation": {
+      "targets": [
+        "lifecycle_contracts",
+        "lifecycle_gguf",
+        "lifecycle_modelscope",
+        "lifecycle_revisions",
+        "lifecycle_classification",
+        "lifecycle_metadata",
+        "lifecycle_search",
+        "lifecycle_compatibility",
+        "lifecycle_variants",
+        "lifecycle_observations"
+      ],
+      "suites": 10,
+      "passed": 131,
+      "failed": 0,
+      "ignored": 4,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\foundation-app\\foundation-run.log"
+    },
+    "result": {
+      "test": "installed_gguf_generates_actual_text",
+      "input": "Compute 2 + 2. Respond only with the numeral.",
+      "output": "4",
+      "outputTokens": 1,
+      "execution": "cpu",
+      "scope": "existing runtime text smoke, not lifecycle installation acceptance"
+    },
+    "evidencePath": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\inference-app\\evidence\\text-smoke.json",
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\inference-app\\inference-run.log",
+    "scope": "Actual existing runtime text smoke; not complete lifecycle or release acceptance.",
+    "report": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\recipe-m1-moe-cpu-r1-results\\model_lifecycle_foundation.md",
+      "sha256": "2f28fae50449474fa52d12d6913198b98040e9d5cbec284940404c0e8c2e23e5",
+      "content": "# lumina model lifecycle validation\n\nStatus: PASS\nScope: foundation and actual existing-runtime text smoke; not full product acceptance.\n\nFoundation targets: lifecycle_contracts, lifecycle_gguf, lifecycle_modelscope, lifecycle_revisions, lifecycle_classification, lifecycle_metadata, lifecycle_search, lifecycle_compatibility, lifecycle_variants, lifecycle_observations\nFoundation passed: 131\nFoundation failed: 0\nFoundation ignored: 4\nFoundation log: D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\foundation-app\\foundation-run.log\nActual text test passed: 1\nActual output: 4\nActual output tokens: 1\nInference evidence: D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\inference-app\\evidence\\text-smoke.json\nInference log: D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\inference-app\\inference-run.log\n"
+    }
+  },
+  "assistantReply": "I'll execute the model lifecycle checks as instructed. Let me start by running the test script.\n\nThe script executed successfully. Here is the summary of the returned JSON:\n\n---\n\n**Status:** `PASS` (exit code 0)\n\n**Foundation Checks:**\n- **Passed:** 131 tests\n- **Failed:** 0 tests\n- **Ignored:** 4 tests\n- **Targets validated:** `lifecycle_contracts`, `lifecycle_gguf`, `lifecycle_modelscope`, `lifecycle_revisions`, `lifecycle_classification`, `lifecycle_metadata`, `lifecycle_search`, `lifecycle_compatibility`, `lifecycle_variants`, `lifecycle_observations`\n- **Suites:** 10\n\n**Actual Text Inference:**\n- **Test:** `installed_gguf_generates_actual_text` — **PASSED**\n- **Input:** `Compute 2 + 2. Respond only with the numeral.`\n- **Output:** `4`\n- **Output Tokens:** 1\n- **Execution:** CPU\n\n**Report:**\n- **Path:** `D:\\Project\\goose\\target\\lifecycle-validation\\recipe-m1-moe-cpu-r1-results\\model_lifecycle_foundation.md`\n- **SHA-256:** `2f28fae50449474fa52d12d6913198b98040e9d5cbec284940404c0e8c2e23e5`\n\n**Logs:**\n- Foundation log: `D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\foundation-app\\foundation-run.log`\n- Inference log: `D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\inference-app\\inference-run.log`\n- Evidence: `D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m1-moe-cpu-r1-app\\inference-app\\evidence\\text-smoke.json`\n\n---\n\n**Summary:** All 131 foundation lifecycle contract tests passed with 0 failures (4 ignored). The actual text inference smoke test also passed — the model correctly output `4` for `Compute 2 + 2`. The factual report was created and read back at the path above with a verified SHA-256 hash. No model capabilities beyond these specific checks are claimed.",
+  "actualParentGpuOffload": null,
+  "finishedAt": "2026-11-01T14:55:48.048260+00:00"
+}

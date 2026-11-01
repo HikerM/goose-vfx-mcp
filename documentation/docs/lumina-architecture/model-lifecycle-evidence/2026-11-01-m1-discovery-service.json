@@ -1,0 +1,407 @@
+{
+  "observedAt": "2026-11-01T12:41:11.814381+00:00",
+  "status": "PASS",
+  "scope": "Actual production discovery service with public ModelScope; no model download, managed installation, inference or authenticated restricted-account claim",
+  "cases": [
+    {
+      "case": "exact-real-repository",
+      "request": {
+        "query": {
+          "text": "gpustack/stable-diffusion-v1-5-GGUF",
+          "kind": "name"
+        },
+        "limit": 4,
+        "page_budget": 2,
+        "verification_limit": 2
+      },
+      "catalogCoverage": "complete",
+      "exactRepository": {
+        "status": "verified",
+        "repository": "gpustack/stable-diffusion-v1-5-GGUF"
+      },
+      "candidates": [
+        {
+          "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+          "matched_as": "exact_repository",
+          "catalog": {
+            "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+            "display_name": "stable-diffusion-v1-5-GGUF",
+            "downloads": 56980,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "verified",
+            "facts": {
+              "snapshot": {
+                "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+                "requested_revision": "HEAD",
+                "resolved_revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f",
+                "files_digest": "230aba0d0f5c48f42e65e2b44214881b7fa1296d90124696d8964d96356e73c2",
+                "fetched_at": 1793536873
+              },
+              "file_count": 7,
+              "gguf_filename_count": 4,
+              "portable_gguf_filename_count": 4,
+              "unsupported_path_count": 0
+            }
+          }
+        },
+        {
+          "repository": "gpustack/stable-diffusion-v1-5-inpainting-GGUF",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "gpustack/stable-diffusion-v1-5-inpainting-GGUF",
+            "display_name": "stable-diffusion-v1-5-inpainting-GGUF",
+            "downloads": 2527,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "verified",
+            "facts": {
+              "snapshot": {
+                "repository": "gpustack/stable-diffusion-v1-5-inpainting-GGUF",
+                "requested_revision": "HEAD",
+                "resolved_revision": "85fe20338cfa4ac11bb77ef0e7b2b48047377b3e",
+                "files_digest": "1ce1c309464a4be8c034c18d4ca3eddc31dabea0d762572ff7ecd764958f086e",
+                "fetched_at": 1793536874
+              },
+              "file_count": 7,
+              "gguf_filename_count": 4,
+              "portable_gguf_filename_count": 4,
+              "unsupported_path_count": 0
+            }
+          }
+        }
+      ],
+      "queries": [
+        {
+          "query": "gpustack/stable-diffusion-v1-5-GGUF GGUF",
+          "fetched_pages": 1,
+          "total_count": 2,
+          "next_page": null,
+          "complete": true,
+          "failure": null
+        },
+        {
+          "query": "gpustack/stable-diffusion-v1-5-GGUF",
+          "fetched_pages": 1,
+          "total_count": 2,
+          "next_page": null,
+          "complete": true,
+          "failure": null
+        }
+      ]
+    },
+    {
+      "case": "related-bounded",
+      "request": {
+        "query": {
+          "text": "Wan GGUF",
+          "kind": "name"
+        },
+        "limit": 8,
+        "page_budget": 1,
+        "verification_limit": 2
+      },
+      "catalogCoverage": "limited",
+      "exactRepository": {
+        "status": "not_requested"
+      },
+      "candidates": [
+        {
+          "repository": "QuantStack/Wan2.2-Animate-14B-GGUF",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "QuantStack/Wan2.2-Animate-14B-GGUF",
+            "display_name": "Wan2.2-Animate-14B-GGUF",
+            "downloads": 15235,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "verified",
+            "facts": {
+              "snapshot": {
+                "repository": "QuantStack/Wan2.2-Animate-14B-GGUF",
+                "requested_revision": "HEAD",
+                "resolved_revision": "3d7223bd25a5e94ff4d9af6cc9f1c0aaa6ffb92a",
+                "files_digest": "8fbee8cf3fb19b6657775bcb25bbcd72ac8b30468daff60d4334fffda3792781",
+                "fetched_at": 1793536881
+              },
+              "file_count": 15,
+              "gguf_filename_count": 11,
+              "portable_gguf_filename_count": 11,
+              "unsupported_path_count": 0
+            }
+          }
+        },
+        {
+          "repository": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+            "display_name": "Wan2.2-I2V-A14B-GGUF",
+            "downloads": 28449,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "verified",
+            "facts": {
+              "snapshot": {
+                "repository": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+                "requested_revision": "HEAD",
+                "resolved_revision": "b67c55ca3cc63388e8fe22678d5988445bbf6484",
+                "files_digest": "c5f13ddd31980b9f2115c6655cebd528e56d7e24279b34488ca302daa39ad5c0",
+                "fetched_at": 1793536881
+              },
+              "file_count": 28,
+              "gguf_filename_count": 24,
+              "portable_gguf_filename_count": 24,
+              "unsupported_path_count": 0
+            }
+          }
+        },
+        {
+          "repository": "QuantStack/Wan2.2-T2V-A14B-GGUF",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "QuantStack/Wan2.2-T2V-A14B-GGUF",
+            "display_name": "Wan2.2-T2V-A14B-GGUF",
+            "downloads": 27012,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "unverified"
+          }
+        },
+        {
+          "repository": "QuantStack/Wan2.2-TI2V-5B-GGUF",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "QuantStack/Wan2.2-TI2V-5B-GGUF",
+            "display_name": "Wan2.2-TI2V-5B-GGUF",
+            "downloads": 26876,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "unverified"
+          }
+        },
+        {
+          "repository": "bullerwins/Wan2.2-I2V-A14B-GGUF",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "bullerwins/Wan2.2-I2V-A14B-GGUF",
+            "display_name": "Wan2.2-I2V-A14B-GGUF",
+            "downloads": 26223,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "unverified"
+          }
+        },
+        {
+          "repository": "bullerwins/Wan2.2-T2V-A14B-GGUF",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "bullerwins/Wan2.2-T2V-A14B-GGUF",
+            "display_name": "Wan2.2-T2V-A14B-GGUF",
+            "downloads": 6950,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "unverified"
+          }
+        },
+        {
+          "repository": "calcuis/wan-gguf",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "calcuis/wan-gguf",
+            "display_name": "wan-gguf",
+            "downloads": 13601,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "unverified"
+          }
+        },
+        {
+          "repository": "city96/Wan2.1-I2V-14B-480P-gguf",
+          "matched_as": "related",
+          "catalog": {
+            "repository": "city96/Wan2.1-I2V-14B-480P-gguf",
+            "display_name": "Wan2.1-I2V-14B-480P-gguf",
+            "downloads": 18470,
+            "private": false,
+            "gated": false
+          },
+          "source": {
+            "status": "unverified"
+          }
+        }
+      ],
+      "queries": [
+        {
+          "query": "Wan GGUF",
+          "fetched_pages": 1,
+          "total_count": 85,
+          "next_page": 2,
+          "complete": false,
+          "failure": null
+        },
+        {
+          "query": "Wan",
+          "fetched_pages": 0,
+          "total_count": null,
+          "next_page": 1,
+          "complete": false,
+          "failure": null
+        }
+      ]
+    },
+    {
+      "case": "missing-repository",
+      "request": {
+        "query": {
+          "text": "Qwen/lumina-missing-source-check-20261101-7aa6cfbe9",
+          "kind": "name"
+        },
+        "limit": 4,
+        "page_budget": 2,
+        "verification_limit": 0
+      },
+      "catalogCoverage": "complete",
+      "exactRepository": {
+        "status": "failed",
+        "repository": "Qwen/lumina-missing-source-check-20261101-7aa6cfbe9",
+        "failure": {
+          "code": "SOURCE_NOT_FOUND",
+          "http_status": 404
+        }
+      },
+      "candidates": [],
+      "queries": [
+        {
+          "query": "Qwen/lumina-missing-source-check-20261101-7aa6cfbe9 GGUF",
+          "fetched_pages": 1,
+          "total_count": 0,
+          "next_page": null,
+          "complete": true,
+          "failure": null
+        },
+        {
+          "query": "Qwen/lumina-missing-source-check-20261101-7aa6cfbe9",
+          "fetched_pages": 1,
+          "total_count": 0,
+          "next_page": null,
+          "complete": true,
+          "failure": null
+        }
+      ]
+    },
+    {
+      "case": "real-repository-no-gguf",
+      "request": {
+        "query": {
+          "text": "Qwen/Qwen3-0.6B",
+          "kind": "name"
+        },
+        "limit": 1,
+        "page_budget": 1,
+        "verification_limit": 0
+      },
+      "catalogCoverage": "limited",
+      "exactRepository": {
+        "status": "verified",
+        "repository": "Qwen/Qwen3-0.6B"
+      },
+      "candidates": [
+        {
+          "repository": "Qwen/Qwen3-0.6B",
+          "matched_as": "exact_repository",
+          "catalog": null,
+          "source": {
+            "status": "verified",
+            "facts": {
+              "snapshot": {
+                "repository": "Qwen/Qwen3-0.6B",
+                "requested_revision": "HEAD",
+                "resolved_revision": "09b42cad3d112e832108974449ccb5e8e0f5b5d1",
+                "files_digest": "fe8cfec3601a738f84b36b7ed5de1ca654b8809460e207c88aa9ae062aa1e63f",
+                "fetched_at": 1793536888
+              },
+              "file_count": 11,
+              "gguf_filename_count": 0,
+              "portable_gguf_filename_count": 0,
+              "unsupported_path_count": 0
+            }
+          }
+        }
+      ],
+      "queries": [
+        {
+          "query": "Qwen/Qwen3-0.6B GGUF",
+          "fetched_pages": 0,
+          "total_count": null,
+          "next_page": 1,
+          "complete": false,
+          "failure": null
+        },
+        {
+          "query": "Qwen/Qwen3-0.6B",
+          "fetched_pages": 0,
+          "total_count": null,
+          "next_page": 1,
+          "complete": false,
+          "failure": null
+        }
+      ]
+    },
+    {
+      "case": "empty-catalog",
+      "request": {
+        "query": {
+          "text": "lumina_empty_catalog_check_20261101_7aa6cfbe9",
+          "kind": "name"
+        },
+        "limit": 4,
+        "page_budget": 2,
+        "verification_limit": 0
+      },
+      "catalogCoverage": "complete",
+      "exactRepository": {
+        "status": "not_requested"
+      },
+      "candidates": [],
+      "queries": [
+        {
+          "query": "lumina_empty_catalog_check_20261101_7aa6cfbe9 GGUF",
+          "fetched_pages": 1,
+          "total_count": 0,
+          "next_page": null,
+          "complete": true,
+          "failure": null
+        },
+        {
+          "query": "lumina_empty_catalog_check_20261101_7aa6cfbe9",
+          "fetched_pages": 1,
+          "total_count": 0,
+          "next_page": null,
+          "complete": true,
+          "failure": null
+        }
+      ]
+    }
+  ],
+  "binarySha256": "0862283abd3a7b45c8d2539b34062f0d2b7f6510297b0af8efec239fcc27cc27",
+  "outputDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-discovery-checks-20261101-r1"
+}

@@ -58,6 +58,7 @@ fn plan() -> InstallPlan {
         required_disk_bytes: 2048,
         rules_version: "test-rules-v1".to_string(),
         expires_at: 1000,
+        admission: None,
     }
 }
 
@@ -954,6 +955,34 @@ fn artifact_verification_detects_same_size_corruption_and_invalid_gguf() {
 }
 
 #[test]
+fn observed_plan_rechecks_downloaded_header_even_when_source_has_no_sha256() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = RepositoryPath::parse("observed.gguf").unwrap();
+    let bytes = synthetic_gguf_weight();
+    let header = inspect_gguf(
+        std::io::Cursor::new(&bytes),
+        bytes.len() as u64,
+        GgufReadLimits::default(),
+    )
+    .unwrap();
+    let mut plan = plan();
+    plan.rules_version = OBSERVED_GGUF_PLAN_RULES_VERSION.into();
+    plan.dependencies
+        .components
+        .get_mut("main")
+        .unwrap()
+        .evidence_ids
+        .insert(gguf_header_evidence_id("main-file", &header.header_digest));
+    std::fs::write(temp.path().join(path.as_str()), &bytes).unwrap();
+    verify_artifact_file(&plan, "main-file", temp.path(), &path).unwrap();
+    let mut changed = bytes;
+    changed[32] = b'y';
+    std::fs::write(temp.path().join(path.as_str()), &changed).unwrap();
+    let error = verify_artifact_file(&plan, "main-file", temp.path(), &path).unwrap_err();
+    assert!(error.to_string().contains("accepted source observation"));
+}
+
+#[test]
 fn persisted_file_records_and_events_detect_corruption() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path().join("models.db");
@@ -1705,7 +1734,7 @@ fn schema_three_upgrade_preserves_jobs_and_rolls_back_on_installation_table_coll
             assert_eq!(
                 raw.pragma_query_value(None, "user_version", |row| row.get::<_, u32>(0))
                     .unwrap(),
-                4
+                MODEL_DATABASE_SCHEMA_VERSION
             );
             assert!(repo.active_installations().unwrap().is_empty());
         }

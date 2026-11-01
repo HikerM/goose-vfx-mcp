@@ -173,7 +173,9 @@ function Invoke-LifecycleFoundation {
         throw (New-RealTextException 'LMRT003' 'Existing foundation evidence is preserved; use a fresh root.')
     }
     $targets = @('lifecycle_contracts', 'lifecycle_gguf', 'lifecycle_modelscope',
-        'lifecycle_revisions', 'lifecycle_classification', 'lifecycle_metadata')
+        'lifecycle_revisions', 'lifecycle_classification', 'lifecycle_metadata',
+        'lifecycle_search', 'lifecycle_compatibility', 'lifecycle_variants',
+        'lifecycle_observations')
     $arguments = @('test', '--quiet', '-p', 'lumina-local-inference', '--no-default-features', '--offline', '--locked')
     foreach ($target in $targets) { $arguments += @('--test', $target) }
     $execution = Invoke-LifecycleCargo -Root $Root -ChildRoot $child -LogName 'foundation-run.log' -CargoArguments $arguments

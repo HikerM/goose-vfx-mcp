@@ -945,8 +945,51 @@ pub fn parse_model_spec(spec: &str) -> Result<(String, String)> {
 
 /// Resolve a model spec to all GGUF files for that quantization (handles shards).
 pub async fn resolve_model_spec_full(spec: &str) -> Result<(String, ResolvedModel)> {
+    let (repo, model, _) = resolve_pinned_model_spec(spec).await?;
+    Ok((repo, model))
+}
+
+async fn resolve_pinned_model_spec(
+    spec: &str,
+) -> Result<(String, ResolvedModel, crate::lifecycle::RepositoryInventory)> {
+    use crate::lifecycle::{ModelScopeProvider, ModelScopeRepository, RepositoryPath};
+    let (repo_id, _) = parse_model_spec(spec)?;
+    let token = modelscope_token()?;
+    let source = ModelScopeProvider::new()?
+        .inspect_repository(
+            ModelScopeRepository::parse(&repo_id)?,
+            "HEAD",
+            token.as_deref(),
+        )
+        .await?;
+    let (repo_id, mut resolved) = resolve_model_spec_from_inventory(spec, &source.inventory)?;
+    for file in resolved.files.iter_mut().chain(resolved.mmproj.iter_mut()) {
+        let path = RepositoryPath::parse(&file.filename)?;
+        file.download_url = source.inventory.download_url(&path)?.into();
+        ensure!(file.size_bytes > 0, "Selected GGUF has no verified size");
+    }
+    Ok((repo_id, resolved, source.inventory))
+}
+
+fn resolve_model_spec_from_inventory(
+    spec: &str,
+    inventory: &crate::lifecycle::RepositoryInventory,
+) -> Result<(String, ResolvedModel)> {
     let (repo_id, quant) = parse_model_spec(spec)?;
-    let siblings = modelscope_repo_files(&repo_id).await?;
+    inventory.validate()?;
+    ensure!(
+        inventory.snapshot.repository.as_str() == repo_id,
+        "Model selection belongs to a different repository"
+    );
+    let siblings: Vec<HfApiSibling> = inventory
+        .files
+        .values()
+        .map(|file| HfApiSibling {
+            rfilename: file.path.as_str().into(),
+            size: file.size_bytes,
+            sha256: file.sha256.as_ref().map(|s| s.as_str().to_string()),
+        })
+        .collect();
     let stem = model_stem_from_repo(&repo_id);
 
     // Collect all GGUF files matching the quantization
@@ -979,6 +1022,10 @@ pub async fn resolve_model_spec_full(spec: &str) -> Result<(String, ResolvedMode
     }
 
     // Prefer single file if available
+    ensure!(
+        single_files.len() <= 1,
+        "Quantization matches multiple main files; select a concrete variant"
+    );
     if let Some(single) = single_files.first() {
         let mmproj = select_best_mmproj(&repo_id, &siblings, &single.rfilename, &quant);
         let file = HfGgufFile {
@@ -1105,6 +1152,16 @@ pub fn recommend_variant(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn legacy_quant_selection_rejects_ambiguous_names_instead_of_choosing_the_first_file() {
+        use crate::lifecycle::*;
+        let inventory = parse_modelscope_inventory(&serde_json::to_vec(&serde_json::json!({"Code":200,"Data":{"Files":[{"Path":"demo-Q4_K_M.gguf","Type":"blob","Size":1024},{"Path":"other-Q4_K_M.gguf","Type":"blob","Size":2048}]}})).unwrap(),RepositorySnapshot {repository:ModelScopeRepository::parse("unit/demo-GGUF").unwrap(),requested_revision:"HEAD".into(),resolved_revision:"a".repeat(40),files_digest:Sha256Digest::of_bytes(b"placeholder"),fetched_at:10}).unwrap();
+        let error =
+            resolve_model_spec_from_inventory("unit/demo-GGUF:Q4_K_M", &inventory).unwrap_err();
+        assert!(error.to_string().contains("multiple main files"));
+        assert!(resolve_model_spec_from_inventory("other/demo-GGUF:Q4_K_M", &inventory).is_err());
+    }
 
     fn resolved_test_model(size_bytes: u64) -> ResolvedModel {
         ResolvedModel {
@@ -2061,6 +2118,10 @@ pub async fn get_repo_local_variants(repo_id: &str) -> Result<Vec<HfModelVariant
 }
 
 pub async fn get_repo_mlx_variants(repo_id: &str) -> Result<Vec<HfModelVariant>> {
+    crate::lifecycle::require_managed_weight_policy(
+        crate::lifecycle::ManagedWeightOrigin::HuggingFace,
+        crate::lifecycle::ManagedWeightFormat::Safetensors,
+    )?;
     let client = hf_client().await?;
     let repo = model_repo(&client, repo_id)?;
     let info = repo
@@ -2434,10 +2495,83 @@ fn snapshot_root_for_file(
 }
 
 async fn resolve_gguf_model(repo_id: &str, quantization: &str) -> Result<ResolvedLocalModel> {
+    use crate::lifecycle::{
+        classify_gguf, ComponentRole, GgufReadLimits, LifecycleErrorCode, ModelScopeProvider,
+        ModelSourceError, ModelTaskFamily, RepositoryPath,
+    };
     let spec = format!("{}:{}", repo_id, quantization);
-    let (_repo, resolved) = resolve_model_spec_full(&spec).await?;
-    let (local_paths, mmproj_path) =
-        download_gguf_to_modelscope_cache(repo_id, quantization, &resolved).await?;
+    let (_repo, resolved, inventory) = resolve_pinned_model_spec(&spec).await?;
+    require_legacy_cache_checksums(&resolved)?;
+    let paths = resolved
+        .files
+        .iter()
+        .map(|file| RepositoryPath::parse(&file.filename))
+        .collect::<Result<Vec<_>>>()?;
+    let token = modelscope_token()?;
+    let observed = ModelScopeProvider::new()?
+        .inspect_selected_component(
+            &inventory,
+            &paths,
+            ComponentRole::Main,
+            GgufReadLimits::for_llama_cpp(),
+            token.as_deref(),
+        )
+        .await?;
+    let primary = observed
+        .observation
+        .files
+        .iter()
+        .find(|file| {
+            file.header
+                .shard
+                .as_ref()
+                .is_none_or(|shard| shard.index == 0)
+        })
+        .context("Missing primary model header")?;
+    let classification = classify_gguf(
+        &primary.artifact,
+        &primary.artifact.snapshot_id,
+        &primary.snapshot,
+        &primary.header,
+        &[],
+    )?;
+    ensure!(
+        classification
+            .task_candidates
+            .contains(&ModelTaskFamily::Language),
+        ModelSourceError {
+            code: LifecycleErrorCode::RuntimeUnsupported,
+            http_status: None
+        }
+    );
+    ensure!(
+        resolved.mmproj.is_none(),
+        ModelSourceError {
+            code: LifecycleErrorCode::DependencyUnverified,
+            http_status: None
+        }
+    );
+    let (local_paths, mmproj_path) = download_gguf_to_modelscope_cache(
+        repo_id,
+        quantization,
+        &resolved,
+        &inventory.snapshot.resolved_revision,
+    )
+    .await?;
+    for file in &observed.observation.files {
+        let path = resolved
+            .files
+            .iter()
+            .zip(&local_paths)
+            .find(|(selected, _)| selected.filename == file.artifact.path.as_str())
+            .map(|(_, path)| path)
+            .context("Observed model file is absent from the download result")?;
+        let downloaded = inspect_downloaded_gguf(path)?;
+        ensure!(
+            downloaded.header_digest == file.header.header_digest,
+            "Downloaded model header differs from the pinned source observation"
+        );
+    }
     Ok(ResolvedLocalModel::Gguf {
         repo_id: repo_id.to_string(),
         quantization: quantization.to_string(),
@@ -2448,15 +2582,36 @@ async fn resolve_gguf_model(repo_id: &str, quantization: &str) -> Result<Resolve
     })
 }
 
+fn require_legacy_cache_checksums(resolved: &ResolvedModel) -> Result<()> {
+    ensure!(
+        !resolved.files.is_empty()
+            && resolved
+                .files
+                .iter()
+                .chain(resolved.mmproj.iter())
+                .all(|file| file
+                    .sha256
+                    .as_ref()
+                    .is_some_and(|sha| crate::lifecycle::Sha256Digest::parse(sha).is_ok())),
+        crate::lifecycle::ModelSourceError {
+            code: crate::lifecycle::LifecycleErrorCode::DependencyUnverified,
+            http_status: None
+        }
+    );
+    Ok(())
+}
+
 async fn download_gguf_to_modelscope_cache(
     repo_id: &str,
     quantization: &str,
     resolved: &ResolvedModel,
+    resolved_revision: &str,
 ) -> Result<(Vec<std::path::PathBuf>, Option<std::path::PathBuf>)> {
     let model_id = model_id_from_repo(repo_id, quantization);
     let root = Paths::in_data_dir("models")
         .join("modelscope")
-        .join(repo_id.replace('/', "__"));
+        .join(repo_id.replace('/', "__"))
+        .join(resolved_revision);
     let mut downloads =
         Vec::with_capacity(resolved.files.len() + usize::from(resolved.mmproj.is_some()));
     let mut paths = Vec::with_capacity(resolved.files.len());
@@ -2638,6 +2793,10 @@ pub async fn resolve_local_model_spec(spec: &str) -> Result<ResolvedLocalModel> 
 }
 
 async fn resolve_mlx_model(repo_id: &str, variant_id: &str) -> Result<ResolvedLocalModel> {
+    crate::lifecycle::require_managed_weight_policy(
+        crate::lifecycle::ManagedWeightOrigin::HuggingFace,
+        crate::lifecycle::ManagedWeightFormat::Safetensors,
+    )?;
     let variants = get_repo_mlx_variants(repo_id).await?;
     if !variants
         .iter()

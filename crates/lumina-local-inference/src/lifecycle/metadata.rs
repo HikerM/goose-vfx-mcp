@@ -19,18 +19,25 @@ pub enum SourceDocumentKind {
     ModelCard,
     JsonConfig,
     ModelIndex,
+    LicenseNotice,
 }
 
-pub(crate) fn task_document_kind(path: &RepositoryPath) -> Option<SourceDocumentKind> {
+fn source_document_kind(path: &RepositoryPath) -> Option<SourceDocumentKind> {
     let filename = path.as_str().rsplit('/').next()?.to_ascii_lowercase();
     match filename.as_str() {
         "config.json" | "configuration.json" => Some(SourceDocumentKind::JsonConfig),
         "model-index.yaml" | "model-index.yml" => Some(SourceDocumentKind::ModelIndex),
+        "license" | "license.txt" | "license.md" | "copying" | "copying.txt" | "copying.md"
+        | "notice" | "notice.txt" | "notice.md" => Some(SourceDocumentKind::LicenseNotice),
         value if value.starts_with("readme") && value.ends_with(".md") => {
             Some(SourceDocumentKind::ModelCard)
         }
         _ => None,
     }
+}
+
+pub(crate) fn task_document_kind(path: &RepositoryPath) -> Option<SourceDocumentKind> {
+    source_document_kind(path).filter(|kind| *kind != SourceDocumentKind::LicenseNotice)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -78,7 +85,7 @@ fn document_error(code: LifecycleErrorCode) -> ModelSourceError {
 pub fn source_document_size(inventory: &RepositoryInventory, path: &RepositoryPath) -> Result<u64> {
     inventory.validate()?;
     ensure!(
-        task_document_kind(path).is_some(),
+        source_document_kind(path).is_some(),
         document_error(LifecycleErrorCode::FormatForbidden)
     );
     let source = inventory
@@ -116,12 +123,18 @@ pub fn verify_source_document(
     );
     let text = String::from_utf8(bytes)
         .map_err(|_| document_error(LifecycleErrorCode::SourcePartialFailure))?;
+    ensure!(
+        !text
+            .chars()
+            .any(|character| character.is_control() && !matches!(character, '\t' | '\r' | '\n')),
+        document_error(LifecycleErrorCode::FormatForbidden)
+    );
     Ok(ModelSourceDocument {
         evidence: SourceDocumentEvidence {
             schema_version: MODEL_LIFECYCLE_SCHEMA_VERSION,
             snapshot_digest: inventory.snapshot.content_digest()?,
             path: path.clone(),
-            kind: task_document_kind(path).expect("Document kind was checked"),
+            kind: source_document_kind(path).expect("Document kind was checked"),
             size_bytes: size,
             source_sha256: source.sha256.clone(),
             computed_sha256,
@@ -306,6 +319,7 @@ pub fn observe_document_tasks(document: &ModelSourceDocument) -> DocumentTaskObs
         SourceDocumentKind::JsonConfig => json_tags(text, &mut issues),
         SourceDocumentKind::ModelCard => yaml_tags(text, true, &mut issues),
         SourceDocumentKind::ModelIndex => yaml_tags(text, false, &mut issues),
+        SourceDocumentKind::LicenseNotice => Vec::new(),
     };
     if tags.len() > 32
         || tags

@@ -3,9 +3,9 @@ use super::hf_models::{
     resolve_model_spec, HfGgufFile, HfModelInfo, HfModelVariant,
 };
 use super::local_model_registry::{
-    default_settings_for_model, featured_mmproj_spec, get_registry, is_featured_model,
-    model_id_from_repo, ChatTemplate, LocalModelEntry, LocalModelStorage, ModelDownloadStatus,
-    ModelSettings, SamplingConfig, ToolCallingMode, FEATURED_MODELS,
+    default_settings_for_model, get_registry, is_featured_model, model_id_from_repo, ChatTemplate,
+    LocalModelEntry, LocalModelStorage, ModelDownloadStatus, ModelSettings, SamplingConfig,
+    ToolCallingMode, FEATURED_MODELS,
 };
 use super::{
     available_inference_memory_bytes, builtin_chat_template_names, recommend_local_model,
@@ -26,7 +26,6 @@ use lumina_sdk_types::custom_requests::{
     LocalInferenceModelsListResponse, LocalInferenceSamplingConfig, LocalInferenceToolCallingMode,
 };
 use std::collections::HashSet;
-use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 
 static MANAGEMENT_RUNTIME: OnceLock<Arc<InferenceRuntime>> = OnceLock::new();
@@ -262,8 +261,6 @@ fn management_runtime() -> Result<Arc<InferenceRuntime>> {
 }
 
 pub async fn ensure_featured_models_current() -> Result<()> {
-    let mut mmproj_downloads_needed: Vec<(String, String, PathBuf)> = Vec::new();
-
     struct PendingResolve {
         spec: &'static str,
         repo_id: String,
@@ -284,23 +281,8 @@ pub async fn ensure_featured_models_current() -> Result<()> {
             let registry = get_registry()
                 .lock()
                 .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
-            if let Some(existing) = registry.get_model(&model_id) {
-                let needs_backfill = existing.mmproj_path.is_none() && featured.mmproj.is_some();
-                let needs_download = existing.is_downloaded()
-                    && featured.mmproj.is_some()
-                    && !existing.mmproj_path.as_ref().is_some_and(|p| p.exists());
-
-                if needs_download {
-                    if let Some(mmproj) = featured.mmproj.as_ref() {
-                        let path = mmproj.local_path();
-                        let url = hf_models::modelscope_download_url(mmproj.repo, mmproj.filename);
-                        mmproj_downloads_needed.push((model_id.clone(), url, path));
-                    }
-                }
-
-                if !needs_backfill {
-                    continue;
-                }
+            if registry.get_model(&model_id).is_some() {
+                continue;
             }
         }
 
@@ -314,29 +296,12 @@ pub async fn ensure_featured_models_current() -> Result<()> {
 
     let resolved: Vec<(PendingResolve, HfGgufFile)> =
         join_all(to_resolve.into_iter().map(|pending| async move {
-            let hf_file = match resolve_model_spec(pending.spec).await {
-                Ok((_repo, file)) => file,
-                Err(_) => {
-                    let filename = format!(
-                        "{}-{}.gguf",
-                        pending.repo_id.split('/').next_back().unwrap_or("model"),
-                        pending.quantization
-                    );
-                    HfGgufFile {
-                        filename: filename.clone(),
-                        size_bytes: 0,
-                        quantization: pending.quantization.to_string(),
-                        download_url: hf_models::modelscope_download_url(
-                            &pending.repo_id,
-                            &filename,
-                        ),
-                        sha256: None,
-                    }
-                }
-            };
-            (pending, hf_file)
+            let (_, file) = resolve_model_spec(pending.spec).await?;
+            Ok((pending, file))
         }))
-        .await;
+        .await
+        .into_iter()
+        .collect::<Result<_>>()?;
 
     let entries_to_add: Vec<LocalModelEntry> = resolved
         .into_iter()
@@ -372,46 +337,7 @@ pub async fn ensure_featured_models_current() -> Result<()> {
             registry.sync_with_featured(entries_to_add);
         }
 
-        for model in registry.list_models_mut() {
-            model.enrich_with_featured_mmproj();
-            if model.is_downloaded() {
-                if let Some(mmproj) = featured_mmproj_spec(&model.id) {
-                    let path = mmproj.local_path();
-                    if !path.exists() {
-                        let url = hf_models::modelscope_download_url(mmproj.repo, mmproj.filename);
-                        mmproj_downloads_needed.push((model.id.clone(), url, path));
-                    }
-                }
-            }
-        }
-        let _ = registry.save();
-    }
-
-    let dm = get_download_manager();
-    let modelscope_token = hf_models::modelscope_token()?;
-    let mut started_paths = std::collections::HashSet::new();
-    for (model_id, url, path) in mmproj_downloads_needed {
-        if !path.exists() && started_paths.insert(path.clone()) {
-            let download_id = format!("{}-mmproj", model_id);
-            let dominated_by_active = dm
-                .get_progress(&download_id)
-                .is_some_and(|p| p.status == DownloadStatus::Downloading);
-            if !dominated_by_active {
-                tracing::info!(model_id = %model_id, "Auto-downloading vision encoder for existing model");
-                if let Err(e) = dm
-                    .download_model_with_bearer_token(
-                        download_id,
-                        url,
-                        path,
-                        modelscope_token.clone(),
-                        None,
-                    )
-                    .await
-                {
-                    tracing::warn!(model_id = %model_id, error = %e, "Failed to start mmproj download");
-                }
-            }
-        }
+        registry.save()?;
     }
 
     Ok(())

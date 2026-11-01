@@ -131,7 +131,7 @@ async fn main() -> Result<()> {
                     .as_str()
                     .to_string(),
                 snapshot_id: snapshot_id.clone(),
-                path: source.path.clone(),
+                path: source.path.materializable_path()?,
                 purpose: FilePurpose::GgufWeight,
                 size_bytes: source.size_bytes,
                 source_sha256: source.sha256.clone(),

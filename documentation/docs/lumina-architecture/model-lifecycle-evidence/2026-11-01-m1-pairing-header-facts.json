@@ -1,0 +1,230 @@
+{
+  "observedAt": "2026-11-01T13:04:05.996321+00:00",
+  "status": "PASS",
+  "scope": "Complete local-file SHA256 before/after and actual generic GGUF header; existing ModelScope source proofs retained",
+  "binarySha256": "407fb9c6c44eec7aed5eff6a2cb713cb6672c703e1f89b31da50437522d9fa8c",
+  "cases": [
+    {
+      "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+      "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+      "file": "Qwen3.5-0.8B-Q8_0.gguf",
+      "fileSha256BeforeAndAfter": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+      "fileBytes": 833592736,
+      "headerDigest": "872b80438a93d5cdf6a79edd4dcd57c620f24b40fe9314f1bd6ac335ae6a7508",
+      "headerFile": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-pairing-headers-20261101-r1\\0.json",
+      "criticalMetadata": {
+        "qwen35.block_count": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 25
+          }
+        },
+        "qwen35.embedding_length": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 1024
+          }
+        },
+        "qwen35.nextn_predict_layers": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 1
+          }
+        }
+      },
+      "projectorTensors": [],
+      "scope": "Actual source-bound local header for compatibility-rule development; not installation or runtime READY"
+    },
+    {
+      "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+      "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+      "file": "mmproj-F16.gguf",
+      "fileSha256BeforeAndAfter": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798",
+      "fileBytes": 204987104,
+      "headerDigest": "5b4c87cee15eea7fc81908ac935e56dd9e629fad51144ab587bd3fa373472766",
+      "headerFile": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-pairing-headers-20261101-r1\\1.json",
+      "criticalMetadata": {
+        "clip.has_vision_encoder": {
+          "kind": "scalar",
+          "type_id": 7,
+          "value": {
+            "type": "bool",
+            "value": true
+          }
+        },
+        "clip.projector_type": {
+          "kind": "scalar",
+          "type_id": 8,
+          "value": {
+            "type": "string",
+            "value": "qwen3vl_merger"
+          }
+        },
+        "clip.use_gelu": {
+          "kind": "scalar",
+          "type_id": 7,
+          "value": {
+            "type": "bool",
+            "value": true
+          }
+        },
+        "clip.vision.attention.head_count": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 12
+          }
+        },
+        "clip.vision.attention.layer_norm_epsilon": {
+          "kind": "scalar",
+          "type_id": 6,
+          "value": {
+            "type": "float32_bits",
+            "value": 897988541
+          }
+        },
+        "clip.vision.block_count": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 12
+          }
+        },
+        "clip.vision.embedding_length": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 768
+          }
+        },
+        "clip.vision.feed_forward_length": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 3072
+          }
+        },
+        "clip.vision.image_size": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 768
+          }
+        },
+        "clip.vision.patch_size": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 16
+          }
+        },
+        "clip.vision.projection_dim": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 1024
+          }
+        },
+        "clip.vision.spatial_merge_size": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 2
+          }
+        }
+      },
+      "projectorTensors": [
+        {
+          "name": "mm.0.bias",
+          "dimensions": [
+            3072
+          ],
+          "type_id": 0,
+          "quantization": "f32",
+          "relative_offset": 170348544,
+          "encoded_bytes": 12288,
+          "elements": 3072
+        },
+        {
+          "name": "mm.0.weight",
+          "dimensions": [
+            3072,
+            3072
+          ],
+          "type_id": 1,
+          "quantization": "f16",
+          "relative_offset": 170360832,
+          "encoded_bytes": 18874368,
+          "elements": 9437184
+        },
+        {
+          "name": "mm.2.bias",
+          "dimensions": [
+            1024
+          ],
+          "type_id": 0,
+          "quantization": "f32",
+          "relative_offset": 189235200,
+          "encoded_bytes": 4096,
+          "elements": 1024
+        },
+        {
+          "name": "mm.2.weight",
+          "dimensions": [
+            3072,
+            1024
+          ],
+          "type_id": 1,
+          "quantization": "f16",
+          "relative_offset": 189239296,
+          "encoded_bytes": 6291456,
+          "elements": 3145728
+        }
+      ],
+      "scope": "Actual source-bound local header for compatibility-rule development; not installation or runtime READY"
+    },
+    {
+      "repository": "AtomicChat/Qwen3.5-4B-GGUF",
+      "revision": "3ba229851bf643577ee703364116751f3ac120b8",
+      "file": "qwen35-4b-Q4_K_M.gguf",
+      "fileSha256BeforeAndAfter": "c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a",
+      "fileBytes": 2708804608,
+      "headerDigest": "a46de10368d44a335bb218b338c5c6c172c5089b6713d324f044456bbaf83981",
+      "headerFile": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-pairing-headers-20261101-r1\\2.json",
+      "criticalMetadata": {
+        "qwen35.block_count": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 32
+          }
+        },
+        "qwen35.embedding_length": {
+          "kind": "scalar",
+          "type_id": 4,
+          "value": {
+            "type": "unsigned",
+            "value": 2560
+          }
+        }
+      },
+      "projectorTensors": [],
+      "scope": "Actual source-bound local header for compatibility-rule development; not installation or runtime READY"
+    }
+  ]
+}

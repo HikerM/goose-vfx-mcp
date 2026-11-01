@@ -1,0 +1,88 @@
+{
+  "observedAt": "2026-11-01T15:15:53.389560+00:00",
+  "status": "VERIFIED_INCREMENT_NOT_COMPLETE_STAGE_OR_PRODUCT",
+  "branch": "testing",
+  "baseHead": "7aa6cfbe9fad627faf705a389b24369a3c2a5daa",
+  "scope": "ModelScope source/discovery/content observations, known component pairing rules, CPU resource accounting, immutable plan admission and legacy source-policy foundation. Remaining M1 requirements and all M2-M6 remain active.",
+  "regression": {
+    "passed": 246,
+    "failed": 0,
+    "ignored": 6,
+    "evidence": "2026-11-01-m1-windows-gate.json"
+  },
+  "format": {
+    "status": "PASS",
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-precommit-format-r1.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "crateStrictClippy": {
+    "status": "PASS",
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-prebuild-local-clippy-r1.log",
+    "sha256": "6fcb7075fbe56d33cfd086d059ff7c622954ae95cff9c5c544b483cc9dec02db"
+  },
+  "workspaceStrictClippy": {
+    "status": "FAIL",
+    "evidence": "2026-11-01-m1-workspace-clippy.json"
+  },
+  "builds": [
+    {
+      "kind": "cpu",
+      "status": "PASS",
+      "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina",
+      "elapsed": "10m51s",
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-cli-cpu-build-r2.log",
+      "binary": "D:\\Project\\goose\\target\\debug\\lumina.exe",
+      "sha256": "919729e95c0a26d424fbf9134ce12e39698f3eaed7489f70908f3d0d37855fc6",
+      "actualRecipe": "2026-11-01-selftest-m1-moe-cpu-r1.json",
+      "retainedFailedAttempt": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-cli-cpu-build-r1.log",
+      "correctedFailure": "Three dictation policy references now use the existing provider re-export; no dependency added"
+    },
+    {
+      "kind": "cuda",
+      "status": "PASS",
+      "command": "bin/cargo.cmd build --locked --offline -p lumina-agent-cli --bin lumina --features cuda --target x86_64-pc-windows-msvc",
+      "elapsed": "18m20s",
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-cli-cuda-build-r1.log",
+      "binary": "D:\\Project\\goose\\target\\cuda-validation\\x86_64-pc-windows-msvc\\debug\\lumina.exe",
+      "sha256": "96efd0f3456debd03866a5ca5bedc4d1d3a768e50b9e9b085e0af44235d68cb4",
+      "actualProbe": "2026-11-01-m1-cuda-text-r1.json",
+      "offloadLayers": [
+        [
+          29,
+          29
+        ]
+      ],
+      "cudaModelBufferMiB": [
+        1743.77
+      ],
+      "actualOutput": "4"
+    }
+  ],
+  "windowsGate": "2026-11-01-m1-windows-gate.json",
+  "realSourcePlanQueue": "2026-11-01-m1-real-plan-acceptance.json",
+  "userDeferred": [
+    "Real authenticated restricted-repository positive acceptance; user has no authorized repository available and requested continuing others"
+  ],
+  "openRequirements": [
+    "Complete concrete role/profile resolution beyond the recorded baseline pairings",
+    "GPU and modality resource envelopes and resource-sensitive admission at application service boundaries",
+    "Finish all managed download/cache/import entry handoffs and durable source-hash witnesses",
+    "M2 jobs, network transport, installation/uninstall/recovery and historical migration",
+    "M3 Runtime/Agent/ACP/SDK/CLI integration; M4 all task adapters and full real capability acceptance",
+    "M5 model center UI; M6 complete system validation and workspace/release quality gates"
+  ],
+  "knownFailures": [
+    "Old Candle Whisper naming/layout mismatch",
+    "Video direction and severe final-frame block artifacts, including ineffective F32 override diagnostics",
+    "Workspace strict Clippy remains blocked by existing MCP import; no fresh downstream clean claim"
+  ],
+  "sourceLayout": {
+    "checkout": "D:\\Project\\goose",
+    "additionalProjectCopies": 0,
+    "additionalWorktrees": 0,
+    "outputVolumes": [
+      "D:",
+      "E:"
+    ]
+  }
+}

@@ -34,6 +34,7 @@ async fn main() -> Result<()> {
         "{}",
         serde_json::to_string(&serde_json::json!({
             "inspection": inspection,
+            "path_diagnostics": inspection.inventory.path_diagnostics(),
             "document_observations": documents,
             "scope": "Source inventory and document claims only; no component or runtime acceptance",
         }))?

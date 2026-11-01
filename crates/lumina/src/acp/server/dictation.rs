@@ -195,6 +195,11 @@ impl LuminaAcpAgent {
             let model = whisper::get_model(&_req.model_id).ok_or_else(|| {
                 agent_client_protocol::Error::invalid_params().data("Unknown model id")
             })?;
+            crate::providers::local_inference::lifecycle::require_managed_weight_policy(
+                crate::providers::local_inference::lifecycle::ManagedWeightOrigin::HuggingFace,
+                crate::providers::local_inference::lifecycle::ManagedWeightFormat::Gguf,
+            )
+            .internal_err()?;
             let manager = get_download_manager();
             let model_id_for_config = model.id.to_string();
 

@@ -9,15 +9,17 @@ sidebar_position: 14
 
 四份完整规划文档已作为规划基线提交 `4f6265905` 并推送到 `origin/testing`。该提交只交付完整计划，不表示 M0 或后续实施阶段完成。
 
+M0 技术基线提交为 `7aa6cfbe9fad627faf705a389b24369a3c2a5daa`，已推送到 `origin/testing` 并核对远程 SHA 完全一致；提交后工作区干净。当前继续实施 M1，不以 M0 提交作为整体任务结束。
+
 ## 阶段状态
 
 | 阶段 | 当前状态 | 已取得证据 | 尚需完成 |
 | --- | --- | --- | --- |
 | M0 全量契约和技术验证 | VERIFIED，完整工作区 lint 失败保留 | ML-01～07、全类别真实试验、确切引擎/来源/组件/许可证事实、SQLite v4、状态契约、最新 CPU/CUDA 和完整 recipe；见阶段退出复核 | 产品接入属于 M1～M6；视频质量、旧 Whisper 和完整工作区 lint 仍未通过 |
-| M1 来源解析和完整依赖 | IN_PROGRESS，辅助 M0 核验 | 有界 GGUF、固定版本清单、真实 HTTPS 分支解析通过；解析器接入旧下载校验入口 | 搜索、远程元数据、分类器、依赖和安装准入实际接入 |
+| M1 来源解析和完整依赖 | IN_PROGRESS | 有界 GGUF、固定版本清单、真实 HTTPS 分支解析、远程原名与安装路径分离、Wan 63 文件完整复核和真实两页 85 个搜索结果 | 搜索发现服务实际调用、远程元数据、依赖、资源预算和全部入口准入 |
 | M2 可靠安装和数据迁移 | IN_PROGRESS，产品入口未接入 | 逐文件、检查点、只读内容存储与独立目录提交、版本和引用；三处真实子进程强制终止后恢复通过 | 实际传输、启动恢复调度、产品服务接入、引用使用保护、卸载、迁移 |
 | M3 Runtime 和核心真实验收 | PLANNED | 既有 Dense/MoE CPU 文本 smoke 与小模型一次严格工具闭环可运行 | 新 LaunchConfig 和 Runtime 接入、完整文本/工具/视觉验收 |
-| M4 全部类型和加速 | PLANNED | 11 类候选仓库清单及多个类别的真实 Header 观察 | 各类别完整组件、Adapter、类型化服务及真实结果 |
+| M4 全部类型和加速 | PLANNED，M0 探针已交接 | 全类别实际 Runtime 技术记录；Embedding、Reranker、音频、图像、MTP/DFlash 探针通过；视频内容与旧 Whisper 失败保留 | 产品 Adapter、受管安装、类型化服务、质量与边界验收、视频和 Whisper 修复 |
 | M5 完整模型中心 | PLANNED | 完整界面与服务契约已编写 | 实际页面、SDK、任务及能力状态接入和尺寸验收 |
 | M6 系统验收和发行 | PLANNED | 原计划需求与验收映射 | 全类别、硬件、旧功能、安装包和回退验收 |
 
@@ -193,3 +195,52 @@ Video 实际产出 17 帧且均可解码、互不相同，内容方向与末帧�
 [退出证据](./model-lifecycle-evidence/2026-11-01-m0-exit-review.json)对应 ML-01～07 的技术基线范围。最终回归为 188 项通过、0 失败、6 项明确跳过；Windows 格式检查及该 crate 严格 Clippy 通过，最新 CPU/CUDA 构建和真实 recipe 通过。全工作区严格 Clippy 失败：lumina-agent 697 项、lumina-mcp 1 项；[诊断来源审计](./model-lifecycle-evidence/2026-11-01-workspace-clippy-m0.json)记录 58 个相关源码文件与规划 HEAD 一致，该结论不能替代全工作区通过。此项保留为后续系统交付门槛。
 
 [模型入口台账](./model-lifecycle-evidence/2026-11-01-model-entry-inventory.json)覆盖桌面/ACP、CLI、显式 backend、缓存、推荐主文件和 projector、Whisper、MLX 与原始传输层。台账的每个入口列出实际符号和迁移工作包，当前未声称统一策略已接入。M1 接续处理全量清单路径、搜索与来源策略，M2～M6 继续按原计划完成。
+
+## M1 来源与发现推进
+
+生产 Provider 的远程清单现在使用 `ObservedRepositoryPath` 保留 Git 原名，只有转换到 `RepositoryPath` 的文件才能进入安装 Artifact。反斜杠、盘符/ADS、保留名和控制字符作为远程观察保留并给出不可落盘诊断，不归一化成其他路径；Git 路径越界、重复条目、符号链接和非法哈希仍拒绝。大小写不同的 Git 文件保留各自来源身份；安装物理路径继续按 Artifact ID 的摘要分配。
+
+[实际来源复核](./model-lifecycle-evidence/2026-11-01-m1-production-sources.json)通过：`calcuis/wan-1.3b-gguf` 固定版本完整保留 63 个文件和 6 个不合规预览名，所有原始文件事实逐项一致，3 个实际 GGUF 的完整 SHA256 与新生产清单一致。原本合法的 SD1.5 仓库清单摘要保持兼容。历史整库拒绝及视频质量失败记录均保留，没有改写为已安装或 READY。
+
+新 Catalog API 显式发送并核对页码、页大小、总数和实际行数；成功空页与失败/缺字段分开，重复 ID、错误页码和截断结果拒绝，未知下载量和访问标记保留未知。真实 `Wan GGUF` 查询两页返回全部 85 个不同仓库。五类检索使用同一受限来源；实现边界依据 [ModelScope 官方 SDK](https://github.com/modelscope/modelscope_hub/blob/main/src/modelscope_hub/api.py) 和 [官方 OpenAPI 使用说明](https://github.com/modelscope/modelscope-skills/blob/main/skills/ms-hub/SKILL.md)，并用实际响应复核。
+
+新 `discover_models` 组合精确仓库核验、原始查询与分页记录、去重、精确/相关候选分类、最大 3 并发来源核验及明确的完整/受限/部分失败/不可用状态。该服务的来源 VERIFIED 只表示固定版本清单事实，文件名候选数量不表示 GGUF 内容或 Runtime 支持。服务整包回归曾完成 202 项通过、6 项明确跳过；[五种真实发现服务场景](./model-lifecycle-evidence/2026-11-01-m1-discovery-service.json)全部通过。随后增量另有专项检查，尚未执行最终全阶段回归，未产生 M1 阶段完成提交。ML-08 的真实受限账号访问、远程 GGUF 内容读取、完整组件配对、硬件预算和 ML-16 全入口策略仍须完成。
+
+
+### M1 远程内容与来源文档
+
+[远程 GGUF 第二轮](./model-lifecycle-evidence/2026-11-01-m1-remote-gguf.json)覆盖 Whisper、SD1.5、Wan VAE、PocketTTS 和专用 DFlash。固定仓库/版本后只经已观察的 ModelScope HTTPS API/CDN 读取有限 Range，逐次核对 Content-Range 和文件总长，凭据只留在 API 原点。五份实际 Header 均与本地完整文件的独立结构解析一致，输入完整 SHA256 前后相同；每份实际读取 128 KiB～16 MiB。旧第一轮事实另存历史，未覆盖失败或未执行结果。
+
+[内容分类 v2](./model-lifecycle-evidence/2026-11-01-m1-classifier-v2.json)使用这五份实际来源与 Header 记录，正例和跨快照/来源哈希变化反例通过。SD1.5 无架构元数据时仍保留 UNKNOWN，张量组仅提供 ImageDiffusion 候选；Whisper 是 ASR 候选；audio.cpp family/spec 仅提供有限任务线索；DFlash 保持独立组件含义。实际来源发现旧内嵌 Audio 配置含其他格式和平台下载描述，作为[不执行的元数据事实](./model-lifecycle-evidence/2026-11-01-m1-embedded-audio-spec.json)记录，不能替代产品来源和资产策略。
+
+[来源文档复核](./model-lifecycle-evidence/2026-11-01-m1-source-documents.json)实际读取 Qwen 固定版本 LICENSE 与 README 并核对全部字节摘要。许可证/NOTICE 只作为来源文件事实，不声明模型任务；允许名称中的二进制控制字节被拒绝。该记录没有作许可条款或商业使用结论。
+
+[本批次状态](./model-lifecycle-evidence/2026-11-01-m1-source-foundation.json)分别列出整包与后续专项范围：分类 14 项、来源/Artifact 10 项、文档 9 项、Range/凭据 4 项通过；文档与来源各有 1 项需要真实环境的默认跳过测试，实际在线例另列证据。当前 crate 全 targets 严格 Clippy 通过；完整工作区 M0 遗留失败仍未解决。M1 的完整依赖、资源预算、统一入口和最终验证尚未关闭。
+
+## M1 观察存储、冻结计划与当前交付边界
+
+M0 已提交并推送到 `testing`，提交为 `7aa6cfbe9fad627faf705a389b24369a3c2a5daa`。M1 的新增源码与证据仍在工作区；截至本节记录时，CPU CLI 正在重建，M1 尚未形成阶段退出提交。M2～M6 的完整范围继续保留，没有以技术探针替代产品接入。
+
+[观察与资源检查点](./model-lifecycle-evidence/2026-11-01-m1-admission-checkpoint.json)记录数据库升级到 v6、实际 BF16 双分片观察的关闭后重开读取、计划与观察绑定，以及资源不足反例。该检查点当时整包为 244 项通过；后续增加动态缓存和冻结计划检查后，最新整包为 246 项通过、0 失败、6 项明确跳过，日志与摘要保存在[最新 Windows 验证记录](./model-lifecycle-evidence/2026-11-01-m1-windows-gate.json)。明确跳过不视为通过。
+
+资源规则已从 v1 推进到 `local-resource-budget-v2`，记录全部权重、F16/F32 KV、混合架构循环状态、并行与回滚、提示缓存、上下文检查点、计算/辅助缓冲和三份磁盘峰值。实际 35B BF16 双分片总权重为 71,065,942,560 字节，当前 CPU 配置因空闲内存不足被拒绝；该记录没有 GPU、部分 offload 或其他模态的内存准入结论。
+
+[原生资源测量](./model-lifecycle-evidence/2026-11-01-m1-native-resource-measurements.json)在同一 0.8B 内容与固定 helper 构建上完成两次真实 CPU 文本推理。默认配置暴露 8 GiB 提示缓存和每槽最多 32 个上下文检查点；显式关闭后，原生报告 KV 24 MiB、循环状态 19.27 MiB、计算缓冲 37.02 MiB、输出缓冲 0.95 MiB。测量仅对应确切工作负载；辅助缓冲的保守余量不冒充通用实测上限。
+
+新计划规则 `modelscope-gguf-plan-v2` 冻结 Runtime 安装档案、Context/Batch、KV 精度、动态缓存上限、硬件快照与资源预算，全部进入计划摘要。读取和入队时重新依据缓存 GGUF 观察核对预算。旧计划缺省 admission 字段不参与序列化，保留旧摘要和恢复语义；旧格式记录不自动取得新计划准入证据。
+
+[真实来源到计划及入队](./model-lifecycle-evidence/2026-11-01-m1-real-plan-acceptance.json)使用固定 ModelScope 提交的 Qwen3.5-0.8B 实际头部、经完整摘要核对的本地样本及 helper 二进制，以及确切工作负载资源档案。新数据库中有 1 条 GGUF 观察、1 个冻结计划、1 条观察绑定和 1 个 queued 任务，正式安装版本为 0。该正例没有声称已完成下载 worker、产品 Runtime Adapter 或能力 READY。
+
+旧入口已移除推荐文件合成回退和自动 projector 下载。GGUF 解析使用固定提交与版本专属缓存目录，下载前检查实际头部与完整分片，下载后重验头部。旧聊天下载入口对未验证 projector 和缺少来源完整校验和的缓存复用保持拒绝；支持无来源哈希的本地计算校验与长期 witness 由新的受管安装路径接续。HF/MLX 及旧 HF 听写新下载入口受来源策略限制，历史资产和用户设置保留。
+
+Windows 验证脚本保留六套原检查并增加四套 M1 检查。R6 在 PowerShell 5.1.26100.9711 和 7.6.9 上通过静态检查、LF/CRLF 矩阵、两组各 12 项单元检查、8 次真实文本推理和 14 个集成反例；两次完整 foundation 各为 10 套、131 项通过、4 项跳过。完整工作区 Clippy 的 M0 遗留失败仍未清零。
+
+用户明确表示暂时没有可用于验收的授权受限仓库，要求继续其余开发。真实账号的受限仓库正例保持 USER_DEFERRED_UNVERIFIED；公开来源实测、401/403 单元处理与凭据作用域验证分别保留，不合并成账号验收通过。
+
+M1 后续仍需收尾重建后的 CLI 实际 recipe、必要的 CUDA 复核、差异审计和提交推送。M2 的正式下载/安装与迁移、M3 的 Runtime/Agent/ACP/SDK/CLI 接入、M4 的全部类型 Adapter、M5 的模型中心 UI 和 M6 的系统验收尚未交付。旧 Candle Whisper 布局问题和 Video 质量失败继续保留。
+
+### M1 已验证增量提交边界
+
+[本次增量验证](./model-lifecycle-evidence/2026-11-01-m1-verified-increment.json)记录最新 CPU 完整构建通过（10m51s）及 35B 父模型实际 recipe 通过：10 套检查、131 项通过、4 项跳过、1 次实际文本生成和报告/输入摘要核对。最新 CUDA 完整构建通过（18m20s），实际 Qwen3-1.7B offload 29/29 层、原生缓冲 1743.77 MiB，生成 4，未发现 CPU 回退。听写入口曾有三处错误 crate 引用，修正后重建通过，失败日志保留。
+
+本次提交仅交付已验证基础增量，M1 不标记为整体完成：具体组件角色/档案解析、GPU 与多模态资源档案、全部受管下载和缓存导入切换仍需接续。M2～M6 的原始范围保留。用户延期的受限仓库账号正例继续待验收。[本阶段完整工作区 Clippy](./model-lifecycle-evidence/2026-11-01-m1-workspace-clippy.json)先被未修改的 MCP OnceLock 导入阻止，未证明下游检查通过，保持全局质量门槛未解决。

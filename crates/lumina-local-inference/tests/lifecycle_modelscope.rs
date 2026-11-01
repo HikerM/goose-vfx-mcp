@@ -90,17 +90,165 @@ fn preserves_unknown_sizes_hashes_and_real_empty_repository() {
 }
 
 #[test]
-fn refuses_unsafe_paths_collisions_symlinks_and_invalid_hashes() {
+fn refuses_invalid_git_paths_duplicate_entries_symlinks_and_invalid_hashes() {
     for bad_files in [
         json!([file("../model.gguf")]),
-        json!([file("NUL.gguf")]),
-        json!([file("model.gguf"), file("MODEL.gguf")]),
+        json!([file("/model.gguf")]),
+        json!([file("folder/./model.gguf")]),
+        json!([file("folder//model.gguf")]),
+        json!([file("model\0.gguf")]),
+        json!([file("model.gguf"), file("model.gguf")]),
         json!([{"Path":"model.gguf", "Type":"commit"}]),
         json!([{"Path":"model.gguf", "Type":"blob", "Mode":"40960"}]),
         json!([{"Path":"model.gguf", "Type":"blob", "Sha256":"bad"}]),
     ] {
         assert!(parse(payload(bad_files)).is_err());
     }
+}
+
+#[test]
+fn remote_git_names_are_preserved_without_becoming_install_paths() {
+    let paths = [
+        "samples\\ComfyUI_00001_.webp",
+        "NUL.gguf",
+        "C:relative.gguf",
+        "weights.gguf:stream",
+        "trailing./model.gguf",
+        "control\npreview.png",
+    ];
+    let mut entries = paths.iter().map(|path| file(path)).collect::<Vec<_>>();
+    entries.push(file("main.gguf"));
+    let inventory = parse(payload(json!(entries))).unwrap();
+    assert_eq!(inventory.files.len(), paths.len() + 1);
+    assert_eq!(inventory.path_diagnostics().len(), paths.len());
+    for path in paths {
+        let observed = &inventory.files[path].path;
+        assert_eq!(observed.as_str(), path);
+        assert!(observed.materializable_path().is_err());
+        assert!(RepositoryPath::parse(path).is_err());
+    }
+    assert!(!inventory.files.contains_key("samples/ComfyUI_00001_.webp"));
+    assert!(inventory
+        .download_url(&RepositoryPath::parse("main.gguf").unwrap())
+        .is_ok());
+    let mut modified = inventory.clone();
+    modified
+        .files
+        .get_mut("samples\\ComfyUI_00001_.webp")
+        .unwrap()
+        .size_bytes = Some(101);
+    assert!(modified.validate().is_err());
+    let mut changed_entries = entries;
+    changed_entries[0]["Size"] = json!(101);
+    let changed = parse(payload(json!(changed_entries))).unwrap();
+    assert_ne!(
+        inventory.snapshot.files_digest,
+        changed.snapshot.files_digest
+    );
+    let round_trip: RepositoryInventory =
+        serde_json::from_slice(&serde_json::to_vec(&inventory).unwrap()).unwrap();
+    assert_eq!(round_trip, inventory);
+    round_trip.validate().unwrap();
+}
+
+#[test]
+fn case_distinct_git_files_keep_their_exact_source_identity() {
+    let inventory = parse(payload(json!([file("model.gguf"), file("MODEL.gguf")]))).unwrap();
+    assert_eq!(inventory.files.len(), 2);
+    assert!(inventory.path_diagnostics().is_empty());
+    for path in ["model.gguf", "MODEL.gguf"] {
+        let url = inventory
+            .download_url(&RepositoryPath::parse(path).unwrap())
+            .unwrap();
+        assert_eq!(
+            url.query_pairs()
+                .find(|(key, _)| key == "FilePath")
+                .unwrap()
+                .1,
+            path
+        );
+    }
+}
+
+#[test]
+fn remote_names_have_protocol_bounds_and_selected_names_remain_strict() {
+    for path in ["", "/model.gguf", "../x", "a/../x", "a/./x", "a//x", "x\0y"] {
+        assert!(ObservedRepositoryPath::parse(path).is_err());
+    }
+    assert!(ObservedRepositoryPath::parse("x".repeat(16 * 1024 + 1)).is_err());
+    for path in [
+        "folder\\..\\outside.gguf",
+        "C:/model.gguf",
+        "CON/model.gguf",
+        "model.gguf ",
+    ] {
+        assert!(ObservedRepositoryPath::parse(path)
+            .unwrap()
+            .materializable_path()
+            .is_err());
+    }
+}
+
+#[test]
+fn observed_artifact_ids_bind_exact_source_paths_and_ignore_fetch_time() {
+    let mut inventory = parse(payload(json!([file("model.gguf"), file("MODEL.gguf")]))).unwrap();
+    let path = RepositoryPath::parse("model.gguf").unwrap();
+    let artifact = inventory.artifact(&path, FilePurpose::GgufWeight).unwrap();
+    inventory.snapshot.fetched_at += 100;
+    inventory.snapshot.requested_revision = "refs/heads/master".into();
+    assert_eq!(
+        artifact,
+        inventory.artifact(&path, FilePurpose::GgufWeight).unwrap()
+    );
+    let other_case = inventory
+        .artifact(
+            &RepositoryPath::parse("MODEL.gguf").unwrap(),
+            FilePurpose::GgufWeight,
+        )
+        .unwrap();
+    assert_ne!(artifact.id, other_case.id);
+    assert_ne!(
+        installed_artifact_path(&artifact.id, artifact.purpose, &artifact.path).unwrap(),
+        installed_artifact_path(&other_case.id, other_case.purpose, &other_case.path).unwrap()
+    );
+    inventory.snapshot.resolved_revision = "c".repeat(40);
+    assert_ne!(
+        artifact.id,
+        inventory
+            .artifact(&path, FilePurpose::GgufWeight)
+            .unwrap()
+            .id
+    );
+}
+
+#[test]
+fn observed_artifact_factory_rejects_absent_files_and_wrong_purposes() {
+    let inventory = parse(payload(json!([file("main.gguf"), file("config.json")]))).unwrap();
+    assert!(inventory
+        .artifact(
+            &RepositoryPath::parse("missing.gguf").unwrap(),
+            FilePurpose::GgufWeight
+        )
+        .is_err());
+    assert!(inventory
+        .artifact(
+            &RepositoryPath::parse("config.json").unwrap(),
+            FilePurpose::GgufWeight
+        )
+        .is_err());
+    assert!(inventory
+        .artifact(
+            &RepositoryPath::parse("main.gguf").unwrap(),
+            FilePurpose::RuntimeConfig
+        )
+        .is_err());
+    let config = inventory
+        .artifact(
+            &RepositoryPath::parse("config.json").unwrap(),
+            FilePurpose::RuntimeConfig,
+        )
+        .unwrap();
+    assert_eq!(config.size_bytes, Some(100));
 }
 
 #[test]
