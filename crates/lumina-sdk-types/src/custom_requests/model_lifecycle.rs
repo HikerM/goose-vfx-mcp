@@ -106,8 +106,89 @@ impl Default for ModelInstallationJobsListRequest {
 #[serde(rename_all = "camelCase")]
 pub struct ModelInstallationJobsListResponse {
     pub jobs: Vec<ModelInstallationJobDto>,
+    #[serde(default)]
+    pub file_retries: Vec<ModelInstallationFileRetryDto>,
     pub next_after_id: Option<String>,
     pub service_state: ModelInstallationServiceState,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelInstallationFileRetryState {
+    Ready,
+    Active,
+    Waiting,
+    Exhausted,
+    NeedsAction,
+    Verified,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ModelInstallationFailureCode {
+    SourceNotFound,
+    SourceAuthRequired,
+    SourceForbidden,
+    SourceTimeout,
+    SourceRateLimited,
+    SourceUnavailable,
+    SourcePartialFailure,
+    RevisionUnresolved,
+    RevisionChanged,
+    NoGguf,
+    GgufInvalid,
+    FormatForbidden,
+    ShardIncomplete,
+    DependencyMissing,
+    DependencyIncompatible,
+    DependencyUnverified,
+    RuntimeUnsupported,
+    HardwareInsufficient,
+    DiskInsufficient,
+    HashMismatch,
+    DestinationLocked,
+    PlanStale,
+    StateConflict,
+    DownloadFailed,
+    InstallFailed,
+    StartFailed,
+    ValidationFailed,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelInstallationRetryHistoryOrigin {
+    FromEnqueue,
+    LegacyUntracked,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInstallationFileFailureDto {
+    pub code: ModelInstallationFailureCode,
+    pub stage: ModelInstallationStage,
+    pub failed_at: i64,
+    pub retry_after_seconds: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInstallationFileRetryDto {
+    pub job_id: String,
+    pub artifact_id: String,
+    pub policy_version: String,
+    pub max_attempts: u32,
+    pub cycle: u64,
+    pub cycle_attempts: u32,
+    pub recorded_attempts: u64,
+    pub history_origin: ModelInstallationRetryHistoryOrigin,
+    pub tracking_started_at: i64,
+    pub state: ModelInstallationFileRetryState,
+    pub next_retry_at: Option<i64>,
+    pub last_failure: Option<ModelInstallationFileFailureDto>,
+    pub version: u64,
+    pub updated_at: i64,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]

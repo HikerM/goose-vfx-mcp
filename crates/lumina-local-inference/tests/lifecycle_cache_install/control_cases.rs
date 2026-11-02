@@ -373,7 +373,7 @@ fn schema_seven_control_upgrade_preserves_inputs_and_rolls_back_on_table_collisi
         let path = fixture.temp.path().join("models.db");
         drop(fixture.repository);
         let raw = rusqlite::Connection::open(&path).unwrap();
-        raw.execute_batch("DROP TABLE installation_control_receipts; PRAGMA user_version=7;")
+        raw.execute_batch("DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; DROP TABLE installation_control_receipts; PRAGMA user_version=7;")
             .unwrap();
         if collision {
             raw.execute_batch("CREATE TABLE installation_control_receipts (unrecognized TEXT);")

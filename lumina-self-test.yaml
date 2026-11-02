@@ -177,7 +177,8 @@ prompt: |
   application startup recovery, startup submission barriers, background job discovery,
   versioned pause/resume/cancel controls and checkpoint-preserving graceful shutdown,
   durable control deduplication, historical result replay, concurrent compare-and-swap,
-  receipt transaction rollback and schema upgrade boundaries,
+  receipt transaction rollback and schema upgrade boundaries, durable per-file retry budgets,
+  bounded transient backoff, explicit retry cycles and retry history across database reopen,
   while full network installation and Runtime readiness need their separate acceptance evidence.
   {% elif test_phases == "model-lifecycle" %}
   Execute the model lifecycle checks now using your developer shell tool. Your first action

@@ -55,6 +55,81 @@ map_enum!(
     Cancel,
     Retry
 );
+map_enum!(
+    RetryHistoryOrigin,
+    ModelInstallationRetryHistoryOrigin,
+    FromEnqueue,
+    LegacyUntracked
+);
+map_enum!(
+    LifecycleErrorCode,
+    ModelInstallationFailureCode,
+    SourceNotFound,
+    SourceAuthRequired,
+    SourceForbidden,
+    SourceTimeout,
+    SourceRateLimited,
+    SourceUnavailable,
+    SourcePartialFailure,
+    RevisionUnresolved,
+    RevisionChanged,
+    NoGguf,
+    GgufInvalid,
+    FormatForbidden,
+    ShardIncomplete,
+    DependencyMissing,
+    DependencyIncompatible,
+    DependencyUnverified,
+    RuntimeUnsupported,
+    HardwareInsufficient,
+    DiskInsufficient,
+    HashMismatch,
+    DestinationLocked,
+    PlanStale,
+    StateConflict,
+    DownloadFailed,
+    InstallFailed,
+    StartFailed,
+    ValidationFailed,
+    Cancelled
+);
+
+impl From<FileRetryBudget> for ModelInstallationFileRetryDto {
+    fn from(budget: FileRetryBudget) -> Self {
+        let next_retry_at = budget.next_retry_at();
+        let state = match budget.state {
+            FileRetryState::Ready => ModelInstallationFileRetryState::Ready,
+            FileRetryState::Active => ModelInstallationFileRetryState::Active,
+            FileRetryState::Waiting { .. } => ModelInstallationFileRetryState::Waiting,
+            FileRetryState::Exhausted => ModelInstallationFileRetryState::Exhausted,
+            FileRetryState::NeedsAction => ModelInstallationFileRetryState::NeedsAction,
+            FileRetryState::Verified => ModelInstallationFileRetryState::Verified,
+        };
+        Self {
+            job_id: budget.job_id,
+            artifact_id: budget.artifact_id,
+            policy_version: budget.policy_version,
+            max_attempts: budget.max_attempts,
+            cycle: budget.cycle,
+            cycle_attempts: budget.cycle_attempts,
+            recorded_attempts: budget.recorded_attempts,
+            history_origin: budget.history_origin.into(),
+            tracking_started_at: budget.tracking_started_at,
+            state,
+            next_retry_at,
+            last_failure: budget
+                .last_failure
+                .map(|failure| ModelInstallationFileFailureDto {
+                    code: failure.code.into(),
+                    stage: failure.stage.into(),
+                    failed_at: failure.failed_at,
+                    retry_after_seconds: failure.retry_after_seconds,
+                }),
+            version: budget.version,
+            updated_at: budget.updated_at,
+        }
+    }
+}
 
 impl From<LifecycleJob> for ModelInstallationJobDto {
     fn from(job: LifecycleJob) -> Self {
@@ -105,6 +180,7 @@ impl InstallationApplication {
         if !self.root().join("models.db").try_exists()? {
             return Ok(ModelInstallationJobsListResponse {
                 jobs: Vec::new(),
+                file_retries: Vec::new(),
                 next_after_id: None,
                 service_state: self.state().into(),
             });
@@ -122,8 +198,18 @@ impl InstallationApplication {
         let jobs = repository.list_jobs(request.after_id.as_deref(), request.limit)?;
         let next_after_id = (jobs.len() == request.limit as usize)
             .then(|| jobs.last().expect("Job page is nonempty").id.clone());
+        let mut file_retries = Vec::new();
+        for job in &jobs {
+            file_retries.extend(
+                repository
+                    .file_retry_budgets(&job.id)?
+                    .into_iter()
+                    .map(Into::into),
+            );
+        }
         Ok(ModelInstallationJobsListResponse {
             jobs: jobs.into_iter().map(Into::into).collect(),
+            file_retries,
             next_after_id,
             service_state: self.state().into(),
         })

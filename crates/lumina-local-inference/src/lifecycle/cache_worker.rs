@@ -257,11 +257,16 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
             let code = error
                 .downcast_ref::<ModelSourceError>()
                 .map_or(LifecycleErrorCode::InstallFailed, |error| error.code);
-            self.repository.fail_file(
+            self.repository.fail_installation_file(
                 &self.lease,
                 artifact_id,
                 record.version,
-                code,
+                super::FileAttemptFailure {
+                    code,
+                    retry_after_seconds: error
+                        .downcast_ref::<lumina_download_manager::managed::ManagedTransportError>()
+                        .and_then(|transport| transport.retry_after_seconds),
+                },
                 (self.clock)(),
             )?;
         }
@@ -281,6 +286,11 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
         if job.stage == LifecycleStage::Downloading {
             for file in self.repository.file_transfers(&request.job_id)? {
                 self.checkpoint()?;
+                self.repository.begin_file_attempt(
+                    &self.lease,
+                    &file.artifact_id,
+                    (self.clock)(),
+                )?;
                 let result = if matches!(
                     file.state,
                     FileTransferState::Downloaded | FileTransferState::Verified { .. }
@@ -324,6 +334,11 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
         if job.stage == LifecycleStage::Verifying {
             for file in self.repository.file_transfers(&self.lease.job_id)? {
                 self.checkpoint()?;
+                self.repository.begin_file_attempt(
+                    &self.lease,
+                    &file.artifact_id,
+                    (self.clock)(),
+                )?;
                 let verified = match super::files::verify_artifact_file_with_progress(
                     &plan,
                     &file.artifact_id,

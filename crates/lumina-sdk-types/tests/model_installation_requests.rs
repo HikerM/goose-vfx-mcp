@@ -54,3 +54,28 @@ fn installation_controls_require_the_callers_idempotency_key() {
         assert!(serde_json::from_value::<ModelInstallationJobControlRequest>(changed).is_err());
     }
 }
+
+#[test]
+fn installation_queries_decode_old_responses_and_expose_typed_retry_state() {
+    let old: ModelInstallationJobsListResponse = serde_json::from_value(json!({
+        "jobs":[],"nextAfterId":null,"serviceState":"dormant"
+    }))
+    .unwrap();
+    assert!(old.file_retries.is_empty());
+    let dto: ModelInstallationFileRetryDto = serde_json::from_value(json!({
+        "jobId":"job:unit","artifactId":"file:unit","policyVersion":"installation-file-retry-v1",
+        "maxAttempts":3,"cycle":1,"cycleAttempts":2,"recordedAttempts":5,
+        "historyOrigin":"from_enqueue","trackingStartedAt":10,"state":"waiting",
+        "nextRetryAt":50,"lastFailure":{"code":"SOURCE_RATE_LIMITED","stage":"downloading","failedAt":20,"retryAfterSeconds":30},
+        "version":4,"updatedAt":20
+    })).unwrap();
+    assert!(matches!(
+        dto.state,
+        ModelInstallationFileRetryState::Waiting
+    ));
+    assert!(matches!(
+        dto.last_failure.unwrap().code,
+        ModelInstallationFailureCode::SourceRateLimited
+    ));
+    assert_eq!(dto.next_retry_at, Some(50));
+}

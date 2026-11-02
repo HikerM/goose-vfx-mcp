@@ -196,12 +196,16 @@ Agent 的规划模型仅从通过所需文本和工具能力准入的模型中�
 | 当前 ACP 方法，统一前缀 `_lumina/unstable/local-inference/` | 输入及结果 | CLI 对应入口 |
 | --- | --- | --- |
 | `installations/submit` | planId、planDigest、installationId、idempotencyKey；服务端原子生成 jobId 和 versionId，重放相同幂等请求返回原身份 | `local-models install-plan` |
-| `installations/jobs/list` | afterId、limit；返回任务状态版本、阶段、generation、分页游标及应用服务状态；查询空命名空间不创建安装数据库或启动下载 | `local-models jobs` |
+| `installations/jobs/list` | afterId、limit；返回任务状态版本、阶段、generation、分页游标、应用服务状态和独立的 fileRetries；查询空命名空间不创建安装数据库或启动下载 | `local-models jobs` |
 | `installations/jobs/control` | jobId、expectedVersion、action、idempotencyKey；以 CAS 执行 pause/resume/cancel/retry，返回 job 与 replayed；v8 回执持久化 | `local-models job-control`，要求 `--idempotency-key` |
 
-`local-models wait-job` 等待已有任务，`local-models installation-worker` 运行同一个应用服务。ACP 工厂内的 Agent 共用安装服务；ACP stdio 启动、工厂创建 Agent 及 CLI 长会话入口会扫描已有命名空间，未完成初次恢复扫描时新提交等待。HTTP/HTTPS 启动路径调用同一工厂的恢复入口，主动恢复不依赖首个客户端连接；本批实际 HTTP 无客户端恢复通过，HTTPS 分支已接入并经编译检查，独立 TLS 实测仍待后续硬件/发行验收。没有模型数据库时保持休眠，模型存储损坏不阻止普通 Agent 创建。正常调用应用关闭时保留网络检查点，将当前 worker 所有的执行任务重新排队；用户暂停或取消的意图优先保留。HTTP 进程正常停止信号的接入及端到端关闭验收仍待完成，本批 HTTP 完成安装后的强制终止只作探针清理。当前 worker 每实例顺序执行；跨进程全局并发和任务/文件/Range 三层预算、空间预留、持久化退避仍待实现。
+`local-models wait-job` 等待已有任务，`local-models installation-worker` 运行同一个应用服务。ACP 工厂内的 Agent 共用安装服务；ACP stdio 启动、工厂创建 Agent 及 CLI 长会话入口会扫描已有命名空间，未完成初次恢复扫描时新提交等待。HTTP/HTTPS 启动路径调用同一工厂的恢复入口，主动恢复不依赖首个客户端连接；本批实际 HTTP 无客户端恢复通过，HTTPS 分支已接入并经编译检查，独立 TLS 实测仍待后续硬件/发行验收。没有模型数据库时保持休眠，模型存储损坏不阻止普通 Agent 创建。正常调用应用关闭时保留网络检查点，将当前 worker 所有的执行任务重新排队；用户暂停或取消的意图优先保留。HTTP 进程正常停止信号的接入及端到端关闭验收仍待完成，本批 HTTP 完成安装后的强制终止只作探针清理。当前 worker 每实例顺序执行；跨进程全局并发和任务/文件/Range 三层预算、空间预留仍待实现，逐文件持久化退避见下方 schema v9 契约。
 
 SQLite schema v8 在同一事务中提交控制状态、任务事件和幂等回执。相同键必须绑定相同任务、动作、expectedVersion 和受管根目录；改变其中任何一项均拒绝。回执同时绑定历史任务事件，损坏或伪造结果不能仅凭重算摘要通过。`replayed=true` 返回首次接受时的历史结果，即使任务后来已恢复或完成，也不会重复执行旧动作；客户端需要展示最新状态时仍查询任务列表并比较任务版本。新键提交过期版本被拒绝；写入回执失败使状态和事件一起回滚。终态取消可以保存无副作用的回执，不增加任务事件。
+
+SQLite schema v9 增加逐文件重试账本和历史事件，保持已有任务、文件及控制回执的序列化格式。`installation-file-retry-v1` 每个文件在一个显式重试周期内最多执行 3 次逻辑尝试；首次执行前持久化次数，同一次传输的暂停、正常关闭或租约恢复继续原尝试。超时、限流、来源暂时不可用在预算内分别按 2 秒、4 秒等待重试，并取传输层返回的有界 Retry-After 与本地退避的较大值；当前传输层 Retry-After 上限为 60 秒。恢复扫描和直接领取任务均检查等待时间，退避期间不持有 worker 租约。第三次失败保留为 FAILED/EXHAUSTED；鉴权、哈希、格式及其他非瞬时错误进入 FAILED/NEEDS_ACTION。
+
+失败码、阶段、时间、文件状态、预算和排队结果在同一事务提交；不保存原始异常、令牌或下载 URL。显式 Retry 为失败文件开始新周期，保留累计已记录次数及上次失败，同键重放控制回执不重复重置；Pause/Resume 不重置周期。文件验证通过与 VERIFIED 预算状态同事务提交。旧数据库升级标记 `legacy_untracked`，从升级后开始统计，不补造历史尝试次数。`installations/jobs/list` 的独立 `fileRetries` 返回文件身份、策略版本、周期、次数、历史起点、下次重试时间、类型化失败和预算版本；控制响应仍返回首次接受时的历史任务快照。
 
 结构化失败详情、文件进度和游标事件尚未覆盖上表完整契约；旧 spec 下载及其他历史入口也尚未全部转发到新服务。当前 ACP DTO 不暴露原始下载 URL、令牌、调用方指定的受管根目录或内部启动参数。后续 SDK、界面和旧入口迁移继续执行完整 ML-40 范围。
 

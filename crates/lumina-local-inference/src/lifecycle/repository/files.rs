@@ -91,6 +91,11 @@ impl LifecycleRepository {
             }
             connection.execute("INSERT INTO job_files (job_id, artifact_id, version, digest, payload) VALUES (?1, ?2, 0, ?3, ?4)", params![job.id, id, Sha256Digest::of_serializable(&record)?.as_str(), serde_json::to_string(&record)?])?;
             Self::append_file_event(connection, &record)?;
+            Self::initialize_retry_budget(
+                connection,
+                &record,
+                crate::lifecycle::RetryHistoryOrigin::FromEnqueue,
+            )?;
         }
         Ok(())
     }
@@ -166,7 +171,22 @@ impl LifecycleRepository {
             .lock()
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let mut job = Self::read_job_by(&tx, "id", &lease.job_id)?.context("Job not found")?;
+        let record =
+            Self::update_file_by(&tx, lease, artifact_id, expected_version, now, operation)?;
+        tx.commit()?;
+        Ok(record)
+    }
+
+    pub(super) fn update_file_by(
+        connection: &Connection,
+        lease: &WorkerLease,
+        artifact_id: &str,
+        expected_version: u64,
+        now: i64,
+        operation: impl FnOnce(&mut FileTransferRecord, &LifecycleJob) -> Result<()>,
+    ) -> Result<FileTransferRecord> {
+        let mut job =
+            Self::read_job_by(connection, "id", &lease.job_id)?.context("Job not found")?;
         Self::validate_lease(&job, lease, now)?;
         ensure!(
             matches!(
@@ -175,7 +195,7 @@ impl LifecycleRepository {
             ),
             "File writes require a transfer or verification stage"
         );
-        let mut record = Self::read_file_by(&tx, &lease.job_id, artifact_id)?
+        let mut record = Self::read_file_by(connection, &lease.job_id, artifact_id)?
             .context("File is absent from the accepted plan")?;
         ensure!(
             record.version == expected_version,
@@ -190,14 +210,16 @@ impl LifecycleRepository {
         record.generation = lease.generation;
         record.updated_at = now;
         record.validate()?;
-        let updated = tx.execute("UPDATE job_files SET version = ?1, digest = ?2, payload = ?3 WHERE job_id = ?4 AND artifact_id = ?5 AND version = ?6", params![record.version, Sha256Digest::of_serializable(&record)?.as_str(), serde_json::to_string(&record)?, record.job_id, record.artifact_id, expected_version])?;
+        let updated = connection.execute("UPDATE job_files SET version = ?1, digest = ?2, payload = ?3 WHERE job_id = ?4 AND artifact_id = ?5 AND version = ?6", params![record.version, Sha256Digest::of_serializable(&record)?.as_str(), serde_json::to_string(&record)?, record.job_id, record.artifact_id, expected_version])?;
         ensure!(updated == 1, "File transfer state version conflict");
-        Self::append_file_event(&tx, &record)?;
+        Self::append_file_event(connection, &record)?;
+        if matches!(record.state, FileTransferState::Verified { .. }) {
+            Self::complete_retry_by(connection, &job, artifact_id, now)?;
+        }
         let previous_version = job.version;
         job.version += 1;
         job.updated_at = now;
-        Self::write_job(&tx, &job, previous_version)?;
-        tx.commit()?;
+        Self::write_job(connection, &job, previous_version)?;
         Ok(record)
     }
 

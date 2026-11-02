@@ -17,13 +17,14 @@ mod inputs;
 mod installation;
 mod observations;
 mod plan_observations;
+mod retries;
 pub use files::FileTransferEvent;
 pub use observations::{GgufObservationRecord, GGUF_OBSERVATION_VERSION};
 pub use plan_observations::{
     gguf_header_evidence_id, gguf_observation_evidence_id, OBSERVED_GGUF_PLAN_RULES_VERSION,
 };
 
-pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 8;
+pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 9;
 
 const SCHEMA: &str = include_str!("repository/migrations/0001.sql");
 
@@ -125,6 +126,10 @@ impl LifecycleRepository {
         }
         if version < 8 {
             tx.execute_batch(controls::SCHEMA)?;
+        }
+        if version < 9 {
+            tx.execute_batch(retries::SCHEMA)?;
+            Self::migrate_retry_budgets(&tx)?;
         }
         tx.commit()?;
         Ok(Self {
@@ -365,7 +370,7 @@ impl LifecycleRepository {
             .lock()
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let mut statement = connection.prepare(
-            "SELECT id FROM lifecycle_jobs WHERE (?1 IS NULL OR id > ?1) AND (?2 IS NULL OR status = ?3 OR (status = ?4 AND lease_until <= ?2) OR status = ?5) ORDER BY id LIMIT ?6"
+            "SELECT id FROM lifecycle_jobs WHERE (?1 IS NULL OR id > ?1) AND (?2 IS NULL OR ((status = ?3 OR (status = ?4 AND lease_until <= ?2)) AND NOT EXISTS (SELECT 1 FROM installation_file_retries r WHERE r.job_id=lifecycle_jobs.id AND r.next_retry_at > ?2)) OR status = ?5) ORDER BY id LIMIT ?6"
         )?;
         let ids = statement
             .query_map(
@@ -469,6 +474,7 @@ impl LifecycleRepository {
         );
         plan.validate_for_install(job.accepted_at, u64::MAX)?;
         Self::initialize_files(&tx, &job, &plan)?;
+        Self::validate_retry_claim(&tx, &job.id, now)?;
         ensure!(
             job.status == JobStatus::Queued
                 || (job.status == JobStatus::Running
@@ -604,6 +610,11 @@ impl LifecycleRepository {
             status != JobStatus::Completed,
             "Job completion requires a verified stage-specific result"
         );
+        if status == JobStatus::Queued
+            && matches!(job.status, JobStatus::Failed | JobStatus::Blocked)
+        {
+            Self::reset_retries_by(connection, &job.id, now)?;
+        }
         job.status = job.status.transition(status)?;
         job.version += 1;
         job.generation += 1;

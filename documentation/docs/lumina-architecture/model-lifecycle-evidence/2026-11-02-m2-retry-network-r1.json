@@ -1,0 +1,352 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-02T08:25:02.318600+00:00",
+  "scope": "Actual HTTP listener starts recovery of a v7 accepted installation before any ACP client connects, upgrades to v9 with explicit legacy retry history, and completes pinned ModelScope content. Subsequent independent CLI processes prove durable control receipts and request binding for terminal cancellation. HTTP force termination after installation is completed is explicit probe cleanup, not HTTP graceful-shutdown acceptance. Active pause/resume, concurrent CAS and receipt rollback have separate Rust integration tests. Not full M2 or Runtime READY acceptance.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\a859e59aa55d4093e7bafa5b7119507684715b4b9a270740d71b86411759fe87\\lumina.exe",
+  "binarySha256": "a859e59aa55d4093e7bafa5b7119507684715b4b9a270740d71b86411759fe87",
+  "planProducer": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\b72f7cc6a6bc828e6a49dc8443e11f60c1bcf3c1add2662d50958d0437f4e4f0\\cache_recorded_component.exe",
+  "source": {
+    "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+    "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+    "file": "Qwen3.5-0.8B-Q8_0.gguf",
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "sizeBytes": 833592736,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "elapsedSeconds": 84.03100000001723,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "jobId": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+  "argv": [
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\a859e59aa55d4093e7bafa5b7119507684715b4b9a270740d71b86411759fe87\\lumina.exe",
+    "serve",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "0",
+    "--dangerously-unauthenticated"
+  ],
+  "pid": 20408,
+  "applicationClientRequestsSent": 0,
+  "httpProbeCleanup": {
+    "method": "force termination after verified terminal job",
+    "exitCode": 1,
+    "notGracefulShutdownAcceptance": true
+  },
+  "retryBudgets": [
+    {
+      "job_id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "policy_version": "installation-file-retry-v1",
+      "max_attempts": 3,
+      "cycle": 0,
+      "cycle_attempts": 1,
+      "recorded_attempts": 1,
+      "history_origin": "legacy_untracked",
+      "tracking_started_at": 1793607963,
+      "state": {
+        "status": "verified"
+      },
+      "last_failure": null,
+      "version": 2,
+      "updated_at": 1793608067
+    }
+  ],
+  "retryEvents": [
+    {
+      "job_id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "policy_version": "installation-file-retry-v1",
+      "max_attempts": 3,
+      "cycle": 0,
+      "cycle_attempts": 0,
+      "recorded_attempts": 0,
+      "history_origin": "legacy_untracked",
+      "tracking_started_at": 1793607963,
+      "state": {
+        "status": "ready"
+      },
+      "last_failure": null,
+      "version": 0,
+      "updated_at": 1793607963
+    },
+    {
+      "job_id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "policy_version": "installation-file-retry-v1",
+      "max_attempts": 3,
+      "cycle": 0,
+      "cycle_attempts": 1,
+      "recorded_attempts": 1,
+      "history_origin": "legacy_untracked",
+      "tracking_started_at": 1793607963,
+      "state": {
+        "status": "active"
+      },
+      "last_failure": null,
+      "version": 1,
+      "updated_at": 1793607966
+    },
+    {
+      "job_id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "policy_version": "installation-file-retry-v1",
+      "max_attempts": 3,
+      "cycle": 0,
+      "cycle_attempts": 1,
+      "recorded_attempts": 1,
+      "history_origin": "legacy_untracked",
+      "tracking_started_at": 1793607963,
+      "state": {
+        "status": "verified"
+      },
+      "last_failure": null,
+      "version": 2,
+      "updated_at": 1793608067
+    }
+  ],
+  "jobQuery": {
+    "jobs": [
+      {
+        "id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+        "planId": "plan:637656a2-4022-48ad-9a50-f9119de50797",
+        "planDigest": "f91edf700a2351bdc092dcc4ce7f09ba6958d0ae6286490744c618e9c9cda3e0",
+        "stage": "installed",
+        "status": "completed",
+        "version": 111,
+        "generation": 2,
+        "acceptedAt": 1793607963,
+        "updatedAt": 1793608196
+      }
+    ],
+    "fileRetries": [
+      {
+        "jobId": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+        "artifactId": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+        "policyVersion": "installation-file-retry-v1",
+        "maxAttempts": 3,
+        "cycle": 0,
+        "cycleAttempts": 1,
+        "recordedAttempts": 1,
+        "historyOrigin": "legacy_untracked",
+        "trackingStartedAt": 1793607963,
+        "state": "verified",
+        "nextRetryAt": null,
+        "lastFailure": null,
+        "version": 2,
+        "updatedAt": 1793608067
+      }
+    ],
+    "nextAfterId": null,
+    "serviceState": "dormant"
+  },
+  "retryAcceptanceScope": "Actual schema migration and completed download with persisted attempts and independent CLI query. Controlled transient fault scheduling/exhaustion is covered by Rust integration tests, not injected into this real ModelScope download.",
+  "schemaBefore": 7,
+  "schemaAfter": 9,
+  "completedJob": {
+    "id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+    "idempotency_key": "baseline-install:plan:637656a2-4022-48ad-9a50-f9119de50797",
+    "plan_id": "plan:637656a2-4022-48ad-9a50-f9119de50797",
+    "plan_digest": "f91edf700a2351bdc092dcc4ce7f09ba6958d0ae6286490744c618e9c9cda3e0",
+    "stage": "installed",
+    "status": "completed",
+    "version": 111,
+    "generation": 2,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793607963,
+    "updated_at": 1793608196
+  },
+  "transfers": [
+    {
+      "job_id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "relative_path": "06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.part",
+      "expected_bytes": 833592736,
+      "checkpoint": {
+        "completed_bytes": 833592736,
+        "prefix_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "state": {
+        "state": "verified",
+        "computed_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "evidence_digest": "67ee5f82fe2040e73ed174dbf1fe0d278e02356d315f9d9fcedf454fdfb9f470"
+      },
+      "restart_reason": null,
+      "version": 101,
+      "generation": 1,
+      "updated_at": 1793608067
+    }
+  ],
+  "controls": [
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\a859e59aa55d4093e7bafa5b7119507684715b4b9a270740d71b86411759fe87\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+        "cancel",
+        "--expected-version",
+        "111",
+        "--idempotency-key",
+        "http-terminal-cancel"
+      ],
+      "exitCode": 0,
+      "response": {
+        "job": {
+          "id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+          "planId": "plan:637656a2-4022-48ad-9a50-f9119de50797",
+          "planDigest": "f91edf700a2351bdc092dcc4ce7f09ba6958d0ae6286490744c618e9c9cda3e0",
+          "stage": "installed",
+          "status": "completed",
+          "version": 111,
+          "generation": 2,
+          "acceptedAt": 1793607963,
+          "updatedAt": 1793608196
+        },
+        "replayed": false
+      }
+    },
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\a859e59aa55d4093e7bafa5b7119507684715b4b9a270740d71b86411759fe87\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+        "cancel",
+        "--expected-version",
+        "111",
+        "--idempotency-key",
+        "http-terminal-cancel"
+      ],
+      "exitCode": 0,
+      "response": {
+        "job": {
+          "id": "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+          "planId": "plan:637656a2-4022-48ad-9a50-f9119de50797",
+          "planDigest": "f91edf700a2351bdc092dcc4ce7f09ba6958d0ae6286490744c618e9c9cda3e0",
+          "stage": "installed",
+          "status": "completed",
+          "version": 111,
+          "generation": 2,
+          "acceptedAt": 1793607963,
+          "updatedAt": 1793608196
+        },
+        "replayed": true
+      }
+    },
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\a859e59aa55d4093e7bafa5b7119507684715b4b9a270740d71b86411759fe87\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+        "pause",
+        "--expected-version",
+        "111",
+        "--idempotency-key",
+        "http-terminal-cancel"
+      ],
+      "exitCode": 1
+    },
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\a859e59aa55d4093e7bafa5b7119507684715b4b9a270740d71b86411759fe87\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:30c6947b-43b4-4fe3-b45f-ccd50cdef063",
+        "cancel",
+        "--expected-version",
+        "0",
+        "--idempotency-key",
+        "http-stale-control"
+      ],
+      "exitCode": 1
+    }
+  ],
+  "inputUnchanged": true,
+  "jobAndEventsUnchangedByTerminalControls": true,
+  "capabilityEvidenceCount": 0,
+  "finishedAt": "2026-11-02T08:29:59.954011+00:00",
+  "verifierSha256": "917abe3762bdd20ec8e53f07aef1e41b32d603932164bf1301936c74a42a652a",
+  "artifacts": {
+    "before-startup.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\before-startup.json",
+      "sha256": "dc5bed90b1b789fde4e44d0f9184750c51f55684c283e4b73496f37cebd4c28f"
+    },
+    "cancel-first.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\cancel-first.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "cancel-first.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\cancel-first.stdout.log",
+      "sha256": "307be17efea8926dcabc7892f099e5d064ffc153670a2f0f1cc491f227d78502"
+    },
+    "cancel-replayed.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\cancel-replayed.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "cancel-replayed.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\cancel-replayed.stdout.log",
+      "sha256": "37373742b029a1bcc5ae29d1b07c33c356183f41ecbb558f1603e3b2e25c96e0"
+    },
+    "changed-control.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\changed-control.stderr.log",
+      "sha256": "391ffe5a9749c7ba3ccfe3a4121c44894bb9675b117cb95bb66a0bf17a2fe4d5"
+    },
+    "changed-control.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\changed-control.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "http.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\http.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "http.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\http.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "input.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\input.json",
+      "sha256": "c6c7a38e1e2ea20bf50ac7cc4426dc058362116b35202b708a5db32f6a1fcb5c"
+    },
+    "jobs.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\jobs.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "jobs.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\jobs.stdout.json",
+      "sha256": "676b2854e99f78b73d08a10cb463bdee602935c60db40848c45b3fe937b25919"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\prepare.stdout.json",
+      "sha256": "6d3c247e2b8604089b42f33ae925102f12dffafed8be5a9b9f13355e6225b774"
+    },
+    "stale-control.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\stale-control.stderr.log",
+      "sha256": "7a7e83321db98ffc03977fc55fa6b6076d1a2e718798e44c257a2dbccd70628e"
+    },
+    "stale-control.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\stale-control.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "startup-without-client.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-retry-network-20261102-r1\\startup-without-client.json",
+      "sha256": "b98407f4c7dd2dcd878b9f1b6142761cdd5fccd4fb8ec94bd448a1c04782f17f"
+    }
+  }
+}

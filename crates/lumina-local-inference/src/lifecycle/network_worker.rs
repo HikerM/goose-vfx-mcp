@@ -33,11 +33,11 @@ fn source_error(error: ManagedTransportError) -> anyhow::Error {
         ManagedTransportErrorKind::RevisionChanged => LifecycleErrorCode::RevisionChanged,
         _ => LifecycleErrorCode::SourcePartialFailure,
     };
-    ModelSourceError {
+    anyhow::Error::new(ModelSourceError {
         code,
         http_status: error.http_status,
-    }
-    .into()
+    })
+    .context(error)
 }
 
 async fn with_lease<F: Fn() -> i64, T>(
@@ -263,6 +263,11 @@ async fn execute<F: Fn() -> i64>(
             ) {
                 continue;
             }
+            execution.repository.begin_file_attempt(
+                &execution.lease,
+                &file.artifact_id,
+                (execution.clock)(),
+            )?;
             if let Err(error) = download_file(execution, &client, &plan, &file, headers).await {
                 execution.record_file_failure(&file.artifact_id, &error)?;
                 return Err(error);
