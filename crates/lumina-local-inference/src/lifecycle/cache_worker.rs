@@ -1,3 +1,5 @@
+use super::worker_control::InstallationInterrupted;
+use super::InstallationWorkerControl;
 use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -5,6 +7,7 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use super::{
     build_installation_manifest, FileRestartReason, FileTransferRecord, FileTransferState,
@@ -56,10 +59,12 @@ pub(crate) struct InstallExecution<'a, F> {
     pub(crate) store: &'a InstallationStore,
     pub(crate) lease: WorkerLease,
     pub(crate) clock: F,
+    pub(crate) control: Arc<InstallationWorkerControl>,
 }
 
 impl<F: Fn() -> i64> InstallExecution<'_, F> {
     pub(crate) fn checkpoint(&self) -> Result<LifecycleJob> {
+        self.control.checkpoint()?;
         let now = (self.clock)();
         let job = self
             .repository
@@ -237,6 +242,9 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
         artifact_id: &str,
         error: &anyhow::Error,
     ) -> Result<()> {
+        if error.is::<InstallationInterrupted>() {
+            return Ok(());
+        }
         let job = self
             .repository
             .read_job(&self.lease.job_id)?
@@ -362,15 +370,16 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
                 )?
             };
         let job = self.checkpoint()?;
-        self.store.prepare(
+        self.store.prepare_with_control(
             self.repository,
             &self.lease,
             job.version,
             &manifest,
             &transfer_root,
-            &self.clock,
+            (&self.clock, &self.control),
         )?;
-        self.store.commit(self.repository, &self.lease, &self.clock)
+        self.store
+            .commit_with_control(self.repository, &self.lease, &self.clock, &self.control)
     }
 
     pub(crate) fn settle_failure(&self) -> Result<()> {
@@ -385,6 +394,9 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
                 JobStatus::Cancelled,
                 (self.clock)(),
             )?;
+        } else if self.control.is_stopping() {
+            self.repository
+                .release_worker_for_recovery(&self.lease, (self.clock)())?;
         } else if LifecycleRepository::validate_lease(&job, &self.lease, (self.clock)()).is_ok() {
             self.repository
                 .transition(&job.id, job.version, JobStatus::Failed, (self.clock)())?;
@@ -400,6 +412,25 @@ pub fn install_from_local_cache(
     worker_name: &str,
     clock: impl Fn() -> i64,
 ) -> Result<InstalledVersion> {
+    install_from_local_cache_controlled(
+        repository,
+        store,
+        request,
+        worker_name,
+        clock,
+        Arc::new(InstallationWorkerControl::default()),
+    )
+}
+
+pub(crate) fn install_from_local_cache_controlled(
+    repository: &LifecycleRepository,
+    store: &InstallationStore,
+    request: &CacheInstallRequest,
+    worker_name: &str,
+    clock: impl Fn() -> i64,
+    control: Arc<InstallationWorkerControl>,
+) -> Result<InstalledVersion> {
+    control.checkpoint()?;
     ensure!(
         !request.installation_id.trim().is_empty() && !request.version_id.trim().is_empty(),
         "Cache installation has no installation or version identity"
@@ -458,6 +489,7 @@ pub fn install_from_local_cache(
         store,
         lease,
         clock,
+        control,
     };
     let result = execution.install(request, plan);
     if result.is_err() {

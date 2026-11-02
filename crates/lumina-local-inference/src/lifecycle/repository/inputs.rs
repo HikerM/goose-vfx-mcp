@@ -3,13 +3,57 @@ use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 
 use super::{LifecycleJob, LifecycleRepository};
 use crate::lifecycle::{
-    InstallPlan, InstallationInput, InstallationIntent, JobAcceptance, JobStatus, Sha256Digest,
+    InstallPlan, InstallationInput, InstallationIntent, InstallationSource, InstallationStore,
+    InstallationSubmission, JobAcceptance, JobStatus, Sha256Digest,
     INSTALLATION_INPUT_RULES_VERSION,
 };
 
 pub(super) const SCHEMA: &str = include_str!("migrations/0007.sql");
 
 impl LifecycleRepository {
+    pub fn accept_modelscope_installation(
+        &self,
+        request: &InstallationSubmission,
+        store: &InstallationStore,
+        now: i64,
+    ) -> Result<LifecycleJob> {
+        let mut connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        if let Some(job) = Self::read_job_by(&tx, "idempotency_key", &request.idempotency_key)? {
+            ensure!(
+                job.plan_id == request.plan_id && job.plan_digest == request.plan_digest,
+                "Idempotency key belongs to a different installation plan"
+            );
+            let intent = Self::read_installation_input_by(&tx, &job)?
+                .context("Legacy installation requires explicit input adoption")?;
+            ensure!(
+                intent.input.installation_id == request.installation_id
+                    && intent.input.store_root == store.root()
+                    && matches!(intent.input.source, InstallationSource::ModelScope {}),
+                "Idempotency key belongs to different installation inputs"
+            );
+            return Ok(job);
+        }
+        let acceptance = JobAcceptance {
+            id: format!("job:{}", uuid::Uuid::new_v4()),
+            idempotency_key: request.idempotency_key.clone(),
+            plan_id: request.plan_id.clone(),
+            plan_digest: request.plan_digest.clone(),
+        };
+        let input = InstallationInput::new(
+            store,
+            request.installation_id.clone(),
+            format!("version:{}", uuid::Uuid::new_v4()),
+            InstallationSource::ModelScope {},
+        )?;
+        let job = Self::enqueue_by(&tx, &acceptance, now, fs2::available_space(store.root())?)?;
+        Self::bind_installation_input_by(&tx, &job, &input, now)?;
+        tx.commit()?;
+        Ok(job)
+    }
     fn input_plan_by(connection: &Connection, job: &LifecycleJob) -> Result<InstallPlan> {
         let (digest, payload): (String, String) = connection.query_row(
             "SELECT digest, payload FROM installation_plans WHERE id = ?1",

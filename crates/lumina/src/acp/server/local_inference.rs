@@ -6,6 +6,57 @@ fn local_inference_unavailable() -> agent_client_protocol::Error {
 }
 
 impl LuminaAcpAgent {
+    pub(super) async fn on_model_installation_submit(
+        &self,
+        req: ModelInstallationSubmitRequest,
+    ) -> Result<ModelInstallationSubmitResponse, agent_client_protocol::Error> {
+        #[cfg(feature = "local-inference")]
+        {
+            self.local_installations
+                .submit_request(req)
+                .await
+                .invalid_params_err()
+        }
+        #[cfg(not(feature = "local-inference"))]
+        {
+            let _ = req;
+            Err(local_inference_unavailable())
+        }
+    }
+    pub(super) async fn on_model_installation_jobs_list(
+        &self,
+        req: ModelInstallationJobsListRequest,
+    ) -> Result<ModelInstallationJobsListResponse, agent_client_protocol::Error> {
+        #[cfg(feature = "local-inference")]
+        {
+            self.local_installations
+                .list_request(req)
+                .await
+                .internal_err()
+        }
+        #[cfg(not(feature = "local-inference"))]
+        {
+            let _ = req;
+            Err(local_inference_unavailable())
+        }
+    }
+    pub(super) async fn on_model_installation_job_control(
+        &self,
+        req: ModelInstallationJobControlRequest,
+    ) -> Result<ModelInstallationJobControlResponse, agent_client_protocol::Error> {
+        #[cfg(feature = "local-inference")]
+        {
+            self.local_installations
+                .control_request(req)
+                .await
+                .invalid_params_err()
+        }
+        #[cfg(not(feature = "local-inference"))]
+        {
+            let _ = req;
+            Err(local_inference_unavailable())
+        }
+    }
     pub(super) async fn on_local_inference_models_list(
         &self,
         _req: LocalInferenceModelsListRequest,

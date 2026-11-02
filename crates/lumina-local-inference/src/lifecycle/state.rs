@@ -66,7 +66,7 @@ impl JobStatus {
             (self, next),
             (
                 Self::Queued,
-                Self::Running | Self::Cancelled | Self::Blocked
+                Self::Running | Self::Paused | Self::Cancelled | Self::Blocked
             ) | (
                 Self::Running,
                 Self::Paused | Self::Cancelling | Self::Completed | Self::Blocked | Self::Failed

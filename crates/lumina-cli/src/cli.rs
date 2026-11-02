@@ -1172,6 +1172,36 @@ enum Command {
 #[cfg(feature = "local-inference")]
 #[derive(Subcommand)]
 enum LocalModelsCommand {
+    #[command(about = "Install an accepted immutable model plan")]
+    InstallPlan {
+        #[arg(long)]
+        plan_id: String,
+        #[arg(long)]
+        plan_digest: String,
+        #[arg(long)]
+        installation_id: String,
+        #[arg(long)]
+        idempotency_key: String,
+    },
+    #[command(about = "List durable model installation jobs without starting downloads")]
+    Jobs {
+        #[arg(long)]
+        after_id: Option<String>,
+        #[arg(long, default_value_t = 64)]
+        limit: u32,
+    },
+    #[command(about = "Control a durable installation with its current state version")]
+    JobControl {
+        id: String,
+        #[arg(value_parser=["pause","resume","cancel","retry"])]
+        action: String,
+        #[arg(long)]
+        expected_version: u64,
+    },
+    #[command(about = "Recover and wait for a durable model installation")]
+    WaitJob { id: String },
+    #[command(about = "Run the durable installation worker until Ctrl+C")]
+    InstallationWorker,
     /// Search ModelScope for local models
     #[command(about = "Search ModelScope for local GGUF models")]
     Search {
@@ -2012,13 +2042,83 @@ fn print_download_progress(manager: &lumina::download_manager::DownloadManager) 
 }
 
 #[cfg(feature = "local-inference")]
-async fn handle_local_models_command(command: LocalModelsCommand) -> Result<()> {
+async fn handle_local_models_command(
+    command: LocalModelsCommand,
+    installations: std::sync::Arc<
+        lumina::providers::local_inference::lifecycle::InstallationApplication,
+    >,
+) -> Result<()> {
     use lumina::providers::local_inference::hf_models;
     use lumina::providers::local_inference::local_model_registry::get_registry;
 
     lumina::providers::local_inference::configure_huggingface_auth();
 
     match command {
+        LocalModelsCommand::InstallPlan {
+            plan_id,
+            plan_digest,
+            installation_id,
+            idempotency_key,
+        } => {
+            let mut accepted = installations
+                .submit_request(lumina::custom_requests::ModelInstallationSubmitRequest {
+                    plan_id,
+                    plan_digest,
+                    installation_id,
+                    idempotency_key,
+                })
+                .await?;
+            let job = wait_installation_job(&installations, &accepted.job.id).await?;
+            let complete =
+                job.status == lumina::providers::local_inference::lifecycle::JobStatus::Completed;
+            accepted.job = job.into();
+            println!("{}", serde_json::to_string(&accepted)?);
+            anyhow::ensure!(
+                complete,
+                "Installation did not complete; inspect the durable job state"
+            );
+        }
+        LocalModelsCommand::Jobs { after_id, limit } => {
+            let result = installations
+                .list_request(lumina::custom_requests::ModelInstallationJobsListRequest {
+                    after_id,
+                    limit,
+                })
+                .await?;
+            println!("{}", serde_json::to_string(&result)?);
+        }
+        LocalModelsCommand::JobControl {
+            id,
+            action,
+            expected_version,
+        } => {
+            use lumina::custom_requests::ModelInstallationJobAction as Action;
+            let action = match action.as_str() {
+                "pause" => Action::Pause,
+                "resume" => Action::Resume,
+                "cancel" => Action::Cancel,
+                "retry" => Action::Retry,
+                _ => anyhow::bail!("Invalid installation action"),
+            };
+            let result = installations
+                .control_request(
+                    lumina::custom_requests::ModelInstallationJobControlRequest {
+                        job_id: id,
+                        action,
+                        expected_version,
+                    },
+                )
+                .await?;
+            println!("{}", serde_json::to_string(&result)?);
+        }
+        LocalModelsCommand::WaitJob { id } => {
+            let job = wait_installation_job(&installations, &id).await?;
+            println!("{}", serde_json::to_string(&job)?);
+        }
+        LocalModelsCommand::InstallationWorker => {
+            installations.service().await?;
+            tokio::signal::ctrl_c().await?;
+        }
         LocalModelsCommand::Search { query, limit } => {
             println!("Searching ModelScope for '{}'...", query);
             let results = hf_models::search_local_models(&query, limit).await?;
@@ -2191,7 +2291,28 @@ pub async fn cli() -> anyhow::Result<()> {
         "CLI command executed"
     );
 
-    match cli.command {
+    #[cfg(feature = "local-inference")]
+    let installations = {
+        lumina::providers::local_inference::configure_local_inference();
+        let host = std::sync::Arc::new(
+            lumina::providers::local_inference::lifecycle::InstallationApplication::new(
+                &Paths::data_dir(),
+                std::sync::Arc::new(
+                    lumina::providers::local_inference::hf_models::modelscope_token,
+                ),
+            ),
+        );
+        if matches!(
+            &cli.command,
+            None | Some(Command::Run { .. }) | Some(Command::Session { command: None, .. })
+        ) {
+            if let Err(error) = host.start_if_present().await {
+                tracing::error!(error=%error,"Model installation startup recovery is unavailable");
+            }
+        }
+        host
+    };
+    let result = match cli.command {
         Some(Command::Completion { shell, bin_name }) => {
             let mut cmd = Cli::command();
             shell.generate(&mut cmd, &bin_name, &mut std::io::stdout());
@@ -2295,7 +2416,9 @@ pub async fn cli() -> anyhow::Result<()> {
         #[cfg(feature = "tui")]
         Some(Command::Tui { args }) => crate::commands::tui::handle_tui(args),
         #[cfg(feature = "local-inference")]
-        Some(Command::LocalModels { command }) => handle_local_models_command(command).await,
+        Some(Command::LocalModels { command }) => {
+            handle_local_models_command(command, std::sync::Arc::clone(&installations)).await
+        }
         Some(Command::Review {
             range,
             prompt,
@@ -2349,6 +2472,44 @@ pub async fn cli() -> anyhow::Result<()> {
             }
         }
         None => handle_default_session().await,
+    };
+    #[cfg(feature = "local-inference")]
+    if let Err(error) = installations.shutdown().await {
+        tracing::error!(error=%error,"Model installation shutdown failed");
+    }
+    result
+}
+
+#[cfg(feature = "local-inference")]
+async fn wait_installation_job(
+    host: &lumina::providers::local_inference::lifecycle::InstallationApplication,
+    id: &str,
+) -> Result<lumina::providers::local_inference::lifecycle::LifecycleJob> {
+    use lumina::providers::local_inference::lifecycle::{InstallationServiceState, JobStatus};
+    let service = host.service().await?;
+    loop {
+        let job = service
+            .repository()
+            .read_job(id)?
+            .ok_or_else(|| anyhow::anyhow!("Installation job not found"))?;
+        if matches!(
+            job.status,
+            JobStatus::Completed
+                | JobStatus::Failed
+                | JobStatus::Blocked
+                | JobStatus::Paused
+                | JobStatus::Cancelled
+        ) {
+            return Ok(job);
+        }
+        anyhow::ensure!(
+            !matches!(
+                service.state(),
+                InstallationServiceState::Failed | InstallationServiceState::Stopped
+            ),
+            "Installation worker is unavailable"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
     }
 }
 
@@ -2368,6 +2529,56 @@ mod tests {
     use super::*;
     use std::cell::RefCell;
     use std::sync::atomic::{AtomicBool, Ordering};
+
+    #[cfg(feature = "local-inference")]
+    #[test]
+    fn installation_commands_require_frozen_plan_identity_and_control_version() {
+        assert!(Cli::try_parse_from([
+            "lumina",
+            "local-models",
+            "install-plan",
+            "--plan-id",
+            "plan:unit",
+            "--plan-digest",
+            &"a".repeat(64),
+            "--installation-id",
+            "installation:unit",
+            "--idempotency-key",
+            "key:unit",
+        ])
+        .is_ok());
+        assert!(Cli::try_parse_from([
+            "lumina",
+            "local-models",
+            "job-control",
+            "job:unit",
+            "pause",
+            "--expected-version",
+            "2",
+        ])
+        .is_ok());
+        assert!(Cli::try_parse_from([
+            "lumina",
+            "local-models",
+            "job-control",
+            "job:unit",
+            "pause",
+        ])
+        .is_err());
+        assert!(Cli::try_parse_from([
+            "lumina",
+            "local-models",
+            "job-control",
+            "job:unit",
+            "reset",
+            "--expected-version",
+            "2",
+        ])
+        .is_err());
+        for command in ["jobs", "installation-worker"] {
+            assert!(Cli::try_parse_from(["lumina", "local-models", command]).is_ok());
+        }
+    }
 
     #[tokio::test]
     async fn serve_completion_awaits_shutdown_before_returning() {

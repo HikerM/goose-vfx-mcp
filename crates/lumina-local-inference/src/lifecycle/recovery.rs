@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use super::{
-    resume_installation, InstallationSource, InstallationStore, LifecycleErrorCode,
-    LifecycleRepository, ModelSourceError,
+    resume_installation_with_control, InstallationSource, InstallationStore,
+    InstallationWorkerControl, LifecycleErrorCode, LifecycleRepository, ModelSourceError,
 };
 
 pub type InstallationCredentials = Arc<dyn Fn() -> Result<Option<String>> + Send + Sync>;
@@ -26,6 +26,7 @@ pub enum RecoveryDisposition {
     InvalidInput,
     CredentialsUnavailable,
     Failed { code: LifecycleErrorCode },
+    Interrupted,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -59,76 +60,94 @@ where
         .then(|| jobs.last().expect("Recovery page is nonempty").id.clone());
     let mut outcomes = Vec::with_capacity(jobs.len());
     for job in jobs {
-        let intent = match repository.read_installation_input(&job.id) {
-            Ok(Some(intent)) => intent,
-            Ok(None) => {
-                outcomes.push(RecoveryOutcome {
-                    job_id: job.id,
-                    disposition: RecoveryDisposition::NeedsInputAdoption,
-                });
-                continue;
-            }
-            Err(_) => {
-                outcomes.push(RecoveryOutcome {
-                    job_id: job.id,
-                    disposition: RecoveryDisposition::InvalidInput,
-                });
-                continue;
-            }
-        };
-        if intent.input.store_root != store.root() {
-            outcomes.push(RecoveryOutcome {
-                job_id: job.id,
-                disposition: RecoveryDisposition::DifferentStore,
-            });
-            continue;
-        }
-        let token = if matches!(intent.input.source, InstallationSource::ModelScope {}) {
-            let provider = Arc::clone(&credentials);
-            match tokio::task::spawn_blocking(move || provider()).await {
-                Ok(Ok(token)) => token,
-                _ => {
-                    outcomes.push(RecoveryOutcome {
-                        job_id: job.id,
-                        disposition: RecoveryDisposition::CredentialsUnavailable,
-                    });
-                    continue;
-                }
-            }
-        } else {
-            None
-        };
-        let result = resume_installation(
-            Arc::clone(&repository),
-            Arc::clone(&store),
-            job.id.clone(),
-            token,
-            request.worker_name.clone(),
-            clock.clone(),
-        )
-        .await;
-        let disposition = match result {
-            Ok(installed) => RecoveryDisposition::Completed {
-                version_id: installed.manifest.version_id,
-            },
-            Err(error) => {
-                let code = error
-                    .downcast_ref::<ModelSourceError>()
-                    .map_or(LifecycleErrorCode::InstallFailed, |source| source.code);
-                if code == LifecycleErrorCode::Cancelled {
-                    RecoveryDisposition::Cancelled
-                } else {
-                    RecoveryDisposition::Failed { code }
-                }
-            }
-        };
-        outcomes.push(RecoveryOutcome {
-            job_id: job.id,
-            disposition,
-        });
+        outcomes.push(
+            recover_installation_job(
+                Arc::clone(&repository),
+                Arc::clone(&store),
+                job.id,
+                request.worker_name.clone(),
+                Arc::clone(&credentials),
+                clock.clone(),
+                Arc::new(InstallationWorkerControl::default()),
+            )
+            .await?,
+        );
     }
     Ok(RecoveryPage {
         outcomes,
         next_after_id,
     })
+}
+
+pub(crate) async fn recover_installation_job<F>(
+    repository: Arc<LifecycleRepository>,
+    store: Arc<InstallationStore>,
+    job_id: String,
+    worker_name: String,
+    credentials: InstallationCredentials,
+    clock: F,
+    control: Arc<InstallationWorkerControl>,
+) -> Result<RecoveryOutcome>
+where
+    F: Fn() -> i64 + Clone + Send + 'static,
+{
+    control.checkpoint()?;
+    let outcome = |disposition| {
+        Ok(RecoveryOutcome {
+            job_id: job_id.clone(),
+            disposition,
+        })
+    };
+    let intent = match repository.read_installation_input(&job_id) {
+        Ok(Some(intent)) => intent,
+        Ok(None) => {
+            return outcome(RecoveryDisposition::NeedsInputAdoption);
+        }
+        Err(_) => {
+            return outcome(RecoveryDisposition::InvalidInput);
+        }
+    };
+    if intent.input.store_root != store.root() {
+        return outcome(RecoveryDisposition::DifferentStore);
+    }
+    let token = if matches!(intent.input.source, InstallationSource::ModelScope {}) {
+        let provider = Arc::clone(&credentials);
+        match tokio::task::spawn_blocking(move || provider()).await {
+            Ok(Ok(token)) => token,
+            _ => {
+                return outcome(RecoveryDisposition::CredentialsUnavailable);
+            }
+        }
+    } else {
+        None
+    };
+    let result = resume_installation_with_control(
+        Arc::clone(&repository),
+        Arc::clone(&store),
+        job_id.clone(),
+        token,
+        worker_name,
+        clock.clone(),
+        control,
+    )
+    .await;
+    let disposition = match result {
+        Ok(installed) => RecoveryDisposition::Completed {
+            version_id: installed.manifest.version_id,
+        },
+        Err(error) => {
+            if error.is::<super::worker_control::InstallationInterrupted>() {
+                return outcome(RecoveryDisposition::Interrupted);
+            }
+            let code = error
+                .downcast_ref::<ModelSourceError>()
+                .map_or(LifecycleErrorCode::InstallFailed, |source| source.code);
+            if code == LifecycleErrorCode::Cancelled {
+                RecoveryDisposition::Cancelled
+            } else {
+                RecoveryDisposition::Failed { code }
+            }
+        }
+    };
+    outcome(disposition)
 }

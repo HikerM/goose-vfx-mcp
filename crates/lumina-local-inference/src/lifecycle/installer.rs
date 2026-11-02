@@ -7,9 +7,9 @@ use std::path::{Path, PathBuf};
 use super::files::{checked_local_path, open_for_verification, verify_artifact_file_with_progress};
 use super::installation::verify_installation_directory_with_progress;
 use super::{
-    installation_directory, InstallationCommitJournal, InstallationCommitStage, InstalledVersion,
-    LifecycleJob, LifecycleRepository, LifecycleStage, ModelManifest, RepositoryPath, Sha256Digest,
-    WorkerLease,
+    installation_directory, InstallationCommitJournal, InstallationCommitStage,
+    InstallationWorkerControl, InstalledVersion, LifecycleJob, LifecycleRepository, LifecycleStage,
+    ModelManifest, RepositoryPath, Sha256Digest, WorkerLease,
 };
 
 pub struct InstallationStore {
@@ -20,10 +20,12 @@ struct InstallationExecution<'a, F> {
     repository: &'a LifecycleRepository,
     lease: &'a WorkerLease,
     clock: F,
+    control: &'a InstallationWorkerControl,
 }
 
 impl<F: Fn() -> i64> InstallationExecution<'_, F> {
     fn checkpoint(&self) -> Result<LifecycleJob> {
+        self.control.checkpoint()?;
         let now = (self.clock)();
         let job = self
             .repository
@@ -379,6 +381,27 @@ impl InstallationStore {
         transfer_root: &Path,
         clock: impl Fn() -> i64,
     ) -> Result<InstallationCommitJournal> {
+        self.prepare_with_control(
+            repository,
+            lease,
+            expected_job_version,
+            manifest,
+            transfer_root,
+            (clock, &InstallationWorkerControl::default()),
+        )
+    }
+
+    pub(crate) fn prepare_with_control(
+        &self,
+        repository: &LifecycleRepository,
+        lease: &WorkerLease,
+        expected_job_version: u64,
+        manifest: &ModelManifest,
+        transfer_root: &Path,
+        environment: (impl Fn() -> i64, &InstallationWorkerControl),
+    ) -> Result<InstallationCommitJournal> {
+        let (clock, control) = environment;
+        control.checkpoint()?;
         manifest.validate()?;
         if let Some(intent) = repository.read_installation_input(&lease.job_id)? {
             intent.input.validate_destination(
@@ -402,6 +425,7 @@ impl InstallationStore {
             repository,
             lease,
             clock,
+            control,
         };
         self.prepare_files(&execution, manifest, transfer_root)?;
         let witness =
@@ -466,6 +490,22 @@ impl InstallationStore {
         lease: &WorkerLease,
         clock: impl Fn() -> i64,
     ) -> Result<InstalledVersion> {
+        self.commit_with_control(
+            repository,
+            lease,
+            clock,
+            &InstallationWorkerControl::default(),
+        )
+    }
+
+    pub(crate) fn commit_with_control(
+        &self,
+        repository: &LifecycleRepository,
+        lease: &WorkerLease,
+        clock: impl Fn() -> i64,
+        control: &InstallationWorkerControl,
+    ) -> Result<InstalledVersion> {
+        control.checkpoint()?;
         let mut journal = repository
             .installation_commit(&lease.job_id)?
             .context("Installation commit is missing")?;
@@ -490,6 +530,7 @@ impl InstallationStore {
             repository,
             lease,
             clock,
+            control,
         };
         execution.checkpoint()?;
         ensure!(

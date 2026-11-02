@@ -598,6 +598,38 @@ impl LifecycleRepository {
         Ok(job)
     }
 
+    pub(crate) fn release_worker_for_recovery(&self, lease: &WorkerLease, now: i64) -> Result<()> {
+        let mut connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let mut job = Self::read_job_by(&tx, "id", &lease.job_id)?
+            .ok_or_else(|| anyhow!("Installation job not found"))?;
+        if job.status != JobStatus::Running
+            || job.generation != lease.generation
+            || job.lease_owner.as_deref() != Some(lease.owner.as_str())
+        {
+            return Ok(());
+        }
+        ensure!(
+            now >= job.updated_at,
+            "Installation recovery release time moved backwards"
+        );
+        for status in [JobStatus::Paused, JobStatus::Queued] {
+            let expected = job.version;
+            job.status = job.status.transition(status)?;
+            job.version += 1;
+            job.generation += 1;
+            job.lease_owner = None;
+            job.lease_until = None;
+            job.updated_at = now;
+            Self::write_job(&tx, &job, expected)?;
+        }
+        tx.commit()?;
+        Ok(())
+    }
+
     pub fn events(&self, job_id: &str, after_sequence: u64, limit: u32) -> Result<Vec<JobEvent>> {
         ensure!(
             (1..=1000).contains(&limit),

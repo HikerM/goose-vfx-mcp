@@ -1208,6 +1208,28 @@ impl LuminaAcpAgent {
         self.on_local_inference_models_list(req).await
     }
 
+    #[custom_method(ModelInstallationSubmitRequest)]
+    async fn dispatch_model_installation_submit(
+        &self,
+        req: ModelInstallationSubmitRequest,
+    ) -> Result<ModelInstallationSubmitResponse, agent_client_protocol::Error> {
+        self.on_model_installation_submit(req).await
+    }
+    #[custom_method(ModelInstallationJobsListRequest)]
+    async fn dispatch_model_installation_jobs_list(
+        &self,
+        req: ModelInstallationJobsListRequest,
+    ) -> Result<ModelInstallationJobsListResponse, agent_client_protocol::Error> {
+        self.on_model_installation_jobs_list(req).await
+    }
+    #[custom_method(ModelInstallationJobControlRequest)]
+    async fn dispatch_model_installation_job_control(
+        &self,
+        req: ModelInstallationJobControlRequest,
+    ) -> Result<ModelInstallationJobControlResponse, agent_client_protocol::Error> {
+        self.on_model_installation_job_control(req).await
+    }
+
     #[custom_method(LocalInferenceModelDownloadRequest)]
     async fn dispatch_local_inference_model_download(
         &self,

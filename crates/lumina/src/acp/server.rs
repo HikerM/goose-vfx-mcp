@@ -254,7 +254,15 @@ pub struct LuminaAcpAgentOptions {
     pub mcp_platform_service_cell: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
 }
 
+#[cfg(feature = "local-inference")]
+type LocalInstallationApplication =
+    crate::providers::local_inference::lifecycle::InstallationApplication;
+#[cfg(not(feature = "local-inference"))]
+type LocalInstallationApplication = ();
+
 pub struct LuminaAcpAgent {
+    #[cfg(feature = "local-inference")]
+    local_installations: Arc<LocalInstallationApplication>,
     sessions: Arc<Mutex<HashMap<String, LuminaAcpSession>>>,
     managed_runtime_sessions: Arc<Mutex<ManagedRuntimeSessionState>>,
     session_registrations: Arc<Mutex<HashMap<String, SessionRegistration>>>,
@@ -1059,6 +1067,28 @@ impl LuminaAcpAgent {
         options: LuminaAcpAgentOptions,
         trusted_mcp_platform_service: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
     ) -> Result<Self> {
+        Self::new_with_application_services(options, trusted_mcp_platform_service, None).await
+    }
+
+    pub(crate) async fn new_with_application_services(
+        options: LuminaAcpAgentOptions,
+        trusted_mcp_platform_service: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
+        _local_installations: Option<Arc<LocalInstallationApplication>>,
+    ) -> Result<Self> {
+        #[cfg(feature = "local-inference")]
+        let local_installations = {
+            crate::providers::local_inference::configure_local_inference();
+            let host = _local_installations.unwrap_or_else(|| {
+                Arc::new(LocalInstallationApplication::new(
+                    &options.data_dir,
+                    Arc::new(crate::providers::local_inference::hf_models::modelscope_token),
+                ))
+            });
+            if let Err(error) = host.start_if_present().await {
+                tracing::error!(error=%error,"Model installation startup recovery is unavailable");
+            }
+            host
+        };
         let mcp_platform_database_path = options.data_dir.join("mcp-platform/platform.db");
         let mcp_platform_service = options
             .mcp_platform_service_cell
@@ -1108,6 +1138,8 @@ impl LuminaAcpAgent {
         let agent_manager = Arc::new(AgentManager::new(agent_config, None).await?);
 
         Ok(Self {
+            #[cfg(feature = "local-inference")]
+            local_installations,
             sessions: Arc::new(Mutex::new(HashMap::new())),
             managed_runtime_sessions: Arc::new(Mutex::new(ManagedRuntimeSessionState::default())),
             session_registrations: Arc::new(Mutex::new(HashMap::new())),
@@ -1222,6 +1254,11 @@ impl LuminaAcpAgent {
     #[cfg(test)]
     pub(super) fn test_mcp_platform_service_cell(&self) -> Arc<OnceCell<Arc<McpPlatformService>>> {
         self.mcp_platform_service.clone()
+    }
+
+    #[cfg(all(test, feature = "local-inference"))]
+    pub(super) fn test_local_installations(&self) -> Arc<LocalInstallationApplication> {
+        Arc::clone(&self.local_installations)
     }
 
     #[cfg(test)]
@@ -3977,9 +4014,21 @@ where
     W: futures::AsyncWrite + Unpin + Send + 'static,
 {
     Box::pin(async move {
-        use futures::AsyncWriteExt;
+        use futures::{AsyncWriteExt, StreamExt};
 
-        let incoming = bounded_validated_acp_lines(read);
+        let (disconnected, disconnect) = tokio::sync::oneshot::channel();
+        let incoming = async_stream::stream! {
+            let lines = bounded_validated_acp_lines(read);
+            futures::pin_mut!(lines);
+            while let Some(line) = lines.next().await {
+                let failed = line.is_err();
+                yield line;
+                if failed {
+                    return;
+                }
+            }
+            let _ = disconnected.send(());
+        };
         let outgoing = futures::sink::unfold(write, async move |mut writer, line: String| {
             writer.write_all(line.as_bytes()).await?;
             writer.write_all(b"\n").await?;
@@ -3989,7 +4038,12 @@ where
             .builder()
             .name("lumina-acp")
             .with_handler(handler)
-            .connect_to(Lines::new(outgoing, incoming))
+            .connect_with(Lines::new(outgoing, incoming), async move |_connection| {
+                disconnect
+                    .await
+                    .map_err(|_| agent_client_protocol::Error::internal_error())?;
+                Ok(())
+            })
             .await;
         result?;
 
@@ -4297,7 +4351,12 @@ mod tests {
         assert!(!written.contains("secret-stdio-url"));
         assert!(written.contains("\"id\":7"));
 
-        serving.abort();
+        drop(input_writer);
+        tokio::time::timeout(std::time::Duration::from_secs(2), serving)
+            .await
+            .expect("stdio EOF must finish the connection")
+            .unwrap()
+            .unwrap();
         server.shutdown().await;
     }
 

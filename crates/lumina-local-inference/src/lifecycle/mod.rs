@@ -1,3 +1,5 @@
+mod api;
+pub mod application;
 pub mod cache_worker;
 pub mod classification;
 pub mod compatibility;
@@ -16,8 +18,11 @@ pub mod policy;
 pub mod recovery;
 pub mod repository;
 pub mod resources;
+pub mod service;
 pub mod state;
+mod worker_control;
 
+pub use application::*;
 pub use cache_worker::*;
 pub use classification::*;
 pub use compatibility::*;
@@ -36,6 +41,8 @@ pub use policy::*;
 pub use recovery::*;
 pub use repository::*;
 pub use resources::*;
+pub use service::*;
 pub use state::*;
+pub use worker_control::InstallationWorkerControl;
 pub mod catalog;
 pub use catalog::*;

@@ -910,7 +910,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_verify_provenance_fails_closed_when_unverifiable() {
-        let result = verify_provenance(b"not a real archive", "stable").await;
+        let result = verify_provenance(
+            b"not a real archive",
+            "stable",
+            "lumina-test-owner-does-not-exist",
+            "unverifiable-fixture",
+        )
+        .await;
         assert!(
             result.is_err(),
             "verify_provenance must fail closed when provenance cannot be verified"

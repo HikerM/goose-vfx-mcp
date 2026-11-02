@@ -5,9 +5,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use super::{
-    install_from_local_cache, install_from_modelscope, CacheInstallRequest, InstallPlan,
-    InstallationStore, InstalledVersion, LifecycleRepository, ModelScopeInstallRequest,
-    Sha256Digest, PREPARED_GGUF_PLAN_RULES_VERSION,
+    CacheInstallRequest, InstallPlan, InstallationStore, InstallationWorkerControl,
+    InstalledVersion, LifecycleRepository, ModelScopeInstallRequest, Sha256Digest,
+    PREPARED_GGUF_PLAN_RULES_VERSION,
 };
 
 pub const INSTALLATION_INPUT_RULES_VERSION: &str = "installation-input-v1";
@@ -120,6 +120,15 @@ pub struct JobAcceptance {
     pub plan_digest: Sha256Digest,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InstallationSubmission {
+    pub idempotency_key: String,
+    pub plan_id: String,
+    pub plan_digest: Sha256Digest,
+    pub installation_id: String,
+}
+
 pub async fn resume_installation<F>(
     repository: Arc<LifecycleRepository>,
     store: Arc<InstallationStore>,
@@ -131,6 +140,31 @@ pub async fn resume_installation<F>(
 where
     F: Fn() -> i64 + Send + 'static,
 {
+    resume_installation_with_control(
+        repository,
+        store,
+        job_id,
+        token,
+        worker_name,
+        clock,
+        Arc::new(InstallationWorkerControl::default()),
+    )
+    .await
+}
+
+pub async fn resume_installation_with_control<F>(
+    repository: Arc<LifecycleRepository>,
+    store: Arc<InstallationStore>,
+    job_id: String,
+    token: Option<String>,
+    worker_name: String,
+    clock: F,
+    control: Arc<InstallationWorkerControl>,
+) -> Result<InstalledVersion>
+where
+    F: Fn() -> i64 + Send + 'static,
+{
+    control.checkpoint()?;
     let intent = repository
         .read_installation_input(&job_id)?
         .context("Legacy installation requires explicit input adoption before recovery")?;
@@ -141,7 +175,7 @@ where
     )?;
     match intent.input.source {
         InstallationSource::ModelScope {} => {
-            install_from_modelscope(
+            super::network_worker::install_from_modelscope_controlled(
                 repository,
                 store,
                 ModelScopeInstallRequest {
@@ -152,11 +186,12 @@ where
                 token,
                 worker_name,
                 clock,
+                control,
             )
             .await
         }
         InstallationSource::LocalCache { files } => tokio::task::spawn_blocking(move || {
-            install_from_local_cache(
+            super::cache_worker::install_from_local_cache_controlled(
                 &repository,
                 &store,
                 &CacheInstallRequest {
@@ -167,6 +202,7 @@ where
                 },
                 &worker_name,
                 clock,
+                control,
             )
         })
         .await

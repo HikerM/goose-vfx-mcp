@@ -50,9 +50,23 @@ fn unit_weight() -> Vec<u8> {
 
 impl Fixture {
     fn new(source_checksum: bool) -> Self {
+        Self::with_layout(source_checksum, false)
+    }
+
+    fn with_layout(source_checksum: bool, application_layout: bool) -> Self {
         let temp = tempfile::tempdir().unwrap();
-        let repository = LifecycleRepository::open(&temp.path().join("models.db")).unwrap();
-        let store = InstallationStore::open(&temp.path().join("managed")).unwrap();
+        let store_path = if application_layout {
+            temp.path().join("data/model-lifecycle")
+        } else {
+            temp.path().join("managed")
+        };
+        let database = if application_layout {
+            store_path.join("models.db")
+        } else {
+            temp.path().join("models.db")
+        };
+        let repository = LifecycleRepository::open(&database).unwrap();
+        let store = InstallationStore::open(&store_path).unwrap();
         let bytes = unit_weight();
         let source_path = temp.path().join("original.gguf");
         std::fs::write(&source_path, &bytes).unwrap();
@@ -1938,4 +1952,445 @@ fn repository_rejects_a_valid_file_witness_from_another_store() {
         fixture.repository.read_job(&lease.job_id).unwrap(),
         Some(job)
     );
+}
+
+fn service_runtime() -> tokio::runtime::Runtime {
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap()
+}
+
+async fn wait_for_completed(repository: &LifecycleRepository, id: &str) {
+    tokio::time::timeout(std::time::Duration::from_secs(5), async {
+        loop {
+            if repository.read_job(id).unwrap().unwrap().status == JobStatus::Completed {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+}
+
+#[test]
+fn background_service_recovers_startup_jobs_and_polls_jobs_from_another_producer() {
+    let fixture = Fixture::new(true);
+    let first = acceptance(&fixture, "first-startup-job");
+    let input = cache_input(&fixture);
+    fixture
+        .repository
+        .enqueue_installation(&first, &input, 32, 1 << 30)
+        .unwrap();
+    let second = acceptance(&fixture, "second-background-job");
+    let mut second_input = input.clone();
+    second_input.version_id = "background-version".into();
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    service_runtime().block_on(async {
+        let service = InstallationService::start(
+            repository.clone(),
+            store,
+            Arc::new(|| panic!("Cache jobs must not read credentials")),
+            Arc::new(|| 50),
+            std::time::Duration::from_millis(20),
+        )
+        .unwrap();
+        service.wait_ready().await.unwrap();
+        assert_eq!(
+            repository.read_job(&first.id).unwrap().unwrap().status,
+            JobStatus::Completed
+        );
+        repository
+            .enqueue_installation(&second, &second_input, 50, 1 << 30)
+            .unwrap();
+        wait_for_completed(&repository, &second.id).await;
+        service.shutdown().await.unwrap();
+        assert_eq!(service.state(), InstallationServiceState::Stopped);
+        assert!(repository
+            .evidence(&input.installation_id)
+            .unwrap()
+            .is_empty());
+    });
+}
+
+#[test]
+fn service_submission_generates_one_version_and_rejects_changed_idempotent_requests() {
+    let fixture = Fixture::new(true);
+    let accepted = acceptance(&fixture, "source-only");
+    let request = InstallationSubmission {
+        idempotency_key: "application-install".into(),
+        plan_id: accepted.plan_id,
+        plan_digest: accepted.plan_digest,
+        installation_id: "managed-install".into(),
+    };
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    service_runtime().block_on(async {
+        let service = InstallationService::start(
+            repository.clone(),
+            store,
+            Arc::new(|| anyhow::bail!("Credentials unavailable for unit fixture")),
+            Arc::new(|| 32),
+            std::time::Duration::from_millis(20),
+        )
+        .unwrap();
+        let first = service.submit(&request).await.unwrap();
+        let second = service.submit(&request).await.unwrap();
+        assert_eq!(first, second);
+        let intent = repository
+            .read_installation_input(&first.id)
+            .unwrap()
+            .unwrap();
+        assert!(intent.input.version_id.starts_with("version:"));
+        assert_eq!(repository.list_jobs(None, 100).unwrap().len(), 2);
+        let mut wrong = request.clone();
+        wrong.installation_id = "another-install".into();
+        assert!(service.submit(&wrong).await.is_err());
+        service.shutdown().await.unwrap();
+        assert!(service.submit(&request).await.is_err());
+    });
+}
+
+#[test]
+fn controlled_shutdown_requeues_checkpointed_work_without_losing_downloaded_content() {
+    let fixture = Fixture::new(true);
+    let input = cache_input(&fixture);
+    fixture
+        .repository
+        .adopt_installation_input(&fixture.request.job_id, &input, 32)
+        .unwrap();
+    let id = fixture.request.job_id.clone();
+    let original = fixture
+        .request
+        .source_files
+        .values()
+        .next()
+        .unwrap()
+        .clone();
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    let control = Arc::new(InstallationWorkerControl::default());
+    service_runtime().block_on(async {
+        let observed = repository.clone();
+        let observed_id = id.clone();
+        let stop = control.clone();
+        let result = resume_installation_with_control(
+            repository.clone(),
+            store.clone(),
+            id.clone(),
+            None,
+            "shutdown-worker".into(),
+            move || {
+                if observed
+                    .file_transfers(&observed_id)
+                    .unwrap()
+                    .iter()
+                    .any(|file| matches!(file.state, FileTransferState::Downloaded))
+                {
+                    stop.request_stop();
+                }
+                500
+            },
+            control,
+        )
+        .await;
+        assert!(result.is_err());
+        assert_eq!(
+            repository.read_job(&id).unwrap().unwrap().status,
+            JobStatus::Queued
+        );
+        assert!(matches!(
+            repository.file_transfers(&id).unwrap()[0].state,
+            FileTransferState::Downloaded
+        ));
+        std::fs::remove_file(original).unwrap();
+        resume_installation(
+            repository.clone(),
+            store,
+            id.clone(),
+            None,
+            "after-restart".into(),
+            || 600,
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            repository.read_job(&id).unwrap().unwrap().status,
+            JobStatus::Completed
+        );
+    });
+}
+
+#[test]
+fn shutdown_preserves_user_pause_and_acknowledges_user_cancellation() {
+    for target in [JobStatus::Paused, JobStatus::Cancelling] {
+        let fixture = Fixture::new(true);
+        let input = cache_input(&fixture);
+        fixture
+            .repository
+            .adopt_installation_input(&fixture.request.job_id, &input, 32)
+            .unwrap();
+        let id = fixture.request.job_id.clone();
+        let repository = Arc::new(fixture.repository);
+        let store = Arc::new(fixture.store);
+        let control = Arc::new(InstallationWorkerControl::default());
+        service_runtime().block_on(async {
+            let observed = repository.clone();
+            let observed_id = id.clone();
+            let stop = control.clone();
+            let _ = resume_installation_with_control(
+                repository.clone(),
+                store,
+                id.clone(),
+                None,
+                "user-control".into(),
+                move || {
+                    let job = observed.read_job(&observed_id).unwrap().unwrap();
+                    if job.status == JobStatus::Running
+                        && observed
+                            .file_transfers(&observed_id)
+                            .unwrap()
+                            .iter()
+                            .any(|f| matches!(f.state, FileTransferState::Downloaded))
+                    {
+                        observed
+                            .transition(&job.id, job.version, target, 500)
+                            .unwrap();
+                        stop.request_stop();
+                    }
+                    500
+                },
+                control,
+            )
+            .await;
+            assert_eq!(
+                repository.read_job(&id).unwrap().unwrap().status,
+                if target == JobStatus::Paused {
+                    JobStatus::Paused
+                } else {
+                    JobStatus::Cancelled
+                }
+            );
+        });
+    }
+}
+
+#[test]
+fn shutdown_during_credential_resolution_never_claims_the_queued_job() {
+    let fixture = Fixture::new(true);
+    let mut input = cache_input(&fixture);
+    input.source = InstallationSource::ModelScope {};
+    fixture
+        .repository
+        .adopt_installation_input(&fixture.request.job_id, &input, 32)
+        .unwrap();
+    let id = fixture.request.job_id.clone();
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    let (entered_tx, entered_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let release = Arc::new(std::sync::Mutex::new(release_rx));
+    service_runtime().block_on(async {
+        let service = InstallationService::start(
+            repository.clone(),
+            store,
+            Arc::new(move || {
+                entered_tx.send(()).unwrap();
+                release.lock().unwrap().recv().unwrap();
+                Ok(None)
+            }),
+            Arc::new(|| 500),
+            std::time::Duration::from_millis(20),
+        )
+        .unwrap();
+        tokio::task::spawn_blocking(move || entered_rx.recv().unwrap())
+            .await
+            .unwrap();
+        let mut shutdown = Box::pin(service.shutdown());
+        assert!(matches!(
+            futures::poll!(&mut shutdown),
+            std::task::Poll::Pending
+        ));
+        release_tx.send(()).unwrap();
+        shutdown.await.unwrap();
+        assert_eq!(repository.read_job(&id).unwrap().unwrap().version, 0);
+        assert_eq!(
+            repository.read_job(&id).unwrap().unwrap().status,
+            JobStatus::Queued
+        );
+    });
+}
+
+#[test]
+fn application_stays_dormant_for_empty_read_queries_and_reports_corrupt_storage() {
+    let temp = tempfile::tempdir().unwrap();
+    service_runtime().block_on(async {
+        let application = InstallationApplication::new(temp.path(), Arc::new(|| Ok(None)));
+        application.start_if_present().await.unwrap();
+        let result = application
+            .list_request(
+                lumina_sdk_types::custom_requests::ModelInstallationJobsListRequest {
+                    after_id: None,
+                    limit: 64,
+                },
+            )
+            .await
+            .unwrap();
+        assert!(result.jobs.is_empty());
+        assert!(!application.root().exists());
+        assert_eq!(application.state(), InstallationApplicationState::Dormant);
+        std::fs::create_dir_all(application.root()).unwrap();
+        std::fs::write(application.root().join("models.db"), b"corrupt SQLite file").unwrap();
+        assert!(application.start_if_present().await.is_err());
+        assert_eq!(application.state(), InstallationApplicationState::Failed);
+        assert!(application
+            .list_request(
+                lumina_sdk_types::custom_requests::ModelInstallationJobsListRequest {
+                    after_id: None,
+                    limit: 64
+                }
+            )
+            .await
+            .is_err());
+        assert_eq!(
+            std::fs::read(application.root().join("models.db")).unwrap(),
+            b"corrupt SQLite file"
+        );
+    });
+}
+
+#[test]
+fn application_startup_restores_existing_work_without_a_page_or_submit_call() {
+    let fixture = Fixture::with_layout(true, true);
+    let input = cache_input(&fixture);
+    let id = fixture.request.job_id.clone();
+    fixture
+        .repository
+        .adopt_installation_input(&id, &input, 32)
+        .unwrap();
+    drop(fixture.repository);
+    drop(fixture.store);
+    service_runtime().block_on(async {
+        let application = InstallationApplication::new(
+            &fixture.temp.path().join("data"),
+            Arc::new(|| panic!("Cache restore must not resolve credentials")),
+        );
+        application.start_if_present().await.unwrap();
+        let service = application.service().await.unwrap();
+        service.wait_ready().await.unwrap();
+        assert_eq!(
+            service.repository().read_job(&id).unwrap().unwrap().status,
+            JobStatus::Completed
+        );
+        let same = application.service().await.unwrap();
+        assert!(Arc::ptr_eq(&service, &same));
+        application.shutdown().await.unwrap();
+        assert_eq!(application.state(), InstallationApplicationState::Stopped);
+    });
+}
+
+#[test]
+fn service_controls_pause_queued_jobs_and_reject_stale_versions() {
+    let fixture = Fixture::new(true);
+    let mut input = cache_input(&fixture);
+    input.source = InstallationSource::ModelScope {};
+    fixture
+        .repository
+        .adopt_installation_input(&fixture.request.job_id, &input, 32)
+        .unwrap();
+    let id = fixture.request.job_id.clone();
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    service_runtime().block_on(async {
+        let service = InstallationService::start(
+            repository.clone(),
+            store,
+            Arc::new(|| anyhow::bail!("No unit credentials")),
+            Arc::new(|| 500),
+            std::time::Duration::from_millis(20),
+        )
+        .unwrap();
+        service.wait_ready().await.unwrap();
+        let paused = service
+            .control_job(&id, 0, InstallationJobAction::Pause)
+            .unwrap();
+        assert_eq!(paused.status, JobStatus::Paused);
+        assert!(service
+            .control_job(&id, 0, InstallationJobAction::Resume)
+            .is_err());
+        let queued = service
+            .control_job(&id, paused.version, InstallationJobAction::Resume)
+            .unwrap();
+        let cancelled = service
+            .control_job(&id, queued.version, InstallationJobAction::Cancel)
+            .unwrap();
+        assert_eq!(cancelled.status, JobStatus::Cancelled);
+        service.shutdown().await.unwrap();
+    });
+}
+
+#[test]
+fn service_submission_waits_for_initial_recovery_before_accepting_new_writes() {
+    let fixture = Fixture::new(true);
+    let input = cache_input(&fixture);
+    let id = fixture.request.job_id.clone();
+    fixture
+        .repository
+        .adopt_installation_input(&id, &input, 32)
+        .unwrap();
+    let accepted = acceptance(&fixture, "new-write");
+    let submission = InstallationSubmission {
+        idempotency_key: "after-startup".into(),
+        plan_id: accepted.plan_id,
+        plan_digest: accepted.plan_digest,
+        installation_id: "after-startup-installation".into(),
+    };
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    let (entered_tx, entered_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let release = std::sync::Mutex::new(release_rx);
+    let fired = std::sync::atomic::AtomicBool::new(false);
+    let observed = repository.clone();
+    let observed_id = id.clone();
+    let clock: InstallationClock = Arc::new(move || {
+        let job = observed.read_job(&observed_id).unwrap().unwrap();
+        if job.stage == LifecycleStage::Downloading
+            && !fired.swap(true, std::sync::atomic::Ordering::SeqCst)
+        {
+            entered_tx.send(()).unwrap();
+            release.lock().unwrap().recv().unwrap();
+        }
+        50
+    });
+    service_runtime().block_on(async {
+        let service = InstallationService::start(
+            repository.clone(),
+            store,
+            Arc::new(|| anyhow::bail!("No unit network credentials")),
+            clock,
+            std::time::Duration::from_millis(20),
+        )
+        .unwrap();
+        tokio::task::spawn_blocking(move || entered_rx.recv().unwrap())
+            .await
+            .unwrap();
+        let mut pending = Box::pin(service.submit(&submission));
+        assert!(matches!(
+            futures::poll!(&mut pending),
+            std::task::Poll::Pending
+        ));
+        assert_eq!(repository.list_jobs(None, 100).unwrap().len(), 1);
+        release_tx.send(()).unwrap();
+        let accepted = pending.await.unwrap();
+        assert_eq!(
+            repository.read_job(&id).unwrap().unwrap().status,
+            JobStatus::Completed
+        );
+        assert_eq!(accepted.status, JobStatus::Queued);
+        service.shutdown().await.unwrap();
+    });
 }

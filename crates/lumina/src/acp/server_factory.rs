@@ -17,6 +17,9 @@ pub struct AcpServerFactoryConfig {
 }
 
 pub struct AcpServer {
+    #[cfg(feature = "local-inference")]
+    local_installations:
+        OnceCell<Arc<crate::providers::local_inference::lifecycle::InstallationApplication>>,
     config: AcpServerFactoryConfig,
     scheduler: OnceCell<Arc<dyn SchedulerTrait>>,
     mcp_platform_service: Arc<OnceCell<Arc<crate::mcp_platform::McpPlatformService>>>,
@@ -26,6 +29,8 @@ pub struct AcpServer {
 impl AcpServer {
     pub fn new(config: AcpServerFactoryConfig) -> Self {
         Self {
+            #[cfg(feature = "local-inference")]
+            local_installations: OnceCell::new(),
             config,
             scheduler: OnceCell::new(),
             mcp_platform_service: Arc::new(OnceCell::new()),
@@ -34,6 +39,12 @@ impl AcpServer {
     }
 
     pub async fn shutdown(&self) {
+        #[cfg(feature = "local-inference")]
+        if let Some(host) = self.local_installations.get() {
+            if let Err(error) = host.shutdown().await {
+                tracing::error!(error=%error,"Model installation shutdown failed");
+            }
+        }
         if let Some(service) = self.trusted_mcp_platform_service.get() {
             service.shutdown_worker().await;
         } else if let Some(service) = self.mcp_platform_service.get() {
@@ -79,7 +90,25 @@ impl AcpServer {
                 })
             });
 
-        let agent = LuminaAcpAgent::new_with_trusted_mcp_platform_service_cell(
+        #[cfg(feature = "local-inference")]
+        let local_installations = Some(
+            self.local_installations
+                .get_or_init(|| async {
+                    Arc::new(
+                        crate::providers::local_inference::lifecycle::InstallationApplication::new(
+                            &self.config.data_dir,
+                            Arc::new(
+                                crate::providers::local_inference::hf_models::modelscope_token,
+                            ),
+                        ),
+                    )
+                })
+                .await
+                .clone(),
+        );
+        #[cfg(not(feature = "local-inference"))]
+        let local_installations = None;
+        let agent = LuminaAcpAgent::new_with_application_services(
             LuminaAcpAgentOptions {
                 provider_factory,
                 builtins: self.config.builtins.clone(),
@@ -93,6 +122,7 @@ impl AcpServer {
                 mcp_platform_service_cell: Some(self.mcp_platform_service.clone()),
             },
             Some(self.trusted_mcp_platform_service.clone()),
+            local_installations,
         )
         .await?;
         info!("Created new ACP agent");
@@ -114,6 +144,64 @@ mod tests {
             lumina_platform: LuminaPlatform::LuminaCli,
             additional_source_roots: Vec::new(),
         })
+    }
+
+    #[cfg(feature = "local-inference")]
+    #[tokio::test]
+    async fn model_installation_host_is_shared_and_empty_queries_stay_dormant() {
+        use crate::providers::local_inference::lifecycle::InstallationApplicationState;
+        use lumina_sdk_types::custom_requests::ModelInstallationJobsListRequest;
+
+        let directory = tempfile::tempdir().unwrap();
+        let server = test_server(&directory);
+        let first = server.create_agent().await.unwrap();
+        let second = server.create_agent().await.unwrap();
+        let host = first.test_local_installations();
+        assert!(Arc::ptr_eq(&host, &second.test_local_installations()));
+        assert!(Arc::ptr_eq(
+            &host,
+            server.local_installations.get().unwrap()
+        ));
+        let response = host
+            .list_request(ModelInstallationJobsListRequest {
+                after_id: None,
+                limit: 64,
+            })
+            .await
+            .unwrap();
+        assert!(response.jobs.is_empty());
+        assert_eq!(host.state(), InstallationApplicationState::Dormant);
+        assert!(!host.root().exists());
+        server.shutdown().await;
+        assert!(!host.root().exists());
+    }
+
+    #[cfg(feature = "local-inference")]
+    #[tokio::test]
+    async fn corrupt_model_storage_does_not_break_agent_creation_or_replace_the_database() {
+        use crate::providers::local_inference::lifecycle::InstallationApplicationState;
+        use lumina_sdk_types::custom_requests::ModelInstallationJobsListRequest;
+
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path().join("data/model-lifecycle");
+        std::fs::create_dir_all(&root).unwrap();
+        let database = root.join("models.db");
+        let original = b"corrupt installation database";
+        std::fs::write(&database, original).unwrap();
+        let server = test_server(&directory);
+        let agent = server.create_agent().await.unwrap();
+        let host = agent.test_local_installations();
+        assert_eq!(host.state(), InstallationApplicationState::Failed);
+        assert!(host
+            .list_request(ModelInstallationJobsListRequest {
+                after_id: None,
+                limit: 64,
+            })
+            .await
+            .is_err());
+        let _ordinary_non_model_dependency = agent.permission_manager();
+        assert_eq!(std::fs::read(&database).unwrap(), original);
+        server.shutdown().await;
     }
 
     #[tokio::test]

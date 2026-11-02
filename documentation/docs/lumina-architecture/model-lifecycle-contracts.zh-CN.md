@@ -189,6 +189,20 @@ Agent 的规划模型仅从通过所需文本和工具能力准入的模型中�
 
 错误统一包含 code、stage、messageKey、messageArgs、retryable、recoverable、jobId、causeId 和不含凭据的诊断引用。错误族包括 SOURCE_NOT_FOUND、SOURCE_AUTH_REQUIRED、SOURCE_FORBIDDEN、SOURCE_TIMEOUT、SOURCE_RATE_LIMITED、SOURCE_PARTIAL_FAILURE、REVISION_UNRESOLVED、REVISION_CHANGED、NO_GGUF、GGUF_INVALID、FORMAT_FORBIDDEN、SHARD_INCOMPLETE、DEPENDENCY_MISSING、DEPENDENCY_INCOMPATIBLE、DEPENDENCY_UNVERIFIED、RUNTIME_UNSUPPORTED、HARDWARE_INSUFFICIENT、DISK_INSUFFICIENT、HASH_MISMATCH、DESTINATION_LOCKED、PLAN_STALE、STATE_CONFLICT、DOWNLOAD_FAILED、INSTALL_FAILED、START_FAILED、VALIDATION_FAILED、CANCELLED。无结果是业务结果，不伪装 HTTP 错误，也不吞掉搜索部分失败。
 
+### 当前应用服务接入范围
+
+本批接入实现位于 `lifecycle/application.rs`、`service.rs` 和 `api.rs`，请求类型位于 `lumina-sdk-types::custom_requests::model_lifecycle`。以下为当前增量的确切接口，不替代上表完整目标；验证和交付状态以实施进度及对应证据为准。
+
+| 当前 ACP 方法，统一前缀 `_lumina/unstable/local-inference/` | 输入及结果 | CLI 对应入口 |
+| --- | --- | --- |
+| `installations/submit` | planId、planDigest、installationId、idempotencyKey；服务端原子生成 jobId 和 versionId，重放相同幂等请求返回原身份 | `local-models install-plan` |
+| `installations/jobs/list` | afterId、limit；返回任务状态版本、阶段、generation、分页游标及应用服务状态；查询空命名空间不创建安装数据库或启动下载 | `local-models jobs` |
+| `installations/jobs/control` | jobId、expectedVersion、action；以 CAS 执行 pause/resume/cancel/retry，过期版本明确拒绝 | `local-models job-control` |
+
+`local-models wait-job` 等待已有任务，`local-models installation-worker` 运行同一个应用服务。ACP 工厂内的 Agent 共用安装服务；ACP stdio 启动、工厂创建 Agent 及 CLI 长会话入口会扫描已有命名空间，未完成初次恢复扫描时新提交等待。HTTP 服务监听后、首个客户端连接前的主动恢复仍需补齐。正常关闭保留网络检查点，将当前 worker 所有的执行任务重新排队；用户暂停或取消的意图优先保留。当前 worker 每实例顺序执行；跨进程全局并发和任务/文件/Range 三层预算、空间预留、持久化退避仍待实现。
+
+控制操作的幂等回执、结构化失败详情、文件进度和游标事件尚未覆盖上表完整契约；旧 spec 下载及其他历史入口也尚未全部转发到新服务。当前 ACP DTO 不暴露原始下载 URL、令牌、调用方指定的受管根目录或内部启动参数。后续 SDK、界面和旧入口迁移继续执行完整 ML-40 范围。
+
 ## 界面和状态契约
 
 面向 Windows Electron 桌面，复用 React、现有主题 token、Button、Dialog、Tabs 和国际化，不另建视觉系统。属于跨模块复杂业务界面；原生文件路径和进程信息经后端适配，渲染端不直接访问数据库、文件或启动命令。

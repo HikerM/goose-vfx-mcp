@@ -1,0 +1,91 @@
+{
+  "status": "FAIL",
+  "startedAt": "2026-11-02T06:04:41.543720+00:00",
+  "scope": "Actual application-owned installation service through archived CLI ACP stdio: typed submission, pause, stale control rejection, restart preserving pause, graceful shutdown preserving a network checkpoint, and automatic startup recovery without an installation request. Not full M2 concurrency, registry migration, Runtime or capability READY acceptance.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\177fc2b900acbc3d9601ffd57457398482e81d43b4dab101251afd08c7c5b8e9\\lumina.exe",
+  "binarySha256": "177fc2b900acbc3d9601ffd57457398482e81d43b4dab101251afd08c7c5b8e9",
+  "planProducer": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\b72f7cc6a6bc828e6a49dc8443e11f60c1bcf3c1add2662d50958d0437f4e4f0\\cache_recorded_component.exe",
+  "planProducerSha256": "b72f7cc6a6bc828e6a49dc8443e11f60c1bcf3c1add2662d50958d0437f4e4f0",
+  "source": {
+    "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+    "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+    "file": "Qwen3.5-0.8B-Q8_0.gguf",
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "sizeBytes": 833592736,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "elapsedSeconds": 84.03100000001723,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "jobId": "job:72cda702-2af1-497b-8f6b-20801ed30e22",
+  "versionId": "version:4fbf796e-e2e1-4ea2-a19c-3ddb9090dd43",
+  "submission": {
+    "planId": "plan:4bf34a25-12e6-4e25-ac6e-32ed06957f85",
+    "planDigest": "b1c36fb7f52a1ba2bf240bd7d160dd92555a91c2c8e71823123feec488796d78",
+    "installationId": "m2-application-qwen35-08b",
+    "idempotencyKey": "m2-application-startup-r2"
+  },
+  "failure": "Traceback (most recent call last):\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-application-startup-r2.py\", line 203, in <module>\n    assert query('SELECT status,version FROM lifecycle_jobs WHERE id=?', (legacy['id'],))[0] == ('queued', 0)\nAssertionError\n",
+  "finishedAt": "2026-11-02T06:09:13.599067+00:00",
+  "verifierSha256": "5ddf3d2638806b4d40053818d9bd71616acd5832740f6e40136104bb171a5e58",
+  "artifacts": {
+    "acp-1.requests.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-1.requests.json",
+      "sha256": "97e8f002bab8dd749402632f3d23b501b9204b9a0553262c962de5aca373b887"
+    },
+    "acp-1.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-1.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "acp-1.stdout.jsonl": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-1.stdout.jsonl",
+      "sha256": "a986f18d67776acb25a9bd3732ad031ba4e217bc58fd0934bc913cdac7212a12"
+    },
+    "acp-2.requests.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-2.requests.json",
+      "sha256": "ecb2335b189a9896475a7bccc8b920214f830909eec56e9b7dceb3045cec7d0d"
+    },
+    "acp-2.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-2.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "acp-2.stdout.jsonl": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-2.stdout.jsonl",
+      "sha256": "a2bbb3da9127e186e638ad0c041ae1e12f459c52505dddf7f0a76316a832db14"
+    },
+    "acp-3.requests.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-3.requests.json",
+      "sha256": "67696431f827818e34bb134facd3833a18ab6f9f4a2cc292f6fde7209d7d3c8a"
+    },
+    "acp-3.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-3.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "acp-3.stdout.jsonl": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\acp-3.stdout.jsonl",
+      "sha256": "f5ce45d8f646a3d14139ca9804dd500df8f62b010f2dd2d7a9bd4cb6fb25f7cd"
+    },
+    "graceful-shutdown.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\graceful-shutdown.json",
+      "sha256": "90f9ada42f11049473f1299afcd469fbddf75c23946625764e455263a2d97e26"
+    },
+    "paused.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\paused.json",
+      "sha256": "6e4a2cedfd0381b66f2d6440b86e9c96019d22e4e4cad5155f66e4b08151d8f4"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r2\\prepare.stdout.json",
+      "sha256": "3e9254851038e1fa0c60c3ab68bda3ac4ec462b2a17c13a01a27b47b1bbb0fc6"
+    }
+  }
+}

@@ -284,8 +284,33 @@ pub async fn install_from_modelscope<F>(
 where
     F: Fn() -> i64 + Send + 'static,
 {
+    install_from_modelscope_controlled(
+        repository,
+        store,
+        request,
+        token,
+        worker_name,
+        clock,
+        Arc::new(InstallationWorkerControl::default()),
+    )
+    .await
+}
+
+pub(crate) async fn install_from_modelscope_controlled<F>(
+    repository: Arc<LifecycleRepository>,
+    store: Arc<InstallationStore>,
+    request: ModelScopeInstallRequest,
+    token: Option<String>,
+    worker_name: String,
+    clock: F,
+    control: Arc<InstallationWorkerControl>,
+) -> Result<InstalledVersion>
+where
+    F: Fn() -> i64 + Send + 'static,
+{
     let runtime = tokio::runtime::Handle::current();
     tokio::task::spawn_blocking(move || {
+        control.checkpoint()?;
         ensure!(
             !request.installation_id.trim().is_empty() && !request.version_id.trim().is_empty(),
             "Network installation has no installation or version identity"
@@ -341,6 +366,7 @@ where
             store: &store,
             lease,
             clock,
+            control,
         };
         let result = runtime.block_on(execute(&execution, &request, plan, &headers));
         if result.is_err() {

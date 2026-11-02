@@ -20,6 +20,7 @@ activities:
   - Test delegate tool for task delegation (sync and async)
   - Test error boundaries including nested delegation prevention
   - Validate frozen-plan cache installation, checkpoint recovery, cancellation, and original-file ownership
+  - Validate installation application startup recovery, durable task controls, and graceful worker shutdown
   - Generate comprehensive test report
 
 parameters:
@@ -172,6 +173,8 @@ prompt: |
   Explain that these cover cache installation and network-worker preflight, cancellation,
   transfer locking, completed replay, failed-file checkpoint recovery, atomic durable inputs,
   database reopen recovery, bounded recovery pages and legacy input adoption boundaries,
+  application startup recovery, startup submission barriers, background job discovery,
+  versioned pause/resume/cancel controls and checkpoint-preserving graceful shutdown,
   while full network installation and Runtime readiness need their separate acceptance evidence.
   {% elif test_phases == "model-lifecycle" %}
   Execute the model lifecycle checks now using your developer shell tool. Your first action

@@ -1,0 +1,56 @@
+{
+  "status": "FAIL",
+  "startedAt": "2026-11-02T05:52:35.142708+00:00",
+  "scope": "Actual application-owned installation service through archived CLI ACP stdio: typed submission, pause, stale control rejection, restart preserving pause, graceful shutdown preserving a network checkpoint, and automatic startup recovery without an installation request. Not full M2 concurrency, registry migration, Runtime or capability READY acceptance.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r1\\0709e09c917150ebb3e3160ff39a0b0b6b9f72e008182bdc5ae141cf38db7a98\\lumina.exe",
+  "binarySha256": "0709e09c917150ebb3e3160ff39a0b0b6b9f72e008182bdc5ae141cf38db7a98",
+  "planProducer": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r1\\b72f7cc6a6bc828e6a49dc8443e11f60c1bcf3c1add2662d50958d0437f4e4f0\\cache_recorded_component.exe",
+  "planProducerSha256": "b72f7cc6a6bc828e6a49dc8443e11f60c1bcf3c1add2662d50958d0437f4e4f0",
+  "source": {
+    "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+    "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+    "file": "Qwen3.5-0.8B-Q8_0.gguf",
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "sizeBytes": 833592736,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "elapsedSeconds": 84.03100000001723,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "jobId": "job:32e354e4-6ede-42c1-809a-4f8592b820e0",
+  "versionId": "version:5fe47098-5f41-49f2-808c-973b289da826",
+  "submission": {
+    "planId": "plan:d52f85a2-567d-481b-9f57-54556cb226aa",
+    "planDigest": "529a5c82dc0b75389c40830e2b98eabbd22fb30eee46f26e7ec5dcb4b828c6e8",
+    "installationId": "m2-application-qwen35-08b",
+    "idempotencyKey": "m2-application-startup-r1"
+  },
+  "failure": "Traceback (most recent call last):\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-application-startup-r1.py\", line 148, in <module>\n    current.stop()\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-application-startup-r1.py\", line 114, in stop\n    result = self.process.wait(timeout=40)\n  File \"C:\\Python310\\lib\\subprocess.py\", line 1209, in wait\n    return self._wait(timeout=timeout)\n  File \"C:\\Python310\\lib\\subprocess.py\", line 1509, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\m2-application-startup-20261102-r1\\\\0709e09c917150ebb3e3160ff39a0b0b6b9f72e008182bdc5ae141cf38db7a98\\\\lumina.exe', 'acp']' timed out after 40 seconds\n",
+  "cleanupFailure": "Traceback (most recent call last):\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-application-startup-r1.py\", line 148, in <module>\n    current.stop()\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-application-startup-r1.py\", line 114, in stop\n    result = self.process.wait(timeout=40)\n  File \"C:\\Python310\\lib\\subprocess.py\", line 1209, in wait\n    return self._wait(timeout=timeout)\n  File \"C:\\Python310\\lib\\subprocess.py\", line 1509, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\m2-application-startup-20261102-r1\\\\0709e09c917150ebb3e3160ff39a0b0b6b9f72e008182bdc5ae141cf38db7a98\\\\lumina.exe', 'acp']' timed out after 40 seconds\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-application-startup-r1.py\", line 231, in <module>\n    current.stop()\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-application-startup-r1.py\", line 114, in stop\n    result = self.process.wait(timeout=40)\n  File \"C:\\Python310\\lib\\subprocess.py\", line 1209, in wait\n    return self._wait(timeout=timeout)\n  File \"C:\\Python310\\lib\\subprocess.py\", line 1509, in _wait\n    raise TimeoutExpired(self.args, timeout)\nsubprocess.TimeoutExpired: Command '['D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\m2-application-startup-20261102-r1\\\\0709e09c917150ebb3e3160ff39a0b0b6b9f72e008182bdc5ae141cf38db7a98\\\\lumina.exe', 'acp']' timed out after 40 seconds\n",
+  "finishedAt": "2026-11-02T05:54:26.909728+00:00",
+  "verifierSha256": "f1a78d147f9f2a0b7a5aec0b7ac2b5eb7e3175be72f6128e2b071af77a01ca75",
+  "artifacts": {
+    "acp-1.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r1\\acp-1.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "acp-1.stdout.jsonl": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r1\\acp-1.stdout.jsonl",
+      "sha256": "41d2a7f1430152355d0c4d321667326f198d9083eae16cb878813c4934662d30"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r1\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-application-startup-20261102-r1\\prepare.stdout.json",
+      "sha256": "ee2fbbe1c41e2c9ca74509b7e1e81ffec5c9cfd7a08d731ba2ec39bed3b532b0"
+    }
+  }
+}
