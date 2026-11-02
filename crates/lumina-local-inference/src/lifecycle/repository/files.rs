@@ -255,6 +255,36 @@ impl LifecycleRepository {
         })
     }
 
+    pub fn resume_failed_file(
+        &self,
+        lease: &WorkerLease,
+        artifact_id: &str,
+        expected_version: u64,
+        now: i64,
+    ) -> Result<FileTransferRecord> {
+        self.update_file(lease, artifact_id, expected_version, now, |record, job| {
+            ensure!(
+                job.stage == LifecycleStage::Downloading,
+                "File retries require the download stage"
+            );
+            let FileTransferState::Failed { code } = record.state else {
+                anyhow::bail!("File is not awaiting retry")
+            };
+            ensure!(
+                code != LifecycleErrorCode::HashMismatch,
+                "Hash mismatch requires an explicit full restart"
+            );
+            record.state = if record.checkpoint.completed_bytes == record.expected_bytes {
+                FileTransferState::Downloaded
+            } else if record.checkpoint.completed_bytes == 0 {
+                FileTransferState::Pending
+            } else {
+                FileTransferState::Downloading
+            };
+            Ok(())
+        })
+    }
+
     pub fn fail_file(
         &self,
         lease: &WorkerLease,

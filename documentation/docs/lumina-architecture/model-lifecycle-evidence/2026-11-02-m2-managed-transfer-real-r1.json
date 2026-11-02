@@ -1,0 +1,38 @@
+{
+  "startedAt": "2026-11-02T03:05:55.986189+00:00",
+  "status": "PASS",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-managed-transfer-real-20261102-r1\\01606f52d58cc6d6e47f844b6e5250bca4c83920a78d58c7babb62a529b0156b\\probe_managed_transfer.exe",
+  "binarySha256": "01606f52d58cc6d6e47f844b6e5250bca4c83920a78d58c7babb62a529b0156b",
+  "sourceRecord": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf.source-verification.json",
+  "sourceRecordSha256": "612444ab686b052767acc43dff2242efe325c7b8928a2e16e4141f63d8ec3f1f",
+  "scope": "Actual fixed-source managed transport probe, not an installation or capability readiness acceptance",
+  "exitCode": 0,
+  "finishedAt": "2026-11-02T03:07:13.756184+00:00",
+  "stdoutPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-managed-transfer-real-20261102-r1\\stdout.json",
+  "stderrPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-managed-transfer-real-20261102-r1\\stderr.log",
+  "stdoutSha256": "31e9505cab86fc83925d850eb973b4ce705f233a6589f03cf0d6240933023d92",
+  "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "result": {
+    "status": "PASS_TRANSFER_PROBE_NOT_INSTALL",
+    "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+    "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+    "file": "Qwen3.5-0.8B-Q8_0.gguf",
+    "first_range": {
+      "bytes": 65536,
+      "sha256": "54314977922fa656477a89addd335c719651da41322bb6376ad93dfaa00d0494",
+      "strong_etag": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+    },
+    "resume": {
+      "status": "PASS",
+      "start": 65536,
+      "bytes": 65536,
+      "sha256": "de70f63f8675a00955782dbd9a43521634a57241bf10b3a6d5735d274777e253"
+    },
+    "complete_stream": {
+      "bytes": 833592736,
+      "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+    },
+    "original_source_unchanged": true,
+    "scope": "Actual managed transport range and complete stream only; no disk download, job, installation or Runtime READY capability was created"
+  }
+}

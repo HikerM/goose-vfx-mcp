@@ -1,0 +1,97 @@
+{
+  "observedAt": "2026-11-02T03:27:54.266245+00:00",
+  "status": "PASS_INDEPENDENT_AUDIT",
+  "scope": "Actual public fixed-source network installation, forced process termination during download, expired-lease resume, complete verification, atomic registration and completed replay. No startup scheduler, product entry, Runtime launch or capability READY acceptance.",
+  "originalVerifierFailure": "D:\\Project\\goose\\documentation\\docs\\lumina-architecture\\model-lifecycle-evidence\\2026-11-02-m2-network-install-real-r1-verifier-failure.json",
+  "workerBinary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\83a14b0a3e611cb0a4063d099d6981ddde8cd4f11257d8521498dc2813eb948c\\install_modelscope_plan.exe",
+  "workerBinarySha256": "83a14b0a3e611cb0a4063d099d6981ddde8cd4f11257d8521498dc2813eb948c",
+  "request": {
+    "job_id": "job:80e651dc-afc5-408f-a7a4-45a1dc34ec2a",
+    "installation_id": "m2-baseline-qwen35-0.8b",
+    "version_id": "m2-baseline-qwen35-0.8b-network-r3"
+  },
+  "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+  "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+  "sizeBytes": 833592736,
+  "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+  "interruptedCheckpointBytes": 8395823,
+  "resumeValidator": {
+    "kind": "strong_etag",
+    "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+  },
+  "recoveredWithoutRestart": true,
+  "workerGenerationBefore": 1,
+  "workerGenerationAfterReclaim": 2,
+  "completedFencingGeneration": 3,
+  "completedReplayVerified": true,
+  "installedVersions": 3,
+  "physicalBlobs": 1,
+  "blobReferences": 3,
+  "oldActiveVersionUnchanged": true,
+  "oldDatabaseVersionRowsUnchanged": true,
+  "allInstalledFilesMatchTheirImmutableManifests": true,
+  "sourceUnchanged": true,
+  "capabilityEvidenceCount": 0,
+  "physicalVersionFiles": [
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed\\installations\\11e414ae7e8c0933cb796999c6a71a922b9bfb8dafc73d5236df21f119a444c1\\9d7cbf49181c0255c2e91742368e4319182c96401cc076413bae77b5351e24f6\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+      "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+      "readonly": true,
+      "links": 1,
+      "fileIdentity": 844424937477258
+    },
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed\\installations\\11e414ae7e8c0933cb796999c6a71a922b9bfb8dafc73d5236df21f119a444c1\\a3bf3169bfe8f79ec7d28036ceb9dd77610aa65d6613a31f18ee2c7dd732f8be\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+      "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+      "readonly": true,
+      "links": 1,
+      "fileIdentity": 1970324844019873
+    },
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed\\installations\\11e414ae7e8c0933cb796999c6a71a922b9bfb8dafc73d5236df21f119a444c1\\207d1eeefd7f465f3b629a2cacc4c4caa96b2991b5a309ebf0fef40c372e104b\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+      "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+      "readonly": true,
+      "links": 1,
+      "fileIdentity": 1970324844175062
+    }
+  ],
+  "artifacts": {
+    "before.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\before.json",
+      "sha256": "3f64eac74dad7408013e4f0e1fd6e50a3de33c187685c19b451cdbabda58e103"
+    },
+    "forced-termination.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\forced-termination.json",
+      "sha256": "546300d54997f5e31e3b4ab6969bb868530dc508c8bdf3427723db734e703e77"
+    },
+    "interrupted.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\interrupted.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "interrupted.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\interrupted.stdout.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\prepare.stdout.json",
+      "sha256": "b4691e0a9366212d8f0a2325d2c2fa12b493dd997bf89ac4cb4f46460d69d179"
+    },
+    "recovered.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\recovered.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "recovered.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\recovered.stdout.json",
+      "sha256": "f3b9084d6aabfcd3b2d62fc6066744a858970dde012456c9d59961de9268ede6"
+    },
+    "request.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\request.json",
+      "sha256": "bb6422e147307f5aec0e44def88feded799ef6a29c8bf514ae2e1b66147fcd1c"
+    }
+  },
+  "auditScriptSha256": "6d182843a8c1a9d179e8e41ad430f2ad3b7071b30fc6bd47af767e81fab5d3fd"
+}

@@ -291,7 +291,7 @@ impl ModelScopeProvider {
     }
 }
 
-fn scoped_auth_headers(token: Option<&str>) -> Result<HeaderMap> {
+pub(crate) fn scoped_auth_headers(token: Option<&str>) -> Result<HeaderMap> {
     let mut headers = HeaderMap::new();
     if let Some(token) = token.map(str::trim).filter(|token| !token.is_empty()) {
         let invalid = || ModelSourceError {
@@ -321,6 +321,23 @@ fn repository_url(repository: &ModelScopeRepository, suffix: &str) -> Result<req
         "{API_BASE}/{}/{suffix}",
         repository.as_str()
     ))?)
+}
+
+pub(crate) fn pinned_artifact_url(
+    artifact: &Artifact,
+    snapshot: &RepositorySnapshot,
+) -> Result<reqwest::Url> {
+    artifact.validate()?;
+    snapshot.validate()?;
+    ensure!(
+        artifact.snapshot_id == snapshot.content_digest()?.as_str(),
+        "Artifact belongs to a different immutable source snapshot"
+    );
+    let mut url = repository_url(&snapshot.repository, "repo")?;
+    url.query_pairs_mut()
+        .append_pair("Revision", &snapshot.resolved_revision)
+        .append_pair("FilePath", artifact.path.as_str());
+    Ok(url)
 }
 
 fn status_error(status: u16) -> ModelSourceError {

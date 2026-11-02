@@ -5,6 +5,7 @@ use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 struct Fixture {
     temp: tempfile::TempDir,
@@ -828,4 +829,195 @@ fn durable_job_pages_find_queued_and_expired_workers_without_resuming_paused_or_
     );
     assert!(reopened.list_jobs(None, 0).is_err());
     assert!(reopened.recoverable_jobs(500, None, 1001).is_err());
+}
+
+fn network_request(cache: &CacheInstallRequest) -> ModelScopeInstallRequest {
+    ModelScopeInstallRequest {
+        job_id: cache.job_id.clone(),
+        installation_id: cache.installation_id.clone(),
+        version_id: cache.version_id.clone(),
+    }
+}
+
+fn network_run(
+    repository: Arc<LifecycleRepository>,
+    store: Arc<InstallationStore>,
+    request: ModelScopeInstallRequest,
+    token: Option<String>,
+) -> anyhow::Result<InstalledVersion> {
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(install_from_modelscope(
+            repository,
+            store,
+            request,
+            token,
+            "network-test-worker".into(),
+            || 500,
+        ))
+}
+
+#[test]
+fn network_preflight_rejects_invalid_credentials_before_claiming_or_contacting_source() {
+    let fixture = Fixture::new(true);
+    let request = network_request(&fixture.request);
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    let error = network_run(
+        repository.clone(),
+        store,
+        request.clone(),
+        Some("invalid\ntoken".into()),
+    )
+    .unwrap_err();
+    assert_eq!(
+        error.downcast_ref::<ModelSourceError>().unwrap().code,
+        LifecycleErrorCode::SourceAuthRequired
+    );
+    let job = repository.read_job(&request.job_id).unwrap().unwrap();
+    assert_eq!(job.status, JobStatus::Queued);
+    assert_eq!(job.version, 0);
+    assert!(repository.active_installations().unwrap().is_empty());
+}
+
+#[test]
+fn network_worker_acknowledges_cancelled_recovery_without_network_io() {
+    let fixture = Fixture::new(true);
+    let request = network_request(&fixture.request);
+    fixture
+        .repository
+        .claim(&request.job_id, 0, "stopped", 32, 120)
+        .unwrap();
+    let job = fixture
+        .repository
+        .read_job(&request.job_id)
+        .unwrap()
+        .unwrap();
+    fixture
+        .repository
+        .transition(&job.id, job.version, JobStatus::Cancelling, 33)
+        .unwrap();
+    let repository = Arc::new(fixture.repository);
+    let error = network_run(
+        repository.clone(),
+        Arc::new(fixture.store),
+        request.clone(),
+        None,
+    )
+    .unwrap_err();
+    assert_eq!(
+        error.downcast_ref::<ModelSourceError>().unwrap().code,
+        LifecycleErrorCode::Cancelled
+    );
+    assert_eq!(
+        repository
+            .read_job(&request.job_id)
+            .unwrap()
+            .unwrap()
+            .status,
+        JobStatus::Cancelled
+    );
+    assert!(repository.active_installations().unwrap().is_empty());
+}
+
+#[test]
+fn network_completed_replay_uses_the_same_manifest_identity_and_ownership_checks() {
+    let fixture = Fixture::new(true);
+    let installed = fixture.run(40).unwrap();
+    let request = network_request(&fixture.request);
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    let events = repository.events(&request.job_id, 0, 100).unwrap();
+    assert_eq!(
+        network_run(repository.clone(), store.clone(), request.clone(), None).unwrap(),
+        installed
+    );
+    assert_eq!(repository.events(&request.job_id, 0, 100).unwrap(), events);
+    let mut wrong = request.clone();
+    wrong.version_id = "other-version".into();
+    assert!(network_run(repository.clone(), store, wrong, None).is_err());
+    assert!(repository
+        .evidence(&request.installation_id)
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn network_worker_respects_the_same_transfer_writer_lock_before_claiming() {
+    let fixture = Fixture::new(true);
+    let request = network_request(&fixture.request);
+    let path = fixture.store.root().join("locks/transfers").join(format!(
+        "{}.lock",
+        Sha256Digest::of_bytes(request.job_id.as_bytes()).as_str()
+    ));
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let lock = std::fs::File::create(path).unwrap();
+    lock.try_lock_exclusive().unwrap();
+    let repository = Arc::new(fixture.repository);
+    assert!(network_run(
+        repository.clone(),
+        Arc::new(fixture.store),
+        request.clone(),
+        None
+    )
+    .is_err());
+    assert_eq!(
+        repository
+            .read_job(&request.job_id)
+            .unwrap()
+            .unwrap()
+            .version,
+        0
+    );
+}
+
+#[test]
+fn transient_file_retry_preserves_checkpoint_while_hash_mismatch_requires_restart() {
+    for code in [
+        LifecycleErrorCode::SourceTimeout,
+        LifecycleErrorCode::HashMismatch,
+    ] {
+        let fixture = Fixture::new(true);
+        fixture.prepare_partial(&fixture.bytes[..512]);
+        let job = fixture
+            .repository
+            .read_job(&fixture.request.job_id)
+            .unwrap()
+            .unwrap();
+        let lease = fixture
+            .repository
+            .claim(&job.id, job.version, "retry-worker", 40, 120)
+            .unwrap();
+        let file = fixture
+            .repository
+            .file_transfers(&job.id)
+            .unwrap()
+            .remove(0);
+        let failed = fixture
+            .repository
+            .fail_file(&lease, &file.artifact_id, file.version, code, 41)
+            .unwrap();
+        let result =
+            fixture
+                .repository
+                .resume_failed_file(&lease, &file.artifact_id, failed.version, 42);
+        if code == LifecycleErrorCode::HashMismatch {
+            assert!(result.is_err());
+            assert_eq!(
+                fixture
+                    .repository
+                    .read_file_transfer(&job.id, &file.artifact_id)
+                    .unwrap()
+                    .unwrap(),
+                failed
+            );
+        } else {
+            let resumed = result.unwrap();
+            assert_eq!(resumed.state, FileTransferState::Downloading);
+            assert_eq!(resumed.checkpoint, file.checkpoint);
+        }
+    }
 }

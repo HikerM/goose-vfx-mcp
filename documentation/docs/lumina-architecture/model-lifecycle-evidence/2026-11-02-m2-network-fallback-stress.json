@@ -1,0 +1,189 @@
+{
+  "status": "PASS",
+  "observedAt": "2026-11-02T03:28:17.740205+00:00",
+  "scope": "30 actual executions of the legacy no-Range fallback test using exact request sequence plus final byte equality, preserving the earlier timing-based assertion failure. No production transport change.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\76af544b29338311e4c6af2b90e29c49b6718e040d444e86dcac1ddd270e3ebc\\lumina_download_manager-561dadc4701c55db.exe",
+  "binarySha256": "76af544b29338311e4c6af2b90e29c49b6718e040d444e86dcac1ddd270e3ebc",
+  "iterations": [
+    {
+      "iteration": 1,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\01.log",
+      "sha256": "e7684d066e997e76e2dab9f374d41eec9b5ba5904e14d821c1fd9dc055c4089f"
+    },
+    {
+      "iteration": 2,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\02.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 3,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\03.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 4,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\04.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 5,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\05.log",
+      "sha256": "e7684d066e997e76e2dab9f374d41eec9b5ba5904e14d821c1fd9dc055c4089f"
+    },
+    {
+      "iteration": 6,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\06.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 7,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\07.log",
+      "sha256": "e7684d066e997e76e2dab9f374d41eec9b5ba5904e14d821c1fd9dc055c4089f"
+    },
+    {
+      "iteration": 8,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\08.log",
+      "sha256": "e7684d066e997e76e2dab9f374d41eec9b5ba5904e14d821c1fd9dc055c4089f"
+    },
+    {
+      "iteration": 9,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\09.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 10,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\10.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 11,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\11.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 12,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\12.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 13,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\13.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 14,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\14.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 15,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\15.log",
+      "sha256": "e7684d066e997e76e2dab9f374d41eec9b5ba5904e14d821c1fd9dc055c4089f"
+    },
+    {
+      "iteration": 16,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\16.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 17,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\17.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 18,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\18.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 19,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\19.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 20,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\20.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 21,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\21.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 22,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\22.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 23,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\23.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 24,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\24.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 25,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\25.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 26,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\26.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 27,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\27.log",
+      "sha256": "27f1175e1fdaa64f3b0ad7d09f8b945735dd17b24a4661e6e6eb4a91e827a9ce"
+    },
+    {
+      "iteration": 28,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\28.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 29,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\29.log",
+      "sha256": "0fad85475bdfc97911e490097636b10025e8d8ddf60c9e98a187525f93141a7e"
+    },
+    {
+      "iteration": 30,
+      "exitCode": 0,
+      "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-fallback-stress-r1\\30.log",
+      "sha256": "f781db2627f1a0bea4d26792eaab840cbc4c028bb71e50ce7cff0ef8634bf222"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "status": "FAIL_VERIFIER_ASSERTION",
+  "observedAt": "2026-11-02T03:27:10.414067+00:00",
+  "verifier": "D:\\Project\\goose\\target\\lifecycle-validation\\verify-network-install-real-r1.py",
+  "verifierSha256": "30be33945fc02854d3c23fad2d9cf6b8837b8e40eb015149e29d9156160fc5dc",
+  "failedExpression": "output['job_after']['generation'] == killed_job['generation'] + 1",
+  "expectedByOriginalVerifier": 2,
+  "actualTerminalGeneration": 3,
+  "reason": "Original verifier omitted the existing final registration fencing increment. Separate audit verifies the exact running and terminal generations and actual outputs without rerunning or replacing this attempt.",
+  "rawResult": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-network-install-real-20261102-r1\\recovered.stdout.json",
+  "rawResultSha256": "f3b9084d6aabfcd3b2d62fc6066744a858970dde012456c9d59961de9268ede6"
+}

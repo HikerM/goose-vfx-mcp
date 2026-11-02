@@ -11,7 +11,7 @@ sidebar_position: 14
 
 M0 技术基线提交为 `7aa6cfbe9fad627faf705a389b24369a3c2a5daa`，已推送到 `origin/testing` 并核对远程 SHA 完全一致；提交后工作区干净。当前继续实施 M1，不以 M0 提交作为整体任务结束。
 
-M1 已验证的来源、观察存储和冻结计划基础增量提交为 `8da22cf34f1b89c846d93cbbd45b95b439040e61`，已推送并通过 `git ls-remote` 核对远端 SHA；见[推送记录](./model-lifecycle-evidence/2026-11-01-m1-foundation-push.json)。M1 整体仍在实施。M2 已在同一数据库和受管目录中实际安装两个 0.8B GGUF 版本，完成内容复用和旧活动版本保留复核；最新 CLI 构建及固定入口的实际新配方验收已通过，该增量正进行提交和推送复核。
+M1 已验证的来源、观察存储和冻结计划基础增量提交为 `8da22cf34f1b89c846d93cbbd45b95b439040e61`，已推送并通过 `git ls-remote` 核对远端 SHA；见[推送记录](./model-lifecycle-evidence/2026-11-01-m1-foundation-push.json)。M1 整体仍在实施。M2 缓存安装基础增量 `24117f59469f34af8e32de54c7c8919880b5f850` 已推送到 `testing`，在同一数据库和受管目录中完成两个 0.8B GGUF 版本的实际安装、内容复用及旧活动版本保留复核。后续网络安装增量已完成局部回归、真实故障恢复和最新 CLI 实际配方验证，具体提交与远端 SHA 以 Git 记录为准；M2 整体仍未完成。
 
 ## 阶段状态
 
@@ -19,7 +19,7 @@ M1 已验证的来源、观察存储和冻结计划基础增量提交为 `8da22c
 | --- | --- | --- | --- |
 | M0 全量契约和技术验证 | VERIFIED，完整工作区 lint 失败保留 | ML-01～07、全类别真实试验、确切引擎/来源/组件/许可证事实、SQLite v4、状态契约、最新 CPU/CUDA 和完整 recipe；见阶段退出复核 | 产品接入属于 M1～M6；视频质量、旧 Whisper 和完整工作区 lint 仍未通过 |
 | M1 来源解析和完整依赖 | IN_PROGRESS，基础增量已推送 | 实际发现服务、远程 GGUF、已知组件配对、SQLite v6 观察绑定、CPU 资源预算、不可变计划与入队；基础增量 246 项回归和 CPU/CUDA 实测通过 | 更完整的组件角色与档案、GPU/多模态预算、全部入口和受管安装交接；受限账号正例由用户延期 |
-| M2 可靠安装和数据迁移 | IN_PROGRESS，产品入口未接入 | 逐文件、检查点、只读内容与目录提交、版本和引用、三处进程终止恢复；实际 0.8B 双版本缓存安装、blob 复用、幂等重放、硬链接所有权检查、258 项回归、最新 CLI 和固定入口实际配方 | 网络传输、启动恢复调度与产品服务接入、运行引用保护、卸载、迁移及完整阶段验收 |
+| M2 可靠安装和数据迁移 | IN_PROGRESS，产品入口未接入 | 缓存安装增量已推送；新增固定来源网络传输和实际进程终止续传安装、三版本内容复用；263 项回归、下载器 17 项及严格局部 Clippy 通过 | 持久化安装输入与原子入队、启动恢复调度、三层并发与重试预算、产品服务接入、运行引用保护、卸载、迁移及完整阶段验收 |
 | M3 Runtime 和核心真实验收 | PLANNED | 既有 Dense/MoE CPU 文本 smoke 与小模型一次严格工具闭环可运行 | 新 LaunchConfig 和 Runtime 接入、完整文本/工具/视觉验收 |
 | M4 全部类型和加速 | PLANNED，M0 探针已交接 | 全类别实际 Runtime 技术记录；Embedding、Reranker、音频、图像、MTP/DFlash 探针通过；视频内容与旧 Whisper 失败保留 | 产品 Adapter、受管安装、类型化服务、质量与边界验收、视频和 Whisper 修复 |
 | M5 完整模型中心 | PLANNED | 完整界面与服务契约已编写 | 实际页面、SDK、任务及能力状态接入和尺寸验收 |
@@ -274,3 +274,27 @@ M1 后续仍需收尾重建后的 CLI 实际 recipe、必要的 CUDA 复核、�
 新增 `bin/test-lumina-cache-install.ps1` 复用既有 Windows 验证入口的路径、UTF-8、计数解析、哈希和 Cargo 执行规则，以固定参数运行缓存安装目标并创建不可覆盖的事实报告。未修改原有真实文本入口及其十套 foundation 的统计口径。[脚本质量矩阵](./model-lifecycle-evidence/2026-11-02-m2-cache-powershell-gate.json)在 PowerShell 5.1.26100.9711 和 7.6.9 上通过两次静态检查、各 9 项单元检查、LF/CRLF 与默认仓库路径合计 6 次实际执行、10 个失败反例；每次实际执行均为 12 项通过、无失败或跳过。可选 PSScriptAnalyzer 未安装，未计为执行通过。
 
 修正后的配方及入口重建后，[第二轮实际 CLI 配方](./model-lifecycle-evidence/2026-11-01-selftest-m2-cache-install-r2.json)通过。最新 CLI SHA256 为 `390e39e7521a9620e8f708d06c35ea81ca538ab2bf760e42ade7d83d2e021ac5`；35B 父模型实际调用一次固定 PowerShell 入口，工具退出 0，读取 12/0/0 的结果及报告，最终摘要、报告摘要和全部冻结输入前后核对通过。该结果验证本次安装边界增量，不表示网络安装、Runtime READY 或完整 M2 已完成。
+
+
+## M2 固定来源网络传输与进程终止恢复
+
+新增 `lumina-download-manager::managed` 仅接收固定 ModelScope API 来源，手动限制重定向到已观察的 ModelScope CDN。鉴权头只发送至 API 原点，不随重定向进入 CDN。Range、Content-Range、总大小、强 ETag、身份编码、响应截断和有界流式读取均有检查；错误不包含签名地址或令牌。下载器 17 项测试通过。旧回退测试曾将服务端线程完成时间误作并发下载判据，保留该失败后改为核对一次 Range 探测和一次整文件请求及实际文件字节，另有连续 30 次通过的[复核记录](./model-lifecycle-evidence/2026-11-02-m2-network-fallback-stress.json)。
+
+[实际传输探针](./model-lifecycle-evidence/2026-11-02-m2-managed-transfer-real-r1.json)从固定提交完整读取 833,592,736 字节，SHA256 与来源记录一致；第二个 Range 使用强 ETag 和 If-Range，实际字节与本地样本一致。该探针本身不写入安装文件或产生能力证据。
+
+新增 `network_worker.rs` 从已接受计划生成固定来源 URL，复用缓存安装的文件校验、Manifest、只读 blob、目录提交和登记事务。写入前核对所有权和检查点前缀；每个有界检查点先同步文件再保存账本。等待响应和接收分块期间检查租约、暂停及取消。Range 不可用或 ETag 改变只允许一次明确归零；瞬时失败可保留检查点供显式重试，完整的持久化自动退避预算尚未接入。
+
+[实际故障恢复审计](./model-lifecycle-evidence/2026-11-02-m2-network-install-real-r1-audit.json)使用独立诊断入口，在真实网络下载保存 8,395,823 字节检查点后强制终止 worker。旧租约过期后，第二个进程复验前缀和强 ETag，未触发归零，完成全部文件校验及登记。同一数据库和根目录最终为 3 个版本、1 个物理 blob、3 条引用，旧活动版本、旧版本 Manifest 和文件内容保持一致，各版本文件身份独立且只读，原始模型摘要不变，完成重放没有新增任务或文件事件，能力证据仍为 0。
+
+[原验收器失败](./model-lifecycle-evidence/2026-11-02-m2-network-install-real-r1-verifier-failure.json)保留：它错误地预期最终 generation 为 2，遗漏了既有完成登记事务再次递增 generation 的 fencing 规则。独立审计核对完整事件链，确认原 worker 为 1、恢复执行为 2、完成封禁为 3，未重新执行或覆盖原始网络过程。
+
+该批次生命周期整包回归为 263 项通过、0 失败、6 项明确跳过；缓存及网络 worker 边界目标为 17 项通过。两个相关 crate 全 targets 严格 Clippy 与 Windows 格式检查通过。网络安装输入目前仍由诊断请求提供，尚未具备与任务原子入队的持久化输入、启动恢复调度或产品 ACP/CLI 入口；三层并发、持久化重试、卸载、运行引用保护和旧数据迁移继续按 ML-17～22 实施。M1 和 M3～M6 的剩余范围保持完整。
+
+
+### 网络安装增量交付验证
+
+[完整增量记录](./model-lifecycle-evidence/2026-11-02-m2-network-validation.json)汇总 263 项生命周期回归、6 项明确跳过、下载器 17 项、严格局部 Clippy、Windows 格式检查、真实网络故障恢复及 CLI 配方证据。完整 CPU CLI 重建通过（16m30s）；修改配方超时说明后再次构建通过（26.63s），二进制 SHA256 为 `4d4588df496711d16928e7189083b98080239a2c75ddd082d98ce459806a0c4c`。本轮未重新执行完整工作区 Clippy，前述全局失败仍是发行门槛。
+
+[首轮实际配方失败](./model-lifecycle-evidence/2026-11-02-m2-network-recipe-timeout.json)保留：冷 Cargo 验证超过工具的 120 秒限制，工具返回超时和空 stdout；随后原生日志虽记录 17 项通过且生成报告，也不能覆盖工具失败。父模型另尝试一次不合规的报告读取，该已失败运行被明确终止。配方随后明确要求 `timeout_secs=600`，任何超时、缺失/截断输出或工具错误均立即停止，不再检查报告或另行调用工具。
+
+[第二轮实际配方](./model-lifecycle-evidence/2026-11-02-selftest-m2-network-worker-r2.json)使用独立应用目录和报告路径通过。35B 父模型实际仅调用一次固定 Windows 入口，工具参数确为 600 秒，返回 17/0/0 和报告内容及摘要；无过滤、无跳过，最终摘要与工具结果一致，全部冻结源码、配方、二进制、注册表及原始父模型前后哈希一致。两个 PowerShell 入口未修改，前述跨运行时质量矩阵继续按其原始范围保留。该交付只关闭网络安装基础增量的验证，不关闭 M1、M2 或后续阶段。

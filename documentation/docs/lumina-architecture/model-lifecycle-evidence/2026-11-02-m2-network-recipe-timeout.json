@@ -1,0 +1,109 @@
+{
+  "status": "FAIL_ACTUAL_RECIPE",
+  "observedAt": "2026-11-02T03:55:58.518188+00:00",
+  "reason": "Actual shell validation exceeded 120 seconds, returned no stdout and timed_out/isError. Native tests later reported 17/0/0 and wrote a report, which cannot override the actual tool failure. Parent then attempted an additional invalid report read, so the already failed run was explicitly stopped.",
+  "toolRequests": [
+    {
+      "type": "toolRequest",
+      "id": "qFYmbcBn5dfgqnKdnBWva29hv63dzBPe",
+      "toolCall": {
+        "status": "success",
+        "value": {
+          "name": "shell",
+          "arguments": {
+            "command": "powershell.exe -NoProfile -File bin\\test-lumina-cache-install.ps1 -ReportPath \"D:/Project/goose/target/lifecycle-validation/recipe-m2-network-worker-r1-results/cache_install_validation.json\"",
+            "timeout_secs": 120
+          }
+        }
+      },
+      "_meta": {
+        "lumina_extension": "developer"
+      }
+    },
+    {
+      "type": "toolRequest",
+      "id": "JbWNH3HUr8IJy3AkIgvlCsN3KporVBvj",
+      "toolCall": {
+        "status": "success",
+        "value": {
+          "name": "shell",
+          "arguments": {
+            "command": "if (Test-Path \"D:/Project/goose/target/lifecycle-validation/recipe-m2-network-worker-r1-results/cache_install_validation.json\") { Get-Content \"D:/Project/goose/target/lifecycle-validation/recipe-m2-network-worker-r1-results/cache_install_validation.json\" -Raw } else { \"Report file not found\" }",
+            "timeout_secs": 10
+          }
+        }
+      },
+      "_meta": {
+        "lumina_extension": "developer"
+      }
+    }
+  ],
+  "toolResponses": [
+    {
+      "type": "toolResponse",
+      "id": "qFYmbcBn5dfgqnKdnBWva29hv63dzBPe",
+      "toolResult": {
+        "status": "success",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "(no output)\n\nCommand timed out after 120 seconds\n\nOutput may be incomplete because stream draining timed out after process exit.",
+              "annotations": {
+                "priority": 0.0
+              }
+            }
+          ],
+          "structuredContent": {
+            "stdout": "",
+            "stderr": "",
+            "timed_out": true,
+            "output_truncated": true
+          },
+          "isError": true
+        }
+      }
+    },
+    {
+      "type": "toolResponse",
+      "id": "JbWNH3HUr8IJy3AkIgvlCsN3KporVBvj",
+      "toolResult": {
+        "status": "success",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "\"D:/Project/goose/target/lifecycle-validation/recipe-m2-network-worker-r1-results/cache_install_validation.json\") was unexpected at this time.\r\n\nCommand exited with code 1",
+              "annotations": {
+                "priority": 0.0
+              }
+            }
+          ],
+          "structuredContent": {
+            "stdout": "",
+            "stderr": "\"D:/Project/goose/target/lifecycle-validation/recipe-m2-network-worker-r1-results/cache_install_validation.json\") was unexpected at this time.\r",
+            "exit_code": 1
+          },
+          "isError": true
+        }
+      }
+    }
+  ],
+  "nativeReport": {
+    "schemaVersion": 1,
+    "status": "PASS",
+    "ruleId": "LMCI000",
+    "exitCode": 0,
+    "target": "lifecycle_cache_install",
+    "passed": 17,
+    "failed": 0,
+    "ignored": 0,
+    "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m2-network-worker-r1-app\\cache-install-app\\cache-install-run.log",
+    "scope": "Cache installation boundary tests; not network transfer or Runtime READY acceptance."
+  },
+  "nativeReportSha256": "770149778a7f85527bb90449180ab7d0aea96426ed17f83eb192488a7126eb3a",
+  "nativeLogSha256": "fc61d15b2450b0e193db9932d1da5b43bb5ba04f1682e3c43c707295a5159bd3",
+  "rawOutputPath": "D:\\Project\\goose\\target\\lifecycle-validation\\recipe-m2-network-worker-r1-run.jsonl",
+  "rawOutputSha256": "e2eb334483c9102d74e4b39e014d4ae405edc86a055c63a4dc134951debb2b79",
+  "recovery": "Independent R2 freezes timeout_secs=600 and requires stop on timeout, missing/truncated output or any tool error."
+}

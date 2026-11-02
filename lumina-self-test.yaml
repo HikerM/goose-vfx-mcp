@@ -158,15 +158,19 @@ extensions:
 
 prompt: |
   {% if test_phases == "model-cache-install" %}
-  Execute the frozen-plan cache installation tests now using your developer shell tool.
+  Execute the frozen-plan installation boundary tests now using your developer shell tool.
   The working directory is already D:/Project/goose. Your first action must be the validation
   shell call below, not a plan or directory inspection. Work only in D:/Project/goose,
   preserve inherited D:/E: caches and temporary directories, and do not delegate or create worktrees.
   Run exactly once `powershell.exe -NoProfile -File bin\test-lumina-cache-install.ps1 -ReportPath "{{ workspace_dir }}/cache_install_validation.json"`.
+  Set the shell tool's timeout_secs to 600 so a cold Cargo validation can finish.
   Do not add cd, directory listing, pipes, redirection, or a manual Cargo invocation.
   Summarize only its returned JSON: status, passed/failed/ignored counts and report path.
-  A nonzero exit is FAIL; do not retry, repair the invocation or manufacture output.
-  Explain that these are cache installation boundary tests,
+  A nonzero exit, timeout, missing stdout, truncated output or tool error is FAIL.
+  After any such failure, stop with a failure summary; do not inspect reports, retry,
+  repair the invocation, call another tool or manufacture output.
+  Explain that these cover cache installation and network-worker preflight, cancellation,
+  transfer locking, completed replay and failed-file checkpoint recovery boundaries,
   while full network installation and Runtime readiness need their separate acceptance evidence.
   {% elif test_phases == "model-lifecycle" %}
   Execute the model lifecycle checks now using your developer shell tool. Your first action

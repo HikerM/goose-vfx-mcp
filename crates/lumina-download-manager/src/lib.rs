@@ -12,6 +12,8 @@ use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 use tracing::info;
 use utoipa::ToSchema;
 
+pub mod managed;
+
 const DOWNLOAD_USER_AGENT: &str = "lumina-ai-agent";
 
 fn download_client() -> reqwest::Result<reqwest::Client> {
@@ -1595,6 +1597,7 @@ mod tests {
         max_active_gets: Arc<AtomicUsize>,
         bytes_served: Arc<AtomicU64>,
         head_requests: Arc<AtomicUsize>,
+        get_ranges: Arc<Mutex<Vec<String>>>,
     }
 
     impl RangeTestServer {
@@ -1606,12 +1609,14 @@ mod tests {
             let active_gets = Arc::new(AtomicUsize::new(0));
             let bytes_served = Arc::new(AtomicU64::new(0));
             let head_requests = Arc::new(AtomicUsize::new(0));
+            let get_ranges = Arc::new(Mutex::new(Vec::new()));
             let data = Arc::new(data);
 
             let server_stop = stop.clone();
             let server_max_active = max_active_gets.clone();
             let server_bytes_served = bytes_served.clone();
             let server_head_requests = head_requests.clone();
+            let server_get_ranges = get_ranges.clone();
             let thread = std::thread::spawn(move || {
                 while let Ok((stream, _)) = listener.accept() {
                     if server_stop.load(Ordering::SeqCst) {
@@ -1622,6 +1627,7 @@ mod tests {
                     let max_active_gets = server_max_active.clone();
                     let bytes_served = server_bytes_served.clone();
                     let head_requests = server_head_requests.clone();
+                    let get_ranges = server_get_ranges.clone();
                     std::thread::spawn(move || {
                         Self::handle_request(
                             stream,
@@ -1632,6 +1638,7 @@ mod tests {
                             &max_active_gets,
                             &bytes_served,
                             &head_requests,
+                            &get_ranges,
                         );
                     });
                 }
@@ -1644,6 +1651,7 @@ mod tests {
                 max_active_gets,
                 bytes_served,
                 head_requests,
+                get_ranges,
             }
         }
 
@@ -1657,6 +1665,7 @@ mod tests {
             max_active_gets: &AtomicUsize,
             bytes_served: &AtomicU64,
             head_requests: &AtomicUsize,
+            get_ranges: &Mutex<Vec<String>>,
         ) {
             let mut request = Vec::new();
             let mut buffer = [0u8; 4096];
@@ -1685,6 +1694,16 @@ mod tests {
                 return;
             }
 
+            get_ranges.lock().unwrap().push(
+                request
+                    .lines()
+                    .find_map(|line| {
+                        let (name, value) = line.split_once(':')?;
+                        name.eq_ignore_ascii_case("range")
+                            .then(|| value.trim().to_string())
+                    })
+                    .unwrap_or_default(),
+            );
             let active = active_gets.fetch_add(1, Ordering::SeqCst) + 1;
             max_active_gets.fetch_max(active, Ordering::SeqCst);
             std::thread::sleep(response_delay);
@@ -1967,6 +1986,6 @@ mod tests {
             .unwrap();
 
         assert_eq!(std::fs::read(destination).unwrap(), data);
-        assert_eq!(server.max_active_gets.load(Ordering::SeqCst), 1);
+        assert_eq!(*server.get_ranges.lock().unwrap(), vec!["bytes=0-0", ""]);
     }
 }

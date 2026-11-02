@@ -23,15 +23,43 @@ pub struct CacheInstallRequest {
     pub source_files: BTreeMap<String, PathBuf>,
 }
 
-struct CacheExecution<'a, F> {
-    repository: &'a LifecycleRepository,
-    store: &'a InstallationStore,
-    lease: WorkerLease,
-    clock: F,
+pub(crate) fn replay_completed_installation(
+    repository: &LifecycleRepository,
+    store: &InstallationStore,
+    job: &LifecycleJob,
+    installation_id: &str,
+    version_id: &str,
+) -> Result<InstalledVersion> {
+    let journal = repository
+        .installation_commit(&job.id)?
+        .context("Completed job has no installation commit")?;
+    ensure!(
+        journal.stage == InstallationCommitStage::Registered
+            && journal.manifest.installation_id == installation_id
+            && journal.manifest.version_id == version_id
+            && journal.manifest.plan.digest()? == job.plan_digest,
+        "Completed installation belongs to a different request"
+    );
+    let installed = repository
+        .installed_version(version_id)?
+        .context("Completed installation version is missing")?;
+    ensure!(
+        installed.manifest_digest == journal.manifest_digest,
+        "Completed installation has a different manifest"
+    );
+    store.verify_installed_version(&installed)?;
+    Ok(installed)
 }
 
-impl<F: Fn() -> i64> CacheExecution<'_, F> {
-    fn checkpoint(&self) -> Result<LifecycleJob> {
+pub(crate) struct InstallExecution<'a, F> {
+    pub(crate) repository: &'a LifecycleRepository,
+    pub(crate) store: &'a InstallationStore,
+    pub(crate) lease: WorkerLease,
+    pub(crate) clock: F,
+}
+
+impl<F: Fn() -> i64> InstallExecution<'_, F> {
+    pub(crate) fn checkpoint(&self) -> Result<LifecycleJob> {
         let now = (self.clock)();
         let job = self
             .repository
@@ -51,13 +79,13 @@ impl<F: Fn() -> i64> CacheExecution<'_, F> {
         }
     }
 
-    fn advance(&self, stage: LifecycleStage) -> Result<LifecycleJob> {
+    pub(crate) fn advance(&self, stage: LifecycleStage) -> Result<LifecycleJob> {
         let job = self.checkpoint()?;
         self.repository
             .advance(&self.lease, job.version, stage, (self.clock)())
     }
 
-    fn hash_prefix(&self, file: &mut File, bytes: u64) -> Result<Sha256> {
+    pub(crate) fn hash_prefix(&self, file: &mut File, bytes: u64) -> Result<Sha256> {
         file.rewind()?;
         let mut hasher = Sha256::new();
         let mut remaining = bytes;
@@ -204,7 +232,11 @@ impl<F: Fn() -> i64> CacheExecution<'_, F> {
         Ok(())
     }
 
-    fn record_file_failure(&self, artifact_id: &str, error: &anyhow::Error) -> Result<()> {
+    pub(crate) fn record_file_failure(
+        &self,
+        artifact_id: &str,
+        error: &anyhow::Error,
+    ) -> Result<()> {
         let job = self
             .repository
             .read_job(&self.lease.job_id)?
@@ -268,10 +300,21 @@ impl<F: Fn() -> i64> CacheExecution<'_, F> {
                     return Err(error);
                 }
             }
-            job = self.advance(LifecycleStage::Verifying)?;
+            self.advance(LifecycleStage::Verifying)?;
         }
+        self.finish_installation(&request.installation_id, &request.version_id, plan)
+    }
+
+    pub(crate) fn finish_installation(
+        &self,
+        installation_id: &str,
+        version_id: &str,
+        plan: InstallPlan,
+    ) -> Result<InstalledVersion> {
+        let mut job = self.checkpoint()?;
+        let transfer_root = self.store.transfer_directory(&self.lease.job_id)?;
         if job.stage == LifecycleStage::Verifying {
-            for file in self.repository.file_transfers(&request.job_id)? {
+            for file in self.repository.file_transfers(&self.lease.job_id)? {
                 self.checkpoint()?;
                 let verified = match super::files::verify_artifact_file_with_progress(
                     &plan,
@@ -301,19 +344,19 @@ impl<F: Fn() -> i64> CacheExecution<'_, F> {
             "Cache worker cannot execute this lifecycle stage"
         );
         let manifest =
-            if let Some(journal) = self.repository.installation_commit(&request.job_id)? {
+            if let Some(journal) = self.repository.installation_commit(&self.lease.job_id)? {
                 ensure!(
-                    journal.manifest.installation_id == request.installation_id
-                        && journal.manifest.version_id == request.version_id,
+                    journal.manifest.installation_id == installation_id
+                        && journal.manifest.version_id == version_id,
                     "Recovered installation belongs to different requested identities"
                 );
                 journal.manifest
             } else {
                 build_installation_manifest(
-                    request.installation_id.clone(),
-                    request.version_id.clone(),
+                    installation_id.to_string(),
+                    version_id.to_string(),
                     plan,
-                    &self.repository.file_transfers(&request.job_id)?,
+                    &self.repository.file_transfers(&self.lease.job_id)?,
                     job.accepted_at,
                     (self.clock)(),
                 )?
@@ -328,6 +371,25 @@ impl<F: Fn() -> i64> CacheExecution<'_, F> {
             &self.clock,
         )?;
         self.store.commit(self.repository, &self.lease, &self.clock)
+    }
+
+    pub(crate) fn settle_failure(&self) -> Result<()> {
+        let job = self
+            .repository
+            .read_job(&self.lease.job_id)?
+            .context("Failed installation job disappeared")?;
+        if job.status == JobStatus::Cancelling {
+            self.repository.transition(
+                &job.id,
+                job.version,
+                JobStatus::Cancelled,
+                (self.clock)(),
+            )?;
+        } else if LifecycleRepository::validate_lease(&job, &self.lease, (self.clock)()).is_ok() {
+            self.repository
+                .transition(&job.id, job.version, JobStatus::Failed, (self.clock)())?;
+        }
+        Ok(())
     }
 }
 
@@ -355,25 +417,13 @@ pub fn install_from_local_cache(
         .into());
     }
     if job.status == JobStatus::Completed {
-        let journal = repository
-            .installation_commit(&job.id)?
-            .context("Completed cache job has no installation commit")?;
-        ensure!(
-            journal.stage == InstallationCommitStage::Registered
-                && journal.manifest.installation_id == request.installation_id
-                && journal.manifest.version_id == request.version_id
-                && journal.manifest.plan.digest()? == job.plan_digest,
-            "Completed cache installation belongs to a different request"
+        return replay_completed_installation(
+            repository,
+            store,
+            &job,
+            &request.installation_id,
+            &request.version_id,
         );
-        let installed = repository
-            .installed_version(&request.version_id)?
-            .context("Completed cache installation version is missing")?;
-        ensure!(
-            installed.manifest_digest == journal.manifest_digest,
-            "Completed cache installation has a different manifest"
-        );
-        store.verify_installed_version(&installed)?;
-        return Ok(installed);
     }
     let plan = repository
         .read_plan(&job.plan_id)?
@@ -389,7 +439,7 @@ pub fn install_from_local_cache(
     );
     ensure!(plan.artifacts.values().all(|artifact| artifact.source_sha256.is_some()), "Local cache import requires pinned source checksums; unproven historical files require migration review");
     let lease = repository.claim(&job.id, job.version, worker_name, clock(), 120)?;
-    let execution = CacheExecution {
+    let execution = InstallExecution {
         repository,
         store,
         lease,
@@ -397,21 +447,7 @@ pub fn install_from_local_cache(
     };
     let result = execution.install(request, plan);
     if result.is_err() {
-        let job = repository
-            .read_job(&request.job_id)?
-            .context("Failed cache job disappeared")?;
-        if job.status == JobStatus::Cancelling {
-            repository.transition(
-                &job.id,
-                job.version,
-                JobStatus::Cancelled,
-                (execution.clock)(),
-            )?;
-        } else if LifecycleRepository::validate_lease(&job, &execution.lease, (execution.clock)())
-            .is_ok()
-        {
-            repository.transition(&job.id, job.version, JobStatus::Failed, (execution.clock)())?;
-        }
+        execution.settle_failure()?;
     }
     result
 }
