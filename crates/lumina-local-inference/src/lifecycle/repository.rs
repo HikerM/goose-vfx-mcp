@@ -12,6 +12,7 @@ use super::{
 
 mod catalog;
 mod controls;
+mod failures;
 mod files;
 mod inputs;
 mod installation;
@@ -24,7 +25,7 @@ pub use plan_observations::{
     gguf_header_evidence_id, gguf_observation_evidence_id, OBSERVED_GGUF_PLAN_RULES_VERSION,
 };
 
-pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 9;
+pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 10;
 
 const SCHEMA: &str = include_str!("repository/migrations/0001.sql");
 
@@ -130,6 +131,9 @@ impl LifecycleRepository {
         if version < 9 {
             tx.execute_batch(retries::SCHEMA)?;
             Self::migrate_retry_budgets(&tx)?;
+        }
+        if version < 10 {
+            tx.execute_batch(failures::SCHEMA)?;
         }
         tx.commit()?;
         Ok(Self {

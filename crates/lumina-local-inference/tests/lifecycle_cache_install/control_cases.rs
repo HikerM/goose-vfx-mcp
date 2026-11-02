@@ -373,7 +373,7 @@ fn schema_seven_control_upgrade_preserves_inputs_and_rolls_back_on_table_collisi
         let path = fixture.temp.path().join("models.db");
         drop(fixture.repository);
         let raw = rusqlite::Connection::open(&path).unwrap();
-        raw.execute_batch("DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; DROP TABLE installation_control_receipts; PRAGMA user_version=7;")
+        raw.execute_batch("DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; DROP TABLE installation_control_receipts; PRAGMA user_version=7;")
             .unwrap();
         if collision {
             raw.execute_batch("CREATE TABLE installation_control_receipts (unrecognized TEXT);")
@@ -428,48 +428,76 @@ fn application_control_api_replays_after_restart_without_repeating_a_later_actio
     let id = fixture.request.job_id.clone();
     let data = fixture.temp.path().join("data");
     drop(fixture.repository);
-    service_runtime().block_on(async {
-        let application =
-            InstallationApplication::new(&data, Arc::new(|| anyhow::bail!("No unit credentials")));
-        let pause = ModelInstallationJobControlRequest {
-            job_id: id.clone(),
-            expected_version: 0,
-            action: ModelInstallationJobAction::Pause,
-            idempotency_key: "api-pause".into(),
-        };
-        let paused = application.control_request(pause.clone()).await.unwrap();
-        assert!(!paused.replayed);
-        let resumed = application
-            .control_request(ModelInstallationJobControlRequest {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let application = InstallationApplication::new(
+                &data,
+                Arc::new(|| anyhow::bail!("No unit credentials")),
+            );
+            let pause = ModelInstallationJobControlRequest {
                 job_id: id.clone(),
-                expected_version: paused.job.version,
-                action: ModelInstallationJobAction::Resume,
-                idempotency_key: "api-resume".into(),
-            })
-            .await
-            .unwrap();
-        assert!(!resumed.replayed);
-        application.shutdown().await.unwrap();
-        let restarted =
-            InstallationApplication::new(&data, Arc::new(|| anyhow::bail!("No unit credentials")));
-        restarted.start_if_present().await.unwrap();
-        let replay = restarted.control_request(pause).await.unwrap();
-        assert!(replay.replayed);
-        assert!(matches!(
-            replay.job.status,
-            ModelInstallationJobStatus::Paused
-        ));
-        assert_eq!(replay.job.version, paused.job.version);
-        let current = restarted
-            .service()
-            .await
-            .unwrap()
-            .repository()
-            .read_job(&id)
-            .unwrap()
-            .unwrap();
-        assert_eq!(current.status, JobStatus::Queued);
-        assert_eq!(current.version, resumed.job.version);
-        restarted.shutdown().await.unwrap();
-    });
+                expected_version: 0,
+                action: ModelInstallationJobAction::Pause,
+                idempotency_key: "api-pause".into(),
+            };
+            let paused = application.control_request(pause.clone()).await.unwrap();
+            assert!(!paused.replayed);
+            let resumed = application
+                .control_request(ModelInstallationJobControlRequest {
+                    job_id: id.clone(),
+                    expected_version: paused.job.version,
+                    action: ModelInstallationJobAction::Resume,
+                    idempotency_key: "api-resume".into(),
+                })
+                .await
+                .unwrap();
+            assert!(!resumed.replayed);
+            application.shutdown().await.unwrap();
+            let restarted = InstallationApplication::new(
+                &data,
+                Arc::new(|| anyhow::bail!("No unit credentials")),
+            );
+            restarted.start_if_present().await.unwrap();
+            restarted
+                .service()
+                .await
+                .unwrap()
+                .wait_ready()
+                .await
+                .unwrap();
+            let replay = restarted.control_request(pause).await.unwrap();
+            assert!(replay.replayed);
+            assert!(matches!(
+                replay.job.status,
+                ModelInstallationJobStatus::Paused
+            ));
+            assert_eq!(replay.job.version, paused.job.version);
+            let current = restarted
+                .service()
+                .await
+                .unwrap()
+                .repository()
+                .read_job(&id)
+                .unwrap()
+                .unwrap();
+            assert_eq!(current.status, JobStatus::Blocked);
+            assert_eq!(current.version, resumed.job.version + 1);
+            assert_eq!(
+                restarted
+                    .service()
+                    .await
+                    .unwrap()
+                    .repository()
+                    .latest_installation_failure(&id)
+                    .unwrap()
+                    .unwrap()
+                    .details
+                    .origin,
+                InstallationFailureOrigin::Credentials
+            );
+            restarted.shutdown().await.unwrap();
+        });
 }

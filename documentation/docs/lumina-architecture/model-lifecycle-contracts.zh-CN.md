@@ -196,7 +196,7 @@ Agent 的规划模型仅从通过所需文本和工具能力准入的模型中�
 | 当前 ACP 方法，统一前缀 `_lumina/unstable/local-inference/` | 输入及结果 | CLI 对应入口 |
 | --- | --- | --- |
 | `installations/submit` | planId、planDigest、installationId、idempotencyKey；服务端原子生成 jobId 和 versionId，重放相同幂等请求返回原身份 | `local-models install-plan` |
-| `installations/jobs/list` | afterId、limit；返回任务状态版本、阶段、generation、分页游标、应用服务状态和独立的 fileRetries；查询空命名空间不创建安装数据库或启动下载 | `local-models jobs` |
+| `installations/jobs/list` | afterId、limit；返回任务状态版本、阶段、generation、分页游标、应用服务状态、fileRetries 和各任务最近的 failures；查询空命名空间不创建安装数据库或启动下载 | `local-models jobs` |
 | `installations/jobs/control` | jobId、expectedVersion、action、idempotencyKey；以 CAS 执行 pause/resume/cancel/retry，返回 job 与 replayed；v8 回执持久化 | `local-models job-control`，要求 `--idempotency-key` |
 
 `local-models wait-job` 等待已有任务，`local-models installation-worker` 运行同一个应用服务。ACP 工厂内的 Agent 共用安装服务；ACP stdio 启动、工厂创建 Agent 及 CLI 长会话入口会扫描已有命名空间，未完成初次恢复扫描时新提交等待。HTTP/HTTPS 启动路径调用同一工厂的恢复入口，主动恢复不依赖首个客户端连接；本批实际 HTTP 无客户端恢复通过，HTTPS 分支已接入并经编译检查，独立 TLS 实测仍待后续硬件/发行验收。没有模型数据库时保持休眠，模型存储损坏不阻止普通 Agent 创建。正常调用应用关闭时保留网络检查点，将当前 worker 所有的执行任务重新排队；用户暂停或取消的意图优先保留。HTTP 进程正常停止信号的接入及端到端关闭验收仍待完成，本批 HTTP 完成安装后的强制终止只作探针清理。当前 worker 每实例顺序执行；跨进程全局并发和任务/文件/Range 三层预算、空间预留仍待实现，逐文件持久化退避见下方 schema v9 契约。
@@ -207,7 +207,13 @@ SQLite schema v9 增加逐文件重试账本和历史事件，保持已有任务
 
 失败码、阶段、时间、文件状态、预算和排队结果在同一事务提交；不保存原始异常、令牌或下载 URL。显式 Retry 为失败文件开始新周期，保留累计已记录次数及上次失败，同键重放控制回执不重复重置；Pause/Resume 不重置周期。文件验证通过与 VERIFIED 预算状态同事务提交。旧数据库升级标记 `legacy_untracked`，从升级后开始统计，不补造历史尝试次数。`installations/jobs/list` 的独立 `fileRetries` 返回文件身份、策略版本、周期、次数、历史起点、下次重试时间、类型化失败和预算版本；控制响应仍返回首次接受时的历史任务快照。
 
-结构化失败详情、文件进度和游标事件尚未覆盖上表完整契约；旧 spec 下载及其他历史入口也尚未全部转发到新服务。当前 ACP DTO 不暴露原始下载 URL、令牌、调用方指定的受管根目录或内部启动参数。后续 SDK、界面和旧入口迁移继续执行完整 ML-40 范围。
+schema v10 增加不可变安装失败记录，绑定状态变更后的历史任务事件，摘要或历史快照不一致时拒绝读取。绑定受管目录的任务在凭据获取或安装准入失败时，以预期任务版本进入 BLOCKED；失败记录与状态、generation 和事件同事务提交。暂停、取消及其他 worker 的有效租约优先，旧检查结果不能覆盖新状态。历史未绑定输入、其他目录和损坏输入继续保留各自恢复诊断，不写入推断的失败归属。取消确认不要求读取凭据。
+
+生产 ModelScope 凭据桥接区分未配置与配置值或存储读取失败；错误返回固定诊断，不携带原始值。凭据失败不领取文件尝试，也不会在后续轮询或重启时自动重新领取，用户处理后需显式 Retry。拥有有效租约的非文件执行及提交失败进入 FAILED；文件失败同时记录已有重试预算和任务失败证据。当前状态与失败记录写入中任一步失败时事务整体回滚。
+
+任务列表的 `failures` 返回任务身份及失败时的版本、code、stage、origin、artifactId、messageKey、受限 messageArgs、retryable、recoverable、causeId、automaticRetryAt、occurredAt，以及失败快照是否与返回任务一致的 isCurrent。origin 区分 credentials、admission、transfer、verification、commit。保留最近失败不表示它仍阻塞当前任务；重试或完成后相应 isCurrent 为 false。控制回执继续返回首次接受的历史任务快照，不附加会变化的失败详情。v9 升级不补造此前未记录的失败历史。
+
+逐文件进度和游标事件尚未覆盖上表完整契约；旧 spec 下载及其他历史入口也尚未全部转发到新服务。当前 ACP DTO 不暴露原始下载 URL、令牌、调用方指定的受管根目录或内部启动参数。后续 SDK、界面和旧入口迁移继续执行完整 ML-40 范围。
 
 ## 界面和状态契约
 

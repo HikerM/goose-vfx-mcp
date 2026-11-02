@@ -356,8 +356,28 @@ where
                 && plan.digest()? == job.plan_digest,
             "Network installation requires its accepted immutable plan"
         );
-        plan.validate_for_install(job.accepted_at, fs2::available_space(store.root())?)?;
-        let headers = scoped_auth_headers(token.as_deref())?;
+        super::failure::validate_installation_store_admission(
+            &repository,
+            &store,
+            &job,
+            &plan,
+            clock(),
+        )?;
+        let headers = match scoped_auth_headers(token.as_deref()) {
+            Ok(headers) => headers,
+            Err(error) => {
+                repository.block_installation(
+                    &job,
+                    &store,
+                    InstallationFailureDetails::operation(
+                        super::failure::installation_failure_code(&error),
+                        InstallationFailureOrigin::Credentials,
+                    ),
+                    clock(),
+                )?;
+                return Err(error);
+            }
+        };
         let input = InstallationInput::new(
             &store,
             request.installation_id.clone(),
@@ -374,8 +394,8 @@ where
             control,
         };
         let result = runtime.block_on(execute(&execution, &request, plan, &headers));
-        if result.is_err() {
-            execution.settle_failure()?;
+        if let Err(error) = &result {
+            execution.settle_failure(error)?;
         }
         result
     })

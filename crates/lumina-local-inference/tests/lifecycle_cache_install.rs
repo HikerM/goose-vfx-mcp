@@ -13,6 +13,9 @@ mod control_cases;
 #[path = "lifecycle_cache_install/retry_cases.rs"]
 mod retry_cases;
 
+#[path = "lifecycle_cache_install/failure_cases.rs"]
+mod failure_cases;
+
 fn control_request(
     id: &str,
     version: u64,
@@ -1359,7 +1362,7 @@ fn network_recovery_uses_ephemeral_credentials_and_keeps_invalid_tokens_out_of_s
     );
     assert_eq!(
         repository.read_job(&request.id).unwrap().unwrap().version,
-        0
+        1
     );
     let intent = repository
         .read_installation_input(&request.id)
@@ -1368,6 +1371,18 @@ fn network_recovery_uses_ephemeral_credentials_and_keeps_invalid_tokens_out_of_s
     let payload = serde_json::to_string(&intent).unwrap();
     assert!(!payload.contains("secret") && !payload.contains("token"));
     assert_eq!(intent.input, input);
+    let failure = repository
+        .latest_installation_failure(&request.id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(failure.job.status, JobStatus::Blocked);
+    assert_eq!(
+        failure.details.origin,
+        InstallationFailureOrigin::Credentials
+    );
+    assert!(!serde_json::to_string(&failure)
+        .unwrap()
+        .contains("unit-secret"));
 }
 
 #[test]
@@ -1454,7 +1469,7 @@ fn schema_six_upgrade_preserves_legacy_jobs_without_inventing_installation_input
             .unwrap();
         drop(fixture.repository);
         let raw = rusqlite::Connection::open(&path).unwrap();
-        raw.execute_batch("DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; DROP TABLE installation_control_receipts; DROP TABLE installation_inputs; PRAGMA user_version=6;")
+        raw.execute_batch("DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; DROP TABLE installation_control_receipts; DROP TABLE installation_inputs; PRAGMA user_version=6;")
             .unwrap();
         if collision {
             raw.execute_batch("CREATE TABLE installation_inputs (legacy_value TEXT);")
@@ -1719,7 +1734,7 @@ fn bounded_recovery_pages_resume_bound_jobs_and_preserve_paused_live_and_legacy_
 }
 
 #[test]
-fn recovery_credential_provider_failures_leave_the_durable_job_queued() {
+fn recovery_credential_provider_failures_block_the_bound_job_with_durable_details() {
     let fixture = Fixture::new(true);
     let request = acceptance(&fixture, "network-job");
     let mut input = cache_input(&fixture);
@@ -1753,8 +1768,20 @@ fn recovery_credential_provider_failures_leave_the_durable_job_queued() {
     );
     assert_eq!(
         repository.read_job(&request.id).unwrap().unwrap().version,
-        0
+        1
     );
+    let job = repository.read_job(&request.id).unwrap().unwrap();
+    assert_eq!(job.status, JobStatus::Blocked);
+    let failure = repository
+        .latest_installation_failure(&job.id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(failure.details.code, LifecycleErrorCode::SourceAuthRequired);
+    assert_eq!(
+        failure.details.origin,
+        InstallationFailureOrigin::Credentials
+    );
+    assert_eq!(failure.job, job);
 }
 
 fn installing_fixture(fixture: &Fixture) -> (WorkerLease, ModelManifest, PathBuf) {
@@ -2324,16 +2351,29 @@ fn service_controls_pause_queued_jobs_and_reject_stale_versions() {
     let id = fixture.request.job_id.clone();
     let repository = Arc::new(fixture.repository);
     let store = Arc::new(fixture.store);
+    let (entered_tx, entered_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let release = std::sync::Mutex::new(release_rx);
     service_runtime().block_on(async {
         let service = InstallationService::start(
             repository.clone(),
             store,
-            Arc::new(|| anyhow::bail!("No unit credentials")),
+            Arc::new(move || {
+                entered_tx.send(()).unwrap();
+                release.lock().unwrap().recv().unwrap();
+                anyhow::bail!("No unit credentials")
+            }),
             Arc::new(|| 500),
             std::time::Duration::from_millis(20),
         )
         .unwrap();
-        service.wait_ready().await.unwrap();
+        tokio::task::spawn_blocking(move || {
+            entered_rx
+                .recv_timeout(std::time::Duration::from_secs(5))
+                .unwrap()
+        })
+        .await
+        .unwrap();
         let paused = service
             .control_job(&control_request(
                 &id,
@@ -2371,6 +2411,12 @@ fn service_controls_pause_queued_jobs_and_reject_stale_versions() {
             .unwrap()
             .job;
         assert_eq!(cancelled.status, JobStatus::Cancelled);
+        release_tx.send(()).unwrap();
+        service.wait_ready().await.unwrap();
+        assert!(repository
+            .latest_installation_failure(&id)
+            .unwrap()
+            .is_none());
         service.shutdown().await.unwrap();
     });
 }

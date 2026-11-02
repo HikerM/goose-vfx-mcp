@@ -62,6 +62,7 @@ fn installation_queries_decode_old_responses_and_expose_typed_retry_state() {
     }))
     .unwrap();
     assert!(old.file_retries.is_empty());
+    assert!(old.failures.is_empty());
     let dto: ModelInstallationFileRetryDto = serde_json::from_value(json!({
         "jobId":"job:unit","artifactId":"file:unit","policyVersion":"installation-file-retry-v1",
         "maxAttempts":3,"cycle":1,"cycleAttempts":2,"recordedAttempts":5,
@@ -78,4 +79,24 @@ fn installation_queries_decode_old_responses_and_expose_typed_retry_state() {
         ModelInstallationFailureCode::SourceRateLimited
     ));
     assert_eq!(dto.next_retry_at, Some(50));
+}
+
+#[test]
+fn installation_failure_wire_data_carries_recovery_and_history_identity() {
+    let failure: ModelInstallationFailureDto = serde_json::from_value(json!({
+        "jobId":"job:unit","jobVersion":4,"code":"SOURCE_AUTH_REQUIRED","stage":"ready_to_install",
+        "origin":"credentials","artifactId":null,"messageKey":"models.installation.failure.source_auth_required",
+        "messageArgs":{},"retryable":false,"recoverable":true,"causeId":"installation-failure:job:unit:4",
+        "automaticRetryAt":null,"isCurrent":true,"occurredAt":50
+    })).unwrap();
+    assert!(matches!(
+        failure.origin,
+        ModelInstallationFailureOrigin::Credentials
+    ));
+    assert!(matches!(
+        failure.code,
+        ModelInstallationFailureCode::SourceAuthRequired
+    ));
+    assert!(failure.is_current && failure.recoverable && !failure.retryable);
+    assert_eq!(failure.job_version, 4);
 }

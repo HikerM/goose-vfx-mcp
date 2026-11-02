@@ -397,7 +397,7 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
             .commit_with_control(self.repository, &self.lease, &self.clock, &self.control)
     }
 
-    pub(crate) fn settle_failure(&self) -> Result<()> {
+    pub(crate) fn settle_failure(&self, error: &anyhow::Error) -> Result<()> {
         let job = self
             .repository
             .read_job(&self.lease.job_id)?
@@ -413,8 +413,15 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
             self.repository
                 .release_worker_for_recovery(&self.lease, (self.clock)())?;
         } else if LifecycleRepository::validate_lease(&job, &self.lease, (self.clock)()).is_ok() {
-            self.repository
-                .transition(&job.id, job.version, JobStatus::Failed, (self.clock)())?;
+            self.repository.fail_installation_operation(
+                &self.lease,
+                job.version,
+                super::InstallationFailureDetails::operation(
+                    super::failure::installation_failure_code(error),
+                    super::InstallationFailureOrigin::for_stage(job.stage),
+                ),
+                (self.clock)(),
+            )?;
         }
         Ok(())
     }
@@ -483,7 +490,7 @@ pub(crate) fn install_from_local_cache_controlled(
         plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION && plan.digest()? == job.plan_digest,
         "Cache import requires the accepted frozen installation plan"
     );
-    plan.validate_for_install(job.accepted_at, fs2::available_space(store.root())?)?;
+    super::failure::validate_installation_store_admission(repository, store, &job, &plan, clock())?;
     ensure!(
         plan.artifacts.keys().eq(request.source_files.keys()),
         "Cache source selection does not match the installation plan"
@@ -507,8 +514,8 @@ pub(crate) fn install_from_local_cache_controlled(
         control,
     };
     let result = execution.install(request, plan);
-    if result.is_err() {
-        execution.settle_failure()?;
+    if let Err(error) = &result {
+        execution.settle_failure(error)?;
     }
     result
 }

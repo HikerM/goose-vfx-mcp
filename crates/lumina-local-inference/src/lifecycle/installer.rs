@@ -187,10 +187,18 @@ impl InstallationStore {
     }
 
     fn require_space(&self, needed: u64) -> Result<()> {
-        ensure!(
-            fs2::available_space(&self.root)? >= needed,
-            "Insufficient disk space for installation commit"
-        );
+        let available =
+            fs2::available_space(&self.root).map_err(|_| super::InstallationOperationError {
+                code: super::LifecycleErrorCode::InstallFailed,
+                origin: super::InstallationFailureOrigin::Commit,
+            })?;
+        if available < needed {
+            return Err(super::InstallationOperationError {
+                code: super::LifecycleErrorCode::DiskInsufficient,
+                origin: super::InstallationFailureOrigin::Commit,
+            }
+            .into());
+        }
         Ok(())
     }
 

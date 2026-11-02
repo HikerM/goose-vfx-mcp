@@ -1,0 +1,537 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-02T09:36:07.144912+00:00",
+  "scope": "Actual rebuilt HTTP application with a synthetic malformed credential configuration blocks before worker claim, persists sanitized failure, retains the blocked job across restart, and completes pinned public ModelScope installation only after explicit retry with corrected anonymous configuration. Independent CLI queries distinguish current and historical failure and replay the original retry receipt. Server force termination occurs only at blocked/completed states as explicit probe cleanup; not HTTP graceful shutdown, private-account authorization or full M2 acceptance.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+  "binarySha256": "2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3",
+  "source": {
+    "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+    "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+    "file": "Qwen3.5-0.8B-Q8_0.gguf",
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "sizeBytes": 833592736,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "elapsedSeconds": 84.03100000001723,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "jobId": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+  "schemaBefore": 7,
+  "processes": [
+    {
+      "label": "invalid-configuration",
+      "pid": 25544,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "0",
+        "--dangerously-unauthenticated"
+      ],
+      "listeners": [
+        [
+          "TCP",
+          "127.0.0.1:58227",
+          "0.0.0.0:0",
+          "LISTENING",
+          "25544"
+        ],
+        [
+          "TCP",
+          "127.0.0.1:58228",
+          "0.0.0.0:0",
+          "LISTENING",
+          "25544"
+        ]
+      ],
+      "applicationClientRequestsSent": 0,
+      "exitCode": 1,
+      "cleanup": "force termination at blocked",
+      "notGracefulShutdownAcceptance": true
+    },
+    {
+      "label": "blocked-restart",
+      "pid": 3484,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "0",
+        "--dangerously-unauthenticated"
+      ],
+      "listeners": [
+        [
+          "TCP",
+          "127.0.0.1:58232",
+          "0.0.0.0:0",
+          "LISTENING",
+          "3484"
+        ],
+        [
+          "TCP",
+          "127.0.0.1:58234",
+          "0.0.0.0:0",
+          "LISTENING",
+          "3484"
+        ]
+      ],
+      "applicationClientRequestsSent": 0,
+      "exitCode": 1,
+      "cleanup": "force termination at blocked",
+      "notGracefulShutdownAcceptance": true
+    },
+    {
+      "label": "corrected-configuration",
+      "pid": 51624,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "0",
+        "--dangerously-unauthenticated"
+      ],
+      "listeners": [
+        [
+          "TCP",
+          "127.0.0.1:58241",
+          "0.0.0.0:0",
+          "LISTENING",
+          "51624"
+        ],
+        [
+          "TCP",
+          "127.0.0.1:58242",
+          "0.0.0.0:0",
+          "LISTENING",
+          "51624"
+        ]
+      ],
+      "applicationClientRequestsSent": 0,
+      "exitCode": 1,
+      "cleanup": "force termination at completed",
+      "notGracefulShutdownAcceptance": true
+    }
+  ],
+  "cli": [
+    {
+      "label": "current-failure",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+        "local-models",
+        "jobs",
+        "--limit",
+        "64"
+      ],
+      "exitCode": 0,
+      "response": {
+        "jobs": [
+          {
+            "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+            "planId": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+            "planDigest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+            "stage": "ready_to_install",
+            "status": "blocked",
+            "version": 1,
+            "generation": 1,
+            "acceptedAt": 1793612222,
+            "updatedAt": 1793612226
+          }
+        ],
+        "fileRetries": [
+          {
+            "jobId": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+            "artifactId": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+            "policyVersion": "installation-file-retry-v1",
+            "maxAttempts": 3,
+            "cycle": 0,
+            "cycleAttempts": 0,
+            "recordedAttempts": 0,
+            "historyOrigin": "legacy_untracked",
+            "trackingStartedAt": 1793612222,
+            "state": "ready",
+            "nextRetryAt": null,
+            "lastFailure": null,
+            "version": 0,
+            "updatedAt": 1793612222
+          }
+        ],
+        "failures": [
+          {
+            "jobId": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+            "jobVersion": 1,
+            "code": "SOURCE_AUTH_REQUIRED",
+            "stage": "ready_to_install",
+            "origin": "credentials",
+            "artifactId": null,
+            "messageKey": "models.installation.failure.source_auth_required",
+            "messageArgs": {},
+            "retryable": false,
+            "recoverable": true,
+            "causeId": "installation-failure:job:e6e148da-b1f4-47c5-8d67-541c6ab6c946:1",
+            "automaticRetryAt": null,
+            "isCurrent": true,
+            "occurredAt": 1793612226
+          }
+        ],
+        "nextAfterId": null,
+        "serviceState": "dormant"
+      }
+    },
+    {
+      "label": "explicit-retry",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+        "retry",
+        "--expected-version",
+        "1",
+        "--idempotency-key",
+        "explicit-credential-retry"
+      ],
+      "exitCode": 0,
+      "response": {
+        "job": {
+          "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+          "planId": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+          "planDigest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+          "stage": "ready_to_install",
+          "status": "queued",
+          "version": 2,
+          "generation": 2,
+          "acceptedAt": 1793612222,
+          "updatedAt": 1793612234
+        },
+        "replayed": false
+      }
+    },
+    {
+      "label": "retry-replay",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+        "retry",
+        "--expected-version",
+        "1",
+        "--idempotency-key",
+        "explicit-credential-retry"
+      ],
+      "exitCode": 0,
+      "response": {
+        "job": {
+          "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+          "planId": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+          "planDigest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+          "stage": "ready_to_install",
+          "status": "queued",
+          "version": 2,
+          "generation": 2,
+          "acceptedAt": 1793612222,
+          "updatedAt": 1793612234
+        },
+        "replayed": true
+      }
+    },
+    {
+      "label": "completed-history",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\2cad95403ab0e132cffe641ce505427fe09f4f50abadb14427eda3d69258ece3\\lumina.exe",
+        "local-models",
+        "jobs",
+        "--limit",
+        "64"
+      ],
+      "exitCode": 0,
+      "response": {
+        "jobs": [
+          {
+            "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+            "planId": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+            "planDigest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+            "stage": "installed",
+            "status": "completed",
+            "version": 115,
+            "generation": 4,
+            "acceptedAt": 1793612222,
+            "updatedAt": 1793612542
+          }
+        ],
+        "fileRetries": [
+          {
+            "jobId": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+            "artifactId": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+            "policyVersion": "installation-file-retry-v1",
+            "maxAttempts": 3,
+            "cycle": 0,
+            "cycleAttempts": 1,
+            "recordedAttempts": 1,
+            "historyOrigin": "legacy_untracked",
+            "trackingStartedAt": 1793612222,
+            "state": "verified",
+            "nextRetryAt": null,
+            "lastFailure": null,
+            "version": 2,
+            "updatedAt": 1793612366
+          }
+        ],
+        "failures": [
+          {
+            "jobId": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+            "jobVersion": 1,
+            "code": "SOURCE_AUTH_REQUIRED",
+            "stage": "ready_to_install",
+            "origin": "credentials",
+            "artifactId": null,
+            "messageKey": "models.installation.failure.source_auth_required",
+            "messageArgs": {},
+            "retryable": false,
+            "recoverable": true,
+            "causeId": "installation-failure:job:e6e148da-b1f4-47c5-8d67-541c6ab6c946:1",
+            "automaticRetryAt": null,
+            "isCurrent": false,
+            "occurredAt": 1793612226
+          }
+        ],
+        "nextAfterId": null,
+        "serviceState": "dormant"
+      }
+    }
+  ],
+  "schemaAfter": 10,
+  "blockedJob": {
+    "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+    "idempotency_key": "baseline-install:plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+    "plan_id": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+    "plan_digest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+    "stage": "ready_to_install",
+    "status": "blocked",
+    "version": 1,
+    "generation": 1,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793612222,
+    "updated_at": 1793612226
+  },
+  "completedJob": {
+    "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+    "idempotency_key": "baseline-install:plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+    "plan_id": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+    "plan_digest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+    "stage": "installed",
+    "status": "completed",
+    "version": 115,
+    "generation": 4,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793612222,
+    "updated_at": 1793612542
+  },
+  "originalFailure": {
+    "rules_version": "installation-failure-v1",
+    "job": {
+      "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+      "idempotency_key": "baseline-install:plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+      "plan_id": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+      "plan_digest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+      "stage": "ready_to_install",
+      "status": "blocked",
+      "version": 1,
+      "generation": 1,
+      "lease_owner": null,
+      "lease_until": null,
+      "accepted_at": 1793612222,
+      "updated_at": 1793612226
+    },
+    "details": {
+      "code": "SOURCE_AUTH_REQUIRED",
+      "origin": "credentials",
+      "artifact_id": null,
+      "automatic_retry_at": null
+    },
+    "failure": {
+      "code": "SOURCE_AUTH_REQUIRED",
+      "stage": "ready_to_install",
+      "message_key": "models.installation.failure.source_auth_required",
+      "message_args": {},
+      "recoverable": true,
+      "job_id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+      "cause_id": "installation-failure:job:e6e148da-b1f4-47c5-8d67-541c6ab6c946:1"
+    },
+    "occurred_at": 1793612226
+  },
+  "failureHistory": [
+    {
+      "rules_version": "installation-failure-v1",
+      "job": {
+        "id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+        "idempotency_key": "baseline-install:plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+        "plan_id": "plan:eebc0d52-f31f-46a0-8ed5-e2b2f0b23f4f",
+        "plan_digest": "caf886149ac17aad1ca0ab05d1b7ef98633ca72a96045df774c8201645612dd6",
+        "stage": "ready_to_install",
+        "status": "blocked",
+        "version": 1,
+        "generation": 1,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793612222,
+        "updated_at": 1793612226
+      },
+      "details": {
+        "code": "SOURCE_AUTH_REQUIRED",
+        "origin": "credentials",
+        "artifact_id": null,
+        "automatic_retry_at": null
+      },
+      "failure": {
+        "code": "SOURCE_AUTH_REQUIRED",
+        "stage": "ready_to_install",
+        "message_key": "models.installation.failure.source_auth_required",
+        "message_args": {},
+        "recoverable": true,
+        "job_id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+        "cause_id": "installation-failure:job:e6e148da-b1f4-47c5-8d67-541c6ab6c946:1"
+      },
+      "occurred_at": 1793612226
+    }
+  ],
+  "retryBudget": {
+    "job_id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+    "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+    "policy_version": "installation-file-retry-v1",
+    "max_attempts": 3,
+    "cycle": 0,
+    "cycle_attempts": 1,
+    "recorded_attempts": 1,
+    "history_origin": "legacy_untracked",
+    "tracking_started_at": 1793612222,
+    "state": {
+      "status": "verified"
+    },
+    "last_failure": null,
+    "version": 2,
+    "updated_at": 1793612366
+  },
+  "transfers": [
+    {
+      "job_id": "job:e6e148da-b1f4-47c5-8d67-541c6ab6c946",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "relative_path": "06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.part",
+      "expected_bytes": 833592736,
+      "checkpoint": {
+        "completed_bytes": 833592736,
+        "prefix_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "state": {
+        "state": "verified",
+        "computed_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "evidence_digest": "2faf431949f59f5c0b4544c07797044ea231105de2e2cf3f505d73f7ecb0fb55"
+      },
+      "restart_reason": null,
+      "version": 101,
+      "generation": 3,
+      "updated_at": 1793612366
+    }
+  ],
+  "inputUnchanged": true,
+  "blockedRestartUnchanged": true,
+  "capabilityEvidenceCount": 0,
+  "finishedAt": "2026-11-02T09:42:25.044242+00:00",
+  "verifierSha256": "b90e98031e7635493217b0758d6f4e360e074653087096bc57e7c0903e61e990",
+  "artifacts": {
+    "blocked-after-restart.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\blocked-after-restart.json",
+      "sha256": "3fbaff5121012fbe7a1ccc7d05c65ae334a6f0d59fe5090d18e7c11280e1cf74"
+    },
+    "blocked-before-restart.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\blocked-before-restart.json",
+      "sha256": "3fbaff5121012fbe7a1ccc7d05c65ae334a6f0d59fe5090d18e7c11280e1cf74"
+    },
+    "blocked-restart.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\blocked-restart.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "blocked-restart.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\blocked-restart.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "completed-history.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\completed-history.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "completed-history.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\completed-history.stdout.json",
+      "sha256": "dbbb1270544a6ec23d47be1441299e5df8a94f11a5c640cafad34cdb80cd56fa"
+    },
+    "corrected-configuration.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\corrected-configuration.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "corrected-configuration.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\corrected-configuration.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-failure.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\current-failure.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-failure.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\current-failure.stdout.json",
+      "sha256": "7ca466a701083fed02b560359ec5c44fd50858df72f00f262ac17755f5964e7e"
+    },
+    "explicit-retry.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\explicit-retry.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "explicit-retry.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\explicit-retry.stdout.json",
+      "sha256": "4beebb8d411e9c7b58f864ac2146af568aa7babdb4c3aca1199a609d90720bfd"
+    },
+    "input.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\input.json",
+      "sha256": "2d28b4fd336056d9cdb0a4e5f5953f6ad9f582f3cd820dead463541eedfed4ff"
+    },
+    "invalid-configuration.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\invalid-configuration.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "invalid-configuration.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\invalid-configuration.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\prepare.stdout.json",
+      "sha256": "fd0aca3e6358ee968cfcc06d3322d09008c0173a7f24ab0dad63bd8eb13ecb91"
+    },
+    "retry-replay.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\retry-replay.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "retry-replay.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-failure-network-20261102-r1\\retry-replay.stdout.json",
+      "sha256": "46095397a16fd52b5c6f6c1d2ee1a04aa5219fbbc5675bbc4fa7e2f6dbdd3c3d"
+    }
+  }
+}

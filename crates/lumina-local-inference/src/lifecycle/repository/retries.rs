@@ -249,6 +249,17 @@ impl LifecycleRepository {
             failed.generation += 1;
             Self::write_job(&tx, &failed, version)?;
         }
+        Self::record_failure_by(
+            &tx,
+            &failed,
+            crate::lifecycle::InstallationFailureDetails {
+                code,
+                origin: crate::lifecycle::InstallationFailureOrigin::for_stage(failed.stage),
+                artifact_id: Some(artifact_id.into()),
+                automatic_retry_at: budget.next_retry_at(),
+            },
+            now,
+        )?;
         tx.commit()?;
         Ok(budget)
     }

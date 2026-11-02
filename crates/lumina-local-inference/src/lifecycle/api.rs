@@ -62,6 +62,15 @@ map_enum!(
     LegacyUntracked
 );
 map_enum!(
+    InstallationFailureOrigin,
+    ModelInstallationFailureOrigin,
+    Credentials,
+    Admission,
+    Transfer,
+    Verification,
+    Commit
+);
+map_enum!(
     LifecycleErrorCode,
     ModelInstallationFailureCode,
     SourceNotFound,
@@ -181,6 +190,7 @@ impl InstallationApplication {
             return Ok(ModelInstallationJobsListResponse {
                 jobs: Vec::new(),
                 file_retries: Vec::new(),
+                failures: Vec::new(),
                 next_after_id: None,
                 service_state: self.state().into(),
             });
@@ -199,6 +209,7 @@ impl InstallationApplication {
         let next_after_id = (jobs.len() == request.limit as usize)
             .then(|| jobs.last().expect("Job page is nonempty").id.clone());
         let mut file_retries = Vec::new();
+        let mut failures = Vec::new();
         for job in &jobs {
             file_retries.extend(
                 repository
@@ -206,10 +217,32 @@ impl InstallationApplication {
                     .into_iter()
                     .map(Into::into),
             );
+            if let Some(record) = repository.latest_installation_failure(&job.id)? {
+                failures.push(ModelInstallationFailureDto {
+                    job_id: job.id.clone(),
+                    job_version: record.job.version,
+                    code: record.details.code.into(),
+                    stage: record.job.stage.into(),
+                    origin: record.details.origin.into(),
+                    artifact_id: record.details.artifact_id,
+                    message_key: record.failure.message_key,
+                    message_args: record.failure.message_args,
+                    retryable: record.details.code.retryable(),
+                    recoverable: record.failure.recoverable,
+                    cause_id: record
+                        .failure
+                        .cause_id
+                        .context("Installation failure has no cause identity")?,
+                    automatic_retry_at: record.details.automatic_retry_at,
+                    is_current: *job == record.job,
+                    occurred_at: record.occurred_at,
+                });
+            }
         }
         Ok(ModelInstallationJobsListResponse {
             jobs: jobs.into_iter().map(Into::into).collect(),
             file_retries,
+            failures,
             next_after_id,
             service_state: self.state().into(),
         })

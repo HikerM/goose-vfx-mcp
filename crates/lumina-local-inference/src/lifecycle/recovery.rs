@@ -1,10 +1,11 @@
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use super::{
-    resume_installation_with_control, InstallationSource, InstallationStore,
-    InstallationWorkerControl, LifecycleErrorCode, LifecycleRepository, ModelSourceError,
+    resume_installation_with_control, InstallationFailureDetails, InstallationFailureOrigin,
+    InstallationSource, InstallationStore, InstallationWorkerControl, JobStatus,
+    LifecycleErrorCode, LifecycleRepository,
 };
 
 pub type InstallationCredentials = Arc<dyn Fn() -> Result<Option<String>> + Send + Sync>;
@@ -98,6 +99,15 @@ where
             disposition,
         })
     };
+    let observed = repository
+        .read_job(&job_id)?
+        .context("Installation job not found")?;
+    if !(matches!(observed.status, JobStatus::Queued | JobStatus::Cancelling)
+        || (observed.status == JobStatus::Running
+            && observed.lease_until.is_some_and(|until| until <= clock())))
+    {
+        return outcome(RecoveryDisposition::Interrupted);
+    }
     let intent = match repository.read_installation_input(&job_id) {
         Ok(Some(intent)) => intent,
         Ok(None) => {
@@ -110,12 +120,28 @@ where
     if intent.input.store_root != store.root() {
         return outcome(RecoveryDisposition::DifferentStore);
     }
-    let token = if matches!(intent.input.source, InstallationSource::ModelScope {}) {
+    let token = if observed.status != JobStatus::Cancelling
+        && matches!(intent.input.source, InstallationSource::ModelScope {})
+    {
         let provider = Arc::clone(&credentials);
         match tokio::task::spawn_blocking(move || provider()).await {
             Ok(Ok(token)) => token,
             _ => {
-                return outcome(RecoveryDisposition::CredentialsUnavailable);
+                control.checkpoint()?;
+                let recorded = repository.block_installation(
+                    &observed,
+                    &store,
+                    InstallationFailureDetails::operation(
+                        LifecycleErrorCode::SourceAuthRequired,
+                        InstallationFailureOrigin::Credentials,
+                    ),
+                    clock(),
+                )?;
+                return outcome(if recorded.is_some() {
+                    RecoveryDisposition::CredentialsUnavailable
+                } else {
+                    RecoveryDisposition::Interrupted
+                });
             }
         }
     } else {
@@ -139,9 +165,7 @@ where
             if error.is::<super::worker_control::InstallationInterrupted>() {
                 return outcome(RecoveryDisposition::Interrupted);
             }
-            let code = error
-                .downcast_ref::<ModelSourceError>()
-                .map_or(LifecycleErrorCode::InstallFailed, |source| source.code);
+            let code = super::failure::installation_failure_code(&error);
             if code == LifecycleErrorCode::Cancelled {
                 RecoveryDisposition::Cancelled
             } else {
