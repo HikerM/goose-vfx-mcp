@@ -39,4 +39,4 @@
 - 未知：Windows computer and browser control has not yet passed a product-level end-to-end acceptance scenario.
 - 未知：The current English localization fallback conflicts with the Simplified-Chinese-only commercial product requirement.
 
-> 完整事实见 `.ai/requirements/source-baseline.json`、`ledger.json` 与 `reconciliation.json`。
+> 需求对账的历史明细可从 Git 历史查询。

@@ -25,4 +25,4 @@
 - 决策模式：automatic_non_blocking
 - 已锁定：无
 
-> 决策 Checkpoint 自动记录后非阻塞继续，不设置人工审批暂停点。完整历史和被裁剪需求见 `.ai/requirements/ledger.json`，会话只加载本文件活动切片。
+> 决策 Checkpoint 自动记录后非阻塞继续，不设置人工审批暂停点。完整历史和被裁剪需求可从 Git 历史查询，会话只加载本文件活动切片。
