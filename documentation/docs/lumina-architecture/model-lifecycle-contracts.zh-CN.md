@@ -54,6 +54,7 @@ ModelScope Provider 暴露 `search`、`readRepository`、`resolveRevision`、`li
 | `Installation` | 稳定 installationId；明确的 activeVersionId；旧 ID 别名；不绑定单个不可变目录快照 |
 | `InstalledVersion` | 全局不可变 versionId；installationId；plan/model/variant；manifestDigest；正式版本目录；引用的 blob；提交状态；installedAt；历史版本保留 |
 | `Job` | jobId；操作；installation/plan；幂等键；阶段；generation；状态版本；lease；heartbeat；事件序号；错误；恢复检查点 |
+| `InstallationInput` / `InstallationIntent` | jobId；原计划摘要；绑定时间与规则版本；installationId；全局不可变 versionId；规范化受管根目录；固定 ModelScope 来源或精确缓存文件映射；不得保存令牌或任意下载 URL |
 | `FileJob` | jobId；artifactId；目标；逐文件状态；分段检查点；重试；expected/actual bytes；computedSha256；速度及 ETA |
 | `RuntimeBuild` | adapterId；引擎版本和源码提交；绑定版本；平台架构；features；二进制摘要；能力声明版本 |
 | `CapabilityEvidence` | installationId；文件摘要集合；runtimeBuildId；launchDigest；能力；验证套件版本；输入输出引用；判定；测量；时间 |
@@ -115,7 +116,7 @@ BLOCKED、FAILED 是任务结果，并保存失败阶段；PAUSED、CANCELLING�
 
 所有路径从现有 `Paths` 派生。建议新增模型命名空间 `model-lifecycle/`，包含独立 `models.db`、`blobs/sha256/`、`staging/`、`installations/` 和任务证据目录；现有模型路径作为迁移源保留，不硬编码 Windows 用户目录。
 
-1. 原子登记执行请求、幂等键及计划摘要，预留空间并取得任务租约。
+1. 在同一数据库事务中登记执行请求、不可变安装输入、幂等键及计划摘要，预留空间并取得任务租约。
 2. 按 artifact 身份下载到同卷 staging。已有目标和共享 blob 都重新核对必要哈希、大小及验证证据，不能 exists 即跳过。
 3. 逐文件确认远程身份与分段检查点一致；支持 Range、ETag/If-Range 等实际可用机制；不支持 Range 时明确从头重下该文件。
 4. 全部必要文件完成后核对 SHA256、GGUF 结构和组件图，生成规范序列化 Manifest 及摘要。
@@ -124,6 +125,8 @@ BLOCKED、FAILED 是任务结果，并保存失败阶段；PAUSED、CANCELLING�
 7. 只有登记成功的 installation 出现在正式已安装列表；待下载项目和任务单独展示。INSTALLED 后运行 Validator，不改变文件提交事实。
 
 Manifest 显式包含 installationId 和 versionId。版本目录按两者分别派生，更新生成新版本而不覆盖旧目录；首次登记可建立默认活动版本，之后的更新保留现有 activeVersionId。切换必须带 expectedActiveVersion，冲突拒绝；运行会话持有原 versionId 和 manifestDigest，不因默认项变化而替换。安装日志和引用以 versionId 关联，跨版本相同摘要的文件仍各自保留引用。
+
+任务和逐文件账本不能早于安装输入独立提交。同一幂等键只重放同一输入，改变版本、受管根目录、传输方式或缓存选择必须拒绝。底层 Manifest 提交也须核对该身份；文件验证见证携带实际受管根目录，不能用另一目录中内容相同的文件完成登记。恢复从持久化输入重建执行请求，鉴权凭据在执行时重新读取。历史任务若缺少输入，必须显式补录并核对既有提交日志，不从旧别名或目录名称猜测；暂停、取消和有效租约仍分别遵循原控制语义。
 
 文件系统和数据库没有共同原子事务。不得把“数据库 transaction + rename”描述成整体原子提交。
 

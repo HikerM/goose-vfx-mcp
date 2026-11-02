@@ -1021,3 +1021,921 @@ fn transient_file_retry_preserves_checkpoint_while_hash_mismatch_requires_restar
         }
     }
 }
+
+fn cache_input(fixture: &Fixture) -> InstallationInput {
+    InstallationInput::new(
+        &fixture.store,
+        fixture.request.installation_id.clone(),
+        fixture.request.version_id.clone(),
+        InstallationSource::LocalCache {
+            files: fixture.request.source_files.clone(),
+        },
+    )
+    .unwrap()
+}
+
+fn acceptance(fixture: &Fixture, id: &str) -> JobAcceptance {
+    let job = fixture
+        .repository
+        .read_job(&fixture.request.job_id)
+        .unwrap()
+        .unwrap();
+    JobAcceptance {
+        id: id.into(),
+        idempotency_key: format!("key:{id}"),
+        plan_id: job.plan_id,
+        plan_digest: job.plan_digest,
+    }
+}
+
+#[test]
+fn durable_acceptance_reopens_the_exact_inputs_and_is_idempotent_after_expiry() {
+    let fixture = Fixture::new(true);
+    let input = cache_input(&fixture);
+    let mut request = acceptance(&fixture, "durable-job");
+    let job = fixture
+        .repository
+        .enqueue_installation(&request, &input, 32, 1 << 30)
+        .unwrap();
+    let intent = fixture
+        .repository
+        .read_installation_input(&job.id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(intent.input, input);
+    assert_eq!(intent.plan_digest, request.plan_digest);
+    assert_eq!(intent.bound_at, 32);
+    request.id = "duplicate-id-must-not-be-created".into();
+    assert_eq!(
+        fixture
+            .repository
+            .enqueue_installation(&request, &input, 500, 0)
+            .unwrap(),
+        job
+    );
+    assert!(fixture.repository.read_job(&request.id).unwrap().is_none());
+    drop(fixture.repository);
+    let reopened = LifecycleRepository::open(&fixture.temp.path().join("models.db")).unwrap();
+    assert_eq!(
+        reopened.read_installation_input(&job.id).unwrap(),
+        Some(intent)
+    );
+    assert_eq!(reopened.file_transfers(&job.id).unwrap().len(), 1);
+    assert_eq!(reopened.events(&job.id, 0, 100).unwrap().len(), 1);
+}
+
+#[test]
+fn input_insert_failure_rolls_back_the_job_files_and_events() {
+    let fixture = Fixture::new(true);
+    let request = acceptance(&fixture, "failed-atomic-job");
+    let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+    raw.execute_batch("CREATE TRIGGER reject_inputs BEFORE INSERT ON installation_inputs BEGIN SELECT RAISE(ABORT, 'injected input failure'); END;").unwrap();
+    assert!(fixture
+        .repository
+        .enqueue_installation(&request, &cache_input(&fixture), 32, 1 << 30)
+        .is_err());
+    assert!(fixture.repository.read_job(&request.id).unwrap().is_none());
+    assert!(fixture
+        .repository
+        .file_transfers(&request.id)
+        .unwrap()
+        .is_empty());
+    assert!(fixture
+        .repository
+        .events(&request.id, 0, 100)
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn immutable_inputs_reject_version_store_transport_and_cache_selection_changes() {
+    let fixture = Fixture::new(true);
+    let request = acceptance(&fixture, "durable-job");
+    let input = cache_input(&fixture);
+    let job = fixture
+        .repository
+        .enqueue_installation(&request, &input, 32, 1 << 30)
+        .unwrap();
+    let events = fixture.repository.events(&job.id, 0, 100).unwrap();
+    let mut candidates = Vec::new();
+    let mut changed = input.clone();
+    changed.version_id = "different-version".into();
+    candidates.push(changed);
+    let mut changed = input.clone();
+    changed.installation_id = "different-installation".into();
+    candidates.push(changed);
+    let mut changed = input.clone();
+    changed.store_root = fixture.temp.path().join("other-store");
+    candidates.push(changed);
+    let mut changed = input.clone();
+    changed.source = InstallationSource::ModelScope {};
+    candidates.push(changed);
+    let mut changed = input.clone();
+    if let InstallationSource::LocalCache { files } = &mut changed.source {
+        *files.values_mut().next().unwrap() = fixture.temp.path().join("different-source.gguf");
+    }
+    candidates.push(changed);
+    for changed in candidates {
+        assert!(fixture
+            .repository
+            .enqueue_installation(&request, &changed, 33, 1 << 30)
+            .is_err());
+        assert!(fixture
+            .repository
+            .adopt_installation_input(&job.id, &changed, 33)
+            .is_err());
+    }
+    assert_eq!(
+        fixture.repository.read_job(&job.id).unwrap(),
+        Some(job.clone())
+    );
+    assert_eq!(fixture.repository.events(&job.id, 0, 100).unwrap(), events);
+}
+
+#[test]
+fn version_reservation_prevents_two_jobs_from_publishing_the_same_version() {
+    let fixture = Fixture::new(true);
+    let input = cache_input(&fixture);
+    fixture
+        .repository
+        .enqueue_installation(&acceptance(&fixture, "first"), &input, 32, 1 << 30)
+        .unwrap();
+    assert!(fixture
+        .repository
+        .enqueue_installation(&acceptance(&fixture, "second"), &input, 32, 1 << 30)
+        .is_err());
+    assert!(fixture.repository.read_job("second").unwrap().is_none());
+}
+
+#[test]
+fn legacy_job_requires_explicit_input_adoption_before_recovery() {
+    let fixture = Fixture::new(true);
+    let before = fixture
+        .repository
+        .read_job(&fixture.request.job_id)
+        .unwrap()
+        .unwrap();
+    let request = JobAcceptance {
+        id: before.id.clone(),
+        idempotency_key: before.idempotency_key.clone(),
+        plan_id: before.plan_id.clone(),
+        plan_digest: before.plan_digest.clone(),
+    };
+    let input = cache_input(&fixture);
+    assert!(fixture
+        .repository
+        .enqueue_installation(&request, &input, 32, 1 << 30)
+        .is_err());
+    let repository = Arc::new(fixture.repository);
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    assert!(runtime
+        .block_on(resume_installation(
+            repository.clone(),
+            Arc::new(fixture.store),
+            before.id.clone(),
+            None,
+            "legacy-recovery".into(),
+            || 500
+        ))
+        .is_err());
+    assert_eq!(
+        repository.read_job(&before.id).unwrap(),
+        Some(before.clone())
+    );
+    repository
+        .adopt_installation_input(&before.id, &input, 32)
+        .unwrap();
+    assert_eq!(repository.read_job(&before.id).unwrap(), Some(before));
+}
+
+#[test]
+fn recovery_after_database_reopen_needs_only_the_job_id_and_keeps_ready_unverified() {
+    let fixture = Fixture::new(true);
+    let input = cache_input(&fixture);
+    let request = acceptance(&fixture, "recovery-job");
+    fixture
+        .repository
+        .enqueue_installation(&request, &input, 32, 1 << 30)
+        .unwrap();
+    drop(fixture.repository);
+    let repository =
+        Arc::new(LifecycleRepository::open(&fixture.temp.path().join("models.db")).unwrap());
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap();
+    let store = Arc::new(fixture.store);
+    let installed = runtime
+        .block_on(resume_installation(
+            repository.clone(),
+            store.clone(),
+            request.id.clone(),
+            None,
+            "recovery-worker".into(),
+            || 500,
+        ))
+        .unwrap();
+    assert_eq!(installed.manifest.installation_id, input.installation_id);
+    assert_eq!(installed.manifest.version_id, input.version_id);
+    let events = repository.events(&request.id, 0, 100).unwrap();
+    assert_eq!(
+        runtime
+            .block_on(resume_installation(
+                repository.clone(),
+                store,
+                request.id.clone(),
+                None,
+                "replay".into(),
+                || 600
+            ))
+            .unwrap(),
+        installed
+    );
+    assert_eq!(repository.events(&request.id, 0, 100).unwrap(), events);
+    assert!(repository
+        .evidence(&input.installation_id)
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn recovery_rejects_another_store_before_claiming_or_creating_installations() {
+    let fixture = Fixture::new(true);
+    let request = acceptance(&fixture, "recovery-job");
+    fixture
+        .repository
+        .enqueue_installation(&request, &cache_input(&fixture), 32, 1 << 30)
+        .unwrap();
+    let wrong_store =
+        Arc::new(InstallationStore::open(&fixture.temp.path().join("wrong-store")).unwrap());
+    let repository = Arc::new(fixture.repository);
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    assert!(runtime
+        .block_on(resume_installation(
+            repository.clone(),
+            wrong_store,
+            request.id.clone(),
+            None,
+            "wrong-root".into(),
+            || 500
+        ))
+        .is_err());
+    assert_eq!(
+        repository.read_job(&request.id).unwrap().unwrap().version,
+        0
+    );
+    assert!(repository.active_installations().unwrap().is_empty());
+}
+
+#[test]
+fn network_recovery_uses_ephemeral_credentials_and_keeps_invalid_tokens_out_of_storage() {
+    let fixture = Fixture::new(true);
+    let request = acceptance(&fixture, "network-recovery");
+    let mut input = cache_input(&fixture);
+    input.source = InstallationSource::ModelScope {};
+    fixture
+        .repository
+        .enqueue_installation(&request, &input, 32, 1 << 30)
+        .unwrap();
+    let repository = Arc::new(fixture.repository);
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let error = runtime
+        .block_on(resume_installation(
+            repository.clone(),
+            Arc::new(fixture.store),
+            request.id.clone(),
+            Some("unit-secret\ninvalid".into()),
+            "auth-recovery".into(),
+            || 500,
+        ))
+        .unwrap_err();
+    assert_eq!(
+        error.downcast_ref::<ModelSourceError>().unwrap().code,
+        LifecycleErrorCode::SourceAuthRequired
+    );
+    assert_eq!(
+        repository.read_job(&request.id).unwrap().unwrap().version,
+        0
+    );
+    let intent = repository
+        .read_installation_input(&request.id)
+        .unwrap()
+        .unwrap();
+    let payload = serde_json::to_string(&intent).unwrap();
+    assert!(!payload.contains("secret") && !payload.contains("token"));
+    assert_eq!(intent.input, input);
+}
+
+#[test]
+fn serialized_installation_inputs_reject_tokens_urls_and_unknown_fields() {
+    let fixture = Fixture::new(true);
+    let original = serde_json::to_value(cache_input(&fixture)).unwrap();
+    for field in ["token", "url", "authorization"] {
+        let mut value = original.clone();
+        value[field] = "must-not-be-accepted".into();
+        assert!(serde_json::from_value::<InstallationInput>(value).is_err());
+        let mut value = original.clone();
+        value["source"] = json!({"kind":"model_scope"});
+        value["source"][field] = "must-not-be-accepted".into();
+        assert!(serde_json::from_value::<InstallationInput>(value).is_err());
+    }
+}
+
+#[test]
+fn corrupted_input_payload_is_rejected_before_recovery_or_worker_claim() {
+    let fixture = Fixture::new(true);
+    let request = acceptance(&fixture, "corrupt-job");
+    fixture
+        .repository
+        .enqueue_installation(&request, &cache_input(&fixture), 32, 1 << 30)
+        .unwrap();
+    let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+    raw.execute(
+        "UPDATE installation_inputs SET payload=json_set(payload,'$.input.version_id','forged')",
+        [],
+    )
+    .unwrap();
+    assert!(fixture
+        .repository
+        .read_installation_input(&request.id)
+        .is_err());
+    let mut cache_request = fixture.request.clone();
+    cache_request.job_id = request.id.clone();
+    assert!(install_from_local_cache(
+        &fixture.repository,
+        &fixture.store,
+        &cache_request,
+        "corrupt-input",
+        || 500
+    )
+    .is_err());
+    assert_eq!(
+        fixture
+            .repository
+            .read_job(&request.id)
+            .unwrap()
+            .unwrap()
+            .version,
+        0
+    );
+}
+
+#[test]
+fn input_admission_rejects_noncanonical_roots_and_unmatched_cache_artifacts_atomically() {
+    let fixture = Fixture::new(true);
+    for (id, mode) in [("noncanonical", 0), ("wrong-artifact", 1)] {
+        let mut input = cache_input(&fixture);
+        if mode == 0 {
+            input.store_root = fixture.temp.path().join("managed/../managed");
+        } else if let InstallationSource::LocalCache { files } = &mut input.source {
+            files.insert("unplanned".into(), fixture.temp.path().join("source.gguf"));
+        }
+        assert!(fixture
+            .repository
+            .enqueue_installation(&acceptance(&fixture, id), &input, 32, 1 << 30)
+            .is_err());
+        assert!(fixture.repository.read_job(id).unwrap().is_none());
+    }
+}
+
+#[test]
+fn schema_six_upgrade_preserves_legacy_jobs_without_inventing_installation_inputs() {
+    for collision in [false, true] {
+        let fixture = Fixture::new(true);
+        let path = fixture.temp.path().join("models.db");
+        let before = fixture
+            .repository
+            .read_job(&fixture.request.job_id)
+            .unwrap()
+            .unwrap();
+        drop(fixture.repository);
+        let raw = rusqlite::Connection::open(&path).unwrap();
+        raw.execute_batch("DROP TABLE installation_inputs; PRAGMA user_version=6;")
+            .unwrap();
+        if collision {
+            raw.execute_batch("CREATE TABLE installation_inputs (legacy_value TEXT);")
+                .unwrap();
+            assert!(LifecycleRepository::open(&path).is_err());
+            assert_eq!(
+                raw.pragma_query_value::<u32, _>(None, "user_version", |r| r.get(0))
+                    .unwrap(),
+                6
+            );
+            assert_eq!(
+                raw.query_row::<u32, _, _>("SELECT count(*) FROM lifecycle_jobs", [], |r| r.get(0))
+                    .unwrap(),
+                1
+            );
+        } else {
+            let reopened = LifecycleRepository::open(&path).unwrap();
+            assert_eq!(reopened.read_job(&before.id).unwrap(), Some(before.clone()));
+            assert!(reopened
+                .read_installation_input(&before.id)
+                .unwrap()
+                .is_none());
+            assert_eq!(
+                raw.pragma_query_value::<u32, _>(None, "user_version", |r| r.get(0))
+                    .unwrap(),
+                MODEL_DATABASE_SCHEMA_VERSION
+            );
+        }
+    }
+}
+
+#[test]
+fn concurrent_connections_accept_one_durable_job_for_the_same_idempotency_key() {
+    let fixture = Fixture::new(true);
+    let path = fixture.temp.path().join("models.db");
+    let left = LifecycleRepository::open(&path).unwrap();
+    let right = LifecycleRepository::open(&path).unwrap();
+    let barrier = Arc::new(std::sync::Barrier::new(3));
+    let input = cache_input(&fixture);
+    let results = std::thread::scope(|scope| {
+        let mut handles = Vec::new();
+        for (repository, id) in [(left, "candidate-left"), (right, "candidate-right")] {
+            let mut request = acceptance(&fixture, id);
+            request.idempotency_key = "shared-install-key".into();
+            let barrier = barrier.clone();
+            let input = input.clone();
+            handles.push(scope.spawn(move || {
+                barrier.wait();
+                repository
+                    .enqueue_installation(&request, &input, 32, 1 << 30)
+                    .unwrap()
+            }));
+        }
+        barrier.wait();
+        handles
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+    assert_eq!(results[0], results[1]);
+    assert_eq!(fixture.repository.list_jobs(None, 100).unwrap().len(), 2);
+    assert!(fixture
+        .repository
+        .read_installation_input(&results[0].id)
+        .unwrap()
+        .is_some());
+    assert_eq!(
+        fixture
+            .repository
+            .events(&results[0].id, 0, 100)
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn workers_cannot_change_a_bound_transport_or_destination_before_claiming() {
+    let fixture = Fixture::new(true);
+    fixture
+        .repository
+        .adopt_installation_input(&fixture.request.job_id, &cache_input(&fixture), 32)
+        .unwrap();
+    let mut wrong = fixture.request.clone();
+    wrong.version_id = "other-version".into();
+    assert!(install_from_local_cache(
+        &fixture.repository,
+        &fixture.store,
+        &wrong,
+        "wrong-version",
+        || 500
+    )
+    .is_err());
+    let request = network_request(&fixture.request);
+    let repository = Arc::new(fixture.repository);
+    let error = network_run(
+        repository.clone(),
+        Arc::new(fixture.store),
+        request.clone(),
+        None,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("different immutable inputs"));
+    assert_eq!(
+        repository
+            .read_job(&request.job_id)
+            .unwrap()
+            .unwrap()
+            .version,
+        0
+    );
+}
+
+#[test]
+fn a_registered_legacy_version_cannot_be_reserved_by_a_new_job() {
+    let fixture = Fixture::new(true);
+    let input = cache_input(&fixture);
+    fixture.run(40).unwrap();
+    let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+    raw.execute("DELETE FROM installation_inputs", []).unwrap();
+    assert!(fixture
+        .repository
+        .enqueue_installation(&acceptance(&fixture, "collision"), &input, 41, 1 << 30)
+        .is_err());
+    assert!(fixture.repository.read_job("collision").unwrap().is_none());
+    assert!(fixture
+        .repository
+        .installed_version(&fixture.request.version_id)
+        .unwrap()
+        .is_some());
+}
+
+#[test]
+fn bounded_recovery_pages_resume_bound_jobs_and_preserve_paused_live_and_legacy_jobs() {
+    let fixture = Fixture::new(true);
+    for id in [
+        "a-bound",
+        "b-other",
+        "c-corrupt",
+        "d-paused",
+        "e-cancelled",
+        "f-live",
+        "g-cancelling",
+    ] {
+        let mut input = cache_input(&fixture);
+        input.version_id = format!("version:{id}");
+        if id == "b-other" {
+            input.store_root = InstallationStore::open(&fixture.temp.path().join("other-store"))
+                .unwrap()
+                .root()
+                .to_path_buf();
+        }
+        let job = fixture
+            .repository
+            .enqueue_installation(&acceptance(&fixture, id), &input, 32, 1 << 30)
+            .unwrap();
+        if id == "e-cancelled" {
+            fixture
+                .repository
+                .transition(id, job.version, JobStatus::Cancelled, 33)
+                .unwrap();
+        }
+        if matches!(id, "d-paused" | "f-live" | "g-cancelling") {
+            fixture
+                .repository
+                .claim(id, job.version, "old-worker", 33, 1000)
+                .unwrap();
+            let job = fixture.repository.read_job(id).unwrap().unwrap();
+            if id != "f-live" {
+                fixture
+                    .repository
+                    .transition(
+                        id,
+                        job.version,
+                        if id == "d-paused" {
+                            JobStatus::Paused
+                        } else {
+                            JobStatus::Cancelling
+                        },
+                        34,
+                    )
+                    .unwrap();
+            }
+        }
+    }
+    let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+    raw.execute(
+        "UPDATE installation_inputs SET digest='invalid' WHERE job_id='c-corrupt'",
+        [],
+    )
+    .unwrap();
+    drop(raw);
+    let legacy_id = fixture.request.job_id.clone();
+    let repository = Arc::new(fixture.repository);
+    let store = Arc::new(fixture.store);
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()
+        .unwrap();
+    let credentials: InstallationCredentials =
+        Arc::new(|| panic!("Cache and skipped recovery jobs must not request credentials"));
+    let mut after_id = None;
+    let mut outcomes = Vec::new();
+    loop {
+        let page = runtime
+            .block_on(recover_installations_page(
+                repository.clone(),
+                store.clone(),
+                RecoveryPageRequest {
+                    after_id,
+                    limit: 2,
+                    worker_name: "paged-worker".into(),
+                },
+                credentials.clone(),
+                || 500,
+            ))
+            .unwrap();
+        outcomes.extend(page.outcomes);
+        match page.next_after_id {
+            Some(cursor) => after_id = Some(cursor),
+            None => break,
+        }
+    }
+    assert_eq!(
+        outcomes
+            .iter()
+            .map(|outcome| outcome.job_id.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            "a-bound",
+            "b-other",
+            "c-corrupt",
+            "g-cancelling",
+            legacy_id.as_str()
+        ]
+    );
+    assert_eq!(
+        outcomes[0].disposition,
+        RecoveryDisposition::Completed {
+            version_id: "version:a-bound".into()
+        }
+    );
+    assert_eq!(outcomes[1].disposition, RecoveryDisposition::DifferentStore);
+    assert_eq!(outcomes[2].disposition, RecoveryDisposition::InvalidInput);
+    assert_eq!(outcomes[3].disposition, RecoveryDisposition::Cancelled);
+    assert_eq!(
+        outcomes[4].disposition,
+        RecoveryDisposition::NeedsInputAdoption
+    );
+    for (id, status) in [
+        ("d-paused", JobStatus::Paused),
+        ("e-cancelled", JobStatus::Cancelled),
+        ("f-live", JobStatus::Running),
+    ] {
+        assert_eq!(repository.read_job(id).unwrap().unwrap().status, status);
+    }
+    assert!(repository
+        .read_installation_input(&legacy_id)
+        .unwrap()
+        .is_none());
+}
+
+#[test]
+fn recovery_credential_provider_failures_leave_the_durable_job_queued() {
+    let fixture = Fixture::new(true);
+    let request = acceptance(&fixture, "network-job");
+    let mut input = cache_input(&fixture);
+    input.source = InstallationSource::ModelScope {};
+    fixture
+        .repository
+        .enqueue_installation(&request, &input, 32, 1 << 30)
+        .unwrap();
+    let repository = Arc::new(fixture.repository);
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let page = runtime
+        .block_on(recover_installations_page(
+            repository.clone(),
+            Arc::new(fixture.store),
+            RecoveryPageRequest {
+                after_id: None,
+                limit: 100,
+                worker_name: "credentials-worker".into(),
+            },
+            Arc::new(|| anyhow::bail!("Unit credential provider unavailable")),
+            || 500,
+        ))
+        .unwrap();
+    assert_eq!(page.outcomes[0].job_id, request.id);
+    assert_eq!(
+        page.outcomes[0].disposition,
+        RecoveryDisposition::CredentialsUnavailable
+    );
+    assert_eq!(
+        repository.read_job(&request.id).unwrap().unwrap().version,
+        0
+    );
+}
+
+fn installing_fixture(fixture: &Fixture) -> (WorkerLease, ModelManifest, PathBuf) {
+    let repository = &fixture.repository;
+    repository
+        .adopt_installation_input(&fixture.request.job_id, &cache_input(fixture), 32)
+        .unwrap();
+    let lease = repository
+        .claim(
+            &fixture.request.job_id,
+            0,
+            "direct-install-worker",
+            33,
+            1200,
+        )
+        .unwrap();
+    repository
+        .advance(&lease, 1, LifecycleStage::Downloading, 34)
+        .unwrap();
+    let file = repository
+        .file_transfers(&fixture.request.job_id)
+        .unwrap()
+        .remove(0);
+    let path = fixture.transfer_path();
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(&path, &fixture.bytes).unwrap();
+    let downloaded = repository
+        .checkpoint_file(
+            &lease,
+            &file.artifact_id,
+            file.version,
+            TransferCheckpoint {
+                completed_bytes: fixture.bytes.len() as u64,
+                prefix_sha256: Sha256Digest::of_bytes(&fixture.bytes),
+                resume_validator: ResumeValidator::Unknown,
+            },
+            35,
+        )
+        .unwrap();
+    let job = repository.read_job(&lease.job_id).unwrap().unwrap();
+    repository
+        .advance(&lease, job.version, LifecycleStage::Verifying, 36)
+        .unwrap();
+    let plan = repository.read_plan(&job.plan_id).unwrap().unwrap();
+    let transfer_root = path.parent().unwrap().to_path_buf();
+    let verified = verify_artifact_file(
+        &plan,
+        &file.artifact_id,
+        &transfer_root,
+        &file.relative_path,
+    )
+    .unwrap();
+    repository
+        .record_verified_file(&lease, &file.artifact_id, downloaded.version, &verified, 37)
+        .unwrap();
+    let job = repository.read_job(&lease.job_id).unwrap().unwrap();
+    repository
+        .advance(&lease, job.version, LifecycleStage::Installing, 38)
+        .unwrap();
+    let manifest = build_installation_manifest(
+        fixture.request.installation_id.clone(),
+        fixture.request.version_id.clone(),
+        plan,
+        &repository.file_transfers(&lease.job_id).unwrap(),
+        job.accepted_at,
+        40,
+    )
+    .unwrap();
+    (lease, manifest, transfer_root)
+}
+
+#[test]
+fn direct_repository_commits_cannot_override_the_durable_destination() {
+    let fixture = Fixture::new(true);
+    let (lease, manifest, _) = installing_fixture(&fixture);
+    let job = fixture.repository.read_job(&lease.job_id).unwrap().unwrap();
+    for change_version in [false, true] {
+        let mut wrong = manifest.clone();
+        if change_version {
+            wrong.version_id = "unexpected-version".into();
+        } else {
+            wrong.installation_id = "unexpected-installation".into();
+        }
+        assert!(fixture
+            .repository
+            .begin_installation_commit(&lease, job.version, &wrong, 40)
+            .is_err());
+        assert!(fixture
+            .repository
+            .installation_commit(&lease.job_id)
+            .unwrap()
+            .is_none());
+        assert_eq!(
+            fixture.repository.read_job(&lease.job_id).unwrap(),
+            Some(job.clone())
+        );
+    }
+}
+
+#[test]
+fn prepare_commit_and_registered_replay_reject_another_store_before_writing_files() {
+    let fixture = Fixture::new(true);
+    let (lease, manifest, transfer_root) = installing_fixture(&fixture);
+    let wrong_store = InstallationStore::open(&fixture.temp.path().join("wrong-store")).unwrap();
+    let job = fixture.repository.read_job(&lease.job_id).unwrap().unwrap();
+    assert!(wrong_store
+        .prepare(
+            &fixture.repository,
+            &lease,
+            job.version,
+            &manifest,
+            &transfer_root,
+            || 40
+        )
+        .is_err());
+    assert!(fixture
+        .repository
+        .installation_commit(&lease.job_id)
+        .unwrap()
+        .is_none());
+    assert_eq!(std::fs::read_dir(wrong_store.root()).unwrap().count(), 0);
+    fixture
+        .store
+        .prepare(
+            &fixture.repository,
+            &lease,
+            job.version,
+            &manifest,
+            &transfer_root,
+            || 40,
+        )
+        .unwrap();
+    let journal = fixture
+        .repository
+        .installation_commit(&lease.job_id)
+        .unwrap()
+        .unwrap();
+    assert!(wrong_store
+        .commit(&fixture.repository, &lease, || 40)
+        .is_err());
+    assert_eq!(
+        fixture
+            .repository
+            .installation_commit(&lease.job_id)
+            .unwrap(),
+        Some(journal)
+    );
+    assert_eq!(std::fs::read_dir(wrong_store.root()).unwrap().count(), 0);
+    fixture
+        .store
+        .commit(&fixture.repository, &lease, || 40)
+        .unwrap();
+    assert!(wrong_store
+        .commit(&fixture.repository, &lease, || 40)
+        .is_err());
+    assert_eq!(std::fs::read_dir(wrong_store.root()).unwrap().count(), 0);
+}
+
+#[test]
+fn repository_rejects_a_valid_file_witness_from_another_store() {
+    let fixture = Fixture::new(true);
+    let (lease, manifest, transfer_root) = installing_fixture(&fixture);
+    let job = fixture.repository.read_job(&lease.job_id).unwrap().unwrap();
+    fixture
+        .store
+        .prepare(
+            &fixture.repository,
+            &lease,
+            job.version,
+            &manifest,
+            &transfer_root,
+            || 40,
+        )
+        .unwrap();
+    let wrong_store = InstallationStore::open(&fixture.temp.path().join("foreign-store")).unwrap();
+    let directory = wrong_store
+        .root()
+        .join(installation_directory(&manifest, false).unwrap().as_str());
+    std::fs::create_dir_all(&directory).unwrap();
+    std::fs::write(
+        directory.join("manifest.json"),
+        serde_json::to_vec(&manifest).unwrap(),
+    )
+    .unwrap();
+    for file in manifest.installed_files.values() {
+        let path = directory.join(file.relative_path.as_str());
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, &fixture.bytes).unwrap();
+    }
+    let witness = verify_installation_directory(wrong_store.root(), &manifest, false).unwrap();
+    let job = fixture.repository.read_job(&lease.job_id).unwrap().unwrap();
+    let journal = fixture
+        .repository
+        .installation_commit(&lease.job_id)
+        .unwrap()
+        .unwrap();
+    assert!(fixture
+        .repository
+        .advance_installation_commit(
+            &lease,
+            job.version,
+            &witness,
+            InstallationCommitStage::Prepared,
+            40
+        )
+        .is_err());
+    assert_eq!(
+        fixture
+            .repository
+            .installation_commit(&lease.job_id)
+            .unwrap(),
+        Some(journal)
+    );
+    assert_eq!(
+        fixture.repository.read_job(&lease.job_id).unwrap(),
+        Some(job)
+    );
+}

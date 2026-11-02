@@ -11,7 +11,7 @@ use crate::lifecycle::{
 pub(super) const SCHEMA: &str = include_str!("migrations/0004.sql");
 
 impl LifecycleRepository {
-    fn read_commit_by(
+    pub(super) fn read_commit_by(
         connection: &Connection,
         job_id: &str,
     ) -> Result<Option<InstallationCommitJournal>> {
@@ -134,6 +134,13 @@ impl LifecycleRepository {
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
         let mut job = Self::require_installation_worker(&tx, lease, expected_version, now)?;
+        if let Some(intent) = Self::read_installation_input_by(&tx, &job)? {
+            ensure!(
+                intent.input.installation_id == manifest.installation_id
+                    && intent.input.version_id == manifest.version_id,
+                "Manifest differs from the accepted durable destination"
+            );
+        }
         ensure!(
             manifest.plan.digest()? == job.plan_digest
                 && manifest.plan_accepted_at == job.accepted_at
@@ -210,6 +217,14 @@ impl LifecycleRepository {
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
         let mut journal =
             Self::read_commit_by(&tx, &lease.job_id)?.context("Installation commit not found")?;
+        let input_job =
+            Self::read_job_by(&tx, "id", &lease.job_id)?.context("Installation job not found")?;
+        if let Some(intent) = Self::read_installation_input_by(&tx, &input_job)? {
+            ensure!(
+                intent.input.store_root == witness.store_root,
+                "Filesystem verification belongs to a different installation store"
+            );
+        }
         ensure!(
             witness.installation_id == journal.manifest.installation_id
                 && witness.version_id == journal.manifest.version_id

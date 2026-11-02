@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "observedAt": "2026-11-02T04:30:06.408372+00:00",
+  "scope": "Latest guarded binary performs actual public fixed-source network installation, database-only recovery dispatch, verified-directory witness binding, atomic registration and completed replay. Supplements the earlier forced-termination and v6 migration record; no application startup wiring, Runtime or READY acceptance.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\4dce8d03140e03428633ffcf52785d157886ceb0b2b1114e7b4141cd2daea69a\\recover_pending_installations.exe",
+  "binarySha256": "4dce8d03140e03428633ffcf52785d157886ceb0b2b1114e7b4141cd2daea69a",
+  "argv": [
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\4dce8d03140e03428633ffcf52785d157886ceb0b2b1114e7b4141cd2daea69a\\recover_pending_installations.exe",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m1-real-plan-checks-20261101-r1\\models.db",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed"
+  ],
+  "jobId": "job:955d6008-0bd8-4b39-b882-887b12019054",
+  "versionId": "m2-baseline-qwen35-0.8b-guarded-r5",
+  "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+  "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+  "sizeBytes": 833592736,
+  "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+  "schema": 7,
+  "installedVersionCount": 5,
+  "physicalBlobCount": 1,
+  "blobReferenceCount": 5,
+  "durableInputCount": 2,
+  "oldVersionsInputsAndActivationUnchanged": true,
+  "sourceUnchanged": true,
+  "replayVerified": true,
+  "capabilityEvidenceCount": 0,
+  "artifacts": {
+    "after.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\after.json",
+      "sha256": "fe0ca583cd9128a6acd860e815e399ceef44d1faef31883ccf0e72fd98923e50"
+    },
+    "before.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\before.json",
+      "sha256": "4fb2b55341cd7365eb1f419a3a22b4471e65eb2ec48b36668fb6f0fde4bab6bc"
+    },
+    "input.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\input.json",
+      "sha256": "e4182df60efb56b1131216de49f8036af21293fd81c240c6916cf4b5366ecdad"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\prepare.stdout.json",
+      "sha256": "0c7759eb90c6f2804f439b6b5283deee46e27ad8ee253ff098d3a9e9d74279bf"
+    },
+    "recovered.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\recovered.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "recovered.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-guarded-20261102-r2\\recovered.stdout.json",
+      "sha256": "45a88d95de528c8264dcd5da698b87398908f5960782826226ad1bbd10eee1f8"
+    }
+  },
+  "verifierSha256": "67740443a653e63f48556c0a7cb3d510f1a65e7b97a162265bfd55126b5823fd"
+}

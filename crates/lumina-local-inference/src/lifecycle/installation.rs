@@ -2,7 +2,7 @@ use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::{
     FilePurpose, FileTransferRecord, FileTransferState, InstallPlan, InstalledArtifact,
@@ -136,6 +136,7 @@ pub fn installation_directory(manifest: &ModelManifest, committed: bool) -> Resu
 
 #[derive(Debug)]
 pub struct InstallationFilesWitness {
+    pub(crate) store_root: PathBuf,
     pub(crate) installation_id: String,
     pub(crate) version_id: String,
     pub(crate) manifest_digest: Sha256Digest,
@@ -158,6 +159,7 @@ pub(crate) fn verify_installation_directory_with_progress(
     mut progress: impl FnMut(u64) -> Result<()>,
 ) -> Result<InstallationFilesWitness> {
     manifest.validate()?;
+    let store_root = root.canonicalize()?;
     let relative = installation_directory(manifest, committed)?;
     let directory = super::files::checked_local_path(root, &relative)?;
     ensure!(
@@ -224,6 +226,7 @@ pub(crate) fn verify_installation_directory_with_progress(
         }
     }
     Ok(InstallationFilesWitness {
+        store_root,
         installation_id: manifest.installation_id.clone(),
         version_id: manifest.version_id.clone(),
         manifest_digest: digest,

@@ -1,0 +1,174 @@
+use anyhow::{anyhow, ensure, Context, Result};
+use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
+
+use super::{LifecycleJob, LifecycleRepository};
+use crate::lifecycle::{
+    InstallPlan, InstallationInput, InstallationIntent, JobAcceptance, JobStatus, Sha256Digest,
+    INSTALLATION_INPUT_RULES_VERSION,
+};
+
+pub(super) const SCHEMA: &str = include_str!("migrations/0007.sql");
+
+impl LifecycleRepository {
+    fn input_plan_by(connection: &Connection, job: &LifecycleJob) -> Result<InstallPlan> {
+        let (digest, payload): (String, String) = connection.query_row(
+            "SELECT digest, payload FROM installation_plans WHERE id = ?1",
+            [&job.plan_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        let plan: InstallPlan = serde_json::from_str(&payload)?;
+        ensure!(
+            plan.id == job.plan_id
+                && digest == job.plan_digest.as_str()
+                && plan.digest()? == job.plan_digest,
+            "Installation input plan integrity check failed"
+        );
+        Self::validate_plan_observations_by(connection, &plan)?;
+        Ok(plan)
+    }
+
+    pub(super) fn read_installation_input_by(
+        connection: &Connection,
+        job: &LifecycleJob,
+    ) -> Result<Option<InstallationIntent>> {
+        let stored: Option<(String, String, String)> = connection
+            .query_row(
+                "SELECT version_id, digest, payload FROM installation_inputs WHERE job_id = ?1",
+                [&job.id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()?;
+        let Some((version, digest, payload)) = stored else {
+            return Ok(None);
+        };
+        let intent: InstallationIntent = serde_json::from_str(&payload)?;
+        ensure!(
+            intent.rules_version == INSTALLATION_INPUT_RULES_VERSION
+                && intent.job_id == job.id
+                && intent.plan_digest == job.plan_digest
+                && intent.bound_at >= job.accepted_at
+                && intent.input.version_id == version
+                && Sha256Digest::of_serializable(&intent)?.as_str() == digest,
+            "Installation input integrity check failed"
+        );
+        intent
+            .input
+            .validate_plan(&Self::input_plan_by(connection, job)?)?;
+        if let Some(journal) = Self::read_commit_by(connection, &job.id)? {
+            ensure!(
+                journal.manifest.installation_id == intent.input.installation_id
+                    && journal.manifest.version_id == intent.input.version_id,
+                "Installation input differs from the committed destination"
+            );
+        }
+        Ok(Some(intent))
+    }
+
+    pub fn read_installation_input(&self, job_id: &str) -> Result<Option<InstallationIntent>> {
+        let connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let job =
+            Self::read_job_by(&connection, "id", job_id)?.context("Installation job not found")?;
+        Self::read_installation_input_by(&connection, &job)
+    }
+
+    fn bind_installation_input_by(
+        connection: &Connection,
+        job: &LifecycleJob,
+        input: &InstallationInput,
+        now: i64,
+    ) -> Result<InstallationIntent> {
+        if let Some(existing) = Self::read_installation_input_by(connection, job)? {
+            ensure!(
+                existing.input == *input,
+                "Installation job already has different immutable inputs"
+            );
+            return Ok(existing);
+        }
+        ensure!(
+            job.status != JobStatus::Completed,
+            "Completed legacy installations cannot adopt new inputs"
+        );
+        input.validate_plan(&Self::input_plan_by(connection, job)?)?;
+        ensure!(
+            input.store_root.canonicalize()? == input.store_root && now >= job.updated_at,
+            "Installation input requires its canonical store root and a valid binding time"
+        );
+        if let Some(journal) = Self::read_commit_by(connection, &job.id)? {
+            ensure!(
+                journal.manifest.installation_id == input.installation_id
+                    && journal.manifest.version_id == input.version_id,
+                "Legacy input differs from the existing installation journal"
+            );
+        }
+        let registered_job: Option<String> = connection
+            .query_row(
+                "SELECT job_id FROM installation_versions WHERE version_id = ?1",
+                [&input.version_id],
+                |row| row.get(0),
+            )
+            .optional()?;
+        ensure!(
+            registered_job.as_deref().is_none_or(|id| id == job.id),
+            "Installation version belongs to another job"
+        );
+        let intent = InstallationIntent {
+            rules_version: INSTALLATION_INPUT_RULES_VERSION.into(),
+            job_id: job.id.clone(),
+            plan_digest: job.plan_digest.clone(),
+            bound_at: now,
+            input: input.clone(),
+        };
+        connection.execute(
+            "INSERT INTO installation_inputs (job_id, version_id, digest, payload) VALUES (?1, ?2, ?3, ?4)",
+            params![job.id, input.version_id, Sha256Digest::of_serializable(&intent)?.as_str(), serde_json::to_string(&intent)?],
+        )?;
+        Ok(intent)
+    }
+
+    pub fn adopt_installation_input(
+        &self,
+        job_id: &str,
+        input: &InstallationInput,
+        now: i64,
+    ) -> Result<InstallationIntent> {
+        input.validate()?;
+        let mut connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let job = Self::read_job_by(&tx, "id", job_id)?.context("Installation job not found")?;
+        let intent = Self::bind_installation_input_by(&tx, &job, input, now)?;
+        tx.commit()?;
+        Ok(intent)
+    }
+
+    pub fn enqueue_installation(
+        &self,
+        request: &JobAcceptance,
+        input: &InstallationInput,
+        now: i64,
+        available_disk_bytes: u64,
+    ) -> Result<LifecycleJob> {
+        input.validate()?;
+        let mut connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let existing = Self::read_job_by(&tx, "idempotency_key", &request.idempotency_key)?;
+        if let Some(existing) = existing {
+            ensure!(
+                Self::read_installation_input_by(&tx, &existing)?.is_some(),
+                "Legacy job requires explicit input adoption"
+            );
+        }
+        let job = Self::enqueue_by(&tx, request, now, available_disk_bytes)?;
+        Self::bind_installation_input_by(&tx, &job, input, now)?;
+        tx.commit()?;
+        Ok(job)
+    }
+}

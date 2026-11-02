@@ -408,6 +408,11 @@ pub fn install_from_local_cache(
     let job = repository
         .read_job(&request.job_id)?
         .context("Cache installation job not found")?;
+    if let Some(intent) = repository.read_installation_input(&job.id)? {
+        intent
+            .input
+            .validate_destination(store, &request.installation_id, &request.version_id)?;
+    }
     if job.status == JobStatus::Cancelling {
         repository.transition(&job.id, job.version, JobStatus::Cancelled, clock())?;
         return Err(ModelSourceError {
@@ -438,6 +443,15 @@ pub fn install_from_local_cache(
         "Cache source selection does not match the installation plan"
     );
     ensure!(plan.artifacts.values().all(|artifact| artifact.source_sha256.is_some()), "Local cache import requires pinned source checksums; unproven historical files require migration review");
+    let input = super::InstallationInput::new(
+        store,
+        request.installation_id.clone(),
+        request.version_id.clone(),
+        super::InstallationSource::LocalCache {
+            files: request.source_files.clone(),
+        },
+    )?;
+    repository.adopt_installation_input(&job.id, &input, clock())?;
     let lease = repository.claim(&job.id, job.version, worker_name, clock(), 120)?;
     let execution = InstallExecution {
         repository,

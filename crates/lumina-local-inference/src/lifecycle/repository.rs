@@ -6,11 +6,13 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use super::{
-    CapabilityEvidence, InstallPlan, JobStatus, LifecycleStage, RepositorySnapshot, Sha256Digest,
+    CapabilityEvidence, InstallPlan, JobAcceptance, JobStatus, LifecycleStage, RepositorySnapshot,
+    Sha256Digest,
 };
 
 mod catalog;
 mod files;
+mod inputs;
 mod installation;
 mod observations;
 mod plan_observations;
@@ -20,7 +22,7 @@ pub use plan_observations::{
     gguf_header_evidence_id, gguf_observation_evidence_id, OBSERVED_GGUF_PLAN_RULES_VERSION,
 };
 
-pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 6;
+pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 7;
 
 const SCHEMA: &str = include_str!("repository/migrations/0001.sql");
 
@@ -116,6 +118,9 @@ impl LifecycleRepository {
         }
         if version < 6 {
             tx.execute_batch(plan_observations::SCHEMA)?;
+        }
+        if version < 7 {
+            tx.execute_batch(inputs::SCHEMA)?;
         }
         tx.commit()?;
         Ok(Self {
@@ -260,16 +265,37 @@ impl LifecycleRepository {
         now: i64,
         available_disk_bytes: u64,
     ) -> Result<LifecycleJob> {
-        ensure!(
-            !id.is_empty() && !idempotency_key.trim().is_empty(),
-            "Missing job ID or idempotency key"
-        );
+        let request = JobAcceptance {
+            id: id.into(),
+            idempotency_key: idempotency_key.into(),
+            plan_id: plan_id.into(),
+            plan_digest: expected_digest.clone(),
+        };
         let mut connection = self
             .connection
             .lock()
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let existing = Self::read_job_by(&tx, "idempotency_key", idempotency_key)?;
+        let job = Self::enqueue_by(&tx, &request, now, available_disk_bytes)?;
+        tx.commit()?;
+        Ok(job)
+    }
+
+    fn enqueue_by(
+        connection: &Connection,
+        request: &JobAcceptance,
+        now: i64,
+        available_disk_bytes: u64,
+    ) -> Result<LifecycleJob> {
+        let id = request.id.as_str();
+        let idempotency_key = request.idempotency_key.as_str();
+        let plan_id = request.plan_id.as_str();
+        let expected_digest = &request.plan_digest;
+        ensure!(
+            !id.is_empty() && !idempotency_key.trim().is_empty(),
+            "Missing job ID or idempotency key"
+        );
+        let existing = Self::read_job_by(connection, "idempotency_key", idempotency_key)?;
         if let Some(existing) = existing {
             ensure!(
                 existing.plan_id == plan_id && &existing.plan_digest == expected_digest,
@@ -277,7 +303,7 @@ impl LifecycleRepository {
             );
             return Ok(existing);
         }
-        let (stored_digest, payload): (String, String) = tx.query_row(
+        let (stored_digest, payload): (String, String) = connection.query_row(
             "SELECT digest, payload FROM installation_plans WHERE id = ?1",
             [plan_id],
             |row| Ok((row.get(0)?, row.get(1)?)),
@@ -290,13 +316,12 @@ impl LifecycleRepository {
             "Installation plan digest does not match"
         );
         plan.validate_for_install(now, available_disk_bytes)?;
-        Self::validate_plan_observations_by(&tx, &plan)?;
-        tx.execute("INSERT INTO lifecycle_jobs (id, idempotency_key, plan_id, plan_digest, stage, status, accepted_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)", params![id, idempotency_key, plan_id, expected_digest.as_str(), serde_json::to_string(&LifecycleStage::ReadyToInstall)?, serde_json::to_string(&JobStatus::Queued)?, now])?;
-        let job =
-            Self::read_job_by(&tx, "id", id)?.ok_or_else(|| anyhow!("Accepted job is missing"))?;
-        Self::initialize_files(&tx, &job, &plan)?;
-        Self::append_event(&tx, &job)?;
-        tx.commit()?;
+        Self::validate_plan_observations_by(connection, &plan)?;
+        connection.execute("INSERT INTO lifecycle_jobs (id, idempotency_key, plan_id, plan_digest, stage, status, accepted_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)", params![id, idempotency_key, plan_id, expected_digest.as_str(), serde_json::to_string(&LifecycleStage::ReadyToInstall)?, serde_json::to_string(&JobStatus::Queued)?, now])?;
+        let job = Self::read_job_by(connection, "id", id)?
+            .ok_or_else(|| anyhow!("Accepted job is missing"))?;
+        Self::initialize_files(connection, &job, &plan)?;
+        Self::append_event(connection, &job)?;
         Ok(job)
     }
 

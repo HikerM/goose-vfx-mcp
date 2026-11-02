@@ -294,6 +294,13 @@ where
         let job = repository
             .read_job(&request.job_id)?
             .context("Network installation job not found")?;
+        if let Some(intent) = repository.read_installation_input(&job.id)? {
+            intent.input.validate_destination(
+                &store,
+                &request.installation_id,
+                &request.version_id,
+            )?;
+        }
         if job.status == JobStatus::Cancelling {
             repository.transition(&job.id, job.version, JobStatus::Cancelled, clock())?;
             return Err(ModelSourceError {
@@ -321,6 +328,13 @@ where
         );
         plan.validate_for_install(job.accepted_at, fs2::available_space(store.root())?)?;
         let headers = scoped_auth_headers(token.as_deref())?;
+        let input = InstallationInput::new(
+            &store,
+            request.installation_id.clone(),
+            request.version_id.clone(),
+            InstallationSource::ModelScope {},
+        )?;
+        repository.adopt_installation_input(&job.id, &input, clock())?;
         let lease = repository.claim(&job.id, job.version, &worker_name, clock(), 120)?;
         let execution = InstallExecution {
             repository: &repository,

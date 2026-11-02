@@ -380,6 +380,13 @@ impl InstallationStore {
         clock: impl Fn() -> i64,
     ) -> Result<InstallationCommitJournal> {
         manifest.validate()?;
+        if let Some(intent) = repository.read_installation_input(&lease.job_id)? {
+            intent.input.validate_destination(
+                self,
+                &manifest.installation_id,
+                &manifest.version_id,
+            )?;
+        }
         let _version_lock = self.lock("versions", &manifest.version_id)?;
         let journal =
             repository.begin_installation_commit(lease, expected_job_version, manifest, clock())?;
@@ -462,6 +469,13 @@ impl InstallationStore {
         let mut journal = repository
             .installation_commit(&lease.job_id)?
             .context("Installation commit is missing")?;
+        if let Some(intent) = repository.read_installation_input(&lease.job_id)? {
+            intent.input.validate_destination(
+                self,
+                &journal.manifest.installation_id,
+                &journal.manifest.version_id,
+            )?;
+        }
         let _version_lock = self.lock("versions", &journal.manifest.version_id)?;
         let manifest = journal.manifest.clone();
         if journal.stage == InstallationCommitStage::Registered {

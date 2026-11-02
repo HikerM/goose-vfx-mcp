@@ -18,6 +18,7 @@ fn prepare_native_text_plan(
     observation: &ComponentObservation,
     binary: &Path,
     database: &Path,
+    installation_input: Option<&InstallationInput>,
 ) -> Result<serde_json::Value> {
     ensure!(
         observation.role == ComponentRole::Main
@@ -99,34 +100,81 @@ fn prepare_native_text_plan(
         .plan
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("Baseline plan was not created"))?;
-    let job = repository.enqueue(
-        &format!("job:{}", uuid::Uuid::new_v4()),
-        &format!("baseline-install:{}", plan.id),
-        &plan.id,
-        &plan.digest()?,
-        now,
-        hardware.disk_free_bytes,
-    )?;
+    let acceptance = JobAcceptance {
+        id: format!("job:{}", uuid::Uuid::new_v4()),
+        idempotency_key: format!("baseline-install:{}", plan.id),
+        plan_id: plan.id.clone(),
+        plan_digest: plan.digest()?,
+    };
+    let job = if let Some(input) = installation_input {
+        repository.enqueue_installation(&acceptance, input, now, hardware.disk_free_bytes)?
+    } else {
+        repository.enqueue(
+            &acceptance.id,
+            &acceptance.idempotency_key,
+            &acceptance.plan_id,
+            &acceptance.plan_digest,
+            now,
+            hardware.disk_free_bytes,
+        )?
+    };
     ensure!(
         job.status == JobStatus::Queued && repository.read_plan(&plan.id)?.as_ref() == Some(plan),
         "Plan acceptance did not persist"
     );
     Ok(
-        serde_json::json!({"profile":profile,"envelope":envelope,"hardware":hardware,"assessment":assessment,"queued_job":job,"scope":"Exact measured baseline content only; one immutable installation plan and queued job in a diagnostic database. No download worker, installation, runtime adapter or product READY was created."}),
+        serde_json::json!({"profile":profile,"envelope":envelope,"hardware":hardware,"assessment":assessment,"installation_input":repository.read_installation_input(&job.id)?,"queued_job":job,"scope":"Exact measured baseline content only; one immutable installation plan and queued job in a diagnostic database. No download worker, installation, runtime adapter or product READY was created."}),
     )
 }
 
 fn main() -> Result<()> {
     let arguments: Vec<_> = std::env::args().skip(1).collect();
-    let reuse_database = arguments.len() == 5 && arguments[4] == "--reuse-database";
     ensure!(
-        arguments.len() == 2 || ((arguments.len() == 4 || reuse_database) && arguments[2] == "--prepare-native-text-plan"),
-        "Usage: cache_recorded_component component-json database-path [--prepare-native-text-plan native-binary [--reuse-database]]"
+        arguments.len() == 2 || (arguments.len() >= 4 && arguments[2] == "--prepare-native-text-plan"),
+        "Usage: cache_recorded_component component-json database-path [--prepare-native-text-plan native-binary [--reuse-database] [--installation-input input.json]]"
     );
+    let mut reuse_database = false;
+    let mut installation_input_path = None;
+    if arguments.len() >= 4 {
+        let mut options = arguments[4..].iter();
+        while let Some(option) = options.next() {
+            match option.as_str() {
+                "--reuse-database" if !reuse_database => reuse_database = true,
+                "--installation-input" if installation_input_path.is_none() => {
+                    let path = options
+                        .next()
+                        .ok_or_else(|| anyhow::anyhow!("Missing installation input path"))?;
+                    installation_input_path = Some(path);
+                }
+                _ => anyhow::bail!("Unexpected or repeated diagnostic option"),
+            }
+        }
+    }
     ensure!(
         !Path::new(&arguments[1]).exists() || reuse_database,
         "Existing model database is preserved; use a fresh path or explicitly --reuse-database"
     );
+    let installation_input = if let Some(path) = installation_input_path {
+        let mut bytes = Vec::new();
+        std::fs::File::open(path)?
+            .take(64 * 1024 + 1)
+            .read_to_end(&mut bytes)?;
+        ensure!(
+            bytes.len() <= 64 * 1024,
+            "Installation input exceeds input budget"
+        );
+        let input: InstallationInput = serde_json::from_slice(&bytes)?;
+        input.validate()?;
+        let store = InstallationStore::open(&input.store_root)?;
+        Some(InstallationInput::new(
+            &store,
+            input.installation_id,
+            input.version_id,
+            input.source,
+        )?)
+    } else {
+        None
+    };
     let mut bytes = Vec::new();
     std::fs::File::open(&arguments[0])?
         .take(16 * 1024 * 1024 + 1)
@@ -243,6 +291,7 @@ fn main() -> Result<()> {
             &observation,
             Path::new(&arguments[3]),
             Path::new(&arguments[1]),
+            installation_input.as_ref(),
         )?)
     } else {
         None

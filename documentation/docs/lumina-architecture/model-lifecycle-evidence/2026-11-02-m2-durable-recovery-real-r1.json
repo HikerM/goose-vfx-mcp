@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "observedAt": "2026-11-02T04:22:22.157330+00:00",
+  "scope": "Actual v6-to-v7 diagnostic database migration, atomic frozen-plan/input acceptance and database-only recovery across forced process termination. Both workers receive only database and managed-root paths, never a request file, installation/version IDs or job ID. No application startup wiring, full queue drain, Runtime or READY acceptance.",
+  "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+  "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+  "sizeBytes": 833592736,
+  "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+  "jobId": "job:9c2da52c-b7f6-415c-a68f-a0a0c8e94c6d",
+  "versionId": "m2-baseline-qwen35-0.8b-durable-r4",
+  "schemaBefore": 6,
+  "schemaAfter": 7,
+  "legacyVersionCount": 3,
+  "legacyInputsInvented": 0,
+  "persistedInputCount": 1,
+  "checkpointBytes": 8395819,
+  "resumeValidator": {
+    "kind": "strong_etag",
+    "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+  },
+  "workerGenerationBefore": 1,
+  "workerGenerationAfterReclaim": 2,
+  "terminalFencingGeneration": 3,
+  "recoveredWithoutRestart": true,
+  "inputUnchanged": true,
+  "oldVersionsAndActivationUnchanged": true,
+  "installedVersionCount": 4,
+  "physicalBlobCount": 1,
+  "blobReferenceCount": 4,
+  "capabilityEvidenceCount": 0,
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\366c6e30768f10b007226437b12c527d9b591da3528159891d6f8430d91e9ec7\\recover_pending_installations.exe",
+  "binarySha256": "366c6e30768f10b007226437b12c527d9b591da3528159891d6f8430d91e9ec7",
+  "argv": [
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\366c6e30768f10b007226437b12c527d9b591da3528159891d6f8430d91e9ec7\\recover_pending_installations.exe",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m1-real-plan-checks-20261101-r1\\models.db",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m2-real-cache-install-20261101-r1\\managed"
+  ],
+  "artifacts": {
+    "accepted-input.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\accepted-input.json",
+      "sha256": "3ceb63ae1b8edbbafa354aa5697c01789a49374e286372c53073c51c7b396528"
+    },
+    "after.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\after.json",
+      "sha256": "6b99957d9ae51c8fc82abccd8460ec5ae04b5996f1d8a0aacb01049155e9751e"
+    },
+    "before.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\before.json",
+      "sha256": "b659a9c6e5e8722a515f0046501331bc45a8a4062829ef2be1d774eb59873b63"
+    },
+    "forced-termination.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\forced-termination.json",
+      "sha256": "88c1cd5c4e04071e9813f075123977342a2f34c66320fbc92fcda8c97c5ce4e3"
+    },
+    "installation-input.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\installation-input.json",
+      "sha256": "767273e65e1b18536ba1ee3c10bfb87bf56c6b445abefe2be06d0c4babff4af9"
+    },
+    "interrupted.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\interrupted.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "interrupted.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\interrupted.stdout.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "models-before-v7.sqlite": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\models-before-v7.sqlite",
+      "sha256": "a60f66f70840246cc2b5d514ea2a9d634165b6b9c40485cff802d9c4027032a1"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\prepare.stdout.json",
+      "sha256": "5de6bf4b7a732bcfc45f980787cd41a74bb98745684344ca1e7ea42e3fd59068"
+    },
+    "recovered.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\recovered.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "recovered.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-durable-recovery-real-20261102-r1\\recovered.stdout.json",
+      "sha256": "fcad6f478ec7ac5c5297e8632fddd68d5cf72f55bd0f736bc7677a2cf4e3b21c"
+    }
+  },
+  "verifierSha256": "ebeec41eb560596d2e78d786f6203ded4204415cc2a433e944ea9db6ec946835"
+}

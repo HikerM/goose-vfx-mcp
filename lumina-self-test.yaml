@@ -170,7 +170,8 @@ prompt: |
   After any such failure, stop with a failure summary; do not inspect reports, retry,
   repair the invocation, call another tool or manufacture output.
   Explain that these cover cache installation and network-worker preflight, cancellation,
-  transfer locking, completed replay and failed-file checkpoint recovery boundaries,
+  transfer locking, completed replay, failed-file checkpoint recovery, atomic durable inputs,
+  database reopen recovery, bounded recovery pages and legacy input adoption boundaries,
   while full network installation and Runtime readiness need their separate acceptance evidence.
   {% elif test_phases == "model-lifecycle" %}
   Execute the model lifecycle checks now using your developer shell tool. Your first action
