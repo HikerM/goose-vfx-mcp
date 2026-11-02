@@ -16,19 +16,19 @@ fn installation_submission_rejects_credentials_destinations_and_download_urls() 
 fn installation_controls_require_a_version_and_a_known_action() {
     assert!(
         serde_json::from_value::<ModelInstallationJobControlRequest>(
-            json!({"jobId":"job:unit","action":"pause"})
+            json!({"jobId":"job:unit","action":"pause","idempotencyKey":"key:unit"})
         )
         .is_err()
     );
     assert!(
         serde_json::from_value::<ModelInstallationJobControlRequest>(
-            json!({"jobId":"job:unit","expectedVersion":1,"action":"reset"})
+            json!({"jobId":"job:unit","expectedVersion":1,"action":"reset","idempotencyKey":"key:unit"})
         )
         .is_err()
     );
     assert!(
         serde_json::from_value::<ModelInstallationJobControlRequest>(
-            json!({"jobId":"job:unit","expectedVersion":-1,"action":"pause"})
+            json!({"jobId":"job:unit","expectedVersion":-1,"action":"pause","idempotencyKey":"key:unit"})
         )
         .is_err()
     );
@@ -36,4 +36,21 @@ fn installation_controls_require_a_version_and_a_known_action() {
     assert_eq!(request.limit, 64);
     assert_eq!(ModelInstallationJobsListRequest::default().limit, 64);
     assert!(request.after_id.is_none());
+}
+
+#[test]
+fn installation_controls_require_the_callers_idempotency_key() {
+    assert!(
+        serde_json::from_value::<ModelInstallationJobControlRequest>(
+            json!({"jobId":"job:unit","expectedVersion":1,"action":"pause"})
+        )
+        .is_err()
+    );
+    let request = json!({"jobId":"job:unit","expectedVersion":1,"action":"pause","idempotencyKey":"key:unit"});
+    assert!(serde_json::from_value::<ModelInstallationJobControlRequest>(request.clone()).is_ok());
+    for field in ["token", "storeRoot", "url"] {
+        let mut changed = request.clone();
+        changed[field] = json!("not accepted");
+        assert!(serde_json::from_value::<ModelInstallationJobControlRequest>(changed).is_err());
+    }
 }

@@ -133,11 +133,15 @@ impl InstallationApplication {
         request: ModelInstallationJobControlRequest,
     ) -> Result<ModelInstallationJobControlResponse> {
         let service = self.service().await?;
-        let job = service.control_job(
-            &request.job_id,
-            request.expected_version,
-            request.action.into(),
-        )?;
-        Ok(ModelInstallationJobControlResponse { job: job.into() })
+        let result = service.control_job(&InstallationControlRequest {
+            job_id: request.job_id,
+            expected_version: request.expected_version,
+            action: request.action.into(),
+            idempotency_key: request.idempotency_key,
+        })?;
+        Ok(ModelInstallationJobControlResponse {
+            job: result.job.into(),
+            replayed: result.replayed,
+        })
     }
 }

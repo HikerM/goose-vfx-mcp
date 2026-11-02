@@ -1,0 +1,236 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-02T07:18:31.121334+00:00",
+  "scope": "Actual HTTP listener starts recovery of a v7 accepted installation before any ACP client connects, upgrades to v8, and completes pinned ModelScope content. Subsequent independent CLI processes prove durable control receipts and request binding for terminal cancellation. HTTP force termination after installation is completed is explicit probe cleanup, not HTTP graceful-shutdown acceptance. Active pause/resume, concurrent CAS and receipt rollback have separate Rust integration tests. Not full M2 or Runtime READY acceptance.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\ad664334fbd3649cc553c6f1b985046aaea28390fd20db08c32c41e2ca9bb3ad\\lumina.exe",
+  "binarySha256": "ad664334fbd3649cc553c6f1b985046aaea28390fd20db08c32c41e2ca9bb3ad",
+  "planProducer": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\b72f7cc6a6bc828e6a49dc8443e11f60c1bcf3c1add2662d50958d0437f4e4f0\\cache_recorded_component.exe",
+  "source": {
+    "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+    "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+    "file": "Qwen3.5-0.8B-Q8_0.gguf",
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "sizeBytes": 833592736,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "elapsedSeconds": 84.03100000001723,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "jobId": "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+  "argv": [
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\ad664334fbd3649cc553c6f1b985046aaea28390fd20db08c32c41e2ca9bb3ad\\lumina.exe",
+    "serve",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "0",
+    "--dangerously-unauthenticated"
+  ],
+  "pid": 55500,
+  "applicationClientRequestsSent": 0,
+  "httpProbeCleanup": {
+    "method": "force termination after verified terminal job",
+    "exitCode": 1,
+    "notGracefulShutdownAcceptance": true
+  },
+  "schemaBefore": 7,
+  "schemaAfter": 8,
+  "completedJob": {
+    "id": "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+    "idempotency_key": "baseline-install:plan:72b0a124-33d5-4469-82e3-f4031288029b",
+    "plan_id": "plan:72b0a124-33d5-4469-82e3-f4031288029b",
+    "plan_digest": "109286318ba176da6b1fd24983936aea757beb1008ad7e79eda925d0fbe71260",
+    "stage": "installed",
+    "status": "completed",
+    "version": 111,
+    "generation": 2,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793603925,
+    "updated_at": 1793604132
+  },
+  "transfers": [
+    {
+      "job_id": "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "relative_path": "06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.part",
+      "expected_bytes": 833592736,
+      "checkpoint": {
+        "completed_bytes": 833592736,
+        "prefix_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "state": {
+        "state": "verified",
+        "computed_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "evidence_digest": "5701d202fccaf1df81b9a084587431bf5956eac2c7efab63eaa0ea8493705496"
+      },
+      "restart_reason": null,
+      "version": 101,
+      "generation": 1,
+      "updated_at": 1793604008
+    }
+  ],
+  "controls": [
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\ad664334fbd3649cc553c6f1b985046aaea28390fd20db08c32c41e2ca9bb3ad\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+        "cancel",
+        "--expected-version",
+        "111",
+        "--idempotency-key",
+        "http-terminal-cancel"
+      ],
+      "exitCode": 0,
+      "response": {
+        "job": {
+          "id": "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+          "planId": "plan:72b0a124-33d5-4469-82e3-f4031288029b",
+          "planDigest": "109286318ba176da6b1fd24983936aea757beb1008ad7e79eda925d0fbe71260",
+          "stage": "installed",
+          "status": "completed",
+          "version": 111,
+          "generation": 2,
+          "acceptedAt": 1793603925,
+          "updatedAt": 1793604132
+        },
+        "replayed": false
+      }
+    },
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\ad664334fbd3649cc553c6f1b985046aaea28390fd20db08c32c41e2ca9bb3ad\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+        "cancel",
+        "--expected-version",
+        "111",
+        "--idempotency-key",
+        "http-terminal-cancel"
+      ],
+      "exitCode": 0,
+      "response": {
+        "job": {
+          "id": "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+          "planId": "plan:72b0a124-33d5-4469-82e3-f4031288029b",
+          "planDigest": "109286318ba176da6b1fd24983936aea757beb1008ad7e79eda925d0fbe71260",
+          "stage": "installed",
+          "status": "completed",
+          "version": 111,
+          "generation": 2,
+          "acceptedAt": 1793603925,
+          "updatedAt": 1793604132
+        },
+        "replayed": true
+      }
+    },
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\ad664334fbd3649cc553c6f1b985046aaea28390fd20db08c32c41e2ca9bb3ad\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+        "pause",
+        "--expected-version",
+        "111",
+        "--idempotency-key",
+        "http-terminal-cancel"
+      ],
+      "exitCode": 1
+    },
+    {
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\ad664334fbd3649cc553c6f1b985046aaea28390fd20db08c32c41e2ca9bb3ad\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:84c09df0-f8dd-436f-ab66-8a604b681083",
+        "cancel",
+        "--expected-version",
+        "0",
+        "--idempotency-key",
+        "http-stale-control"
+      ],
+      "exitCode": 1
+    }
+  ],
+  "inputUnchanged": true,
+  "jobAndEventsUnchangedByTerminalControls": true,
+  "capabilityEvidenceCount": 0,
+  "finishedAt": "2026-11-02T07:22:13.850293+00:00",
+  "verifierSha256": "9ad3b7fe9d5191c6a5c495469d8c09e0a0cca56cfeaed86329b5756151c2818f",
+  "artifacts": {
+    "before-startup.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\before-startup.json",
+      "sha256": "0d1c9e256550a6b696fd964fa05e1b2b9080d4ed8398b79e06faa68b8b844864"
+    },
+    "cancel-first.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\cancel-first.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "cancel-first.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\cancel-first.stdout.log",
+      "sha256": "4795b9bb42e01913aaa943fdcfe1373bbf3b1e6db1a1e03fd527b3068b33d8ca"
+    },
+    "cancel-replayed.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\cancel-replayed.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "cancel-replayed.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\cancel-replayed.stdout.log",
+      "sha256": "605a954d57ebb3f9b21c2011dfa74d91cbfbabecb4476888d12bdb6af5fb5d79"
+    },
+    "changed-control.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\changed-control.stderr.log",
+      "sha256": "391ffe5a9749c7ba3ccfe3a4121c44894bb9675b117cb95bb66a0bf17a2fe4d5"
+    },
+    "changed-control.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\changed-control.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "http.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\http.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "http.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\http.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "input.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\input.json",
+      "sha256": "71e3cce1990143e70952a11ca9ff22fc37583606851449b72053a0f9962233ec"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\prepare.stdout.json",
+      "sha256": "dd56e1d3ce70c3ed3fb2dee4c57d04c0c782de17a52a0f6d9d04f0d9192066e3"
+    },
+    "stale-control.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\stale-control.stderr.log",
+      "sha256": "7a7e83321db98ffc03977fc55fa6b6076d1a2e718798e44c257a2dbccd70628e"
+    },
+    "stale-control.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\stale-control.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "startup-without-client.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-controls-20261102-r1\\startup-without-client.json",
+      "sha256": "783b5b7319c6549ff5a76274ac349721b1f29b96f6dd5a86b8b8f9f51234b13f"
+    }
+  }
+}

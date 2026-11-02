@@ -1197,6 +1197,8 @@ enum LocalModelsCommand {
         action: String,
         #[arg(long)]
         expected_version: u64,
+        #[arg(long)]
+        idempotency_key: String,
     },
     #[command(about = "Recover and wait for a durable model installation")]
     WaitJob { id: String },
@@ -1497,6 +1499,7 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
                     tls_key_path.as_deref(),
                 )
                 .await?;
+                server.start_model_installations().await;
                 info!("Starting ACP server on https://{}", addr);
 
                 #[cfg(feature = "rustls-tls")]
@@ -1521,6 +1524,7 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
         } else {
             info!("Starting ACP server on http://{}", addr);
             let listener = tokio::net::TcpListener::bind(addr).await?;
+            server.start_model_installations().await;
             axum::serve(
                 listener,
                 router.into_make_service_with_connect_info::<SocketAddr>(),
@@ -2091,6 +2095,7 @@ async fn handle_local_models_command(
             id,
             action,
             expected_version,
+            idempotency_key,
         } => {
             use lumina::custom_requests::ModelInstallationJobAction as Action;
             let action = match action.as_str() {
@@ -2106,6 +2111,7 @@ async fn handle_local_models_command(
                         job_id: id,
                         action,
                         expected_version,
+                        idempotency_key,
                     },
                 )
                 .await?;
@@ -2555,6 +2561,8 @@ mod tests {
             "pause",
             "--expected-version",
             "2",
+            "--idempotency-key",
+            "key:pause",
         ])
         .is_ok());
         assert!(Cli::try_parse_from([
@@ -2563,6 +2571,8 @@ mod tests {
             "job-control",
             "job:unit",
             "pause",
+            "--idempotency-key",
+            "key:pause",
         ])
         .is_err());
         assert!(Cli::try_parse_from([
@@ -2571,6 +2581,18 @@ mod tests {
             "job-control",
             "job:unit",
             "reset",
+            "--expected-version",
+            "2",
+            "--idempotency-key",
+            "key:pause",
+        ])
+        .is_err());
+        assert!(Cli::try_parse_from([
+            "lumina",
+            "local-models",
+            "job-control",
+            "job:unit",
+            "pause",
             "--expected-version",
             "2",
         ])

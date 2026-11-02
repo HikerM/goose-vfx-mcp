@@ -21,6 +21,7 @@ activities:
   - Test error boundaries including nested delegation prevention
   - Validate frozen-plan cache installation, checkpoint recovery, cancellation, and original-file ownership
   - Validate installation application startup recovery, durable task controls, and graceful worker shutdown
+  - Validate durable control receipts, concurrent state-version conflicts, atomic rollback, and schema upgrades
   - Generate comprehensive test report
 
 parameters:
@@ -175,6 +176,8 @@ prompt: |
   database reopen recovery, bounded recovery pages and legacy input adoption boundaries,
   application startup recovery, startup submission barriers, background job discovery,
   versioned pause/resume/cancel controls and checkpoint-preserving graceful shutdown,
+  durable control deduplication, historical result replay, concurrent compare-and-swap,
+  receipt transaction rollback and schema upgrade boundaries,
   while full network installation and Runtime readiness need their separate acceptance evidence.
   {% elif test_phases == "model-lifecycle" %}
   Execute the model lifecycle checks now using your developer shell tool. Your first action

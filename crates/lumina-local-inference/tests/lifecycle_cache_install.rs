@@ -7,6 +7,23 @@ use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[path = "lifecycle_cache_install/control_cases.rs"]
+mod control_cases;
+
+fn control_request(
+    id: &str,
+    version: u64,
+    action: InstallationJobAction,
+    key: &str,
+) -> InstallationControlRequest {
+    InstallationControlRequest {
+        job_id: id.into(),
+        expected_version: version,
+        action,
+        idempotency_key: key.into(),
+    }
+}
+
 struct Fixture {
     temp: tempfile::TempDir,
     repository: LifecycleRepository,
@@ -1434,7 +1451,7 @@ fn schema_six_upgrade_preserves_legacy_jobs_without_inventing_installation_input
             .unwrap();
         drop(fixture.repository);
         let raw = rusqlite::Connection::open(&path).unwrap();
-        raw.execute_batch("DROP TABLE installation_inputs; PRAGMA user_version=6;")
+        raw.execute_batch("DROP TABLE installation_control_receipts; DROP TABLE installation_inputs; PRAGMA user_version=6;")
             .unwrap();
         if collision {
             raw.execute_batch("CREATE TABLE installation_inputs (legacy_value TEXT);")
@@ -2315,18 +2332,41 @@ fn service_controls_pause_queued_jobs_and_reject_stale_versions() {
         .unwrap();
         service.wait_ready().await.unwrap();
         let paused = service
-            .control_job(&id, 0, InstallationJobAction::Pause)
-            .unwrap();
+            .control_job(&control_request(
+                &id,
+                0,
+                InstallationJobAction::Pause,
+                "pause",
+            ))
+            .unwrap()
+            .job;
         assert_eq!(paused.status, JobStatus::Paused);
         assert!(service
-            .control_job(&id, 0, InstallationJobAction::Resume)
+            .control_job(&control_request(
+                &id,
+                0,
+                InstallationJobAction::Resume,
+                "stale"
+            ))
             .is_err());
         let queued = service
-            .control_job(&id, paused.version, InstallationJobAction::Resume)
-            .unwrap();
+            .control_job(&control_request(
+                &id,
+                paused.version,
+                InstallationJobAction::Resume,
+                "resume",
+            ))
+            .unwrap()
+            .job;
         let cancelled = service
-            .control_job(&id, queued.version, InstallationJobAction::Cancel)
-            .unwrap();
+            .control_job(&control_request(
+                &id,
+                queued.version,
+                InstallationJobAction::Cancel,
+                "cancel",
+            ))
+            .unwrap()
+            .job;
         assert_eq!(cancelled.status, JobStatus::Cancelled);
         service.shutdown().await.unwrap();
     });

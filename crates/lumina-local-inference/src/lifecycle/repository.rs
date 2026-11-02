@@ -11,6 +11,7 @@ use super::{
 };
 
 mod catalog;
+mod controls;
 mod files;
 mod inputs;
 mod installation;
@@ -22,7 +23,7 @@ pub use plan_observations::{
     gguf_header_evidence_id, gguf_observation_evidence_id, OBSERVED_GGUF_PLAN_RULES_VERSION,
 };
 
-pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 7;
+pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 8;
 
 const SCHEMA: &str = include_str!("repository/migrations/0001.sql");
 
@@ -121,6 +122,9 @@ impl LifecycleRepository {
         }
         if version < 7 {
             tx.execute_batch(inputs::SCHEMA)?;
+        }
+        if version < 8 {
+            tx.execute_batch(controls::SCHEMA)?;
         }
         tx.commit()?;
         Ok(Self {
@@ -574,7 +578,20 @@ impl LifecycleRepository {
             .lock()
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let mut job = Self::read_job_by(&tx, "id", id)?.ok_or_else(|| anyhow!("Job not found"))?;
+        let job = Self::transition_by(&tx, id, expected_version, status, now)?;
+        tx.commit()?;
+        Ok(job)
+    }
+
+    fn transition_by(
+        connection: &Connection,
+        id: &str,
+        expected_version: u64,
+        status: JobStatus,
+        now: i64,
+    ) -> Result<LifecycleJob> {
+        let mut job =
+            Self::read_job_by(connection, "id", id)?.ok_or_else(|| anyhow!("Job not found"))?;
         ensure!(
             job.version == expected_version,
             "Job state version conflict"
@@ -593,8 +610,7 @@ impl LifecycleRepository {
         job.lease_owner = None;
         job.lease_until = None;
         job.updated_at = now;
-        Self::write_job(&tx, &job, expected_version)?;
-        tx.commit()?;
+        Self::write_job(connection, &job, expected_version)?;
         Ok(job)
     }
 

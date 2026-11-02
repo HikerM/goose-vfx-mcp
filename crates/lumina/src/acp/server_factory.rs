@@ -52,6 +52,38 @@ impl AcpServer {
         }
     }
 
+    #[cfg(feature = "local-inference")]
+    async fn model_installation_host(
+        &self,
+    ) -> Arc<crate::providers::local_inference::lifecycle::InstallationApplication> {
+        self.local_installations
+            .get_or_init(|| async {
+                Arc::new(
+                    crate::providers::local_inference::lifecycle::InstallationApplication::new(
+                        &self.config.data_dir,
+                        Arc::new(crate::providers::local_inference::hf_models::modelscope_token),
+                    ),
+                )
+            })
+            .await
+            .clone()
+    }
+
+    pub async fn start_model_installations(&self) {
+        #[cfg(feature = "local-inference")]
+        {
+            crate::providers::local_inference::configure_local_inference();
+            if let Err(error) = self
+                .model_installation_host()
+                .await
+                .start_if_present()
+                .await
+            {
+                tracing::error!(error=%error,"Model installation startup recovery is unavailable");
+            }
+        }
+    }
+
     async fn scheduler(&self) -> Result<Arc<dyn SchedulerTrait>> {
         let data_dir = self.config.data_dir.clone();
         self.scheduler
@@ -91,21 +123,7 @@ impl AcpServer {
             });
 
         #[cfg(feature = "local-inference")]
-        let local_installations = Some(
-            self.local_installations
-                .get_or_init(|| async {
-                    Arc::new(
-                        crate::providers::local_inference::lifecycle::InstallationApplication::new(
-                            &self.config.data_dir,
-                            Arc::new(
-                                crate::providers::local_inference::hf_models::modelscope_token,
-                            ),
-                        ),
-                    )
-                })
-                .await
-                .clone(),
-        );
+        let local_installations = Some(self.model_installation_host().await);
         #[cfg(not(feature = "local-inference"))]
         let local_installations = None;
         let agent = LuminaAcpAgent::new_with_application_services(
@@ -154,6 +172,8 @@ mod tests {
 
         let directory = tempfile::tempdir().unwrap();
         let server = test_server(&directory);
+        server.start_model_installations().await;
+        assert!(server.scheduler.get().is_none());
         let first = server.create_agent().await.unwrap();
         let second = server.create_agent().await.unwrap();
         let host = first.test_local_installations();
@@ -174,6 +194,56 @@ mod tests {
         assert!(!host.root().exists());
         server.shutdown().await;
         assert!(!host.root().exists());
+    }
+
+    #[cfg(feature = "local-inference")]
+    #[tokio::test]
+    async fn model_worker_starts_before_any_agent_or_client_is_created() {
+        use crate::providers::local_inference::lifecycle::{
+            InstallationApplicationState, LifecycleRepository,
+        };
+
+        let directory = tempfile::tempdir().unwrap();
+        let database = directory.path().join("data/model-lifecycle/models.db");
+        drop(LifecycleRepository::open(&database).unwrap());
+        let server = test_server(&directory);
+        server.start_model_installations().await;
+        let host = server.local_installations.get().unwrap();
+        let service = host.service().await.unwrap();
+        service.wait_ready().await.unwrap();
+        assert!(server.scheduler.get().is_none());
+        assert!(server.mcp_platform_service.get().is_none());
+        server.start_model_installations().await;
+        assert!(Arc::ptr_eq(&service, &host.service().await.unwrap()));
+        let agent = server.create_agent().await.unwrap();
+        assert!(Arc::ptr_eq(host, &agent.test_local_installations()));
+        server.shutdown().await;
+        assert_eq!(host.state(), InstallationApplicationState::Stopped);
+    }
+
+    #[cfg(feature = "local-inference")]
+    #[tokio::test]
+    async fn corrupt_model_startup_remains_isolated_before_client_creation() {
+        use crate::providers::local_inference::lifecycle::InstallationApplicationState;
+
+        let directory = tempfile::tempdir().unwrap();
+        let root = directory.path().join("data/model-lifecycle");
+        std::fs::create_dir_all(&root).unwrap();
+        let database = root.join("models.db");
+        let original = b"corrupt model startup fixture";
+        std::fs::write(&database, original).unwrap();
+        let server = test_server(&directory);
+        server.start_model_installations().await;
+        assert_eq!(
+            server.local_installations.get().unwrap().state(),
+            InstallationApplicationState::Failed
+        );
+        assert!(server.scheduler.get().is_none());
+        assert!(server.mcp_platform_service.get().is_none());
+        let agent = server.create_agent().await.unwrap();
+        let _ordinary_non_model_dependency = agent.permission_manager();
+        assert_eq!(std::fs::read(&database).unwrap(), original);
+        server.shutdown().await;
     }
 
     #[cfg(feature = "local-inference")]

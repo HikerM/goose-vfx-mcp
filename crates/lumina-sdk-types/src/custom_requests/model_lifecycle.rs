@@ -117,9 +117,11 @@ pub struct ModelInstallationJobControlRequest {
     pub job_id: String,
     pub expected_version: u64,
     pub action: ModelInstallationJobAction,
+    pub idempotency_key: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelInstallationJobControlResponse {
     pub job: ModelInstallationJobDto,
+    pub replayed: bool,
 }

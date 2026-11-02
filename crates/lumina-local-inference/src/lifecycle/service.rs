@@ -6,8 +6,9 @@ use tokio::sync::{watch, Notify};
 use tokio::task::JoinHandle;
 
 use super::{
-    InstallationCredentials, InstallationStore, InstallationSubmission, InstallationWorkerControl,
-    JobStatus, LifecycleJob, LifecycleRepository,
+    InstallationControlOutcome, InstallationControlRequest, InstallationCredentials,
+    InstallationStore, InstallationSubmission, InstallationWorkerControl, LifecycleJob,
+    LifecycleRepository,
 };
 
 pub type InstallationClock = Arc<dyn Fn() -> i64 + Send + Sync>;
@@ -19,15 +20,6 @@ pub enum InstallationServiceState {
     Ready,
     Stopped,
     Failed,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum InstallationJobAction {
-    Pause,
-    Resume,
-    Cancel,
-    Retry,
 }
 
 struct ServiceWorker {
@@ -194,10 +186,8 @@ impl InstallationService {
 
     pub fn control_job(
         &self,
-        id: &str,
-        expected_version: u64,
-        action: InstallationJobAction,
-    ) -> Result<LifecycleJob> {
+        request: &InstallationControlRequest,
+    ) -> Result<InstallationControlOutcome> {
         ensure!(
             !self.control.is_stopping(),
             "Installation service is stopping"
@@ -209,45 +199,9 @@ impl InstallationService {
             ),
             "Installation service is unavailable"
         );
-        let job = self
-            .repository
-            .read_job(id)?
-            .context("Installation job not found")?;
-        ensure!(
-            job.version == expected_version,
-            "Job state version conflict"
-        );
-        if let Some(intent) = self.repository.read_installation_input(id)? {
-            ensure!(
-                intent.input.store_root == self.store.root(),
-                "Installation belongs to another store"
-            );
-        }
-        let target = match (action, job.status) {
-            (InstallationJobAction::Pause, JobStatus::Queued | JobStatus::Running) => {
-                JobStatus::Paused
-            }
-            (InstallationJobAction::Resume, JobStatus::Paused)
-            | (InstallationJobAction::Retry, JobStatus::Failed | JobStatus::Blocked) => {
-                JobStatus::Queued
-            }
-            (InstallationJobAction::Cancel, JobStatus::Running) => JobStatus::Cancelling,
-            (InstallationJobAction::Cancel, JobStatus::Queued | JobStatus::Paused) => {
-                JobStatus::Cancelled
-            }
-            (
-                InstallationJobAction::Cancel,
-                JobStatus::Cancelling | JobStatus::Cancelled | JobStatus::Completed,
-            ) => return Ok(job),
-            _ => {
-                return Err(anyhow!(
-                    "Installation action is not valid for this job state"
-                ))
-            }
-        };
         let changed = self
             .repository
-            .transition(id, expected_version, target, (self.clock)())?;
+            .control_installation(request, &self.store, (self.clock)())?;
         self.wake.notify_one();
         Ok(changed)
     }
