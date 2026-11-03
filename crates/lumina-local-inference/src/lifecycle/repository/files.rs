@@ -164,15 +164,21 @@ impl LifecycleRepository {
         artifact_id: &str,
         expected_version: u64,
         now: i64,
-        operation: impl FnOnce(&mut FileTransferRecord, &LifecycleJob) -> Result<()>,
+        operation: impl FnOnce(&Connection, &mut FileTransferRecord, &LifecycleJob) -> Result<()>,
     ) -> Result<FileTransferRecord> {
         let mut connection = self
             .connection
             .lock()
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let record =
-            Self::update_file_by(&tx, lease, artifact_id, expected_version, now, operation)?;
+        let record = Self::update_file_by(
+            &tx,
+            lease,
+            artifact_id,
+            expected_version,
+            now,
+            |record, job| operation(&tx, record, job),
+        )?;
         tx.commit()?;
         Ok(record)
     }
@@ -231,30 +237,68 @@ impl LifecycleRepository {
         checkpoint: TransferCheckpoint,
         now: i64,
     ) -> Result<FileTransferRecord> {
-        self.update_file(lease, artifact_id, expected_version, now, |record, job| {
-            ensure!(
-                job.stage == LifecycleStage::Downloading
-                    && !matches!(record.state, FileTransferState::Failed { .. }),
-                "File is not accepting download checkpoints"
-            );
-            checkpoint.validate(record.expected_bytes)?;
-            ensure!(
-                checkpoint.completed_bytes >= record.checkpoint.completed_bytes,
-                "File checkpoint regressed without an explicit restart"
-            );
-            ensure!(
-                record.checkpoint.completed_bytes == 0
-                    || checkpoint.resume_validator == record.checkpoint.resume_validator,
-                "Resume validator changed without an explicit restart"
-            );
-            record.state = if checkpoint.completed_bytes == record.expected_bytes {
-                FileTransferState::Downloaded
-            } else {
-                FileTransferState::Downloading
-            };
-            record.checkpoint = checkpoint;
-            Ok(())
-        })
+        self.checkpoint_file_inner(lease, artifact_id, expected_version, checkpoint, now, false)
+    }
+
+    pub(crate) fn checkpoint_synced_file(
+        &self,
+        lease: &WorkerLease,
+        artifact_id: &str,
+        expected_version: u64,
+        checkpoint: TransferCheckpoint,
+        now: i64,
+    ) -> Result<FileTransferRecord> {
+        self.checkpoint_file_inner(lease, artifact_id, expected_version, checkpoint, now, true)
+    }
+
+    fn checkpoint_file_inner(
+        &self,
+        lease: &WorkerLease,
+        artifact_id: &str,
+        expected_version: u64,
+        checkpoint: TransferCheckpoint,
+        now: i64,
+        synced: bool,
+    ) -> Result<FileTransferRecord> {
+        self.update_file(
+            lease,
+            artifact_id,
+            expected_version,
+            now,
+            |connection, record, job| {
+                ensure!(
+                    job.stage == LifecycleStage::Downloading
+                        && !matches!(record.state, FileTransferState::Failed { .. }),
+                    "File is not accepting download checkpoints"
+                );
+                checkpoint.validate(record.expected_bytes)?;
+                ensure!(
+                    checkpoint.completed_bytes >= record.checkpoint.completed_bytes,
+                    "File checkpoint regressed without an explicit restart"
+                );
+                ensure!(
+                    record.checkpoint.completed_bytes == 0
+                        || checkpoint.resume_validator == record.checkpoint.resume_validator,
+                    "Resume validator changed without an explicit restart"
+                );
+                if synced {
+                    Self::update_transfer_credit_by(
+                        connection,
+                        job,
+                        record,
+                        checkpoint.completed_bytes,
+                        now,
+                    )?;
+                }
+                record.state = if checkpoint.completed_bytes == record.expected_bytes {
+                    FileTransferState::Downloaded
+                } else {
+                    FileTransferState::Downloading
+                };
+                record.checkpoint = checkpoint;
+                Ok(())
+            },
+        )
     }
 
     pub fn restart_file(
@@ -265,16 +309,23 @@ impl LifecycleRepository {
         reason: FileRestartReason,
         now: i64,
     ) -> Result<FileTransferRecord> {
-        self.update_file(lease, artifact_id, expected_version, now, |record, job| {
-            ensure!(
-                job.stage == LifecycleStage::Downloading,
-                "File restarts require the download stage"
-            );
-            record.state = FileTransferState::Pending;
-            record.checkpoint = TransferCheckpoint::empty();
-            record.restart_reason = Some(reason);
-            Ok(())
-        })
+        self.update_file(
+            lease,
+            artifact_id,
+            expected_version,
+            now,
+            |connection, record, job| {
+                ensure!(
+                    job.stage == LifecycleStage::Downloading,
+                    "File restarts require the download stage"
+                );
+                Self::update_transfer_credit_by(connection, job, record, 0, now)?;
+                record.state = FileTransferState::Pending;
+                record.checkpoint = TransferCheckpoint::empty();
+                record.restart_reason = Some(reason);
+                Ok(())
+            },
+        )
     }
 
     pub fn resume_failed_file(
@@ -284,27 +335,33 @@ impl LifecycleRepository {
         expected_version: u64,
         now: i64,
     ) -> Result<FileTransferRecord> {
-        self.update_file(lease, artifact_id, expected_version, now, |record, job| {
-            ensure!(
-                job.stage == LifecycleStage::Downloading,
-                "File retries require the download stage"
-            );
-            let FileTransferState::Failed { code } = record.state else {
-                anyhow::bail!("File is not awaiting retry")
-            };
-            ensure!(
-                code != LifecycleErrorCode::HashMismatch,
-                "Hash mismatch requires an explicit full restart"
-            );
-            record.state = if record.checkpoint.completed_bytes == record.expected_bytes {
-                FileTransferState::Downloaded
-            } else if record.checkpoint.completed_bytes == 0 {
-                FileTransferState::Pending
-            } else {
-                FileTransferState::Downloading
-            };
-            Ok(())
-        })
+        self.update_file(
+            lease,
+            artifact_id,
+            expected_version,
+            now,
+            |_, record, job| {
+                ensure!(
+                    job.stage == LifecycleStage::Downloading,
+                    "File retries require the download stage"
+                );
+                let FileTransferState::Failed { code } = record.state else {
+                    anyhow::bail!("File is not awaiting retry")
+                };
+                ensure!(
+                    code != LifecycleErrorCode::HashMismatch,
+                    "Hash mismatch requires an explicit full restart"
+                );
+                record.state = if record.checkpoint.completed_bytes == record.expected_bytes {
+                    FileTransferState::Downloaded
+                } else if record.checkpoint.completed_bytes == 0 {
+                    FileTransferState::Pending
+                } else {
+                    FileTransferState::Downloading
+                };
+                Ok(())
+            },
+        )
     }
 
     pub fn fail_file(
@@ -315,7 +372,7 @@ impl LifecycleRepository {
         code: LifecycleErrorCode,
         now: i64,
     ) -> Result<FileTransferRecord> {
-        self.update_file(lease, artifact_id, expected_version, now, |record, _| {
+        self.update_file(lease, artifact_id, expected_version, now, |_, record, _| {
             record.state = FileTransferState::Failed { code };
             Ok(())
         })
@@ -329,22 +386,28 @@ impl LifecycleRepository {
         verified: &VerifiedArtifactFile,
         now: i64,
     ) -> Result<FileTransferRecord> {
-        self.update_file(lease, artifact_id, expected_version, now, |record, job| {
-            ensure!(
-                verified.artifact_id == artifact_id
-                    && verified.relative_path == record.relative_path
-                    && verified.plan_digest == job.plan_digest
-                    && verified.size_bytes == record.expected_bytes,
-                "Artifact verification belongs to a different transfer or plan"
-            );
-            record.checkpoint.completed_bytes = verified.size_bytes;
-            record.checkpoint.prefix_sha256 = verified.computed_sha256.clone();
-            record.state = FileTransferState::Verified {
-                computed_sha256: verified.computed_sha256.clone(),
-                evidence_digest: verified.evidence_digest.clone(),
-            };
-            Ok(())
-        })
+        self.update_file(
+            lease,
+            artifact_id,
+            expected_version,
+            now,
+            |_, record, job| {
+                ensure!(
+                    verified.artifact_id == artifact_id
+                        && verified.relative_path == record.relative_path
+                        && verified.plan_digest == job.plan_digest
+                        && verified.size_bytes == record.expected_bytes,
+                    "Artifact verification belongs to a different transfer or plan"
+                );
+                record.checkpoint.completed_bytes = verified.size_bytes;
+                record.checkpoint.prefix_sha256 = verified.computed_sha256.clone();
+                record.state = FileTransferState::Verified {
+                    computed_sha256: verified.computed_sha256.clone(),
+                    evidence_digest: verified.evidence_digest.clone(),
+                };
+                Ok(())
+            },
+        )
     }
 
     pub fn file_transfer_events(

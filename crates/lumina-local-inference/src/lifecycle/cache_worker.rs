@@ -198,7 +198,7 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
                 && completed < record.expected_bytes
             {
                 output.sync_data()?;
-                record = self.repository.checkpoint_file(
+                record = self.repository.checkpoint_synced_file(
                     &self.lease,
                     &record.artifact_id,
                     record.version,
@@ -228,7 +228,7 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
             .into());
         }
         output.sync_all()?;
-        self.repository.checkpoint_file(
+        self.repository.checkpoint_synced_file(
             &self.lease,
             &record.artifact_id,
             record.version,

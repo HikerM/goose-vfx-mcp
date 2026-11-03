@@ -204,7 +204,7 @@ async fn download_file<F: Fn() -> i64>(
             && completed < record.expected_bytes
         {
             output.sync_data()?;
-            record = execution.repository.checkpoint_file(
+            record = execution.repository.checkpoint_synced_file(
                 &execution.lease,
                 &record.artifact_id,
                 record.version,
@@ -235,7 +235,7 @@ async fn download_file<F: Fn() -> i64>(
         .into());
     }
     output.sync_all()?;
-    execution.repository.checkpoint_file(
+    execution.repository.checkpoint_synced_file(
         &execution.lease,
         &record.artifact_id,
         record.version,

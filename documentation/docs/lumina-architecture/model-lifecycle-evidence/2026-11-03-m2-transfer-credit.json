@@ -1,0 +1,281 @@
+{
+  "status": "PASS_INCREMENT_NOT_PHASE_EXIT",
+  "runs": [
+    {
+      "protocol": "http",
+      "port": 61552,
+      "status": 200,
+      "tlsVersion": null,
+      "peerSha256": null,
+      "exitCode": 0,
+      "shutdownSeconds": 0.21899999998277053,
+      "before": {
+        "id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "idempotency_key": "baseline-install:plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_id": "plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "stage": "downloading",
+        "status": "running",
+        "version": 3,
+        "generation": 1,
+        "lease_owner": "installation-service:0c7a20cd-8fdc-4809-a6d4-5bcd8eb4a396",
+        "lease_until": 1793700862,
+        "accepted_at": 1793700737,
+        "updated_at": 1793700744
+      },
+      "after": {
+        "id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "idempotency_key": "baseline-install:plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_id": "plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "stage": "downloading",
+        "status": "queued",
+        "version": 5,
+        "generation": 3,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793700737,
+        "updated_at": 1793700744
+      },
+      "beforeCheckpoint": {
+        "completed_bytes": 8395805,
+        "prefix_sha256": "07a96cb5909fef716d9cbc86c541d337ad170b02080f11d9dc8ad15e5f0bc780",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "afterCheckpoint": {
+        "completed_bytes": 8395805,
+        "prefix_sha256": "07a96cb5909fef716d9cbc86c541d337ad170b02080f11d9dc8ad15e5f0bc780",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "reservation": {
+        "rules_version": "installation-storage-v3",
+        "job_id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-transfer-credit-r2\\app\\data\\model-lifecycle",
+        "volume_id": "windows-volume:c49e613d",
+        "peak_bytes": 2517555424,
+        "reserved_bytes": 2509159619,
+        "state": "held",
+        "version": 2,
+        "created_at": 1793700737,
+        "updated_at": 1793700744
+      },
+      "attempts": 1
+    },
+    {
+      "protocol": "https",
+      "port": 64146,
+      "status": 200,
+      "tlsVersion": "TLSv1.3",
+      "peerSha256": "e8cf3a53fd85934703ff0414798c0a0797519619cf0963209f6a306fa970aebf",
+      "exitCode": 0,
+      "shutdownSeconds": 0.18800000002374873,
+      "before": {
+        "id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "idempotency_key": "baseline-install:plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_id": "plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "stage": "downloading",
+        "status": "running",
+        "version": 7,
+        "generation": 4,
+        "lease_owner": "installation-service:31e7263c-bd97-48ec-b67f-605f8eaa7c6c",
+        "lease_until": 1793700865,
+        "accepted_at": 1793700737,
+        "updated_at": 1793700746
+      },
+      "after": {
+        "id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "idempotency_key": "baseline-install:plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_id": "plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "stage": "downloading",
+        "status": "queued",
+        "version": 9,
+        "generation": 6,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793700737,
+        "updated_at": 1793700747
+      },
+      "beforeCheckpoint": {
+        "completed_bytes": 16791604,
+        "prefix_sha256": "e393c41c2929684ccd45f9b7e05c6af72e8dd5c9bf055c139a9b53bf498a7382",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "afterCheckpoint": {
+        "completed_bytes": 16791604,
+        "prefix_sha256": "e393c41c2929684ccd45f9b7e05c6af72e8dd5c9bf055c139a9b53bf498a7382",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "reservation": {
+        "rules_version": "installation-storage-v3",
+        "job_id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-transfer-credit-r2\\app\\data\\model-lifecycle",
+        "volume_id": "windows-volume:c49e613d",
+        "peak_bytes": 2517555424,
+        "reserved_bytes": 2500763820,
+        "state": "held",
+        "version": 3,
+        "created_at": 1793700737,
+        "updated_at": 1793700746
+      },
+      "attempts": 1
+    },
+    {
+      "protocol": "http",
+      "port": 64155,
+      "status": 200,
+      "tlsVersion": null,
+      "peerSha256": null,
+      "exitCode": 0,
+      "shutdownSeconds": 0.23499999998603016,
+      "before": {
+        "id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "idempotency_key": "baseline-install:plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_id": "plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "stage": "downloading",
+        "status": "running",
+        "version": 12,
+        "generation": 7,
+        "lease_owner": "installation-service:b67f8ac3-954e-4517-a0f8-f5fd881a9228",
+        "lease_until": 1793700867,
+        "accepted_at": 1793700737,
+        "updated_at": 1793700749
+      },
+      "after": {
+        "id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "idempotency_key": "baseline-install:plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_id": "plan:d47a1cf5-f563-4e2d-bdbf-f7323591704e",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "stage": "downloading",
+        "status": "queued",
+        "version": 14,
+        "generation": 9,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793700737,
+        "updated_at": 1793700749
+      },
+      "beforeCheckpoint": {
+        "completed_bytes": 8395805,
+        "prefix_sha256": "07a96cb5909fef716d9cbc86c541d337ad170b02080f11d9dc8ad15e5f0bc780",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "afterCheckpoint": {
+        "completed_bytes": 8395805,
+        "prefix_sha256": "07a96cb5909fef716d9cbc86c541d337ad170b02080f11d9dc8ad15e5f0bc780",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "reservation": {
+        "rules_version": "installation-storage-v3",
+        "job_id": "job:508108f3-badd-4bf4-a51e-035953560659",
+        "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+        "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-transfer-credit-r2\\app\\data\\model-lifecycle",
+        "volume_id": "windows-volume:c49e613d",
+        "peak_bytes": 2517555424,
+        "reserved_bytes": 2509159619,
+        "state": "held",
+        "version": 5,
+        "created_at": 1793700737,
+        "updated_at": 1793700749
+      },
+      "attempts": 1
+    }
+  ],
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-transfer-credit-r2\\2b6f194d245f31b97b08d0c72a457e07fa613ac9855b72a78b7a500ac7916a83\\lumina.exe",
+  "binarySha256": "2b6f194d245f31b97b08d0c72a457e07fa613ac9855b72a78b7a500ac7916a83",
+  "jobId": "job:508108f3-badd-4bf4-a51e-035953560659",
+  "checkpointBytesBeforeRestart": [
+    0,
+    8395805,
+    16791604
+  ],
+  "restoredBudget": {
+    "rules_version": "installation-storage-v3",
+    "job_id": "job:508108f3-badd-4bf4-a51e-035953560659",
+    "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+    "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-transfer-credit-r2\\app\\data\\model-lifecycle",
+    "volume_id": "windows-volume:c49e613d",
+    "peak_bytes": 2517555424,
+    "reserved_bytes": 2517555424,
+    "state": "held",
+    "version": 4,
+    "created_at": 1793700737,
+    "updated_at": 1793700747
+  },
+  "reservationsAfterCorruption": [
+    {
+      "rules_version": "installation-storage-v3",
+      "job_id": "job:508108f3-badd-4bf4-a51e-035953560659",
+      "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+      "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-transfer-credit-r2\\app\\data\\model-lifecycle",
+      "volume_id": "windows-volume:c49e613d",
+      "peak_bytes": 2517555424,
+      "reserved_bytes": 2517555424,
+      "state": "held",
+      "version": 4,
+      "created_at": 1793700737,
+      "updated_at": 1793700747
+    },
+    {
+      "rules_version": "installation-storage-v3",
+      "job_id": "job:508108f3-badd-4bf4-a51e-035953560659",
+      "plan_digest": "019c7f1b503d55bb8c68b7bbe62aae40522459d3b70e5c78279276c569058fc9",
+      "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-transfer-credit-r2\\app\\data\\model-lifecycle",
+      "volume_id": "windows-volume:c49e613d",
+      "peak_bytes": 2517555424,
+      "reserved_bytes": 2509159619,
+      "state": "held",
+      "version": 5,
+      "created_at": 1793700737,
+      "updated_at": 1793700749
+    }
+  ],
+  "databaseIntegrity": "PASS",
+  "baseCommit": "847ed3eaacd5cba8da85ee6aadc27cddcaabe6fc",
+  "sourceIdentities": {
+    "crates/lumina-local-inference/src/lifecycle/cache_worker.rs": "215225baed0666c7d2eb3194b2318afd51c60d89821222bf7a34eb587487c94b",
+    "crates/lumina-local-inference/src/lifecycle/network_worker.rs": "1594f5ebe66d9d05a611de33cff620c63c1fcc0d88fdc8d31112553fa83bc1f7",
+    "crates/lumina-local-inference/src/lifecycle/repository.rs": "f392f1f1c562aae3181bf0f89ae277d96b4837a1df5a02e3d8b6e95a637ee182",
+    "crates/lumina-local-inference/src/lifecycle/repository/files.rs": "e49559bd70c4341de30d2147ef371b1f0d91db67e335d3df1eae8a6bb4f07149",
+    "crates/lumina-local-inference/src/lifecycle/repository/storage.rs": "7a4b6f9cb591b42b4982679314fb3d5cc63a61613d5179390bf54dc64a872e1a",
+    "crates/lumina-local-inference/src/lifecycle/repository/migrations/0013.sql": "a0ed43ff91faff5caba893e33e2cccd2e7fcd71287efb413cf9079c131821267",
+    "crates/lumina-local-inference/src/lifecycle/storage.rs": "367bccebfdd4161fa20471cb9bea742b101e29fdcf882fc3362ddc0d7b30bc25",
+    "crates/lumina-local-inference/tests/lifecycle_cache_install/storage_cases.rs": "fdb36e698bb9d01055edffe14133655876b75e0bf7de50cbd9be7519ec2a339b",
+    "lumina-self-test.yaml": "7468bade65c7820c010c48a1632904efbc345554e7d38b95f41a91e107af18be"
+  },
+  "logSha256": {
+    "clippy": "1563b4e364f90becffa031d4fd3e07e82a107028a117c9ede0bc85fc0805975f",
+    "cli-build": "b37572b2f4454e56f557799bea3c9a222c04978248a75494d6b0dc2f729b7e1f",
+    "tests": "8356b1ac3cbc5f23a507e7b888ea3827d75d48802a83672f2f6268a8087ef7bd"
+  },
+  "selfTestSha256": "ebf54cfeb0bb237fcdb167edbb657012996f1fb042aea9f7ce7a607466a630f3",
+  "verifierSha256": "eb46277f4f3a0d414e1a4c399c7c6c341dd5022e7bb6ff01c6f9ba7c605f9f6d",
+  "earlierProbeFailure": {
+    "sha256": "3a99632aba3b08b7934b22808c8e6124731212cb986bc783319ac365e45cb831",
+    "cause": "Probe stopped the third process before the corrupt checkpoint had been reset",
+    "correction": "Wait for the explicit partial_content_mismatch restart and its new checkpoint"
+  },
+  "scope": "Real pinned ModelScope transfer resumed after Windows Ctrl+Break over HTTP and HTTPS. The third process restarts an intentionally corrupted managed partial file and restores the transfer credit before recording new progress. Admission after release still reserves the original peak."
+}

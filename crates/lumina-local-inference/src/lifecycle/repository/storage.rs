@@ -7,6 +7,7 @@ use crate::lifecycle::{
     InstallationInput, InstallationOperationError, InstallationStore, JobStatus,
     LifecycleErrorCode, Sha256Digest, StorageReservation, StorageReservationState, WorkerLease,
     PUBLICATION_STORAGE_RULES_VERSION, STORAGE_RESERVATION_RULES_VERSION,
+    TRANSFER_STORAGE_RULES_VERSION,
 };
 
 pub(super) const SCHEMA: &str = include_str!("migrations/0011.sql");
@@ -308,6 +309,12 @@ impl LifecycleRepository {
                 return Err(insufficient());
             }
         }
+        if reservation.rules_version == TRANSFER_STORAGE_RULES_VERSION {
+            tx.execute(
+                "DELETE FROM installation_transfer_credits WHERE job_id=?1",
+                [&job.id],
+            )?;
+        }
         if reservation.rules_version != PUBLICATION_STORAGE_RULES_VERSION
             || remaining != reservation.reserved_bytes
         {
@@ -319,6 +326,62 @@ impl LifecycleRepository {
         }
         tx.commit()?;
         Ok(())
+    }
+
+    pub(super) fn update_transfer_credit_by(
+        connection: &Connection,
+        job: &LifecycleJob,
+        file: &crate::lifecycle::FileTransferRecord,
+        completed: u64,
+        now: i64,
+    ) -> Result<()> {
+        let Some(mut reservation) = Self::read_storage_by(connection, &job.id)? else {
+            return Ok(());
+        };
+        let credited: u64 = connection.query_row(
+            "SELECT bytes FROM installation_transfer_credits WHERE job_id=?1 AND artifact_id=?2",
+            params![job.id, file.artifact_id],
+            |row| row.get(0),
+        ).optional()?.unwrap_or(0);
+        let total: u64 = connection.query_row(
+            "SELECT COALESCE(SUM(bytes),0) FROM installation_transfer_credits WHERE job_id=?1",
+            [&job.id],
+            |row| row.get(0),
+        )?;
+        ensure!(
+            reservation.state == StorageReservationState::Held
+                && reservation.plan_digest == job.plan_digest
+                && reservation.rules_version != PUBLICATION_STORAGE_RULES_VERSION
+                && reservation.peak_bytes - reservation.reserved_bytes == total
+                && credited <= file.checkpoint.completed_bytes
+                && completed <= file.expected_bytes
+                && now >= reservation.updated_at,
+            "Transfer credit does not match the held installation reservation"
+        );
+        if credited == completed {
+            return Ok(());
+        }
+        reservation.reserved_bytes = reservation
+            .reserved_bytes
+            .checked_add(credited)
+            .and_then(|bytes| bytes.checked_sub(completed))
+            .context("Transfer checkpoint exceeds its storage reservation")?;
+        if completed == 0 {
+            connection.execute(
+                "DELETE FROM installation_transfer_credits WHERE job_id=?1 AND artifact_id=?2",
+                params![job.id, file.artifact_id],
+            )?;
+        } else {
+            connection.execute(
+                "INSERT INTO installation_transfer_credits (job_id,artifact_id,bytes) VALUES (?1,?2,?3)
+                 ON CONFLICT(job_id,artifact_id) DO UPDATE SET bytes=excluded.bytes",
+                params![job.id, file.artifact_id, completed],
+            )?;
+        }
+        reservation.rules_version = TRANSFER_STORAGE_RULES_VERSION.into();
+        reservation.version += 1;
+        reservation.updated_at = now;
+        Self::write_storage_by(connection, &reservation)
     }
 
     pub(super) fn release_storage_by(
@@ -337,6 +400,10 @@ impl LifecycleRepository {
             reservation.state = StorageReservationState::Released;
             reservation.version += 1;
             reservation.updated_at = now;
+            connection.execute(
+                "DELETE FROM installation_transfer_credits WHERE job_id=?1",
+                [job_id],
+            )?;
             Self::write_storage_by(connection, &reservation)?;
         }
         Ok(())

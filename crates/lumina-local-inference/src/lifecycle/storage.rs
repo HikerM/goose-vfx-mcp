@@ -6,6 +6,7 @@ use super::Sha256Digest;
 
 pub const STORAGE_RESERVATION_RULES_VERSION: &str = "installation-storage-v1";
 pub(crate) const PUBLICATION_STORAGE_RULES_VERSION: &str = "installation-storage-v2";
+pub(crate) const TRANSFER_STORAGE_RULES_VERSION: &str = "installation-storage-v3";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -42,7 +43,9 @@ impl StorageReservation {
         ensure!(
             matches!(
                 self.rules_version.as_str(),
-                STORAGE_RESERVATION_RULES_VERSION | PUBLICATION_STORAGE_RULES_VERSION
+                STORAGE_RESERVATION_RULES_VERSION
+                    | PUBLICATION_STORAGE_RULES_VERSION
+                    | TRANSFER_STORAGE_RULES_VERSION
             ) && !self.job_id.is_empty()
                 && self.store_root.is_absolute()
                 && self.peak_bytes > 0
@@ -62,7 +65,7 @@ impl StorageReservation {
                 StorageReservationState::Held =>
                     self.volume_id.is_some()
                         && self.reserved_bytes <= self.peak_bytes
-                        && (self.rules_version == PUBLICATION_STORAGE_RULES_VERSION
+                        && (self.rules_version != STORAGE_RESERVATION_RULES_VERSION
                             || self.reserved_bytes == self.peak_bytes),
                 StorageReservationState::Released => self.reserved_bytes == 0,
             },

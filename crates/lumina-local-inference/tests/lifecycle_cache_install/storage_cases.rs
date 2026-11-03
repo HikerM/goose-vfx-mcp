@@ -324,7 +324,11 @@ fn publication_retry_reuses_a_blob_persisted_before_its_budget_event() {
     let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
     raw.execute_batch(
         "CREATE TRIGGER reject_blob_budget BEFORE INSERT ON installation_storage_events
-         WHEN NEW.version = 2 AND json_extract(NEW.payload,'$.state') = 'held'
+         WHEN json_extract(NEW.payload,'$.state') = 'held'
+          AND json_extract(NEW.payload,'$.rules_version') = 'installation-storage-v2'
+          AND EXISTS (SELECT 1 FROM installation_storage_events
+                      WHERE job_id=NEW.job_id AND version=NEW.version-1
+                        AND json_extract(payload,'$.rules_version')='installation-storage-v2')
          BEGIN SELECT RAISE(ABORT,'injected publication budget failure'); END;",
     )
     .unwrap();
@@ -390,6 +394,88 @@ fn publication_retry_reuses_a_blob_persisted_before_its_budget_event() {
         ]
     );
     assert_eq!(fixture.repository.active_installations().unwrap().len(), 1);
+}
+
+#[test]
+fn transfer_credit_and_file_checkpoint_rollback_together() {
+    let fixture = Fixture::new(true);
+    bind(&fixture);
+    let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+    raw.execute_batch(
+        "CREATE TRIGGER reject_downloaded_event BEFORE INSERT ON job_file_events
+         WHEN json_extract(NEW.payload,'$.state.state')='downloaded'
+         BEGIN SELECT RAISE(ABORT,'injected file event failure'); END;",
+    )
+    .unwrap();
+    let error = fixture.run(40).unwrap_err();
+    assert!(format!("{error:#}").contains("injected file event failure"));
+    let job = fixture
+        .repository
+        .read_job(&fixture.request.job_id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        fixture.repository.file_transfers(&job.id).unwrap()[0]
+            .checkpoint
+            .completed_bytes,
+        0
+    );
+    assert_eq!(
+        std::fs::metadata(fixture.transfer_path()).unwrap().len(),
+        fixture.bytes.len() as u64
+    );
+    let credits: u64 = raw
+        .query_row(
+            "SELECT COUNT(*) FROM installation_transfer_credits",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(credits, 0);
+    let events: u64 = raw
+        .query_row(
+            "SELECT COUNT(*) FROM installation_storage_events
+         WHERE json_extract(payload,'$.rules_version')='installation-storage-v3'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(events, 0);
+    raw.execute_batch("DROP TRIGGER reject_downloaded_event;")
+        .unwrap();
+    fixture
+        .repository
+        .control_installation(
+            &control_request(
+                &job.id,
+                job.version,
+                InstallationJobAction::Retry,
+                "retry-transfer-credit",
+            ),
+            &fixture.store,
+            41,
+        )
+        .unwrap();
+    fixture.run(42).unwrap();
+    let (peak, reserved): (u64, u64) = raw
+        .query_row(
+            "SELECT json_extract(payload,'$.peak_bytes'), json_extract(payload,'$.reserved_bytes')
+         FROM installation_storage_events
+         WHERE json_extract(payload,'$.rules_version')='installation-storage-v3'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(peak - reserved, fixture.bytes.len() as u64);
+    assert_eq!(
+        raw.query_row(
+            "SELECT COUNT(*) FROM installation_transfer_credits",
+            [],
+            |row| row.get::<_, u64>(0)
+        )
+        .unwrap(),
+        0
+    );
 }
 
 #[test]
@@ -495,7 +581,7 @@ fn schema_ten_upgrade_keeps_jobs_and_inputs_and_marks_storage_for_admission_with
     let root = fixture.store.root().to_path_buf();
     std::fs::remove_dir(&root).unwrap();
     let raw = rusqlite::Connection::open(&path).unwrap();
-    raw.execute_batch("DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; PRAGMA user_version=10;").unwrap();
+    raw.execute_batch("DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; PRAGMA user_version=10;").unwrap();
     let repository = LifecycleRepository::open(&path).unwrap();
     assert_eq!(repository.read_job(&job.id).unwrap(), Some(job.clone()));
     assert_eq!(
@@ -524,7 +610,7 @@ fn storage_upgrade_table_collision_rolls_back_and_preserves_the_old_schema() {
     let path = fixture.temp.path().join("models.db");
     drop(fixture.repository);
     let raw = rusqlite::Connection::open(&path).unwrap();
-    raw.execute_batch("DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; CREATE TABLE installation_storage_reservations (legacy INTEGER); INSERT INTO installation_storage_reservations VALUES (7); PRAGMA user_version=10;").unwrap();
+    raw.execute_batch("DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; CREATE TABLE installation_storage_reservations (legacy INTEGER); INSERT INTO installation_storage_reservations VALUES (7); PRAGMA user_version=10;").unwrap();
     assert!(LifecycleRepository::open(&path).is_err());
     assert_eq!(
         raw.pragma_query_value::<u32, _>(None, "user_version", |row| row.get(0))
