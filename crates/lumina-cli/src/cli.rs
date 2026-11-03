@@ -1502,15 +1502,24 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
                 server.start_model_installations().await;
                 info!("Starting ACP server on https://{}", addr);
 
+                let handle = axum_server::Handle::new();
                 #[cfg(feature = "rustls-tls")]
-                axum_server::bind_rustls(addr, tls_setup.config)
-                    .serve(router.into_make_service_with_connect_info::<SocketAddr>())
-                    .await?;
+                let listener = axum_server::bind_rustls(addr, tls_setup.config);
 
                 #[cfg(feature = "native-tls")]
-                axum_server::bind_openssl(addr, tls_setup.config)
-                    .serve(router.into_make_service_with_connect_info::<SocketAddr>())
-                    .await?;
+                let listener = axum_server::bind_openssl(addr, tls_setup.config);
+
+                let serve = listener
+                    .handle(handle.clone())
+                    .serve(router.into_make_service_with_connect_info::<SocketAddr>());
+                tokio::pin!(serve);
+                tokio::select! {
+                    result = &mut serve => result?,
+                    () = crate::signal::shutdown_signal() => {
+                        handle.graceful_shutdown(Some(HTTP_SHUTDOWN_GRACE));
+                        serve.await?;
+                    }
+                }
             }
 
             #[cfg(not(any(feature = "rustls-tls", feature = "native-tls")))]
@@ -1525,15 +1534,44 @@ async fn handle_serve_command(args: ServeCommandArgs) -> Result<()> {
             info!("Starting ACP server on http://{}", addr);
             let listener = tokio::net::TcpListener::bind(addr).await?;
             server.start_model_installations().await;
-            axum::serve(
+            let (stop, stopped) = tokio::sync::oneshot::channel();
+            let serve = axum::serve(
                 listener,
                 router.into_make_service_with_connect_info::<SocketAddr>(),
+            )
+            .with_graceful_shutdown(async {
+                let _ = stopped.await;
+            });
+            drain_http_on_signal(
+                async { serve.await },
+                crate::signal::shutdown_signal(),
+                stop,
             )
             .await?;
         }
         Ok(())
     };
     await_serve_then_shutdown(serve, server.shutdown()).await
+}
+
+const HTTP_SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(10);
+
+async fn drain_http_on_signal(
+    serve: impl std::future::Future<Output = std::io::Result<()>>,
+    signal: impl std::future::Future<Output = ()>,
+    stop: tokio::sync::oneshot::Sender<()>,
+) -> std::io::Result<()> {
+    tokio::pin!(serve);
+    tokio::select! {
+        result = &mut serve => result,
+        () = signal => {
+            let _ = stop.send(());
+            match tokio::time::timeout(HTTP_SHUTDOWN_GRACE, serve).await {
+                Ok(result) => result,
+                Err(_) => Ok(()),
+            }
+        }
+    }
 }
 
 fn load_serve_additional_source_roots(
@@ -2622,6 +2660,26 @@ mod tests {
         .await;
         assert_eq!(result, Err("serve failed"));
         assert!(stopped.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn serve_signal_requests_http_drain_before_application_shutdown() {
+        let (stop, stopped) = tokio::sync::oneshot::channel();
+        let drained = AtomicBool::new(false);
+        let serve = drain_http_on_signal(
+            async {
+                stopped.await.unwrap();
+                drained.store(true, Ordering::SeqCst);
+                Ok(())
+            },
+            std::future::ready(()),
+            stop,
+        );
+        await_serve_then_shutdown(serve, async {
+            assert!(drained.load(Ordering::SeqCst));
+        })
+        .await
+        .unwrap();
     }
 
     #[test]

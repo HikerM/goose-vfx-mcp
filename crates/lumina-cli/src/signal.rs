@@ -26,7 +26,19 @@ pub fn shutdown_signal() -> Pin<Box<dyn Future<Output = ()> + Send>> {
     })
 }
 
-#[cfg(not(unix))]
+#[cfg(windows)]
+pub fn shutdown_signal() -> Pin<Box<dyn Future<Output = ()> + Send>> {
+    Box::pin(async move {
+        let mut ctrl_break =
+            signal::windows::ctrl_break().expect("failed to install Ctrl+Break handler");
+        tokio::select! {
+            result = signal::ctrl_c() => result.expect("failed to install Ctrl+C handler"),
+            _ = ctrl_break.recv() => {}
+        }
+    })
+}
+
+#[cfg(not(any(unix, windows)))]
 pub fn shutdown_signal() -> Pin<Box<dyn Future<Output = ()> + Send>> {
     Box::pin(async move {
         signal::ctrl_c()

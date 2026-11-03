@@ -1,0 +1,179 @@
+{
+  "status": "PASS_INCREMENT_NOT_PHASE_EXIT",
+  "runs": [
+    {
+      "protocol": "http",
+      "port": 56319,
+      "status": 200,
+      "tlsVersion": null,
+      "peerSha256": null,
+      "exitCode": 0,
+      "shutdownSeconds": 0.21899999998277053,
+      "before": {
+        "id": "job:11bafa87-17d1-4105-9997-3b567cf63ed3",
+        "idempotency_key": "baseline-install:plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_id": "plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_digest": "4516246908e5df00d94e135d53b80c061fb3e2744b612fa938da70d9a406ffd8",
+        "stage": "downloading",
+        "status": "running",
+        "version": 3,
+        "generation": 1,
+        "lease_owner": "installation-service:42c28fc3-b288-43e3-94f3-5902bc34fd06",
+        "lease_until": 1793692803,
+        "accepted_at": 1793692678,
+        "updated_at": 1793692686
+      },
+      "after": {
+        "id": "job:11bafa87-17d1-4105-9997-3b567cf63ed3",
+        "idempotency_key": "baseline-install:plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_id": "plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_digest": "4516246908e5df00d94e135d53b80c061fb3e2744b612fa938da70d9a406ffd8",
+        "stage": "downloading",
+        "status": "queued",
+        "version": 5,
+        "generation": 3,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793692678,
+        "updated_at": 1793692686
+      },
+      "beforeCheckpoint": {
+        "completed_bytes": 8395806,
+        "prefix_sha256": "ff7328fd00d0427ca927ad443e066257c8fde2cc6aa384e17754e4b714071a80",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "afterCheckpoint": {
+        "completed_bytes": 8395806,
+        "prefix_sha256": "ff7328fd00d0427ca927ad443e066257c8fde2cc6aa384e17754e4b714071a80",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "reservation": {
+        "rules_version": "installation-storage-v1",
+        "job_id": "job:11bafa87-17d1-4105-9997-3b567cf63ed3",
+        "plan_digest": "4516246908e5df00d94e135d53b80c061fb3e2744b612fa938da70d9a406ffd8",
+        "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-shutdown-r3\\app\\data\\model-lifecycle",
+        "volume_id": "windows-volume:c49e613d",
+        "peak_bytes": 2517555424,
+        "reserved_bytes": 2517555424,
+        "state": "held",
+        "version": 1,
+        "created_at": 1793692678,
+        "updated_at": 1793692683
+      },
+      "attempts": 1
+    },
+    {
+      "protocol": "https",
+      "port": 56344,
+      "status": 200,
+      "tlsVersion": "TLSv1.3",
+      "peerSha256": "f6619921e87a2f89dd3b7b35b6d45fb78f5c0ac41e4a38a0979ce7e8c1ac3b0f",
+      "exitCode": 0,
+      "shutdownSeconds": 0.1720000000204891,
+      "before": {
+        "id": "job:11bafa87-17d1-4105-9997-3b567cf63ed3",
+        "idempotency_key": "baseline-install:plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_id": "plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_digest": "4516246908e5df00d94e135d53b80c061fb3e2744b612fa938da70d9a406ffd8",
+        "stage": "downloading",
+        "status": "running",
+        "version": 7,
+        "generation": 4,
+        "lease_owner": "installation-service:5436c5d8-f44d-47e9-8d1e-02b137f61704",
+        "lease_until": 1793692807,
+        "accepted_at": 1793692678,
+        "updated_at": 1793692688
+      },
+      "after": {
+        "id": "job:11bafa87-17d1-4105-9997-3b567cf63ed3",
+        "idempotency_key": "baseline-install:plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_id": "plan:4698d813-7196-426f-828a-2cd2b099f240",
+        "plan_digest": "4516246908e5df00d94e135d53b80c061fb3e2744b612fa938da70d9a406ffd8",
+        "stage": "downloading",
+        "status": "queued",
+        "version": 9,
+        "generation": 6,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793692678,
+        "updated_at": 1793692688
+      },
+      "beforeCheckpoint": {
+        "completed_bytes": 16791606,
+        "prefix_sha256": "ac8ae58c72327dc9d72934d7fc1f33efd8d15d852691fbf5da52ed7aa6f842ba",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "afterCheckpoint": {
+        "completed_bytes": 16791606,
+        "prefix_sha256": "ac8ae58c72327dc9d72934d7fc1f33efd8d15d852691fbf5da52ed7aa6f842ba",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "reservation": {
+        "rules_version": "installation-storage-v1",
+        "job_id": "job:11bafa87-17d1-4105-9997-3b567cf63ed3",
+        "plan_digest": "4516246908e5df00d94e135d53b80c061fb3e2744b612fa938da70d9a406ffd8",
+        "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-shutdown-r3\\app\\data\\model-lifecycle",
+        "volume_id": "windows-volume:c49e613d",
+        "peak_bytes": 2517555424,
+        "reserved_bytes": 2517555424,
+        "state": "held",
+        "version": 1,
+        "created_at": 1793692678,
+        "updated_at": 1793692683
+      },
+      "attempts": 1
+    }
+  ],
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-shutdown-r3\\8647991f4bc2caed52519ef11547426ad2b9bb814f8d31edf412abb5ff9eaa00\\lumina.exe",
+  "binarySha256": "8647991f4bc2caed52519ef11547426ad2b9bb814f8d31edf412abb5ff9eaa00",
+  "jobId": "job:11bafa87-17d1-4105-9997-3b567cf63ed3",
+  "checkpointBytesHistory": [
+    0,
+    8395806,
+    16791606
+  ],
+  "restartReasons": [],
+  "databaseIntegrity": "PASS",
+  "baseCommit": "9c426c0dc2b5cb33e7d4508968706e116d00722e",
+  "testLogSha256": "0f631d9e058f0f092c143514cc8c7c129c97b3338fb0c879aff422df4ddbb232",
+  "buildLogSha256": "3da4d7508c11b0276f5a116862dc528d6cfddb154302e088ae51d13a2bc03406",
+  "verifierSha256": "fb0c11785c1c392007bea4f54acaf789db9d53f0c49797af6560b9b20acb45cb",
+  "selfTestSha256": "f2eeefe1648644875603695fb7feecc679464c4135cb2c12e92545e002bdf82d",
+  "scope": "Actual Windows console Ctrl+Break on HTTP and rustls HTTPS while transferring a pinned ModelScope artifact. HTTP health and verified TLS health, zero exits, lease invalidation, monotonic checkpoints, prefix hashes and one retry attempt across restart. The probe stops after checkpoint continuity.",
+  "priorProbeFailures": [
+    {
+      "round": 1,
+      "result": {
+        "status": "FAIL",
+        "runs": [],
+        "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-shutdown-r1\\8647991f4bc2caed52519ef11547426ad2b9bb814f8d31edf412abb5ff9eaa00\\lumina.exe",
+        "binarySha256": "8647991f4bc2caed52519ef11547426ad2b9bb814f8d31edf412abb5ff9eaa00",
+        "jobId": "job:1686d60c-263d-4b10-a4f4-b46133d71189",
+        "failure": "Traceback (most recent call last):\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-http-shutdown-r1.py\", line 160, in <module>\n    first = serve_and_stop(False, 8*1024*1024)\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-http-shutdown-r1.py\", line 101, in serve_and_stop\n    assert status == 200 and response.read() == b'ok'\nAssertionError\n"
+      }
+    },
+    {
+      "round": 2,
+      "result": {
+        "status": "FAIL",
+        "runs": [],
+        "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-http-shutdown-r2\\8647991f4bc2caed52519ef11547426ad2b9bb814f8d31edf412abb5ff9eaa00\\lumina.exe",
+        "binarySha256": "8647991f4bc2caed52519ef11547426ad2b9bb814f8d31edf412abb5ff9eaa00",
+        "jobId": "job:60503d78-bb6e-44aa-82fa-b170ba8c979d",
+        "failure": "Traceback (most recent call last):\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-http-shutdown-r2.py\", line 166, in <module>\n    first = serve_and_stop(False, 8*1024*1024)\n  File \"D:\\Project\\goose\\target\\lifecycle-validation\\verify-m2-http-shutdown-r2.py\", line 120, in serve_and_stop\n    assert queued['generation']==running['generation'] and queued['version']>running['version']\nAssertionError\n"
+      }
+    }
+  ]
+}

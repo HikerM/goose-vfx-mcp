@@ -181,6 +181,7 @@ prompt: |
   bounded transient backoff, explicit retry cycles and retry history across database reopen,
   atomic structured file/operation failures, blocked credential recovery, failure query history,
   atomic storage reservation admission, shared-volume quotas, quiescent release and recovery,
+  with HTTP and HTTPS listener shutdown covered by separate CLI signal acceptance,
   while full network installation and Runtime readiness need their separate acceptance evidence.
   {% elif test_phases == "model-lifecycle" %}
   Execute the model lifecycle checks now using your developer shell tool. Your first action
