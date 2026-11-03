@@ -118,6 +118,12 @@ impl LifecycleRepository {
                 intent.input.store_root == store.root(),
                 "Installation belongs to another store"
             );
+            if matches!(
+                request.action,
+                InstallationJobAction::Resume | InstallationJobAction::Retry
+            ) {
+                Self::reserve_storage_by(&tx, &job, &intent.input, u64::MAX, now)?;
+            }
         }
         let job = match target(request.action, job.status)? {
             Some(status) => {

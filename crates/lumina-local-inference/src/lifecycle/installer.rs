@@ -186,20 +186,14 @@ impl InstallationStore {
         Ok(file)
     }
 
-    fn require_space(&self, needed: u64) -> Result<()> {
-        let available =
-            fs2::available_space(&self.root).map_err(|_| super::InstallationOperationError {
-                code: super::LifecycleErrorCode::InstallFailed,
-                origin: super::InstallationFailureOrigin::Commit,
-            })?;
-        if available < needed {
-            return Err(super::InstallationOperationError {
-                code: super::LifecycleErrorCode::DiskInsufficient,
-                origin: super::InstallationFailureOrigin::Commit,
-            }
-            .into());
-        }
-        Ok(())
+    fn require_space<F: Fn() -> i64>(
+        &self,
+        execution: &InstallationExecution<'_, F>,
+        needed: u64,
+    ) -> Result<()> {
+        execution
+            .repository
+            .require_installation_space(&execution.lease.job_id, self, needed)
     }
 
     fn make_read_only(path: &Path) -> Result<()> {
@@ -245,7 +239,7 @@ impl InstallationStore {
     ) -> Result<()> {
         let target = self.target(destination)?;
         ensure!(!target.exists(), "Installation destination already exists");
-        self.require_space(manifest.installed_files[id].size_bytes)?;
+        self.require_space(execution, manifest.installed_files[id].size_bytes)?;
         let mut input = open_for_verification(&checked_local_path(source_root, source)?)?;
         self.verify_file(execution, manifest, id, source_root, source)?;
         let parent = target
@@ -323,7 +317,7 @@ impl InstallationStore {
                 }
             }
         }
-        self.require_space(remaining)?;
+        self.require_space(execution, remaining)?;
         for (id, installed) in &manifest.installed_files {
             execution.checkpoint()?;
             let _blob_lock = self.lock("blobs", installed.computed_sha256.as_str())?;
@@ -362,7 +356,7 @@ impl InstallationStore {
             staging.as_str()
         ))?)?;
         if !manifest_path.exists() {
-            self.require_space(manifest_bytes.len() as u64)?;
+            self.require_space(execution, manifest_bytes.len() as u64)?;
             let directory = manifest_path
                 .parent()
                 .context("Manifest has no directory")?;

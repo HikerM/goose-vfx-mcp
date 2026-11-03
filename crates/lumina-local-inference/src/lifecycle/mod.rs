@@ -22,6 +22,7 @@ pub mod resources;
 pub mod retry;
 pub mod service;
 pub mod state;
+pub mod storage;
 mod worker_control;
 
 pub use application::*;
@@ -47,6 +48,7 @@ pub use resources::*;
 pub use retry::*;
 pub use service::*;
 pub use state::*;
+pub use storage::*;
 pub use worker_control::InstallationWorkerControl;
 pub mod catalog;
 pub use catalog::*;

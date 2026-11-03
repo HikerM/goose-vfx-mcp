@@ -215,6 +215,8 @@ schema v10 增加不可变安装失败记录，绑定状态变更后的历史任
 
 逐文件进度和游标事件尚未覆盖上表完整契约；旧 spec 下载及其他历史入口也尚未全部转发到新服务。当前 ACP DTO 不暴露原始下载 URL、令牌、调用方指定的受管根目录或内部启动参数。后续 SDK、界面和旧入口迁移继续执行完整 ML-40 范围。
 
+SQLite schema v11 增加 installation-storage-v1 预留及不可变历史，与接受任务、输入绑定及新 Retry/Resume 的状态变化同事务提交。同一数据库按真实磁盘卷协调任务；当前预留完整计划峰值，暂停持有，阻塞/失败/取消需写入停止后释放，完成与版本登记原子释放。回执重放不重复预留；升级标记 needs_admission，恢复前复验卷。列表增加 storageReservations（jobId、planDigest、volumeId、peakBytes、reservedBytes、state、version、createdAt、updatedAt），不返回内部 storeRoot。精确已落盘字节、共享内容节省量、跨数据库协调和操作系统物理预分配不在该保守基础实现范围，三层全局并发和精确空间核算仍待交付。
+
 ## 界面和状态契约
 
 面向 Windows Electron 桌面，复用 React、现有主题 token、Button、Dialog、Tabs 和国际化，不另建视觉系统。属于跨模块复杂业务界面；原生文件路径和进程信息经后端适配，渲染端不直接访问数据库、文件或启动命令。

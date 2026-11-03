@@ -258,14 +258,24 @@ pub(crate) fn validate_installation_store_admission(
     plan: &super::InstallPlan,
     now: i64,
 ) -> Result<()> {
-    let result = fs2::available_space(store.root())
-        .map_err(|_| {
-            anyhow::Error::new(InstallationOperationError {
-                code: LifecycleErrorCode::InstallFailed,
-                origin: InstallationFailureOrigin::Admission,
-            })
-        })
-        .and_then(|available| validate_installation_admission(plan, job.accepted_at, available));
+    let result = repository
+        .admit_installation_storage(job, store, now)
+        .and_then(|reservation| {
+            if reservation.is_some() {
+                plan.validate_for_install(job.accepted_at, u64::MAX)?;
+                return repository.require_installation_space(&job.id, store, 0);
+            }
+            fs2::available_space(store.root())
+                .map_err(|_| {
+                    anyhow::Error::new(InstallationOperationError {
+                        code: LifecycleErrorCode::InstallFailed,
+                        origin: InstallationFailureOrigin::Admission,
+                    })
+                })
+                .and_then(|available| {
+                    validate_installation_admission(plan, job.accepted_at, available)
+                })
+        });
     if let Err(error) = &result {
         repository.block_installation(
             job,

@@ -193,6 +193,11 @@ async fn download_file<F: Fn() -> i64>(
             completed <= record.expected_bytes,
             "Network transfer exceeded pinned size"
         );
+        execution.repository.require_installation_space(
+            &execution.lease.job_id,
+            execution.store,
+            chunk.len() as u64,
+        )?;
         output.write_all(&chunk)?;
         hash.update(&chunk);
         if completed.saturating_sub(persisted) >= 8 * 1024 * 1024
@@ -315,88 +320,92 @@ where
 {
     let runtime = tokio::runtime::Handle::current();
     tokio::task::spawn_blocking(move || {
-        control.checkpoint()?;
-        ensure!(
-            !request.installation_id.trim().is_empty() && !request.version_id.trim().is_empty(),
-            "Network installation has no installation or version identity"
-        );
-        let _lock = store.transfer_lock(&request.job_id)?;
-        let job = repository
-            .read_job(&request.job_id)?
-            .context("Network installation job not found")?;
-        if let Some(intent) = repository.read_installation_input(&job.id)? {
-            intent.input.validate_destination(
-                &store,
-                &request.installation_id,
-                &request.version_id,
-            )?;
-        }
-        if job.status == JobStatus::Cancelling {
-            repository.transition(&job.id, job.version, JobStatus::Cancelled, clock())?;
-            return Err(ModelSourceError {
-                code: LifecycleErrorCode::Cancelled,
-                http_status: None,
+        let result = (|| {
+            control.checkpoint()?;
+            ensure!(
+                !request.installation_id.trim().is_empty() && !request.version_id.trim().is_empty(),
+                "Network installation has no installation or version identity"
+            );
+            let _lock = store.transfer_lock(&request.job_id)?;
+            let job = repository
+                .read_job(&request.job_id)?
+                .context("Network installation job not found")?;
+            if let Some(intent) = repository.read_installation_input(&job.id)? {
+                intent.input.validate_destination(
+                    &store,
+                    &request.installation_id,
+                    &request.version_id,
+                )?;
             }
-            .into());
-        }
-        if job.status == JobStatus::Completed {
-            return replay_completed_installation(
+            if job.status == JobStatus::Cancelling {
+                repository.transition(&job.id, job.version, JobStatus::Cancelled, clock())?;
+                return Err(ModelSourceError {
+                    code: LifecycleErrorCode::Cancelled,
+                    http_status: None,
+                }
+                .into());
+            }
+            if job.status == JobStatus::Completed {
+                return replay_completed_installation(
+                    &repository,
+                    &store,
+                    &job,
+                    &request.installation_id,
+                    &request.version_id,
+                );
+            }
+            let plan = repository
+                .read_plan(&job.plan_id)?
+                .context("Network installation plan is missing")?;
+            ensure!(
+                plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION
+                    && plan.digest()? == job.plan_digest,
+                "Network installation requires its accepted immutable plan"
+            );
+            super::failure::validate_installation_store_admission(
                 &repository,
                 &store,
                 &job,
-                &request.installation_id,
-                &request.version_id,
-            );
-        }
-        let plan = repository
-            .read_plan(&job.plan_id)?
-            .context("Network installation plan is missing")?;
-        ensure!(
-            plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION
-                && plan.digest()? == job.plan_digest,
-            "Network installation requires its accepted immutable plan"
-        );
-        super::failure::validate_installation_store_admission(
-            &repository,
-            &store,
-            &job,
-            &plan,
-            clock(),
-        )?;
-        let headers = match scoped_auth_headers(token.as_deref()) {
-            Ok(headers) => headers,
-            Err(error) => {
-                repository.block_installation(
-                    &job,
-                    &store,
-                    InstallationFailureDetails::operation(
-                        super::failure::installation_failure_code(&error),
-                        InstallationFailureOrigin::Credentials,
-                    ),
-                    clock(),
-                )?;
-                return Err(error);
+                &plan,
+                clock(),
+            )?;
+            let headers = match scoped_auth_headers(token.as_deref()) {
+                Ok(headers) => headers,
+                Err(error) => {
+                    repository.block_installation(
+                        &job,
+                        &store,
+                        InstallationFailureDetails::operation(
+                            super::failure::installation_failure_code(&error),
+                            InstallationFailureOrigin::Credentials,
+                        ),
+                        clock(),
+                    )?;
+                    return Err(error);
+                }
+            };
+            let input = InstallationInput::new(
+                &store,
+                request.installation_id.clone(),
+                request.version_id.clone(),
+                InstallationSource::ModelScope {},
+            )?;
+            repository.adopt_installation_input(&job.id, &input, clock())?;
+            let lease = repository.claim(&job.id, job.version, &worker_name, clock(), 120)?;
+            let execution = InstallExecution {
+                repository: &repository,
+                store: &store,
+                lease,
+                clock: &clock,
+                control,
+            };
+            let result = runtime.block_on(execute(&execution, &request, plan, &headers));
+            if let Err(error) = &result {
+                execution.settle_failure(error)?;
             }
-        };
-        let input = InstallationInput::new(
-            &store,
-            request.installation_id.clone(),
-            request.version_id.clone(),
-            InstallationSource::ModelScope {},
-        )?;
-        repository.adopt_installation_input(&job.id, &input, clock())?;
-        let lease = repository.claim(&job.id, job.version, &worker_name, clock(), 120)?;
-        let execution = InstallExecution {
-            repository: &repository,
-            store: &store,
-            lease,
-            clock,
-            control,
-        };
-        let result = runtime.block_on(execute(&execution, &request, plan, &headers));
-        if let Err(error) = &result {
-            execution.settle_failure(error)?;
-        }
+            result
+        })();
+        repository.release_inactive_storage(&request.job_id, &store, clock())?;
         result
     })
     .await

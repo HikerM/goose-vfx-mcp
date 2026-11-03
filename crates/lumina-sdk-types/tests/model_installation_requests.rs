@@ -63,6 +63,7 @@ fn installation_queries_decode_old_responses_and_expose_typed_retry_state() {
     .unwrap();
     assert!(old.file_retries.is_empty());
     assert!(old.failures.is_empty());
+    assert!(old.storage_reservations.is_empty());
     let dto: ModelInstallationFileRetryDto = serde_json::from_value(json!({
         "jobId":"job:unit","artifactId":"file:unit","policyVersion":"installation-file-retry-v1",
         "maxAttempts":3,"cycle":1,"cycleAttempts":2,"recordedAttempts":5,
@@ -79,6 +80,24 @@ fn installation_queries_decode_old_responses_and_expose_typed_retry_state() {
         ModelInstallationFailureCode::SourceRateLimited
     ));
     assert_eq!(dto.next_retry_at, Some(50));
+}
+
+#[test]
+fn storage_query_wire_data_reports_reserved_peak_and_release_without_store_paths() {
+    let storage:ModelInstallationStorageDto=serde_json::from_value(json!({
+        "jobId":"job:unit","planDigest":"a".repeat(64),"volumeId":"windows-volume:12345678",
+        "peakBytes":1024,"reservedBytes":0,"state":"released","version":2,"createdAt":10,"updatedAt":20
+    })).unwrap();
+    assert!(matches!(
+        storage.state,
+        ModelInstallationStorageState::Released
+    ));
+    assert_eq!(storage.peak_bytes, 1024);
+    assert_eq!(storage.reserved_bytes, 0);
+    assert!(serde_json::to_value(storage)
+        .unwrap()
+        .get("storeRoot")
+        .is_none());
 }
 
 #[test]

@@ -137,6 +137,9 @@ where
                     ),
                     clock(),
                 )?;
+                if recorded.is_some() {
+                    repository.release_inactive_storage(&job_id, &store, clock())?;
+                }
                 return outcome(if recorded.is_some() {
                     RecoveryDisposition::CredentialsUnavailable
                 } else {

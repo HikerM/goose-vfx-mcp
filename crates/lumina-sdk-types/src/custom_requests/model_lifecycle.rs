@@ -110,6 +110,8 @@ pub struct ModelInstallationJobsListResponse {
     pub file_retries: Vec<ModelInstallationFileRetryDto>,
     #[serde(default)]
     pub failures: Vec<ModelInstallationFailureDto>,
+    #[serde(default)]
+    pub storage_reservations: Vec<ModelInstallationStorageDto>,
     pub next_after_id: Option<String>,
     pub service_state: ModelInstallationServiceState,
 }
@@ -182,6 +184,28 @@ pub enum ModelInstallationFailureOrigin {
     Transfer,
     Verification,
     Commit,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelInstallationStorageState {
+    NeedsAdmission,
+    Held,
+    Released,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInstallationStorageDto {
+    pub job_id: String,
+    pub plan_digest: String,
+    pub volume_id: Option<String>,
+    pub peak_bytes: u64,
+    pub reserved_bytes: u64,
+    pub state: ModelInstallationStorageState,
+    pub version: u64,
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]

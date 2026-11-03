@@ -71,6 +71,29 @@ map_enum!(
     Commit
 );
 map_enum!(
+    StorageReservationState,
+    ModelInstallationStorageState,
+    NeedsAdmission,
+    Held,
+    Released
+);
+
+impl From<StorageReservation> for ModelInstallationStorageDto {
+    fn from(reservation: StorageReservation) -> Self {
+        Self {
+            job_id: reservation.job_id,
+            plan_digest: reservation.plan_digest.as_str().into(),
+            volume_id: reservation.volume_id,
+            peak_bytes: reservation.peak_bytes,
+            reserved_bytes: reservation.reserved_bytes,
+            state: reservation.state.into(),
+            version: reservation.version,
+            created_at: reservation.created_at,
+            updated_at: reservation.updated_at,
+        }
+    }
+}
+map_enum!(
     LifecycleErrorCode,
     ModelInstallationFailureCode,
     SourceNotFound,
@@ -191,6 +214,7 @@ impl InstallationApplication {
                 jobs: Vec::new(),
                 file_retries: Vec::new(),
                 failures: Vec::new(),
+                storage_reservations: Vec::new(),
                 next_after_id: None,
                 service_state: self.state().into(),
             });
@@ -210,7 +234,11 @@ impl InstallationApplication {
             .then(|| jobs.last().expect("Job page is nonempty").id.clone());
         let mut file_retries = Vec::new();
         let mut failures = Vec::new();
+        let mut storage_reservations = Vec::new();
         for job in &jobs {
+            if let Some(reservation) = repository.storage_reservation(&job.id)? {
+                storage_reservations.push(reservation.into());
+            }
             file_retries.extend(
                 repository
                     .file_retry_budgets(&job.id)?
@@ -243,6 +271,7 @@ impl InstallationApplication {
             jobs: jobs.into_iter().map(Into::into).collect(),
             file_retries,
             failures,
+            storage_reservations,
             next_after_id,
             service_state: self.state().into(),
         })

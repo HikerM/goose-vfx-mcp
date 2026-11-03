@@ -1,0 +1,768 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-03T07:23:30.007196+00:00",
+  "scope": "Actual product CLI plan submission atomically reserves storage; sanitized credential failure releases it after writes stop, explicit retry reacquires it and successful registration releases it. Same-volume quota, transaction and migration boundaries have separate integration tests. Actual rebuilt HTTP application with a synthetic malformed credential configuration blocks before worker claim, persists sanitized failure, retains the blocked job across restart, and completes pinned public ModelScope installation only after explicit retry with corrected anonymous configuration. Independent CLI queries distinguish current and historical failure and replay the original retry receipt. Server force termination occurs only at blocked/completed states as explicit probe cleanup; not HTTP graceful shutdown, private-account authorization or full M2 acceptance.",
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+  "binarySha256": "e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1",
+  "source": {
+    "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+    "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+    "file": "Qwen3.5-0.8B-Q8_0.gguf",
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "sizeBytes": 833592736,
+    "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "elapsedSeconds": 84.03100000001723,
+    "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+    "redirectCount": 1,
+    "allowedOrigins": [
+      "modelscope.cn",
+      "cdn-lfs-cn-1.modelscope.cn"
+    ],
+    "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+    "status": "PASS"
+  },
+  "schemaBefore": 7,
+  "legacyUnboundJobId": "job:7c38f734-9fbb-45c9-9cf2-082d3ae6e9f9",
+  "cli": [
+    {
+      "label": "product-submit",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "local-models",
+        "install-plan",
+        "--plan-id",
+        "plan:91856bb2-c918-446f-a184-8355ee45126d",
+        "--plan-digest",
+        "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+        "--installation-id",
+        "m2-storage-qwen35-08b",
+        "--idempotency-key",
+        "product-storage-submit"
+      ],
+      "exitCode": 1,
+      "expectedSuccess": false,
+      "response": {
+        "job": {
+          "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+          "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+          "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+          "stage": "ready_to_install",
+          "status": "blocked",
+          "version": 1,
+          "generation": 1,
+          "acceptedAt": 1793690662,
+          "updatedAt": 1793690662
+        },
+        "versionId": "version:59cfc51b-8e03-412c-bace-13571398914d"
+      }
+    },
+    {
+      "label": "current-failure",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "local-models",
+        "jobs",
+        "--limit",
+        "64"
+      ],
+      "exitCode": 0,
+      "expectedSuccess": true,
+      "response": {
+        "jobs": [
+          {
+            "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+            "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+            "stage": "ready_to_install",
+            "status": "blocked",
+            "version": 1,
+            "generation": 1,
+            "acceptedAt": 1793690662,
+            "updatedAt": 1793690662
+          },
+          {
+            "id": "job:7c38f734-9fbb-45c9-9cf2-082d3ae6e9f9",
+            "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+            "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+            "stage": "ready_to_install",
+            "status": "queued",
+            "version": 0,
+            "generation": 0,
+            "acceptedAt": 1793690658,
+            "updatedAt": 1793690658
+          }
+        ],
+        "fileRetries": [
+          {
+            "jobId": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "artifactId": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+            "policyVersion": "installation-file-retry-v1",
+            "maxAttempts": 3,
+            "cycle": 0,
+            "cycleAttempts": 0,
+            "recordedAttempts": 0,
+            "historyOrigin": "from_enqueue",
+            "trackingStartedAt": 1793690662,
+            "state": "ready",
+            "nextRetryAt": null,
+            "lastFailure": null,
+            "version": 0,
+            "updatedAt": 1793690662
+          },
+          {
+            "jobId": "job:7c38f734-9fbb-45c9-9cf2-082d3ae6e9f9",
+            "artifactId": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+            "policyVersion": "installation-file-retry-v1",
+            "maxAttempts": 3,
+            "cycle": 0,
+            "cycleAttempts": 0,
+            "recordedAttempts": 0,
+            "historyOrigin": "legacy_untracked",
+            "trackingStartedAt": 1793690658,
+            "state": "ready",
+            "nextRetryAt": null,
+            "lastFailure": null,
+            "version": 0,
+            "updatedAt": 1793690658
+          }
+        ],
+        "failures": [
+          {
+            "jobId": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "jobVersion": 1,
+            "code": "SOURCE_AUTH_REQUIRED",
+            "stage": "ready_to_install",
+            "origin": "credentials",
+            "artifactId": null,
+            "messageKey": "models.installation.failure.source_auth_required",
+            "messageArgs": {},
+            "retryable": false,
+            "recoverable": true,
+            "causeId": "installation-failure:job:31ef6887-c960-469a-8f05-10f62e171a42:1",
+            "automaticRetryAt": null,
+            "isCurrent": true,
+            "occurredAt": 1793690662
+          }
+        ],
+        "storageReservations": [
+          {
+            "jobId": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+            "volumeId": "windows-volume:c49e613d",
+            "peakBytes": 2517555424,
+            "reservedBytes": 0,
+            "state": "released",
+            "version": 1,
+            "createdAt": 1793690662,
+            "updatedAt": 1793690662
+          }
+        ],
+        "nextAfterId": null,
+        "serviceState": "dormant"
+      }
+    },
+    {
+      "label": "explicit-retry",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:31ef6887-c960-469a-8f05-10f62e171a42",
+        "retry",
+        "--expected-version",
+        "1",
+        "--idempotency-key",
+        "explicit-credential-retry"
+      ],
+      "exitCode": 0,
+      "expectedSuccess": true,
+      "response": {
+        "job": {
+          "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+          "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+          "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+          "stage": "ready_to_install",
+          "status": "queued",
+          "version": 2,
+          "generation": 2,
+          "acceptedAt": 1793690662,
+          "updatedAt": 1793690671
+        },
+        "replayed": false
+      }
+    },
+    {
+      "label": "retry-replay",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "local-models",
+        "job-control",
+        "job:31ef6887-c960-469a-8f05-10f62e171a42",
+        "retry",
+        "--expected-version",
+        "1",
+        "--idempotency-key",
+        "explicit-credential-retry"
+      ],
+      "exitCode": 0,
+      "expectedSuccess": true,
+      "response": {
+        "job": {
+          "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+          "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+          "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+          "stage": "ready_to_install",
+          "status": "queued",
+          "version": 2,
+          "generation": 2,
+          "acceptedAt": 1793690662,
+          "updatedAt": 1793690671
+        },
+        "replayed": true
+      }
+    },
+    {
+      "label": "product-submit-replay",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "local-models",
+        "install-plan",
+        "--plan-id",
+        "plan:91856bb2-c918-446f-a184-8355ee45126d",
+        "--plan-digest",
+        "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+        "--installation-id",
+        "m2-storage-qwen35-08b",
+        "--idempotency-key",
+        "product-storage-submit"
+      ],
+      "exitCode": 0,
+      "expectedSuccess": true,
+      "response": {
+        "job": {
+          "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+          "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+          "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+          "stage": "installed",
+          "status": "completed",
+          "version": 116,
+          "generation": 4,
+          "acceptedAt": 1793690662,
+          "updatedAt": 1793691089
+        },
+        "versionId": "version:59cfc51b-8e03-412c-bace-13571398914d"
+      }
+    },
+    {
+      "label": "completed-history",
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "local-models",
+        "jobs",
+        "--limit",
+        "64"
+      ],
+      "exitCode": 0,
+      "expectedSuccess": true,
+      "response": {
+        "jobs": [
+          {
+            "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+            "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+            "stage": "installed",
+            "status": "completed",
+            "version": 116,
+            "generation": 4,
+            "acceptedAt": 1793690662,
+            "updatedAt": 1793691089
+          },
+          {
+            "id": "job:7c38f734-9fbb-45c9-9cf2-082d3ae6e9f9",
+            "planId": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+            "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+            "stage": "ready_to_install",
+            "status": "queued",
+            "version": 0,
+            "generation": 0,
+            "acceptedAt": 1793690658,
+            "updatedAt": 1793690658
+          }
+        ],
+        "fileRetries": [
+          {
+            "jobId": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "artifactId": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+            "policyVersion": "installation-file-retry-v1",
+            "maxAttempts": 3,
+            "cycle": 0,
+            "cycleAttempts": 1,
+            "recordedAttempts": 1,
+            "historyOrigin": "from_enqueue",
+            "trackingStartedAt": 1793690662,
+            "state": "verified",
+            "nextRetryAt": null,
+            "lastFailure": null,
+            "version": 2,
+            "updatedAt": 1793690920
+          },
+          {
+            "jobId": "job:7c38f734-9fbb-45c9-9cf2-082d3ae6e9f9",
+            "artifactId": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+            "policyVersion": "installation-file-retry-v1",
+            "maxAttempts": 3,
+            "cycle": 0,
+            "cycleAttempts": 0,
+            "recordedAttempts": 0,
+            "historyOrigin": "legacy_untracked",
+            "trackingStartedAt": 1793690658,
+            "state": "ready",
+            "nextRetryAt": null,
+            "lastFailure": null,
+            "version": 0,
+            "updatedAt": 1793690658
+          }
+        ],
+        "failures": [
+          {
+            "jobId": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "jobVersion": 1,
+            "code": "SOURCE_AUTH_REQUIRED",
+            "stage": "ready_to_install",
+            "origin": "credentials",
+            "artifactId": null,
+            "messageKey": "models.installation.failure.source_auth_required",
+            "messageArgs": {},
+            "retryable": false,
+            "recoverable": true,
+            "causeId": "installation-failure:job:31ef6887-c960-469a-8f05-10f62e171a42:1",
+            "automaticRetryAt": null,
+            "isCurrent": false,
+            "occurredAt": 1793690662
+          }
+        ],
+        "storageReservations": [
+          {
+            "jobId": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+            "planDigest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+            "volumeId": "windows-volume:c49e613d",
+            "peakBytes": 2517555424,
+            "reservedBytes": 0,
+            "state": "released",
+            "version": 3,
+            "createdAt": 1793690662,
+            "updatedAt": 1793691089
+          }
+        ],
+        "nextAfterId": null,
+        "serviceState": "dormant"
+      }
+    }
+  ],
+  "jobId": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+  "versionId": "version:59cfc51b-8e03-412c-bace-13571398914d",
+  "processes": [
+    {
+      "label": "invalid-configuration",
+      "pid": 44176,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "0",
+        "--dangerously-unauthenticated"
+      ],
+      "listeners": [
+        [
+          "TCP",
+          "127.0.0.1:53992",
+          "0.0.0.0:0",
+          "LISTENING",
+          "44176"
+        ],
+        [
+          "TCP",
+          "127.0.0.1:53993",
+          "0.0.0.0:0",
+          "LISTENING",
+          "44176"
+        ]
+      ],
+      "applicationClientRequestsSent": 0,
+      "exitCode": 1,
+      "cleanup": "force termination at blocked",
+      "notGracefulShutdownAcceptance": true
+    },
+    {
+      "label": "blocked-restart",
+      "pid": 9684,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "0",
+        "--dangerously-unauthenticated"
+      ],
+      "listeners": [
+        [
+          "TCP",
+          "127.0.0.1:53998",
+          "0.0.0.0:0",
+          "LISTENING",
+          "9684"
+        ],
+        [
+          "TCP",
+          "127.0.0.1:53999",
+          "0.0.0.0:0",
+          "LISTENING",
+          "9684"
+        ]
+      ],
+      "applicationClientRequestsSent": 0,
+      "exitCode": 1,
+      "cleanup": "force termination at blocked",
+      "notGracefulShutdownAcceptance": true
+    },
+    {
+      "label": "corrected-configuration",
+      "pid": 57820,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\e98f440d71056f880622eb95f6054a611af3f14a3b9b7a42f6b785d665e45aa1\\lumina.exe",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "0",
+        "--dangerously-unauthenticated"
+      ],
+      "listeners": [
+        [
+          "TCP",
+          "127.0.0.1:54026",
+          "0.0.0.0:0",
+          "LISTENING",
+          "57820"
+        ],
+        [
+          "TCP",
+          "127.0.0.1:54027",
+          "0.0.0.0:0",
+          "LISTENING",
+          "57820"
+        ]
+      ],
+      "applicationClientRequestsSent": 0,
+      "exitCode": 1,
+      "cleanup": "force termination at completed",
+      "notGracefulShutdownAcceptance": true
+    }
+  ],
+  "schemaAfter": 11,
+  "storageReservation": {
+    "rules_version": "installation-storage-v1",
+    "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+    "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+    "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\app\\data\\model-lifecycle",
+    "volume_id": "windows-volume:c49e613d",
+    "peak_bytes": 2517555424,
+    "reserved_bytes": 0,
+    "state": "released",
+    "version": 3,
+    "created_at": 1793690662,
+    "updated_at": 1793691089
+  },
+  "storageEvents": [
+    {
+      "rules_version": "installation-storage-v1",
+      "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+      "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+      "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\app\\data\\model-lifecycle",
+      "volume_id": "windows-volume:c49e613d",
+      "peak_bytes": 2517555424,
+      "reserved_bytes": 2517555424,
+      "state": "held",
+      "version": 0,
+      "created_at": 1793690662,
+      "updated_at": 1793690662
+    },
+    {
+      "rules_version": "installation-storage-v1",
+      "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+      "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+      "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\app\\data\\model-lifecycle",
+      "volume_id": "windows-volume:c49e613d",
+      "peak_bytes": 2517555424,
+      "reserved_bytes": 0,
+      "state": "released",
+      "version": 1,
+      "created_at": 1793690662,
+      "updated_at": 1793690662
+    },
+    {
+      "rules_version": "installation-storage-v1",
+      "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+      "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+      "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\app\\data\\model-lifecycle",
+      "volume_id": "windows-volume:c49e613d",
+      "peak_bytes": 2517555424,
+      "reserved_bytes": 2517555424,
+      "state": "held",
+      "version": 2,
+      "created_at": 1793690662,
+      "updated_at": 1793690671
+    },
+    {
+      "rules_version": "installation-storage-v1",
+      "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+      "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+      "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\app\\data\\model-lifecycle",
+      "volume_id": "windows-volume:c49e613d",
+      "peak_bytes": 2517555424,
+      "reserved_bytes": 0,
+      "state": "released",
+      "version": 3,
+      "created_at": 1793690662,
+      "updated_at": 1793691089
+    }
+  ],
+  "legacyUnboundUnchanged": true,
+  "productSubmissionAtomicReservation": true,
+  "blockedJob": {
+    "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+    "idempotency_key": "product-storage-submit",
+    "plan_id": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+    "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+    "stage": "ready_to_install",
+    "status": "blocked",
+    "version": 1,
+    "generation": 1,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793690662,
+    "updated_at": 1793690662
+  },
+  "completedJob": {
+    "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+    "idempotency_key": "product-storage-submit",
+    "plan_id": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+    "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+    "stage": "installed",
+    "status": "completed",
+    "version": 116,
+    "generation": 4,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793690662,
+    "updated_at": 1793691089
+  },
+  "originalFailure": {
+    "rules_version": "installation-failure-v1",
+    "job": {
+      "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+      "idempotency_key": "product-storage-submit",
+      "plan_id": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+      "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+      "stage": "ready_to_install",
+      "status": "blocked",
+      "version": 1,
+      "generation": 1,
+      "lease_owner": null,
+      "lease_until": null,
+      "accepted_at": 1793690662,
+      "updated_at": 1793690662
+    },
+    "details": {
+      "code": "SOURCE_AUTH_REQUIRED",
+      "origin": "credentials",
+      "artifact_id": null,
+      "automatic_retry_at": null
+    },
+    "failure": {
+      "code": "SOURCE_AUTH_REQUIRED",
+      "stage": "ready_to_install",
+      "message_key": "models.installation.failure.source_auth_required",
+      "message_args": {},
+      "recoverable": true,
+      "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+      "cause_id": "installation-failure:job:31ef6887-c960-469a-8f05-10f62e171a42:1"
+    },
+    "occurred_at": 1793690662
+  },
+  "failureHistory": [
+    {
+      "rules_version": "installation-failure-v1",
+      "job": {
+        "id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+        "idempotency_key": "product-storage-submit",
+        "plan_id": "plan:91856bb2-c918-446f-a184-8355ee45126d",
+        "plan_digest": "77158a1dc8d5256ae3520701fd8d141df25f55d237d5ad312edeed286457ba18",
+        "stage": "ready_to_install",
+        "status": "blocked",
+        "version": 1,
+        "generation": 1,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793690662,
+        "updated_at": 1793690662
+      },
+      "details": {
+        "code": "SOURCE_AUTH_REQUIRED",
+        "origin": "credentials",
+        "artifact_id": null,
+        "automatic_retry_at": null
+      },
+      "failure": {
+        "code": "SOURCE_AUTH_REQUIRED",
+        "stage": "ready_to_install",
+        "message_key": "models.installation.failure.source_auth_required",
+        "message_args": {},
+        "recoverable": true,
+        "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+        "cause_id": "installation-failure:job:31ef6887-c960-469a-8f05-10f62e171a42:1"
+      },
+      "occurred_at": 1793690662
+    }
+  ],
+  "retryBudget": {
+    "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+    "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+    "policy_version": "installation-file-retry-v1",
+    "max_attempts": 3,
+    "cycle": 0,
+    "cycle_attempts": 1,
+    "recorded_attempts": 1,
+    "history_origin": "from_enqueue",
+    "tracking_started_at": 1793690662,
+    "state": {
+      "status": "verified"
+    },
+    "last_failure": null,
+    "version": 2,
+    "updated_at": 1793690920
+  },
+  "transfers": [
+    {
+      "job_id": "job:31ef6887-c960-469a-8f05-10f62e171a42",
+      "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+      "relative_path": "06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.part",
+      "expected_bytes": 833592736,
+      "checkpoint": {
+        "completed_bytes": 833592736,
+        "prefix_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "state": {
+        "state": "verified",
+        "computed_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "evidence_digest": "67b9fb0587b4f7fe8dc5ba4a4def10b4da0414563c8470865267a048af42247e"
+      },
+      "restart_reason": null,
+      "version": 101,
+      "generation": 3,
+      "updated_at": 1793690920
+    }
+  ],
+  "inputUnchanged": true,
+  "blockedRestartUnchanged": true,
+  "capabilityEvidenceCount": 0,
+  "finishedAt": "2026-11-03T07:31:32.675067+00:00",
+  "verifierSha256": "92c8eff44a6963da514cf2e2056091365b54b76421db761f7d2a5ef06d124b8c",
+  "artifacts": {
+    "blocked-after-restart.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\blocked-after-restart.json",
+      "sha256": "51972c6c3398e8e320dfd75b2cf173e5ac01c6adfbe57c31ab8d426174445e2b"
+    },
+    "blocked-before-restart.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\blocked-before-restart.json",
+      "sha256": "51972c6c3398e8e320dfd75b2cf173e5ac01c6adfbe57c31ab8d426174445e2b"
+    },
+    "blocked-restart.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\blocked-restart.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "blocked-restart.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\blocked-restart.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "completed-history.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\completed-history.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "completed-history.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\completed-history.stdout.json",
+      "sha256": "fcff0b083457eb5e84e9599daf4843bd0f50d9689c6f2e98bf71bf596a7d4d45"
+    },
+    "corrected-configuration.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\corrected-configuration.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "corrected-configuration.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\corrected-configuration.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-failure.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\current-failure.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-failure.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\current-failure.stdout.json",
+      "sha256": "cb63b8224f37d77ee91edae7146c6005536055a27ef3a6b75fce88066db6beb4"
+    },
+    "explicit-retry.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\explicit-retry.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "explicit-retry.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\explicit-retry.stdout.json",
+      "sha256": "4d507c18bc746ebc90db98caa57315ee12755032d93000768fa19df39f7fc218"
+    },
+    "invalid-configuration.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\invalid-configuration.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "invalid-configuration.stdout.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\invalid-configuration.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\prepare.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prepare.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\prepare.stdout.json",
+      "sha256": "3fd3c944b34e1b941bad9ff27c7778a470c74316a1101873b1c249af1990c8d9"
+    },
+    "product-submit-replay.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\product-submit-replay.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "product-submit-replay.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\product-submit-replay.stdout.json",
+      "sha256": "c2ca0e874b67496331ffc3431b5aed8951432e5ffbec20cedcbfa053bbe20682"
+    },
+    "product-submit.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\product-submit.stderr.log",
+      "sha256": "b1ad058b8fe25223ba58b7082f27a4b331949b205165e027e7126ab355799d62"
+    },
+    "product-submit.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\product-submit.stdout.json",
+      "sha256": "98141da87acf776b9e4cc9b7e76ae50bc2d572fd08e024683bc71cdb90aca16c"
+    },
+    "retry-replay.stderr.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\retry-replay.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "retry-replay.stdout.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-storage-network-20261102-r1\\retry-replay.stdout.json",
+      "sha256": "5c3db551adb4504be1158bd2708a2c9419f843c448a6064d0c123f9e3d9a5e05"
+    }
+  }
+}

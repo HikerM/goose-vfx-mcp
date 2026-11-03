@@ -16,6 +16,9 @@ mod retry_cases;
 #[path = "lifecycle_cache_install/failure_cases.rs"]
 mod failure_cases;
 
+#[path = "lifecycle_cache_install/storage_cases.rs"]
+mod storage_cases;
+
 fn control_request(
     id: &str,
     version: u64,
@@ -1469,7 +1472,7 @@ fn schema_six_upgrade_preserves_legacy_jobs_without_inventing_installation_input
             .unwrap();
         drop(fixture.repository);
         let raw = rusqlite::Connection::open(&path).unwrap();
-        raw.execute_batch("DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; DROP TABLE installation_control_receipts; DROP TABLE installation_inputs; PRAGMA user_version=6;")
+        raw.execute_batch("DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; DROP TABLE installation_control_receipts; DROP TABLE installation_inputs; PRAGMA user_version=6;")
             .unwrap();
         if collision {
             raw.execute_batch("CREATE TABLE installation_inputs (legacy_value TEXT);")

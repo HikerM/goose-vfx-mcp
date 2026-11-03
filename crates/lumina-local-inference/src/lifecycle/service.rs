@@ -37,6 +37,22 @@ struct ServiceWorker {
 impl ServiceWorker {
     async fn run(&self) -> Result<()> {
         loop {
+            let mut storage_cursor = None;
+            loop {
+                if self.control.is_stopping() {
+                    return Ok(());
+                }
+                let page = self.repository.reconcile_installation_storage(
+                    &self.store,
+                    (self.clock)(),
+                    storage_cursor.as_deref(),
+                    64,
+                )?;
+                storage_cursor = page.next_after_id;
+                if storage_cursor.is_none() {
+                    break;
+                }
+            }
             let mut cursor = None;
             loop {
                 if self.control.is_stopping() {

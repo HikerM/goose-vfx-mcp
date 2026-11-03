@@ -19,13 +19,14 @@ mod installation;
 mod observations;
 mod plan_observations;
 mod retries;
+mod storage;
 pub use files::FileTransferEvent;
 pub use observations::{GgufObservationRecord, GGUF_OBSERVATION_VERSION};
 pub use plan_observations::{
     gguf_header_evidence_id, gguf_observation_evidence_id, OBSERVED_GGUF_PLAN_RULES_VERSION,
 };
 
-pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 10;
+pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 11;
 
 const SCHEMA: &str = include_str!("repository/migrations/0001.sql");
 
@@ -134,6 +135,10 @@ impl LifecycleRepository {
         }
         if version < 10 {
             tx.execute_batch(failures::SCHEMA)?;
+        }
+        if version < 11 {
+            tx.execute_batch(storage::SCHEMA)?;
+            Self::migrate_storage_reservations(&tx)?;
         }
         tx.commit()?;
         Ok(Self {
@@ -479,6 +484,7 @@ impl LifecycleRepository {
         plan.validate_for_install(job.accepted_at, u64::MAX)?;
         Self::initialize_files(&tx, &job, &plan)?;
         Self::validate_retry_claim(&tx, &job.id, now)?;
+        Self::validate_storage_claim(&tx, &job)?;
         ensure!(
             job.status == JobStatus::Queued
                 || (job.status == JobStatus::Running

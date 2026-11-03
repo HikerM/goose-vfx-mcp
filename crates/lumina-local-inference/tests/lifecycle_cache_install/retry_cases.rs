@@ -502,7 +502,7 @@ fn v8_migration_preserves_control_receipts_and_marks_previous_attempt_history_un
         .unwrap();
     drop(fixture.repository);
     let raw = rusqlite::Connection::open(&path).unwrap();
-    raw.execute_batch("DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; PRAGMA user_version=8;").unwrap();
+    raw.execute_batch("DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; PRAGMA user_version=8;").unwrap();
     let reopened = LifecycleRepository::open(&path).unwrap();
     assert_eq!(reopened.read_job(id).unwrap().unwrap(), original.job);
     let replay = reopened
@@ -527,7 +527,7 @@ fn v8_retry_migration_rolls_back_on_corrupt_file_or_schema_collision() {
         let path = fixture.temp.path().join("models.db");
         drop(fixture.repository);
         let raw = rusqlite::Connection::open(&path).unwrap();
-        raw.execute_batch("DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; PRAGMA user_version=8;").unwrap();
+        raw.execute_batch("DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; DROP TABLE installation_failures; DROP TABLE installation_file_retries; DROP TABLE installation_file_retry_events; PRAGMA user_version=8;").unwrap();
         if corrupt_file {
             raw.execute("UPDATE job_files SET payload='{}'", [])
                 .unwrap();

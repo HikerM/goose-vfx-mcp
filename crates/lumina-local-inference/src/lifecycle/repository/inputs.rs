@@ -51,10 +51,14 @@ impl LifecycleRepository {
         )?;
         let job = Self::enqueue_by(&tx, &acceptance, now, fs2::available_space(store.root())?)?;
         Self::bind_installation_input_by(&tx, &job, &input, now)?;
+        Self::reserve_storage_by(&tx, &job, &input, u64::MAX, now)?;
         tx.commit()?;
         Ok(job)
     }
-    fn input_plan_by(connection: &Connection, job: &LifecycleJob) -> Result<InstallPlan> {
+    pub(super) fn input_plan_by(
+        connection: &Connection,
+        job: &LifecycleJob,
+    ) -> Result<InstallPlan> {
         let (digest, payload): (String, String) = connection.query_row(
             "SELECT digest, payload FROM installation_plans WHERE id = ?1",
             [&job.plan_id],
@@ -185,7 +189,11 @@ impl LifecycleRepository {
             .map_err(|_| anyhow!("Model database lock poisoned"))?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
         let job = Self::read_job_by(&tx, "id", job_id)?.context("Installation job not found")?;
+        let already_bound = Self::read_installation_input_by(&tx, &job)?.is_some();
         let intent = Self::bind_installation_input_by(&tx, &job, input, now)?;
+        if !already_bound {
+            Self::reserve_storage_by(&tx, &job, input, u64::MAX, now)?;
+        }
         tx.commit()?;
         Ok(intent)
     }
@@ -205,13 +213,19 @@ impl LifecycleRepository {
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
         let existing = Self::read_job_by(&tx, "idempotency_key", &request.idempotency_key)?;
         if let Some(existing) = existing {
+            let intent = Self::read_installation_input_by(&tx, &existing)?
+                .context("Legacy job requires explicit input adoption")?;
             ensure!(
-                Self::read_installation_input_by(&tx, &existing)?.is_some(),
-                "Legacy job requires explicit input adoption"
+                existing.plan_id == request.plan_id
+                    && existing.plan_digest == request.plan_digest
+                    && intent.input == *input,
+                "Idempotency key belongs to a different installation request"
             );
+            return Ok(existing);
         }
         let job = Self::enqueue_by(&tx, request, now, available_disk_bytes)?;
         Self::bind_installation_input_by(&tx, &job, input, now)?;
+        Self::reserve_storage_by(&tx, &job, input, available_disk_bytes, now)?;
         tx.commit()?;
         Ok(job)
     }

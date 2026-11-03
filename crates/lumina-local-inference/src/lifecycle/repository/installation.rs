@@ -276,6 +276,9 @@ impl LifecycleRepository {
         job.version += 1;
         job.updated_at = now;
         Self::write_job(&tx, &job, expected_version)?;
+        if next == InstallationCommitStage::Registered {
+            Self::release_storage_by(&tx, &job.id, now)?;
+        }
         tx.commit()?;
         Ok(journal)
     }

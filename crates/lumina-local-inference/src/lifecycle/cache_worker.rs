@@ -187,6 +187,11 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
                 completed <= record.expected_bytes,
                 "Local cache source grew during import"
             );
+            self.repository.require_installation_space(
+                &self.lease.job_id,
+                self.store,
+                count as u64,
+            )?;
             output.write_all(&buffer[..count])?;
             hasher.update(&buffer[..count]);
             if completed.saturating_sub(persisted) >= 64 * 1024 * 1024
@@ -254,9 +259,7 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
                 .repository
                 .read_file_transfer(&job.id, artifact_id)?
                 .context("Cache file disappeared")?;
-            let code = error
-                .downcast_ref::<ModelSourceError>()
-                .map_or(LifecycleErrorCode::InstallFailed, |error| error.code);
+            let code = super::failure::installation_failure_code(error);
             self.repository.fail_installation_file(
                 &self.lease,
                 artifact_id,
@@ -452,70 +455,83 @@ pub(crate) fn install_from_local_cache_controlled(
     clock: impl Fn() -> i64,
     control: Arc<InstallationWorkerControl>,
 ) -> Result<InstalledVersion> {
-    control.checkpoint()?;
-    ensure!(
-        !request.installation_id.trim().is_empty() && !request.version_id.trim().is_empty(),
-        "Cache installation has no installation or version identity"
-    );
-    let _transfer_lock = store.transfer_lock(&request.job_id)?;
-    let job = repository
-        .read_job(&request.job_id)?
-        .context("Cache installation job not found")?;
-    if let Some(intent) = repository.read_installation_input(&job.id)? {
-        intent
-            .input
-            .validate_destination(store, &request.installation_id, &request.version_id)?;
-    }
-    if job.status == JobStatus::Cancelling {
-        repository.transition(&job.id, job.version, JobStatus::Cancelled, clock())?;
-        return Err(ModelSourceError {
-            code: LifecycleErrorCode::Cancelled,
-            http_status: None,
+    let result = (|| {
+        control.checkpoint()?;
+        ensure!(
+            !request.installation_id.trim().is_empty() && !request.version_id.trim().is_empty(),
+            "Cache installation has no installation or version identity"
+        );
+        let _transfer_lock = store.transfer_lock(&request.job_id)?;
+        let job = repository
+            .read_job(&request.job_id)?
+            .context("Cache installation job not found")?;
+        if let Some(intent) = repository.read_installation_input(&job.id)? {
+            intent.input.validate_destination(
+                store,
+                &request.installation_id,
+                &request.version_id,
+            )?;
         }
-        .into());
-    }
-    if job.status == JobStatus::Completed {
-        return replay_completed_installation(
+        if job.status == JobStatus::Cancelling {
+            repository.transition(&job.id, job.version, JobStatus::Cancelled, clock())?;
+            return Err(ModelSourceError {
+                code: LifecycleErrorCode::Cancelled,
+                http_status: None,
+            }
+            .into());
+        }
+        if job.status == JobStatus::Completed {
+            return replay_completed_installation(
+                repository,
+                store,
+                &job,
+                &request.installation_id,
+                &request.version_id,
+            );
+        }
+        let plan = repository
+            .read_plan(&job.plan_id)?
+            .context("Cache installation plan is missing")?;
+        ensure!(
+            plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION
+                && plan.digest()? == job.plan_digest,
+            "Cache import requires the accepted frozen installation plan"
+        );
+        super::failure::validate_installation_store_admission(
             repository,
             store,
             &job,
-            &request.installation_id,
-            &request.version_id,
+            &plan,
+            clock(),
+        )?;
+        ensure!(
+            plan.artifacts.keys().eq(request.source_files.keys()),
+            "Cache source selection does not match the installation plan"
         );
-    }
-    let plan = repository
-        .read_plan(&job.plan_id)?
-        .context("Cache installation plan is missing")?;
-    ensure!(
-        plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION && plan.digest()? == job.plan_digest,
-        "Cache import requires the accepted frozen installation plan"
-    );
-    super::failure::validate_installation_store_admission(repository, store, &job, &plan, clock())?;
-    ensure!(
-        plan.artifacts.keys().eq(request.source_files.keys()),
-        "Cache source selection does not match the installation plan"
-    );
-    ensure!(plan.artifacts.values().all(|artifact| artifact.source_sha256.is_some()), "Local cache import requires pinned source checksums; unproven historical files require migration review");
-    let input = super::InstallationInput::new(
-        store,
-        request.installation_id.clone(),
-        request.version_id.clone(),
-        super::InstallationSource::LocalCache {
-            files: request.source_files.clone(),
-        },
-    )?;
-    repository.adopt_installation_input(&job.id, &input, clock())?;
-    let lease = repository.claim(&job.id, job.version, worker_name, clock(), 120)?;
-    let execution = InstallExecution {
-        repository,
-        store,
-        lease,
-        clock,
-        control,
-    };
-    let result = execution.install(request, plan);
-    if let Err(error) = &result {
-        execution.settle_failure(error)?;
-    }
+        ensure!(plan.artifacts.values().all(|artifact| artifact.source_sha256.is_some()), "Local cache import requires pinned source checksums; unproven historical files require migration review");
+        let input = super::InstallationInput::new(
+            store,
+            request.installation_id.clone(),
+            request.version_id.clone(),
+            super::InstallationSource::LocalCache {
+                files: request.source_files.clone(),
+            },
+        )?;
+        repository.adopt_installation_input(&job.id, &input, clock())?;
+        let lease = repository.claim(&job.id, job.version, worker_name, clock(), 120)?;
+        let execution = InstallExecution {
+            repository,
+            store,
+            lease,
+            clock: &clock,
+            control,
+        };
+        let result = execution.install(request, plan);
+        if let Err(error) = &result {
+            execution.settle_failure(error)?;
+        }
+        result
+    })();
+    repository.release_inactive_storage(&request.job_id, store, clock())?;
     result
 }
