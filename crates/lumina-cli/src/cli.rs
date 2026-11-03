@@ -1190,6 +1190,16 @@ enum LocalModelsCommand {
         #[arg(long, default_value_t = 64)]
         limit: u32,
     },
+    #[command(about = "Read persisted job and file progress after independent cursors")]
+    JobEvents {
+        id: String,
+        #[arg(long, default_value_t = 0)]
+        after_job_sequence: u64,
+        #[arg(long, default_value_t = 0)]
+        after_file_sequence: u64,
+        #[arg(long, default_value_t = 64)]
+        limit: u32,
+    },
     #[command(about = "Control a durable installation with its current state version")]
     JobControl {
         id: String,
@@ -2124,6 +2134,22 @@ async fn handle_local_models_command(
             let result = installations
                 .list_request(lumina::custom_requests::ModelInstallationJobsListRequest {
                     after_id,
+                    limit,
+                })
+                .await?;
+            println!("{}", serde_json::to_string(&result)?);
+        }
+        LocalModelsCommand::JobEvents {
+            id,
+            after_job_sequence,
+            after_file_sequence,
+            limit,
+        } => {
+            let result = installations
+                .events_request(lumina::custom_requests::ModelInstallationJobEventsRequest {
+                    job_id: id,
+                    after_job_sequence,
+                    after_file_sequence,
                     limit,
                 })
                 .await?;

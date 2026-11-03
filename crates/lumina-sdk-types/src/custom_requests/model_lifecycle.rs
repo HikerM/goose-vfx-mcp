@@ -86,6 +86,83 @@ pub struct ModelInstallationSubmitResponse {
 fn default_limit() -> u32 {
     64
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
+#[request(method="_lumina/unstable/local-inference/installations/jobs/events",response=ModelInstallationJobEventsResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ModelInstallationJobEventsRequest {
+    pub job_id: String,
+    #[serde(default)]
+    pub after_job_sequence: u64,
+    #[serde(default)]
+    pub after_file_sequence: u64,
+    #[serde(default = "default_limit")]
+    pub limit: u32,
+}
+
+impl Default for ModelInstallationJobEventsRequest {
+    fn default() -> Self {
+        Self {
+            job_id: String::new(),
+            after_job_sequence: 0,
+            after_file_sequence: 0,
+            limit: default_limit(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInstallationJobEventsResponse {
+    pub job_events: Vec<ModelInstallationJobEventDto>,
+    pub file_events: Vec<ModelInstallationFileEventDto>,
+    pub next_job_sequence: u64,
+    pub next_file_sequence: u64,
+    pub has_more_job_events: bool,
+    pub has_more_file_events: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInstallationJobEventDto {
+    pub sequence: u64,
+    pub job: ModelInstallationJobDto,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelInstallationFileStatus {
+    Pending,
+    Downloading,
+    Downloaded,
+    Verified,
+    Failed,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelInstallationFileRestartReason {
+    RangeUnavailable,
+    ValidatorChanged,
+    PartialContentMismatch,
+    HashMismatch,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInstallationFileEventDto {
+    pub sequence: u64,
+    pub artifact_id: String,
+    pub version: u64,
+    pub generation: u64,
+    pub completed_bytes: u64,
+    pub expected_bytes: u64,
+    pub status: ModelInstallationFileStatus,
+    pub failure_code: Option<ModelInstallationFailureCode>,
+    pub restart_reason: Option<ModelInstallationFileRestartReason>,
+    pub updated_at: i64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
 #[request(method="_lumina/unstable/local-inference/installations/jobs/list",response=ModelInstallationJobsListResponse)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

@@ -197,6 +197,7 @@ Agent 的规划模型仅从通过所需文本和工具能力准入的模型中�
 | --- | --- | --- |
 | `installations/submit` | planId、planDigest、installationId、idempotencyKey；服务端原子生成 jobId 和 versionId，重放相同幂等请求返回原身份 | `local-models install-plan` |
 | `installations/jobs/list` | afterId、limit；返回任务状态版本、阶段、generation、分页游标、应用服务状态、fileRetries 和各任务最近的 failures；查询空命名空间不创建安装数据库或启动下载 | `local-models jobs` |
+| `installations/jobs/events` | jobId、afterJobSequence、afterFileSequence、limit；分别返回持久化任务状态和逐文件进度事件、各自的续读游标及是否还有下一页 | `local-models job-events <id>` |
 | `installations/jobs/control` | jobId、expectedVersion、action、idempotencyKey；以 CAS 执行 pause/resume/cancel/retry，返回 job 与 replayed；v8 回执持久化 | `local-models job-control`，要求 `--idempotency-key` |
 
 `local-models wait-job` 等待已有任务，`local-models installation-worker` 运行同一个应用服务。ACP 工厂内的 Agent 共用安装服务；ACP stdio 启动、工厂创建 Agent 及 CLI 长会话入口会扫描已有命名空间，未完成初次恢复扫描时新提交等待。HTTP/HTTPS 启动路径调用同一工厂的恢复入口，主动恢复不依赖首个客户端连接；实际 HTTP 无客户端启动恢复已通过。Windows 实测通过证书校验的 TLS 1.3 连接及 HTTP/HTTPS 两种监听的正常关闭和检查点续传。没有模型数据库时保持休眠，模型存储损坏不阻止普通 Agent 创建。正常调用应用关闭时保留网络检查点，将当前 worker 所有的执行任务重新排队；用户暂停或取消的意图优先保留。HTTP 与 HTTPS 收到停止信号后停止接收连接，最多等待 10 秒排空，然后等待应用服务关闭。当前 worker 每实例顺序执行；跨进程全局并发和任务/文件/Range 三层预算和精确空间核算仍待实现，逐文件持久化退避见下方 schema v9 契约。
@@ -213,7 +214,7 @@ schema v10 增加不可变安装失败记录，绑定状态变更后的历史任
 
 任务列表的 `failures` 返回任务身份及失败时的版本、code、stage、origin、artifactId、messageKey、受限 messageArgs、retryable、recoverable、causeId、automaticRetryAt、occurredAt，以及失败快照是否与返回任务一致的 isCurrent。origin 区分 credentials、admission、transfer、verification、commit。保留最近失败不表示它仍阻塞当前任务；重试或完成后相应 isCurrent 为 false。控制回执继续返回首次接受的历史任务快照，不附加会变化的失败详情。v9 升级不补造此前未记录的失败历史。
 
-逐文件进度和游标事件尚未覆盖上表完整契约；旧 spec 下载及其他历史入口也尚未全部转发到新服务。当前 ACP DTO 不暴露原始下载 URL、令牌、调用方指定的受管根目录或内部启动参数。后续 SDK、界面和旧入口迁移继续执行完整 ML-40 范围。
+事件轮询按任务隔离。两个序号来自独立事件表，客户端分别保存 `nextJobSequence` 和 `nextFileSequence`，初次读取使用 0。每个流按序号升序返回，每页上限默认 64、允许 1 至 256。空页保留原游标。逐文件事件含阶段状态、已完成与预期字节、任务代次、文件版本、更新时间及可选的失败码和重下原因。事件查询不会启动 worker，空命名空间不创建安装数据库。原始路径、URL、令牌、检查点摘要和下载验证器不进入响应。桌面总体进度、速度和 ETA 展示，以及旧 spec 下载转发继续执行 ML-40、ML-42 范围。
 
 SQLite schema v11 增加 installation-storage-v1 预留及不可变历史，与接受任务、输入绑定及新 Retry/Resume 的状态变化同事务提交。同一数据库按真实磁盘卷协调任务；当前预留完整计划峰值，暂停持有，阻塞/失败/取消需写入停止后释放，完成与版本登记原子释放。回执重放不重复预留；升级标记 needs_admission，恢复前复验卷。列表增加 storageReservations（jobId、planDigest、volumeId、peakBytes、reservedBytes、state、version、createdAt、updatedAt），不返回内部 storeRoot。精确已落盘字节、共享内容节省量、跨数据库协调和操作系统物理预分配不在该保守基础实现范围，三层全局并发和精确空间核算仍待交付。
 

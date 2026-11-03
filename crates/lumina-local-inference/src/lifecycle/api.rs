@@ -77,6 +77,40 @@ map_enum!(
     Held,
     Released
 );
+map_enum!(
+    FileRestartReason,
+    ModelInstallationFileRestartReason,
+    RangeUnavailable,
+    ValidatorChanged,
+    PartialContentMismatch,
+    HashMismatch
+);
+
+impl From<FileTransferEvent> for ModelInstallationFileEventDto {
+    fn from(event: FileTransferEvent) -> Self {
+        use ModelInstallationFileStatus as Status;
+        let file = event.file;
+        let (status, failure_code) = match file.state {
+            FileTransferState::Pending => (Status::Pending, None),
+            FileTransferState::Downloading => (Status::Downloading, None),
+            FileTransferState::Downloaded => (Status::Downloaded, None),
+            FileTransferState::Verified { .. } => (Status::Verified, None),
+            FileTransferState::Failed { code } => (Status::Failed, Some(code.into())),
+        };
+        Self {
+            sequence: event.sequence,
+            artifact_id: file.artifact_id,
+            version: file.version,
+            generation: file.generation,
+            completed_bytes: file.checkpoint.completed_bytes,
+            expected_bytes: file.expected_bytes,
+            status,
+            failure_code,
+            restart_reason: file.restart_reason.map(Into::into),
+            updated_at: file.updated_at,
+        }
+    }
+}
 
 impl From<StorageReservation> for ModelInstallationStorageDto {
     fn from(reservation: StorageReservation) -> Self {
@@ -209,7 +243,7 @@ impl InstallationApplication {
             (1..=1000).contains(&request.limit),
             "Job page size must be 1..=1000"
         );
-        if !self.root().join("models.db").try_exists()? {
+        let Some(repository) = self.query_repository().await? else {
             return Ok(ModelInstallationJobsListResponse {
                 jobs: Vec::new(),
                 file_retries: Vec::new(),
@@ -218,16 +252,6 @@ impl InstallationApplication {
                 next_after_id: None,
                 service_state: self.state().into(),
             });
-        }
-        let repository = if let Some(service) = self.started_service() {
-            std::sync::Arc::clone(service.repository())
-        } else {
-            let path = self.root().join("models.db");
-            tokio::task::spawn_blocking(move || {
-                LifecycleRepository::open(&path).map(std::sync::Arc::new)
-            })
-            .await
-            .context("Installation job query failed")??
         };
         let jobs = repository.list_jobs(request.after_id.as_deref(), request.limit)?;
         let next_after_id = (jobs.len() == request.limit as usize)
@@ -276,6 +300,83 @@ impl InstallationApplication {
             service_state: self.state().into(),
         })
     }
+    async fn query_repository(&self) -> Result<Option<std::sync::Arc<LifecycleRepository>>> {
+        if let Some(service) = self.started_service() {
+            return Ok(Some(std::sync::Arc::clone(service.repository())));
+        }
+        let path = self.root().join("models.db");
+        if !path.try_exists()? {
+            return Ok(None);
+        }
+        tokio::task::spawn_blocking(move || {
+            LifecycleRepository::open(&path).map(|repository| Some(std::sync::Arc::new(repository)))
+        })
+        .await
+        .context("Installation job query failed")?
+    }
+
+    pub async fn events_request(
+        &self,
+        request: ModelInstallationJobEventsRequest,
+    ) -> Result<ModelInstallationJobEventsResponse> {
+        anyhow::ensure!(
+            !request.job_id.is_empty(),
+            "Installation job ID is required"
+        );
+        anyhow::ensure!(
+            (1..=256).contains(&request.limit),
+            "Event page size must be 1..=256"
+        );
+        anyhow::ensure!(
+            request.after_job_sequence <= i64::MAX as u64
+                && request.after_file_sequence <= i64::MAX as u64,
+            "Event sequence exceeds the database range"
+        );
+        let repository = self.query_repository().await?;
+        tokio::task::spawn_blocking(move || {
+            let (mut jobs, mut files) = match repository {
+                Some(repository) => (
+                    repository.events(
+                        &request.job_id,
+                        request.after_job_sequence,
+                        request.limit + 1,
+                    )?,
+                    repository.file_transfer_events(
+                        &request.job_id,
+                        request.after_file_sequence,
+                        request.limit + 1,
+                    )?,
+                ),
+                None => (Vec::new(), Vec::new()),
+            };
+            let limit = request.limit as usize;
+            let has_more_job_events = jobs.len() > limit;
+            let has_more_file_events = files.len() > limit;
+            jobs.truncate(limit);
+            files.truncate(limit);
+            Ok(ModelInstallationJobEventsResponse {
+                next_job_sequence: jobs
+                    .last()
+                    .map_or(request.after_job_sequence, |event| event.sequence),
+                next_file_sequence: files
+                    .last()
+                    .map_or(request.after_file_sequence, |event| event.sequence),
+                has_more_job_events,
+                has_more_file_events,
+                job_events: jobs
+                    .into_iter()
+                    .map(|event| ModelInstallationJobEventDto {
+                        sequence: event.sequence,
+                        job: event.job.into(),
+                    })
+                    .collect(),
+                file_events: files.into_iter().map(Into::into).collect(),
+            })
+        })
+        .await
+        .context("Installation event query failed")?
+    }
+
     pub async fn control_request(
         &self,
         request: ModelInstallationJobControlRequest,

@@ -40,6 +40,24 @@ impl LuminaAcpAgent {
             Err(local_inference_unavailable())
         }
     }
+    pub(super) async fn on_model_installation_job_events(
+        &self,
+        req: ModelInstallationJobEventsRequest,
+    ) -> Result<ModelInstallationJobEventsResponse, agent_client_protocol::Error> {
+        #[cfg(feature = "local-inference")]
+        {
+            self.local_installations
+                .events_request(req)
+                .await
+                .internal_err()
+        }
+        #[cfg(not(feature = "local-inference"))]
+        {
+            let _ = req;
+            Err(local_inference_unavailable())
+        }
+    }
+
     pub(super) async fn on_model_installation_job_control(
         &self,
         req: ModelInstallationJobControlRequest,

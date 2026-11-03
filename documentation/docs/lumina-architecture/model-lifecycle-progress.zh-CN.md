@@ -19,7 +19,7 @@ M1 已验证的来源、观察存储和冻结计划基础增量提交为 `8da22c
 | --- | --- | --- | --- |
 | M0 全量契约和技术验证 | VERIFIED，完整工作区 lint 失败保留 | ML-01～07、全类别真实试验、确切引擎/来源/组件/许可证事实、SQLite v4、状态契约、最新 CPU/CUDA 和完整 recipe；见阶段退出复核 | 产品接入属于 M1～M6；视频质量、旧 Whisper 和完整工作区 lint 仍未通过 |
 | M1 来源解析和完整依赖 | IN_PROGRESS，基础增量已推送 | 实际发现服务、远程 GGUF、已知组件配对、SQLite v6 观察绑定、CPU 资源预算、不可变计划与入队；基础增量 246 项回归和 CPU/CUDA 实测通过 | 更完整的组件角色与档案、GPU/多模态预算、全部入口和受管安装交接；受限账号正例由用户延期 |
-| M2 可靠安装和数据迁移 | IN_PROGRESS，HTTP/HTTPS 信号关闭和续传已验证 | 应用服务、ACP/CLI、启动恢复、schema v11 空间预留、v10 原子失败、v9 文件预算及 v8 控制回执；334 项回归、88 项安装边界、产品 CLI 提交及真实恢复安装和 self-test 通过 | 精确增量及共享内容空间核算、旧入口统一、三层并发、进度游标、运行引用保护、卸载、用户 registry 迁移及完整阶段验收 |
+| M2 可靠安装和数据迁移 | IN_PROGRESS，任务和文件事件续读已验证 | 应用服务、ACP/CLI、启动恢复、schema v11 空间预留、v10 原子失败、v9 文件预算及 v8 控制回执；334 项回归、89 项安装边界、产品 CLI 提交及真实恢复安装和 self-test 通过 | 精确增量及共享内容空间核算、旧入口统一、三层并发、运行引用保护、卸载、用户 registry 迁移及完整阶段验收 |
 | M3 Runtime 和核心真实验收 | PLANNED | 既有 Dense/MoE CPU 文本 smoke 与小模型一次严格工具闭环可运行 | 新 LaunchConfig 和 Runtime 接入、完整文本/工具/视觉验收 |
 | M4 全部类型和加速 | PLANNED，M0 探针已交接 | 全类别实际 Runtime 技术记录；Embedding、Reranker、音频、图像、MTP/DFlash 探针通过；视频内容与旧 Whisper 失败保留 | 产品 Adapter、受管安装、类型化服务、质量与边界验收、视频和 Whisper 修复 |
 | M5 完整模型中心 | PLANNED | 完整界面与服务契约已编写 | 实际页面、SDK、任务及能力状态接入和尺寸验收 |
@@ -417,3 +417,10 @@ schema v11 在任务接受和绑定安装输入的同一事务内保存空间预
 [Windows 实测](./model-lifecycle-evidence/2026-11-03-m2-http-shutdown.json)使用同一固定 ModelScope 安装任务，先启动 HTTP，再启动 HTTPS。两个健康请求均返回 200，HTTPS 通过服务端证书校验并协商 TLS 1.3。两次定向 Ctrl+Break 均正常退出，检查点从 8,395,806 增至 16,791,606 字节，前缀哈希一致。检查点历史单调，传输维持一次逻辑尝试，旧租约失效，任务保留空间预留。该场景验收关闭与续传，完整文件安装见上一批真实安装证据。
 
 CLI 构建、格式及 5 项 serve 专项通过。[真实 35B self-test](./model-lifecycle-evidence/2026-11-03-selftest-m2-http-shutdown-r1.json)返回 88/0/0，报告和冻结输入通过哈希复核。首两轮探针的端口选择和代次断言问题保留在验收记录。M2 仍需精确空间核算、三层并发、旧入口统一、进度事件、运行引用保护、卸载和迁移。
+
+
+## M2 安装事件游标续读
+
+ACP 安装事件查询和 CLI `local-models job-events` 按两个独立游标读取任务状态和文件进度。每页各返回最多 256 条事件，空页保留调用者的游标。客户端可按事件序号续读，文件状态和字节数来源于持久化账本。
+
+[产品验收](./model-lifecycle-evidence/2026-11-03-m2-event-cursors.json)用先前完成的真实 ModelScope 安装账本验证进程重连。两个 ACP 进程跨连接续读 117 条任务事件和 102 条文件事件，逐条匹配 SQLite 序号。CLI 与 ACP 对同一页返回一致，最终文件状态为 verified，已完成与预期字节数均为 833,592,736。CLI 构建通过，[35B self-test](./model-lifecycle-evidence/2026-11-03-selftest-m2-event-cursors-r1.json)执行 89 项安装边界用例，失败和跳过均为 0。桌面总体进度、速度与 ETA 留在 ML-42，M2 精确空间核算、并发和数据迁移仍需完成。

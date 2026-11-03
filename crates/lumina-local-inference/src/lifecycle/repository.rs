@@ -682,10 +682,12 @@ impl LifecycleRepository {
         })?;
         rows.map(|row| {
             let (sequence, payload) = row?;
-            Ok(JobEvent {
-                sequence,
-                job: serde_json::from_str(&payload)?,
-            })
+            let job: LifecycleJob = serde_json::from_str(&payload)?;
+            ensure!(
+                job.id == job_id,
+                "Job event identity differs from its index"
+            );
+            Ok(JobEvent { sequence, job })
         })
         .collect()
     }

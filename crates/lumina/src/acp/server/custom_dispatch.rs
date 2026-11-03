@@ -1222,6 +1222,14 @@ impl LuminaAcpAgent {
     ) -> Result<ModelInstallationJobsListResponse, agent_client_protocol::Error> {
         self.on_model_installation_jobs_list(req).await
     }
+    #[custom_method(ModelInstallationJobEventsRequest)]
+    async fn dispatch_model_installation_job_events(
+        &self,
+        req: ModelInstallationJobEventsRequest,
+    ) -> Result<ModelInstallationJobEventsResponse, agent_client_protocol::Error> {
+        self.on_model_installation_job_events(req).await
+    }
+
     #[custom_method(ModelInstallationJobControlRequest)]
     async fn dispatch_model_installation_job_control(
         &self,

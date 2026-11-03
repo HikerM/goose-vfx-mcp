@@ -41,6 +41,65 @@ struct Fixture {
     bytes: Vec<u8>,
 }
 
+#[test]
+fn installation_event_cursors_resume_independently_after_reopen() {
+    use lumina_sdk_types::custom_requests::ModelInstallationJobEventsRequest;
+
+    let fixture = Fixture::with_layout(true, true);
+    fixture.run(32).unwrap();
+    let data = fixture.temp.path().join("data");
+    let mut request = ModelInstallationJobEventsRequest {
+        job_id: fixture.request.job_id.clone(),
+        after_job_sequence: 0,
+        after_file_sequence: 0,
+        limit: 1,
+    };
+    service_runtime().block_on(async {
+        let app = InstallationApplication::new(&data, Arc::new(|| Ok(None)));
+        let first = app.events_request(request.clone()).await.unwrap();
+        assert!(first.has_more_job_events && first.has_more_file_events);
+        assert_eq!(first.job_events.len(), 1);
+        assert_eq!(first.file_events.len(), 1);
+        assert_eq!(first.file_events[0].completed_bytes, 0);
+        request.after_job_sequence = first.next_job_sequence;
+        request.after_file_sequence = first.next_file_sequence;
+        drop(app);
+
+        let app = InstallationApplication::new(&data, Arc::new(|| Ok(None)));
+        request.limit = 256;
+        let rest = app.events_request(request.clone()).await.unwrap();
+        assert!(!rest.has_more_job_events && !rest.has_more_file_events);
+        let last = serde_json::to_value(rest.file_events.last().unwrap()).unwrap();
+        assert_eq!(last["status"], "verified");
+        assert_eq!(last["completedBytes"], fixture.bytes.len());
+        assert!(last.get("relativePath").is_none());
+        assert!(last.get("checkpoint").is_none());
+        assert!(rest
+            .job_events
+            .iter()
+            .all(|event| event.sequence > request.after_job_sequence));
+        assert!(rest
+            .file_events
+            .iter()
+            .all(|event| event.sequence > request.after_file_sequence));
+        request.after_job_sequence = rest.next_job_sequence;
+        let file_only = app.events_request(request.clone()).await.unwrap();
+        assert!(file_only.job_events.is_empty());
+        assert_eq!(file_only.next_job_sequence, request.after_job_sequence);
+        assert_eq!(file_only.next_file_sequence, rest.next_file_sequence);
+        request.after_file_sequence = rest.next_file_sequence;
+        let end = app.events_request(request.clone()).await.unwrap();
+        assert!(end.job_events.is_empty() && end.file_events.is_empty());
+        assert_eq!(app.state(), InstallationApplicationState::Dormant);
+
+        let unused = fixture.temp.path().join("unused");
+        let app = InstallationApplication::new(&unused, Arc::new(|| Ok(None)));
+        let empty = app.events_request(request).await.unwrap();
+        assert!(empty.job_events.is_empty() && empty.file_events.is_empty());
+        assert!(!unused.exists());
+    });
+}
+
 fn gguf_string(bytes: &mut Vec<u8>, value: &str) {
     bytes.extend((value.len() as u64).to_le_bytes());
     bytes.extend(value.as_bytes());
