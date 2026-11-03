@@ -1,0 +1,220 @@
+{
+  "status": "PASS_INCREMENT_NOT_PHASE_EXIT",
+  "runs": [
+    {
+      "protocol": "http",
+      "port": 56942,
+      "status": 200,
+      "tlsVersion": null,
+      "peerSha256": null,
+      "exitCode": 0,
+      "shutdownSeconds": 0.35899999999674037,
+      "before": {
+        "id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+        "idempotency_key": "baseline-install:plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_id": "plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+        "stage": "downloading",
+        "status": "running",
+        "version": 3,
+        "generation": 1,
+        "lease_owner": "installation-service:8095c442-a46f-4fc9-a586-25e7782a7491",
+        "lease_until": 1793702251,
+        "accepted_at": 1793702126,
+        "updated_at": 1793702133
+      },
+      "after": {
+        "id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+        "idempotency_key": "baseline-install:plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_id": "plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+        "stage": "downloading",
+        "status": "queued",
+        "version": 5,
+        "generation": 3,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793702126,
+        "updated_at": 1793702134
+      },
+      "beforeCheckpoint": {
+        "completed_bytes": 8395804,
+        "prefix_sha256": "7f73123b5dc65d836c3de8645da207bd6ed2fdea4a4bfab7691cec1c9f3cc3e9",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "afterCheckpoint": {
+        "completed_bytes": 8395804,
+        "prefix_sha256": "7f73123b5dc65d836c3de8645da207bd6ed2fdea4a4bfab7691cec1c9f3cc3e9",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "reservation": {
+        "rules_version": "installation-storage-v3",
+        "job_id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+        "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+        "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-readmission-r1\\app\\data\\model-lifecycle",
+        "volume_id": "windows-volume:c49e613d",
+        "peak_bytes": 2517555424,
+        "reserved_bytes": 2509159620,
+        "state": "held",
+        "version": 2,
+        "created_at": 1793702126,
+        "updated_at": 1793702133
+      },
+      "attempts": 1
+    },
+    {
+      "protocol": "https",
+      "port": 49240,
+      "status": 200,
+      "tlsVersion": "TLSv1.3",
+      "peerSha256": "789df6891733711db9b67e52c127738fc196e08cf9fc718a92184dfd15701871",
+      "exitCode": 0,
+      "shutdownSeconds": 0.18700000003445894,
+      "before": {
+        "id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+        "idempotency_key": "baseline-install:plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_id": "plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+        "stage": "downloading",
+        "status": "running",
+        "version": 12,
+        "generation": 7,
+        "lease_owner": "installation-service:2afc8d1b-99c7-4a74-8f03-a7a4ab0ffa31",
+        "lease_until": 1793702258,
+        "accepted_at": 1793702126,
+        "updated_at": 1793702140
+      },
+      "after": {
+        "id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+        "idempotency_key": "baseline-install:plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_id": "plan:c7176e64-9922-458b-91b1-063959e7bef5",
+        "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+        "stage": "downloading",
+        "status": "queued",
+        "version": 14,
+        "generation": 9,
+        "lease_owner": null,
+        "lease_until": null,
+        "accepted_at": 1793702126,
+        "updated_at": 1793702140
+      },
+      "beforeCheckpoint": {
+        "completed_bytes": 16791603,
+        "prefix_sha256": "86e49a9b2708ce14cae4988cb6f963d88e4e863bbb8a63525917bb0c165eedff",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "afterCheckpoint": {
+        "completed_bytes": 16791603,
+        "prefix_sha256": "86e49a9b2708ce14cae4988cb6f963d88e4e863bbb8a63525917bb0c165eedff",
+        "resume_validator": {
+          "kind": "strong_etag",
+          "value": "\"6BC6C254F03E3FF5913C37C8330F92ED-325\""
+        }
+      },
+      "reservation": {
+        "rules_version": "installation-storage-v3",
+        "job_id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+        "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+        "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-readmission-r1\\app\\data\\model-lifecycle",
+        "volume_id": "windows-volume:c49e613d",
+        "peak_bytes": 2517555424,
+        "reserved_bytes": 2500763821,
+        "state": "held",
+        "version": 5,
+        "created_at": 1793702126,
+        "updated_at": 1793702140
+      },
+      "attempts": 2
+    }
+  ],
+  "binary": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-readmission-r1\\070f52ff9ffc1f6f0f720ff2aa8f074d84ed82349c0548e97c780c0e540ae7ec\\lumina.exe",
+  "binarySha256": "070f52ff9ffc1f6f0f720ff2aa8f074d84ed82349c0548e97c780c0e540ae7ec",
+  "jobId": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+  "failedJob": {
+    "id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+    "idempotency_key": "baseline-install:plan:c7176e64-9922-458b-91b1-063959e7bef5",
+    "plan_id": "plan:c7176e64-9922-458b-91b1-063959e7bef5",
+    "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+    "stage": "downloading",
+    "status": "failed",
+    "version": 8,
+    "generation": 5,
+    "lease_owner": null,
+    "lease_until": null,
+    "accepted_at": 1793702126,
+    "updated_at": 1793702136
+  },
+  "releasedReservation": {
+    "rules_version": "installation-storage-v3",
+    "job_id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+    "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+    "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-readmission-r1\\app\\data\\model-lifecycle",
+    "volume_id": "windows-volume:c49e613d",
+    "peak_bytes": 2517555424,
+    "reserved_bytes": 0,
+    "state": "released",
+    "version": 3,
+    "created_at": 1793702126,
+    "updated_at": 1793702136
+  },
+  "retryReceipt": {
+    "job": {
+      "id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+      "planId": "plan:c7176e64-9922-458b-91b1-063959e7bef5",
+      "planDigest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+      "stage": "downloading",
+      "status": "queued",
+      "version": 9,
+      "generation": 6,
+      "acceptedAt": 1793702126,
+      "updatedAt": 1793702137
+    },
+    "replayed": false
+  },
+  "readmittedReservation": {
+    "rules_version": "installation-storage-v3",
+    "job_id": "job:186ee01b-45df-4d2c-8c04-70f354fd1bb9",
+    "plan_digest": "b3c65de38d00cc046cd2faee8ce3c6f858c827ace5500ffc04150cde77a07da3",
+    "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-readmission-r1\\app\\data\\model-lifecycle",
+    "volume_id": "windows-volume:c49e613d",
+    "peak_bytes": 2517555424,
+    "reserved_bytes": 2509159620,
+    "state": "held",
+    "version": 4,
+    "created_at": 1793702126,
+    "updated_at": 1793702137
+  },
+  "retainedBytes": 8395804,
+  "resumedBytes": 16791603,
+  "databaseIntegrity": "PASS",
+  "baseCommit": "2950f70673c9d32bc1b11d4a7be79ecfdc111cf0",
+  "sourceIdentities": {
+    "crates/lumina-local-inference/src/lifecycle/repository.rs": "d4f28b250a5b71d5ca01a39c68d9b3e5d43311da8ede9688076b7bbb9d692338",
+    "crates/lumina-local-inference/src/lifecycle/repository/storage.rs": "ee69937862c1f5513004bd843f5097fa3cc4aa99c08674d081f17f08ae8a4206",
+    "crates/lumina-local-inference/src/lifecycle/repository/migrations/0014.sql": "a3b6cf775777b5198063536fea387abdd88d6d46c92c3112e9e4ed60f3b2cfa3",
+    "crates/lumina-local-inference/tests/lifecycle_cache_install/storage_cases.rs": "52723772591b4c1a81193d0aaeac62a4c866b463d14d72331739f4ab99c1a04d",
+    "lumina-self-test.yaml": "890c6096d620eaf7c02cabd6d071d39a4b890bc7c53fad0f3ee84645e0bcbf9d"
+  },
+  "logSha256": {
+    "clippy": "b245c2ebbfec3e8d98ecbf9543b95ad6402b4a582b612bbd6a7204d7cf76c0aa",
+    "cli-build": "64430ec6e630d12058e914452dacd1c15802974f9946961f84924b7aba970429",
+    "tests": "1742890973eb3a4d3fd8713e399bbdd9265eae6a6b1657f17852055ca0e2b79e"
+  },
+  "selfTestSha256": "3443ef4ea47420a873b4fb534b855e2c259671c44afba725b278874afc2c6872",
+  "verifierSha256": "58cec9b43e6abb22d4b352641022cf74ba822e6622e930a1ba5126ecc06a50d7",
+  "earlierCompileFailure": {
+    "sha256": "a3eb75b1ac173e31d0ec569e856df729cb9a9d104d6bb0273f1e038a55af2ac2",
+    "cause": "Opening a retained file returns an anyhow wrapper",
+    "correction": "Inspect the underlying I/O error when classifying a missing file"
+  },
+  "scope": "Pinned ModelScope transfer interrupted at a committed checkpoint by an injected SQLite event failure. Explicit product CLI retry reacquires the reservation minus the retained checkpoint and resumes HTTPS. First admission and released records without retained credits continue to reserve the original peak."
+}

@@ -183,6 +183,7 @@ prompt: |
   atomic storage reservation admission, shared-volume quotas, quiescent release and recovery,
   publication budgets for missing blobs, staging files and manifest with recovery after a durable write,
   atomic download checkpoint and space credit with rollback before publication,
+  retry admission using retained file credits and full reservation for truncated files,
   persisted job and file progress cursors across reconnect and database reopen,
   with HTTP and HTTPS listener shutdown covered by separate CLI signal acceptance,
   while full network installation and Runtime readiness need their separate acceptance evidence.

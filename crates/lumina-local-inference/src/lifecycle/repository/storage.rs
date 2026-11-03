@@ -3,10 +3,10 @@ use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 
 use super::{LifecycleJob, LifecycleRepository};
 use crate::lifecycle::{
-    installation_storage_volume, InstallationCommitStage, InstallationFailureOrigin,
-    InstallationInput, InstallationOperationError, InstallationStore, JobStatus,
-    LifecycleErrorCode, Sha256Digest, StorageReservation, StorageReservationState, WorkerLease,
-    PUBLICATION_STORAGE_RULES_VERSION, STORAGE_RESERVATION_RULES_VERSION,
+    installation_storage_volume, FileTransferState, InstallationCommitStage,
+    InstallationFailureOrigin, InstallationInput, InstallationOperationError, InstallationStore,
+    JobStatus, LifecycleErrorCode, Sha256Digest, StorageReservation, StorageReservationState,
+    WorkerLease, PUBLICATION_STORAGE_RULES_VERSION, STORAGE_RESERVATION_RULES_VERSION,
     TRANSFER_STORAGE_RULES_VERSION,
 };
 
@@ -115,6 +115,64 @@ impl LifecycleRepository {
         })
     }
 
+    fn readmit_transfer_credits(
+        connection: &Connection,
+        job: &LifecycleJob,
+        input: &InstallationInput,
+    ) -> Result<u64> {
+        let store = InstallationStore::open(&input.store_root)?;
+        let _writer = store.transfer_lock(&job.id)?;
+        let mut statement = connection.prepare(
+            "SELECT artifact_id,bytes FROM installation_transfer_credits WHERE job_id=?1",
+        )?;
+        let credits = statement
+            .query_map([&job.id], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?))
+            })?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        credits
+            .into_iter()
+            .try_fold(0u64, |sum, (artifact_id, bytes)| {
+                let transfer = Self::read_file_by(connection, &job.id, &artifact_id)?
+                    .context("Credited transfer is absent from its plan")?;
+                ensure!(
+                    bytes <= transfer.checkpoint.completed_bytes,
+                    "Transfer credit exceeds the saved checkpoint"
+                );
+                let path = store.transfer_file_path(&job.id, &transfer.relative_path)?;
+                let retained = match super::super::files::open_for_verification(&path) {
+                    Ok(file) => {
+                        super::super::files::require_single_link_file(&file)?;
+                        file.metadata()?.len() >= transfer.checkpoint.completed_bytes
+                            && !matches!(
+                                transfer.state,
+                                FileTransferState::Failed {
+                                    code: LifecycleErrorCode::HashMismatch
+                                }
+                            )
+                    }
+                    Err(error)
+                        if error
+                            .downcast_ref::<std::io::Error>()
+                            .is_some_and(|cause| cause.kind() == std::io::ErrorKind::NotFound) =>
+                    {
+                        false
+                    }
+                    Err(error) => return Err(error),
+                };
+                if retained {
+                    sum.checked_add(bytes)
+                        .context("Transfer credit sum overflow")
+                } else {
+                    connection.execute(
+                    "DELETE FROM installation_transfer_credits WHERE job_id=?1 AND artifact_id=?2",
+                    params![job.id, artifact_id],
+                )?;
+                    Ok(sum)
+                }
+            })
+    }
+
     pub(super) fn reserve_storage_by(
         connection: &Connection,
         job: &LifecycleJob,
@@ -145,25 +203,44 @@ impl LifecycleRepository {
             "Storage reservation time moved backwards"
         );
         let inactive = matches!(job.status, JobStatus::Completed | JobStatus::Cancelled);
+        let credit = if matches!(job.status, JobStatus::Failed | JobStatus::Blocked)
+            && existing.as_ref().is_some_and(|record| {
+                record.state == StorageReservationState::Released
+                    && record.rules_version == TRANSFER_STORAGE_RULES_VERSION
+                    && record.volume_id.as_deref() == Some(volume.as_str())
+            }) {
+            Self::readmit_transfer_credits(connection, job, input)?
+        } else {
+            connection.execute(
+                "DELETE FROM installation_transfer_credits WHERE job_id=?1",
+                [&job.id],
+            )?;
+            0
+        };
+        let remaining = plan
+            .required_disk_bytes
+            .checked_sub(credit)
+            .context("Transfer credit exceeds the installation storage peak")?;
         if !inactive {
             let other = Self::other_storage_by(connection, &job.id, &volume)?;
             let free = fs2::available_space(&input.store_root)?.min(limit);
-            if plan.required_disk_bytes > free.saturating_sub(other) {
+            if remaining > free.saturating_sub(other) {
                 return Err(insufficient());
             }
         }
         let reservation = StorageReservation {
-            rules_version: STORAGE_RESERVATION_RULES_VERSION.into(),
+            rules_version: if credit == 0 {
+                STORAGE_RESERVATION_RULES_VERSION
+            } else {
+                TRANSFER_STORAGE_RULES_VERSION
+            }
+            .into(),
             job_id: job.id.clone(),
             plan_digest: job.plan_digest.clone(),
             store_root: input.store_root.clone(),
             volume_id: Some(volume),
             peak_bytes: plan.required_disk_bytes,
-            reserved_bytes: if inactive {
-                0
-            } else {
-                plan.required_disk_bytes
-            },
+            reserved_bytes: if inactive { 0 } else { remaining },
             state: if inactive {
                 StorageReservationState::Released
             } else {
@@ -400,10 +477,16 @@ impl LifecycleRepository {
             reservation.state = StorageReservationState::Released;
             reservation.version += 1;
             reservation.updated_at = now;
-            connection.execute(
-                "DELETE FROM installation_transfer_credits WHERE job_id=?1",
-                [job_id],
-            )?;
+            let job =
+                Self::read_job_by(connection, "id", job_id)?.context("Installation job missing")?;
+            if reservation.rules_version != TRANSFER_STORAGE_RULES_VERSION
+                || !matches!(job.status, JobStatus::Failed | JobStatus::Blocked)
+            {
+                connection.execute(
+                    "DELETE FROM installation_transfer_credits WHERE job_id=?1",
+                    [job_id],
+                )?;
+            }
             Self::write_storage_by(connection, &reservation)?;
         }
         Ok(())

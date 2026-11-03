@@ -479,6 +479,87 @@ fn transfer_credit_and_file_checkpoint_rollback_together() {
 }
 
 #[test]
+fn retry_admission_credits_only_retained_transfer_files() {
+    for truncate in [false, true] {
+        let fixture = Fixture::new(true);
+        let original = bind(&fixture);
+        let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+        raw.execute_batch(
+            "CREATE TRIGGER reject_verification BEFORE INSERT ON job_events
+             WHEN json_extract(NEW.payload,'$.stage') = 'verifying'
+             BEGIN SELECT RAISE(ABORT,'injected verification transition failure'); END;",
+        )
+        .unwrap();
+        let error = fixture.run(40).unwrap_err();
+        assert!(format!("{error:#}").contains("injected verification transition failure"));
+        let job = fixture
+            .repository
+            .read_job(&fixture.request.job_id)
+            .unwrap()
+            .unwrap();
+        let released = fixture
+            .repository
+            .storage_reservation(&job.id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(released.state, StorageReservationState::Released);
+        assert_eq!(released.reserved_bytes, 0);
+        let credited: u64 = raw
+            .query_row(
+                "SELECT bytes FROM installation_transfer_credits WHERE job_id=?1",
+                [&job.id],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(credited, fixture.bytes.len() as u64);
+        raw.execute_batch("DROP TRIGGER reject_verification;")
+            .unwrap();
+        if truncate {
+            std::fs::OpenOptions::new()
+                .write(true)
+                .open(fixture.transfer_path())
+                .unwrap()
+                .set_len(0)
+                .unwrap();
+        }
+        let request = control_request(
+            &job.id,
+            job.version,
+            InstallationJobAction::Retry,
+            "readmit-retained-prefix",
+        );
+        fixture
+            .repository
+            .control_installation(&request, &fixture.store, 41)
+            .unwrap();
+        let held = fixture
+            .repository
+            .storage_reservation(&job.id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(held.state, StorageReservationState::Held);
+        assert_eq!(
+            held.reserved_bytes,
+            original.peak_bytes - if truncate { 0 } else { credited }
+        );
+        assert!(
+            fixture
+                .repository
+                .control_installation(&request, &fixture.store, 42)
+                .unwrap()
+                .replayed
+        );
+        assert_eq!(
+            fixture.repository.storage_reservation(&job.id).unwrap(),
+            Some(held)
+        );
+        if !truncate {
+            fixture.run(43).unwrap();
+        }
+    }
+}
+
+#[test]
 fn storage_release_failure_rolls_back_registration_and_recovers_without_duplicate_versions() {
     let fixture = Fixture::new(true);
     bind(&fixture);

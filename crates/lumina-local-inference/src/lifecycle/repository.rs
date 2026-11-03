@@ -26,7 +26,7 @@ pub use plan_observations::{
     gguf_header_evidence_id, gguf_observation_evidence_id, OBSERVED_GGUF_PLAN_RULES_VERSION,
 };
 
-pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 13;
+pub const MODEL_DATABASE_SCHEMA_VERSION: u32 = 14;
 
 const SCHEMA: &str = include_str!("repository/migrations/0001.sql");
 
@@ -145,6 +145,9 @@ impl LifecycleRepository {
         }
         if version < 13 {
             tx.execute_batch(include_str!("repository/migrations/0013.sql"))?;
+        }
+        if version < 14 {
+            tx.execute_batch(include_str!("repository/migrations/0014.sql"))?;
         }
         tx.commit()?;
         Ok(Self {
