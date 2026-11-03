@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use super::Sha256Digest;
 
 pub const STORAGE_RESERVATION_RULES_VERSION: &str = "installation-storage-v1";
+pub(crate) const PUBLICATION_STORAGE_RULES_VERSION: &str = "installation-storage-v2";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -39,8 +40,10 @@ pub struct StorageReservation {
 impl StorageReservation {
     pub fn validate(&self) -> Result<()> {
         ensure!(
-            self.rules_version == STORAGE_RESERVATION_RULES_VERSION
-                && !self.job_id.is_empty()
+            matches!(
+                self.rules_version.as_str(),
+                STORAGE_RESERVATION_RULES_VERSION | PUBLICATION_STORAGE_RULES_VERSION
+            ) && !self.job_id.is_empty()
                 && self.store_root.is_absolute()
                 && self.peak_bytes > 0
                 && self.peak_bytes <= i64::MAX as u64
@@ -57,7 +60,10 @@ impl StorageReservation {
                 StorageReservationState::NeedsAdmission =>
                     self.volume_id.is_none() && self.reserved_bytes == self.peak_bytes,
                 StorageReservationState::Held =>
-                    self.volume_id.is_some() && self.reserved_bytes == self.peak_bytes,
+                    self.volume_id.is_some()
+                        && self.reserved_bytes <= self.peak_bytes
+                        && (self.rules_version == PUBLICATION_STORAGE_RULES_VERSION
+                            || self.reserved_bytes == self.peak_bytes),
                 StorageReservationState::Released => self.reserved_bytes == 0,
             },
             "Storage reservation state mismatch"

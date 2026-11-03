@@ -218,6 +218,8 @@ schema v10 增加不可变安装失败记录，绑定状态变更后的历史任
 
 SQLite schema v11 增加 installation-storage-v1 预留及不可变历史，与接受任务、输入绑定及新 Retry/Resume 的状态变化同事务提交。同一数据库按真实磁盘卷协调任务；当前预留完整计划峰值，暂停持有，阻塞/失败/取消需写入停止后释放，完成与版本登记原子释放。回执重放不重复预留；升级标记 needs_admission，恢复前复验卷。列表增加 storageReservations（jobId、planDigest、volumeId、peakBytes、reservedBytes、state、version、createdAt、updatedAt），不返回内部 storeRoot。精确已落盘字节、共享内容节省量、跨数据库协调和操作系统物理预分配不在该保守基础实现范围，三层全局并发和精确空间核算仍待交付。
 
+schema v12 在安装提交的 staging 阶段记录剩余发布预留。按摘要锁定本次涉及的 blob 后，计算缺失的共享内容、独立版本文件和 Manifest 的逻辑字节数。已同步并写入受管路径的文件才能扣减预留。数据库更新失败时保留已写文件，恢复后重新计算并验证内容。已准备完成的任务可持有零字节预算，登记或不再活跃时照常释放。历史 v11 事件沿用原规则。首次准入与下载阶段仍预留完整峰值，运行引用和卸载清理继续按 ML-20、ML-21 实施。
+
 ## 界面和状态契约
 
 面向 Windows Electron 桌面，复用 React、现有主题 token、Button、Dialog、Tabs 和国际化，不另建视觉系统。属于跨模块复杂业务界面；原生文件路径和进程信息经后端适配，渲染端不直接访问数据库、文件或启动命令。

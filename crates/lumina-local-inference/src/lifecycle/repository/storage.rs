@@ -3,9 +3,10 @@ use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 
 use super::{LifecycleJob, LifecycleRepository};
 use crate::lifecycle::{
-    installation_storage_volume, InstallationFailureOrigin, InstallationInput,
-    InstallationOperationError, InstallationStore, JobStatus, LifecycleErrorCode, Sha256Digest,
-    StorageReservation, StorageReservationState, STORAGE_RESERVATION_RULES_VERSION,
+    installation_storage_volume, InstallationCommitStage, InstallationFailureOrigin,
+    InstallationInput, InstallationOperationError, InstallationStore, JobStatus,
+    LifecycleErrorCode, Sha256Digest, StorageReservation, StorageReservationState, WorkerLease,
+    PUBLICATION_STORAGE_RULES_VERSION, STORAGE_RESERVATION_RULES_VERSION,
 };
 
 pub(super) const SCHEMA: &str = include_str!("migrations/0011.sql");
@@ -253,14 +254,70 @@ impl LifecycleRepository {
                 "Installation has no active reservation on this volume"
             );
             ensure!(
-                needed <= own.peak_bytes,
-                "Installation write exceeds its accepted storage peak"
+                needed <= own.reserved_bytes,
+                "Installation write exceeds its remaining storage reservation"
             );
         }
         let other = Self::other_storage_by(&connection, job_id, &volume)?;
         if needed > fs2::available_space(store.root())?.saturating_sub(other) {
             return Err(insufficient());
         }
+        Ok(())
+    }
+
+    pub(crate) fn update_publication_storage(
+        &self,
+        lease: &WorkerLease,
+        store: &InstallationStore,
+        remaining: u64,
+        now: i64,
+    ) -> Result<()> {
+        let mut connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let job =
+            Self::read_job_by(&tx, "id", &lease.job_id)?.context("Installation job missing")?;
+        Self::validate_lease(&job, lease, now)?;
+        let journal = Self::read_commit_by(&tx, &job.id)?.context("Installation commit missing")?;
+        ensure!(
+            journal.stage == InstallationCommitStage::Staging,
+            "Publication storage can only change during staging"
+        );
+        let Some(mut reservation) = Self::read_storage_by(&tx, &job.id)? else {
+            ensure!(
+                Self::read_installation_input_by(&tx, &job)?.is_none(),
+                "Bound installation has no storage reservation"
+            );
+            return Ok(());
+        };
+        let volume = installation_storage_volume(store.root())?;
+        ensure!(
+            reservation.state == StorageReservationState::Held
+                && reservation.plan_digest == job.plan_digest
+                && reservation.store_root == store.root()
+                && reservation.volume_id.as_deref() == Some(volume.as_str())
+                && remaining <= reservation.peak_bytes
+                && now >= reservation.updated_at,
+            "Publication storage does not match the held installation reservation"
+        );
+        if remaining > reservation.reserved_bytes {
+            let other = Self::other_storage_by(&tx, &job.id, &volume)?;
+            if remaining > fs2::available_space(store.root())?.saturating_sub(other) {
+                return Err(insufficient());
+            }
+        }
+        if reservation.rules_version != PUBLICATION_STORAGE_RULES_VERSION
+            || remaining != reservation.reserved_bytes
+        {
+            reservation.rules_version = PUBLICATION_STORAGE_RULES_VERSION.into();
+            reservation.reserved_bytes = remaining;
+            reservation.version += 1;
+            reservation.updated_at = now;
+            Self::write_storage_by(&tx, &reservation)?;
+        }
+        tx.commit()?;
         Ok(())
     }
 
@@ -345,7 +402,7 @@ impl LifecycleRepository {
                 .connection
                 .lock()
                 .map_err(|_| anyhow!("Model database lock poisoned"))?;
-            let mut statement=connection.prepare("SELECT r.job_id FROM installation_storage_reservations r JOIN lifecycle_jobs j ON j.id=r.job_id WHERE r.reserved_bytes>0 AND j.status IN (?1,?2,?3,?4) AND json_extract(r.payload,'$.store_root')=?6 AND (?7 IS NULL OR r.job_id>?7) ORDER BY r.job_id LIMIT ?5")?;
+            let mut statement=connection.prepare("SELECT r.job_id FROM installation_storage_reservations r JOIN lifecycle_jobs j ON j.id=r.job_id WHERE json_extract(r.payload,'$.state')!='released' AND j.status IN (?1,?2,?3,?4) AND json_extract(r.payload,'$.store_root')=?6 AND (?7 IS NULL OR r.job_id>?7) ORDER BY r.job_id LIMIT ?5")?;
             let rows = statement.query_map(
                 params![
                     serde_json::to_string(&JobStatus::Completed)?,

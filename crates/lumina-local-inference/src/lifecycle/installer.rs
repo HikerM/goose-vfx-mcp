@@ -1,5 +1,6 @@
 use anyhow::{ensure, Context, Result};
 use fs2::FileExt;
+use std::collections::BTreeSet;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -300,27 +301,58 @@ impl InstallationStore {
             manifest_bytes.len() <= 16 * 1024 * 1024,
             "Installation manifest exceeds byte limit"
         );
-        let mut remaining = manifest_bytes.len() as u64;
+        let blobs: BTreeSet<_> = manifest
+            .installed_files
+            .values()
+            .map(|file| &file.computed_sha256)
+            .collect();
+        let _blob_locks = blobs
+            .iter()
+            .map(|digest| self.lock("blobs", digest.as_str()))
+            .collect::<Result<Vec<_>>>()?;
+        let manifest_path = self.target(&RepositoryPath::parse(format!(
+            "{}/manifest.json",
+            staging.as_str()
+        ))?)?;
+        let mut remaining = if manifest_path.exists() {
+            0
+        } else {
+            manifest_bytes.len() as u64
+        };
+        let mut counted_blobs = BTreeSet::new();
         for installed in manifest.installed_files.values() {
-            for relative in [
-                Self::blob_path(&installed.computed_sha256)?,
-                RepositoryPath::parse(format!(
-                    "{}/{}",
-                    staging.as_str(),
-                    installed.relative_path.as_str()
-                ))?,
-            ] {
-                if !self.target(&relative)?.exists() {
-                    remaining = remaining
-                        .checked_add(installed.size_bytes)
-                        .context("Installation disk budget overflow")?;
-                }
+            if counted_blobs.insert(&installed.computed_sha256)
+                && !self
+                    .target(&Self::blob_path(&installed.computed_sha256)?)?
+                    .exists()
+            {
+                remaining = remaining
+                    .checked_add(installed.size_bytes)
+                    .context("Installation disk budget overflow")?;
+            }
+            let staged = RepositoryPath::parse(format!(
+                "{}/{}",
+                staging.as_str(),
+                installed.relative_path.as_str()
+            ))?;
+            if !self.target(&staged)?.exists() {
+                remaining = remaining
+                    .checked_add(installed.size_bytes)
+                    .context("Installation disk budget overflow")?;
             }
         }
+        let reserve = |bytes| {
+            execution.repository.update_publication_storage(
+                execution.lease,
+                self,
+                bytes,
+                (execution.clock)(),
+            )
+        };
+        reserve(remaining)?;
         self.require_space(execution, remaining)?;
         for (id, installed) in &manifest.installed_files {
             execution.checkpoint()?;
-            let _blob_lock = self.lock("blobs", installed.computed_sha256.as_str())?;
             let blob = Self::blob_path(&installed.computed_sha256)?;
             let blob_path = self.target(&blob)?;
             if !blob_path.exists() {
@@ -336,6 +368,10 @@ impl InstallationStore {
                     &transfer.relative_path,
                     &blob,
                 )?;
+                remaining = remaining
+                    .checked_sub(installed.size_bytes)
+                    .context("Published blob exceeds its remaining budget")?;
+                reserve(remaining)?;
             }
             self.verify_file(execution, manifest, id, &self.root, &blob)?;
             Self::make_read_only(&blob_path)?;
@@ -347,14 +383,14 @@ impl InstallationStore {
             let staged_path = self.target(&staged)?;
             if !staged_path.exists() {
                 self.copy_file(execution, manifest, id, &self.root, &blob, &staged)?;
+                remaining = remaining
+                    .checked_sub(installed.size_bytes)
+                    .context("Staged file exceeds its remaining budget")?;
+                reserve(remaining)?;
             }
             self.verify_file(execution, manifest, id, &self.root, &staged)?;
             Self::make_read_only(&staged_path)?;
         }
-        let manifest_path = self.target(&RepositoryPath::parse(format!(
-            "{}/manifest.json",
-            staging.as_str()
-        ))?)?;
         if !manifest_path.exists() {
             self.require_space(execution, manifest_bytes.len() as u64)?;
             let directory = manifest_path
@@ -368,7 +404,15 @@ impl InstallationStore {
                 .into_temp_path()
                 .persist_noclobber(&manifest_path)?;
             sync_directory(directory)?;
+            remaining = remaining
+                .checked_sub(manifest_bytes.len() as u64)
+                .context("Published manifest exceeds its remaining budget")?;
+            reserve(remaining)?;
         }
+        ensure!(
+            remaining == 0,
+            "Installation publication budget was not consumed"
+        );
         Self::make_read_only(&manifest_path)?;
         sync_directory(&self.root.join(staging.as_str()))?;
         Ok(())

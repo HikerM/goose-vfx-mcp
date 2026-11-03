@@ -1,0 +1,194 @@
+{
+  "status": "PASS_INCREMENT_NOT_PHASE_EXIT",
+  "installs": [
+    {
+      "jobId": "job:a06fbbf9-74c1-461c-b782-cb437dedeee7",
+      "versionId": "publication-budget-version-1",
+      "manifestBytes": 5311,
+      "publishedFile": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed\\installations\\9ce9b06cf4d620fc5dccaf175c390d9adf1a6e42f522550cd612b4fb66fbf632\\3c33e5447dd5d34df74c82797c466ccd2acf3f1332f0a54028c5c1abb9716bba\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+      "publishedIdentity": 844424937572706,
+      "reservations": [
+        {
+          "rules_version": "installation-storage-v1",
+          "job_id": "job:a06fbbf9-74c1-461c-b782-cb437dedeee7",
+          "plan_digest": "d7ccccd98ac221a57a01c16646a8daf83bc621d4fdadbffc914413f9fcb09ba0",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 2517555424,
+          "state": "held",
+          "version": 0,
+          "created_at": 1793696952,
+          "updated_at": 1793696952
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:a06fbbf9-74c1-461c-b782-cb437dedeee7",
+          "plan_digest": "d7ccccd98ac221a57a01c16646a8daf83bc621d4fdadbffc914413f9fcb09ba0",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 1667190783,
+          "state": "held",
+          "version": 1,
+          "created_at": 1793696952,
+          "updated_at": 1793697039
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:a06fbbf9-74c1-461c-b782-cb437dedeee7",
+          "plan_digest": "d7ccccd98ac221a57a01c16646a8daf83bc621d4fdadbffc914413f9fcb09ba0",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 833598047,
+          "state": "held",
+          "version": 2,
+          "created_at": 1793696952,
+          "updated_at": 1793697076
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:a06fbbf9-74c1-461c-b782-cb437dedeee7",
+          "plan_digest": "d7ccccd98ac221a57a01c16646a8daf83bc621d4fdadbffc914413f9fcb09ba0",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 5311,
+          "state": "held",
+          "version": 3,
+          "created_at": 1793696952,
+          "updated_at": 1793697127
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:a06fbbf9-74c1-461c-b782-cb437dedeee7",
+          "plan_digest": "d7ccccd98ac221a57a01c16646a8daf83bc621d4fdadbffc914413f9fcb09ba0",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 0,
+          "state": "held",
+          "version": 4,
+          "created_at": 1793696952,
+          "updated_at": 1793697142
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:a06fbbf9-74c1-461c-b782-cb437dedeee7",
+          "plan_digest": "d7ccccd98ac221a57a01c16646a8daf83bc621d4fdadbffc914413f9fcb09ba0",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 0,
+          "state": "released",
+          "version": 5,
+          "created_at": 1793696952,
+          "updated_at": 1793697217
+        }
+      ]
+    },
+    {
+      "jobId": "job:e54be079-ca3d-4468-b400-0e7153a966c9",
+      "versionId": "publication-budget-version-2",
+      "manifestBytes": 5311,
+      "publishedFile": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed\\installations\\9ce9b06cf4d620fc5dccaf175c390d9adf1a6e42f522550cd612b4fb66fbf632\\4bb1d7a431cbf03551b52497b6366ee521030f28a5d032427900e7ed820b7902\\files\\06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+      "publishedIdentity": 844424937572862,
+      "reservations": [
+        {
+          "rules_version": "installation-storage-v1",
+          "job_id": "job:e54be079-ca3d-4468-b400-0e7153a966c9",
+          "plan_digest": "8c6fdd552e8564645595409af23268725691b4e62116ac9c5e8970e0d7a3de07",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 2517555424,
+          "state": "held",
+          "version": 0,
+          "created_at": 1793697241,
+          "updated_at": 1793697241
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:e54be079-ca3d-4468-b400-0e7153a966c9",
+          "plan_digest": "8c6fdd552e8564645595409af23268725691b4e62116ac9c5e8970e0d7a3de07",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 833598047,
+          "state": "held",
+          "version": 1,
+          "created_at": 1793697241,
+          "updated_at": 1793697271
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:e54be079-ca3d-4468-b400-0e7153a966c9",
+          "plan_digest": "8c6fdd552e8564645595409af23268725691b4e62116ac9c5e8970e0d7a3de07",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 5311,
+          "state": "held",
+          "version": 2,
+          "created_at": 1793697241,
+          "updated_at": 1793697309
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:e54be079-ca3d-4468-b400-0e7153a966c9",
+          "plan_digest": "8c6fdd552e8564645595409af23268725691b4e62116ac9c5e8970e0d7a3de07",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 0,
+          "state": "held",
+          "version": 3,
+          "created_at": 1793697241,
+          "updated_at": 1793697321
+        },
+        {
+          "rules_version": "installation-storage-v2",
+          "job_id": "job:e54be079-ca3d-4468-b400-0e7153a966c9",
+          "plan_digest": "8c6fdd552e8564645595409af23268725691b4e62116ac9c5e8970e0d7a3de07",
+          "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m2-publication-budget-r1\\managed",
+          "volume_id": "windows-volume:c49e613d",
+          "peak_bytes": 2517555424,
+          "reserved_bytes": 0,
+          "state": "released",
+          "version": 4,
+          "created_at": 1793697241,
+          "updated_at": 1793697380
+        }
+      ]
+    }
+  ],
+  "sourceSha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+  "sourceSize": 833592736,
+  "binaries": {
+    "producer": "57dac385e91b142f62b3013ac4c9e9958229d2a61fb7a37f1f20098048a9ae01",
+    "worker": "1cf8163a3da5be62b8b64f697e40dd022919a825ce3b4e8aee1c9a39964e47d5"
+  },
+  "schema": 12,
+  "physicalBlobs": 1,
+  "blobReferences": 2,
+  "baseCommit": "02f75081fe7d19163c0253a04f24772954534da4",
+  "sourceIdentities": {
+    "crates/lumina-local-inference/src/lifecycle/installer.rs": "89a0c6a4e66e58e7f8b07b750557065d29c29de53b5a1fe26d77628f58d81c4f",
+    "crates/lumina-local-inference/src/lifecycle/repository.rs": "405e8b77ab147f5f8d9ba46e06fdd9f19b818227bb1e7cc7c58ecc69c2b13bb9",
+    "crates/lumina-local-inference/src/lifecycle/repository/storage.rs": "9a49aac8b0dd907e09ce978f249cc0b129708ecab603c4531e501258fbfea001",
+    "crates/lumina-local-inference/src/lifecycle/repository/migrations/0012.sql": "2ff1df9636d06f7d0fc0ff3e9cb737e8188f98ece862f965dc8bf655ae8a2edd",
+    "crates/lumina-local-inference/src/lifecycle/storage.rs": "26e5df85501f0491fe2724e7125c12c09a38c2c17f50f50464789008bacdcc99",
+    "crates/lumina-local-inference/tests/lifecycle_cache_install/storage_cases.rs": "88668723aaa2bc44793619260ad76dc85857c629e0b7b161bae2943b25e0935e",
+    "lumina-self-test.yaml": "6b5b769852008454490e27caab178ca1000cae19b47e67dfb3e4734a15fd863a"
+  },
+  "logSha256": {
+    "clippy": "ab1097c0e0ad67fd021a5b64cbe95414aba4547dc8b6a132e133b7ad5ef4afce",
+    "examples": "daff7a2085f0b89b515a54d2bf33c6669967a1d23fd8722173aa9c16fff71241",
+    "cli-build": "eb6d1207b881970795f4822c04267a563294fda58145bd7c543750568423854a",
+    "tests": "b568df7806bf78b90bc424381e19e631e1aebc4e80cdcc12b453b1890e1f01e7"
+  },
+  "selfTestSha256": "29cbe759bb31de740ef36a48e9260242081fad12e3795e46a73766d223723e30",
+  "verifierSha256": "328d23f3f6e1b89b37d10fab7dd05885f065836b29924520ef93d48a016b5267",
+  "scope": "Actual pinned GGUF cache installation of two independent versions with one physical blob. Publication budgets follow missing files and are reduced after durable publication. Download admission retains its existing conservative peak."
+}

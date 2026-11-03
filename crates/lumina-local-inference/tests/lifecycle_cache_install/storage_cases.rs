@@ -318,6 +318,81 @@ fn failed_reservation_insert_rolls_back_job_input_file_and_initial_events() {
 }
 
 #[test]
+fn publication_retry_reuses_a_blob_persisted_before_its_budget_event() {
+    let fixture = Fixture::new(true);
+    bind(&fixture);
+    let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+    raw.execute_batch(
+        "CREATE TRIGGER reject_blob_budget BEFORE INSERT ON installation_storage_events
+         WHEN NEW.version = 2 AND json_extract(NEW.payload,'$.state') = 'held'
+         BEGIN SELECT RAISE(ABORT,'injected publication budget failure'); END;",
+    )
+    .unwrap();
+    let error = fixture.run(40).unwrap_err();
+    assert!(format!("{error:#}").contains("injected publication budget failure"));
+    let job = fixture
+        .repository
+        .read_job(&fixture.request.job_id)
+        .unwrap()
+        .unwrap();
+    let journal = fixture
+        .repository
+        .installation_commit(&job.id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(journal.stage, InstallationCommitStage::Staging);
+    let manifest_bytes = serde_json::to_vec(&journal.manifest).unwrap().len() as u64;
+    let weight_bytes = fixture.bytes.len() as u64;
+    let blob = InstallationStore::blob_path(&Sha256Digest::of_bytes(&fixture.bytes)).unwrap();
+    assert_eq!(
+        std::fs::read(fixture.store.root().join(blob.as_str())).unwrap(),
+        fixture.bytes
+    );
+    raw.execute_batch("DROP TRIGGER reject_blob_budget;")
+        .unwrap();
+    fixture
+        .repository
+        .control_installation(
+            &control_request(
+                &job.id,
+                job.version,
+                InstallationJobAction::Retry,
+                "retry-publication-budget",
+            ),
+            &fixture.store,
+            41,
+        )
+        .unwrap();
+    fixture.run(42).unwrap();
+
+    let mut events = raw
+        .prepare(
+            "SELECT reserved_bytes FROM (
+            SELECT version, json_extract(payload,'$.reserved_bytes') AS reserved_bytes
+            FROM installation_storage_events
+            WHERE job_id=?1 AND json_extract(payload,'$.rules_version')='installation-storage-v2'
+                            AND json_extract(payload,'$.state')='held'
+         ) ORDER BY version",
+        )
+        .unwrap();
+    let reserved = events
+        .query_map([&job.id], |row| row.get::<_, u64>(0))
+        .unwrap()
+        .collect::<rusqlite::Result<Vec<_>>>()
+        .unwrap();
+    assert_eq!(
+        reserved,
+        [
+            2 * weight_bytes + manifest_bytes,
+            weight_bytes + manifest_bytes,
+            manifest_bytes,
+            0,
+        ]
+    );
+    assert_eq!(fixture.repository.active_installations().unwrap().len(), 1);
+}
+
+#[test]
 fn storage_release_failure_rolls_back_registration_and_recovers_without_duplicate_versions() {
     let fixture = Fixture::new(true);
     bind(&fixture);
