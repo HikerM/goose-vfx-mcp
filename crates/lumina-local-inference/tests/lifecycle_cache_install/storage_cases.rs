@@ -21,6 +21,69 @@ fn bind(fixture: &Fixture) -> StorageReservation {
 }
 
 #[test]
+fn new_admission_pins_an_existing_registered_blob_and_reserves_only_the_difference() {
+    let fixture = Fixture::new(true);
+    let original = bind(&fixture);
+    fixture.run(40).unwrap();
+    let (acceptance, input) = request(&fixture, "reuse-registered-blob");
+    let size = fixture.bytes.len() as u64;
+    let reduced = original.peak_bytes - size;
+    assert!(fixture
+        .repository
+        .enqueue_installation(&acceptance, &input, 41, reduced - 1)
+        .is_err());
+    assert!(fixture
+        .repository
+        .read_job(&acceptance.id)
+        .unwrap()
+        .is_none());
+    fixture
+        .repository
+        .enqueue_installation(&acceptance, &input, 42, reduced)
+        .unwrap();
+    let reservation = fixture
+        .repository
+        .storage_reservation(&acceptance.id)
+        .unwrap()
+        .unwrap();
+    assert_eq!(reservation.peak_bytes, original.peak_bytes);
+    assert_eq!(reservation.reserved_bytes, reduced);
+    let raw = rusqlite::Connection::open(fixture.temp.path().join("models.db")).unwrap();
+    let digest = Sha256Digest::of_bytes(&fixture.bytes);
+    let pin: (String, u64) = raw
+        .query_row(
+            "SELECT pinned_blob, bytes FROM installation_blob_admission WHERE job_id=?1",
+            [&acceptance.id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(pin, (digest.as_str().to_string(), size));
+    let second = CacheInstallRequest {
+        job_id: acceptance.id.clone(),
+        installation_id: input.installation_id,
+        version_id: input.version_id,
+        source_files: fixture.request.source_files.clone(),
+    };
+    install_from_local_cache(
+        &fixture.repository,
+        &fixture.store,
+        &second,
+        "second-worker",
+        || 43,
+    )
+    .unwrap();
+    let remaining_pins: u64 = raw
+        .query_row(
+            "SELECT COUNT(*) FROM installation_blob_admission WHERE job_id=?1",
+            [&acceptance.id],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(remaining_pins, 0);
+    assert_eq!(fixture.repository.blob_reference_count(&digest).unwrap(), 2);
+}
+
+#[test]
 fn concurrent_connections_admit_only_one_peak_when_capacity_cannot_cover_both() {
     let fixture = Fixture::new(true);
     let peak = fixture
@@ -662,7 +725,7 @@ fn schema_ten_upgrade_keeps_jobs_and_inputs_and_marks_storage_for_admission_with
     let root = fixture.store.root().to_path_buf();
     std::fs::remove_dir(&root).unwrap();
     let raw = rusqlite::Connection::open(&path).unwrap();
-    raw.execute_batch("DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; PRAGMA user_version=10;").unwrap();
+    raw.execute_batch("DROP TABLE installation_blob_admission; DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; PRAGMA user_version=10;").unwrap();
     let repository = LifecycleRepository::open(&path).unwrap();
     assert_eq!(repository.read_job(&job.id).unwrap(), Some(job.clone()));
     assert_eq!(
@@ -691,7 +754,7 @@ fn storage_upgrade_table_collision_rolls_back_and_preserves_the_old_schema() {
     let path = fixture.temp.path().join("models.db");
     drop(fixture.repository);
     let raw = rusqlite::Connection::open(&path).unwrap();
-    raw.execute_batch("DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; CREATE TABLE installation_storage_reservations (legacy INTEGER); INSERT INTO installation_storage_reservations VALUES (7); PRAGMA user_version=10;").unwrap();
+    raw.execute_batch("DROP TABLE installation_blob_admission; DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; CREATE TABLE installation_storage_reservations (legacy INTEGER); INSERT INTO installation_storage_reservations VALUES (7); PRAGMA user_version=10;").unwrap();
     assert!(LifecycleRepository::open(&path).is_err());
     assert_eq!(
         raw.pragma_query_value::<u32, _>(None, "user_version", |row| row.get(0))

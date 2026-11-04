@@ -1,5 +1,6 @@
 use anyhow::{anyhow, ensure, Context, Result};
 use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
+use std::collections::BTreeMap;
 
 use super::{LifecycleJob, LifecycleRepository};
 use crate::lifecycle::{
@@ -173,6 +174,66 @@ impl LifecycleRepository {
             })
     }
 
+    fn reserve_blob_credits(
+        connection: &Connection,
+        job: &LifecycleJob,
+        input: &InstallationInput,
+        plan: &crate::lifecycle::InstallPlan,
+    ) -> Result<u64> {
+        use super::super::files::{
+            checked_local_path, open_for_verification, require_single_link_file,
+        };
+        if plan.rules_version != crate::lifecycle::PREPARED_GGUF_PLAN_RULES_VERSION {
+            return Ok(0);
+        }
+        let mut copies = BTreeMap::new();
+        for artifact in plan.artifacts.values() {
+            if let (Some(digest), Some(expected_size)) =
+                (&artifact.source_sha256, artifact.size_bytes)
+            {
+                let (size, count) = copies.entry(digest).or_insert((expected_size, 0u64));
+                ensure!(
+                    *size == expected_size,
+                    "Pinned digest has conflicting artifact sizes"
+                );
+                *count += 1;
+            }
+        }
+        copies.into_iter().try_fold(0u64, |total, (digest, (size, count))| {
+            let registered: bool = connection.query_row(
+                "SELECT EXISTS(SELECT 1 FROM managed_blobs b JOIN installation_blob_refs r
+                               ON r.sha256=b.sha256 WHERE b.sha256=?1 AND b.size_bytes=?2)",
+                params![digest.as_str(),size], |row| row.get(0),
+            )?;
+            let reusable = if registered {
+                let relative = InstallationStore::blob_path(digest)?;
+                let candidate = checked_local_path(&input.store_root,&relative)
+                    .and_then(|path| open_for_verification(&path));
+                match candidate {
+                    Ok(file) => {
+                        require_single_link_file(&file)?;
+                        let metadata = file.metadata()?;
+                        metadata.len()==size && metadata.permissions().readonly()
+                    }
+                    Err(error) if error.downcast_ref::<std::io::Error>()
+                        .is_some_and(|cause| cause.kind()==std::io::ErrorKind::NotFound) => false,
+                    Err(error) => return Err(error),
+                }
+            } else {
+                false
+            };
+            let credit = size.checked_mul(count - 1 + u64::from(reusable))
+                .context("Blob storage credit overflow")?;
+            if credit > 0 {
+                connection.execute(
+                    "INSERT INTO installation_blob_admission (job_id,sha256,bytes,pinned_blob) VALUES (?1,?2,?3,?4)",
+                    params![job.id,digest.as_str(),credit,reusable.then(|| digest.as_str())],
+                )?;
+            }
+            total.checked_add(credit).context("Blob storage credit sum overflow")
+        })
+    }
+
     pub(super) fn reserve_storage_by(
         connection: &Connection,
         job: &LifecycleJob,
@@ -217,10 +278,16 @@ impl LifecycleRepository {
             )?;
             0
         };
+        let blob_credit = if inactive {
+            0
+        } else {
+            Self::reserve_blob_credits(connection, job, input, &plan)?
+        };
         let remaining = plan
             .required_disk_bytes
             .checked_sub(credit)
-            .context("Transfer credit exceeds the installation storage peak")?;
+            .and_then(|bytes| bytes.checked_sub(blob_credit))
+            .context("Storage credits exceed the installation storage peak")?;
         if !inactive {
             let other = Self::other_storage_by(connection, &job.id, &volume)?;
             let free = fs2::available_space(&input.store_root)?.min(limit);
@@ -229,7 +296,7 @@ impl LifecycleRepository {
             }
         }
         let reservation = StorageReservation {
-            rules_version: if credit == 0 {
+            rules_version: if credit == 0 && blob_credit == 0 {
                 STORAGE_RESERVATION_RULES_VERSION
             } else {
                 TRANSFER_STORAGE_RULES_VERSION
@@ -421,7 +488,8 @@ impl LifecycleRepository {
             |row| row.get(0),
         ).optional()?.unwrap_or(0);
         let total: u64 = connection.query_row(
-            "SELECT COALESCE(SUM(bytes),0) FROM installation_transfer_credits WHERE job_id=?1",
+            "SELECT (SELECT COALESCE(SUM(bytes),0) FROM installation_transfer_credits WHERE job_id=?1)
+                  + (SELECT COALESCE(SUM(bytes),0) FROM installation_blob_admission WHERE job_id=?1)",
             [&job.id],
             |row| row.get(0),
         )?;
@@ -475,6 +543,10 @@ impl LifecycleRepository {
             );
             reservation.reserved_bytes = 0;
             reservation.state = StorageReservationState::Released;
+            connection.execute(
+                "DELETE FROM installation_blob_admission WHERE job_id=?1",
+                [job_id],
+            )?;
             reservation.version += 1;
             reservation.updated_at = now;
             let job =

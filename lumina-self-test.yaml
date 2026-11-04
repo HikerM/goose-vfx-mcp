@@ -184,6 +184,7 @@ prompt: |
   publication budgets for missing blobs, staging files and manifest with recovery after a durable write,
   atomic download checkpoint and space credit with rollback before publication,
   retry admission using retained file credits and full reservation for truncated files,
+  atomic admission with a pinned registered blob and a reduced space reservation,
   persisted job and file progress cursors across reconnect and database reopen,
   with HTTP and HTTPS listener shutdown covered by separate CLI signal acceptance,
   while full network installation and Runtime readiness need their separate acceptance evidence.

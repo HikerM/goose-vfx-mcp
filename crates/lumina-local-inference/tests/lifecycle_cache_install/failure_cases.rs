@@ -569,7 +569,7 @@ fn schema_nine_failure_upgrade_preserves_receipts_and_does_not_invent_prior_fail
             .unwrap();
         drop(fixture.repository);
         let raw = rusqlite::Connection::open(&path).unwrap();
-        raw.execute_batch("DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; DROP TABLE installation_failures; PRAGMA user_version=9;")
+        raw.execute_batch("DROP TABLE installation_blob_admission; DROP TABLE installation_transfer_credits; DROP TABLE installation_storage_reservations; DROP TABLE installation_storage_events; DROP TABLE installation_failures; PRAGMA user_version=9;")
             .unwrap();
         if collision {
             raw.execute_batch("CREATE TABLE installation_failures (legacy INTEGER); INSERT INTO installation_failures VALUES (17);").unwrap();

@@ -49,7 +49,8 @@ impl LifecycleRepository {
             format!("version:{}", uuid::Uuid::new_v4()),
             InstallationSource::ModelScope {},
         )?;
-        let job = Self::enqueue_by(&tx, &acceptance, now, fs2::available_space(store.root())?)?;
+        // The bound reservation below checks volume capacity after deducting pinned reuse.
+        let job = Self::enqueue_by(&tx, &acceptance, now, u64::MAX)?;
         Self::bind_installation_input_by(&tx, &job, &input, now)?;
         Self::reserve_storage_by(&tx, &job, &input, u64::MAX, now)?;
         tx.commit()?;
@@ -223,7 +224,7 @@ impl LifecycleRepository {
             );
             return Ok(existing);
         }
-        let job = Self::enqueue_by(&tx, request, now, available_disk_bytes)?;
+        let job = Self::enqueue_by(&tx, request, now, u64::MAX)?;
         Self::bind_installation_input_by(&tx, &job, input, now)?;
         Self::reserve_storage_by(&tx, &job, input, available_disk_bytes, now)?;
         tx.commit()?;
