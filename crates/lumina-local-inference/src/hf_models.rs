@@ -3125,9 +3125,7 @@ pub fn register_resolved_model(resolved: ResolvedLocalModel, source: &str) -> Re
         }
     };
 
-    let mut registry = get_registry()
-        .lock()
-        .map_err(|_| anyhow::anyhow!("Failed to acquire registry lock"))?;
+    let mut registry = get_registry().lock()?;
     registry.add_model(entry)?;
     Ok(model_id)
 }

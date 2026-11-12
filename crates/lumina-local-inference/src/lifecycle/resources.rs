@@ -11,6 +11,9 @@ use super::{
     Sha256Digest,
 };
 
+mod vision;
+pub use vision::*;
+
 pub const RESOURCE_RULES_VERSION: &str = "local-resource-budget-v2";
 pub const RESOURCE_ENGINE_REVISION: &str = "dde879bc4f954b809892fd0d660515f42536394a";
 
@@ -96,6 +99,16 @@ pub struct ResourceWorkload {
     pub kv_value_type: ResourceCacheType,
     pub prompt_cache_bytes: u64,
     pub context_checkpoint_slots: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vision: Option<VisionResourceWorkload>,
+}
+
+pub fn resource_rules_version(workload: &ResourceWorkload) -> &'static str {
+    if workload.vision.is_some() {
+        VISION_RESOURCE_RULES_VERSION
+    } else {
+        RESOURCE_RULES_VERSION
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -264,6 +277,11 @@ pub fn assess_resource_budget(
     if envelope.runtime.engine_revision != RESOURCE_ENGINE_REVISION {
         reasons.push("Runtime revision has no registered cache accounting rules".into());
     }
+    if envelope.workload.vision.is_some() {
+        if let Err(error) = vision::validate_measured_envelope(components, envelope) {
+            reasons.push(error.to_string());
+        }
+    }
     for component in components {
         component.validate()?;
         ensure!(
@@ -274,6 +292,9 @@ pub fn assess_resource_budget(
             if artifacts.insert(file.artifact.id.clone()) {
                 weight_bytes = sum([weight_bytes, file.header.file_bytes])?;
             }
+        }
+        if component.role == ComponentRole::VisionProjector && envelope.workload.vision.is_some() {
+            continue;
         }
         if !matches!(
             component.role,
@@ -347,9 +368,9 @@ pub fn assess_resource_budget(
         HardwareCompatibility::Runnable
     };
     Ok(ResourceBudget {
-        rules_version: RESOURCE_RULES_VERSION.into(),
+        rules_version: resource_rules_version(&envelope.workload).into(),
         binding_digest: Sha256Digest::of_serializable(&(
-            RESOURCE_RULES_VERSION,
+            resource_rules_version(&envelope.workload),
             envelope,
             hardware,
         ))?,

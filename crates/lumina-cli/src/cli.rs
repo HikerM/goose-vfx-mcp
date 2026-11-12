@@ -1236,10 +1236,12 @@ enum LocalModelsCommand {
     #[command(about = "List downloaded local models")]
     List,
 
-    /// Delete a downloaded model
-    #[command(about = "Delete a downloaded local model")]
+    #[command(about = "Inspect preserved legacy registry imports and repair diagnostics")]
+    LegacyImports,
+
+    #[command(about = "Remove a legacy model registration while preserving original files")]
     Delete {
-        /// Model ID to delete
+        /// Model registration ID
         id: String,
     },
 }
@@ -2267,9 +2269,7 @@ async fn handle_local_models_command(
             println!("Registered: {}", model_id);
         }
         LocalModelsCommand::List => {
-            let registry = get_registry()
-                .lock()
-                .map_err(|_| anyhow::anyhow!("Failed to acquire registry lock"))?;
+            let registry = get_registry().lock()?;
             let models = registry.list_models();
 
             if models.is_empty() {
@@ -2292,14 +2292,35 @@ async fn handle_local_models_command(
                 );
             }
         }
+        LocalModelsCommand::LegacyImports => {
+            use lumina::providers::local_inference::local_model_registry::migrate_legacy_registry;
+
+            let report = migrate_legacy_registry(&Paths::data_dir())?;
+            let status = match &report {
+                None => "absent",
+                Some(report) if report.diagnostics.is_empty() => "imported_unverified",
+                Some(_) => "needs_repair",
+            };
+            println!(
+                "{}",
+                serde_json::to_string(&serde_json::json!({
+                    "status": status,
+                    "report": report,
+                }))?
+            );
+            if let Some(report) = report {
+                report.require_valid()?;
+            }
+        }
         LocalModelsCommand::Delete { id } => {
-            let mut registry = get_registry()
-                .lock()
-                .map_err(|_| anyhow::anyhow!("Failed to acquire registry lock"))?;
+            let mut registry = get_registry().lock()?;
 
             if registry.get_model(&id).is_some() {
                 registry.delete_model(&id)?;
-                println!("Deleted model: {}", id);
+                println!(
+                    "Removed model registration: {} (original files preserved)",
+                    id
+                );
             } else {
                 println!("Model not found: {}", id);
             }

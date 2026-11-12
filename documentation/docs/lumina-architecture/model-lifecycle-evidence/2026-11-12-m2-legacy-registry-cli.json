@@ -1,0 +1,376 @@
+{
+  "status": "PASS",
+  "executions": [
+    {
+      "label": "old-before",
+      "binarySha256": "f5451e48859be0a4d82165a4d2eb077da37822671384a47e39fb31e257f02fab",
+      "arguments": [
+        "list"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "new-import",
+      "binarySha256": "f094ed6f26115aa5c7115ed526fc3b1e4f0ac8614a8bfc8c2da93a6feb8ed925",
+      "arguments": [
+        "legacy-imports"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "new-repeat",
+      "binarySha256": "f094ed6f26115aa5c7115ed526fc3b1e4f0ac8614a8bfc8c2da93a6feb8ed925",
+      "arguments": [
+        "legacy-imports"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "new-remove-manual-alias",
+      "binarySha256": "f094ed6f26115aa5c7115ed526fc3b1e4f0ac8614a8bfc8c2da93a6feb8ed925",
+      "arguments": [
+        "delete",
+        "legacy-probe-3"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "old-after-update",
+      "binarySha256": "f5451e48859be0a4d82165a4d2eb077da37822671384a47e39fb31e257f02fab",
+      "arguments": [
+        "list"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "new-after-byte-restore",
+      "binarySha256": "f094ed6f26115aa5c7115ed526fc3b1e4f0ac8614a8bfc8c2da93a6feb8ed925",
+      "arguments": [
+        "legacy-imports"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "old-after-byte-restore",
+      "binarySha256": "f5451e48859be0a4d82165a4d2eb077da37822671384a47e39fb31e257f02fab",
+      "arguments": [
+        "list"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "new-corruption-diagnostic",
+      "binarySha256": "f094ed6f26115aa5c7115ed526fc3b1e4f0ac8614a8bfc8c2da93a6feb8ed925",
+      "arguments": [
+        "legacy-imports"
+      ],
+      "exitCode": 1
+    },
+    {
+      "label": "new-corruption-list",
+      "binarySha256": "f094ed6f26115aa5c7115ed526fc3b1e4f0ac8614a8bfc8c2da93a6feb8ed925",
+      "arguments": [
+        "list"
+      ],
+      "exitCode": 1
+    }
+  ],
+  "startedAt": "2026-11-12T05:08:20.514037+00:00",
+  "scope": "Real current and pre-change CLI registry listing, import diagnostics, reference-only removal and byte-for-byte rollback. Does not prove session Runtime pinning or managed uninstall.",
+  "binaries": {
+    "current": "f094ed6f26115aa5c7115ed526fc3b1e4f0ac8614a8bfc8c2da93a6feb8ed925",
+    "preChange": "f5451e48859be0a4d82165a4d2eb077da37822671384a47e39fb31e257f02fab"
+  },
+  "importReport": {
+    "status": "imported_unverified",
+    "report": {
+      "schema_version": 1,
+      "migration_id": "4e76682e8814c01fc61567fab52b111ebe8323a7485ef9f9f009d73b995c915a",
+      "source_registry": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\app\\data\\models\\registry.json",
+      "source_sha256": "6f33c0a6eaefcd591d7f245e97e1fdc6c8b716f14c9b492eb5b7fd9feb198cbb",
+      "backup_path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\app\\data\\model-lifecycle\\legacy-imports\\v1\\4e76682e8814c01fc61567fab52b111ebe8323a7485ef9f9f009d73b995c915a\\registry.json",
+      "ledger_path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\app\\data\\model-lifecycle\\legacy-imports\\v1\\4e76682e8814c01fc61567fab52b111ebe8323a7485ef9f9f009d73b995c915a\\import.json",
+      "aliases": [
+        {
+          "migration_id": "4e76682e8814c01fc61567fab52b111ebe8323a7485ef9f9f009d73b995c915a",
+          "legacy_id": "legacy-probe-0",
+          "record_index": 0,
+          "original_record": {
+            "id": "legacy-probe-0",
+            "repo_id": "historical/unsloth-model",
+            "filename": "Qwen3.5-0.8B-Q8_0.gguf",
+            "local_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "quantization": "Q8_0",
+            "source_url": "https://example.invalid/historical/unpinned",
+            "size_bytes": 833592736,
+            "mmproj_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+            "mmproj_size_bytes": 204987104,
+            "settings": {
+              "context_size": 2048,
+              "max_output_tokens": 128,
+              "n_threads": 4,
+              "future_setting": {
+                "keep": 0
+              }
+            },
+            "future_entry": {
+              "owner": "original-user",
+              "marker": 0
+            }
+          },
+          "declared_storage": null,
+          "verification_state": "imported_unverified",
+          "source_traceability": "unverified",
+          "assets": [
+            {
+              "role": "main",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "declared_source": "https://example.invalid/historical/unpinned",
+              "ownership": "referenced_only"
+            },
+            {
+              "role": "mmproj",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+              "declared_source": null,
+              "ownership": "referenced_only"
+            }
+          ]
+        },
+        {
+          "migration_id": "4e76682e8814c01fc61567fab52b111ebe8323a7485ef9f9f009d73b995c915a",
+          "legacy_id": "legacy-probe-1",
+          "record_index": 1,
+          "original_record": {
+            "id": "legacy-probe-1",
+            "repo_id": "historical/unsloth-model",
+            "filename": "Qwen3.5-0.8B-Q8_0.gguf",
+            "local_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "quantization": "Q8_0",
+            "source_url": "https://example.invalid/historical/unpinned",
+            "size_bytes": 833592736,
+            "mmproj_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+            "mmproj_size_bytes": 204987104,
+            "settings": {
+              "context_size": 2560,
+              "max_output_tokens": 129,
+              "n_threads": 4,
+              "future_setting": {
+                "keep": 1
+              }
+            },
+            "future_entry": {
+              "owner": "original-user",
+              "marker": 1
+            },
+            "storage": "lumina_managed"
+          },
+          "declared_storage": "lumina_managed",
+          "verification_state": "imported_unverified",
+          "source_traceability": "unverified",
+          "assets": [
+            {
+              "role": "main",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "declared_source": "https://example.invalid/historical/unpinned",
+              "ownership": "referenced_only"
+            },
+            {
+              "role": "mmproj",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+              "declared_source": null,
+              "ownership": "referenced_only"
+            }
+          ]
+        },
+        {
+          "migration_id": "4e76682e8814c01fc61567fab52b111ebe8323a7485ef9f9f009d73b995c915a",
+          "legacy_id": "legacy-probe-2",
+          "record_index": 2,
+          "original_record": {
+            "id": "legacy-probe-2",
+            "repo_id": "historical/unsloth-model",
+            "filename": "Qwen3.5-0.8B-Q8_0.gguf",
+            "local_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "quantization": "Q8_0",
+            "source_url": "https://example.invalid/historical/unpinned",
+            "size_bytes": 833592736,
+            "mmproj_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+            "mmproj_size_bytes": 204987104,
+            "settings": {
+              "context_size": 3072,
+              "max_output_tokens": 130,
+              "n_threads": 4,
+              "future_setting": {
+                "keep": 2
+              }
+            },
+            "future_entry": {
+              "owner": "original-user",
+              "marker": 2
+            },
+            "storage": "hugging_face_cache"
+          },
+          "declared_storage": "hugging_face_cache",
+          "verification_state": "imported_unverified",
+          "source_traceability": "unverified",
+          "assets": [
+            {
+              "role": "main",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "declared_source": "https://example.invalid/historical/unpinned",
+              "ownership": "referenced_only"
+            },
+            {
+              "role": "mmproj",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+              "declared_source": null,
+              "ownership": "referenced_only"
+            }
+          ]
+        },
+        {
+          "migration_id": "4e76682e8814c01fc61567fab52b111ebe8323a7485ef9f9f009d73b995c915a",
+          "legacy_id": "legacy-probe-3",
+          "record_index": 3,
+          "original_record": {
+            "id": "legacy-probe-3",
+            "repo_id": "historical/unsloth-model",
+            "filename": "Qwen3.5-0.8B-Q8_0.gguf",
+            "local_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "quantization": "Q8_0",
+            "source_url": "https://example.invalid/historical/unpinned",
+            "size_bytes": 833592736,
+            "mmproj_path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+            "mmproj_size_bytes": 204987104,
+            "settings": {
+              "context_size": 3584,
+              "max_output_tokens": 131,
+              "n_threads": 4,
+              "future_setting": {
+                "keep": 3
+              }
+            },
+            "future_entry": {
+              "owner": "original-user",
+              "marker": 3
+            },
+            "storage": "manual_path"
+          },
+          "declared_storage": "manual_path",
+          "verification_state": "imported_unverified",
+          "source_traceability": "unverified",
+          "assets": [
+            {
+              "role": "main",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+              "declared_source": "https://example.invalid/historical/unpinned",
+              "ownership": "referenced_only"
+            },
+            {
+              "role": "mmproj",
+              "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+              "declared_source": null,
+              "ownership": "referenced_only"
+            }
+          ]
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "corruptionReport": {
+    "status": "needs_repair",
+    "report": {
+      "schema_version": 1,
+      "migration_id": "e58356d5d7bb240deacbe948ff8ab52663f6a59245c3bcc4cadd391cff5fc1a3",
+      "source_registry": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\corrupt-app\\data\\models\\registry.json",
+      "source_sha256": "ab28d8e9111665ad413c3bdd7c855bd1d7c9d1ee1a28ba761f5bb4a7be303108",
+      "backup_path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\corrupt-app\\data\\model-lifecycle\\legacy-imports\\v1\\e58356d5d7bb240deacbe948ff8ab52663f6a59245c3bcc4cadd391cff5fc1a3\\registry.json",
+      "ledger_path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\corrupt-app\\data\\model-lifecycle\\legacy-imports\\v1\\e58356d5d7bb240deacbe948ff8ab52663f6a59245c3bcc4cadd391cff5fc1a3\\import.json",
+      "aliases": [],
+      "diagnostics": [
+        {
+          "code": "invalid_json",
+          "record_index": null,
+          "message": "Registry JSON is invalid: expected value at line 1 column 13"
+        }
+      ]
+    }
+  },
+  "preservedModelIdentities": {
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798"
+  },
+  "preservedConfigAndSessionFixtureIdentities": {
+    "D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\app\\config\\config.yaml": "42115794df774a98ba736b0b30f33be2995825ac45d06e36cf2804e22f110d55",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\app\\data\\sessions.db": "cfa7a4cc905ffe914101479bf50bb0b36268fcefa1acafa5462911064e2f3e8c"
+  },
+  "finishedAt": "2026-11-12T05:08:32.014073+00:00",
+  "gitBase": "de2d355b24bb952cbe6e05fece2d6d763311f503",
+  "sourceIdentitiesAtEvidencePublication": {
+    "crates\\lumina-local-inference\\src\\lifecycle\\api.rs": "0c3fb4695c8060f691ffc530d55bd52b48b2ae63aeee7182269659cd58042714",
+    "crates\\lumina-local-inference\\src\\lifecycle\\application.rs": "9c060dcd4e3976adda6babc0ed042f10d6055f264a41362138d899d00e4390e6",
+    "crates\\lumina-local-inference\\src\\lifecycle\\cache_worker.rs": "215225baed0666c7d2eb3194b2318afd51c60d89821222bf7a34eb587487c94b",
+    "crates\\lumina-local-inference\\src\\lifecycle\\catalog.rs": "3b625eb86298f41cde0302a1e586c92b9c93e8e280e87b05296abe4d2f0b3c2c",
+    "crates\\lumina-local-inference\\src\\lifecycle\\classification.rs": "52f6b3809052f5062baa75b29969be12217d26154c1f951f3d3d5c3d05852967",
+    "crates\\lumina-local-inference\\src\\lifecycle\\compatibility.rs": "20529c35d782733574832fb40f34a05565605e9913d378bbbe71101a2eee223b",
+    "crates\\lumina-local-inference\\src\\lifecycle\\control.rs": "ceb3ab8ba5485fa2a6a19c27395babf45d82252108de565ce6f6a5903e7d7540",
+    "crates\\lumina-local-inference\\src\\lifecycle\\domain.rs": "16e433201db02e6c6adf13d56766a9252f82be63fdea8cbb47c77ed7932e5a9e",
+    "crates\\lumina-local-inference\\src\\lifecycle\\failure.rs": "eff41bafaa5c0156e677ffd4ec465ba55f9acd7362346110e5ce4059d261e57c",
+    "crates\\lumina-local-inference\\src\\lifecycle\\files.rs": "e8e4d2b056016eec29a17e43a8a6168d93b52895c1eb4a437787bd5c01ab6c73",
+    "crates\\lumina-local-inference\\src\\lifecycle\\gguf.rs": "4b04a7cc0acbeb6982e46ba8e9aa37c8ee5d21b0af0ec055743a015291ec80b7",
+    "crates\\lumina-local-inference\\src\\lifecycle\\installation.rs": "2ebe165c3d7a20d5deac2d1ec5fbbea62fda75a54b5156e0cfbc4b4279b05493",
+    "crates\\lumina-local-inference\\src\\lifecycle\\installation_input.rs": "8928d83d632c305970273ddb541221cc5a2b8c2454e15f08e93aaa671c3e4911",
+    "crates\\lumina-local-inference\\src\\lifecycle\\installer.rs": "a4c044d8deb83d550c9f2bd95dce03aaf1211068401efc771a11f0bd89c8aad9",
+    "crates\\lumina-local-inference\\src\\lifecycle\\metadata.rs": "3b09cef3444f232abbd80c1c5de0df17f1690cb8a36afd4c33086b13c78635a7",
+    "crates\\lumina-local-inference\\src\\lifecycle\\mod.rs": "b1ab9823ba8fcc79739e051316a206fe220dec7a4b917361fd65c5739d3db0cb",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope.rs": "0bb42d01ab8525bef96ee018d146b47558bca704d0c982c447c71da103e462e0",
+    "crates\\lumina-local-inference\\src\\lifecycle\\network_ranges.rs": "de6eaa7adb1734a6548ac7d06eefa0d71b78a2db33aa23dd23bb205e7a873bbf",
+    "crates\\lumina-local-inference\\src\\lifecycle\\network_worker.rs": "df833ca4a3a4e1ad9982c1453369a5064e00231c317f29aeca6fe8e440324153",
+    "crates\\lumina-local-inference\\src\\lifecycle\\planning.rs": "bd8d949d457c67580b9aa14506a2e9cc6d7219542879c6dcc2a73414e7c0cab7",
+    "crates\\lumina-local-inference\\src\\lifecycle\\policy.rs": "ea69cde581404019ead123b952445be8777559765342990a6f498ea94c6f17ff",
+    "crates\\lumina-local-inference\\src\\lifecycle\\recovery.rs": "865f368ea6c9cb1e7b009c85ed537051d215b07089b6b54529ac915b4b870234",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository.rs": "c4cb1527a2997c223afa559c9e97d6a3df9f27f9a4ad844c635b9a7faae4fa07",
+    "crates\\lumina-local-inference\\src\\lifecycle\\resources.rs": "db92a63db19d7e3f1656201d938a298bc50403481315af0aec1c032cb1a1a5ab",
+    "crates\\lumina-local-inference\\src\\lifecycle\\retry.rs": "08cda1b22523efd0c284bcdd0a726b6de17090c20af5b10348a17f65e0104cdd",
+    "crates\\lumina-local-inference\\src\\lifecycle\\service.rs": "d65fcf0e30919108f87a0635e809d80bbc5d93a38b37c5c6b6122fe253450183",
+    "crates\\lumina-local-inference\\src\\lifecycle\\state.rs": "721740cc202d0815aba2287130bbe2456e5e5c6034a294384e0672d23adf8a3e",
+    "crates\\lumina-local-inference\\src\\lifecycle\\storage.rs": "367bccebfdd4161fa20471cb9bea742b101e29fdcf882fc3362ddc0d7b30bc25",
+    "crates\\lumina-local-inference\\src\\lifecycle\\worker_control.rs": "81f5b51654619f859980312eaedfbd9c3888a26e8455463e129c48ce508ac2e3",
+    "crates\\lumina-local-inference\\src\\lifecycle\\compatibility\\profiles.rs": "04d1a607a71dd0217f1036894c396c2391b92cf74133ac486aebf31945cbeab1",
+    "crates\\lumina-local-inference\\src\\lifecycle\\compatibility\\tokenizer.rs": "744ce154914fe2b404b4834b4d0830a6f26fde0877e270f58cfabd9dd44f19f4",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\components.rs": "8182a30335452d4b27524d7a48c12eb3052648d54d392605978e32aef6b3a229",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\discovery.rs": "cb27654776e3321a2260e775c925b70a4ca51614569ca8a61106677d54977495",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\paths.rs": "1f12418889ed0bf945d0d78b27cf66117e1d60fc18ca21dace5997c4afc25098",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\remote_gguf.rs": "bb8a30038dae22644687f611c51c7b91926edabde541460a84d33a058c92ec2b",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\revisions.rs": "41ed8e66832e146c21c070c2275818c7540602c340dfe45960cf11f4639c4683",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\search.rs": "18ce2cbbc5aaf41087ee9c43a742a6dd04acd44a1c917e766a8823ade11517a5",
+    "crates\\lumina-local-inference\\src\\lifecycle\\modelscope\\variants.rs": "2536276c3bd202acc13f2428e7123e627c9d8a2036615ed8e7cd942963e3f03c",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\catalog.rs": "5b74956a01c59b00b1a135f9ad865ca90f1ff3d5307bbd67a17452dd8a65156f",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\controls.rs": "405786b331ecddbf8e653354194e06681db78e732825a1db4712a000a37cb593",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\failures.rs": "9d092db5d315803ce14ebb0a645e83a4ed2dbf07857aef4d45d94aed90218ed2",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\files.rs": "e49559bd70c4341de30d2147ef371b1f0d91db67e335d3df1eae8a6bb4f07149",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\inputs.rs": "832b1d60cb9b7284a3cc934acccf37902cd44e31cd243e06efacd48a3c5d1db4",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\installation.rs": "c7e133cd730117d2fbc940ac2478a7c831db12b385937686dd81bd4836fb5b2c",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\observations.rs": "d6283da04dc153b2aa87859cd70eb91f5b18818d1de0400550b6bdcb24d65dba",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\plan_observations.rs": "8995c9a219a5966c69deb4344df96e190844072b74308b7dc96e657be502357f",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\retries.rs": "10fefd8a1669addf385d31b50a7f7324fb5cd8d5cc749565503133981dcb9c9b",
+    "crates\\lumina-local-inference\\src\\lifecycle\\repository\\storage.rs": "742762018f10cd68df6ed326deb3d58b237fac93b40d530bd581dd9bbf59bb32",
+    "crates\\lumina-local-inference\\src\\lifecycle\\resources\\vision.rs": "a1904f501f285391e35633ce00fbd7ee98855bfd1255bb1c74525a03f6863709",
+    "crates\\lumina-local-inference\\src\\lifecycle\\resources\\vision\\png.rs": "4c14884f1a0bbde3c57f462f0c0d1ac299386d1df22730787c97ea268ccb5fb0",
+    "crates\\lumina-local-inference\\src\\local_model_registry\\migration.rs": "a498b84a60417ebce749fb6fce0f83b32bd77664fdf2cdc90ec3110dc248dd24",
+    "crates\\lumina-local-inference\\src\\local_model_registry\\storage.rs": "67de83f4896fad53b8a466f6f056b64e57c67460760b4325bed6a705cd816ecf",
+    "Cargo.lock": "48ac4e60b7e591e75ed8ef94538548fa20428901e7a345d6328bf9f5c5339900",
+    "crates\\lumina-local-inference\\Cargo.toml": "8ed16f9ab8507017c06811177d184d64269e6f83e782aec8d2627eb58dcf304a",
+    "crates\\lumina-local-inference\\src\\local_model_registry.rs": "c12cecb442fd1cb208de01c2bb2454ed8b09ee1b0392dbb07fda4caa035eebcb",
+    "crates\\lumina-local-inference\\src\\management.rs": "45dee3df91e0bb5acc0b23d8c5f786b8bcb91a43f1dea584431e4fb03a50d8f6",
+    "crates\\lumina-local-inference\\src\\hf_models.rs": "e88166cca91ffc488e5047a74fbb466564e95696fe21f4824c9bcf64b275ecbe",
+    "crates\\lumina-local-inference\\src\\lib.rs": "0dcf49bf15c0e67bf02f97b9383f4b3a56ec336f8c5ad0775382d24763e2dd35",
+    "crates\\lumina-cli\\src\\cli.rs": "0a5f788cb378c51828055a0791ea2d992b4eb4986cf6c0edab17f65afe48ce16"
+  },
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\legacy-registry-cli-r1\\evidence.json",
+    "sha256": "3b057c1dc451c645275f93ab6c9288345449e92240ac858637fbdbbaeb80df8d"
+  },
+  "probeSha256": "f3e76665f0309ced945eb02512c426458499dce91e0ff27469af7f3f989c144f"
+}

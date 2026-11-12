@@ -3,9 +3,9 @@ use super::hf_models::{
     resolve_model_spec, HfGgufFile, HfModelInfo, HfModelVariant,
 };
 use super::local_model_registry::{
-    default_settings_for_model, get_registry, is_featured_model, model_id_from_repo, ChatTemplate,
-    LocalModelEntry, LocalModelStorage, ModelDownloadStatus, ModelSettings, SamplingConfig,
-    ToolCallingMode, FEATURED_MODELS,
+    default_settings_for_model, get_registry, model_id_from_repo, ChatTemplate, LocalModelEntry,
+    LocalModelStorage, ModelDownloadStatus, ModelSettings, PendingModelRegistration,
+    SamplingConfig, ToolCallingMode, FEATURED_MODELS,
 };
 use super::{
     available_inference_memory_bytes, builtin_chat_template_names, recommend_local_model,
@@ -39,14 +39,12 @@ struct LocalModelSelection {
 
 pub async fn list_models() -> Result<LocalInferenceModelsListResponse> {
     let runtime = management_runtime()?;
-    let recommended_id = recommend_local_model(&runtime);
+    let recommended_id = recommend_local_model(&runtime)?;
 
     let loaded_model_ids = crate::loaded_model_ids()
         .await
         .map_err(|error| anyhow!(error.to_string()))?;
-    let mut registry = get_registry()
-        .lock()
-        .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+    let mut registry = get_registry().lock()?;
     registry.apply_safe_runtime_defaults()?;
     let mut models: Vec<LocalInferenceModelDto> = registry
         .list_models()
@@ -103,9 +101,7 @@ pub async fn huggingface_repo_variants(
     let recommended_index = hf_models::recommend_variant(&gguf_variants, available_memory);
 
     let (downloaded_quants, downloaded_variants) = {
-        let registry = get_registry()
-            .lock()
-            .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+        let registry = get_registry().lock()?;
         let models: Vec<_> = registry
             .list_models()
             .iter()
@@ -136,11 +132,13 @@ pub async fn download_model(
         return Ok(LocalInferenceModelDownloadResponse { model_id });
     }
 
-    if let Err(error) = register_pending_download_model(&model_id, &req, selection.as_ref()) {
-        mark_download_failed(&model_id, &error);
-        remove_failed_pending_model(&model_id);
-        return Err(error.context("Failed to register download"));
-    }
+    let pending = match register_pending_download_model(&model_id, &req, selection.as_ref()) {
+        Ok(pending) => pending,
+        Err(error) => {
+            mark_download_failed(&model_id, &error);
+            return Err(error.context("Failed to register download"));
+        }
+    };
 
     let spec = req.spec.clone();
     let selection_for_task = selection.clone();
@@ -163,12 +161,12 @@ pub async fn download_model(
                 }
                 if let Err(error) = register_resolved_model(resolved, &spec) {
                     mark_download_failed(&model_id_for_task, error);
-                    remove_failed_pending_model(&model_id_for_task);
+                    remove_failed_pending_model(&model_id_for_task, pending.as_ref());
                 }
             }
             Err(error) => {
                 mark_download_failed(&model_id_for_task, error);
-                remove_failed_pending_model(&model_id_for_task);
+                remove_failed_pending_model(&model_id_for_task, pending.as_ref());
             }
         }
     });
@@ -190,9 +188,7 @@ pub fn cancel_download(model_id: &str) -> Result<()> {
 }
 
 pub fn delete_model(model_id: &str) -> Result<()> {
-    let mut registry = get_registry()
-        .lock()
-        .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+    let mut registry = get_registry().lock()?;
     if registry.get_model(model_id).is_none() {
         anyhow::bail!("Model not found");
     }
@@ -200,9 +196,7 @@ pub fn delete_model(model_id: &str) -> Result<()> {
 }
 
 pub fn model_exists(model_id: &str) -> Result<bool> {
-    let registry = get_registry()
-        .lock()
-        .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+    let registry = get_registry().lock()?;
     Ok(registry.get_model(model_id).is_some())
 }
 
@@ -214,9 +208,7 @@ pub async fn evict_model(model_id: &str) -> Result<()> {
 }
 
 pub fn get_model_settings(model_id: &str) -> Result<LocalInferenceModelSettingsReadResponse> {
-    let registry = get_registry()
-        .lock()
-        .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+    let registry = get_registry().lock()?;
     let settings = registry
         .get_model_settings(model_id)
         .ok_or_else(|| anyhow!("Model not found"))?;
@@ -230,9 +222,7 @@ pub fn update_model_settings(
     settings: LocalInferenceModelSettingsDto,
 ) -> Result<LocalInferenceModelSettingsUpdateResponse> {
     let settings = model_settings_from_dto(settings);
-    let mut registry = get_registry()
-        .lock()
-        .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+    let mut registry = get_registry().lock()?;
     registry.update_model_settings(model_id, settings.clone())?;
     Ok(LocalInferenceModelSettingsUpdateResponse {
         settings: model_settings_to_dto(&settings),
@@ -278,9 +268,7 @@ pub async fn ensure_featured_models_current() -> Result<()> {
         let model_id = model_id_from_repo(&repo_id, &quantization);
 
         {
-            let registry = get_registry()
-                .lock()
-                .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+            let registry = get_registry().lock()?;
             if registry.get_model(&model_id).is_some() {
                 continue;
             }
@@ -329,12 +317,10 @@ pub async fn ensure_featured_models_current() -> Result<()> {
         .collect();
 
     {
-        let mut registry = get_registry()
-            .lock()
-            .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+        let mut registry = get_registry().lock()?;
 
         if !entries_to_add.is_empty() {
-            registry.sync_with_featured(entries_to_add);
+            registry.sync_with_featured(entries_to_add)?;
         }
 
         registry.save()?;
@@ -685,15 +671,19 @@ fn mark_download_failed(model_id: &str, error: impl std::fmt::Display) {
     });
 }
 
-fn remove_failed_pending_model(model_id: &str) {
-    let Ok(mut registry) = get_registry().lock() else {
+fn remove_failed_pending_model(model_id: &str, pending: Option<&PendingModelRegistration>) {
+    let Some(pending) = pending else {
         return;
     };
-    let should_remove = registry
-        .get_model(model_id)
-        .is_some_and(|entry| !entry.is_downloaded() && !is_featured_model(model_id));
-    if should_remove {
-        let _ = registry.remove_model(model_id);
+    let mut registry = match get_registry().lock() {
+        Ok(registry) => registry,
+        Err(error) => {
+            mark_download_failed(model_id, error);
+            return;
+        }
+    };
+    if let Err(error) = registry.remove_failed_pending_model(pending) {
+        mark_download_failed(model_id, error);
     }
 }
 
@@ -707,7 +697,7 @@ fn register_pending_download_model(
     model_id: &str,
     req: &LocalInferenceModelDownloadRequest,
     selection: Option<&LocalModelSelection>,
-) -> Result<()> {
+) -> Result<Option<PendingModelRegistration>> {
     let (repo_id, backend_id, variant_id) = if let Some(selection) = selection {
         (
             selection.repo_id.clone(),
@@ -723,11 +713,9 @@ fn register_pending_download_model(
         (req.spec.clone(), "mlx".to_string(), "default".to_string())
     };
 
-    let mut registry = get_registry()
-        .lock()
-        .map_err(|_| anyhow!("Failed to acquire registry lock"))?;
+    let mut registry = get_registry().lock()?;
     if registry.has_model(model_id) {
-        return Ok(());
+        return Ok(None);
     }
 
     let mut settings = default_settings_for_model(model_id);
@@ -736,7 +724,7 @@ fn register_pending_download_model(
     }
 
     let filename = variant_id.clone();
-    registry.add_model(LocalModelEntry {
+    registry.add_pending_model(LocalModelEntry {
         id: model_id.to_string(),
         repo_id,
         filename: filename.clone(),

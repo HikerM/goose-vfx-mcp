@@ -2,9 +2,18 @@ use crate::download_manager::{get_download_manager, DownloadStatus};
 use crate::paths::Paths;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::sync::{Mutex, OnceLock};
+use std::path::{Path, PathBuf};
 use utoipa::ToSchema;
+
+mod migration;
+mod storage;
+
+pub use migration::{
+    migrate_legacy_registry, LegacyAlias, LegacyAssetOwnership, LegacyAssetReference,
+    LegacyAssetRole, LegacyImportDiagnostic, LegacyImportDiagnosticCode, LegacyImportReport,
+    LegacySourceTraceability, LegacyVerificationState, LEGACY_IMPORT_VERSION,
+};
+pub use storage::PendingModelRegistration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(tag = "type")]
@@ -271,13 +280,18 @@ pub fn is_featured_model(model_id: &str) -> bool {
     })
 }
 
-static REGISTRY: OnceLock<Mutex<LocalModelRegistry>> = OnceLock::new();
+pub struct RegistryAccess;
 
-pub fn get_registry() -> &'static Mutex<LocalModelRegistry> {
-    REGISTRY.get_or_init(|| {
-        let registry = LocalModelRegistry::load().unwrap_or_default();
-        Mutex::new(registry)
-    })
+impl RegistryAccess {
+    /// Read a fresh snapshot under the file lock. Saving checks that its source
+    /// digest is still current, so callers never hold a lock across model work.
+    pub fn lock(&self) -> Result<LocalModelRegistry> {
+        LocalModelRegistry::load()
+    }
+}
+
+pub fn get_registry() -> &'static RegistryAccess {
+    &RegistryAccess
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -383,8 +397,8 @@ impl LocalModelEntry {
         self.local_path.exists() && self.shard_files.iter().all(|s| s.local_path.exists())
     }
 
-    /// Returns all local paths owned by Lumina for this model.
-    /// Does NOT include mmproj — that has separate shared-ownership deletion logic.
+    /// Historical storage declarations do not establish deletion ownership.
+    /// The returned paths are references only and exclude the mmproj component.
     pub fn all_local_paths(&self) -> impl Iterator<Item = &std::path::Path> {
         let lumina_managed = self.storage == LocalModelStorage::LuminaManaged;
         std::iter::once(self.local_path.as_path())
@@ -476,50 +490,30 @@ pub enum ModelDownloadStatus {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LocalModelRegistry {
     pub models: Vec<LocalModelEntry>,
+    #[serde(skip)]
+    snapshot: Option<storage::RegistrySnapshot>,
 }
 
 impl LocalModelRegistry {
-    fn registry_path() -> PathBuf {
-        Paths::in_data_dir("models/registry.json")
-    }
-
     pub fn load() -> Result<Self> {
-        let path = Self::registry_path();
-        if path.exists() {
-            let lock_path = path.with_extension("json.lock");
-            let lock_file = std::fs::File::create(&lock_path)?;
-            fs2::FileExt::lock_shared(&lock_file)?;
-            let contents = std::fs::read_to_string(&path)?;
-            fs2::FileExt::unlock(&lock_file)?;
-            let registry: LocalModelRegistry = serde_json::from_str(&contents)?;
-            Ok(registry)
-        } else {
-            Ok(Self::default())
-        }
+        Self::load_from_data_dir(&Paths::data_dir())
     }
 
-    pub fn save(&self) -> Result<()> {
-        let path = Self::registry_path();
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        let lock_path = path.with_extension("json.lock");
-        let lock_file = std::fs::File::create(&lock_path)?;
-        fs2::FileExt::lock_exclusive(&lock_file)?;
-
-        let mut tmp = tempfile::NamedTempFile::new_in(path.parent().unwrap())?;
-        let contents = serde_json::to_string_pretty(self)?;
-        std::io::Write::write_all(&mut tmp, contents.as_bytes())?;
-        tmp.persist(&path)?;
-
-        fs2::FileExt::unlock(&lock_file)?;
-        Ok(())
+    pub fn load_from_data_dir(data_dir: &Path) -> Result<Self> {
+        storage::load(data_dir)
     }
 
-    /// Sync registry with featured models:
-    /// add any featured models that are missing, remove non-downloaded non-featured models.
-    pub fn sync_with_featured(&mut self, featured_entries: Vec<LocalModelEntry>) {
+    pub fn migration_report(&self) -> Option<&LegacyImportReport> {
+        self.snapshot
+            .as_ref()
+            .and_then(|snapshot| snapshot.report.as_ref())
+    }
+
+    pub fn save(&mut self) -> Result<()> {
+        storage::save(self)
+    }
+
+    pub fn sync_with_featured(&mut self, featured_entries: Vec<LocalModelEntry>) -> Result<()> {
         let mut changed = false;
 
         for mut entry in featured_entries {
@@ -530,27 +524,50 @@ impl LocalModelRegistry {
             }
         }
 
-        let before_len = self.models.len();
-        self.models
-            .retain(|m| m.is_downloaded() || m.is_downloading() || is_featured_model(&m.id));
-        if self.models.len() != before_len {
-            changed = true;
-        }
-
         if changed {
-            let _ = self.save();
+            self.save()?;
         }
+        Ok(())
     }
 
     pub fn add_model(&mut self, mut entry: LocalModelEntry) -> Result<()> {
         entry.enrich_with_featured_mmproj();
         entry.refresh_mmproj_metadata();
         if let Some(existing) = self.models.iter_mut().find(|m| m.id == entry.id) {
+            entry.settings = existing.settings.clone();
             *existing = entry;
         } else {
             self.models.push(entry);
         }
         self.save()
+    }
+
+    pub fn add_pending_model(
+        &mut self,
+        entry: LocalModelEntry,
+    ) -> Result<Option<PendingModelRegistration>> {
+        if self.has_model(&entry.id) {
+            return Ok(None);
+        }
+        let model_id = entry.id.clone();
+        self.add_model(entry)?;
+        storage::pending_registration(self, &model_id).map(Some)
+    }
+
+    pub fn remove_failed_pending_model(
+        &mut self,
+        receipt: &PendingModelRegistration,
+    ) -> Result<bool> {
+        if !storage::owns_pending_registration(self, receipt)? {
+            return Ok(false);
+        }
+        let should_remove = self
+            .get_model(&receipt.model_id)
+            .is_some_and(|entry| !entry.is_downloaded() && !is_featured_model(&receipt.model_id));
+        if should_remove {
+            self.remove_model(&receipt.model_id)?;
+        }
+        Ok(should_remove)
     }
 
     pub fn remove_model(&mut self, id: &str) -> Result<()> {
@@ -559,39 +576,10 @@ impl LocalModelRegistry {
     }
 
     pub fn delete_model(&mut self, id: &str) -> Result<()> {
-        let plan = self.deletion_plan(id)?;
-        delete_model_artifacts(&plan)?;
-
-        if is_featured_model(id) {
-            if let Some(entry) = self.models.iter_mut().find(|m| m.id == id) {
-                entry.local_path = Paths::in_data_dir("models").join(&entry.filename);
-                entry.storage = LocalModelStorage::LuminaManaged;
-                entry.size_bytes = 0;
-                entry.shard_files.clear();
-            }
-            self.save()
-        } else {
-            self.remove_model(id)
-        }
-    }
-
-    fn deletion_plan(&self, id: &str) -> Result<ModelDeletionPlan> {
-        let entry = self
-            .get_model(id)
-            .ok_or_else(|| anyhow::anyhow!("Model not found: {}", id))?;
-        let mmproj_path = entry.mmproj_path.clone();
-        let other_uses_mmproj = mmproj_path.as_ref().is_some_and(|target| {
-            self.models
-                .iter()
-                .any(|m| m.id != id && m.is_downloaded() && m.mmproj_path.as_ref() == Some(target))
-        });
-
-        Ok(ModelDeletionPlan {
-            all_paths: entry.all_local_paths().map(|p| p.to_path_buf()).collect(),
-            primary_path: entry.local_path.clone(),
-            mmproj_path,
-            delete_mmproj: entry.storage == LocalModelStorage::LuminaManaged && !other_uses_mmproj,
-        })
+        anyhow::ensure!(self.has_model(id), "Model not found: {}", id);
+        // Legacy JSON has no ownership witness. Only the lifecycle installer
+        // may remove managed blobs after checking references and runtime use.
+        self.remove_model(id)
     }
 
     pub fn get_model(&self, id: &str) -> Option<&LocalModelEntry> {
@@ -641,40 +629,6 @@ impl LocalModelRegistry {
         }
         Ok(())
     }
-}
-
-struct ModelDeletionPlan {
-    all_paths: Vec<PathBuf>,
-    primary_path: PathBuf,
-    mmproj_path: Option<PathBuf>,
-    delete_mmproj: bool,
-}
-
-fn delete_model_artifacts(plan: &ModelDeletionPlan) -> Result<()> {
-    for path in &plan.all_paths {
-        if path.exists() {
-            std::fs::remove_file(path)?;
-        }
-    }
-
-    if !plan.all_paths.is_empty() {
-        if let Some(parent) = plan.primary_path.parent() {
-            let models_dir = Paths::in_data_dir("models");
-            if parent != models_dir {
-                let _ = std::fs::remove_dir(parent);
-            }
-        }
-    }
-
-    if plan.delete_mmproj {
-        if let Some(mmproj) = &plan.mmproj_path {
-            if mmproj.exists() {
-                std::fs::remove_file(mmproj)?;
-            }
-        }
-    }
-
-    Ok(())
 }
 
 /// Generate a unique ID for a model from its repo_id and quantization.

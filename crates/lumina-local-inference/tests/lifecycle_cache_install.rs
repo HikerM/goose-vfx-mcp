@@ -240,6 +240,7 @@ impl Fixture {
                 kv_value_type: ResourceCacheType::F16,
                 prompt_cache_bytes: 0,
                 context_checkpoint_slots: 0,
+                vision: None,
             },
             compute_buffer_bytes: 1024,
             auxiliary_buffer_bytes: 1024,

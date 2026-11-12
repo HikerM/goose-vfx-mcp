@@ -168,7 +168,7 @@ impl InferenceRuntime {
 }
 
 pub async fn is_model_loaded(model_name: &str) -> Result<bool, ProviderError> {
-    let resolved = match resolve_model_path(model_name) {
+    let resolved = match resolve_model_path(model_name).map_err(registry_provider_error)? {
         Some(resolved) => resolved,
         None => return Ok(false),
     };
@@ -252,88 +252,74 @@ pub(crate) struct ResolvedModelPaths {
     pub draft_model_path: Option<PathBuf>,
 }
 
-fn resolve_model_local_path(model_id: &str) -> Option<PathBuf> {
-    use crate::local_model_registry::get_registry;
-
-    get_registry()
-        .lock()
-        .ok()?
-        .get_model(model_id)
-        .map(|entry| entry.local_path.clone())
+fn registry_provider_error(error: anyhow::Error) -> ProviderError {
+    ProviderError::ExecutionError(format!("Local model registry is unavailable: {error:#}"))
 }
 
-/// Resolve model path, context limit, settings, and mmproj path for a model ID from the registry.
-fn resolve_model_path(model_id: &str) -> Option<ResolvedModelPaths> {
+/// Resolve without changing the user's historical model ID or settings.
+fn resolve_model_path(model_id: &str) -> Result<Option<ResolvedModelPaths>> {
     use crate::local_model_registry::{default_settings_for_model, get_registry};
 
-    if let Ok(registry) = get_registry().lock() {
-        if let Some(entry) = registry.get_model(model_id) {
-            let ctx = entry.settings.context_size.unwrap_or(0) as usize;
-            let mut settings = entry.settings.clone();
-            let defaults = default_settings_for_model(model_id);
-            settings.vision_capable = defaults.vision_capable;
-            settings.mmproj_size_bytes = entry.mmproj_size_bytes;
-            let mmproj_path = entry.mmproj_path.as_ref().filter(|p| p.exists()).cloned();
-            let backend_id = entry
-                .backend_id
-                .clone()
-                .or_else(|| settings.backend_id.clone());
-            let draft_model = settings
-                .draft_model
-                .clone()
-                .or_else(|| {
-                    config_resolver::string_param("LUMINA_LOCAL_DRAFT_MODEL")
-                        .ok()
-                        .flatten()
-                })
-                .filter(|draft_model| draft_model != model_id);
-            let draft_model_path = draft_model.as_deref().and_then(resolve_model_local_path);
-            return Some(ResolvedModelPaths {
-                model_path: entry.local_path.clone(),
-                context_limit: ctx,
-                settings,
-                mmproj_path,
-                backend_id,
-                draft_model_path,
-            });
-        }
-    }
-
-    None
+    let registry = get_registry().lock()?;
+    let Some(entry) = registry.get_model(model_id) else {
+        return Ok(None);
+    };
+    let ctx = entry.settings.context_size.unwrap_or(0) as usize;
+    let mut settings = entry.settings.clone();
+    let defaults = default_settings_for_model(model_id);
+    settings.vision_capable = defaults.vision_capable;
+    settings.mmproj_size_bytes = entry.mmproj_size_bytes;
+    let mmproj_path = entry.mmproj_path.as_ref().filter(|p| p.exists()).cloned();
+    let backend_id = entry
+        .backend_id
+        .clone()
+        .or_else(|| settings.backend_id.clone());
+    let draft_model = settings
+        .draft_model
+        .clone()
+        .or_else(|| {
+            config_resolver::string_param("LUMINA_LOCAL_DRAFT_MODEL")
+                .ok()
+                .flatten()
+        })
+        .filter(|draft_model| draft_model != model_id);
+    let draft_model_path = draft_model
+        .as_deref()
+        .and_then(|id| registry.get_model(id).map(|entry| entry.local_path.clone()));
+    Ok(Some(ResolvedModelPaths {
+        model_path: entry.local_path.clone(),
+        context_limit: ctx,
+        settings,
+        mmproj_path,
+        backend_id,
+        draft_model_path,
+    }))
 }
 
 pub fn available_inference_memory_bytes(runtime: &InferenceRuntime) -> u64 {
     runtime.default_backend().available_memory_bytes()
 }
 
-pub fn recommend_local_model(runtime: &InferenceRuntime) -> String {
+pub fn recommend_local_model(runtime: &InferenceRuntime) -> Result<String> {
     use local_model_registry::{get_registry, is_featured_model, FEATURED_MODELS};
 
     let available_memory = available_inference_memory_bytes(runtime);
-
-    if let Ok(registry) = get_registry().lock() {
-        let mut models: Vec<_> = registry
-            .list_models()
-            .iter()
-            .filter(|m| is_featured_model(&m.id) && m.size_bytes > 0)
-            .collect();
-        models.sort_by_key(|model| std::cmp::Reverse(model.size_bytes));
-
-        // Return largest that fits in available memory
-        for model in &models {
-            if available_memory >= model.size_bytes {
-                return model.id.clone();
-            }
-        }
-
-        // If nothing fits, return smallest
-        if let Some(smallest) = models.last() {
-            return smallest.id.clone();
+    let registry = get_registry().lock()?;
+    let mut models: Vec<_> = registry
+        .list_models()
+        .iter()
+        .filter(|m| is_featured_model(&m.id) && m.size_bytes > 0)
+        .collect();
+    models.sort_by_key(|model| std::cmp::Reverse(model.size_bytes));
+    for model in &models {
+        if available_memory >= model.size_bytes {
+            return Ok(model.id.clone());
         }
     }
-
-    // Fallback to first featured model
-    FEATURED_MODELS[0].spec.to_string()
+    if let Some(smallest) = models.last() {
+        return Ok(smallest.id.clone());
+    }
+    Ok(FEATURED_MODELS[0].spec.to_string())
 }
 
 fn build_openai_messages_json(
@@ -610,17 +596,21 @@ impl ProviderDescriptor for LocalInferenceProvider {
 
         // Add any registry models not already in the featured list
         let mut dynamic_models = Vec::new();
-        if let Ok(registry) = get_registry().lock() {
-            for entry in registry.list_models() {
-                if !known_models.contains(&entry.id.as_str()) {
-                    dynamic_models.push(entry.id.clone());
+        let registry_error = match get_registry().lock() {
+            Ok(registry) => {
+                for entry in registry.list_models() {
+                    if !known_models.contains(&entry.id.as_str()) {
+                        dynamic_models.push(entry.id.clone());
+                    }
                 }
+                None
             }
-        }
+            Err(error) => Some(format!("Local model registry needs repair: {error:#}")),
+        };
         let dynamic_refs: Vec<&str> = dynamic_models.iter().map(|s| s.as_str()).collect();
         known_models.extend(dynamic_refs);
 
-        ProviderMetadata::new(
+        let mut metadata = ProviderMetadata::new(
             PROVIDER_NAME,
             "Local Inference",
             "Local inference using quantized GGUF models (llama.cpp)",
@@ -628,7 +618,12 @@ impl ProviderDescriptor for LocalInferenceProvider {
             known_models,
             "https://github.com/utilityai/llama-cpp-rs",
             vec![],
-        )
+        );
+        if let Some(error) = registry_error {
+            metadata.description = error.clone();
+            metadata.model_selection_hint = Some(error);
+        }
+        metadata
     }
 }
 
@@ -641,15 +636,12 @@ impl Provider for LocalInferenceProvider {
     async fn fetch_supported_models(&self) -> Result<Vec<String>, ProviderError> {
         use crate::local_model_registry::get_registry;
 
-        let mut all_models: Vec<String> = Vec::new();
-
-        if let Ok(registry) = get_registry().lock() {
-            for entry in registry.list_models() {
-                all_models.push(entry.id.clone());
-            }
-        }
-
-        Ok(all_models)
+        let registry = get_registry().lock().map_err(registry_provider_error)?;
+        Ok(registry
+            .list_models()
+            .iter()
+            .map(|entry| entry.id.clone())
+            .collect())
     }
 
     async fn stream(
@@ -659,9 +651,14 @@ impl Provider for LocalInferenceProvider {
         messages: &[Message],
         tools: &[Tool],
     ) -> Result<MessageStream, ProviderError> {
-        let resolved = resolve_model_path(&model_config.model_name).ok_or_else(|| {
-            ProviderError::ExecutionError(format!("Model not found: {}", model_config.model_name))
-        })?;
+        let resolved = resolve_model_path(&model_config.model_name)
+            .map_err(registry_provider_error)?
+            .ok_or_else(|| {
+                ProviderError::ExecutionError(format!(
+                    "Model not found: {}",
+                    model_config.model_name
+                ))
+            })?;
         let backend = self.runtime.backend_for_model(&resolved)?;
         let model_context_limit = resolved.context_limit;
 

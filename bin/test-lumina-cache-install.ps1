@@ -2,22 +2,33 @@
 param(
     [string]$RepositoryRoot,
     [string]$ApplicationRoot = $env:LUMINA_PATH_ROOT,
-    [string]$ReportPath
+    [string]$ReportPath,
+    [ValidateSet('cache-install', 'model-assets')][string]$Suite = 'cache-install'
 )
 
 function Get-CacheInstallSummary {
-    param([Parameter(Mandatory = $true)][string]$Text)
+    param(
+        [Parameter(Mandatory = $true)][string]$Text,
+        [Parameter(Mandatory = $true)][string]$Target
+    )
 
     $summaries = @(Get-LifecycleTestResults -Text $Text)
+    $expectedIgnored = 0
+    if ($Target -eq 'legacy_registry') {
+        $expectedIgnored = 1
+        if ($Text -notmatch '(?m)^test legacy_registry_child \.\.\. ignored, subprocess helper for legacy registry locking and CAS tests\r?$') {
+            throw (New-RealTextException 'LMCI004' 'The ignored registry helper must be identified explicitly.')
+        }
+    }
     if ($summaries.Count -ne 1 -or $summaries[0].Result -ne 'ok' -or
-        $summaries[0].Passed -lt 1 -or $summaries[0].Failed -ne 0 -or $summaries[0].Ignored -ne 0) {
-        throw (New-RealTextException 'LMCI002' 'Cache installation tests must execute without failures or skips.')
+        $summaries[0].Passed -lt 1 -or $summaries[0].Failed -ne 0 -or $summaries[0].Ignored -ne $expectedIgnored) {
+        throw (New-RealTextException 'LMCI002' 'Required tests must execute without failures or unexpected skips.')
     }
     return $summaries[0]
 }
 
 function Invoke-CacheInstallValidation {
-    param([string]$Root, [string]$ParentRoot)
+    param([string]$Root, [string]$ParentRoot, [string]$SelectedSuite = 'cache-install')
 
     if ([string]::IsNullOrWhiteSpace($ParentRoot)) {
         return [pscustomobject]@{
@@ -30,19 +41,34 @@ function Invoke-CacheInstallValidation {
     foreach ($temporary in @($env:TEMP, $env:TMP)) {
         Resolve-RealTextDirectory -LiteralPath $temporary | Out-Null
     }
-    $child = Join-Path $parentPath 'cache-install-app'
+    $child = Join-Path $parentPath ($SelectedSuite + '-app')
     if (Test-Path -LiteralPath $child) {
         throw (New-RealTextException 'LMRT003' 'Existing cache installation evidence is preserved; use a fresh root.')
     }
-    $arguments = @('test', '--quiet', '-p', 'lumina-local-inference', '--no-default-features',
-        '--offline', '--locked', '--test', 'lifecycle_cache_install')
-    $execution = Invoke-LifecycleCargo -Root $rootPath -ChildRoot $child -LogName 'cache-install-run.log' -CargoArguments $arguments
-    $summary = Get-CacheInstallSummary -Text (Get-RealTextUtf8 -LiteralPath $execution.LogPath)
+    $targets = @('lifecycle_cache_install')
+    $scope = 'Cache installation boundary tests; not network transfer or Runtime READY acceptance.'
+    if ($SelectedSuite -eq 'model-assets') {
+        $targets = @('legacy_registry', 'lifecycle_vision_resources')
+        $scope = 'Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.'
+    }
+    $results = @()
+    foreach ($target in $targets) {
+        $arguments = @('test', '--quiet', '-p', 'lumina-local-inference', '--no-default-features',
+            '--offline', '--locked', '--test', $target, '--', '--format=pretty')
+        $execution = Invoke-LifecycleCargo -Root $rootPath -ChildRoot $child -LogName ($target + '-run.log') -CargoArguments $arguments
+        $summary = Get-CacheInstallSummary -Text (Get-RealTextUtf8 -LiteralPath $execution.LogPath) -Target $target
+        $results += [pscustomobject]@{
+            target = $target; passed = $summary.Passed; failed = $summary.Failed
+            ignored = $summary.Ignored; logPath = $execution.LogPath
+        }
+    }
     return [pscustomobject]@{
         schemaVersion = 1; status = 'PASS'; ruleId = 'LMCI000'; exitCode = 0
-        target = 'lifecycle_cache_install'; passed = $summary.Passed; failed = $summary.Failed
-        ignored = $summary.Ignored; logPath = $execution.LogPath
-        scope = 'Cache installation boundary tests; not network transfer or Runtime READY acceptance.'
+        target = ($targets -join ','); targets = $results
+        passed = ($results | Measure-Object -Property passed -Sum).Sum
+        failed = ($results | Measure-Object -Property failed -Sum).Sum
+        ignored = ($results | Measure-Object -Property ignored -Sum).Sum
+        logPath = $execution.LogPath; scope = $scope
     }
 }
 
@@ -72,7 +98,7 @@ if ($MyInvocation.InvocationName -ne '.') {
         $support = Join-Path $RepositoryRoot 'bin/test-lumina-real-text.ps1'
         . $support -RepositoryRoot $RepositoryRoot -ApplicationRoot $ApplicationRoot -ReportPath $ReportPath
         if (-not [string]::IsNullOrWhiteSpace($ReportPath)) { $reportTarget = Resolve-LifecycleReport -LiteralPath $ReportPath }
-        $result = Invoke-CacheInstallValidation -Root $RepositoryRoot -ParentRoot $ApplicationRoot
+        $result = Invoke-CacheInstallValidation -Root $RepositoryRoot -ParentRoot $ApplicationRoot -SelectedSuite $Suite
     } catch {
         $ruleId = 'LMCI900'
         if ($_.Exception.Data.Contains('ruleId')) { $ruleId = $_.Exception.Data['ruleId'] }

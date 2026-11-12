@@ -41,6 +41,7 @@ fn main() -> Result<()> {
             kv_value_type: ResourceCacheType::F16,
             prompt_cache_bytes: 0,
             context_checkpoint_slots: 0,
+            vision: None,
         },
         compute_buffer_bytes: args[4].parse()?,
         auxiliary_buffer_bytes: args[5].parse()?,

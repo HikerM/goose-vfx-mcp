@@ -410,6 +410,7 @@ fn resource_fixture(
             kv_value_type: ResourceCacheType::F16,
             prompt_cache_bytes: 0,
             context_checkpoint_slots: 0,
+            vision: None,
         },
         compute_buffer_bytes: 128 * 1024 * 1024,
         auxiliary_buffer_bytes: 64 * 1024 * 1024,

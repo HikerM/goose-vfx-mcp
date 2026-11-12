@@ -93,6 +93,10 @@ GGUF Parser 解析 Header、版本、键值类型、数组、Tensor 名称、维
 
 READY_TO_INSTALL 的条件是来源已验证、版本固定、文件已发现、分类足够、完整性 COMPLETE、Runtime 支持、硬件满足所选 profile、磁盘满足、计划未过期且摘要一致。NOT_RECOMMENDED 默认不生成自动执行计划；用户调整到满足规则的 profile 后重算。UNKNOWN、INCOMPATIBLE 和缺少必需依赖均阻塞。
 
+当前视觉资源档案采用独立 `local-resource-budget-vision-v1`，绑定固定 Qwen3.5-0.8B Q8_0 主模型、F16 projector 的完整内容身份和 CPU helper 构建。旧文本 workload 不序列化新增的可选 vision 字段，继续使用 v2 摘要和准入规则。视觉档案固定 Context 4096、Batch/Microbatch 512、单序列、四线程、无提示缓存、无检查点和无推测解码；主模型与 projector 均计权重，projector 不计 decoder KV。计算缓冲和辅助缓冲分别保留 256 MiB、512 MiB，属于固定测量档案的保守余量，不代表所有模型的内存上界。
+
+输入限制覆盖整个会话中的所有图片：当前档案最多一张、宽高各不超过 1024、编码不超过 8 MiB，仅接受非交错 8-bit RGB/RGBA PNG。原生最小/最大 token 参数 1024 仅为预处理提示，按确切尺寸规则预留至 2048 个图像 token。边界 API 校验完整 chunk 边界、CRC、顺序与 IDAT 定长解压，禁止通过小 IHDR 加过量解压绕过像素预算，并冻结实际提交字节及摘要。完整提示 token 必须取自同一运行参数、模板和图片字节的原生多模态计数，连同输出额度不得超过 Context。此契约的产品 Runtime 调用接线属于 M3；安装或边界检查通过不创建能力 READY 证据。
+
 ## 状态和合法流转
 
 生命周期阶段使用原始目标中的 DISCOVERED、REPOSITORY_VERIFIED、FILES_DISCOVERED、MODEL_CLASSIFIED、DEPENDENCIES_RESOLVED、COMPATIBILITY_CHECKED、READY_TO_INSTALL、DOWNLOADING、VERIFYING、INSTALLING、INSTALLED、STARTING、VALIDATING。READY 只作为某能力或某目标 profile 的聚合结果，不是文件存在状态。
@@ -254,6 +258,10 @@ schema v15 允许冻结的 GGUF 计划在首次准入时按已登记且物理存
 ## 迁移和协议兼容
 
 旧模型先读后备份，产生 migrationId 和导入日志。LuminaManaged、HuggingFaceCache、ManualPath 保留各自所有权；不得删除共享缓存或用户原始模型。无法追溯版本时标记 imported_unverified，允许检查文件，不能自动成为受管完整安装或 READY。
+
+当前兼容实现保持旧 `models/registry.json` 格式，另在 `model-lifecycle/legacy-imports/v1/<migrationId>/` 写入原字节 `registry.json` 与不可变 `import.json`，不修改 SQLite v15。导入 ID 绑定原注册表内容与来源目录；重复导入复用同一份记录。备份和导入记录须写入、同步并读回校验后才能保存新注册表；未被当前 JSON 内容引用的预写快照可在中断后保留。损坏、重复 ID 和非法条目产生诊断，不能默认为空表。`local-models legacy-imports` 显示当前备份和诊断，需修复时返回非零退出码。
+
+历史 storage 字段只保留原声明，字段缺失不补造所有权。历史主模型、分片和 projector 一律先作为 `referenced_only` 资产；旧 delete 只解除登记。读取每次取得新快照，保存持跨进程锁并比较完整来源摘要，陈旧写入必须失败。已知字段更新保留未知字段；分片按 filename 与 local_path 匹配，歧义身份拒绝更新。下载失败仅可清理本次创建且未变化的 pending 登记：receipt 绑定原目录、完整快照、原始条目和唯一注册 ID，同 ID 重建、未知字段变化或旧写入器重写均撤销该清理资格。
 
 旧 HF/MLX 已安装资产保留记录和显式兼容访问边界，不新增非合规下载；既有可运行功能的保留与新受管安装政策分开说明。待该路径及发行依赖评估完成后再移除下载实现，不能通过直接删除 crate feature 破坏其他平台已有功能。
 

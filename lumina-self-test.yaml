@@ -22,6 +22,7 @@ activities:
   - Validate frozen-plan cache installation, checkpoint recovery, cancellation, and original-file ownership
   - Validate installation application startup recovery, durable task controls, and graceful worker shutdown
   - Validate durable control receipts, concurrent state-version conflicts, atomic rollback, and schema upgrades
+  - Validate legacy registry preservation and bounded vision installation admission
   - Generate comprehensive test report
 
 parameters:
@@ -29,7 +30,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, model-cache-install"
+    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, model-cache-install, model-assets"
 
   - key: test_depth
     input_type: string
@@ -56,7 +57,14 @@ parameters:
     description: "Clean up test artifacts after completion"
 
 instructions: |
-  {% if test_phases == "model-cache-install" %}
+  {% if test_phases == "model-assets" %}
+  Validate legacy registry preservation and bounded vision installation admission through
+  the actual developer shell tool. Invoke the fixed validation entry exactly once and
+  summarize its returned JSON, including the report read-back and individual target counts.
+  The ignored registry subprocess helper is exercised by parent tests; it is not a passed test.
+  These regression tests do not prove real network installation, rollback with an older binary,
+  or Runtime capability readiness. Preserve inherited D:/E: caches and temporary directories.
+  {% elif test_phases == "model-cache-install" %}
   Validate frozen-plan local cache installation using the actual developer shell tool.
   Invoke the fixed PowerShell validation entry once, then summarize its returned JSON.
   The entry supplies the Cargo argument list and preserves logs and a factual report.
@@ -159,7 +167,19 @@ extensions:
     name: extensionmanager
 
 prompt: |
-  {% if test_phases == "model-cache-install" %}
+  {% if test_phases == "model-assets" %}
+  Execute the legacy registry and vision admission tests now using your developer shell tool.
+  Your first action must be the shell call below. Work only in D:/Project/goose, preserve
+  inherited D:/E: caches and temporary directories, and do not delegate or create worktrees.
+  Run exactly once `powershell.exe -NoProfile -File bin\test-lumina-cache-install.ps1 -Suite model-assets -ReportPath "{{ workspace_dir }}/model_assets_validation.json"`.
+  Set timeout_secs to 600. Do not add directory inspection, pipes, redirection, or manual Cargo calls.
+  Summarize only the returned JSON: status, per-target and total passed/failed/ignored counts,
+  scope, and report path. A nonzero exit, timeout, missing stdout, truncated output or tool error
+  is FAIL. After such failure, stop with the actual failure summary; do not retry or manufacture output.
+  The registry helper is explicitly ignored at top level and invoked by cross-process parent tests;
+  never count it as passed. Actual network installation, old-binary rollback and Runtime readiness
+  require their separate evidence.
+  {% elif test_phases == "model-cache-install" %}
   Execute the frozen-plan installation boundary tests now using your developer shell tool.
   The working directory is already D:/Project/goose. Your first action must be the validation
   shell call below, not a plan or directory inspection. Work only in D:/Project/goose,

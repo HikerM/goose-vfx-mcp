@@ -19,7 +19,7 @@ impl PlanAdmission {
     pub fn validate(&self, plan: &InstallPlan, now: i64) -> Result<()> {
         ensure!(
             self.runtime_profile.rules_version == RUNTIME_INSTALL_PROFILE_VERSION
-                && self.budget.rules_version == RESOURCE_RULES_VERSION,
+                && self.budget.rules_version == resource_rules_version(&self.envelope.workload),
             "Unsupported frozen admission rules"
         );
         ensure!(
@@ -37,7 +37,7 @@ impl PlanAdmission {
         ensure!(
             self.budget.binding_digest
                 == Sha256Digest::of_serializable(&(
-                    RESOURCE_RULES_VERSION,
+                    resource_rules_version(&self.envelope.workload),
                     &self.envelope,
                     &self.hardware
                 ))?

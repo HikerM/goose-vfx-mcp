@@ -1,0 +1,326 @@
+{
+  "status": "PASS",
+  "sourceSha256": "cb077036ee658266c2cd0ffacac8adce1f7e657fd6fa732a68cc0fd329e19c7c",
+  "executions": [
+    {
+      "label": "powershell.exe-version",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$PSVersionTable.PSVersion.ToString()"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-static",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-lf",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\model-assets-powershell-r1\\powershell.exe-lf.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-lf-app",
+        "-Suite",
+        "model-assets",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-lf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "5.1.26100.9818",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "legacy_registry,lifecycle_vision_resources",
+        "targets": [
+          {
+            "target": "legacy_registry",
+            "passed": 19,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-lf-app\\model-assets-app\\legacy_registry-run.log"
+          },
+          {
+            "target": "lifecycle_vision_resources",
+            "passed": 20,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-lf-app\\model-assets-app\\lifecycle_vision_resources-run.log"
+          }
+        ],
+        "passed": 39,
+        "failed": 0,
+        "ignored": 1,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-lf-app\\model-assets-app\\lifecycle_vision_resources-run.log",
+        "scope": "Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-lf-report.json",
+          "sha256": "543f1c614153a7fc717c240caac0170bb96243ad2e8a3860bf246e98421a4d03",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"legacy_registry,lifecycle_vision_resources\",\"targets\":[{\"target\":\"legacy_registry\",\"passed\":19,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\powershell.exe-lf-app\\\\model-assets-app\\\\legacy_registry-run.log\"},{\"target\":\"lifecycle_vision_resources\",\"passed\":20,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\powershell.exe-lf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\"}],\"passed\":39,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\powershell.exe-lf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\",\"scope\":\"Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.\"}\n"
+        }
+      }
+    },
+    {
+      "label": "powershell.exe-crlf",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\model-assets-powershell-r1\\powershell.exe-crlf.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-crlf-app",
+        "-Suite",
+        "model-assets",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-crlf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "5.1.26100.9818",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "legacy_registry,lifecycle_vision_resources",
+        "targets": [
+          {
+            "target": "legacy_registry",
+            "passed": 19,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-crlf-app\\model-assets-app\\legacy_registry-run.log"
+          },
+          {
+            "target": "lifecycle_vision_resources",
+            "passed": 20,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-crlf-app\\model-assets-app\\lifecycle_vision_resources-run.log"
+          }
+        ],
+        "passed": 39,
+        "failed": 0,
+        "ignored": 1,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-crlf-app\\model-assets-app\\lifecycle_vision_resources-run.log",
+        "scope": "Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\powershell.exe-crlf-report.json",
+          "sha256": "906838ee3bd2ef8335729ff2573cf2c4219b6ee78095b2fae1c6cbf1cc4c8f4d",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"legacy_registry,lifecycle_vision_resources\",\"targets\":[{\"target\":\"legacy_registry\",\"passed\":19,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\powershell.exe-crlf-app\\\\model-assets-app\\\\legacy_registry-run.log\"},{\"target\":\"lifecycle_vision_resources\",\"passed\":20,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\powershell.exe-crlf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\"}],\"passed\":39,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\powershell.exe-crlf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\",\"scope\":\"Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.\"}\n"
+        }
+      }
+    },
+    {
+      "label": "powershell.exe-result-fixtures",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "\n. 'D:/Project/goose/bin/test-lumina-real-text.ps1'\n. 'D:/Project/goose/bin/test-lumina-cache-install.ps1'\n$ErrorActionPreference = 'Stop'\n$helper = 'test legacy_registry_child ... ignored, subprocess helper for legacy registry locking and CAS tests'\n$cases = @(\n    @{Target='lifecycle_cache_install';Text='test result: ok. 96 passed; 0 failed; 0 ignored;';Accept=$true},\n    @{Target='legacy_registry';Text=($helper+\"`n\"+'test result: ok. 19 passed; 0 failed; 1 ignored;');Accept=$true},\n    @{Target='legacy_registry';Text='test result: ok. 19 passed; 0 failed; 1 ignored;';Accept=$false},\n    @{Target='legacy_registry';Text=($helper+\"`n\"+'test result: ok. 19 passed; 0 failed; 2 ignored;');Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='test result: ok. 20 passed; 0 failed; 1 ignored;';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='test result: FAILED. 19 passed; 1 failed; 0 ignored;';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='test result: ok. 0 passed; 0 failed; 0 ignored;';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='truncated output';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text=('test result: ok. 20 passed; 0 failed; 0 ignored;'+\"`n\"+'test result: ok. 20 passed; 0 failed; 0 ignored;');Accept=$false}\n)\nforeach ($case in $cases) {\n    $accepted = $true\n    try { Get-CacheInstallSummary -Text $case.Text -Target $case.Target | Out-Null }\n    catch { $accepted = $false }\n    if ($accepted -ne $case.Accept) { throw 'Result gate accepted or rejected the wrong fixture.' }\n}\n@{status='PASS';fixtures=$cases.Count} | ConvertTo-Json -Compress\n"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-version",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$PSVersionTable.PSVersion.ToString()"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-static",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-lf",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\model-assets-powershell-r1\\pwsh-lf.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-lf-app",
+        "-Suite",
+        "model-assets",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-lf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "7.6.9",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "legacy_registry,lifecycle_vision_resources",
+        "targets": [
+          {
+            "target": "legacy_registry",
+            "passed": 19,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-lf-app\\model-assets-app\\legacy_registry-run.log"
+          },
+          {
+            "target": "lifecycle_vision_resources",
+            "passed": 20,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-lf-app\\model-assets-app\\lifecycle_vision_resources-run.log"
+          }
+        ],
+        "passed": 39.0,
+        "failed": 0.0,
+        "ignored": 1.0,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-lf-app\\model-assets-app\\lifecycle_vision_resources-run.log",
+        "scope": "Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-lf-report.json",
+          "sha256": "205a4083419cfbb2a1f7b5f607354a74505d64eed4a1018cdf82e098fa12de0e",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"legacy_registry,lifecycle_vision_resources\",\"targets\":[{\"target\":\"legacy_registry\",\"passed\":19,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\pwsh-lf-app\\\\model-assets-app\\\\legacy_registry-run.log\"},{\"target\":\"lifecycle_vision_resources\",\"passed\":20,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\pwsh-lf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\"}],\"passed\":39.0,\"failed\":0.0,\"ignored\":1.0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\pwsh-lf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\",\"scope\":\"Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.\"}\n"
+        }
+      }
+    },
+    {
+      "label": "pwsh-crlf",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\model-assets-powershell-r1\\pwsh-crlf.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-crlf-app",
+        "-Suite",
+        "model-assets",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-crlf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "7.6.9",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "legacy_registry,lifecycle_vision_resources",
+        "targets": [
+          {
+            "target": "legacy_registry",
+            "passed": 19,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-crlf-app\\model-assets-app\\legacy_registry-run.log"
+          },
+          {
+            "target": "lifecycle_vision_resources",
+            "passed": 20,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-crlf-app\\model-assets-app\\lifecycle_vision_resources-run.log"
+          }
+        ],
+        "passed": 39.0,
+        "failed": 0.0,
+        "ignored": 1.0,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-crlf-app\\model-assets-app\\lifecycle_vision_resources-run.log",
+        "scope": "Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\pwsh-crlf-report.json",
+          "sha256": "2decf416e44d817236d863ae95fcd346423a50ee673e8665f91078bbe17034be",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"legacy_registry,lifecycle_vision_resources\",\"targets\":[{\"target\":\"legacy_registry\",\"passed\":19,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\pwsh-crlf-app\\\\model-assets-app\\\\legacy_registry-run.log\"},{\"target\":\"lifecycle_vision_resources\",\"passed\":20,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\pwsh-crlf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\"}],\"passed\":39.0,\"failed\":0.0,\"ignored\":1.0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\model-assets-powershell-r1\\\\pwsh-crlf-app\\\\model-assets-app\\\\lifecycle_vision_resources-run.log\",\"scope\":\"Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.\"}\n"
+        }
+      }
+    },
+    {
+      "label": "pwsh-result-fixtures",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "\n. 'D:/Project/goose/bin/test-lumina-real-text.ps1'\n. 'D:/Project/goose/bin/test-lumina-cache-install.ps1'\n$ErrorActionPreference = 'Stop'\n$helper = 'test legacy_registry_child ... ignored, subprocess helper for legacy registry locking and CAS tests'\n$cases = @(\n    @{Target='lifecycle_cache_install';Text='test result: ok. 96 passed; 0 failed; 0 ignored;';Accept=$true},\n    @{Target='legacy_registry';Text=($helper+\"`n\"+'test result: ok. 19 passed; 0 failed; 1 ignored;');Accept=$true},\n    @{Target='legacy_registry';Text='test result: ok. 19 passed; 0 failed; 1 ignored;';Accept=$false},\n    @{Target='legacy_registry';Text=($helper+\"`n\"+'test result: ok. 19 passed; 0 failed; 2 ignored;');Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='test result: ok. 20 passed; 0 failed; 1 ignored;';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='test result: FAILED. 19 passed; 1 failed; 0 ignored;';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='test result: ok. 0 passed; 0 failed; 0 ignored;';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text='truncated output';Accept=$false},\n    @{Target='lifecycle_vision_resources';Text=('test result: ok. 20 passed; 0 failed; 0 ignored;'+\"`n\"+'test result: ok. 20 passed; 0 failed; 0 ignored;');Accept=$false}\n)\nforeach ($case in $cases) {\n    $accepted = $true\n    try { Get-CacheInstallSummary -Text $case.Text -Target $case.Target | Out-Null }\n    catch { $accepted = $false }\n    if ($accepted -ne $case.Accept) { throw 'Result gate accepted or rejected the wrong fixture.' }\n}\n@{status='PASS';fixtures=$cases.Count} | ConvertTo-Json -Compress\n"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "startedAt": "2026-11-12T04:41:51.404681+00:00",
+  "finishedAt": "2026-11-12T04:43:48.804430+00:00",
+  "skill": "E:/Codex/home/skills/powershell-code-quality/SKILL.md",
+  "gitBase": "de2d355b24bb952cbe6e05fece2d6d763311f503",
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\model-assets-powershell-r1\\evidence.json",
+    "sha256": "86030f0302d91952ea58512ed37a6e3701a0f7a4ea013661a38dd3f34ea01af7"
+  },
+  "scope": "Windows PowerShell 5.1 and PowerShell 7 static checks, actual LF/CRLF script executions, exact target result checks, report read-back and nine positive/negative result fixtures per runtime. No ignored helper is counted as passed.",
+  "changedFilesAtValidation": [
+    " M Cargo.lock",
+    " M bin/test-lumina-cache-install.ps1",
+    " M crates/lumina-cli/src/cli.rs",
+    " M crates/lumina-local-inference/Cargo.toml",
+    " M crates/lumina-local-inference/examples/assess_recorded_resources.rs",
+    " M crates/lumina-local-inference/examples/cache_recorded_component.rs",
+    " M crates/lumina-local-inference/src/hf_models.rs",
+    " M crates/lumina-local-inference/src/lib.rs",
+    " M crates/lumina-local-inference/src/lifecycle/planning.rs",
+    " M crates/lumina-local-inference/src/lifecycle/resources.rs",
+    " M crates/lumina-local-inference/src/local_model_registry.rs",
+    " M crates/lumina-local-inference/src/management.rs",
+    " M crates/lumina-local-inference/tests/lifecycle_cache_install.rs",
+    " M crates/lumina-local-inference/tests/lifecycle_observations.rs",
+    " M crates/lumina-local-inference/tests/support/network_file_downloads.rs",
+    " M documentation/docs/lumina-architecture/model-lifecycle-contracts.zh-CN.md",
+    " M documentation/docs/lumina-architecture/model-lifecycle-progress.zh-CN.md",
+    " M lumina-self-test.yaml",
+    "?? crates/lumina-local-inference/examples/inspect_vision_input.rs",
+    "?? crates/lumina-local-inference/examples/prepare_recorded_vision_plan.rs",
+    "?? crates/lumina-local-inference/src/lifecycle/resources/",
+    "?? crates/lumina-local-inference/src/local_model_registry/",
+    "?? crates/lumina-local-inference/tests/fixtures/",
+    "?? crates/lumina-local-inference/tests/legacy_registry.rs",
+    "?? crates/lumina-local-inference/tests/lifecycle_vision_resources.rs",
+    "?? documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-01-m4-native-video-vae-f32-diagnostic.json",
+    "?? documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-01-m4-native-video-vae-f32-normalized-names-diagnostic.json",
+    "?? documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-12-m1-vision-preflight.json"
+  ],
+  "supplementalChecks": {
+    "asciiSource": "PASS",
+    "literalCredentialAndAddressScan": "PASS",
+    "gitDiffCheckExit": 0,
+    "preservedPreExistingUntracked": [
+      "2026-11-01-m4-native-video-vae-f32-diagnostic.json",
+      "2026-11-01-m4-native-video-vae-f32-normalized-names-diagnostic.json"
+    ]
+  }
+}

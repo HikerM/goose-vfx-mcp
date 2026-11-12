@@ -1,0 +1,612 @@
+{
+  "status": "PASS",
+  "identities": {
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798",
+    "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+    "D:\\Project\\goose\\target\\debug\\examples\\inspect_vision_input.exe": "5ee37b450f5b6d31fb8dfc1bf5508caf9d68de7f10870f9357cb9dcafebfd3df",
+    "D:\\Project\\goose\\target\\debug\\examples\\prepare_recorded_vision_plan.exe": "bc4f7dfa58b3aede815d6d84aa1e1625a95c8457537dcb096e52dd3e25478b20",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-preflight-r1\\plan.json": "155f0f8b7e2522421412b16d2fd11aa42f1dc127c3ce510e3a2227595db2b645"
+  },
+  "cases": [
+    {
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "expectedColor": "red",
+      "payloadSha256": "9675058455963ff8d122ac8f61d5742d1ccef350eebd5f74979071fae3bc42af",
+      "boundary": {
+        "plan_digest": "3eabbe77d7e7494623adb606dac4f2d8f09a3a6852d1827b08eebc501992e8f4",
+        "image_sha256": "f0ecd7252848b1ea453e7f155f4635895258974e7f3fe7f9f0496173e0d21e33",
+        "image_bytes": 5588,
+        "allocation": {
+          "resized_width": 1024,
+          "resized_height": 1024,
+          "image_tokens": 1024
+        },
+        "scope": "Recorded input boundary diagnostic; supplied token counts are not authenticated Runtime preflight."
+      },
+      "preflight": {
+        "input_tokens": 1056,
+        "object": "response.input_tokens"
+      },
+      "overflowRejected": {
+        "exitCode": 1,
+        "error": "Error: Multimodal prompt and output exceed the frozen context capacity\n"
+      },
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"color\": \"red\"\n}"
+            }
+          }
+        ],
+        "created": 1794458480,
+        "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 12,
+          "prompt_tokens": 1056,
+          "total_tokens": 1068,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-uk1eFARgnN2o4ZGNyxDPlTOTkaafl936",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1056,
+          "prompt_ms": 12588.038,
+          "prompt_per_token_ms": 11.92049053030303,
+          "prompt_per_second": 83.8891652535526,
+          "predicted_n": 12,
+          "predicted_ms": 1012.499,
+          "predicted_per_token_ms": 92.04536363636363,
+          "predicted_per_second": 10.86420826094643
+        }
+      }
+    },
+    {
+      "dimensions": [
+        128,
+        1024
+      ],
+      "expectedColor": "green",
+      "payloadSha256": "0463060ede1c963ca8c079ff4f8ae9db3f379a70a3fc9b37ce7ce5f1ae4e5fd4",
+      "boundary": {
+        "plan_digest": "3eabbe77d7e7494623adb606dac4f2d8f09a3a6852d1827b08eebc501992e8f4",
+        "image_sha256": "a07595003dc70f681016fcaca80321e799a5353460742ae3ecbf5131597653a0",
+        "image_bytes": 2643,
+        "allocation": {
+          "resized_width": 384,
+          "resized_height": 2912,
+          "image_tokens": 1092
+        },
+        "scope": "Recorded input boundary diagnostic; supplied token counts are not authenticated Runtime preflight."
+      },
+      "preflight": {
+        "input_tokens": 1124,
+        "object": "response.input_tokens"
+      },
+      "overflowRejected": {
+        "exitCode": 1,
+        "error": "Error: Multimodal prompt and output exceed the frozen context capacity\n"
+      },
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"color\": \"green\"\n}"
+            }
+          }
+        ],
+        "created": 1794458496,
+        "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 12,
+          "prompt_tokens": 1124,
+          "total_tokens": 1136,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-MluBchxuJBRsP8Ei5tmUlL8rbGXvGHwr",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 1124,
+          "prompt_ms": 14113.096,
+          "prompt_per_token_ms": 12.556135231316725,
+          "prompt_per_second": 79.64234070256448,
+          "predicted_n": 12,
+          "predicted_ms": 1019.234,
+          "predicted_per_token_ms": 92.65763636363637,
+          "predicted_per_second": 10.792418620257958
+        }
+      }
+    },
+    {
+      "dimensions": [
+        1,
+        1023
+      ],
+      "expectedColor": "blue",
+      "payloadSha256": "eb0be31d7564398ca24587fa348257242a5c8ce3135a3c81b15d31f82f90d4ed",
+      "boundary": {
+        "plan_digest": "3eabbe77d7e7494623adb606dac4f2d8f09a3a6852d1827b08eebc501992e8f4",
+        "image_sha256": "2084a0eb7820847253dc90128e726ad57fd03dce8e555eb45163164df7dcd995",
+        "image_bytes": 86,
+        "allocation": {
+          "resized_width": 64,
+          "resized_height": 32768,
+          "image_tokens": 2048
+        },
+        "scope": "Recorded input boundary diagnostic; supplied token counts are not authenticated Runtime preflight."
+      },
+      "preflight": {
+        "input_tokens": 2080,
+        "object": "response.input_tokens"
+      },
+      "overflowRejected": {
+        "exitCode": 1,
+        "error": "Error: Multimodal prompt and output exceed the frozen context capacity\n"
+      },
+      "response": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\n  \"color\": \"blue\"\n}"
+            }
+          }
+        ],
+        "created": 1794458536,
+        "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+        "object": "chat.completion",
+        "usage": {
+          "completion_tokens": 12,
+          "prompt_tokens": 2080,
+          "total_tokens": 2092,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "id": "chatcmpl-UAi82cnUEvikZGlNt7mBBLaL8j0gpFXP",
+        "timings": {
+          "cache_n": 0,
+          "prompt_n": 2080,
+          "prompt_ms": 39496.28,
+          "prompt_per_token_ms": 18.988596153846153,
+          "prompt_per_second": 52.663187520444964,
+          "predicted_n": 12,
+          "predicted_ms": 965.258,
+          "predicted_per_token_ms": 87.75072727272727,
+          "predicted_per_second": 11.395916946557294
+        }
+      }
+    }
+  ],
+  "startedAt": "2026-11-12T04:41:01.776411+00:00",
+  "scope": "Actual native multimodal count endpoint and generation using identical frozen data-URI bytes and existing verified source assets; Rust boundary diagnostic and real persisted dual-component plan. Installation execution and product Runtime integration remain separate acceptance requirements.",
+  "preparedPlan": {
+    "assessment": {
+      "plan": {
+        "schema_version": 1,
+        "id": "vision-plan:dd5861be-066f-42ca-a0d9-2f6d4fa17394",
+        "model_id": "observed-vision-model:172682cba41a80ee01dfd23e1e8cef0a752f4b18c4fb69d065298665273d4dd2",
+        "variant_id": "observed-vision-variant:172682cba41a80ee01dfd23e1e8cef0a752f4b18c4fb69d065298665273d4dd2",
+        "target_capabilities": [
+          "text",
+          "vision"
+        ],
+        "snapshots": {
+          "eeb436645f43fd0f3d2a23558869666025a3bc641536e468903a0abadf9ab176": {
+            "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+            "requested_revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+            "resolved_revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+            "files_digest": "67f4695c610cd7c7476296ee0fe4daa9a2929c6bc336d916b8deaaec0053f693",
+            "fetched_at": 1794457004
+          }
+        },
+        "artifacts": {
+          "33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566": {
+            "id": "33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566",
+            "snapshot_id": "eeb436645f43fd0f3d2a23558869666025a3bc641536e468903a0abadf9ab176",
+            "path": "mmproj-F16.gguf",
+            "purpose": "gguf_weight",
+            "size_bytes": 204987104,
+            "source_sha256": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798"
+          },
+          "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e": {
+            "id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+            "snapshot_id": "eeb436645f43fd0f3d2a23558869666025a3bc641536e468903a0abadf9ab176",
+            "path": "Qwen3.5-0.8B-Q8_0.gguf",
+            "purpose": "gguf_weight",
+            "size_bytes": 833592736,
+            "source_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+          }
+        },
+        "dependencies": {
+          "root": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+          "components": {
+            "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc": {
+              "id": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+              "role": "main",
+              "artifact_ids": [
+                "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e"
+              ],
+              "compatibility": "verified",
+              "evidence_ids": [
+                "component-pairing:6d99b4634a51eb380f81dfe338f7d95277550362db1247a722273ee5f0f54084",
+                "gguf-header:c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e:872b80438a93d5cdf6a79edd4dcd57c620f24b40fe9314f1bd6ac335ae6a7508",
+                "gguf-observation:f2ae1004f07b07e9566dbbc820add1c232362619cb6094e1cce65db2c506a9ce",
+                "m1:2026-11-12-m1-vision-resource-measurements.json:bounded-cpu-v1",
+                "resource-budget:8284c10c77e36e382bbe9ad5cec1cd177b84bc77047959093b5a9abe1dda40e4",
+                "runtime-install-profile:3fe87224da8851ce33d088c02cd3a12f20fd694fd36324ff3866694b3687ce80"
+              ]
+            },
+            "observed-component:f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4": {
+              "id": "observed-component:f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4",
+              "role": "vision_projector",
+              "artifact_ids": [
+                "33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566"
+              ],
+              "compatibility": "verified",
+              "evidence_ids": [
+                "component-pairing:6d99b4634a51eb380f81dfe338f7d95277550362db1247a722273ee5f0f54084",
+                "gguf-header:33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566:5b4c87cee15eea7fc81908ac935e56dd9e629fad51144ab587bd3fa373472766",
+                "gguf-observation:fb1356b502314d1da850f2b26b8b6f47c17e03b1f6752e118734dbe58aee36c4",
+                "m1:2026-11-12-m1-vision-resource-measurements.json:bounded-cpu-v1"
+              ]
+            }
+          },
+          "edges": [
+            {
+              "from": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+              "to": "observed-component:f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4",
+              "requirement": {
+                "kind": "required"
+              }
+            }
+          ]
+        },
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "runtime_verified": true,
+        "hardware": "runnable",
+        "required_disk_bytes": 3132516736,
+        "rules_version": "modelscope-gguf-plan-v2",
+        "expires_at": 1794458763,
+        "admission": {
+          "runtime_profile": {
+            "id": "measured-qwen35-08b-vision-cpu",
+            "rules_version": "runtime-install-profile-v1",
+            "runtime": {
+              "adapter_id": "llama-helper",
+              "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+              "binding_version": "native-http-v1",
+              "platform": "x86_64-pc-windows-msvc",
+              "features": [
+                "cpu",
+                "dflash",
+                "embedding",
+                "mtmd",
+                "mtp",
+                "reranking"
+              ],
+              "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+            },
+            "architectures": [
+              "qwen35"
+            ],
+            "capabilities": [
+              "text",
+              "vision"
+            ],
+            "required_roles": [
+              "main",
+              "vision_projector"
+            ],
+            "evidence_ids": [
+              "m1:2026-11-12-m1-vision-resource-measurements.json:bounded-cpu-v1"
+            ]
+          },
+          "envelope": {
+            "runtime": {
+              "adapter_id": "llama-helper",
+              "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+              "binding_version": "native-http-v1",
+              "platform": "x86_64-pc-windows-msvc",
+              "features": [
+                "cpu",
+                "dflash",
+                "embedding",
+                "mtmd",
+                "mtp",
+                "reranking"
+              ],
+              "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+            },
+            "component_digests": [
+              "a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+              "f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4"
+            ],
+            "workload": {
+              "context_tokens": 4096,
+              "batch_tokens": 512,
+              "parallel_sequences": 1,
+              "recurrent_rollback_slots": 0,
+              "kv_key_type": "f16",
+              "kv_value_type": "f16",
+              "prompt_cache_bytes": 0,
+              "context_checkpoint_slots": 0,
+              "vision": {
+                "resize_policy": "qwen3_vl_native_v1",
+                "max_images": 1,
+                "max_input_width": 1024,
+                "max_input_height": 1024,
+                "max_input_bytes": 8388608,
+                "native_min_image_tokens": 1024,
+                "native_max_image_tokens": 1024,
+                "max_encoded_image_tokens": 2048,
+                "microbatch_tokens": 512,
+                "image_batch_tokens": 1024,
+                "cpu_threads": 4
+              }
+            },
+            "compute_buffer_bytes": 268435456,
+            "auxiliary_buffer_bytes": 536870912,
+            "evidence_id": "m1:2026-11-12-m1-vision-resource-measurements.json:bounded-cpu-v1"
+          },
+          "hardware": {
+            "observed_at": 1794458463,
+            "devices": [
+              {
+                "index": 0,
+                "backend": "CPU",
+                "name": "CPU",
+                "description": "Intel(R) Core(TM) i7-14700F",
+                "kind": "cpu",
+                "total_bytes": 102904569856,
+                "free_bytes": 56839884800
+              }
+            ],
+            "storage_volume": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-preflight-r1\\app\\data\\model-lifecycle",
+            "disk_free_bytes": 195562663936
+          },
+          "budget": {
+            "rules_version": "local-resource-budget-vision-v1",
+            "binding_digest": "8284c10c77e36e382bbe9ad5cec1cd177b84bc77047959093b5a9abe1dda40e4",
+            "compatibility": "runnable",
+            "weight_bytes": 1038579840,
+            "kv_cache_bytes": 58720256,
+            "recurrent_cache_bytes": 20201472,
+            "dynamic_cache_bytes": 0,
+            "compute_buffer_bytes": 268435456,
+            "auxiliary_buffer_bytes": 536870912,
+            "host_memory_required_bytes": 1922807936,
+            "host_memory_available_bytes": 56839884800,
+            "peak_incremental_disk_bytes": 3132516736,
+            "blocking_reasons": []
+          }
+        }
+      },
+      "observation_bindings": {
+        "33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566": "fb1356b502314d1da850f2b26b8b6f47c17e03b1f6752e118734dbe58aee36c4",
+        "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e": "f2ae1004f07b07e9566dbbc820add1c232362619cb6094e1cce65db2c506a9ce"
+      },
+      "resource_budget": {
+        "rules_version": "local-resource-budget-vision-v1",
+        "binding_digest": "8284c10c77e36e382bbe9ad5cec1cd177b84bc77047959093b5a9abe1dda40e4",
+        "compatibility": "runnable",
+        "weight_bytes": 1038579840,
+        "kv_cache_bytes": 58720256,
+        "recurrent_cache_bytes": 20201472,
+        "dynamic_cache_bytes": 0,
+        "compute_buffer_bytes": 268435456,
+        "auxiliary_buffer_bytes": 536870912,
+        "host_memory_required_bytes": 1922807936,
+        "host_memory_available_bytes": 56839884800,
+        "peak_incremental_disk_bytes": 3132516736,
+        "blocking_reasons": []
+      },
+      "dependencies": {
+        "root": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+        "components": {
+          "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc": {
+            "id": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+            "role": "main",
+            "artifact_ids": [
+              "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e"
+            ],
+            "compatibility": "verified",
+            "evidence_ids": [
+              "component-pairing:6d99b4634a51eb380f81dfe338f7d95277550362db1247a722273ee5f0f54084",
+              "gguf-header:c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e:872b80438a93d5cdf6a79edd4dcd57c620f24b40fe9314f1bd6ac335ae6a7508",
+              "gguf-observation:f2ae1004f07b07e9566dbbc820add1c232362619cb6094e1cce65db2c506a9ce",
+              "m1:2026-11-12-m1-vision-resource-measurements.json:bounded-cpu-v1",
+              "resource-budget:8284c10c77e36e382bbe9ad5cec1cd177b84bc77047959093b5a9abe1dda40e4",
+              "runtime-install-profile:3fe87224da8851ce33d088c02cd3a12f20fd694fd36324ff3866694b3687ce80"
+            ]
+          },
+          "observed-component:f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4": {
+            "id": "observed-component:f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4",
+            "role": "vision_projector",
+            "artifact_ids": [
+              "33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566"
+            ],
+            "compatibility": "verified",
+            "evidence_ids": [
+              "component-pairing:6d99b4634a51eb380f81dfe338f7d95277550362db1247a722273ee5f0f54084",
+              "gguf-header:33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566:5b4c87cee15eea7fc81908ac935e56dd9e629fad51144ab587bd3fa373472766",
+              "gguf-observation:fb1356b502314d1da850f2b26b8b6f47c17e03b1f6752e118734dbe58aee36c4",
+              "m1:2026-11-12-m1-vision-resource-measurements.json:bounded-cpu-v1"
+            ]
+          }
+        },
+        "edges": [
+          {
+            "from": "observed-component:a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+            "to": "observed-component:f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4",
+            "requirement": {
+              "kind": "required"
+            }
+          }
+        ]
+      },
+      "blocking_reasons": []
+    },
+    "queued_job": {
+      "id": "vision-job:d6e516aa-c808-41bd-bf51-e0b6ebe5570c",
+      "idempotency_key": "vision-install:vision-plan:dd5861be-066f-42ca-a0d9-2f6d4fa17394",
+      "plan_id": "vision-plan:dd5861be-066f-42ca-a0d9-2f6d4fa17394",
+      "plan_digest": "3eabbe77d7e7494623adb606dac4f2d8f09a3a6852d1827b08eebc501992e8f4",
+      "stage": "ready_to_install",
+      "status": "queued",
+      "version": 0,
+      "generation": 0,
+      "lease_owner": null,
+      "lease_until": null,
+      "accepted_at": 1794458463,
+      "updated_at": 1794458463
+    },
+    "pairing": {
+      "rules_version": "component-pairing-v1",
+      "profile_digest": "9baa56d84edb218bcba3cdb43829f934b1ab642af3e709ae4803744fe3fa8ac8",
+      "runtime_digest": "a31c5e9014128722b0396aff9305b853b64c0eab7d6ebf13cf7a52ef1310fb66",
+      "main_observation_digest": "a22aa33cb210adc771ff5b43b107349a3bd82aaae01d75b9d56513614fc3a1cc",
+      "dependency_observation_digest": "f1afeb800470ef5c7c3af3dec6bedcd8473ee633be058713a2beb08363780da4",
+      "compatibility": "verified",
+      "issues": []
+    },
+    "profile": {
+      "id": "measured-qwen35-08b-vision-cpu",
+      "rules_version": "runtime-install-profile-v1",
+      "runtime": {
+        "adapter_id": "llama-helper",
+        "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+        "binding_version": "native-http-v1",
+        "platform": "x86_64-pc-windows-msvc",
+        "features": [
+          "cpu",
+          "dflash",
+          "embedding",
+          "mtmd",
+          "mtp",
+          "reranking"
+        ],
+        "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+      },
+      "architectures": [
+        "qwen35"
+      ],
+      "capabilities": [
+        "text",
+        "vision"
+      ],
+      "required_roles": [
+        "main",
+        "vision_projector"
+      ],
+      "evidence_ids": [
+        "m1:2026-11-12-m1-vision-resource-measurements.json:bounded-cpu-v1"
+      ]
+    },
+    "installation_input": {
+      "installation_id": "vision-preflight-diagnostic",
+      "version_id": "vision-preflight-v1",
+      "store_root": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-preflight-r1\\app\\data\\model-lifecycle",
+      "source": {
+        "kind": "model_scope"
+      }
+    },
+    "scope": "Source/header pairing, bounded measured CPU workload and frozen installation admission. This does not create Runtime or capability READY evidence."
+  },
+  "diagnosticJobExecution": "QUEUED_ONLY: no installation worker is started in this isolated diagnostic store",
+  "argv": [
+    "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+    "-m",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "--mmproj",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "56676",
+    "--threads",
+    "4",
+    "--threads-batch",
+    "4",
+    "--ctx-size",
+    "4096",
+    "--batch-size",
+    "512",
+    "--ubatch-size",
+    "512",
+    "--parallel",
+    "1",
+    "--gpu-layers",
+    "0",
+    "--no-mmproj-offload",
+    "--no-webui",
+    "--spec-type",
+    "none",
+    "--cache-ram",
+    "0",
+    "--ctx-checkpoints",
+    "0",
+    "--image-min-tokens",
+    "1024",
+    "--image-max-tokens",
+    "1024",
+    "--mtmd-batch-max-tokens",
+    "1024",
+    "--log-verbosity",
+    "4",
+    "--offline"
+  ],
+  "pid": 42248,
+  "finishedAt": "2026-11-12T04:42:18.295299+00:00",
+  "sourceIdentitiesAtEvidencePublication": {
+    "crates\\lumina-local-inference\\src\\lifecycle\\resources.rs": "db92a63db19d7e3f1656201d938a298bc50403481315af0aec1c032cb1a1a5ab",
+    "crates\\lumina-local-inference\\src\\lifecycle\\planning.rs": "bd8d949d457c67580b9aa14506a2e9cc6d7219542879c6dcc2a73414e7c0cab7",
+    "crates\\lumina-local-inference\\examples\\prepare_recorded_vision_plan.rs": "4d86e34b8186ccc9317a6b93e702f0d1846ce596b2412eef030923c85ea7bb67",
+    "crates\\lumina-local-inference\\examples\\inspect_vision_input.rs": "aed05176593c71ec91b99128ba272510038498801cc5bf11a1ab326bfc02d641",
+    "crates\\lumina-local-inference\\tests\\lifecycle_vision_resources.rs": "c777a802ce238f102707545526f865d6aad9b29de073aff6bb7c9a9a7ca30b1e",
+    "Cargo.lock": "48ac4e60b7e591e75ed8ef94538548fa20428901e7a345d6328bf9f5c5339900",
+    "crates\\lumina-local-inference\\src\\lifecycle\\resources\\vision.rs": "a1904f501f285391e35633ce00fbd7ee98855bfd1255bb1c74525a03f6863709",
+    "crates\\lumina-local-inference\\src\\lifecycle\\resources\\vision\\png.rs": "4c14884f1a0bbde3c57f462f0c0d1ac299386d1df22730787c97ea268ccb5fb0"
+  },
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-preflight-r1\\evidence.json",
+    "sha256": "5c50ec7bfc6936dc68f7e0ba0d40f23c974fa765a1dc18ead631f58478dbdbc7"
+  },
+  "probeSha256": "2795403a6907d4c28e7af05cc4a3c2a8fc1529e44e4aab3096524efeb112476d",
+  "gitBase": "de2d355b24bb952cbe6e05fece2d6d763311f503"
+}
