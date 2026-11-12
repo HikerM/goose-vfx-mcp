@@ -1,0 +1,1018 @@
+{
+  "status": "PASS",
+  "scope": "MCP audio/resource-link forwarding, live ACP delivery, persisted replay and captured-notification browser playback. Not new TTS synthesis, full packaged Electron, MediaResultRef/file actions, video generation, or M3/M4 stage completion.",
+  "backendUnitTests": {
+    "passed": 4,
+    "failed": 0,
+    "ignored": 0,
+    "filter": "media_tool_content",
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-acp-media-forwarding-r1.log",
+    "sha256": "dadc1d8955240a055c169e5ac1375ae19f3e0df6c7adc9fa16d988a05a1a5203"
+  },
+  "frontendTargetedChecks": {
+    "passed": 30,
+    "failed": 0,
+    "typecheck": "PASS",
+    "scopedEslint": "PASS",
+    "source": "Actual UI agent tool execution in this task; browser evidence below is independently persisted."
+  },
+  "cliBuild": {
+    "status": "PASS",
+    "sha256": "ba38f985d367c64c8f2ac0cbc0ea59018fcf6ca7ed454c1e95aad87c70e48a36",
+    "elapsedSeconds": 1913,
+    "logSha256": "29814e9c52f5a793d862e2c2b889ccde0621c9a6a409833aa0c603e4f789acfd",
+    "retainedWarnings": {
+      "lumina-agent": 605,
+      "lumina-agent-cli": 6
+    }
+  },
+  "browserFlow": {
+    "status": "PASS",
+    "startedAt": "2026-11-12T10:08:45.510018+00:00",
+    "scope": "Actual local-model MCP call, live ACP delivery and process-restart SQLite replay. Existing native TTS WAV; no new synthesis, MediaResultRef, file actions or packaged Electron acceptance.",
+    "inputSha256": {
+      "D:\\Project\\goose\\target\\debug\\lumina.exe": "ba38f985d367c64c8f2ac0cbc0ea59018fcf6ca7ed454c1e95aad87c70e48a36",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\audio-runtime-results\\pocket-tts-english.wav": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\moe-cuda-source.json": "01fe7201f4fdd3b199a941851b41539c86e6a25a5005b924ec55ba8338b5501e",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-clean-entry-app\\data\\models\\registry.json": "71b1f8e60e4ebb815047e6e5896d3749b3ca529b508af38dbb1b721bb73c74db",
+      "D:\\Project\\goose\\bin\\test-lumina-media-forwarding.py": "dc25b4cd30c04ac2fd95f043521c6d091877fcbf6c8d2bd234a577a160154c9e",
+      "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server.rs": "3473e23ebee3709509d7f1a0d7cdce70d93327747e58e0f97107686197e6256a",
+      "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server\\load_session.rs": "d41081f76ceaadaa45536ed6aaf498a885ab65f224cdef1b66d0ceafdde74173"
+    },
+    "model": {
+      "path": "D:\\Lumina\\data\\models\\modelscope\\Abiray__Qwen3.6-35B-A3B-Q4_K_M-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf",
+      "sha256": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f"
+    },
+    "availableTools": [
+      "mediaforwarding__emit_media",
+      "platform__manage_schedule"
+    ],
+    "sessionId": "20261112_1",
+    "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+    "actualMcpCalls": 1,
+    "audioSha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+    "audioDurationSeconds": 2.4,
+    "liveUpdatesSha256": "24ce92d4ee039f4bfadb3c4fc1367dd478ba4461abafd9ee8f02b6c371f9adb0",
+    "replayUpdatesSha256": "6541d869746ca9d0f23210761818818a88632038c8d6c05d2e2b7ad5915e43d1",
+    "persistedMessageRows": 4,
+    "databaseIntegrity": "ok",
+    "finishedAt": "2026-11-12T10:13:02.406239+00:00"
+  },
+  "browser": {
+    "started": "2026-11-12T10:18:17.168Z",
+    "pass": true,
+    "cases": [
+      {
+        "mode": "live",
+        "errors": [],
+        "consoleErrors": [],
+        "resources": [
+          {
+            "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+            "index": 2,
+            "fields": {
+              "type": "resource_link",
+              "name": "pocket-tts-english.wav",
+              "title": "Native speech fixture",
+              "description": "Existing 2.4 second native speech; media forwarding verification only.",
+              "mimeType": "audio/wav",
+              "size": 115244,
+              "uri": "mcp://media-forwarding/pocket-tts-english.wav"
+            },
+            "displayed": {
+              "text": "pocket-tts-english.wavNative speech fixtureExisting 2.4 second native speech; media forwarding verification only.audio/wav115,244 Bmcp://media-forwarding/pocket-tts-english.wav",
+              "activeElements": 0
+            }
+          }
+        ],
+        "audio": [
+          {
+            "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+            "index": 1,
+            "loaded": {
+              "duration": 2.4,
+              "readyState": 4,
+              "paused": true,
+              "currentTime": 0,
+              "autoplay": false,
+              "controls": true,
+              "sourceScheme": "blob",
+              "error": null
+            },
+            "playing": {
+              "paused": false,
+              "currentTime": 0.133086
+            },
+            "pausedByKeyboard": true
+          }
+        ],
+        "layouts": [
+          {
+            "viewportWidth": 480,
+            "viewportHeight": 400,
+            "scrollWidth": 480,
+            "clientWidth": 480,
+            "scrollHeight": 576,
+            "audioBounds": [
+              {
+                "left": 41,
+                "right": 439,
+                "width": 398,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.121777
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.128717,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "live-480x400.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 930,
+            "viewportHeight": 700,
+            "scrollWidth": 930,
+            "clientWidth": 930,
+            "scrollHeight": 700,
+            "audioBounds": [
+              {
+                "left": 63.5,
+                "right": 866.5,
+                "width": 803,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.114428
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.122107,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "live-930x700.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 1366,
+            "viewportHeight": 768,
+            "scrollWidth": 1366,
+            "clientWidth": 1366,
+            "scrollHeight": 768,
+            "audioBounds": [
+              {
+                "left": 250,
+                "right": 1116,
+                "width": 866,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.114483
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.119402,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "live-1366x768.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "scrollHeight": 1080,
+            "audioBounds": [
+              {
+                "left": 527,
+                "right": 1393,
+                "width": 866,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.119445
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.124486,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "live-1920x1080.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 2560,
+            "viewportHeight": 1440,
+            "scrollWidth": 2560,
+            "clientWidth": 2560,
+            "scrollHeight": 1440,
+            "audioBounds": [
+              {
+                "left": 847,
+                "right": 1713,
+                "width": 866,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.131493
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.139125,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "live-2560x1440.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          }
+        ],
+        "adapter": {
+          "case": "live",
+          "notificationCount": 13,
+          "messageCount": 3,
+          "tools": [
+            {
+              "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+              "types": [
+                "text",
+                "audio",
+                "resource_link",
+                "text"
+              ]
+            }
+          ]
+        },
+        "collapseUnmountsPlayers": true,
+        "pass": true
+      },
+      {
+        "mode": "replay",
+        "errors": [],
+        "consoleErrors": [],
+        "resources": [
+          {
+            "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+            "index": 2,
+            "fields": {
+              "type": "resource_link",
+              "name": "pocket-tts-english.wav",
+              "title": "Native speech fixture",
+              "description": "Existing 2.4 second native speech; media forwarding verification only.",
+              "mimeType": "audio/wav",
+              "size": 115244,
+              "uri": "mcp://media-forwarding/pocket-tts-english.wav"
+            },
+            "displayed": {
+              "text": "pocket-tts-english.wavNative speech fixtureExisting 2.4 second native speech; media forwarding verification only.audio/wav115,244 Bmcp://media-forwarding/pocket-tts-english.wav",
+              "activeElements": 0
+            }
+          }
+        ],
+        "audio": [
+          {
+            "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+            "index": 1,
+            "loaded": {
+              "duration": 2.4,
+              "readyState": 4,
+              "paused": true,
+              "currentTime": 0,
+              "autoplay": false,
+              "controls": true,
+              "sourceScheme": "blob",
+              "error": null
+            },
+            "playing": {
+              "paused": false,
+              "currentTime": 0.128065
+            },
+            "pausedByKeyboard": true
+          }
+        ],
+        "layouts": [
+          {
+            "viewportWidth": 480,
+            "viewportHeight": 400,
+            "scrollWidth": 480,
+            "clientWidth": 480,
+            "scrollHeight": 576,
+            "audioBounds": [
+              {
+                "left": 41,
+                "right": 439,
+                "width": 398,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.112983
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.115004,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "replay-480x400.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 930,
+            "viewportHeight": 700,
+            "scrollWidth": 930,
+            "clientWidth": 930,
+            "scrollHeight": 700,
+            "audioBounds": [
+              {
+                "left": 63.5,
+                "right": 866.5,
+                "width": 803,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.108276
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.110731,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "replay-930x700.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 1366,
+            "viewportHeight": 768,
+            "scrollWidth": 1366,
+            "clientWidth": 1366,
+            "scrollHeight": 768,
+            "audioBounds": [
+              {
+                "left": 250,
+                "right": 1116,
+                "width": 866,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.108004
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.109746,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "replay-1366x768.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "scrollHeight": 1080,
+            "audioBounds": [
+              {
+                "left": 527,
+                "right": 1393,
+                "width": 866,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.112348
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.114324,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "replay-1920x1080.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          },
+          {
+            "viewportWidth": 2560,
+            "viewportHeight": 1440,
+            "scrollWidth": 2560,
+            "clientWidth": 2560,
+            "scrollHeight": 1440,
+            "audioBounds": [
+              {
+                "left": 847,
+                "right": 1713,
+                "width": 866,
+                "paused": true
+              }
+            ],
+            "resourceMetadataSpacing": [
+              {
+                "display": "flex",
+                "columnGap": "12px"
+              }
+            ],
+            "viewportPlayback": [
+              {
+                "before": {
+                  "paused": true,
+                  "autoplay": false,
+                  "duration": 2.4,
+                  "readyState": 4,
+                  "error": null
+                },
+                "playing": {
+                  "paused": false,
+                  "currentTime": 0.114898
+                },
+                "paused": {
+                  "paused": true,
+                  "currentTime": 0.11711,
+                  "error": null
+                },
+                "interaction": "native keyboard Space play and pause; currentTime reset for each viewport"
+              }
+            ],
+            "screenshot": "replay-2560x1440.png",
+            "capture": "full page at the stated viewport; vertical scrolling is allowed"
+          }
+        ],
+        "adapter": {
+          "case": "replay",
+          "notificationCount": 6,
+          "messageCount": 4,
+          "tools": [
+            {
+              "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+              "types": [
+                "text",
+                "audio",
+                "resource_link",
+                "text"
+              ]
+            }
+          ]
+        },
+        "collapseUnmountsPlayers": true,
+        "pass": true
+      }
+    ],
+    "actualFlow": {
+      "file": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-mcp-media-flow-r2\\result.json",
+      "sha256": "029657e07d863b0bcfe67ad612ba809ee6fcfc927fe085ac98aef07d9c0b20f4",
+      "status": "PASS",
+      "actualMcpCalls": 1,
+      "persistedMessageRows": 4,
+      "databaseIntegrity": "ok"
+    },
+    "inputs": {
+      "live": {
+        "file": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-mcp-media-flow-r2\\live-updates.json",
+        "bytes": 171821,
+        "sha256": "24ce92d4ee039f4bfadb3c4fc1367dd478ba4461abafd9ee8f02b6c371f9adb0",
+        "notificationCount": 13
+      },
+      "replay": {
+        "file": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-mcp-media-flow-r2\\replay-updates.json",
+        "bytes": 169570,
+        "sha256": "6541d869746ca9d0f23210761818818a88632038c8d6c05d2e2b7ad5915e43d1",
+        "notificationCount": 6
+      }
+    },
+    "wav": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\audio-runtime-results\\pocket-tts-english.wav",
+      "bytes": 115244,
+      "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+      "durationFromHeader": 2.4,
+      "provenance": "Existing native PocketTTS output supplied by the actual fixed MCP tool; no synthetic notification replacement."
+    },
+    "sessionId": "20261112_1",
+    "media": [
+      {
+        "toolCallId": "VmyPce3HhhkxuHviAHwORUDnmlJaRVsi",
+        "content": [
+          {
+            "type": "text",
+            "text": "Existing native audio fixture follows."
+          },
+          {
+            "type": "audio",
+            "mimeType": "audio/wav",
+            "bytes": 115244,
+            "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870"
+          },
+          {
+            "type": "resource_link",
+            "name": "pocket-tts-english.wav",
+            "title": "Native speech fixture",
+            "description": "Existing 2.4 second native speech; media forwarding verification only.",
+            "mimeType": "audio/wav",
+            "size": 115244,
+            "uri": "mcp://media-forwarding/pocket-tts-english.wav"
+          },
+          {
+            "type": "text",
+            "text": "End of media fixture."
+          }
+        ]
+      }
+    ],
+    "browserVersion": "157.0.8103.40",
+    "sourceSha256": {
+      "src/components/ToolCallWithResponse.tsx": "d05642bbf40cddb27e00f575313ca7c6eb4703a31119d52efbac5524b89cc05f",
+      "src/components/AudioPreview.tsx": "fe6655e6f518e905ac824cbb803a4c84520f40c139b656eafc4ebf46c63f6687",
+      "src/acp/sessionNotificationAdapter.ts": "0152e1a6acf3866caa3a92631c8fc900fc6c09767734d8b55678613c601f9a93",
+      "src/acp/adapter/tools.ts": "bce56a58ad05ada16e3a2e66ffd773e2a52b7f9c08c78bbedeaf8b544b039b6a",
+      "src/acp/adapter/messages.ts": "bf8f5e4d1e0ed0a487e37864f8bc27289253b50381f0515e434097588883f8ed",
+      "src/types/message.ts": "f033f9a97800eb0c449bfd8289cc9c6b85c4dd5708de07b34f28824bf78d5dd6",
+      "src/utils/csp.ts": "590933723c7b35a4da40ad66911d410e719b71bb394b31875d0b740efc5deeb2",
+      "index.html": "a8969d5afe6424acbdebcbacdd6a39d2aadfbebdafb570a9d09d26d3dc7745a9",
+      "src/styles/main.css": "432959aa2e3f8f32cf0712aaa73846eca096ce4abf3ca2acdcb6f72c6ba8f6b5",
+      "src/theme/theme-tokens.ts": "2755c6187304f84978afc138d54a849c033d8330ba2dcc4cafa636e21081e38c",
+      "vite.renderer.config.mts": "685a7416a89fda22da222da6ae1416c3ab7ba969d0e36c1d7be0136d8d7d523b"
+    },
+    "cssSha256": {
+      "main-BbVRZcJj.css": "953e362fb3de0031cb5647a8ad001b742ab01aea67ffdc721a32f55172abeda3"
+    },
+    "scriptSha256": {
+      "run-browser.cjs": "94d792ee87f39bcd8bc849a6c0db0443931b0b7a5e1c03a9f47e89130a02ce8a",
+      "browser-entry.tsx": "ea6bea77829dbc10aa1294367dea08b7c97f604fbc47faa36000959b854ebecc"
+    },
+    "cssBuild": {
+      "entry": "ui/desktop/src/styles/main.css",
+      "config": "ui/desktop/vite.renderer.config.mts",
+      "output": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-mcp-media-browser-r1\\run-2\\source-css",
+      "scope": "Existing renderer Tailwind/Vite plugins, current source scan, output only in this validation directory. Actual applyThemeTokens(light) is called."
+    },
+    "priorRunLimitation": "run-1 used previously built CSS lacking gap-x-3; fields were preserved but MIME/byte labels had no visual gap. run-1 is retained. This run compiles the actual current stylesheet and checks computed spacing.",
+    "scope": "Captured real JSON-RPC live and restart/replay notifications rendered through actual ACP adapter and ToolCallWithResponse in installed Chrome, with current-source Tailwind/Vite CSS and actual light-theme tokens. A getSetting-only Electron test host is used. Native keyboard playback/pause is checked at all five viewports. Full packaged Electron with a live backend, outer recipe orchestration, new TTS generation, persistent MediaResultRef/file actions, and video are not established by this browser run.",
+    "finished": "2026-11-12T10:18:43.061Z"
+  },
+  "visualReview": {
+    "status": "PASS",
+    "reviewedAt": "2026-11-12T10:19:48.9667461Z",
+    "resultSha256": "cc48cf46f06147b3d145abd4097ae23f8325510683f2d44d570ffc6d23b3878d",
+    "screenshots": [
+      {
+        "file": "live-1366x768.png",
+        "bytes": 25022,
+        "sha256": "694a0eeb598ad41bb028c807584802271503e2bc0f24e62d1e215ce73e197de9",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "live-1920x1080.png",
+        "bytes": 28709,
+        "sha256": "530dc8229a42803c43ad7f358d2c38cc79227cd27577b4f18e84bbac4f74afe9",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "live-2560x1440.png",
+        "bytes": 34531,
+        "sha256": "05235b0507e79601108910543df455b60564b658356c432635823dcbe247e6cf",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "live-480x400.png",
+        "bytes": 20494,
+        "sha256": "c8e826c0e9702b0e477411a0cf0b314eb497aaf5487295d0f6f233ef41b7011e",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "live-930x700.png",
+        "bytes": 23081,
+        "sha256": "e2f333d90ce4c909d3740bac2ff3e2e36e16a5a7bfb27d21153d4b481b6e8c40",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "replay-1366x768.png",
+        "bytes": 25022,
+        "sha256": "a840226ae176b7012ffff4f88b182a9b04ab17bdc4d5e8e871e73a1e3d3da440",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "replay-1920x1080.png",
+        "bytes": 28709,
+        "sha256": "0f167d282bfa8233e014ea7863cfea39eca20669acf861fd072b4c157519cc9f",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "replay-2560x1440.png",
+        "bytes": 34529,
+        "sha256": "40ac35eb8cf6869e1c16a13673855ee9aa59d872a5ce5db1cd5ed40194123272",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "replay-480x400.png",
+        "bytes": 20493,
+        "sha256": "c4d8e76e191ac2be04f8c0952395fa9d34e29c1d0cd0b1ddc84dd300d478d801",
+        "visuallyReviewed": true
+      },
+      {
+        "file": "replay-930x700.png",
+        "bytes": 23081,
+        "sha256": "5a7da9a397996ad38725b3c70dbcd221053516a3ad0bb505d5480a2b986766e7",
+        "visuallyReviewed": true
+      }
+    ],
+    "sourceChecks": [
+      {
+        "path": "src/components/ToolCallWithResponse.tsx",
+        "sha256": "d05642bbf40cddb27e00f575313ca7c6eb4703a31119d52efbac5524b89cc05f",
+        "matchesRun": true
+      },
+      {
+        "path": "src/components/AudioPreview.tsx",
+        "sha256": "fe6655e6f518e905ac824cbb803a4c84520f40c139b656eafc4ebf46c63f6687",
+        "matchesRun": true
+      },
+      {
+        "path": "src/acp/sessionNotificationAdapter.ts",
+        "sha256": "0152e1a6acf3866caa3a92631c8fc900fc6c09767734d8b55678613c601f9a93",
+        "matchesRun": true
+      },
+      {
+        "path": "src/acp/adapter/tools.ts",
+        "sha256": "bce56a58ad05ada16e3a2e66ffd773e2a52b7f9c08c78bbedeaf8b544b039b6a",
+        "matchesRun": true
+      },
+      {
+        "path": "src/acp/adapter/messages.ts",
+        "sha256": "bf8f5e4d1e0ed0a487e37864f8bc27289253b50381f0515e434097588883f8ed",
+        "matchesRun": true
+      },
+      {
+        "path": "src/types/message.ts",
+        "sha256": "f033f9a97800eb0c449bfd8289cc9c6b85c4dd5708de07b34f28824bf78d5dd6",
+        "matchesRun": true
+      },
+      {
+        "path": "src/utils/csp.ts",
+        "sha256": "590933723c7b35a4da40ad66911d410e719b71bb394b31875d0b740efc5deeb2",
+        "matchesRun": true
+      },
+      {
+        "path": "index.html",
+        "sha256": "a8969d5afe6424acbdebcbacdd6a39d2aadfbebdafb570a9d09d26d3dc7745a9",
+        "matchesRun": true
+      },
+      {
+        "path": "src/styles/main.css",
+        "sha256": "432959aa2e3f8f32cf0712aaa73846eca096ce4abf3ca2acdcb6f72c6ba8f6b5",
+        "matchesRun": true
+      },
+      {
+        "path": "src/theme/theme-tokens.ts",
+        "sha256": "2755c6187304f84978afc138d54a849c033d8330ba2dcc4cafa636e21081e38c",
+        "matchesRun": true
+      },
+      {
+        "path": "vite.renderer.config.mts",
+        "sha256": "685a7416a89fda22da222da6ae1416c3ab7ba969d0e36c1d7be0136d8d7d523b",
+        "matchesRun": true
+      }
+    ],
+    "visualFindings": [
+      "All ten live/replay screenshots inspected; original text/audio/resource_link/text order preserved.",
+      "At 480x400, content uses vertical scrolling and wraps the description without horizontal overflow.",
+      "Audio controls fit each viewport. Filename, title, description, MIME, exact byte count and URI are legible.",
+      "Current-source Tailwind CSS produces the expected 12px MIME/size gap; run-1 old-CSS limitation is retained in its evidence."
+    ],
+    "scopeLimits": [
+      "This browser run uses captured real ACP notifications, actual adapter/components/CSP/current-source CSS and a getSetting-only Electron host stub.",
+      "Headless Chrome verifies decoding, media readiness and advancing playback clock with keyboard play/pause at every viewport; audible output and speech quality were not listened to.",
+      "Full packaged Electron, outer recipe orchestrator acceptance, new TTS synthesis, MediaResultRef, four file actions and video are separate acceptance scopes."
+    ]
+  },
+  "recipe": {
+    "status": "PASS",
+    "startedAt": "2026-11-12T10:16:47.969944+00:00",
+    "cliSha256": "ba38f985d367c64c8f2ac0cbc0ea59018fcf6ca7ed454c1e95aad87c70e48a36",
+    "frozenInputs": {
+      "D:\\Project\\goose\\target\\debug\\lumina.exe": "ba38f985d367c64c8f2ac0cbc0ea59018fcf6ca7ed454c1e95aad87c70e48a36",
+      "D:\\Project\\goose\\Cargo.lock": "48ac4e60b7e591e75ed8ef94538548fa20428901e7a345d6328bf9f5c5339900",
+      "D:\\Project\\goose\\lumina-self-test.yaml": "b558f32822840b36e56d05805a5e5172c9f84b0eabf7534d71cedf8bc57831fe",
+      "D:\\Project\\goose\\bin\\test-lumina-media-forwarding.py": "dc25b4cd30c04ac2fd95f043521c6d091877fcbf6c8d2bd234a577a160154c9e",
+      "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server.rs": "3473e23ebee3709509d7f1a0d7cdce70d93327747e58e0f97107686197e6256a",
+      "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server\\load_session.rs": "d41081f76ceaadaa45536ed6aaf498a885ab65f224cdef1b66d0ceafdde74173",
+      "D:\\Project\\goose\\ui\\desktop\\src\\components\\ToolCallWithResponse.tsx": "d05642bbf40cddb27e00f575313ca7c6eb4703a31119d52efbac5524b89cc05f",
+      "D:\\Project\\goose\\ui\\desktop\\src\\components\\ToolCallWithResponse.resource.test.tsx": "5d38a6cbe3737ef44ebc310713ee1a380f97315aa6beed3630bf6005a3214e17",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m4-media-forwarding-r4-app\\data\\models\\registry.json": "d14f2164cfe6357a58b792ea7463c5986c8630f48ea8fdf9576b9f8a7441d8ed",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\moe-cuda-source.json": "01fe7201f4fdd3b199a941851b41539c86e6a25a5005b924ec55ba8338b5501e",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\run-media-forwarding-recipe-r1.py": "fa86536fb27dbdc11d6c7687e153d97f79b3a86131a6190565208a21ae935de7"
+    },
+    "orchestratorModel": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:media-forwarding-recipe",
+    "mediaSessionModel": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF",
+    "scope": "Actual lumina run --recipe media-forwarding invokes one real validation tool. Nested local-model ACP session calls the actual MCP fixture, then another ACP process replays SQLite history. Browser evidence remains separate; no new TTS generation or MediaResultRef/file-action acceptance.",
+    "argv": [
+      "D:\\Project\\goose\\target\\debug\\lumina.exe",
+      "run",
+      "--recipe",
+      "D:\\Project\\goose\\lumina-self-test.yaml",
+      "--params",
+      "test_phases=media-forwarding",
+      "--params",
+      "workspace_dir=D:/Project/goose/target/lifecycle-validation/m4-mcp-media-flow-r3",
+      "--params",
+      "parallel_tests=false",
+      "--params",
+      "cleanup_after=false",
+      "--provider",
+      "local",
+      "--model",
+      "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:media-forwarding-recipe",
+      "--no-session",
+      "--no-profile",
+      "--with-builtin",
+      "developer",
+      "--max-turns",
+      "3",
+      "--output-format",
+      "stream-json"
+    ],
+    "pid": 46316,
+    "exitCode": 0,
+    "toolRequest": {
+      "type": "toolRequest",
+      "id": "VA5IKl8tLLjMQ9AbhAv67KyEMz7C8szz",
+      "toolCall": {
+        "status": "success",
+        "value": {
+          "name": "shell",
+          "arguments": {
+            "command": "C:/Python310/python.exe -B bin/test-lumina-media-forwarding.py --execute --run-dir \"D:/Project/goose/target/lifecycle-validation/m4-mcp-media-flow-r3\"",
+            "timeout_secs": 600
+          }
+        }
+      },
+      "_meta": {
+        "lumina_extension": "developer"
+      }
+    },
+    "toolResponse": {
+      "type": "toolResponse",
+      "id": "VA5IKl8tLLjMQ9AbhAv67KyEMz7C8szz",
+      "toolResult": {
+        "status": "success",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"status\": \"PASS\", \"evidence\": \"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\m4-mcp-media-flow-r3\\\\result.json\", \"actualMcpCalls\": 1, \"audioDurationSeconds\": 2.4, \"scope\": \"Actual local-model MCP call, live ACP delivery and process-restart SQLite replay. Existing native TTS WAV; no new synthesis, MediaResultRef, file actions or packaged Electron acceptance.\"}\r",
+              "annotations": {
+                "priority": 0.0
+              }
+            }
+          ],
+          "structuredContent": {
+            "stdout": "{\"status\": \"PASS\", \"evidence\": \"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\m4-mcp-media-flow-r3\\\\result.json\", \"actualMcpCalls\": 1, \"audioDurationSeconds\": 2.4, \"scope\": \"Actual local-model MCP call, live ACP delivery and process-restart SQLite replay. Existing native TTS WAV; no new synthesis, MediaResultRef, file actions or packaged Electron acceptance.\"}\r",
+            "stderr": "",
+            "exit_code": 0
+          },
+          "isError": false
+        }
+      }
+    },
+    "assistantReply": "## Validation Result\n\n| Field | Value |\n|---|---|\n| **Status** | **PASS** |\n| **Actual MCP Call Count** | 1 |\n| **Audio Duration** | 2.4 s |\n| **Evidence Path** | `D:\\Project\\goose\\target\\lifecycle-validation\\m4-mcp-media-flow-r3\\result.json` |\n| **Scope** | Actual local-model MCP call, live ACP delivery, and process-restart SQLite replay. Existing native TTS WAV served; no new synthesis, MediaResultRef, file actions, or packaged Electron acceptance. |\n\nThe fixed validation entry completed successfully: one controlled MCP fixture was exercised, live ACP notifications were observed, ACP was restarted and the SQLite-backed replay confirmed the session. The audio was delivered from the pre-existing native TTS probe (2.4 s WAV) — no fresh TTS generation or file-action acceptance was involved.",
+    "actualFlow": {
+      "status": "PASS",
+      "startedAt": "2026-11-12T10:18:41.045768+00:00",
+      "scope": "Actual local-model MCP call, live ACP delivery and process-restart SQLite replay. Existing native TTS WAV; no new synthesis, MediaResultRef, file actions or packaged Electron acceptance.",
+      "inputSha256": {
+        "D:\\Project\\goose\\target\\debug\\lumina.exe": "ba38f985d367c64c8f2ac0cbc0ea59018fcf6ca7ed454c1e95aad87c70e48a36",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\audio-runtime-results\\pocket-tts-english.wav": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\moe-cuda-source.json": "01fe7201f4fdd3b199a941851b41539c86e6a25a5005b924ec55ba8338b5501e",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-clean-entry-app\\data\\models\\registry.json": "71b1f8e60e4ebb815047e6e5896d3749b3ca529b508af38dbb1b721bb73c74db",
+        "D:\\Project\\goose\\bin\\test-lumina-media-forwarding.py": "dc25b4cd30c04ac2fd95f043521c6d091877fcbf6c8d2bd234a577a160154c9e",
+        "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server.rs": "3473e23ebee3709509d7f1a0d7cdce70d93327747e58e0f97107686197e6256a",
+        "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server\\load_session.rs": "d41081f76ceaadaa45536ed6aaf498a885ab65f224cdef1b66d0ceafdde74173"
+      },
+      "model": {
+        "path": "D:\\Lumina\\data\\models\\modelscope\\Abiray__Qwen3.6-35B-A3B-Q4_K_M-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf",
+        "sha256": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f"
+      },
+      "availableTools": [
+        "mediaforwarding__emit_media",
+        "platform__manage_schedule"
+      ],
+      "sessionId": "20261112_1",
+      "toolCallId": "G7EhREX6sP7aoJDYoliZmx3ysinlvKkM",
+      "actualMcpCalls": 1,
+      "audioSha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+      "audioDurationSeconds": 2.4,
+      "liveUpdatesSha256": "fc0634133ff2ddfe62394b5ba677616beaeb240da6dc17697b560bd9c0be610c",
+      "replayUpdatesSha256": "26bdc415b287f1d362a9335feb2e6226d9b9778262dd40010e99441db3267dba",
+      "persistedMessageRows": 4,
+      "databaseIntegrity": "ok",
+      "finishedAt": "2026-11-12T10:22:11.642967+00:00"
+    },
+    "actualFlowSha256": "3f0dc849126b0d64ddb5ddc2fad5e1ac25da4043ae67f1ed82569564fddf72b3",
+    "rawOutputSha256": "b8f343deca7a29be58772c01c7ae23dfbb4dc2c16d6db1192df3b91ebf77e90b",
+    "finishedAt": "2026-11-12T10:24:37.650721+00:00"
+  },
+  "priorFailedRecipeRuns": [
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m4-media-forwarding-r1-evidence.json",
+      "sha256": "fd0a998e4fbdee428e1f484094083d78a77c85e2f7846f354194e397062aab3a",
+      "failure": "AssertionError()"
+    },
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m4-media-forwarding-r2-evidence.json",
+      "sha256": "d5ab525dda47f76c6c224c48faa85393c4ca9e2a12e77b1a04fa0b280a5996bc",
+      "failure": "AssertionError()"
+    },
+    {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-m4-media-forwarding-r3-evidence.json",
+      "sha256": "23f1954d73bb86a419cb7c11aaec375f18b8ede10a9c918bda330ea4ec1fb185",
+      "failure": "AssertionError()"
+    }
+  ],
+  "priorFailureExplanations": [
+    "r1 validation registry fixture supplied null for required integer mmproj_size_bytes; corrected to zero.",
+    "r2 validation session supplied enabledExtensions=[], overriding supplied MCP server; removed override and added actual tools/list precondition.",
+    "r3 actual MCP flow passed but 1.7B orchestrator made extra unrelated tool calls; preserved FAIL and reran exact one-command recipe with 35B."
+  ],
+  "sourceSha256": {
+    "crates\\lumina\\src\\acp\\server.rs": "3473e23ebee3709509d7f1a0d7cdce70d93327747e58e0f97107686197e6256a",
+    "crates\\lumina\\src\\acp\\server\\load_session.rs": "d41081f76ceaadaa45536ed6aaf498a885ab65f224cdef1b66d0ceafdde74173",
+    "bin\\test-lumina-media-forwarding.py": "dc25b4cd30c04ac2fd95f043521c6d091877fcbf6c8d2bd234a577a160154c9e",
+    "lumina-self-test.yaml": "b558f32822840b36e56d05805a5e5172c9f84b0eabf7534d71cedf8bc57831fe",
+    "ui\\desktop\\src\\components\\ToolCallWithResponse.tsx": "d05642bbf40cddb27e00f575313ca7c6eb4703a31119d52efbac5524b89cc05f",
+    "ui\\desktop\\src\\components\\ToolCallWithResponse.resource.test.tsx": "5d38a6cbe3737ef44ebc310713ee1a380f97315aa6beed3630bf6005a3214e17"
+  }
+}

@@ -999,6 +999,24 @@ function ToolResultView({ result, isStartExpanded }: ToolResultViewProps) {
         {hasResource(result) && (
           <pre className="font-sans text-sm">{JSON.stringify(result, null, 2)}</pre>
         )}
+        {result.type === 'resource_link' && (
+          <div role="group" aria-label={result.name} className="flex min-w-0 flex-col gap-1">
+            <p className="font-sans text-sm font-medium break-all">{result.name}</p>
+            {result.title?.trim() && result.title.trim() !== result.name.trim() && (
+              <p className="text-sm break-words">{result.title}</p>
+            )}
+            {result.description?.trim() && (
+              <p className="text-sm whitespace-pre-wrap break-words">{result.description}</p>
+            )}
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-secondary">
+              {result.mimeType?.trim() && <span className="break-all">{result.mimeType}</span>}
+              {result.size !== undefined &&
+                Number.isSafeInteger(result.size) &&
+                result.size >= 0 && <span>{intl.formatNumber(result.size)} B</span>}
+            </div>
+            <p className="font-mono text-xs text-text-secondary break-all">{result.uri}</p>
+          </div>
+        )}
       </div>
     </ToolCallExpandable>
   );

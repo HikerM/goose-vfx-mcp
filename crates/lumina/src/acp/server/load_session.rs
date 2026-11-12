@@ -249,3 +249,219 @@ impl LuminaAcpAgent {
         Ok(response)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{json, Value};
+    use std::time::Duration;
+
+    fn mixed_media_result() -> Value {
+        json!({
+            "content": [
+                {"type": "text", "text": "Generated media follows"},
+                {
+                    "type": "audio",
+                    "data": "UklGRgQAAABXQVZF",
+                    "mimeType": "audio/wav",
+                    "annotations": {
+                        "audience": ["user", "assistant"],
+                        "priority": 0.75,
+                        "lastModified": "2026-11-12T08:00:00.123Z"
+                    }
+                },
+                {"type": "image", "data": "aW1hZ2U=", "mimeType": "image/png"},
+                {
+                    "type": "resource_link",
+                    "uri": "mcp://generated/video/clip-1",
+                    "name": "clip-1.mp4",
+                    "title": "Generated video",
+                    "description": "Video with its original metadata",
+                    "mimeType": "video/mp4",
+                    "size": 4294967295_u32,
+                    "annotations": {
+                        "audience": ["user"],
+                        "priority": 1.0,
+                        "lastModified": "2026-11-12T08:00:01Z"
+                    },
+                    "_meta": {
+                        "producer": {"id": "video-tool", "revision": 3},
+                        "labels": ["preview", "original"],
+                        "available": true
+                    }
+                },
+                {
+                    "type": "resource",
+                    "resource": {
+                        "uri": "mcp://generated/transcript/clip-1",
+                        "mimeType": "text/plain",
+                        "text": "Transcript"
+                    }
+                },
+                {"type": "text", "text": "End of result"}
+            ],
+            "structuredContent": {"mediaCount": 2},
+            "isError": false
+        })
+    }
+
+    fn expected_media_content() -> Value {
+        Value::Array(
+            mixed_media_result()["content"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|content| json!({"type": "content", "content": content}))
+                .collect(),
+        )
+    }
+
+    #[test]
+    fn media_tool_content_preserves_mixed_order_and_supported_fields() {
+        let result: CallToolResult = serde_json::from_value(mixed_media_result()).unwrap();
+        let content = build_tool_call_content(&Ok(result));
+        assert_eq!(
+            serde_json::to_value(content).unwrap(),
+            expected_media_content()
+        );
+    }
+
+    #[test]
+    fn media_tool_content_keeps_absent_optional_fields_absent() {
+        let blocks = json!([
+            {"type": "audio", "data": "AAEC", "mimeType": "audio/mpeg"},
+            {"type": "resource_link", "uri": "https://example.invalid/a.wav", "name": "a.wav"}
+        ]);
+        let result: CallToolResult = serde_json::from_value(json!({"content": blocks})).unwrap();
+        let content = build_tool_call_content(&Ok(result));
+        assert_eq!(
+            serde_json::to_value(content).unwrap(),
+            json!([
+                {"type": "content", "content": {"type": "audio", "data": "AAEC", "mimeType": "audio/mpeg"}},
+                {"type": "content", "content": {"type": "resource_link", "uri": "https://example.invalid/a.wav", "name": "a.wav"}}
+            ])
+        );
+    }
+
+    #[test]
+    fn media_tool_content_preserves_error_result_media_without_inventing_transport_error_content() {
+        let mut result: CallToolResult = serde_json::from_value(mixed_media_result()).unwrap();
+        result.is_error = Some(true);
+        assert_eq!(
+            serde_json::to_value(build_tool_call_content(&Ok(result))).unwrap(),
+            expected_media_content()
+        );
+        assert!(
+            build_tool_call_content(&Err(rmcp::model::ErrorData::internal_error(
+                "Tool transport failed",
+                None,
+            )))
+            .is_empty()
+        );
+    }
+
+    #[tokio::test]
+    async fn media_tool_content_is_identical_in_live_and_persisted_replay_notifications() {
+        let directory = tempfile::tempdir().unwrap();
+        let server = crate::acp::server_factory::AcpServer::new(
+            crate::acp::server_factory::AcpServerFactoryConfig {
+                builtins: Vec::new(),
+                data_dir: directory.path().join("data"),
+                config_dir: directory.path().join("config"),
+                lumina_platform: LuminaPlatform::LuminaCli,
+                additional_source_roots: Vec::new(),
+            },
+        );
+        let acp_agent = server.create_agent().await.unwrap();
+        let session = acp_agent
+            .session_manager
+            .create_session(
+                directory.path().to_path_buf(),
+                "Media forwarding regression".to_string(),
+                SessionType::Acp,
+                LuminaMode::default(),
+            )
+            .await
+            .unwrap();
+        let runtime_agent = Arc::new(Agent::with_config(AgentConfig::new(
+            acp_agent.session_manager.clone(),
+            Arc::new(PermissionManager::new(directory.path().join("config"))),
+            None,
+            LuminaMode::default(),
+            true,
+            LuminaPlatform::LuminaCli,
+        )));
+        acp_agent
+            .register_acp_session(session.id.clone(), runtime_agent.clone(), HashMap::new())
+            .await;
+        let result = serde_json::from_value(mixed_media_result()).unwrap();
+        let message = Message::assistant().with_tool_response("media-call-1", Ok(result));
+        let MessageContent::ToolResponse(tool_response) = message.content[0].clone() else {
+            panic!("expected a tool response");
+        };
+        acp_agent
+            .session_manager
+            .add_message(&session.id, &message)
+            .await
+            .unwrap();
+        let persisted_session = acp_agent
+            .session_manager
+            .get_session(&session.id, true)
+            .await
+            .unwrap();
+
+        let (sender, mut output) = tokio::sync::mpsc::unbounded_channel::<String>();
+        let outgoing = futures::sink::unfold(sender, async move |sender, line| {
+            sender.send(line).map_err(std::io::Error::other)?;
+            Ok::<_, std::io::Error>(sender)
+        });
+        let transport = Lines::new(
+            outgoing,
+            futures::stream::pending::<std::io::Result<String>>(),
+        );
+        let connection = SacpAgent
+            .builder()
+            .connect_with(transport, async move |cx| {
+                let session_id = SessionId::new(session.id.clone());
+                acp_agent
+                    .handle_tool_response(
+                        &tool_response,
+                        &session_id,
+                        &session.id,
+                        message.id.as_deref(),
+                        &runtime_agent,
+                        &cx,
+                    )
+                    .await?;
+                replay_conversation_to_client(&cx, &persisted_session, false)?;
+
+                let mut notifications = Vec::new();
+                for _ in 0..2 {
+                    let line = output
+                        .recv()
+                        .await
+                        .expect("ACP notification must be written");
+                    let notification: Value = serde_json::from_str(&line).unwrap();
+                    assert_eq!(notification["method"], "session/update");
+                    assert_eq!(notification["params"]["sessionId"], session.id);
+                    let update = &notification["params"]["update"];
+                    assert_eq!(update["sessionUpdate"], "tool_call_update");
+                    assert_eq!(update["toolCallId"], "media-call-1");
+                    assert_eq!(update["status"], "completed");
+                    assert_eq!(update["content"], expected_media_content());
+                    assert_eq!(update["rawOutput"], json!({"mediaCount": 2}));
+                    notifications.push(notification);
+                }
+                assert_eq!(
+                    notifications[0]["params"]["update"]["content"],
+                    notifications[1]["params"]["update"]["content"]
+                );
+                Ok(())
+            });
+        tokio::time::timeout(Duration::from_secs(10), connection)
+            .await
+            .expect("live and replay notifications must both finish")
+            .unwrap();
+        server.shutdown().await;
+    }
+}

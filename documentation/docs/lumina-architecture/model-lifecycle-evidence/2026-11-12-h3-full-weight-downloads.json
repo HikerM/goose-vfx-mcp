@@ -1,0 +1,87 @@
+{
+  "status": "FULL_WEIGHTS_SHA256_VERIFIED",
+  "verifiedAt": "2026-11-12T10:13:59.429604+00:00",
+  "manifestSha256": "b0b4a9c2153115cf6461d05567e90227514218b5128c4f17525a68d69b1c7e98",
+  "totalBytes": 35149418880,
+  "files": [
+    {
+      "repository": "convertor/minimax-h3-gguf",
+      "revision": "2c1d402845a06200b19987e787f2112fa078a0e2",
+      "file": "minimax_h3_audio_vae_fp32-f16.gguf",
+      "sizeBytes": 302904896,
+      "sha256": "45764b28074abab09ec9fa1447b3eed3113b2e6878c177bab5bce0572064edf4",
+      "status": "PASS",
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\convertor__minimax-h3-gguf\\minimax_h3_audio_vae_fp32-f16.gguf",
+      "startedAt": "2026-11-12T09:06:14.992832+00:00",
+      "scope": "Full fixed-source GGUF validation asset; not product installation or inference acceptance",
+      "completedBytes": 302904896,
+      "elapsedSeconds": 44.92199999999866,
+      "finishedAt": "2026-11-12T09:06:59.926701+00:00",
+      "wholeFileSha256Verified": true
+    },
+    {
+      "repository": "convertor/minimax-h3-gguf",
+      "revision": "2c1d402845a06200b19987e787f2112fa078a0e2",
+      "file": "minimax_h3_video_vae_fp16-f16.gguf",
+      "sizeBytes": 5207785056,
+      "sha256": "2806d06d195d41a351a4a838125e9ddea09abb2770e1ef6bb9168409d1d393d9",
+      "status": "PASS",
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\convertor__minimax-h3-gguf\\minimax_h3_video_vae_fp16-f16.gguf",
+      "startedAt": "2026-11-12T09:06:14.992832+00:00",
+      "scope": "Full fixed-source GGUF validation asset; not product installation or inference acceptance",
+      "completedBytes": 5207785056,
+      "elapsedSeconds": 608.1719999999987,
+      "finishedAt": "2026-11-12T09:16:23.176774+00:00",
+      "wholeFileSha256Verified": true
+    },
+    {
+      "repository": "leejet/MiniMax-H3-GGUF",
+      "revision": "a09574553b7d47a064cffcfd6898d4501c315c76",
+      "file": "minimax_h3_fl2va_pruned-Q4_K_M.gguf",
+      "sizeBytes": 11420663904,
+      "sha256": "dd948e08ad0ba3c71bd42f368e283dd82e790f5122a63b276e22a3e0283d0c10",
+      "status": "PASS",
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\leejet__MiniMax-H3-GGUF\\minimax_h3_fl2va_pruned-Q4_K_M.gguf",
+      "startedAt": "2026-11-12T09:07:01.397208+00:00",
+      "scope": "Full fixed-source GGUF validation asset; not product installation or inference acceptance",
+      "completedBytes": 11420663904,
+      "elapsedSeconds": 1276.1719999999987,
+      "finishedAt": "2026-11-12T09:28:17.569151+00:00",
+      "wholeFileSha256Verified": true
+    },
+    {
+      "repository": "leejet/MiniMax-H3-GGUF",
+      "revision": "a09574553b7d47a064cffcfd6898d4501c315c76",
+      "file": "qwen3vl_32b_minimax_h3-Q4_K_M.gguf",
+      "sizeBytes": 18218065024,
+      "sha256": "11e6efe70a57ce7f4838c47bdbd1a1c4b8ce10e2b7747f1b065990b70f4b05fc",
+      "status": "PASS",
+      "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\leejet__MiniMax-H3-GGUF\\qwen3vl_32b_minimax_h3-Q4_K_M.gguf",
+      "startedAt": "2026-11-12T09:49:59.012063+00:00",
+      "scope": "Full fixed-source GGUF validation asset; not product installation or inference acceptance",
+      "completedBytes": 18218065024,
+      "elapsedSeconds": 1440.2339999999967,
+      "finishedAt": "2026-11-12T10:13:59.248157+00:00",
+      "wholeFileSha256Verified": true
+    }
+  ],
+  "priorFailure": {
+    "record": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-full-weights-20261112-r1\\result.json",
+    "sha256": "ddfe7862bd0ad57a4d44519c402436ed1d0e8625998c64a34b8f3ebfdd040944",
+    "failures": [
+      {
+        "file": "qwen3vl_32b_minimax_h3-Q4_K_M.gguf",
+        "failure": "URLError"
+      }
+    ]
+  },
+  "resumedRecord": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-full-weights-20261112-r2\\result.json",
+    "sha256": "803063b5f6ff637a9d30b7d550dd5c921fbb3ee8f5df2005cc7683c838915d2f"
+  },
+  "downloader": {
+    "path": "target/lifecycle-validation/fetch-h3-pinned-assets-r1.py",
+    "sha256": "30b00027358e22bea3add422b2f900010298819ada7b5f8335a10bc91ccef97e"
+  },
+  "scope": "Full fixed-revision GGUF validation assets downloaded with complete SHA256 comparison. This does not establish product managed installation, full tensor compatibility, generation quality, GPU performance, browser playback, or READY capability. The interrupted encoder resumed from independently rehashed segment checkpoints; previous failure evidence is retained."
+}

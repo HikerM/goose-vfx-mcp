@@ -2821,39 +2821,72 @@ fn build_tool_call_content(tool_result: &ToolResult<CallToolResult>) -> Vec<Tool
         Ok(result) => result
             .content
             .iter()
-            .filter_map(|content| match &content.raw {
-                RawContent::Text(val) => Some(ToolCallContent::Content(Content::new(
-                    ContentBlock::Text(TextContent::new(val.text.clone())),
-                ))),
-                RawContent::Image(val) => Some(ToolCallContent::Content(Content::new(
-                    ContentBlock::Image(ImageContent::new(val.data.clone(), val.mime_type.clone())),
-                ))),
-                RawContent::Resource(val) => {
-                    let resource = match &val.resource {
-                        ResourceContents::TextResourceContents {
-                            mime_type,
-                            text,
-                            uri,
-                            ..
-                        } => EmbeddedResourceResource::TextResourceContents(
-                            TextResourceContents::new(text.clone(), uri.clone())
-                                .mime_type(mime_type.clone()),
-                        ),
-                        ResourceContents::BlobResourceContents {
-                            mime_type,
-                            blob,
-                            uri,
-                            ..
-                        } => EmbeddedResourceResource::BlobResourceContents(
-                            BlobResourceContents::new(blob.clone(), uri.clone())
-                                .mime_type(mime_type.clone()),
-                        ),
-                    };
-                    Some(ToolCallContent::Content(Content::new(
-                        ContentBlock::Resource(EmbeddedResource::new(resource)),
-                    )))
-                }
-                RawContent::Audio(_) | RawContent::ResourceLink(_) => None,
+            .map(|content| {
+                let annotations = content.annotations.as_ref().map(|annotations| {
+                    Annotations::new()
+                        .audience(annotations.audience.as_ref().map(|audience| {
+                            audience
+                                .iter()
+                                .map(|role| match role {
+                                    Role::Assistant => {
+                                        agent_client_protocol::schema::v1::Role::Assistant
+                                    }
+                                    Role::User => agent_client_protocol::schema::v1::Role::User,
+                                })
+                                .collect::<Vec<_>>()
+                        }))
+                        .priority(annotations.priority.map(f64::from))
+                        .last_modified(annotations.last_modified.map(|timestamp| {
+                            timestamp.to_rfc3339_opts(chrono::SecondsFormat::AutoSi, true)
+                        }))
+                });
+                let block = match &content.raw {
+                    RawContent::Text(val) => ContentBlock::Text(TextContent::new(val.text.clone())),
+                    RawContent::Image(val) => ContentBlock::Image(ImageContent::new(
+                        val.data.clone(),
+                        val.mime_type.clone(),
+                    )),
+                    RawContent::Resource(val) => {
+                        let resource = match &val.resource {
+                            ResourceContents::TextResourceContents {
+                                mime_type,
+                                text,
+                                uri,
+                                ..
+                            } => EmbeddedResourceResource::TextResourceContents(
+                                TextResourceContents::new(text.clone(), uri.clone())
+                                    .mime_type(mime_type.clone()),
+                            ),
+                            ResourceContents::BlobResourceContents {
+                                mime_type,
+                                blob,
+                                uri,
+                                ..
+                            } => EmbeddedResourceResource::BlobResourceContents(
+                                BlobResourceContents::new(blob.clone(), uri.clone())
+                                    .mime_type(mime_type.clone()),
+                            ),
+                        };
+                        ContentBlock::Resource(EmbeddedResource::new(resource))
+                    }
+                    RawContent::Audio(val) => ContentBlock::Audio(
+                        agent_client_protocol::schema::v1::AudioContent::new(
+                            val.data.clone(),
+                            val.mime_type.clone(),
+                        )
+                        .annotations(annotations),
+                    ),
+                    RawContent::ResourceLink(val) => ContentBlock::ResourceLink(
+                        ResourceLink::new(val.name.clone(), val.uri.clone())
+                            .title(val.title.clone())
+                            .description(val.description.clone())
+                            .mime_type(val.mime_type.clone())
+                            .size(val.size.map(i64::from))
+                            .annotations(annotations)
+                            .meta(val.meta.as_ref().map(|meta| meta.0.clone())),
+                    ),
+                };
+                ToolCallContent::Content(Content::new(block))
             })
             .collect(),
         Err(_) => Vec::new(),
