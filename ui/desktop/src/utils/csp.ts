@@ -71,7 +71,7 @@ export function buildCSP(externalBackend?: ExternalBackendConfig): string {
     "object-src 'none';" +
     "frame-src 'self' https: http:;" +
     "font-src 'self' data: https:;" +
-    "media-src 'self' mediastream:;" +
+    "media-src 'self' mediastream: blob:;" +
     "form-action 'none';" +
     "base-uri 'self';" +
     "manifest-src 'self';" +

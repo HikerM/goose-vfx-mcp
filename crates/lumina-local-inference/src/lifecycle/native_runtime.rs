@@ -18,8 +18,8 @@ use std::time::Duration;
 use super::files::{checked_local_path, open_for_verification, require_single_link_file};
 use super::{
     installation_directory, ComponentRole, InstallationStore, InstalledVersion, LaunchChatTemplate,
-    LaunchConfig, LifecycleRepository, RepositoryPath, RuntimeAssetGuard, RuntimeExecutionMode,
-    RuntimeParameters, Sha256Digest,
+    LaunchConfig, LifecycleRepository, RepositoryPath, ResourceWorkload, RuntimeAssetGuard,
+    RuntimeExecutionMode, RuntimeParameters, Sha256Digest, VectorRuntimeProfile,
 };
 
 /// Owns one authenticated native process, not capability validation or a resource queue.
@@ -30,6 +30,7 @@ use super::{
 pub struct NativeHelperRuntime {
     process: GuardedChild,
     config: LaunchConfig,
+    workload: ResourceWorkload,
     endpoint: Url,
     bearer_token: String,
     model_alias: String,
@@ -215,10 +216,15 @@ impl NativeHelperRuntime {
             !cancelled.load(Ordering::Acquire),
             "Native helper startup was cancelled"
         );
-        ensure!(
-            installed.manifest.plan.admission.is_some(),
-            "Native helper requires frozen resource admission"
-        );
+        let workload = installed
+            .manifest
+            .plan
+            .admission
+            .as_ref()
+            .context("Native helper requires frozen resource admission")?
+            .envelope
+            .workload
+            .clone();
         let port = match config.mode {
             RuntimeExecutionMode::Helper { port } => port,
             RuntimeExecutionMode::InProcess => {
@@ -327,6 +333,7 @@ impl NativeHelperRuntime {
         Ok(Self {
             process,
             config,
+            workload,
             endpoint,
             bearer_token,
             model_alias,
@@ -404,31 +411,12 @@ impl NativeHelperRuntime {
             "Native helper rejected its instance credential"
         );
         let properties = bounded_json(response).await?;
-        let RuntimeParameters::LlamaCpp {
-            workload: Some(workload),
-            ..
-        } = &self.config.parameters
-        else {
-            bail!("Native helper has no bound workload");
-        };
-        ensure!(
-            properties["model_alias"].as_str() == Some(self.model_alias.as_str())
-                && properties["model_path"].as_str().map(Path::new)
-                    == Some(self.model_path.as_path())
-                && properties["default_generation_settings"]["n_ctx"].as_u64()
-                    == Some(u64::from(workload.context_tokens))
-                && properties["total_slots"].as_u64()
-                    == Some(u64::from(workload.parallel_sequences))
-                && properties["modalities"]["vision"].as_bool() == Some(workload.vision.is_some()),
-            "Native helper loaded a different model or execution workload"
-        );
-        let speculation = properties["default_generation_settings"]["params"]["speculative.types"]
-            .as_str()
-            .context("Native helper omitted its speculative execution mode")?;
-        ensure!(
-            !speculation.is_empty() && speculation.split(',').all(|kind| kind == "none"),
-            "Native helper enabled unbudgeted speculative execution"
-        );
+        validate_model_properties(
+            &properties,
+            &self.workload,
+            &self.model_path,
+            &self.model_alias,
+        )?;
         Ok(true)
     }
 
@@ -459,6 +447,31 @@ impl NativeHelperRuntime {
     pub(crate) fn request_gate(&self) -> Arc<NativeRequestGate> {
         Arc::clone(&self.request_gate)
     }
+}
+
+fn validate_model_properties(
+    properties: &Value,
+    workload: &ResourceWorkload,
+    model_path: &Path,
+    alias: &str,
+) -> Result<()> {
+    ensure!(
+        properties["model_alias"].as_str() == Some(alias)
+            && properties["model_path"].as_str().map(Path::new) == Some(model_path)
+            && properties["default_generation_settings"]["n_ctx"].as_u64()
+                == Some(u64::from(workload.context_tokens))
+            && properties["total_slots"].as_u64() == Some(u64::from(workload.parallel_sequences))
+            && properties["modalities"]["vision"].as_bool() == Some(workload.vision.is_some()),
+        "Native helper loaded a different model or execution workload"
+    );
+    let speculation = properties["default_generation_settings"]["params"]["speculative.types"]
+        .as_str()
+        .context("Native helper omitted its speculative execution mode")?;
+    ensure!(
+        !speculation.is_empty() && speculation.split(',').all(|kind| kind == "none"),
+        "Native helper enabled unbudgeted speculative execution"
+    );
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -636,20 +649,6 @@ fn verify_binary(path: &Path, expected: &Sha256Digest) -> Result<()> {
 }
 
 fn helper_arguments(config: &LaunchConfig, directory: &Path, alias: &str) -> Result<Vec<OsString>> {
-    let RuntimeParameters::LlamaCpp {
-        chat_template,
-        context_length,
-        gpu_layers,
-        cpu_threads,
-        kv_key_type,
-        kv_value_type,
-        batch_size,
-        flash_attention,
-        workload: Some(workload),
-    } = &config.parameters
-    else {
-        bail!("Native helper supports only admitted LlamaCpp parameters");
-    };
     let RuntimeExecutionMode::Helper { port } = config.mode else {
         bail!("Native helper requires helper mode");
     };
@@ -675,6 +674,26 @@ fn helper_arguments(config: &LaunchConfig, directory: &Path, alias: &str) -> Res
     option("--host", "127.0.0.1".into());
     option("--port", port.to_string());
     option("--alias", alias.into());
+    if matches!(config.parameters, RuntimeParameters::Specialized { .. }) {
+        let profile = VectorRuntimeProfile::from_parameters(&config.parameters)?;
+        args.extend(profile.arguments().into_iter().map(OsString::from));
+        args.extend(["--offline", "--log-verbosity", "4"].map(OsString::from));
+        return Ok(args);
+    }
+    let RuntimeParameters::LlamaCpp {
+        chat_template,
+        context_length,
+        gpu_layers,
+        cpu_threads,
+        kv_key_type,
+        kv_value_type,
+        batch_size,
+        flash_attention,
+        workload: Some(workload),
+    } = &config.parameters
+    else {
+        bail!("Native helper requires an admitted text, vision or vector workload");
+    };
     option("--ctx-size", context_length.to_string());
     option("--batch-size", batch_size.to_string());
     option(

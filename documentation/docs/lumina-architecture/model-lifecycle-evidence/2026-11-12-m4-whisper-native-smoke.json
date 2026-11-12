@@ -1,0 +1,90 @@
+{
+  "status": "PASS",
+  "started_at": "2026-11-12T07:45:30.192327+00:00",
+  "scope": "Real fixed ModelScope Base GGUF layout and short synthetic English transcription smoke only. Not complete A46, managed installation, dictation integration, multilingual quality, cancellation, GPU, or performance acceptance.",
+  "argv": [
+    "D:\\Project\\goose\\target\\debug\\examples\\test_whisper.exe",
+    "base",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\cloudlnk__whisper-base-gguf\\whisper-base-Q8_0.gguf",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.wav"
+  ],
+  "identities_before": {
+    "D:\\Project\\goose\\target\\debug\\examples\\test_whisper.exe": "8792f33b4ff2ba9b5cf777fd538f44b3b029d72d3afe921d491e20a037b0eb53",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\cloudlnk__whisper-base-gguf\\whisper-base-Q8_0.gguf": "81c069428bc8a24551a8169cf31cf09bcfd9d4cf50389ae281323c9aa9648c81",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.wav": "b29307e631d805d7079910c8c9c5ee14777549954b737e15a5770db7ac2da2e9",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.json": "186d20c5fa1ddf4284e74cb3d44faa7b8415cace809484b7a464e459bef9b33c",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\verify-native-whisper-r1.py": "ebe775bfd8e2ae05bf16ebc0645dfba81c24655ba923e49d59123d8bb455a283",
+    "D:\\Project\\goose\\crates\\lumina\\src\\dictation\\whisper.rs": "ec304aba789de070955a415dc24ee3c9ce8972d7afe912e40dbfbff27b887629",
+    "D:\\Project\\goose\\crates\\lumina\\src\\dictation\\whisper_gguf.rs": "b33539aed0750432bc033c19d2b48abea774ded312a08c8c6bacc5919a8fe6a0",
+    "D:\\Project\\goose\\crates\\lumina\\src\\dictation\\whisper_data\\tokens.json": "2eda9a75eb73d43029e4f99fb86729210e151481214e09899fd34e8ca83bbfa6",
+    "D:\\Project\\goose\\crates\\lumina\\examples\\test_whisper.rs": "075cb493aa93a48e71825a50c271964a9f4c51c88a8e9d27764dadeda0255d8f"
+  },
+  "reference": {
+    "voice": "Microsoft Zira Desktop",
+    "audio": "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.wav",
+    "transcript": "We are testing local speech recognition. The blue door is open.",
+    "sampleRate": 16000,
+    "channels": 1,
+    "maxWordErrorRate": 0.25,
+    "scope": "Synthetic local OS speech fixture for ASR testing only; not evidence of Lumina TTS model support"
+  },
+  "pid": 41084,
+  "exit_code": 0,
+  "response": {
+    "model": "base",
+    "layout": "whisper-modelscope-base-enc-dec-v1",
+    "transcription": "We are testing local speech recognition. The blue door is open."
+  },
+  "expected_words": [
+    "we",
+    "are",
+    "testing",
+    "local",
+    "speech",
+    "recognition",
+    "the",
+    "blue",
+    "door",
+    "is",
+    "open"
+  ],
+  "actual_words": [
+    "we",
+    "are",
+    "testing",
+    "local",
+    "speech",
+    "recognition",
+    "the",
+    "blue",
+    "door",
+    "is",
+    "open"
+  ],
+  "edit_distance": 0,
+  "word_error_rate": 0.0,
+  "elapsed_seconds": 89.15600000000268,
+  "identities_after": {
+    "D:\\Project\\goose\\target\\debug\\examples\\test_whisper.exe": "8792f33b4ff2ba9b5cf777fd538f44b3b029d72d3afe921d491e20a037b0eb53",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\cloudlnk__whisper-base-gguf\\whisper-base-Q8_0.gguf": "81c069428bc8a24551a8169cf31cf09bcfd9d4cf50389ae281323c9aa9648c81",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.wav": "b29307e631d805d7079910c8c9c5ee14777549954b737e15a5770db7ac2da2e9",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.json": "186d20c5fa1ddf4284e74cb3d44faa7b8415cace809484b7a464e459bef9b33c",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\verify-native-whisper-r1.py": "ebe775bfd8e2ae05bf16ebc0645dfba81c24655ba923e49d59123d8bb455a283",
+    "D:\\Project\\goose\\crates\\lumina\\src\\dictation\\whisper.rs": "ec304aba789de070955a415dc24ee3c9ce8972d7afe912e40dbfbff27b887629",
+    "D:\\Project\\goose\\crates\\lumina\\src\\dictation\\whisper_gguf.rs": "b33539aed0750432bc033c19d2b48abea774ded312a08c8c6bacc5919a8fe6a0",
+    "D:\\Project\\goose\\crates\\lumina\\src\\dictation\\whisper_data\\tokens.json": "2eda9a75eb73d43029e4f99fb86729210e151481214e09899fd34e8ca83bbfa6",
+    "D:\\Project\\goose\\crates\\lumina\\examples\\test_whisper.rs": "075cb493aa93a48e71825a50c271964a9f4c51c88a8e9d27764dadeda0255d8f"
+  },
+  "sidecar_before": null,
+  "sidecar_after": null,
+  "schema_version": 1,
+  "source": {
+    "repository": "cloudlnk/whisper-base-gguf",
+    "revision": "1a564799fb1c4db24c3aaea0c2649a204365fdfb",
+    "path": "whisper-base-Q8_0.gguf",
+    "bytes": 84962880,
+    "sha256": "81c069428bc8a24551a8169cf31cf09bcfd9d4cf50389ae281323c9aa9648c81"
+  },
+  "source_report_sha256": "24ba1cf5fe92c6b78509ecfe83e4cb0fb662f7c10a0f0236d1d11692ff42e3ab",
+  "runtime_ready": false
+}

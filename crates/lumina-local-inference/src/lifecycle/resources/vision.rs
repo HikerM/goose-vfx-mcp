@@ -226,6 +226,7 @@ pub fn baseline_vision_resource_envelope(
             prompt_cache_bytes: 0,
             context_checkpoint_slots: 0,
             vision: Some(VisionResourceWorkload::measured_qwen35_cpu()),
+            vector: None,
         },
         compute_buffer_bytes: 256 * MIB,
         auxiliary_buffer_bytes: 512 * MIB,

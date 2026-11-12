@@ -1,11 +1,13 @@
 import { useMemo, useRef } from 'react';
 import ImagePreview from './ImagePreview';
+import AudioPreview from './AudioPreview';
 import { formatMessageTimestamp } from '../utils/timeUtils';
 import MarkdownContent from './MarkdownContent';
 import ThinkingContent from './ThinkingContent';
 import ToolCallWithResponse from './ToolCallWithResponse';
 import {
   getTextAndImageContent,
+  getAudioContent,
   getThinkingContent,
   getToolRequests,
   getToolResponses,
@@ -50,6 +52,7 @@ export default function LuminaMessage({
   const contentRef = useRef<HTMLDivElement | null>(null);
 
   const { textContent: displayText, imagePaths } = getTextAndImageContent(message);
+  const audioContent = getAudioContent(message);
   const thinkingContent = getThinkingContent(message);
 
   const timestamp = useMemo(() => formatMessageTimestamp(message.created), [message.created]);
@@ -129,12 +132,13 @@ export default function LuminaMessage({
               isStreaming &&
               !displayText.trim() &&
               imagePaths.length === 0 &&
+              audioContent.length === 0 &&
               toolRequests.length === 0
             }
           />
         )}
 
-        {(displayText.trim() || imagePaths.length > 0) && (
+        {(displayText.trim() || imagePaths.length > 0 || audioContent.length > 0) && (
           <div className="flex flex-col group">
             {displayText.trim() && (
               <div ref={contentRef} className="w-full">
@@ -149,6 +153,10 @@ export default function LuminaMessage({
                 ))}
               </div>
             )}
+
+            {audioContent.map((audio, index) => (
+              <AudioPreview key={index} data={audio.data} mimeType={audio.mimeType} />
+            ))}
 
             {toolRequests.length === 0 && (
               <div className="relative flex items-center justify-between">

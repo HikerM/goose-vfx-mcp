@@ -31,6 +31,13 @@ export type ImageContent = {
   mimeType: string;
 };
 
+export type AudioContent = {
+  _meta?: JsonObject;
+  annotations?: Annotations | JsonObject;
+  data: string;
+  mimeType: string;
+};
+
 export type ContentBlock =
   | ({ type: 'text' } & RawTextContent)
   | ({ type: 'image' } & RawImageContent)
@@ -52,6 +59,8 @@ type RawImageContent = {
 };
 
 type RawAudioContent = {
+  _meta?: JsonObject;
+  annotations?: ContentAnnotations;
   data: string;
   mimeType: string;
 };
@@ -195,6 +204,7 @@ export type MessageMetadata = {
 export type MessageContent =
   | (TextContent & { type: 'text' })
   | (ImageContent & { type: 'image' })
+  | (AudioContent & { type: 'audio' })
   | (ToolRequest & { type: 'toolRequest' })
   | (ToolResponse & { type: 'toolResponse' })
   | (ToolConfirmationRequest & { type: 'toolConfirmationRequest' })
@@ -319,6 +329,10 @@ export function getTextAndImageContent(message: Message): {
   }
 
   return { textContent, imagePaths };
+}
+
+export function getAudioContent(message: Message): (AudioContent & { type: 'audio' })[] {
+  return message.content.filter((content) => content.type === 'audio');
 }
 
 function stripToolCallMarkers(text: string): string {

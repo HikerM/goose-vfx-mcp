@@ -598,6 +598,65 @@ pub enum RuntimeParameters {
 }
 
 impl LaunchConfig {
+    pub fn for_measured_cpu_installation(
+        installed: &super::InstalledVersion,
+    ) -> Result<LaunchConfig> {
+        let manifest = &installed.manifest;
+        manifest.validate()?;
+        ensure!(
+            installed.manifest_digest == manifest.digest()?,
+            "Installed manifest identity differs"
+        );
+        let workload = manifest
+            .plan
+            .admission
+            .as_ref()
+            .context("Installed model has no frozen resource admission")?
+            .envelope
+            .workload
+            .clone();
+        let mut component_files: BTreeMap<ComponentRole, Vec<RepositoryPath>> = BTreeMap::new();
+        for component in manifest.plan.dependencies.components.values() {
+            let paths = component_files.entry(component.role).or_default();
+            for id in &component.artifact_ids {
+                let path = manifest.installed_files[id].relative_path.clone();
+                if !paths.contains(&path) {
+                    paths.push(path);
+                }
+            }
+        }
+        let cache_name = |kind| match kind {
+            super::ResourceCacheType::F16 => "f16".to_string(),
+            super::ResourceCacheType::F32 => "f32".to_string(),
+        };
+        let parameters = if workload.vector.is_some() {
+            super::validate_vector_admission(manifest.plan.admission.as_ref().unwrap())?
+                .launch_parameters()
+        } else {
+            RuntimeParameters::LlamaCpp {
+                chat_template: LaunchChatTemplate::Embedded,
+                context_length: workload.context_tokens,
+                gpu_layers: 0,
+                cpu_threads: 4,
+                kv_key_type: cache_name(workload.kv_key_type),
+                kv_value_type: cache_name(workload.kv_value_type),
+                batch_size: workload.batch_tokens,
+                flash_attention: true,
+                workload: Some(workload),
+            }
+        };
+        Ok(LaunchConfig {
+            installation_id: manifest.installation_id.clone(),
+            version_id: manifest.version_id.clone(),
+            manifest_digest: installed.manifest_digest.clone(),
+            runtime: manifest.plan.runtime.clone(),
+            capabilities: manifest.plan.target_capabilities.clone(),
+            component_files,
+            parameters,
+            mode: RuntimeExecutionMode::Helper { port: 0 },
+        })
+    }
+
     /// Legacy manifests without admission retain identity-only validation.
     /// An adapter must enforce the bound workload before producing runtime readiness evidence.
     pub fn validate_binding(&self, manifest: &ModelManifest) -> Result<()> {
@@ -643,7 +702,25 @@ impl LaunchConfig {
                     && matches!(self.mode, RuntimeExecutionMode::Helper { port } if port > 0),
                 "Frozen resource admission requires the measured native CPU helper runtime"
             );
-            self.parameters.validate_resource_binding(admission)?;
+            if admission.envelope.workload.vector.is_some() {
+                let profile = super::validate_vector_admission(admission)?;
+                ensure!(
+                    self.parameters == profile.launch_parameters()
+                        && self.capabilities == BTreeSet::from([profile.capability()]),
+                    "Vector launch parameters or capability differ from the admitted profile"
+                );
+                ensure!(
+                    manifest.installed_files.len() == 1
+                        && manifest.installed_files.values().all(|file| file
+                            .computed_sha256
+                            .as_str()
+                            == profile.model_sha256()
+                            && file.size_bytes == profile.model_bytes()),
+                    "Vector installation content differs from the admitted profile"
+                );
+            } else {
+                self.parameters.validate_resource_binding(admission)?;
+            }
             let expected_roles = if admission.envelope.workload.vision.is_some() {
                 BTreeSet::from([ComponentRole::Main, ComponentRole::VisionProjector])
             } else {

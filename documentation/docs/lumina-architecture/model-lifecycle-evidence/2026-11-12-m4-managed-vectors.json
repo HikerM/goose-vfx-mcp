@@ -1,0 +1,541 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-12",
+  "status": "PASS",
+  "scope": "Two exact ModelScope GGUF CPU profiles: production plan-vector -> install-plan -> embed/rerank, registered installation ownership and fixed 20-case bilingual relevance. No all-type, GPU, normal-session service or capability READY claim.",
+  "originalReport": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\summary.json",
+    "sha256": "ab2f4b9b515497a618d0b1b00ba65cd0ee30e05200d96247048505ced8f3de6a"
+  },
+  "startedAt": "2026-11-12T07:51:14.083649+00:00",
+  "finishedAt": "2026-11-12T07:54:58.128194+00:00",
+  "binaries": {
+    "cli": {
+      "path": "D:\\Project\\goose\\target\\debug\\lumina.exe",
+      "sha256": "d364e2c2df12598373bdcf4e9d81610cd437f95019e4cc3b6c9bb65319aece66"
+    },
+    "helper": {
+      "path": "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+      "sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+    },
+    "acceptanceTest": {
+      "path": "D:\\Project\\goose\\target\\debug\\deps\\lifecycle_managed_vectors-40c9bb93989b2450.exe",
+      "sha256": "48565cc173575b2603365df4bc56e2675f2df4a25daf35a62039189cd75d9559"
+    }
+  },
+  "fixture": {
+    "path": "D:\\Project\\goose\\crates\\lumina-local-inference\\tests\\fixtures\\vector-relevance-v1.json",
+    "sha256": "a471f719e0c6efc652d1cf9e492b9c9d483b6ebb9f5f86e7a965e99375bc6d6c",
+    "caseCount": 20,
+    "minimumTop1Correct": 18,
+    "thresholdChangedAfterResults": false
+  },
+  "relevanceReport": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\managed-relevance\\report.json",
+    "sha256": "a866c053eb43193ff63cba08bd157a5d138601f4945b9a524632d98965ddcfa1"
+  },
+  "profiles": [
+    {
+      "capability": "embedding",
+      "installationId": "acceptance-embedding",
+      "versionId": "version:fedc1b66-cfcb-477f-a63b-148bff0d19c6",
+      "manifestDigest": "8644c94d4b8e35601574ddb0214308fc202e90f05d59ff3d5a9150942cf752c8",
+      "manifestFile": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\app\\data\\model-lifecycle\\installations\\5ec9c7b21f3e6f46df4f03b634f57178bfa17ae60b760ba6c49138997c91773a\\6e6de9766e39325e63794fdc9fd7444daa6ed138277e1a67248f3caca071e476\\manifest.json",
+        "sha256": "8644c94d4b8e35601574ddb0214308fc202e90f05d59ff3d5a9150942cf752c8"
+      },
+      "planDigest": "9198c5e1fdc19ad6e3eabad4aadfa58893829685121446ab453b6e70b4166746",
+      "job": {
+        "id": "job:4219939c-6aac-4330-bc95-2e17e3da3eac",
+        "stage": "installed",
+        "status": "completed",
+        "generation": 2,
+        "lease_owner": null,
+        "lease_until": null,
+        "plan_digest": "9198c5e1fdc19ad6e3eabad4aadfa58893829685121446ab453b6e70b4166746"
+      },
+      "installationSeconds": 188.39,
+      "assets": [
+        {
+          "repository": "Qwen/Qwen3-Embedding-0.6B-GGUF",
+          "revision": "61ae123505fc6fa7f36d372fae1a30bc384241ea",
+          "sourceFile": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+          "artifactId": "15efa15c135fcfa587cda179fb2469b1e8db68ea011ec303c42a9f49e563e19e",
+          "formalPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\app\\data\\model-lifecycle\\installations\\5ec9c7b21f3e6f46df4f03b634f57178bfa17ae60b760ba6c49138997c91773a\\6e6de9766e39325e63794fdc9fd7444daa6ed138277e1a67248f3caca071e476\\files\\20a012f01badf317618b15aeb0688aa11f2515fd8890f5827dcc41287f957663.gguf",
+          "blobPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\app\\data\\model-lifecycle\\blobs\\sha256\\06\\06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+          "sizeBytes": 639150592,
+          "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+          "fullFormalAndBlobHashesMatch": true,
+          "blobReferences": [
+            {
+              "version_id": "version:fedc1b66-cfcb-477f-a63b-148bff0d19c6",
+              "artifact_id": "15efa15c135fcfa587cda179fb2469b1e8db68ea011ec303c42a9f49e563e19e",
+              "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "status": "PASS",
+        "correct": 18,
+        "total": 20,
+        "minimumCorrect": 18,
+        "misses": [
+          {
+            "id": "en-07",
+            "expectedIndex": 0,
+            "actualIndex": 1
+          },
+          {
+            "id": "en-10",
+            "expectedIndex": 2,
+            "actualIndex": 1
+          }
+        ],
+        "semantics": "1024-dimensional finite L2-normalized vectors, dot-product top1"
+      },
+      "actualSettings": {
+        "auto_fit": "false",
+        "batch_cpu_threads": "4",
+        "batch_size": "512",
+        "cache_idle_slots": "false",
+        "cache_prompt": "false",
+        "cache_reuse": "0",
+        "cache_type_k": "f16",
+        "cache_type_v": "f16",
+        "context_checkpoints": "0",
+        "context_length": "512",
+        "cpu_threads": "4",
+        "dimensions": "1024",
+        "embedding_normalization": "2",
+        "flash_attention": "on",
+        "gpu_layers": "0",
+        "max_batch_bytes": "65536",
+        "max_batch_items": "16",
+        "max_input_bytes": "8192",
+        "max_input_tokens": "511",
+        "microbatch_size": "512",
+        "parallel_sequences": "1",
+        "pooling": "last",
+        "profile": "qwen3-embedding-06b-q8-v1",
+        "prompt_cache_mib": "0",
+        "speculative_type": "none",
+        "warmup": "false"
+      },
+      "helperStopped": true,
+      "helperExitCode": 1,
+      "helperExitScope": "Explicit owner stop; stop code is not a natural-success claim.",
+      "runtimeLogs": [
+        {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\managed-relevance\\embedding\\native-4fd79b8a-d9a1-40fd-bda0-898fec0b9e52.stdout.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\managed-relevance\\embedding\\native-4fd79b8a-d9a1-40fd-bda0-898fec0b9e52.stderr.log",
+          "sha256": "52cb0cd28cc7ba4939e709de5cd59a0db7a686cc2f5104b7f1aac0f036caaeab"
+        }
+      ]
+    },
+    {
+      "capability": "reranking",
+      "installationId": "acceptance-reranker",
+      "versionId": "version:12129e67-5ff9-4dda-bf91-8eb7af631496",
+      "manifestDigest": "a066fc84d2fd93349f72d972b3ef52432b0d98115b2fdce837a3382cf9459cac",
+      "manifestFile": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\app\\data\\model-lifecycle\\installations\\80694be56243bcfa89b98706d2983f37a5d31c3f3159f0efa406ac5f642f8ef4\\cabeed9cb00fc0b59085cf246e9c0f901a71f6b9cd52cfb4f2df67f8755d976c\\manifest.json",
+        "sha256": "a066fc84d2fd93349f72d972b3ef52432b0d98115b2fdce837a3382cf9459cac"
+      },
+      "planDigest": "27d6dc19c7d93bb36379154753bb636564f70edf4d897b12433dc739a94b4036",
+      "job": {
+        "id": "job:e0a0ef39-b216-403a-8f1e-6a509c117efd",
+        "stage": "installed",
+        "status": "completed",
+        "generation": 2,
+        "lease_owner": null,
+        "lease_until": null,
+        "plan_digest": "27d6dc19c7d93bb36379154753bb636564f70edf4d897b12433dc739a94b4036"
+      },
+      "installationSeconds": 147.734,
+      "assets": [
+        {
+          "repository": "gpustack/bge-reranker-v2-m3-GGUF",
+          "revision": "ee922fb06dd877ddf5019d0fa366072a7be36b16",
+          "sourceFile": "bge-reranker-v2-m3-Q4_K_M.gguf",
+          "artifactId": "a1496cd3d05fba4ebab6bf50c9717305ca6b7322e3f699718dc17de2e7c0e2d6",
+          "formalPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\app\\data\\model-lifecycle\\installations\\80694be56243bcfa89b98706d2983f37a5d31c3f3159f0efa406ac5f642f8ef4\\cabeed9cb00fc0b59085cf246e9c0f901a71f6b9cd52cfb4f2df67f8755d976c\\files\\6f0027d3943641659a5446bc89ccd35674962a1edb3001d89a617b362fd34e6f.gguf",
+          "blobPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\app\\data\\model-lifecycle\\blobs\\sha256\\e1\\e186a244ed455b4ab66ec64339ce7427a6ae13f5c0b5e544de96e50f0f8b3673",
+          "sizeBytes": 438376864,
+          "sha256": "e186a244ed455b4ab66ec64339ce7427a6ae13f5c0b5e544de96e50f0f8b3673",
+          "fullFormalAndBlobHashesMatch": true,
+          "blobReferences": [
+            {
+              "version_id": "version:12129e67-5ff9-4dda-bf91-8eb7af631496",
+              "artifact_id": "a1496cd3d05fba4ebab6bf50c9717305ca6b7322e3f699718dc17de2e7c0e2d6",
+              "sha256": "e186a244ed455b4ab66ec64339ce7427a6ae13f5c0b5e544de96e50f0f8b3673"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "status": "PASS",
+        "correct": 19,
+        "total": 20,
+        "minimumCorrect": 18,
+        "misses": [
+          {
+            "id": "en-10",
+            "expectedIndex": 2,
+            "actualIndex": 3
+          }
+        ],
+        "semantics": "finite raw_classifier_logit, original document indices"
+      },
+      "actualSettings": {
+        "auto_fit": "false",
+        "batch_cpu_threads": "4",
+        "batch_size": "512",
+        "cache_idle_slots": "false",
+        "cache_prompt": "false",
+        "cache_reuse": "0",
+        "cache_type_k": "f16",
+        "cache_type_v": "f16",
+        "context_checkpoints": "0",
+        "context_length": "512",
+        "cpu_threads": "4",
+        "dimensions": "1",
+        "embedding_normalization": "not_applicable",
+        "flash_attention": "on",
+        "gpu_layers": "0",
+        "max_batch_bytes": "65536",
+        "max_batch_items": "16",
+        "max_input_bytes": "8192",
+        "max_input_tokens": "512",
+        "microbatch_size": "512",
+        "parallel_sequences": "1",
+        "pooling": "rank",
+        "profile": "bge-reranker-v2-m3-q4km-v1",
+        "prompt_cache_mib": "0",
+        "speculative_type": "none",
+        "warmup": "false"
+      },
+      "helperStopped": true,
+      "helperExitCode": 1,
+      "helperExitScope": "Explicit owner stop; stop code is not a natural-success claim.",
+      "runtimeLogs": [
+        {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\managed-relevance\\reranker\\native-ccdeffab-221e-4d6c-9b88-9314608d1809.stdout.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\managed-relevance\\reranker\\native-ccdeffab-221e-4d6c-9b88-9314608d1809.stderr.log",
+          "sha256": "61e2d804f7fd322e201192abedf3a1c73cef14e200cd4ff70e0f106cbc3a95bd"
+        }
+      ]
+    }
+  ],
+  "cliExamples": [
+    {
+      "name": "embedding-use",
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\embedding-use.json",
+        "sha256": "1e22524dd3feb78ea7f80b09f5a5bb4431259f4d17127eb6cae6f0b9de946f4f"
+      },
+      "helperStopped": true,
+      "helperExitCode": 1,
+      "usage": {
+        "prompt_tokens": 69,
+        "total_tokens": 69
+      }
+    },
+    {
+      "name": "reranking-use",
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reranking-use.json",
+        "sha256": "a9f59cc433a4a0b5de3ad4e455821b8d046c24e80cb6a3dbda07b822291fa16c"
+      },
+      "helperStopped": true,
+      "helperExitCode": 1,
+      "usage": {
+        "prompt_tokens": 131,
+        "total_tokens": 131
+      }
+    }
+  ],
+  "cliNegativeCases": [
+    {
+      "case": "reject-empty",
+      "exitCode": 1,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-empty.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-empty.stderr.log",
+        "sha256": "8e1d0d9b3ec10b20c17175439b0e77dcdc257a0b337b6a1552d4ab5e04f8cb5b"
+      }
+    },
+    {
+      "case": "reject-large-item",
+      "exitCode": 1,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-large-item.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-large-item.stderr.log",
+        "sha256": "0eb4f96656fa737c85b23e4f46b4cd842ebb75c32f5ea1e02e8874cb99571313"
+      }
+    },
+    {
+      "case": "reject-unknown-field",
+      "exitCode": 1,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-unknown-field.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-unknown-field.stderr.log",
+        "sha256": "b90f71b5e888008361b321f866c19fede87f524c4582719087f7981be21b32d6"
+      }
+    },
+    {
+      "case": "reject-wrong-capability",
+      "exitCode": 1,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-wrong-capability.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-wrong-capability.stderr.log",
+        "sha256": "1d664512c4e21601d6a941930a7ea20e18f78c115d81a3a7039aef304b4aa31c"
+      }
+    }
+  ],
+  "noNewHelperOnRejectedCalls": {
+    "result": "PASS",
+    "basis": "Original v2 harness compared complete runtime-runs child-directory lists before and after all four rejected commands. This audit verified report and harness without rerunning requests.",
+    "harness": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\verify-managed-vectors-v2.py",
+      "sha256": "9f370a8ade774b76601e9b1faaaa0072f88656457fd5ec5ffcd7a9022ac7e31f"
+    },
+    "lines": [
+      163,
+      172
+    ]
+  },
+  "storageAudit": {
+    "status": "PASS",
+    "connection": "sqlite3 URI mode=ro; PRAGMA query_only=ON; WAL-aware read, no checkpoint or database mutation",
+    "schemaVersion": 15,
+    "integrityCheck": [
+      "ok"
+    ],
+    "foreignKeyCheck": [],
+    "counts": {
+      "installation_versions": 2,
+      "managed_blobs": 2,
+      "installation_blob_refs": 2,
+      "capability_evidence": 0
+    },
+    "dbAndSidecarSha256BeforeAndAfter": {
+      "models.db": "8dddeeb7067d217b765e3c099b83f51e8d5f74458c14234e9bae693800b4f752",
+      "models.db-shm": "a89b9aeecda769e326feafbc4eb7842f76dd10f40c04d528f53860208fd03255",
+      "models.db-wal": "1dd07685d01ef6521b369a9dca64917682d5b4398e0969418e511c20723375fe"
+    },
+    "unchanged": true,
+    "pathsDerivedFrom": [
+      {
+        "file": "crates/lumina-local-inference/src/lifecycle/installation.rs",
+        "symbol": "installation_directory",
+        "line": 124
+      },
+      {
+        "file": "crates/lumina-local-inference/src/lifecycle/installation.rs",
+        "symbol": "installed_artifact_path",
+        "line": 48
+      },
+      {
+        "file": "crates/lumina-local-inference/src/lifecycle/installer.rs",
+        "symbol": "InstallationStore::blob_path",
+        "line": 158
+      }
+    ],
+    "method": "Full SHA256 and exact size of each formal asset and blob; disk manifest equals database payload and original registered payload; all original stdout/stderr and reused-step hashes checked."
+  },
+  "preservedHarnessFailure": {
+    "attempt": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\summary.json",
+      "sha256": "5cacbb063a59d39d4009eafb8cba2f90380459ad9d38d2e02d0e4a062511b8ce"
+    },
+    "detail": "r1 read SDK version_id instead of versionId after successful embedding installation. v2 verified original report/stdout hashes and reused that same application store and installed version; no repeated embedding download.",
+    "reusedSteps": [
+      {
+        "label": "embedding-plan",
+        "source_report": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\embedding-plan.json",
+        "sha256": "b35bb87a70294994a8890f35eca0e560c224294876eacc68a1a5d95959deefa3",
+        "stdout_sha256": "de5674f6f06f2cde966807d3896661d8efa5c8c7c295a72355a491860ed68d24"
+      },
+      {
+        "label": "embedding-install",
+        "source_report": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\embedding-install.json",
+        "sha256": "ea4e0fa4467ab0d48d2dda22f080465d42872bb4eefc5f67d5aefd86294e3879",
+        "stdout_sha256": "38a5e89b7c449c75a27035ae5e62422ca5186e40362c12417c4196ea7a6d913f"
+      }
+    ],
+    "originalEmbeddingInstallSeconds": 188.39
+  },
+  "rawSteps": [
+    {
+      "label": "embedding-plan",
+      "exitCode": 0,
+      "elapsedSeconds": 6.234,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\embedding-plan.stdout.log",
+        "sha256": "de5674f6f06f2cde966807d3896661d8efa5c8c7c295a72355a491860ed68d24"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\embedding-plan.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "embedding-install",
+      "exitCode": 0,
+      "elapsedSeconds": 188.39,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\embedding-install.stdout.log",
+        "sha256": "38a5e89b7c449c75a27035ae5e62422ca5186e40362c12417c4196ea7a6d913f"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\embedding-install.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "reranker-plan",
+      "exitCode": 0,
+      "elapsedSeconds": 6.063,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reranker-plan.stdout.log",
+        "sha256": "5a1b1a366082630e9156dcb270ebd8d547848a61a02670eafd92e836a502f729"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reranker-plan.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "reranker-install",
+      "exitCode": 0,
+      "elapsedSeconds": 147.734,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reranker-install.stdout.log",
+        "sha256": "70c45697a2ffd65c2bd4215e628419decdfb14e161caf3af6cb8f87141d076c3"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reranker-install.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "embedding-use",
+      "exitCode": 0,
+      "elapsedSeconds": 15.687,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\embedding-use.stdout.log",
+        "sha256": "0a525f00d33c46c70cf2e80d16f5de8b66e982cbf6406fdc3f17ea9b40289f1d"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\embedding-use.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "reranking-use",
+      "exitCode": 0,
+      "elapsedSeconds": 11.609,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reranking-use.stdout.log",
+        "sha256": "9e4f07eadfaccf3d9ba53a7853bc49d3fd1f4821ee0a90a4bc184343244148c9"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reranking-use.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "reject-empty",
+      "exitCode": 1,
+      "elapsedSeconds": 0.063,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-empty.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-empty.stderr.log",
+        "sha256": "8e1d0d9b3ec10b20c17175439b0e77dcdc257a0b337b6a1552d4ab5e04f8cb5b"
+      }
+    },
+    {
+      "label": "reject-large-item",
+      "exitCode": 1,
+      "elapsedSeconds": 0.062,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-large-item.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-large-item.stderr.log",
+        "sha256": "0eb4f96656fa737c85b23e4f46b4cd842ebb75c32f5ea1e02e8874cb99571313"
+      }
+    },
+    {
+      "label": "reject-unknown-field",
+      "exitCode": 1,
+      "elapsedSeconds": 0.062,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-unknown-field.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-unknown-field.stderr.log",
+        "sha256": "b90f71b5e888008361b321f866c19fede87f524c4582719087f7981be21b32d6"
+      }
+    },
+    {
+      "label": "reject-wrong-capability",
+      "exitCode": 1,
+      "elapsedSeconds": 0.046,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-wrong-capability.stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\reject-wrong-capability.stderr.log",
+        "sha256": "1d664512c4e21601d6a941930a7ea20e18f78c115d81a3a7039aef304b4aa31c"
+      }
+    },
+    {
+      "label": "managed-relevance",
+      "exitCode": 0,
+      "elapsedSeconds": 39.656,
+      "stdout": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\managed-relevance.stdout.log",
+        "sha256": "a70b557f028b285ff0c0575c7344a76b0d099d6a58c8a632f4dbd6667a58bdb3"
+      },
+      "stderr": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r2\\managed-relevance.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "notClaimed": [
+    "GPU/CUDA vector runtime",
+    "Normal Provider/Agent/ACP/UI routing",
+    "Capability READY registration (zero database evidence rows)",
+    "Arbitrary encoder or all-model-type support",
+    "Performance acceleration benchmark",
+    "Complete ASR unit/quality acceptance",
+    "Current self-test recipe or UI acceptance"
+  ]
+}

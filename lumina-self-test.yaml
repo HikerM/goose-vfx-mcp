@@ -23,6 +23,7 @@ activities:
   - Validate installation application startup recovery, durable task controls, and graceful worker shutdown
   - Validate durable control receipts, concurrent state-version conflicts, atomic rollback, and schema upgrades
   - Validate legacy registry preservation and bounded vision installation admission
+  - Validate inline ACP audio in live, restored, history and tool-result messages
   - Generate comprehensive test report
 
 parameters:
@@ -144,6 +145,8 @@ instructions: |
   - Validate security controls
   - Measure performance metrics
   - Test resource constraints
+  - Validate inline audio with `pnpm --dir ui/desktop exec vitest run src/components/AudioPreview.test.tsx src/components/MessageAudio.test.tsx src/components/ToolCallWithResponse.audio.test.tsx src/acp/__tests__/messageAudio.test.ts src/acp/__tests__/sessionNotificationAdapter.test.ts src/utils/__tests__/csp.test.ts --pool=threads --maxWorkers=1 --no-file-parallelism`
+  - Keep audio component results separate from actual browser decoding, TTS generation, video, file-location actions and packaged Electron acceptance; these require their own evidence
 
   ### Phase 5: Report Generation
   Compile comprehensive test results:
@@ -174,7 +177,7 @@ extensions:
 
 prompt: |
   {% if test_phases == "runtime-assets" %}
-  Execute the runtime asset, launch binding and vector protocol tests with your developer shell tool.
+  Execute the runtime asset, launch binding, vector resource admission and serialized vector protocol tests with your developer shell tool.
   Your first action must be the shell call below. Work only in D:/Project/goose, preserve
   inherited D:/E: caches and temporary directories, and do not delegate or create worktrees.
   Run exactly once `powershell.exe -NoProfile -File bin\test-lumina-cache-install.ps1 -Suite runtime-assets -ReportPath "{{ workspace_dir }}/runtime_assets_validation.json"`.

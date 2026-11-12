@@ -70,7 +70,19 @@ impl VectorRuntimeProfile {
             ("microbatch_size", "512"),
             ("parallel_sequences", "1"),
             ("cpu_threads", "4"),
+            ("batch_cpu_threads", "4"),
             ("gpu_layers", "0"),
+            ("flash_attention", "on"),
+            ("cache_type_k", "f16"),
+            ("cache_type_v", "f16"),
+            ("prompt_cache_mib", "0"),
+            ("context_checkpoints", "0"),
+            ("cache_prompt", "false"),
+            ("cache_idle_slots", "false"),
+            ("cache_reuse", "0"),
+            ("auto_fit", "false"),
+            ("speculative_type", "none"),
+            ("warmup", "false"),
             ("max_input_bytes", "8192"),
             ("max_batch_bytes", "65536"),
             ("max_batch_items", "16"),
@@ -81,28 +93,9 @@ impl VectorRuntimeProfile {
         .collect()
     }
 
-    pub(super) fn from_binding(launch: &LaunchConfig, manifest: &ModelManifest) -> Result<Self> {
+    pub(crate) fn from_binding(launch: &LaunchConfig, manifest: &ModelManifest) -> Result<Self> {
         launch.validate_binding(manifest)?;
-        let RuntimeParameters::Specialized {
-            schema_id,
-            settings,
-        } = &launch.parameters
-        else {
-            bail!("Vector helper requires frozen specialized runtime parameters");
-        };
-        ensure!(
-            schema_id == SCHEMA,
-            "Unsupported vector helper parameter schema"
-        );
-        let profile = match settings.get("profile").map(String::as_str) {
-            Some("qwen3-embedding-06b-q8-v1") => Self::Qwen3Embedding06bQ8,
-            Some("bge-reranker-v2-m3-q4km-v1") => Self::BgeRerankerV2M3Q4Km,
-            _ => bail!("Unknown measured vector runtime profile"),
-        };
-        ensure!(
-            *settings == profile.settings(),
-            "Vector helper parameters differ from the frozen profile"
-        );
+        let profile = Self::from_parameters(&launch.parameters)?;
         ensure!(
             launch.capabilities == BTreeSet::from([profile.capability()]),
             "Vector launch must select exactly the profile capability"
@@ -133,7 +126,31 @@ impl VectorRuntimeProfile {
         Ok(profile)
     }
 
-    pub(super) fn arguments(self) -> Vec<String> {
+    pub(crate) fn from_parameters(parameters: &RuntimeParameters) -> Result<Self> {
+        let RuntimeParameters::Specialized {
+            schema_id,
+            settings,
+        } = parameters
+        else {
+            bail!("Vector helper requires frozen specialized runtime parameters");
+        };
+        ensure!(
+            schema_id == SCHEMA,
+            "Unsupported vector helper parameter schema"
+        );
+        let profile = match settings.get("profile").map(String::as_str) {
+            Some("qwen3-embedding-06b-q8-v1") => Self::Qwen3Embedding06bQ8,
+            Some("bge-reranker-v2-m3-q4km-v1") => Self::BgeRerankerV2M3Q4Km,
+            _ => bail!("Unknown measured vector runtime profile"),
+        };
+        ensure!(
+            *settings == profile.settings(),
+            "Vector helper parameters differ from the frozen profile"
+        );
+        Ok(profile)
+    }
+
+    pub(crate) fn arguments(self) -> Vec<String> {
         let mut args: Vec<String> = [
             "--threads",
             "4",
@@ -151,6 +168,24 @@ impl VectorRuntimeProfile {
             "0",
             "--no-webui",
             "--no-warmup",
+            "--cache-ram",
+            "0",
+            "--ctx-checkpoints",
+            "0",
+            "--no-cache-prompt",
+            "--no-cache-idle-slots",
+            "--cache-reuse",
+            "0",
+            "--fit",
+            "off",
+            "--spec-type",
+            "none",
+            "--cache-type-k",
+            "f16",
+            "--cache-type-v",
+            "f16",
+            "--flash-attn",
+            "on",
         ]
         .into_iter()
         .map(str::to_string)

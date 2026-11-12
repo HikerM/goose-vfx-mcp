@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-12",
+  "status": "VERIFIED_INCREMENT",
+  "gitBase": "74e5b41b6144da767f52b1f8c1eb67427dd7dd47",
+  "scope": "Core vector resource/plan admission, shared runtime ownership, protocol regressions, Windows PS matrix, CLI and Whisper example compilation. Later cancellation fixture validation is recorded separately below; not workspace lint or M3/M4 completion.",
+  "coreTests": {
+    "status": "PASS",
+    "passed": 237,
+    "failed": 0,
+    "ignored": 4,
+    "targets": [
+      {
+        "target": "unittests src\\lib.rs",
+        "passed": 169,
+        "failed": 0,
+        "ignored": 2
+      },
+      {
+        "target": "tests\\lifecycle_asset_use.rs",
+        "passed": 7,
+        "failed": 0,
+        "ignored": 1
+      },
+      {
+        "target": "tests\\lifecycle_launch_binding.rs",
+        "passed": 9,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests\\lifecycle_managed_vectors.rs",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 1
+      },
+      {
+        "target": "tests\\lifecycle_native_runtime.rs",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests\\lifecycle_vector_resources.rs",
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests\\lifecycle_vector_runtime.rs",
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests\\lifecycle_vision_resources.rs",
+        "passed": 20,
+        "failed": 0,
+        "ignored": 0
+      }
+    ],
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-core-tests-r2.log",
+      "sha256": "0ba37ffd473acbae64899f91b3b4302d51caf8601d3bf1e6607b533a6aa3dd87"
+    },
+    "ignoredScope": "Three subprocess helper entries plus one environment-dependent real-vector test; the real test was run separately and is not added to the core pass count."
+  },
+  "coreClippy": {
+    "status": "PASS",
+    "scope": "lumina-local-inference --no-default-features --all-targets --offline --locked -- -D warnings; vendor dependency warnings retained; not workspace lint.",
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-core-clippy-r2.log",
+      "sha256": "c908109b5e1b3c1b09636f44f480efd7ce9db2929c52588b0f1d6a1d26ce48ed"
+    }
+  },
+  "format": {
+    "status": "PASS",
+    "evidenceKind": "Parent tool-recorded; no standalone log",
+    "command": "& .\\bin\\cargo.cmd fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; git diff --check",
+    "workdir": "D:\\Project\\goose",
+    "exitCode": 0,
+    "wallTimeSeconds": 7.1219689,
+    "timing": "After final Whisper test string_digest change. No fmt differences; only Git LF/CRLF notices.",
+    "standaloneLog": null,
+    "notRerunForAudit": true
+  },
+  "build": {
+    "status": "PASS",
+    "elapsed": "13m48s",
+    "scope": "CLI and Whisper example compilation, not complete ASR unit execution.",
+    "cli": {
+      "path": "D:\\Project\\goose\\target\\debug\\lumina.exe",
+      "sha256": "d364e2c2df12598373bdcf4e9d81610cd437f95019e4cc3b6c9bb65319aece66"
+    },
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-asr-cli-build-r2.log",
+      "sha256": "e655a19384dc219ba2e466a0906de5746da72f744bc0620185451845faf00f97"
+    },
+    "existingWarnings": {
+      "lumina-agent": 605,
+      "lumina-agent-cli": 6
+    }
+  },
+  "powershell": {
+    "status": "PASS",
+    "mode": "prebuilt-test-executables",
+    "runtimes": [
+      "5.1.26100.9818",
+      "7.6.9"
+    ],
+    "lineEndings": [
+      "LF",
+      "CRLF"
+    ],
+    "eachCombination": {
+      "passed": 94,
+      "failed": 0,
+      "ignored": 3
+    },
+    "summaryFixturesPerCombination": 19,
+    "staticFindings": 0,
+    "parseExecutions": 12,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-runtime-assets-powershell-v2-r1\\evidence.json",
+      "sha256": "6a87043e6e6ccefcf34ec99003afa4baef637ce46f2bd1b165c39d0e19dd9337"
+    },
+    "summary": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-runtime-assets-powershell-v2-r1\\verification-summary.json",
+      "sha256": "d5cf6450e1fddc73c4ccd4b0a78efdf63225b20850386a965c3c802abfaf7ba7"
+    },
+    "executables": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-runtime-assets-powershell-v2-r1\\executables.json",
+      "sha256": "2087741aadfb7763e5d1dfd78a337c2ec0356bf7315b2bab378f1ee32f2b4e3c"
+    },
+    "expected": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-expected-v2.json",
+      "sha256": "c05926221c7026c1aab3a80b8ee2baf32179399737373a9ad86b27267c65b337"
+    },
+    "scope": "Nine-target suite. Predates final CLI/ASR fixes; no Rust freeze/build claim about those files."
+  },
+  "preservedFailures": [
+    {
+      "kind": "core_clippy_r1_large_enum_variant",
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-core-clippy-r1.log",
+        "sha256": "0d07bd565e95809309190042bc9096aec8d7e7f868fd3e4b34364a41444b6b2d"
+      },
+      "fix": "ResourceWorkload.vector uses Option<Box<VectorResourceWorkload>>, preserving JSON; strict Clippy r2 and same-scope core r2 pass."
+    },
+    {
+      "kind": "cli_build_r1_whisper_sha2_lowerhex",
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-asr-cli-build-r1.log",
+        "sha256": "41ecbaa43caf7baab5b3cf6cfa6898985a769c38492b5af863b04d697d08e69e"
+      },
+      "fix": "Production uses existing Sha256Digest; test-local byte-to-hex helper avoids unavailable LowerHex. CLI/Whisper build r2 passes."
+    },
+    {
+      "kind": "managed_harness_r1_sdk_field",
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-managed-vectors-20261112-r1\\summary.json",
+        "sha256": "5cacbb063a59d39d4009eafb8cba2f90380459ad9d38d2e02d0e4a062511b8ce"
+      },
+      "fix": "v2 reads versionId and reuses verified successful embedding installation."
+    }
+  ],
+  "relatedEvidence": [
+    "2026-11-12-m4-managed-vectors.json",
+    "2026-11-12-m4-whisper-native-unit.json",
+    "2026-11-12-m4-whisper-native-smoke.json",
+    "2026-11-12-m4-acp-inline-audio-ui.json",
+    "2026-11-12-selftest-m4-runtime-assets-r2.json"
+  ],
+  "pendingSeparateEvidence": [
+    "Full ASR multilingual/noisy/long-audio quality and normal dictation settings integration",
+    "Normal-session services, Rust MCP audio forwarding, MediaResultRef and packaged Electron integration",
+    "Full workspace strict lint",
+    "GPU and all-type runtime/resource support",
+    "Production Validator READY registration"
+  ],
+  "postFixtureFix": {
+    "evidence": "2026-11-12-m4-vector-cancel-regression.json",
+    "sha256": "b0121a728bb7e0c80eabb7d3e487c36f8b49edb91e28161abbcdaa656b4eaab9",
+    "targetTests": {
+      "passed": 15,
+      "failed": 0,
+      "ignored": 0,
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-cancel-tests-r1.log",
+        "sha256": "c14a2b3b6fdbf6f4e23c189a4aa40081860e0615800a32346c7d9287821009ba"
+      }
+    },
+    "strictCoreClippy": {
+      "exitCode": 0,
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-cancel-clippy-r1.log",
+        "sha256": "9a11f53c975b84d487a7c7f6661efb10d81ebbb0f864e0a20355a58fbd664d36"
+      },
+      "scope": "lumina-local-inference --no-default-features --all-targets --offline --locked -- -D warnings; vendor warnings retained."
+    },
+    "powershell": {
+      "evidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-runtime-assets-powershell-v2-r2\\evidence.json",
+        "sha256": "b9505609d92f5475b2d876ae21f5e21e034f92424ec597b53fad52d198a4d851"
+      },
+      "executableManifest": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-runtime-assets-powershell-v2-r2\\executables.json",
+        "sha256": "84f96d400e232b0c1734b7a7139adc8718edc9226c329b14c4a89af3c1e957d6"
+      },
+      "eachCombination": {
+        "passed": 94,
+        "failed": 0,
+        "ignored": 3
+      },
+      "combinations": 4,
+      "summaryFixturesPerCombination": 19,
+      "namedTestsMatchPreviousMatrix": true
+    },
+    "scope": "Only the vector integration fixture changed. No Rust production code, CLI rebuild or model invocation. Same 15 target tests; full previous 237 core tests were not rerun as a new whole batch."
+  },
+  "finalBuildRecheck": {
+    "status": "PASS",
+    "command": "& .\\bin\\cargo.cmd build -p lumina-agent-cli -p lumina-agent --bin lumina --example test_whisper --offline --locked",
+    "elapsed": "1m21s",
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-asr-cli-build-r3.log",
+      "sha256": "bd97147c8637216f95af173f8057e874b4e1510a4adda262e1136423b090301b"
+    },
+    "scope": "After cancellation test and recipe updates; production source unchanged. Final CLI hash enforced by the next actual recipe."
+  },
+  "finalFormatRecheck": {
+    "status": "PASS",
+    "command": "& .\\bin\\cargo.cmd fmt --all -- --check",
+    "exitCode": 0,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-final-format-r1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "actualSelfTest": {
+    "status": "PASS",
+    "evidence": "2026-11-12-selftest-m4-runtime-assets-r2.json",
+    "sha256": "647bdd4577c6f30287294d2abd26798e17145071ae00c0b3fc1f9c6d28573e8d",
+    "passed": 94,
+    "failed": 0,
+    "ignored": 3,
+    "scope": "Actual 35B model calls the unchanged runtime-assets PowerShell/Cargo entrypoint once on the final rebuilt CLI. All named tests must match the prebuilt PS matrix. Three top-level ignored subprocess helpers are not counted as passes. The frozen inputs include the ASR bridge and vector fixture. This recipe does not prove real ASR/vector/chat inference, uninstall recovery or capability READY.",
+    "precedingFailure": "2026-11-12-m4-vector-cancel-regression.json"
+  }
+}

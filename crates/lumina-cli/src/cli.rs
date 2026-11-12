@@ -1172,6 +1172,17 @@ enum Command {
 #[cfg(feature = "local-inference")]
 #[derive(Subcommand)]
 enum LocalModelsCommand {
+    #[command(
+        about = "Prepare a measured vector model installation from a pinned ModelScope source"
+    )]
+    PlanVector {
+        #[arg(long)]
+        repository: String,
+        #[arg(long)]
+        revision: String,
+        #[arg(long)]
+        file: String,
+    },
     #[command(about = "Install an accepted immutable model plan")]
     InstallPlan {
         #[arg(long)]
@@ -1230,6 +1241,31 @@ enum LocalModelsCommand {
         image: Option<PathBuf>,
         #[arg(long, default_value_t = 256)]
         max_tokens: u32,
+        #[arg(long, default_value_t = 180)]
+        timeout_secs: u64,
+    },
+    #[command(about = "Embed a JSON input array with an installed vector model")]
+    Embed {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+        #[arg(long, help = "JSON file containing {\"input\":[\"text\", ...]}")]
+        request: PathBuf,
+        #[arg(long, default_value_t = 180)]
+        timeout_secs: u64,
+    },
+    #[command(about = "Rerank documents with an installed ranking model")]
+    Rerank {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+        #[arg(
+            long,
+            help = "JSON file containing {\"query\":\"text\",\"documents\":[\"text\", ...]}"
+        )]
+        request: PathBuf,
         #[arg(long, default_value_t = 180)]
         timeout_secs: u64,
     },
@@ -2127,6 +2163,34 @@ async fn handle_local_models_command(
     lumina::providers::local_inference::configure_huggingface_auth();
 
     match command {
+        LocalModelsCommand::PlanVector {
+            repository,
+            revision,
+            file,
+        } => {
+            use lumina::providers::local_inference::lifecycle::{
+                ModelScopeRepository, RepositoryPath,
+            };
+            let assessment = installations
+                .prepare_vector_plan(
+                    ModelScopeRepository::parse(repository)?,
+                    &revision,
+                    RepositoryPath::parse(file)?,
+                )
+                .await?;
+            let plan_digest = assessment
+                .plan
+                .as_ref()
+                .map(|plan| plan.digest())
+                .transpose()?;
+            let mut output = serde_json::to_value(&assessment)?;
+            output["plan_digest"] = serde_json::to_value(plan_digest)?;
+            println!("{}", serde_json::to_string(&output)?);
+            anyhow::ensure!(
+                assessment.plan.is_some(),
+                "Vector installation plan was blocked; inspect blocking_reasons"
+            );
+        }
         LocalModelsCommand::InstallPlan {
             plan_id,
             plan_digest,
@@ -2230,6 +2294,42 @@ async fn handle_local_models_command(
                     max_tokens,
                     timeout_secs,
                 },
+            )
+            .await?;
+        }
+        LocalModelsCommand::Embed {
+            version_id,
+            engine,
+            request,
+            timeout_secs,
+        } => {
+            crate::local_models_runtime::vector_installed(
+                &installations,
+                crate::local_models_runtime::InstalledVectorRequest {
+                    version_id,
+                    engine,
+                    request,
+                    timeout_secs,
+                },
+                lumina::providers::local_inference::lifecycle::ModelCapability::Embedding,
+            )
+            .await?;
+        }
+        LocalModelsCommand::Rerank {
+            version_id,
+            engine,
+            request,
+            timeout_secs,
+        } => {
+            crate::local_models_runtime::vector_installed(
+                &installations,
+                crate::local_models_runtime::InstalledVectorRequest {
+                    version_id,
+                    engine,
+                    request,
+                    timeout_secs,
+                },
+                lumina::providers::local_inference::lifecycle::ModelCapability::Reranking,
             )
             .await?;
         }

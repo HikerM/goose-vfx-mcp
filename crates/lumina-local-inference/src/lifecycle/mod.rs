@@ -27,6 +27,7 @@ pub mod retry;
 pub mod service;
 pub mod state;
 pub mod storage;
+mod vector_plan;
 pub mod vector_runtime;
 mod worker_control;
 

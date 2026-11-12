@@ -7,8 +7,10 @@ import { ScrollArea } from '../ui/scroll-area';
 import MarkdownContent from '../MarkdownContent';
 import ToolCallWithResponse from '../ToolCallWithResponse';
 import ImagePreview from '../ImagePreview';
+import AudioPreview from '../AudioPreview';
 import {
   getTextAndImageContent,
+  getAudioContent,
   getThinkingContent,
   ToolRequestMessageContent,
   ToolResponseMessageContent,
@@ -112,6 +114,7 @@ export const SessionMessages: React.FC<SessionMessagesProps> = ({
               messages
                 .map((message, index) => {
                   const { textContent, imagePaths } = getTextAndImageContent(message);
+                  const audioContent = getAudioContent(message);
                   const thinkingContent = getThinkingContent(message);
 
                   // Get tool requests from the message
@@ -142,14 +145,16 @@ export const SessionMessages: React.FC<SessionMessagesProps> = ({
                     >
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium text-text-primary">
-                          {message.role === 'user' ? intl.formatMessage(i18n.you) : intl.formatMessage(i18n.lumina)}
+                          {message.role === 'user'
+                            ? intl.formatMessage(i18n.you)
+                            : intl.formatMessage(i18n.lumina)}
                         </span>
                         <span className="text-xs text-text-secondary">
                           {formatMessageTimestamp(message.created)}
                         </span>
                       </div>
 
-                      <div className="flex flex-col w-full">
+                      <div className="flex flex-col w-full min-w-0">
                         {/* Thinking content */}
                         {thinkingContent && (
                           <div className="mb-2 text-sm text-gray-400 italic">
@@ -173,6 +178,14 @@ export const SessionMessages: React.FC<SessionMessagesProps> = ({
                             ))}
                           </div>
                         )}
+
+                        {audioContent.map((audio, audioIndex) => (
+                          <AudioPreview
+                            key={audioIndex}
+                            data={audio.data}
+                            mimeType={audio.mimeType}
+                          />
+                        ))}
 
                         {/* Tool requests and responses */}
                         {toolRequests.length > 0 && (

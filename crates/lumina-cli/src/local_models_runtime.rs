@@ -1,10 +1,10 @@
 use anyhow::{ensure, Context, Result};
 use lumina::providers::local_inference::lifecycle::{
-    ComponentRole, InstallationApplication, InstalledVersion, LaunchChatTemplate, LaunchConfig,
-    NativeChatAdapter, NativeChatRequest, NativeHelperRuntime, RepositoryPath, ResourceCacheType,
-    RuntimeExecutionMode, RuntimeParameters,
+    validate_vector_admission, validate_vector_inputs, InstallationApplication, LaunchConfig,
+    ModelCapability, NativeChatAdapter, NativeChatRequest, NativeEmbeddingAdapter,
+    NativeHelperRuntime, NativeRerankAdapter,
 };
-use std::collections::BTreeMap;
+use serde::Deserialize;
 use std::io::Read;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -17,6 +17,119 @@ pub(crate) struct InstalledGeneration {
     pub image: Option<PathBuf>,
     pub max_tokens: u32,
     pub timeout_secs: u64,
+}
+
+pub(crate) struct InstalledVectorRequest {
+    pub version_id: String,
+    pub engine: PathBuf,
+    pub request: PathBuf,
+    pub timeout_secs: u64,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EmbeddingRequest {
+    input: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RerankRequest {
+    query: String,
+    documents: Vec<String>,
+}
+
+pub(crate) async fn vector_installed(
+    application: &InstallationApplication,
+    arguments: InstalledVectorRequest,
+    capability: ModelCapability,
+) -> Result<()> {
+    ensure!(
+        (1..=180).contains(&arguments.timeout_secs),
+        "Runtime timeout must be between 1 and 180 seconds"
+    );
+    let mut bytes = Vec::new();
+    std::fs::File::open(&arguments.request)?
+        .take(512 * 1024 + 1)
+        .read_to_end(&mut bytes)?;
+    ensure!(
+        bytes.len() <= 512 * 1024,
+        "Vector request JSON exceeds 512 KiB"
+    );
+    let (query, inputs) = match capability {
+        ModelCapability::Embedding => {
+            let request: EmbeddingRequest = serde_json::from_slice(&bytes)?;
+            (None, request.input)
+        }
+        ModelCapability::Reranking => {
+            let request: RerankRequest = serde_json::from_slice(&bytes)?;
+            (Some(request.query), request.documents)
+        }
+        _ => anyhow::bail!("This command requires embedding or reranking"),
+    };
+    validate_vector_inputs(query.as_deref(), &inputs)?;
+    let service = application.service().await?;
+    let installed = service
+        .repository()
+        .installed_version(&arguments.version_id)?
+        .context("Model version is not installed")?;
+    let admission = installed
+        .manifest
+        .plan
+        .admission
+        .as_ref()
+        .context("Installed vector model has no frozen resource admission")?;
+    let profile = validate_vector_admission(admission)?;
+    ensure!(
+        profile.capability() == capability,
+        "Installed model does not support this vector operation"
+    );
+    let config = LaunchConfig::for_measured_cpu_installation(&installed)?;
+    let logs = application
+        .root()
+        .join("runtime-runs")
+        .join(format!("{:032x}", rand::random::<u128>()));
+    let timeout = Duration::from_secs(arguments.timeout_secs);
+    let mut runtime = NativeHelperRuntime::start(
+        service.repository(),
+        service.store(),
+        config,
+        &arguments.engine,
+        &logs,
+        timeout,
+    )
+    .await?;
+    let operation = async {
+        if let Some(query) = &query {
+            let adapter = NativeRerankAdapter::new(&runtime, &installed.manifest, timeout)?;
+            Ok(serde_json::to_value(adapter.rerank(query, &inputs).await?)?)
+        } else {
+            let adapter = NativeEmbeddingAdapter::new(&runtime, &installed.manifest, timeout)?;
+            Ok(serde_json::to_value(adapter.embed(&inputs).await?)?)
+        }
+    };
+    let completion: Result<serde_json::Value> = tokio::select! {
+        result = operation => result,
+        signal = tokio::signal::ctrl_c() => {
+            signal?;
+            Err(anyhow::anyhow!("Installed vector operation was cancelled"))
+        }
+    };
+    let stopped = runtime.stop();
+    let response = completion?;
+    let status = stopped?;
+    println!(
+        "{}",
+        serde_json::to_string(&serde_json::json!({
+            "response": response,
+            "launch": runtime.actual_config(),
+            "helper_stopped": true,
+            "helper_exit_code": status.code(),
+            "stdout_log": runtime.stdout_path(),
+            "stderr_log": runtime.stderr_path(),
+        }))?
+    );
+    Ok(())
 }
 
 pub(crate) async fn generate_installed(
@@ -32,7 +145,7 @@ pub(crate) async fn generate_installed(
         .repository()
         .installed_version(&arguments.version_id)?
         .context("Model version is not installed")?;
-    let config = cpu_launch(&installed)?;
+    let config = LaunchConfig::for_measured_cpu_installation(&installed)?;
     let mut request = if let Some(path) = arguments.request {
         let mut bytes = Vec::new();
         const MAX_REQUEST_BYTES: u64 = 16 * 1024 * 1024;
@@ -107,50 +220,4 @@ pub(crate) async fn generate_installed(
         }))?
     );
     Ok(())
-}
-
-fn cpu_launch(installed: &InstalledVersion) -> Result<LaunchConfig> {
-    let manifest = &installed.manifest;
-    let workload = manifest
-        .plan
-        .admission
-        .as_ref()
-        .context("Installed model has no frozen resource admission")?
-        .envelope
-        .workload
-        .clone();
-    let mut component_files: BTreeMap<ComponentRole, Vec<RepositoryPath>> = BTreeMap::new();
-    for component in manifest.plan.dependencies.components.values() {
-        let paths = component_files.entry(component.role).or_default();
-        for id in &component.artifact_ids {
-            let path = manifest.installed_files[id].relative_path.clone();
-            if !paths.contains(&path) {
-                paths.push(path);
-            }
-        }
-    }
-    let cache_name = |kind| match kind {
-        ResourceCacheType::F16 => "f16".to_string(),
-        ResourceCacheType::F32 => "f32".to_string(),
-    };
-    Ok(LaunchConfig {
-        installation_id: manifest.installation_id.clone(),
-        version_id: manifest.version_id.clone(),
-        manifest_digest: installed.manifest_digest.clone(),
-        runtime: manifest.plan.runtime.clone(),
-        capabilities: manifest.plan.target_capabilities.clone(),
-        component_files,
-        parameters: RuntimeParameters::LlamaCpp {
-            chat_template: LaunchChatTemplate::Embedded,
-            context_length: workload.context_tokens,
-            gpu_layers: 0,
-            cpu_threads: 4,
-            kv_key_type: cache_name(workload.kv_key_type),
-            kv_value_type: cache_name(workload.kv_value_type),
-            batch_size: workload.batch_tokens,
-            flash_attention: true,
-            workload: Some(workload),
-        },
-        mode: RuntimeExecutionMode::Helper { port: 0 },
-    })
 }

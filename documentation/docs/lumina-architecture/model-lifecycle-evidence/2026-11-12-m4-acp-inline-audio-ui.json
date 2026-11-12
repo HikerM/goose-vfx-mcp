@@ -1,0 +1,166 @@
+{
+  "schema": "lumina-acp-inline-audio-ui-verification-v1",
+  "observedAt": "2026-11-12T08:22:13.604775+00:00",
+  "status": "scoped_ui_verified",
+  "workspace": "D:/Project/goose",
+  "branch": "testing",
+  "implemented": [
+    "Standard ACP user/assistant audio blocks retained with annotations and metadata; exact same clip deduplicated within one message only",
+    "Native audio controls in assistant/user live messages, restored chat, history detail and nested MCP tool Output",
+    "MIME whitelist, base64 validation, 256-character MIME limit, 32 MiB decoded per-clip budget, Blob URL cleanup on change/unmount/decoder error",
+    "Only blob: added to both existing media-src CSP directives; no autoplay and no remote audio URL support",
+    "Audio-bearing user messages omit text-only editing until that controller can preserve audio; existing text/image editing retained",
+    "English and Simplified Chinese audio messages; generated compiled catalogs refreshed locally"
+  ],
+  "checks": {
+    "focusedVitest": {
+      "pass": true,
+      "files": 6,
+      "tests": 62,
+      "pool": "threads",
+      "maxWorkers": 1,
+      "fileParallelism": false,
+      "evidence": "unit-results.json"
+    },
+    "fullDesktopTypecheck": {
+      "pass": true,
+      "command": "pnpm exec tsc --noEmit",
+      "runVia": "pnpm run typecheck",
+      "exitCode": 0
+    },
+    "scopedEslint": {
+      "pass": true,
+      "warningsAllowed": 0,
+      "exitCode": 0,
+      "scope": "All changed TS/TSX files"
+    },
+    "i18nCheck": {
+      "pass": true,
+      "command": "pnpm run i18n:check",
+      "exitCode": 0,
+      "caveat": "Six new messages translated for en/zh-CN only. Other locales use English fallback. Existing unrelated missing-translation/select warnings remain."
+    },
+    "gitDiffCheck": {
+      "pass": true,
+      "command": "git diff --check -- ui/desktop"
+    },
+    "actualBrowser": {
+      "pass": true,
+      "browser": "157.0.8103.40",
+      "wav": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\asr-input\\english-base.wav",
+        "bytes": 165006,
+        "sha256": "b29307e631d805d7079910c8c9c5ee14777549954b737e15a5770db7ac2da2e9",
+        "provenance": "Existing OS speech fixture; verifies playback only, not Lumina TTS generation."
+      },
+      "loaded": {
+        "duration": 5.155,
+        "readyState": 4,
+        "paused": true,
+        "currentTime": 0,
+        "controls": true,
+        "autoplay": false,
+        "sourceScheme": "blob",
+        "error": null
+      },
+      "playing": {
+        "currentTime": 0.128734,
+        "paused": false,
+        "readyState": 4
+      },
+      "pausedByKeyboard": true,
+      "toolLoaded": {
+        "duration": 5.155,
+        "readyState": 4,
+        "paused": true,
+        "controls": true
+      },
+      "toolPlaying": {
+        "currentTime": 0.118093,
+        "paused": false
+      },
+      "toolCollapseUnmounts": true,
+      "viewports": [
+        {
+          "width": 390,
+          "height": 844,
+          "audioWidth": 351,
+          "horizontalOverflow": false
+        },
+        {
+          "width": 768,
+          "height": 1024,
+          "audioWidth": 691.1875,
+          "horizontalOverflow": false
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "audioWidth": 900,
+          "horizontalOverflow": false
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "audioWidth": 900,
+          "horizontalOverflow": false
+        },
+        {
+          "width": 2560,
+          "height": 1440,
+          "audioWidth": 900,
+          "horizontalOverflow": false
+        }
+      ],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "evidence": "browser-result.json",
+      "visualInspection": [
+        "audio-390x844.png",
+        "audio-decoder-error.png",
+        "tool-audio-390x844.png"
+      ]
+    }
+  },
+  "limitations": [
+    "No MediaResultRef persistence, local file service, video support, or file-location actions",
+    "No proof of Lumina TTS generation: reused pre-existing OS-generated spoken WAV fixture",
+    "Full packaged Electron application with a live backend session was not launched; Chrome harness uses actual source components and existing built CSS, with getSetting test host",
+    "Only WAV codec was actually decoded; other whitelisted containers rely on browser codec support and show decoder errors when unsupported",
+    "Audio-bearing message editing remains unavailable until input/controller contract supports preserving and resending audio"
+  ],
+  "environmentNotes": [
+    "Initial default Vitest fork worker stalled before test execution and was stopped; same tests passed under single threads pool without changing dependencies or skipping tests",
+    "Tool browser bundle initially lacked the PNG asset loader; validation harness corrected its loader then completed. No production source workaround."
+  ],
+  "sourceSha256": {
+    "index.html": "a8969d5afe6424acbdebcbacdd6a39d2aadfbebdafb570a9d09d26d3dc7745a9",
+    "src/acp/adapter/messages.ts": "bf8f5e4d1e0ed0a487e37864f8bc27289253b50381f0515e434097588883f8ed",
+    "src/acp/__tests__/messageAudio.test.ts": "2b81b467b5604337895b978778e66176cbc04e33a07dd2bb9610dfcd9245f9ca",
+    "src/types/message.ts": "f033f9a97800eb0c449bfd8289cc9c6b85c4dd5708de07b34f28824bf78d5dd6",
+    "src/components/AudioPreview.tsx": "fe6655e6f518e905ac824cbb803a4c84520f40c139b656eafc4ebf46c63f6687",
+    "src/components/AudioPreview.test.tsx": "e3e06b47a471d8ab72a4713758f75e9996d43cc9807113446b85193a8b6afd5e",
+    "src/components/MessageAudio.test.tsx": "daa02a87d1556e4b95139f8d4c10d02e9e496cd89f7fe8d0fd533111f04e7ca8",
+    "src/components/LuminaMessage.tsx": "c210ec256c51677ab564a04e138091ef1e15465b93e67ab52969f475e99a4463",
+    "src/components/UserMessage.tsx": "5c05b0e051aaaacd58dab24b3d054c5ee46c3ed3e2995077152c0a8a2c4e83bf",
+    "src/components/ToolCallWithResponse.tsx": "14a94b245267c8d45c70ebf159d0119901d455696109603c802bae96f22e1073",
+    "src/components/ToolCallWithResponse.audio.test.tsx": "481a5a1bdade051f6cf3fc4fddc382480bcf9fd55a1d1ce6ec3d206dc245caf4",
+    "src/components/sessions/SessionViewComponents.tsx": "733e8b9a662376a0c465d664fd773028d9c83a5c1cd53a870e018e29f86b9696",
+    "src/utils/csp.ts": "590933723c7b35a4da40ad66911d410e719b71bb394b31875d0b740efc5deeb2",
+    "src/utils/__tests__/csp.test.ts": "78b56af17525046c0a28c2d121e655d51f7479a68f388f3e8009a2942c285cf5",
+    "src/i18n/messages/en.json": "98080e45fbedc3c87ce39b1d2d31b388005f4c4cc6e9a26dfdde99e37e93132f",
+    "src/i18n/messages/zh-CN.json": "5ad48290b1226cc322229104da87f46e06e7c247ace8fde82660c004020217b7"
+  },
+  "evidenceSha256": {
+    "audio-1366x768.png": "d4e033b6a086543afeb7ac329f087c57d33fc9326a92ef430c64b46229e51412",
+    "audio-1920x1080.png": "f649dcce8015d97bff5b4b7c5b88b9ffe7964d36915e181b2baf1be4353185c9",
+    "audio-2560x1440.png": "23bf601418567b15ae6702d83a9c641e872d6d84df6a6e378c51eee33e810aeb",
+    "audio-390x844.png": "df65fccf134af90dce9d15f7206f9f88cfc5ead67c121c899b0a1eb0556bab3f",
+    "audio-768x1024.png": "3ac6848479278982ef69435d5c707faf8ebd17ce7ef7370e072b7a94fae7e308",
+    "audio-decoder-error.png": "983f1382ec8060273fbb5bc50ae4e9cc1b1b76a24750a4be17feae0467fedeca",
+    "browser-check.cjs": "c699a20115f3629bb48f43178ca437413f22ce53738a6c1703e1809daf6187d7",
+    "browser-result.json": "bfb4e245007f7698ea7029d047a920f7f19ac26885c16b61759a63e4d375c5c5",
+    "tool-audio-390x844.png": "fc3030216e493c746698fe0a1e99c15de55dfb0e85062eb715b43529d8f074ea",
+    "unit-results.json": "d0b5f5e32c6b1ed2f3a4adb4ad6136d87f70b6dee2540e76fcbf046a27f848fb"
+  }
+}

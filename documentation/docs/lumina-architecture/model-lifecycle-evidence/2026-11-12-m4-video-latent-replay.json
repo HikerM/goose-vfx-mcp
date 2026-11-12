@@ -1,0 +1,273 @@
+{
+  "status": "DIAGNOSTIC_COMPLETE_QUALITY_FAILED",
+  "scope": "Fixed-latent Wan2 VAE diagnostic only. Not production acceptance or an F32 decoder comparison.",
+  "engineSourceRevision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+  "diagnosticBinary": {
+    "path": "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-latent-diagnostic\\bin\\Release\\sd-cli.exe",
+    "sha256": "f5e4ebe7677488304e49a20d51d06c8a522496ba7d1b27bbc50a2ec75a8135ba"
+  },
+  "sourceChanges": {
+    "examples/cli/main.cpp": {
+      "sha256": "86eee7d33115e8e47c1916d3d9718bdd02cae1612ea8d6b34ef06eeb59a6cba3",
+      "archiveSha256": "42908623588fcc35f7c09a656b586e52d31852e3bfe0d00fe6a0370e740070ae"
+    },
+    "src/pipeline/video.cpp": {
+      "sha256": "93a99f80201b445bab288b4de06314fc0b7dde6cd7f4e20a22027614a4375473",
+      "archiveSha256": "480cf0baf0381e355cff88e7aff501d9d1c5266d25e0b25c1877f4caa794a983"
+    },
+    "src/pipeline/video_latent_diagnostic.h": {
+      "sha256": "ac4f18812e8d38a2e298f3c7077a74409512c8d7457463f78ecc764857fee5b3",
+      "archiveSha256": null
+    }
+  },
+  "patchSha256": "1f1c897bf2fafed2e79f0c4527ef944f6025c0217e991e29b2e46253a46b88e2",
+  "baselineBinaryUnchanged": true,
+  "captureResultPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-video-latent-diagnostic-20261112-r1\\revision-2\\capture\\result.json",
+  "replayResultPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-video-latent-diagnostic-20261112-r1\\revision-2\\replay\\result.json",
+  "captureElapsedSeconds": 475.8909999999996,
+  "replayElapsedSeconds": 94.43699999999808,
+  "latent": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-video-latent-diagnostic-20261112-r1\\revision-2\\capture\\final.latent",
+    "sha256": "67f00da6b7ebe6c3c6f0799b33087ed6561fbb73557ff3fd3cd6f59d84543327",
+    "payloadSha256": "d37097976186baeeb64de89f4f3641bdfab396e0c71558c150e2b7802a182e88",
+    "dtype": "little-endian IEEE F32 / GGML_TYPE_F32=0",
+    "shape": [
+      32,
+      32,
+      5,
+      16,
+      1
+    ],
+    "request": {
+      "width": 256,
+      "height": 256,
+      "frames": 17,
+      "fps": 8
+    },
+    "headerBytes": 64,
+    "payloadBytes": 327680,
+    "fileBytes": 327744,
+    "allFinite": true,
+    "minimum": -4.633657932281494,
+    "maximum": 4.943904399871826
+  },
+  "all17PngFilesIdentical": true,
+  "all17DecodedFramesIdentical": true,
+  "baselineAviAverageMeanAbsoluteErrorInU8": 2.662967158298866,
+  "frames": [
+    {
+      "index": 0,
+      "capturePngSha256": "434bd4d11b786d201d3ff82805d95ae08b6eca5af77cc64ba836e644518959a5",
+      "replayPngSha256": "434bd4d11b786d201d3ff82805d95ae08b6eca5af77cc64ba836e644518959a5",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.651947021484375,
+      "baselineAviMaxAbsoluteErrorInU8": 66.0,
+      "baselineAviPsnrDb": 35.04191816031876
+    },
+    {
+      "index": 1,
+      "capturePngSha256": "ebd57822eb604ca34a126f7bd7f9e078b8a2f6c5f9f52fe29700f5239de5e9e6",
+      "replayPngSha256": "ebd57822eb604ca34a126f7bd7f9e078b8a2f6c5f9f52fe29700f5239de5e9e6",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.4608612060546875,
+      "baselineAviMaxAbsoluteErrorInU8": 73.0,
+      "baselineAviPsnrDb": 35.74849844360996
+    },
+    {
+      "index": 2,
+      "capturePngSha256": "868a52247fe2b3e91d6792768a17de3de4e96258c63e82b783ffd2f3fdc0fc98",
+      "replayPngSha256": "868a52247fe2b3e91d6792768a17de3de4e96258c63e82b783ffd2f3fdc0fc98",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.2987162272135415,
+      "baselineAviMaxAbsoluteErrorInU8": 72.0,
+      "baselineAviPsnrDb": 35.89372667190566
+    },
+    {
+      "index": 3,
+      "capturePngSha256": "e350a167302809ae3e1fc6e9f14c3b7b9972e5f7bec394b255580e833197c01b",
+      "replayPngSha256": "e350a167302809ae3e1fc6e9f14c3b7b9972e5f7bec394b255580e833197c01b",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.397974650065104,
+      "baselineAviMaxAbsoluteErrorInU8": 61.0,
+      "baselineAviPsnrDb": 35.69651317237751
+    },
+    {
+      "index": 4,
+      "capturePngSha256": "66b1f4330384071227e1c6c84c96f3f2f865540766e000709088b97ef0a1ab56",
+      "replayPngSha256": "66b1f4330384071227e1c6c84c96f3f2f865540766e000709088b97ef0a1ab56",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.4102325439453125,
+      "baselineAviMaxAbsoluteErrorInU8": 70.0,
+      "baselineAviPsnrDb": 35.97285852862396
+    },
+    {
+      "index": 5,
+      "capturePngSha256": "5d0af2c22a53210b814e165f31fc5d2546bf144972afbe2b6e78929eb9c90795",
+      "replayPngSha256": "5d0af2c22a53210b814e165f31fc5d2546bf144972afbe2b6e78929eb9c90795",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.523646036783854,
+      "baselineAviMaxAbsoluteErrorInU8": 67.0,
+      "baselineAviPsnrDb": 35.68934587777375
+    },
+    {
+      "index": 6,
+      "capturePngSha256": "c667953559af5974a3803d9650f98d111d67123951955c85ec99ee7594dc93e0",
+      "replayPngSha256": "c667953559af5974a3803d9650f98d111d67123951955c85ec99ee7594dc93e0",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.5138041178385415,
+      "baselineAviMaxAbsoluteErrorInU8": 61.0,
+      "baselineAviPsnrDb": 35.43570599429604
+    },
+    {
+      "index": 7,
+      "capturePngSha256": "f11902900a27f645fa197b3ac86f6e7292324b2735babb393584da65609d693a",
+      "replayPngSha256": "f11902900a27f645fa197b3ac86f6e7292324b2735babb393584da65609d693a",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.587834676106771,
+      "baselineAviMaxAbsoluteErrorInU8": 63.0,
+      "baselineAviPsnrDb": 35.3057606927938
+    },
+    {
+      "index": 8,
+      "capturePngSha256": "c53b56f41e7458cd11df1947a3504578a4a19a12d63431d735789538de5f3be3",
+      "replayPngSha256": "c53b56f41e7458cd11df1947a3504578a4a19a12d63431d735789538de5f3be3",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.5826212565104165,
+      "baselineAviMaxAbsoluteErrorInU8": 61.0,
+      "baselineAviPsnrDb": 35.33976958865432
+    },
+    {
+      "index": 9,
+      "capturePngSha256": "b67c481932af707f92339cc07d9ae58e1de93cc6ee6ff43a9187e002640558ed",
+      "replayPngSha256": "b67c481932af707f92339cc07d9ae58e1de93cc6ee6ff43a9187e002640558ed",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.6085968017578125,
+      "baselineAviMaxAbsoluteErrorInU8": 77.0,
+      "baselineAviPsnrDb": 35.17614044816539
+    },
+    {
+      "index": 10,
+      "capturePngSha256": "80066247d188ee4b5f37024bba6219eb863959cc4025e3c4ab626cf5fba3f01a",
+      "replayPngSha256": "80066247d188ee4b5f37024bba6219eb863959cc4025e3c4ab626cf5fba3f01a",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.6229349772135415,
+      "baselineAviMaxAbsoluteErrorInU8": 64.0,
+      "baselineAviPsnrDb": 35.21342661855996
+    },
+    {
+      "index": 11,
+      "capturePngSha256": "3816448c8546876633be02ba05141c56a8f64a43762d4fb1da6d01abce330efe",
+      "replayPngSha256": "3816448c8546876633be02ba05141c56a8f64a43762d4fb1da6d01abce330efe",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.719329833984375,
+      "baselineAviMaxAbsoluteErrorInU8": 68.0,
+      "baselineAviPsnrDb": 35.009785970921044
+    },
+    {
+      "index": 12,
+      "capturePngSha256": "cbe34e96b5fbcb9b0c54b6e8da034c5508e3d5ba95435d2a1bd4ecb1c519ea93",
+      "replayPngSha256": "cbe34e96b5fbcb9b0c54b6e8da034c5508e3d5ba95435d2a1bd4ecb1c519ea93",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.686894734700521,
+      "baselineAviMaxAbsoluteErrorInU8": 74.0,
+      "baselineAviPsnrDb": 35.00733939631655
+    },
+    {
+      "index": 13,
+      "capturePngSha256": "2b84a90374d0910458402b0ecdac9f8bdf65301259d740aec5e6ad16d22388c4",
+      "replayPngSha256": "2b84a90374d0910458402b0ecdac9f8bdf65301259d740aec5e6ad16d22388c4",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.540008544921875,
+      "baselineAviMaxAbsoluteErrorInU8": 66.0,
+      "baselineAviPsnrDb": 35.37350716999532
+    },
+    {
+      "index": 14,
+      "capturePngSha256": "1529433bc771d595ad62e9896b9a7a0ea37eeee33c649172c67c43aa304ed27d",
+      "replayPngSha256": "1529433bc771d595ad62e9896b9a7a0ea37eeee33c649172c67c43aa304ed27d",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 2.769994099934896,
+      "baselineAviMaxAbsoluteErrorInU8": 79.0,
+      "baselineAviPsnrDb": 34.284434093765704
+    },
+    {
+      "index": 15,
+      "capturePngSha256": "94a19aa0f229516dbb218188666de2405babb0541b8f8d0553c96d258c376fdd",
+      "replayPngSha256": "94a19aa0f229516dbb218188666de2405babb0541b8f8d0553c96d258c376fdd",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 3.43536376953125,
+      "baselineAviMaxAbsoluteErrorInU8": 96.0,
+      "baselineAviPsnrDb": 32.417872448059924
+    },
+    {
+      "index": 16,
+      "capturePngSha256": "7391be9e826a1505e2d330f22d9f6ddd4bf76faca9d2a7d8973c52a55fa8cacd",
+      "replayPngSha256": "7391be9e826a1505e2d330f22d9f6ddd4bf76faca9d2a7d8973c52a55fa8cacd",
+      "identicalPngBytes": true,
+      "identicalDecodedPixels": true,
+      "baselineAviMeanAbsoluteErrorInU8": 3.459681193033854,
+      "baselineAviMaxAbsoluteErrorInU8": 102.0,
+      "baselineAviPsnrDb": 32.2874983829831
+    }
+  ],
+  "visualReview": {
+    "method": "Viewed capture and replay PNG frames 0, 8 and 16 individually with view_image; independently compared all 17 PNG bytes and decoded BGR pixels.",
+    "recognizableDog": true,
+    "grassVisible": true,
+    "actualTemporalChange": true,
+    "requestedLeftToRightMotion": false,
+    "noSevereBlockArtifacts": false,
+    "observations": [
+      "Dog moves toward the left, outside the requested direction.",
+      "Green blocklike regions are present in lossless frame 0 and severe across the foreground and right side of frame 16.",
+      "The same artifacts occur in independently restarted same-latent VAE replay; all 17 PNG files are byte-identical."
+    ]
+  },
+  "readiness": "EXPERIMENTAL_NOT_READY",
+  "initialDiagnosticError": {
+    "record": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-video-latent-diagnostic-20261112-r1\\capture\\result.json",
+    "classification": "Diagnostic implementation error, not an engine failure",
+    "description": "Initial hook mistook four dimensions printed in logs for true tensor rank. Actual latent is rank five with singleton batch. The owned process was stopped, evidence retained, and one replacement capture plus replay were explicitly authorized after correcting the format and adding a valid rank-five no-model check."
+  },
+  "nativeVersionBoundary": "The tar-extracted source has no nested git repository. CMake version text inherited the containing Lumina checkout; source tar hashes, explicit patch/source hashes and binary SHA are the diagnostic identity.",
+  "executionStatus": "PASS",
+  "conclusions": {
+    "established": [
+      "A bounded raw F32 latent can be captured before decode_first_stage and replayed through the identical VAE path without text encoding or diffusion sampling.",
+      "The saved latent shape is [32,32,5,16,1], all 81920 values are finite, and capture/replay retain the same file and payload SHA.",
+      "A fresh helper process reproduces all 17 lossless PNG files byte-for-byte.",
+      "Severe block artifacts are visible in lossless PNG pixels, so AVI/MJPEG encoding cannot be their sole source."
+    ],
+    "notEstablished": [
+      "Whether the root cause lies in diffusion-generated latent quality, VAE numerical/precision behavior, or tensor-to-pixel conversion remains unresolved.",
+      "This is not a decoder F32 comparison. The saved latent has F32 storage, while Wan CausalConv3d weights remain F16 and no decoder allocation was changed.",
+      "Finite latent values do not prove the latent is semantically correct or that decoder intermediates are finite."
+    ],
+    "nextDiscriminatingBoundary": "If further work is authorized, reuse this fixed hashed latent and inspect decoder floats before range conversion/clamping, then validate actual tensor types before any precision A/B. Do not repeat diffusion sampling.",
+    "additionalModelRunsPerformed": false
+  },
+  "validation": {
+    "negativeCases": 17,
+    "validFiveDimensionalNoModelCase": 1,
+    "status": "PASS",
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-video-latent-diagnostic-20261112-r1\\revision-2\\validation\\result.json"
+  },
+  "captureResultSha256": "00c2d87284a8a94a6b09415161a2d70d8784a853daf4700d6b0b0eb3a909da05",
+  "replayResultSha256": "a73043d40a5223d024d6c404ec0e55f6aa32943bca010af132ce99580a0913e6"
+}

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ImagePreview from './ImagePreview';
+import AudioPreview from './AudioPreview';
 import MarkdownContent from './MarkdownContent';
-import { getTextAndImageContent, type Message } from '../types/message';
+import { getAudioContent, getTextAndImageContent, type Message } from '../types/message';
 import MessageCopyLink from './MessageCopyLink';
 import { formatMessageTimestamp } from '../utils/timeUtils';
 import Edit from './icons/Edit';
@@ -23,7 +24,8 @@ const i18n = defineMessages({
   },
   editInPlaceDescription: {
     id: 'userMessage.editInPlaceDescription',
-    defaultMessage: '<b>Edit in Place</b> updates this session • <b>Fork Session</b> creates a new session',
+    defaultMessage:
+      '<b>Edit in Place</b> updates this session • <b>Fork Session</b> creates a new session',
   },
   cancel: {
     id: 'userMessage.cancel',
@@ -85,6 +87,7 @@ export default function UserMessage({ message, onMessageUpdate }: UserMessagePro
   const [error, setError] = useState<string | null>(null);
 
   const { textContent, imagePaths } = getTextAndImageContent(message);
+  const audioContent = getAudioContent(message);
   const timestamp = formatMessageTimestamp(message.created);
 
   // Effect to handle message content changes and ensure persistence
@@ -233,7 +236,11 @@ export default function UserMessage({ message, onMessageUpdate }: UserMessagePro
                 })}
               </div>
               <div className="flex gap-3">
-                <Button onClick={handleCancel} variant="ghost" aria-label={intl.formatMessage(i18n.cancelAriaLabel)}>
+                <Button
+                  onClick={handleCancel}
+                  variant="ghost"
+                  aria-label={intl.formatMessage(i18n.cancelAriaLabel)}
+                >
                   {intl.formatMessage(i18n.cancel)}
                 </Button>
                 <Button
@@ -257,7 +264,9 @@ export default function UserMessage({ message, onMessageUpdate }: UserMessagePro
         ) : (
           // Normal message display
           <div className="message flex justify-end w-full">
-            <div className="flex-col max-w-[85%] w-fit">
+            <div
+              className={`flex-col min-w-0 max-w-[85%] ${audioContent.length > 0 ? 'w-full' : 'w-fit'}`}
+            >
               <div className="flex flex-col group">
                 {textContent.trim() && (
                   <div className="flex bg-text-primary text-background-primary rounded-xl py-2.5 px-4">
@@ -278,27 +287,36 @@ export default function UserMessage({ message, onMessageUpdate }: UserMessagePro
                   </div>
                 )}
 
+                {audioContent.map((audio, index) => (
+                  <AudioPreview key={index} data={audio.data} mimeType={audio.mimeType} />
+                ))}
+
                 <div className="relative h-[22px] flex justify-end text-right">
                   <div className="absolute w-40 font-mono right-0 text-xs text-text-secondary pt-1 transition-all duration-200 group-hover:-translate-y-4 group-hover:opacity-0">
                     {timestamp}
                   </div>
                   <div className="absolute right-0 pt-1 flex items-center gap-2">
-                    <button
-                      onClick={handleEditClick}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleEditClick();
-                        }
-                      }}
-                      className="flex items-center gap-1 text-xs text-text-secondary hover:cursor-pointer hover:text-text-primary transition-all duration-200 opacity-0 group-hover:opacity-100 -translate-y-4 group-hover:translate-y-0 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 rounded"
-                      aria-label={intl.formatMessage(i18n.editMessageAriaLabel, { preview: `${textContent.substring(0, 50)}${textContent.length > 50 ? '...' : ''}` })}
-                      aria-expanded={isEditing}
-                      title={intl.formatMessage(i18n.editMessageTitle)}
-                    >
-                      <Edit className="h-3 w-3" />
-                      <span>{intl.formatMessage(i18n.editButton)}</span>
-                    </button>
+                    {/* The text-only edit controller does not preserve audio content. */}
+                    {audioContent.length === 0 && (
+                      <button
+                        onClick={handleEditClick}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleEditClick();
+                          }
+                        }}
+                        className="flex items-center gap-1 text-xs text-text-secondary hover:cursor-pointer hover:text-text-primary transition-all duration-200 opacity-0 group-hover:opacity-100 -translate-y-4 group-hover:translate-y-0 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 rounded"
+                        aria-label={intl.formatMessage(i18n.editMessageAriaLabel, {
+                          preview: `${textContent.substring(0, 50)}${textContent.length > 50 ? '...' : ''}`,
+                        })}
+                        aria-expanded={isEditing}
+                        title={intl.formatMessage(i18n.editMessageTitle)}
+                      >
+                        <Edit className="h-3 w-3" />
+                        <span>{intl.formatMessage(i18n.editButton)}</span>
+                      </button>
+                    )}
                     <MessageCopyLink text={textContent} contentRef={contentRef} />
                   </div>
                 </div>

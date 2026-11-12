@@ -11,7 +11,7 @@ import {
   messagesChange,
 } from './shared';
 
-type StreamedContentBlock = Extract<ContentBlock, { type: 'text' | 'image' }>;
+type StreamedContentBlock = Extract<ContentBlock, { type: 'text' | 'image' | 'audio' }>;
 
 export function applyContentChunk(
   state: AdapterState,
@@ -38,7 +38,10 @@ export function applyContentChunk(
 
     if (lastContent?.type === 'text' && content.type === 'text') {
       lastContent.text += content.text;
-    } else if (content.type === 'image' && hasImageContent(existing, content)) {
+    } else if (
+      (content.type === 'image' || content.type === 'audio') &&
+      hasMediaContent(existing, content)
+    ) {
       return messagesChangeWithLocalSteerConfirmation(state, existing, luminaMeta.steer);
     } else {
       existing.content.push(content);
@@ -105,8 +108,9 @@ function messageContentFromAcpContentBlock(
         ...(content.annotations ? { annotations: content.annotations } : {}),
       };
     case 'image':
+    case 'audio':
       return {
-        type: 'image',
+        type: content.type,
         data: content.data,
         mimeType: content.mimeType,
         ...(content._meta ? { _meta: content._meta } : {}),
@@ -155,13 +159,16 @@ function lastMergeableMessageWithRole(
   return lastMessage;
 }
 
-function hasImageContent(
+function hasMediaContent(
   message: Message,
-  image: Extract<StreamedContentBlock, { type: 'image' }>
+  media: Extract<StreamedContentBlock, { type: 'image' | 'audio' }>
 ) {
   return message.content.some(
     (content) =>
-      content.type === 'image' && content.data === image.data && content.mimeType === image.mimeType
+      (content.type === 'image' || content.type === 'audio') &&
+      content.type === media.type &&
+      content.data === media.data &&
+      content.mimeType === media.mimeType
   );
 }
 

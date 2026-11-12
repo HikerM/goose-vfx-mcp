@@ -11,7 +11,9 @@ use super::{
     Sha256Digest,
 };
 
+mod vector;
 mod vision;
+pub use vector::*;
 pub use vision::*;
 
 pub const RESOURCE_RULES_VERSION: &str = "local-resource-budget-v2";
@@ -38,6 +40,13 @@ pub struct HardwareResourceSnapshot {
 
 pub fn probe_hardware_resources(
     _backend: &LlamaBackend,
+    storage: &Path,
+    observed_at: i64,
+) -> Result<HardwareResourceSnapshot> {
+    probe_initialized_hardware_resources(storage, observed_at)
+}
+
+pub(crate) fn probe_initialized_hardware_resources(
     storage: &Path,
     observed_at: i64,
 ) -> Result<HardwareResourceSnapshot> {
@@ -101,10 +110,14 @@ pub struct ResourceWorkload {
     pub context_checkpoint_slots: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vision: Option<VisionResourceWorkload>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vector: Option<Box<VectorResourceWorkload>>,
 }
 
 pub fn resource_rules_version(workload: &ResourceWorkload) -> &'static str {
-    if workload.vision.is_some() {
+    if workload.vector.is_some() {
+        VECTOR_RESOURCE_RULES_VERSION
+    } else if workload.vision.is_some() {
         VISION_RESOURCE_RULES_VERSION
     } else {
         RESOURCE_RULES_VERSION
@@ -282,6 +295,17 @@ pub fn assess_resource_budget(
             reasons.push(error.to_string());
         }
     }
+    let vector_cache = if envelope.workload.vector.is_some() {
+        match vector::validate_measured_envelope(components, envelope) {
+            Ok(cache) => Some(cache),
+            Err(error) => {
+                reasons.push(error.to_string());
+                None
+            }
+        }
+    } else {
+        None
+    };
     for component in components {
         component.validate()?;
         ensure!(
@@ -292,6 +316,9 @@ pub fn assess_resource_budget(
             if artifacts.insert(file.artifact.id.clone()) {
                 weight_bytes = sum([weight_bytes, file.header.file_bytes])?;
             }
+        }
+        if envelope.workload.vector.is_some() {
+            continue;
         }
         if component.role == ComponentRole::VisionProjector && envelope.workload.vision.is_some() {
             continue;
@@ -326,6 +353,9 @@ pub fn assess_resource_budget(
         digests == envelope.component_digests,
         "Adapter resource envelope belongs to different components"
     );
+    if let Some(cache) = vector_cache {
+        kv = cache;
+    }
     let available = hardware
         .devices
         .iter()

@@ -12,7 +12,7 @@ pub const LOCAL_WHISPER_MODEL_CONFIG_KEY: &str = "LOCAL_WHISPER_MODEL";
 use anyhow::{Context, Result};
 use candle_core::{Device, IndexOp, Tensor};
 use candle_nn::ops::log_softmax;
-use candle_transformers::models::whisper::{self as m, audio, Config, N_FRAMES};
+use candle_transformers::models::whisper::{self as m, Config, N_FRAMES};
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
@@ -24,6 +24,9 @@ use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
 use tokenizers::Tokenizer;
 use utoipa::ToSchema;
+
+#[path = "whisper_gguf.rs"]
+mod gguf;
 
 // Common suppress tokens for all Whisper models
 const SUPPRESS_TOKENS: &[u32] = &[
@@ -195,6 +198,7 @@ pub struct WhisperTranscriber {
     no_timestamps_token: u32,
     language_token: u32,
     max_initial_timestamp_index: u32,
+    layout_version: &'static str,
 }
 
 impl WhisperTranscriber {
@@ -225,7 +229,7 @@ impl WhisperTranscriber {
 
         let model =
             get_model(model_id).ok_or_else(|| anyhow::anyhow!("Unknown model: {}", model_id))?;
-        let config = model.config();
+        let mut config = model.config();
         tracing::debug!(
             num_mel_bins = config.num_mel_bins,
             d_model = config.d_model,
@@ -245,16 +249,30 @@ impl WhisperTranscriber {
         tracing::debug!(mel_filters_len = mel_filters.len(), "loaded mel filters");
 
         tracing::debug!("loading GGUF model weights");
-        let vb = candle_transformers::quantized_var_builder::VarBuilder::from_gguf(
+        let weights = gguf::load(
             model_path_ref,
+            model_id,
+            &config,
+            bundled_tokenizer,
             &device,
         )?;
+        let (vb, source_tokenizer, layout_version) = match weights {
+            gguf::WhisperWeights::Legacy(builder) => (builder, None, gguf::LEGACY_LAYOUT),
+            gguf::WhisperWeights::ModelScopeBase {
+                builder,
+                tokenizer,
+                suppress_tokens,
+            } => {
+                config.suppress_tokens = suppress_tokens;
+                (builder, Some(*tokenizer), gguf::MODELSCOPE_LAYOUT)
+            }
+        };
         let model = m::quantized_model::Whisper::load(&vb, config.clone())?;
         tracing::debug!("model weights loaded successfully");
-
-        tracing::debug!("loading tokenizer");
-        let tokenizer = Self::load_tokenizer(model_path_ref, Some(bundled_tokenizer))?;
-        tracing::debug!("tokenizer loaded successfully");
+        let tokenizer = match source_tokenizer {
+            Some(tokenizer) => tokenizer,
+            None => Self::load_tokenizer(model_path_ref, Some(bundled_tokenizer))?,
+        };
 
         Ok(Self {
             model,
@@ -266,7 +284,12 @@ impl WhisperTranscriber {
             no_timestamps_token: 50363,
             language_token: 50259,
             max_initial_timestamp_index: 50,
+            layout_version,
         })
+    }
+
+    pub fn layout_version(&self) -> &'static str {
+        self.layout_version
     }
 
     fn load_tokenizer(model_dir: &Path, bundled_tokenizer: Option<&str>) -> Result<Tokenizer> {
@@ -382,9 +405,18 @@ impl WhisperTranscriber {
         let pcm_samples = pcm_data.len();
         tracing::debug!(pcm_samples, "converting PCM to mel spectrogram");
 
-        let actual_content_frames = pcm_samples / 160;
+        let actual_content_frames = if self.layout_version == gguf::MODELSCOPE_LAYOUT {
+            pcm_samples.div_ceil(160)
+        } else {
+            pcm_samples / 160
+        };
 
-        let mel = audio::pcm_to_mel(&self.config, &pcm_data, &self.mel_filters);
+        let mel = gguf::pcm_to_mel(
+            self.layout_version,
+            &self.config,
+            &pcm_data,
+            &self.mel_filters,
+        )?;
         let mel_len = mel.len();
         tracing::debug!(
             mel_len,
@@ -415,7 +447,12 @@ impl WhisperTranscriber {
     ) -> Result<Vec<u32>> {
         let _time_offset = (seek * 160) as f32 / 16000.0; // HOP_LENGTH = 160
         let _segment_duration = (segment_size * 160) as f32 / 16000.0;
-        let mel_segment = mel_tensor.narrow(2, seek, segment_size)?;
+        let encoder_frames = if self.layout_version == gguf::MODELSCOPE_LAYOUT {
+            N_FRAMES
+        } else {
+            segment_size
+        };
+        let mel_segment = mel_tensor.narrow(2, seek, encoder_frames)?;
 
         if tracing::enabled!(tracing::Level::DEBUG) {
             let mel_flat = mel_segment.flatten_all()?;

@@ -1,0 +1,76 @@
+{
+  "status": "PASS",
+  "scope": "Only the vector integration fixture changed. No Rust production code, CLI rebuild or model invocation. Same 15 target tests; full previous 237 core tests were not rerun as a new whole batch.",
+  "testSource": {
+    "path": "D:\\Project\\goose\\crates\\lumina-local-inference\\tests\\lifecycle_vector_runtime.rs",
+    "sha256": "51161a6043897d103a3f1d4d5a29c0f6cf640c7f10fb5e3ec95b8e4ccb1c7bb9"
+  },
+  "fix": [
+    "Incomplete HTTP EOF/connection abort/reset is accepted as a cancelled connection; malformed completed requests still fail.",
+    "External cancellation waits for the actual first /tokenize request and holds its response until the future is dropped and helper reuse is refused.",
+    "The 150ms internal deadline remains; typed elapsed/HTTP-timeout errors, at most the first tokenize, no inference/later batch and poisoned reuse are checked.",
+    "Teardown drains already accepted/queued connections, joins the mock worker, then checks captured requests; fixed cancellation sleeps are removed."
+  ],
+  "format": {
+    "command": "& .\\bin\\cargo.cmd fmt --all; git diff --check",
+    "exitCode": 0,
+    "wallTimeSeconds": 9.3180512,
+    "evidenceKind": "Actual tool result, no standalone log; source comparison with failed recipe freeze found only the owned Rust test changed."
+  },
+  "targetTests": {
+    "passed": 15,
+    "failed": 0,
+    "ignored": 0,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-cancel-tests-r1.log",
+      "sha256": "c14a2b3b6fdbf6f4e23c189a4aa40081860e0615800a32346c7d9287821009ba"
+    }
+  },
+  "strictCoreClippy": {
+    "exitCode": 0,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-cancel-clippy-r1.log",
+      "sha256": "9a11f53c975b84d487a7c7f6661efb10d81ebbb0f864e0a20355a58fbd664d36"
+    },
+    "scope": "lumina-local-inference --no-default-features --all-targets --offline --locked -- -D warnings; vendor warnings retained."
+  },
+  "commandsAndExitCodes": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-cancel-validation-r1.json",
+    "sha256": "c8a586855b3e8414d24f1605aad1945c5928374c0dac7a399928951c62555537"
+  },
+  "executableProvenance": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-cancel-executable-provenance-r1.json",
+    "sha256": "be750ba9bc4cdb59719ec04754161b889bac307d95935f1e8ef21ac394a4221f"
+  },
+  "powershell": {
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-runtime-assets-powershell-v2-r2\\evidence.json",
+      "sha256": "b9505609d92f5475b2d876ae21f5e21e034f92424ec597b53fad52d198a4d851"
+    },
+    "executableManifest": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-runtime-assets-powershell-v2-r2\\executables.json",
+      "sha256": "84f96d400e232b0c1734b7a7139adc8718edc9226c329b14c4a89af3c1e957d6"
+    },
+    "eachCombination": {
+      "passed": 94,
+      "failed": 0,
+      "ignored": 3
+    },
+    "combinations": 4,
+    "summaryFixturesPerCombination": 19,
+    "namedTestsMatchPreviousMatrix": true
+  },
+  "newTargetExecutable": {
+    "path": "D:\\Project\\goose\\target\\debug\\deps\\lifecycle_vector_runtime-ecce3c42e082a5bd.exe",
+    "sha256": "49ce6e6d6dcde98869236e47b2b24538bd45c848703ba3c2f488763189c5cb44"
+  },
+  "preservedFailedRecipe": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-runtime-assets-v2-r1-evidence.json",
+    "sha256": "b3b201640f25b92e142f247f99b7ef2f5dd92871678e8f9f10ca8911906691b2"
+  },
+  "preservedFailedNativeLog": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-runtime-assets-v2-r1-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log",
+    "sha256": "a544c3183ef39e6c8ab1502eecb628bc09063c94a8284dba73881214d957eb3c"
+  },
+  "nextRecipe": "Root-owned runtime-assets-v2-r2 using the new PS evidence; not run by this task."
+}

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildConnectSrc, shouldUpgradeInsecureRequests, buildCSP } from '../csp';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { ExternalBackendConfig } from '../settings';
 
 describe('buildConnectSrc', () => {
@@ -106,6 +108,14 @@ describe('shouldUpgradeInsecureRequests', () => {
 });
 
 describe('buildCSP', () => {
+  it('allows local audio blobs consistently in the page and Electron policies', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    for (const policy of [buildCSP(), html]) {
+      const mediaDirective = policy.match(/media-src\s+([^;]+);/)?.[1];
+      expect(mediaDirective?.split(/\s+/)).toEqual(["'self'", 'mediastream:', 'blob:']);
+    }
+  });
+
   it('includes upgrade-insecure-requests with no external backend', () => {
     const csp = buildCSP(undefined);
     expect(csp).toContain('upgrade-insecure-requests');

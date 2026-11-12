@@ -65,14 +65,16 @@ function Invoke-CacheInstallValidation {
     }
     if ($SelectedSuite -eq 'runtime-assets') {
         $targets = @('runtime_assets_unit', 'native_runtime_unit', 'chat_runtime_unit',
-            'lifecycle_asset_use', 'lifecycle_launch_binding', 'lifecycle_native_runtime', 'lifecycle_vector_runtime')
-        $scope = 'Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.'
+            'lifecycle_asset_use', 'lifecycle_launch_binding', 'lifecycle_native_runtime', 'lifecycle_vector_runtime',
+            'vector_operation_unit', 'lifecycle_vector_resources')
+        $scope = 'Runtime asset lifetime, frozen launch binding, vector resource admission and serialized adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.'
     }
     $results = @()
     $unitFilters = @{
         runtime_assets_unit = 'runtime_assets::tests'
         native_runtime_unit = 'lifecycle::native_runtime::process_tests'
         chat_runtime_unit = 'lifecycle::chat_runtime::tests'
+        vector_operation_unit = 'lifecycle::vector_runtime::http::tests'
     }
     foreach ($target in $targets) {
         $selection = @('--test', $target)

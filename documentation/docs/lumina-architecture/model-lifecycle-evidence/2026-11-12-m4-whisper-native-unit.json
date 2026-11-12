@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "scope": "Only the 14 native-layout Whisper GGUF unit tests; 2234 other lib tests filtered out, not executed or counted as passes.",
+  "command": [
+    "bin/cargo.cmd",
+    "test",
+    "-p",
+    "lumina-agent",
+    "--features",
+    "local-inference,rustls-tls,code-mode,aws-providers,system-keyring",
+    "--lib",
+    "dictation::whisper::gguf::tests",
+    "--offline",
+    "--locked"
+  ],
+  "passed": 14,
+  "failed": 0,
+  "ignored": 0,
+  "filtered_out": 2234,
+  "test_seconds": 1.61,
+  "cargo_compile_duration": "17m 07s",
+  "exit_code": 0,
+  "library_test_warnings": 157,
+  "source_sha256": {
+    "whisper.rs": "ec304aba789de070955a415dc24ee3c9ce8972d7afe912e40dbfbff27b887629",
+    "whisper_gguf.rs": "b33539aed0750432bc033c19d2b48abea774ded312a08c8c6bacc5919a8fe6a0",
+    "whisper_gguf_tests.rs": "c9b62ee0849ab898c28996e540c7214105ae0743ec9a6f38b9810635ae4fe274"
+  },
+  "source_unchanged_during_execution": true,
+  "tests": [
+    "dictation::whisper::gguf::tests::mixed_radix_power_matches_numpy_rfft_all_201_bins",
+    "dictation::whisper::gguf::tests::legacy_mixed_and_unknown_layouts_are_distinguished",
+    "dictation::whisper::gguf::tests::altered_metadata_and_suppression_rules_are_rejected",
+    "dictation::whisper::gguf::tests::source_metadata_provides_the_complete_suppression_set",
+    "dictation::whisper::gguf::tests::observed_native_headers_map_every_required_candle_tensor",
+    "dictation::whisper::gguf::tests::legacy_quantized_builder_remains_loadable_without_rewriting_source",
+    "dictation::whisper::gguf::tests::arbitrary_native_named_gguf_cannot_enter_the_fixed_profile",
+    "dictation::whisper::gguf::tests::native_frontend_empty_silence_and_nonfinite_inputs",
+    "dictation::whisper::gguf::tests::missing_duplicate_foreign_shape_and_quantization_headers_are_rejected",
+    "dictation::whisper::gguf::tests::native_frontend_matches_numpy_centered_stft_reference",
+    "dictation::whisper::gguf::tests::legacy_frontend_remains_bit_identical_to_candle",
+    "dictation::whisper::gguf::tests::corrected_tokenizer_matches_independent_full_source_fingerprints",
+    "dictation::whisper::gguf::tests::polluted_sidecar_content_and_altered_decoder_settings_are_rejected_in_memory",
+    "dictation::whisper::gguf::tests::changed_source_tokens_merges_types_and_truncated_arrays_are_rejected"
+  ],
+  "log": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-whisper-unit-tests-r1.log",
+  "log_sha256": "b7c525d171a748b3ee98e6751ee471f5192462277c0c8f2e2c129deb057a7d40",
+  "limitations": [
+    "No complete A46 multilingual/long/noisy recording acceptance",
+    "No managed ASR plan/install or dictation UI integration",
+    "No cancellation or GPU/performance acceptance"
+  ]
+}

@@ -62,6 +62,24 @@
   "appsView.title": {
     "defaultMessage": "Apps"
   },
+  "audioPreview.invalid": {
+    "defaultMessage": "The audio data is empty or invalid."
+  },
+  "audioPreview.label": {
+    "defaultMessage": "Audio message"
+  },
+  "audioPreview.loading": {
+    "defaultMessage": "Loading audio…"
+  },
+  "audioPreview.tooLarge": {
+    "defaultMessage": "This audio exceeds the 32 MiB playback limit."
+  },
+  "audioPreview.unableToPlay": {
+    "defaultMessage": "Unable to play this audio. The file may be damaged or its codec unsupported."
+  },
+  "audioPreview.unsupported": {
+    "defaultMessage": "This audio format is not supported."
+  },
   "authSettings.activeProviderWarning": {
     "defaultMessage": "This is the active provider. New requests may fail until you configure another credential."
   },

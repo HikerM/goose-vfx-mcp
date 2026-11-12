@@ -67,7 +67,7 @@ fn prepare_native_text_plan(
             "m1:2026-11-01-m1-native-resource-measurements.json:bounded-exact-workload".into(),
         ]),
     };
-    let envelope = AdapterResourceEnvelope {runtime,component_digests:BTreeSet::from([observation.digest()?]),workload:ResourceWorkload {context_tokens:2048,batch_tokens:512,parallel_sequences:1,recurrent_rollback_slots:0,kv_key_type:ResourceCacheType::F16,kv_value_type:ResourceCacheType::F16,prompt_cache_bytes:0,context_checkpoint_slots:0,vision:None},compute_buffer_bytes:64*1024*1024,auxiliary_buffer_bytes:256*1024*1024,evidence_id:"m1:native-resource-measurements:r2:37.02MiB-compute-0.95MiB-output-with-explicit-headroom".into()};
+    let envelope = AdapterResourceEnvelope {runtime,component_digests:BTreeSet::from([observation.digest()?]),workload:ResourceWorkload {context_tokens:2048,batch_tokens:512,parallel_sequences:1,recurrent_rollback_slots:0,kv_key_type:ResourceCacheType::F16,kv_value_type:ResourceCacheType::F16,prompt_cache_bytes:0,context_checkpoint_slots:0,vision:None,vector:None},compute_buffer_bytes:64*1024*1024,auxiliary_buffer_bytes:256*1024*1024,evidence_id:"m1:native-resource-measurements:r2:37.02MiB-compute-0.95MiB-output-with-explicit-headroom".into()};
     let mut dependencies = DependencyGraph {
         root: catalog.components.keys().next().unwrap().clone(),
         components: catalog.components.clone(),

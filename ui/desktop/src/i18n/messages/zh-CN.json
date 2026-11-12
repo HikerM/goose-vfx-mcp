@@ -62,6 +62,24 @@
   "appsView.title": {
     "defaultMessage": "应用"
   },
+  "audioPreview.invalid": {
+    "defaultMessage": "音频数据为空或无效。"
+  },
+  "audioPreview.label": {
+    "defaultMessage": "音频消息"
+  },
+  "audioPreview.loading": {
+    "defaultMessage": "正在加载音频…"
+  },
+  "audioPreview.tooLarge": {
+    "defaultMessage": "此音频超过 32 MiB 的播放大小上限。"
+  },
+  "audioPreview.unableToPlay": {
+    "defaultMessage": "无法播放此音频。文件可能已损坏或其编码不受支持。"
+  },
+  "audioPreview.unsupported": {
+    "defaultMessage": "不支持此音频格式。"
+  },
   "authSettings.activeProviderWarning": {
     "defaultMessage": "这是当前正在使用的提供商。在配置其他凭据之前，新的请求可能会失败。"
   },

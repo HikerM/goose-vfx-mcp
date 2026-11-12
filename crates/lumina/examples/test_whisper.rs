@@ -27,7 +27,11 @@ fn main() -> Result<()> {
     ensure!(!text.trim().is_empty(), "Actual transcription is empty");
     println!(
         "{}",
-        serde_json::to_string(&serde_json::json!({"model": model.id, "transcription": text}))?
+        serde_json::to_string(&serde_json::json!({
+            "model": model.id,
+            "layout": transcriber.layout_version(),
+            "transcription": text
+        }))?
     );
     Ok(())
 }

@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { ToolCallArguments, ToolCallArgumentValue } from './ToolCallArguments';
 import MarkdownContent from './MarkdownContent';
+import AudioPreview from './AudioPreview';
 import {
   ToolRequestMessageContent,
   ToolResponseMessageContent,
@@ -963,6 +964,7 @@ function ToolResultView({ result, isStartExpanded }: ToolResultViewProps) {
     'text' in c && typeof (c as Record<string, unknown>).text === 'string';
 
   const hasImage = (c: ContentBlock): c is ContentBlock & { data: string; mimeType: string } => {
+    if (c.type !== 'image') return false;
     if (!('data' in c && 'mimeType' in c)) return false;
     const mimeType = (c as Record<string, unknown>).mimeType;
     return typeof mimeType === 'string' && mimeType.startsWith('image');
@@ -982,6 +984,7 @@ function ToolResultView({ result, isStartExpanded }: ToolResultViewProps) {
             {result.text.trim()}
           </pre>
         )}
+        {result.type === 'audio' && <AudioPreview data={result.data} mimeType={result.mimeType} />}
         {hasImage(result) && (
           <img
             src={`data:${result.mimeType};base64,${result.data}`}

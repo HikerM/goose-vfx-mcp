@@ -815,6 +815,7 @@ mod tests {
                     prompt_cache_bytes: 0,
                     context_checkpoint_slots: 0,
                     vision: vision.then(VisionResourceWorkload::measured_qwen35_cpu),
+                    vector: None,
                 }),
             },
             mode: RuntimeExecutionMode::Helper { port },

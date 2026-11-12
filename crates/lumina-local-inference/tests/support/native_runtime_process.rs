@@ -172,6 +172,107 @@ fn vision_arguments_bind_projector_encoder_limits_and_microbatch() {
 }
 
 #[test]
+fn vector_arguments_bind_the_measured_task_without_chat_or_projector_options() {
+    let temp = tempfile::tempdir().unwrap();
+    std::fs::write(
+        temp.path().join("main.gguf"),
+        b"argument fixture, not model weights",
+    )
+    .unwrap();
+    for profile in [
+        VectorRuntimeProfile::Qwen3Embedding06bQ8,
+        VectorRuntimeProfile::BgeRerankerV2M3Q4Km,
+    ] {
+        let mut config = text_config();
+        config.parameters = profile.launch_parameters();
+        config.capabilities = BTreeSet::from([profile.capability()]);
+        let args = helper_arguments(&config, temp.path(), "vector-instance").unwrap();
+        for (flag, value) in [
+            ("--alias", "vector-instance"),
+            ("--ctx-size", "512"),
+            ("--batch-size", "512"),
+            ("--ubatch-size", "512"),
+            ("--parallel", "1"),
+            ("--threads", "4"),
+            ("--threads-batch", "4"),
+            ("--gpu-layers", "0"),
+            ("--flash-attn", "on"),
+            ("--cache-type-k", "f16"),
+            ("--cache-type-v", "f16"),
+            ("--cache-ram", "0"),
+            ("--ctx-checkpoints", "0"),
+            ("--cache-reuse", "0"),
+            ("--spec-type", "none"),
+            ("--fit", "off"),
+        ] {
+            assert_option(&args, flag, value);
+        }
+        for flag in [
+            "--offline",
+            "--no-webui",
+            "--no-warmup",
+            "--no-cache-prompt",
+            "--no-cache-idle-slots",
+        ] {
+            assert!(args.iter().any(|value| value == flag), "{flag}");
+        }
+        for flag in ["--mmproj", "--chat-template", "--draft-model"] {
+            assert!(!args.iter().any(|value| value == flag), "{flag}");
+        }
+        assert_eq!(
+            args.iter().any(|value| value == "--embedding"),
+            profile == VectorRuntimeProfile::Qwen3Embedding06bQ8
+        );
+        assert_eq!(
+            args.iter().any(|value| value == "--reranking"),
+            profile == VectorRuntimeProfile::BgeRerankerV2M3Q4Km
+        );
+        if profile == VectorRuntimeProfile::Qwen3Embedding06bQ8 {
+            assert_option(&args, "--pooling", "last");
+            assert_option(&args, "--embd-normalize", "2");
+        }
+    }
+}
+
+#[test]
+fn vector_properties_reject_wrong_process_identity_or_execution_settings() {
+    let model = Path::new("fixed-model.gguf");
+    let expected = serde_json::json!({
+        "model_alias":"bound-alias", "model_path":model,
+        "default_generation_settings":{"n_ctx":512,"params":{"speculative.types":"none"}},
+        "total_slots":1,"modalities":{"vision":false},
+    });
+    for profile in [
+        VectorRuntimeProfile::Qwen3Embedding06bQ8,
+        VectorRuntimeProfile::BgeRerankerV2M3Q4Km,
+    ] {
+        let workload = profile.resource_workload();
+        validate_model_properties(&expected, &workload, model, "bound-alias").unwrap();
+        for (pointer, value) in [
+            ("/model_alias", serde_json::json!("another-process")),
+            ("/model_path", serde_json::json!("other-model.gguf")),
+            (
+                "/default_generation_settings/n_ctx",
+                serde_json::json!(2048),
+            ),
+            (
+                "/default_generation_settings/params/speculative.types",
+                serde_json::json!("draft-mtp"),
+            ),
+            ("/total_slots", serde_json::json!(2)),
+            ("/modalities/vision", serde_json::json!(true)),
+        ] {
+            let mut changed = expected.clone();
+            *changed.pointer_mut(pointer).unwrap() = value;
+            assert!(
+                validate_model_properties(&changed, &workload, model, "bound-alias").is_err(),
+                "{pointer}"
+            );
+        }
+    }
+}
+
+#[test]
 fn argument_builder_rejects_unmeasured_split_main_and_unbound_parameters() {
     let temp = tempfile::tempdir().unwrap();
     std::fs::write(temp.path().join("main.gguf"), b"fixture").unwrap();

@@ -40,6 +40,22 @@ impl InstallationApplication {
     pub fn root(&self) -> &Path {
         &self.root
     }
+    pub(super) async fn modelscope_credentials(&self) -> Result<Option<String>> {
+        let credentials = Arc::clone(&self.credentials);
+        tokio::task::spawn_blocking(move || credentials())
+            .await
+            .map_err(|_| super::ModelSourceError {
+                code: super::LifecycleErrorCode::SourceAuthRequired,
+                http_status: None,
+            })?
+            .map_err(|_| {
+                super::ModelSourceError {
+                    code: super::LifecycleErrorCode::SourceAuthRequired,
+                    http_status: None,
+                }
+                .into()
+            })
+    }
     pub(crate) fn started_service(&self) -> Option<&Arc<InstallationService>> {
         self.service.get()
     }

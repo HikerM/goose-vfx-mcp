@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -127,15 +127,30 @@ impl Reply {
     }
 }
 
-fn read_request(stream: &mut TcpStream) -> Request {
+fn read_request_chunk(stream: &mut TcpStream, buffer: &mut [u8]) -> Option<usize> {
+    match stream.read(buffer) {
+        Ok(0) => None,
+        Ok(count) => Some(count),
+        Err(error)
+            if matches!(
+                error.kind(),
+                std::io::ErrorKind::ConnectionAborted | std::io::ErrorKind::ConnectionReset
+            ) =>
+        {
+            None
+        }
+        Err(error) => panic!("request read failed: {error}"),
+    }
+}
+
+fn read_request(stream: &mut TcpStream) -> Option<Request> {
     stream
         .set_read_timeout(Some(Duration::from_secs(2)))
         .unwrap();
     let mut bytes = Vec::new();
     let header_end = loop {
         let mut buffer = [0; 4096];
-        let count = stream.read(&mut buffer).unwrap();
-        assert!(count > 0);
+        let count = read_request_chunk(stream, &mut buffer)?;
         bytes.extend_from_slice(&buffer[..count]);
         if let Some(offset) = bytes.windows(4).position(|window| window == b"\r\n\r\n") {
             break offset + 4;
@@ -152,8 +167,7 @@ fn read_request(stream: &mut TcpStream) -> Request {
         .unwrap();
     while bytes.len() < header_end + content_length {
         let mut buffer = [0; 4096];
-        let count = stream.read(&mut buffer).unwrap();
-        assert!(count > 0);
+        let count = read_request_chunk(stream, &mut buffer)?;
         bytes.extend_from_slice(&buffer[..count]);
     }
     let path = headers
@@ -164,11 +178,11 @@ fn read_request(stream: &mut TcpStream) -> Request {
         .nth(1)
         .unwrap()
         .into();
-    Request {
+    Some(Request {
         path,
         headers,
         body: serde_json::from_slice(&bytes[header_end..header_end + content_length]).unwrap(),
-    }
+    })
 }
 
 struct MockHelper {
@@ -183,55 +197,58 @@ struct MockHelper {
 impl MockHelper {
     fn new(
         profile: VectorRuntimeProfile,
-        handler: impl Fn(&Request, &str) -> Reply + Send + 'static,
+        mut handler: impl FnMut(&Request, &str) -> Reply + Send + 'static,
     ) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();
         let port = listener.local_addr().unwrap().port();
         let (launch, manifest) = binding(profile, port);
-        let alias = format!("lumina-vector-{}", launch.digest().unwrap().as_str());
+        let alias = format!("lumina-{}", launch.digest().unwrap().as_str());
         let requests = Arc::new(Mutex::new(Vec::new()));
         let captured = Arc::clone(&requests);
         let stop = Arc::new(AtomicBool::new(false));
         let stopping = Arc::clone(&stop);
-        let worker = thread::spawn(move || {
-            while !stopping.load(Ordering::Acquire) {
-                let (mut stream, _) = match listener.accept() {
-                    Ok(connection) => connection,
-                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                        thread::sleep(Duration::from_millis(2));
-                        continue;
+        let worker = thread::spawn(move || loop {
+            let (mut stream, _) = match listener.accept() {
+                Ok(connection) => connection,
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                    if stopping.load(Ordering::Acquire) {
+                        break;
                     }
-                    Err(error) => panic!("accept failed: {error}"),
-                };
-                stream.set_nonblocking(false).unwrap();
-                let request = read_request(&mut stream);
-                captured.lock().unwrap().push(request.clone());
-                let reply = handler(&request, &alias);
-                thread::sleep(reply.delay);
-                let length_header = if reply.chunked {
-                    "Transfer-Encoding: chunked".into()
-                } else {
-                    format!("Content-Length: {}", reply.body.len())
-                };
-                let header = format!(
-                    "HTTP/1.1 {} Unit\r\nContent-Type: {}\r\n{}\r\nConnection: close\r\n{}\r\n",
-                    reply.status, reply.content_type, length_header, reply.extra_headers
-                );
-                let _ = stream.write_all(header.as_bytes());
-                if reply.chunked {
-                    for chunk in reply.body.as_bytes().chunks(8192) {
-                        if write!(stream, "{:X}\r\n", chunk.len()).is_err()
-                            || stream.write_all(chunk).is_err()
-                            || stream.write_all(b"\r\n").is_err()
-                        {
-                            break;
-                        }
-                    }
-                    let _ = stream.write_all(b"0\r\n\r\n");
-                } else {
-                    let _ = stream.write_all(reply.body.as_bytes());
+                    thread::sleep(Duration::from_millis(2));
+                    continue;
                 }
+                Err(error) => panic!("accept failed: {error}"),
+            };
+            stream.set_nonblocking(false).unwrap();
+            let Some(request) = read_request(&mut stream) else {
+                continue;
+            };
+            captured.lock().unwrap().push(request.clone());
+            let reply = handler(&request, &alias);
+            thread::sleep(reply.delay);
+            let length_header = if reply.chunked {
+                "Transfer-Encoding: chunked".into()
+            } else {
+                format!("Content-Length: {}", reply.body.len())
+            };
+            let header = format!(
+                "HTTP/1.1 {} Unit\r\nContent-Type: {}\r\n{}\r\nConnection: close\r\n{}\r\n",
+                reply.status, reply.content_type, length_header, reply.extra_headers
+            );
+            let _ = stream.write_all(header.as_bytes());
+            if reply.chunked {
+                for chunk in reply.body.as_bytes().chunks(8192) {
+                    if write!(stream, "{:X}\r\n", chunk.len()).is_err()
+                        || stream.write_all(chunk).is_err()
+                        || stream.write_all(b"\r\n").is_err()
+                    {
+                        break;
+                    }
+                }
+                let _ = stream.write_all(b"0\r\n\r\n");
+            } else {
+                let _ = stream.write_all(reply.body.as_bytes());
             }
         });
         Self {
@@ -244,8 +261,8 @@ impl MockHelper {
         }
     }
 
-    fn embedding(&self) -> NativeEmbeddingAdapter {
-        NativeEmbeddingAdapter::new(
+    fn embedding(&self) -> NativeEmbeddingAdapter<'static> {
+        NativeEmbeddingAdapter::diagnostic(
             &self.launch,
             &self.manifest,
             &self.endpoint,
@@ -255,8 +272,8 @@ impl MockHelper {
         .unwrap()
     }
 
-    fn reranker(&self) -> NativeRerankAdapter {
-        NativeRerankAdapter::new(
+    fn reranker(&self) -> NativeRerankAdapter<'static> {
+        NativeRerankAdapter::diagnostic(
             &self.launch,
             &self.manifest,
             &self.endpoint,
@@ -298,7 +315,7 @@ fn constructor_binds_manifest_runtime_capability_and_exact_specialized_parameter
     let profile = VectorRuntimeProfile::Qwen3Embedding06bQ8;
     let (launch, manifest) = binding(profile, 19238);
     let create = |launch: &LaunchConfig, manifest: &ModelManifest| {
-        NativeEmbeddingAdapter::new(
+        NativeEmbeddingAdapter::diagnostic(
             launch,
             manifest,
             "http://127.0.0.1:19238/",
@@ -373,7 +390,7 @@ fn endpoint_requires_literal_loopback_matching_port_and_no_hidden_target() {
         "http://127.0.0.1:19238/#fragment",
     ] {
         assert!(
-            NativeEmbeddingAdapter::new(
+            NativeEmbeddingAdapter::diagnostic(
                 &launch,
                 &manifest,
                 endpoint,
@@ -390,7 +407,7 @@ fn endpoint_requires_literal_loopback_matching_port_and_no_hidden_target() {
         (TOKEN, Duration::ZERO),
         (TOKEN, Duration::from_secs(181)),
     ] {
-        assert!(NativeEmbeddingAdapter::new(
+        assert!(NativeEmbeddingAdapter::diagnostic(
             &launch,
             &manifest,
             "http://127.0.0.1:19238/",
@@ -398,6 +415,98 @@ fn endpoint_requires_literal_loopback_matching_port_and_no_hidden_target() {
             timeout
         )
         .is_err());
+    }
+}
+
+#[test]
+fn measured_resource_flags_are_frozen_in_the_binding_and_helper_arguments() {
+    let frozen = [
+        ("batch_cpu_threads", "4"),
+        ("flash_attention", "on"),
+        ("cache_type_k", "f16"),
+        ("cache_type_v", "f16"),
+        ("prompt_cache_mib", "0"),
+        ("context_checkpoints", "0"),
+        ("cache_prompt", "false"),
+        ("cache_idle_slots", "false"),
+        ("cache_reuse", "0"),
+        ("auto_fit", "false"),
+        ("speculative_type", "none"),
+        ("warmup", "false"),
+    ];
+    for profile in [
+        VectorRuntimeProfile::Qwen3Embedding06bQ8,
+        VectorRuntimeProfile::BgeRerankerV2M3Q4Km,
+    ] {
+        let (launch, manifest) = binding(profile, 19238);
+        let create = |launch: &LaunchConfig| {
+            if profile == VectorRuntimeProfile::Qwen3Embedding06bQ8 {
+                NativeEmbeddingAdapter::diagnostic(
+                    launch,
+                    &manifest,
+                    "http://127.0.0.1:19238/",
+                    TOKEN,
+                    Duration::from_secs(1),
+                )
+                .map(|adapter| adapter.helper_arguments())
+            } else {
+                NativeRerankAdapter::diagnostic(
+                    launch,
+                    &manifest,
+                    "http://127.0.0.1:19238/",
+                    TOKEN,
+                    Duration::from_secs(1),
+                )
+                .map(|adapter| adapter.helper_arguments())
+            }
+        };
+        let args = create(&launch).unwrap();
+        for (key, expected) in frozen {
+            let RuntimeParameters::Specialized { settings, .. } = &launch.parameters else {
+                unreachable!()
+            };
+            assert_eq!(settings.get(key).map(String::as_str), Some(expected));
+            for replacement in [None, Some("unmeasured")] {
+                let mut changed = launch.clone();
+                let RuntimeParameters::Specialized { settings, .. } = &mut changed.parameters
+                else {
+                    unreachable!()
+                };
+                if let Some(value) = replacement {
+                    settings.insert(key.into(), value.into());
+                } else {
+                    settings.remove(key);
+                }
+                assert!(create(&changed).is_err(), "unbound resource flag: {key}");
+            }
+        }
+        for pair in [
+            ["--threads-batch", "4"],
+            ["--cache-ram", "0"],
+            ["--ctx-checkpoints", "0"],
+            ["--cache-reuse", "0"],
+            ["--fit", "off"],
+            ["--spec-type", "none"],
+            ["--cache-type-k", "f16"],
+            ["--cache-type-v", "f16"],
+            ["--flash-attn", "on"],
+        ] {
+            assert_eq!(
+                args.windows(2).filter(|actual| *actual == pair).count(),
+                1,
+                "{pair:?}"
+            );
+        }
+        for flag in ["--no-cache-prompt", "--no-cache-idle-slots", "--no-warmup"] {
+            assert_eq!(
+                args.iter().filter(|actual| actual.as_str() == flag).count(),
+                1
+            );
+        }
+        let alias = format!("lumina-{}", launch.digest().unwrap().as_str());
+        assert!(args
+            .windows(2)
+            .any(|pair| pair == ["--alias", alias.as_str()]));
     }
 }
 
@@ -521,6 +630,49 @@ async fn invalid_inputs_are_rejected_before_any_http_request() {
         .is_err());
     assert!(helper.reranker().rerank("query", &[]).await.is_err());
     assert!(helper.requests.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn maximum_item_count_and_exact_utf8_byte_budget_are_accepted() {
+    let helper = MockHelper::new(
+        VectorRuntimeProfile::Qwen3Embedding06bQ8,
+        |request, alias| {
+            Reply::json(if request.path == "/tokenize" {
+                json!({"tokens":[10]})
+            } else {
+                embedding_response(alias, request.body["input"].as_array().unwrap().len())
+            })
+        },
+    );
+    let adapter = helper.embedding();
+    for inputs in [vec!["item".into(); 16], vec!["x".repeat(8192); 8]] {
+        assert_eq!(
+            adapter.embed(&inputs).await.unwrap().vectors.len(),
+            inputs.len()
+        );
+    }
+    let helper = MockHelper::new(
+        VectorRuntimeProfile::BgeRerankerV2M3Q4Km,
+        |request, alias| {
+            Reply::json(if request.path == "/tokenize" {
+                json!({"tokens":[10]})
+            } else {
+                rerank_response(alias, request.body["documents"].as_array().unwrap().len())
+            })
+        },
+    );
+    let adapter = helper.reranker();
+    let mut byte_boundary = vec!["x".repeat(8192); 8];
+    byte_boundary[0].pop();
+    for documents in [vec!["item".into(); 16], byte_boundary.clone()] {
+        assert_eq!(
+            adapter.rerank("q", &documents).await.unwrap().scores.len(),
+            documents.len()
+        );
+    }
+    let sent = helper.requests.lock().unwrap().len();
+    assert!(adapter.rerank("qq", &byte_boundary).await.is_err());
+    assert_eq!(helper.requests.lock().unwrap().len(), sent);
 }
 
 #[tokio::test]
@@ -733,18 +885,23 @@ async fn transport_rejects_redirect_http_failure_non_json_and_oversized_bodies()
 #[tokio::test]
 async fn request_deadline_and_dropped_future_stop_further_batch_requests() {
     for external_cancel in [false, true] {
-        let helper = MockHelper::new(VectorRuntimeProfile::Qwen3Embedding06bQ8, |_, _| {
-            let mut reply = Reply::json(json!({"tokens":[10]}));
-            reply.delay = Duration::from_millis(350);
-            reply
+        let (entered_tx, entered_rx) = tokio::sync::oneshot::channel();
+        let (release_tx, release_rx) = mpsc::channel();
+        let mut entered = Some(entered_tx);
+        let helper = MockHelper::new(VectorRuntimeProfile::Qwen3Embedding06bQ8, move |_, _| {
+            if let Some(entered) = entered.take() {
+                let _ = entered.send(());
+                release_rx.recv_timeout(Duration::from_secs(30)).unwrap();
+            }
+            Reply::json(json!({"tokens":[10]}))
         });
-        let adapter = NativeEmbeddingAdapter::new(
+        let adapter = NativeEmbeddingAdapter::diagnostic(
             &helper.launch,
             &helper.manifest,
             &helper.endpoint,
             TOKEN,
             if external_cancel {
-                Duration::from_secs(1)
+                Duration::from_secs(30)
             } else {
                 Duration::from_millis(150)
             },
@@ -752,15 +909,42 @@ async fn request_deadline_and_dropped_future_stop_further_batch_requests() {
         .unwrap();
         let inputs = vec!["one".into(), "two".into()];
         if external_cancel {
-            assert!(
-                tokio::time::timeout(Duration::from_millis(150), adapter.embed(&inputs))
-                    .await
-                    .is_err()
-            );
+            let mut operation = Box::pin(adapter.embed(&inputs));
+            tokio::select! {
+                result = &mut operation => panic!("operation finished before cancellation: {result:?}"),
+                entered = entered_rx => entered.unwrap(),
+            }
+            let requests = helper.requests.lock().unwrap();
+            assert_eq!(requests.len(), 1);
+            assert_eq!(requests[0].path, "/tokenize");
+            assert_eq!(requests[0].body["content"], "one");
+            drop(requests);
+            drop(operation);
         } else {
-            assert!(adapter.embed(&inputs).await.is_err());
+            let error = adapter.embed(&inputs).await.unwrap_err();
+            assert!(
+                error
+                    .downcast_ref::<tokio::time::error::Elapsed>()
+                    .is_some()
+                    || error
+                        .downcast_ref::<reqwest::Error>()
+                        .is_some_and(|error| error.is_timeout()),
+                "expected a request deadline error, got {error:#}"
+            );
         }
-        tokio::time::sleep(Duration::from_millis(400)).await;
-        assert_eq!(helper.requests.lock().unwrap().len(), 1);
+        let error = adapter.embed(&inputs).await.unwrap_err();
+        assert!(error.to_string().contains("stop and restart this helper"));
+        release_tx.send(()).unwrap();
+        let requests = Arc::clone(&helper.requests);
+        drop(adapter);
+        drop(helper);
+        let requests = requests.lock().unwrap();
+        assert!(requests.len() <= 1);
+        if external_cancel {
+            assert_eq!(requests.len(), 1);
+        }
+        assert!(requests
+            .iter()
+            .all(|request| request.path == "/tokenize" && request.body["content"] == "one"));
     }
 }

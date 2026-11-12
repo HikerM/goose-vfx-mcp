@@ -2,9 +2,13 @@ use anyhow::{ensure, Context, Result};
 use reqwest::{header, redirect, Client, Url};
 use serde::{de::DeserializeOwned, Deserialize};
 use std::net::IpAddr;
+use std::sync::Arc;
 use std::time::Duration;
 
 use super::{VectorRuntimeProfile, VectorTokenUsage};
+use crate::lifecycle::native_runtime::{
+    NativeHelperRuntime, NativeRequestGate, NativeRequestGuard,
+};
 use crate::lifecycle::{
     LaunchConfig, ModelCapability, ModelManifest, RuntimeExecutionMode, Sha256Digest,
 };
@@ -18,10 +22,37 @@ pub(super) struct VectorConnection {
     pub timeout: Duration,
     pub model_alias: String,
     pub launch_digest: Sha256Digest,
+    pub request_gate: Arc<NativeRequestGate>,
 }
 
 impl VectorConnection {
-    pub fn new(
+    pub fn from_owner(
+        owner: &NativeHelperRuntime,
+        manifest: &ModelManifest,
+        capability: ModelCapability,
+        timeout: Duration,
+    ) -> Result<Self> {
+        ensure!(
+            owner.child_id().is_some(),
+            "Vector helper has already stopped"
+        );
+        let mut connection = Self::diagnostic(
+            owner.actual_config(),
+            manifest,
+            capability,
+            owner.endpoint().as_str(),
+            owner.bearer_token(),
+            timeout,
+        )?;
+        ensure!(
+            connection.model_alias == owner.model_alias(),
+            "Vector helper alias differs from its actual launch binding"
+        );
+        connection.request_gate = owner.request_gate();
+        Ok(connection)
+    }
+
+    pub fn diagnostic(
         launch: &LaunchConfig,
         manifest: &ModelManifest,
         capability: ModelCapability,
@@ -86,8 +117,9 @@ impl VectorConnection {
             endpoint,
             profile,
             timeout,
-            model_alias: format!("lumina-vector-{}", launch_digest.as_str()),
+            model_alias: format!("lumina-{}", launch_digest.as_str()),
             launch_digest,
+            request_gate: Arc::new(NativeRequestGate::default()),
         })
     }
 
@@ -111,23 +143,7 @@ impl VectorConnection {
     }
 
     pub fn validate_inputs(&self, query: Option<&str>, inputs: &[String]) -> Result<()> {
-        ensure!(
-            !inputs.is_empty() && inputs.len() <= 16,
-            "Vector request requires 1 to 16 input items"
-        );
-        let mut bytes = 0usize;
-        for value in query.into_iter().chain(inputs.iter().map(String::as_str)) {
-            ensure!(
-                !value.trim().is_empty() && value.len() <= 8192,
-                "Vector input must be nonempty and at most 8192 UTF-8 bytes"
-            );
-            bytes += value.len();
-        }
-        ensure!(
-            bytes <= 65536,
-            "Vector request exceeds the 65536-byte input budget"
-        );
-        Ok(())
+        super::validate_vector_inputs(query, inputs)
     }
 
     pub async fn token_count(
@@ -135,6 +151,7 @@ impl VectorConnection {
         input: &str,
         add_special: bool,
         parse_special: bool,
+        operation: &mut NativeRequestGuard<'_>,
     ) -> Result<u64> {
         let response: Tokenized = self
             .post(
@@ -143,6 +160,7 @@ impl VectorConnection {
                     "content": input, "add_special": add_special, "parse_special": parse_special,
                     "with_pieces": false,
                 }),
+                operation,
             )
             .await?;
         // The pinned helper rejects n_tokens >= n_ctx for causal LAST pooling;
@@ -182,13 +200,11 @@ impl VectorConnection {
         &self,
         path: &str,
         body: &serde_json::Value,
+        operation: &mut NativeRequestGuard<'_>,
     ) -> Result<T> {
-        let mut response = self
-            .client
-            .post(self.endpoint.join(path)?)
-            .json(body)
-            .send()
-            .await?;
+        let request = self.client.post(self.endpoint.join(path)?).json(body);
+        operation.sending();
+        let mut response = request.send().await?;
         ensure!(
             response.status().is_success(),
             "Vector helper returned HTTP {}",
@@ -220,7 +236,9 @@ impl VectorConnection {
             );
             bytes.extend_from_slice(&chunk);
         }
-        Ok(serde_json::from_slice(&bytes)?)
+        let parsed = serde_json::from_slice(&bytes)?;
+        operation.finished();
+        Ok(parsed)
     }
 }
 
@@ -228,3 +246,7 @@ impl VectorConnection {
 struct Tokenized {
     tokens: Vec<i32>,
 }
+
+#[cfg(test)]
+#[path = "../../../tests/support/vector_operation_gates.rs"]
+mod tests;

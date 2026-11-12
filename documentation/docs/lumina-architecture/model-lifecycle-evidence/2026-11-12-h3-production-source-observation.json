@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-11-12T07:28:22.530666+00:00",
+  "status": "PASS_SOURCE_OBSERVATION_ONLY",
+  "runtime_ready": false,
+  "scope": "Actual existing production ModelScopeProvider structural observations via independent example executable. No full model download, inference, resource admission, or Runtime READY.",
+  "format_gate": {
+    "all_required_weights": "GGUF",
+    "all_sources": "ModelScope",
+    "safetensors_substitution_allowed": false
+  },
+  "production_provider_probe": {
+    "entry_point": "crates/lumina-local-inference/examples/inspect_modelscope_component.rs",
+    "executable_sha256": "55ee0b7597668887fd6775124e19db71c54a0615d7ddc4f2275acc7a58193ca5",
+    "compiled_git_commit": null,
+    "read_limits": "generic rank<=8",
+    "all_four_exit_zero": true,
+    "prefix_bytes_fetched": 524288,
+    "range_http_requests": 8,
+    "exact_header_bytes": 217027,
+    "all_independent_header_digests_and_tensor_descriptors_match": true,
+    "raw_roles_are_diagnostic_main": true
+  },
+  "engine": {
+    "source_revision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+    "source_directory": "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\source",
+    "binary": "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cpu\\bin\\Release\\sd-cli.exe",
+    "binary_sha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043",
+    "backend": "CPU only; CMakeCache SD_CUDA/GGML_CUDA/SD_VULKAN/SD_METAL are OFF",
+    "binary_h3_execution_verified": false
+  },
+  "total_selected_weight_bytes": 35149418880,
+  "total_selected_weight_gib": 32.73544728755951,
+  "components": [
+    {
+      "logical_role": "diffusion_main_fl2va",
+      "repository": "leejet/MiniMax-H3-GGUF",
+      "commit": "a09574553b7d47a064cffcfd6898d4501c315c76",
+      "path": "minimax_h3_fl2va_pruned-Q4_K_M.gguf",
+      "file_bytes": 11420663904,
+      "expected_full_file_sha256": "dd948e08ad0ba3c71bd42f368e283dd82e790f5122a63b276e22a3e0283d0c10",
+      "whole_file_sha256_verified": false,
+      "snapshot_files_digest": "ef1f1894fe569eb3f8d2ba3dc1c2193b3e9fe95e41b574806081fc4aaeef2121",
+      "artifact_id": "3868aa690b2df3dc430c452331352b22b3302cc6df9dc75000603eb261cb6661",
+      "snapshot_id": "67e2aefd93250347ec5b87940c39b65188c9295490b3b1c68eeb72c9fa045415",
+      "header_bytes": 33778,
+      "header_sha256": "c8ce7fddcf4d87f7db34bc45805de5d955b26e3fc8d8bce0a2ab91edaaff5dee",
+      "bytes_fetched": 131072,
+      "range_http_requests": 2,
+      "tensor_count": 532,
+      "maximum_tensor_rank": 2,
+      "dtype_ids": [
+        0,
+        1,
+        12,
+        30
+      ],
+      "independent_header_and_all_tensor_descriptors_match": true,
+      "stdout_sha256": "ae7e9c114ef72f7a6c972b9d3aeb10fe83556530a76f2c8e72f5786c7bbe7969"
+    },
+    {
+      "logical_role": "text_and_vision_encoder",
+      "repository": "leejet/MiniMax-H3-GGUF",
+      "commit": "a09574553b7d47a064cffcfd6898d4501c315c76",
+      "path": "qwen3vl_32b_minimax_h3-Q4_K_M.gguf",
+      "file_bytes": 18218065024,
+      "expected_full_file_sha256": "11e6efe70a57ce7f4838c47bdbd1a1c4b8ce10e2b7747f1b065990b70f4b05fc",
+      "whole_file_sha256_verified": false,
+      "snapshot_files_digest": "ef1f1894fe569eb3f8d2ba3dc1c2193b3e9fe95e41b574806081fc4aaeef2121",
+      "artifact_id": "37a80c70e2837456f537c2d08fd24b85f5e0ce2612e2ff12064f153b1ac5a0f2",
+      "snapshot_id": "67e2aefd93250347ec5b87940c39b65188c9295490b3b1c68eeb72c9fa045415",
+      "header_bytes": 65182,
+      "header_sha256": "0c6bc5ded133ae026c992654de37dbd600fa70b50573a6ed3ac1f54ea29ddc59",
+      "bytes_fetched": 131072,
+      "range_http_requests": 2,
+      "tensor_count": 902,
+      "maximum_tensor_rank": 4,
+      "dtype_ids": [
+        12,
+        14,
+        30
+      ],
+      "independent_header_and_all_tensor_descriptors_match": true,
+      "stdout_sha256": "16464f9a214b41198e541be33a5f47eee229e812d4e76d0c5d73dc7ca655edc2"
+    },
+    {
+      "logical_role": "video_vae",
+      "repository": "convertor/minimax-h3-gguf",
+      "commit": "2c1d402845a06200b19987e787f2112fa078a0e2",
+      "path": "minimax_h3_video_vae_fp16-f16.gguf",
+      "file_bytes": 5207785056,
+      "expected_full_file_sha256": "2806d06d195d41a351a4a838125e9ddea09abb2770e1ef6bb9168409d1d393d9",
+      "whole_file_sha256_verified": false,
+      "snapshot_files_digest": "e616d055f21b981c6711a966028c1b554f48154878544c42f9837f2cd69a4321",
+      "artifact_id": "964df54fcdb929548c8f20c5b5949ee731e2f02c0303eda90799f8f2de53dced",
+      "snapshot_id": "7349cfaf0e6ded805724a0cf83b2cd2ccd051b4e00e0f40500e00c22f5b8a5f6",
+      "header_bytes": 42818,
+      "header_sha256": "e9fc410f5f1bd875f8e8b43ef90192f7234d4e14921855011b08b942823f5f7f",
+      "bytes_fetched": 131072,
+      "range_http_requests": 2,
+      "tensor_count": 562,
+      "maximum_tensor_rank": 5,
+      "dtype_ids": [
+        1
+      ],
+      "independent_header_and_all_tensor_descriptors_match": true,
+      "stdout_sha256": "01bcaa032c8fa7def2f9a486f145ca07edab024345e174f86d010f1a9b6a1e6b"
+    },
+    {
+      "logical_role": "audio_vae",
+      "repository": "convertor/minimax-h3-gguf",
+      "commit": "2c1d402845a06200b19987e787f2112fa078a0e2",
+      "path": "minimax_h3_audio_vae_fp32-f16.gguf",
+      "file_bytes": 302904896,
+      "expected_full_file_sha256": "45764b28074abab09ec9fa1447b3eed3113b2e6878c177bab5bce0572064edf4",
+      "whole_file_sha256_verified": false,
+      "snapshot_files_digest": "e616d055f21b981c6711a966028c1b554f48154878544c42f9837f2cd69a4321",
+      "artifact_id": "22e2f613af98c15b6f267941c9838e25a2b3fea69befcbbf3f5429a6cf882c52",
+      "snapshot_id": "7349cfaf0e6ded805724a0cf83b2cd2ccd051b4e00e0f40500e00c22f5b8a5f6",
+      "header_bytes": 75249,
+      "header_sha256": "84e751991760c554be2bb6f9171f3908e2eda43daa8a618262375b5fd4e1cbf1",
+      "bytes_fetched": 131072,
+      "range_http_requests": 2,
+      "tensor_count": 917,
+      "maximum_tensor_rank": 3,
+      "dtype_ids": [
+        0,
+        1
+      ],
+      "independent_header_and_all_tensor_descriptors_match": true,
+      "stdout_sha256": "34936917d04e864967e0330d7bb349870c746c2d552373c044fea96e38571947"
+    }
+  ],
+  "static_contract": {
+    "method": "Static tensor-name and normalized-shape comparison from pinned source constructors; NOT load or inference execution",
+    "vae_checks": [
+      {
+        "file": "minimax_h3_video_vae_fp16-f16.gguf",
+        "expected_tensor_count": 560,
+        "actual_tensor_count": 562,
+        "missing": [],
+        "extras": [
+          "latents_mean",
+          "latents_std"
+        ],
+        "shape_mismatches": [],
+        "standard_float_dtypes_only": true,
+        "pass": true
+      },
+      {
+        "file": "minimax_h3_audio_vae_fp32-f16.gguf",
+        "expected_tensor_count": 917,
+        "actual_tensor_count": 917,
+        "missing": [],
+        "extras": [],
+        "shape_mismatches": [],
+        "standard_float_dtypes_only": true,
+        "pass": true
+      }
+    ],
+    "rank_normalization": "GGUFReader::read_tensor_info folds ranks above four into ne[3]; trailing singleton dimensions compare equal",
+    "source_sha256": {
+      "src/model/vae/minimax_h3_vae.hpp": "45bbaa3f6290add5afcfe892faf95a8fd3903a0c23be3a630e855bd52e854a72",
+      "src/model/vae/minimax_h3_audio_vae.hpp": "9376ef246cbf5de93a1c4d0cc497ab36ed3a0d73e0ceff94683e97316d6e2701",
+      "src/model/vae/ltx_audio_vae.hpp": "4b41fe29fe29abf132805f29e0e6fd909653c802a2200b23d248218b71e17cb0",
+      "src/model/common/ggml_block.hpp": "213809d6310dbfaf02676a6690e987e88d6515c272fbbd6f6fbb93a29bf16c67",
+      "src/model_io/gguf_reader_ext.h": "2e384266c7c4daa1a7f706cf54f0d8d35ce72657a1be288953e201fa0f2efb79",
+      "src/model_io/gguf_io.cpp": "84fb9988f5eda2ee6ac471948e9e0dc6a78b5f6a593a141b9216245a0c1550ec"
+    },
+    "main": "532 tensors: 50 DiT blocks, video/audio projections, condition width5120 and supported pruned AdaLN table",
+    "text_encoder": "902 tensors: 50 language layers, 27 visual blocks, all three DeepStack mergers; final language norm disabled by the pinned implementation",
+    "tokenizer": {
+      "external_files_required_for_pinned_engine_default": false,
+      "implementation": "LLMEmbedder falls back to compiled Qwen2Tokenizer/load_qwen2_merges with pad 151643; H3 prompts are built by conditioner.cpp logic, no audio.cpp processor JSON is automatically consumed",
+      "external_override": "--tokenizer exists but is deliberately not selected; changing it requires independent ID/merge compatibility checks",
+      "text_encoder_contract": "Qwen3-VL hidden 5120, 50 language layers, final_norm=false; 27 visual blocks, 3 DeepStack mergers with six tensors each",
+      "config_files_required": []
+    }
+  },
+  "next_validation": {
+    "inputs": "Reuse recorded red-apple PNG for text-only and first-frame+text with the selected FL2VA checkpoint; 256x256,22frames,24fps,8steps,cfg1,seed42,CPU4threads",
+    "ref2va": "Separate main and -r reference mode; not validated by these FL2VA observations",
+    "required_next": [
+      "Use these production observations to build a source-bound four-component plan",
+      "Authorize/download exactly these four GGUFs once, verify complete SHA256 and reuse managed assets",
+      "Wire and validate the diffusion helper owner/guards and fixed workload",
+      "Measure actual loading/generation memory and latency; validate generated video/audio and input-image conditioning",
+      "Validate GPU build and acceleration separately"
+    ]
+  },
+  "not_validated": [
+    "Complete file content hashes",
+    "Installation",
+    "Native H3 load or inference",
+    "GPU execution or speedup",
+    "Output quality",
+    "Long-duration/repeated stability",
+    "Resource envelope/admission",
+    "Runtime READY"
+  ],
+  "evidence": {
+    "production_summary": "target/lifecycle-validation/h3-production-observation-20261112-r1/summary.json",
+    "source_candidate_manifest": "target/lifecycle-validation/h3-source-compatibility-20261112-r1/candidate-manifest.json",
+    "source_candidate_manifest_sha256": "b0b4a9c2153115cf6461d05567e90227514218b5128c4f17525a68d69b1c7e98",
+    "source_static_checks": "target/lifecycle-validation/h3-source-compatibility-20261112-r1/vae-static-contract-checks.json",
+    "source_static_checks_sha256": "203a929b525a69e1fc5d6a36115e0a8e59e77b2a878c88b21954d8469457eb45",
+    "prepared_inputs": "target/lifecycle-validation/h3-source-compatibility-20261112-r1/minimal-validation-inputs.json",
+    "prepared_inputs_sha256": "1a98380002914de6b0a146b8d60c4080f9d63eab509194e6ae13329ea5ca30b8",
+    "production_case_outputs": [
+      "target/lifecycle-validation/h3-production-observation-20261112-r1/00-diffusion_main_fl2va.stdout.json",
+      "target/lifecycle-validation/h3-production-observation-20261112-r1/01-text_and_vision_encoder.stdout.json",
+      "target/lifecycle-validation/h3-production-observation-20261112-r1/02-video_vae.stdout.json",
+      "target/lifecycle-validation/h3-production-observation-20261112-r1/03-audio_vae.stdout.json"
+    ]
+  }
+}

@@ -42,6 +42,7 @@ fn main() -> Result<()> {
             prompt_cache_bytes: 0,
             context_checkpoint_slots: 0,
             vision: None,
+            vector: None,
         },
         compute_buffer_bytes: args[4].parse()?,
         auxiliary_buffer_bytes: args[5].parse()?,

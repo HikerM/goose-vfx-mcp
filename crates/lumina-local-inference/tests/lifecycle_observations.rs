@@ -411,6 +411,7 @@ fn resource_fixture(
             prompt_cache_bytes: 0,
             context_checkpoint_slots: 0,
             vision: None,
+            vector: None,
         },
         compute_buffer_bytes: 128 * 1024 * 1024,
         auxiliary_buffer_bytes: 64 * 1024 * 1024,
