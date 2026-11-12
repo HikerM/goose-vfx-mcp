@@ -2126,6 +2126,72 @@ fn background_service_recovers_startup_jobs_and_polls_jobs_from_another_producer
 }
 
 #[test]
+fn background_services_share_two_slots_and_wait_for_contended_blob_publication() {
+    let fixture = Fixture::new(true);
+    let jobs = ["first-task", "second-task", "third-task"];
+    for id in jobs {
+        let mut input = cache_input(&fixture);
+        input.version_id = format!("version:{id}");
+        fixture
+            .repository
+            .enqueue_installation(&acceptance(&fixture, id), &input, 32, 1 << 30)
+            .unwrap();
+    }
+    let digest = Sha256Digest::of_bytes(&fixture.bytes);
+    let lock_key = Sha256Digest::of_bytes(digest.as_str().as_bytes());
+    let locks = fixture.store.root().join("locks/blobs");
+    std::fs::create_dir_all(&locks).unwrap();
+    let blob_lock =
+        std::fs::File::create(locks.join(format!("{}.lock", lock_key.as_str()))).unwrap();
+    blob_lock.try_lock_exclusive().unwrap();
+    let peer_repository =
+        Arc::new(LifecycleRepository::open(&fixture.temp.path().join("models.db")).unwrap());
+    let peer_store = Arc::new(InstallationStore::open(fixture.store.root()).unwrap());
+    let repository = Arc::new(fixture.repository);
+    service_runtime().block_on(async {
+        let start = |repository, store| {
+            InstallationService::start(
+                repository,
+                store,
+                Arc::new(|| panic!("Cache jobs must not read credentials")),
+                Arc::new(|| 50),
+                std::time::Duration::from_millis(20),
+            )
+            .unwrap()
+        };
+        let first = start(repository.clone(), Arc::new(fixture.store));
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                if jobs[..2].iter().all(|id| {
+                    let job = repository.read_job(id).unwrap().unwrap();
+                    job.status == JobStatus::Running && job.stage == LifecycleStage::Installing
+                }) {
+                    break;
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .unwrap();
+        let second = start(peer_repository, peer_store);
+        tokio::time::timeout(std::time::Duration::from_secs(5), second.wait_ready())
+            .await
+            .unwrap()
+            .unwrap();
+        let third = repository.read_job(jobs[2]).unwrap().unwrap();
+        assert_eq!(third.status, JobStatus::Queued);
+        assert_eq!(third.version, 0);
+        drop(blob_lock);
+        for id in jobs {
+            wait_for_completed(&repository, id).await;
+        }
+        assert_eq!(repository.blob_reference_count(&digest).unwrap(), 3);
+        first.shutdown().await.unwrap();
+        second.shutdown().await.unwrap();
+    });
+}
+
+#[test]
 fn service_submission_generates_one_version_and_rejects_changed_idempotent_requests() {
     let fixture = Fixture::new(true);
     let accepted = acceptance(&fixture, "source-only");

@@ -13,6 +13,13 @@ use super::{
     ModelManifest, RepositoryPath, Sha256Digest, WorkerLease,
 };
 
+pub(crate) const INSTALLATION_TASK_LIMIT: usize = 2;
+
+pub(crate) struct InstallationTaskPermit {
+    _job: File,
+    _slot: File,
+}
+
 pub struct InstallationStore {
     root: PathBuf,
 }
@@ -82,6 +89,21 @@ impl InstallationStore {
 
     pub(crate) fn transfer_lock(&self, job_id: &str) -> Result<File> {
         self.lock("transfers", job_id)
+    }
+
+    pub(crate) fn try_schedule(&self, job_id: &str) -> Result<Option<InstallationTaskPermit>> {
+        let Some(job) = self.try_lock("scheduled-jobs", job_id)? else {
+            return Ok(None);
+        };
+        for index in 0..INSTALLATION_TASK_LIMIT {
+            if let Some(slot) = self.try_lock("task-slots", &index.to_string())? {
+                return Ok(Some(InstallationTaskPermit {
+                    _job: job,
+                    _slot: slot,
+                }));
+            }
+        }
+        Ok(None)
     }
 
     pub(crate) fn transfer_directory(&self, job_id: &str) -> Result<PathBuf> {
@@ -170,6 +192,24 @@ impl InstallationStore {
     }
 
     fn lock(&self, namespace: &str, id: &str) -> Result<File> {
+        let file = self.open_lock_file(namespace, id)?;
+        file.try_lock_exclusive()
+            .context("Installation content is locked by another worker")?;
+        Ok(file)
+    }
+
+    fn try_lock(&self, namespace: &str, id: &str) -> Result<Option<File>> {
+        let file = self.open_lock_file(namespace, id)?;
+        match file.try_lock_exclusive() {
+            Ok(()) => Ok(Some(file)),
+            Err(error) if error.raw_os_error() == fs2::lock_contended_error().raw_os_error() => {
+                Ok(None)
+            }
+            Err(error) => Err(error.into()),
+        }
+    }
+
+    fn open_lock_file(&self, namespace: &str, id: &str) -> Result<File> {
         let relative = RepositoryPath::parse(format!(
             "locks/{namespace}/{}.lock",
             Sha256Digest::of_bytes(id.as_bytes()).as_str()
@@ -182,8 +222,6 @@ impl InstallationStore {
             .truncate(false)
             .open(path)?;
         checked_local_path(&self.root, &relative)?;
-        file.try_lock_exclusive()
-            .context("Installation content is locked by another worker")?;
         Ok(file)
     }
 
@@ -306,10 +344,17 @@ impl InstallationStore {
             .values()
             .map(|file| &file.computed_sha256)
             .collect();
-        let _blob_locks = blobs
-            .iter()
-            .map(|digest| self.lock("blobs", digest.as_str()))
-            .collect::<Result<Vec<_>>>()?;
+        let mut blob_locks = Vec::with_capacity(blobs.len());
+        for digest in blobs {
+            loop {
+                execution.checkpoint()?;
+                if let Some(lock) = self.try_lock("blobs", digest.as_str())? {
+                    blob_locks.push(lock);
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+        }
         let manifest_path = self.target(&RepositoryPath::parse(format!(
             "{}/manifest.json",
             staging.as_str()

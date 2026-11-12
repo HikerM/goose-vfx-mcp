@@ -61,6 +61,13 @@ where
         .then(|| jobs.last().expect("Recovery page is nonempty").id.clone());
     let mut outcomes = Vec::with_capacity(jobs.len());
     for job in jobs {
+        let Some(_permit) = store.try_schedule(&job.id)? else {
+            outcomes.push(RecoveryOutcome {
+                job_id: job.id,
+                disposition: RecoveryDisposition::Interrupted,
+            });
+            continue;
+        };
         outcomes.push(
             recover_installation_job(
                 Arc::clone(&repository),

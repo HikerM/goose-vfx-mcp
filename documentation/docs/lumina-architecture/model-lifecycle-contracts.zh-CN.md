@@ -200,7 +200,7 @@ Agent 的规划模型仅从通过所需文本和工具能力准入的模型中�
 | `installations/jobs/events` | jobId、afterJobSequence、afterFileSequence、limit；分别返回持久化任务状态和逐文件进度事件、各自的续读游标及是否还有下一页 | `local-models job-events <id>` |
 | `installations/jobs/control` | jobId、expectedVersion、action、idempotencyKey；以 CAS 执行 pause/resume/cancel/retry，返回 job 与 replayed；v8 回执持久化 | `local-models job-control`，要求 `--idempotency-key` |
 
-`local-models wait-job` 等待已有任务，`local-models installation-worker` 运行同一个应用服务。ACP 工厂内的 Agent 共用安装服务；ACP stdio 启动、工厂创建 Agent 及 CLI 长会话入口会扫描已有命名空间，未完成初次恢复扫描时新提交等待。HTTP/HTTPS 启动路径调用同一工厂的恢复入口，主动恢复不依赖首个客户端连接；实际 HTTP 无客户端启动恢复已通过。Windows 实测通过证书校验的 TLS 1.3 连接及 HTTP/HTTPS 两种监听的正常关闭和检查点续传。没有模型数据库时保持休眠，模型存储损坏不阻止普通 Agent 创建。正常调用应用关闭时保留网络检查点，将当前 worker 所有的执行任务重新排队；用户暂停或取消的意图优先保留。HTTP 与 HTTPS 收到停止信号后停止接收连接，最多等待 10 秒排空，然后等待应用服务关闭。当前 worker 每实例顺序执行；跨进程全局并发和任务/文件/Range 三层预算和精确空间核算仍待实现，逐文件持久化退避见下方 schema v9 契约。
+`local-models wait-job` 等待已有任务，`local-models installation-worker` 运行同一个应用服务。ACP 工厂内的 Agent 共用安装服务；ACP stdio 启动、工厂创建 Agent 及 CLI 长会话入口会扫描已有命名空间，未完成初次恢复扫描时新提交等待。HTTP/HTTPS 启动路径调用同一工厂的恢复入口，主动恢复不依赖首个客户端连接；实际 HTTP 无客户端启动恢复已通过。Windows 实测通过证书校验的 TLS 1.3 连接及 HTTP/HTTPS 两种监听的正常关闭和检查点续传。没有模型数据库时保持休眠，模型存储损坏不阻止普通 Agent 创建。正常调用应用关闭时保留网络检查点，将当前 worker 所有的执行任务重新排队；用户暂停或取消的意图优先保留。HTTP 与 HTTPS 收到停止信号后停止接收连接，最多等待 10 秒排空，然后等待应用服务关闭。应用安装服务和分页恢复入口在同一个受管根目录共享两个任务槽。任务先获取自身调度锁，再竞争槽位；两个锁从读取凭据前持有至任务结束，由操作系统在进程退出时释放。槽位满时任务留在持久化队列中，后续扫描继续调度。不同任务发布相同内容时按 SHA256 排序获取共享文件锁，并在等待期间检查取消、应用停止及续租。两个槽位是当前实现的上限；文件和 Range 层预算、并发性能基准仍待完成。逐文件持久化退避见下方 schema v9 契约。
 
 SQLite schema v8 在同一事务中提交控制状态、任务事件和幂等回执。相同键必须绑定相同任务、动作、expectedVersion 和受管根目录；改变其中任何一项均拒绝。回执同时绑定历史任务事件，损坏或伪造结果不能仅凭重算摘要通过。`replayed=true` 返回首次接受时的历史结果，即使任务后来已恢复或完成，也不会重复执行旧动作；客户端需要展示最新状态时仍查询任务列表并比较任务版本。新键提交过期版本被拒绝；写入回执失败使状态和事件一起回滚。终态取消可以保存无副作用的回执，不增加任务事件。
 

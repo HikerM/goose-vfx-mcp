@@ -3,8 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::{watch, Notify};
-use tokio::task::JoinHandle;
+use tokio::task::{JoinHandle, JoinSet};
 
+use super::installer::INSTALLATION_TASK_LIMIT;
 use super::{
     InstallationControlOutcome, InstallationControlRequest, InstallationCredentials,
     InstallationStore, InstallationSubmission, InstallationWorkerControl, LifecycleJob,
@@ -36,6 +37,16 @@ struct ServiceWorker {
 
 impl ServiceWorker {
     async fn run(&self) -> Result<()> {
+        let mut active = JoinSet::new();
+        let result = self.drive(&mut active).await;
+        self.control.request_stop();
+        while active.join_next().await.is_some() {}
+        result
+    }
+
+    async fn drive(&self, active: &mut JoinSet<Result<()>>) -> Result<()> {
+        let mut cursor = None;
+        let mut scan_pending = true;
         loop {
             let mut storage_cursor = None;
             loop {
@@ -53,47 +64,79 @@ impl ServiceWorker {
                     break;
                 }
             }
-            let mut cursor = None;
-            loop {
-                if self.control.is_stopping() {
-                    return Ok(());
-                }
-                let jobs =
-                    self.repository
-                        .recoverable_jobs((self.clock)(), cursor.as_deref(), 64)?;
-                let full = jobs.len() == 64;
-                for job in jobs {
-                    if self.control.is_stopping() {
-                        return Ok(());
-                    }
-                    cursor = Some(job.id.clone());
-                    let clock = Arc::clone(&self.clock);
-                    let result = super::recovery::recover_installation_job(
-                        Arc::clone(&self.repository),
-                        Arc::clone(&self.store),
-                        job.id,
-                        self.owner.clone(),
-                        Arc::clone(&self.credentials),
-                        move || clock(),
-                        Arc::clone(&self.control),
-                    )
-                    .await;
-                    if let Err(error) = result {
-                        if !self.control.is_stopping() {
-                            return Err(error);
-                        }
-                    }
-                }
-                if !full {
-                    break;
-                }
+            if scan_pending {
+                scan_pending = !self.dispatch(active, &mut cursor)?;
             }
             if self.control.is_stopping() {
                 return Ok(());
             }
-            self.state.send_replace(InstallationServiceState::Ready);
-            tokio::select! {_ = self.wake.notified()=>{}, _ = tokio::time::sleep(self.poll_interval)=>{}}
+            if !scan_pending
+                && active.is_empty()
+                && *self.state.borrow() == InstallationServiceState::Recovering
+            {
+                self.state.send_replace(InstallationServiceState::Ready);
+            }
+            let rescan = tokio::select! {
+                _ = self.wake.notified() => true,
+                _ = tokio::time::sleep(self.poll_interval) => true,
+                Some(result) = active.join_next() => {
+                    if !self.control.is_stopping() {
+                        result.context("Scheduled installation worker stopped")??;
+                    }
+                    false
+                }
+            };
+            if rescan && !scan_pending && *self.state.borrow() == InstallationServiceState::Ready {
+                cursor = None;
+                scan_pending = true;
+            }
         }
+    }
+
+    fn dispatch(
+        &self,
+        active: &mut JoinSet<Result<()>>,
+        cursor: &mut Option<String>,
+    ) -> Result<bool> {
+        while active.len() < INSTALLATION_TASK_LIMIT && !self.control.is_stopping() {
+            let jobs = self
+                .repository
+                .recoverable_jobs((self.clock)(), cursor.as_deref(), 64)?;
+            let full = jobs.len() == 64;
+            for job in jobs {
+                if active.len() == INSTALLATION_TASK_LIMIT || self.control.is_stopping() {
+                    return Ok(false);
+                }
+                *cursor = Some(job.id.clone());
+                let Some(permit) = self.store.try_schedule(&job.id)? else {
+                    continue;
+                };
+                let repository = Arc::clone(&self.repository);
+                let store = Arc::clone(&self.store);
+                let owner = self.owner.clone();
+                let credentials = Arc::clone(&self.credentials);
+                let clock = Arc::clone(&self.clock);
+                let control = Arc::clone(&self.control);
+                active.spawn(async move {
+                    let _permit = permit;
+                    super::recovery::recover_installation_job(
+                        repository,
+                        store,
+                        job.id,
+                        owner,
+                        credentials,
+                        move || clock(),
+                        control,
+                    )
+                    .await
+                    .map(|_| ())
+                });
+            }
+            if !full {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 }
 

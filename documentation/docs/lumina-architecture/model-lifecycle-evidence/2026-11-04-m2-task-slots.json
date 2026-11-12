@@ -1,0 +1,141 @@
+{
+  "status": "PASS",
+  "jobs": [
+    {
+      "id": "job:dedea922-5fe9-4d23-b0c4-cfdf5c3b11ae",
+      "versionId": "task-slots-version-1"
+    },
+    {
+      "id": "job:7cc8c63f-cc92-4c1b-863d-fd11ac07752a",
+      "versionId": "task-slots-version-2"
+    },
+    {
+      "id": "job:ebe6cd40-4e49-47d4-8377-6c9750520540",
+      "versionId": "task-slots-version-3"
+    }
+  ],
+  "workers": [
+    {
+      "label": "first",
+      "pid": 26336,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-task-slots-r1\\30efb8270424b79a41f1f683500e93c6740692de08a98b0744da038863dcec7b\\lumina.exe",
+        "local-models",
+        "installation-worker"
+      ]
+    },
+    {
+      "label": "peer",
+      "pid": 19424,
+      "argv": [
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m2-task-slots-r1\\30efb8270424b79a41f1f683500e93c6740692de08a98b0744da038863dcec7b\\lumina.exe",
+        "local-models",
+        "installation-worker"
+      ]
+    }
+  ],
+  "binaries": {
+    "producer": "67f398b2bc1fe975c8e4df03e45c23664d1f58a0d0f2f9e4ed241af514b4b949",
+    "cli": "30efb8270424b79a41f1f683500e93c6740692de08a98b0744da038863dcec7b"
+  },
+  "source": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+    "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+    "size": 833592736
+  },
+  "twoActiveBeforePeer": [
+    [
+      "job:7cc8c63f-cc92-4c1b-863d-fd11ac07752a",
+      "running",
+      "installing",
+      18,
+      "installation-service:5f106770-6051-43f4-bb66-34c7a3bb8ca2"
+    ],
+    [
+      "job:dedea922-5fe9-4d23-b0c4-cfdf5c3b11ae",
+      "running",
+      "installing",
+      19,
+      "installation-service:5f106770-6051-43f4-bb66-34c7a3bb8ca2"
+    ],
+    [
+      "job:ebe6cd40-4e49-47d4-8377-6c9750520540",
+      "queued",
+      "ready_to_install",
+      0,
+      null
+    ]
+  ],
+  "peerScannedWhileSlotsFull": [
+    [
+      "job:7cc8c63f-cc92-4c1b-863d-fd11ac07752a",
+      "running",
+      "installing",
+      19,
+      "installation-service:5f106770-6051-43f4-bb66-34c7a3bb8ca2"
+    ],
+    [
+      "job:dedea922-5fe9-4d23-b0c4-cfdf5c3b11ae",
+      "running",
+      "installing",
+      19,
+      "installation-service:5f106770-6051-43f4-bb66-34c7a3bb8ca2"
+    ],
+    [
+      "job:ebe6cd40-4e49-47d4-8377-6c9750520540",
+      "queued",
+      "ready_to_install",
+      0,
+      null
+    ]
+  ],
+  "completedJobs": [
+    [
+      "job:7cc8c63f-cc92-4c1b-863d-fd11ac07752a",
+      "completed",
+      "installed",
+      25,
+      null
+    ],
+    [
+      "job:dedea922-5fe9-4d23-b0c4-cfdf5c3b11ae",
+      "completed",
+      "installed",
+      24,
+      null
+    ],
+    [
+      "job:ebe6cd40-4e49-47d4-8377-6c9750520540",
+      "completed",
+      "installed",
+      23,
+      null
+    ]
+  ],
+  "verifiedVersions": 3,
+  "sharedBlobReferences": 3,
+  "logs": {
+    "firstRun": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-task-slots-tests-r1.log",
+      "sha256": "5a5a551e4d1b52cc460dc1c503896858f43b1113d8b38ebe411ef05cb568ff1b"
+    },
+    "correctedRun": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-task-slots-tests-r2.log",
+      "sha256": "d3cc3f875bf9dfa8fb821d45a75872df6114e193ed9c800a833b389d1cdec2cf"
+    },
+    "strictCoreClippy": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-task-slots-clippy-r1.log",
+      "sha256": "dbed2a4efc7aaaba00f1bcd2bd459e2bc62ed9e267b7059b277aeabf0dd5f9f3"
+    },
+    "productCliBuild": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-task-slots-cli-build-r1.log",
+      "sha256": "4381b4e8723768ba2501f674c27d8883ea2321c1d80f3457daf4f3040bb07628"
+    },
+    "queueProducerBuild": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m2-task-slots-example-r1.log",
+      "sha256": "601cb378470500236b03c01529bfdcb76450660a0d1b13c2aa2b230eeb7430bd"
+    }
+  },
+  "selfTestEvidence": "2026-11-04-selftest-m2-task-slots-r1.json",
+  "scope": "Two Windows product CLI workers sharing one managed root. Three bound real GGUF cache jobs, two concurrent tasks, one queued under capacity pressure and three verified versions after release. File and Range concurrency are separate gates."
+}
