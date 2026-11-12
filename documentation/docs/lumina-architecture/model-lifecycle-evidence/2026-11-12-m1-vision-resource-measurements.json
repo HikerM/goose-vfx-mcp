@@ -1,0 +1,1009 @@
+{
+  "status": "MEASURED_BOUNDARY_VIOLATION",
+  "scope": "CPU native resource measurements only. This evidence does not authorize a runnable vision resource envelope.",
+  "runs": [
+    {
+      "status": "NATIVE_MEASUREMENTS_CAPTURED",
+      "startedAt": "2026-11-12T03:31:44.665363+00:00",
+      "sources": [
+        {
+          "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+          "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+          "file": "Qwen3.5-0.8B-Q8_0.gguf",
+          "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+          "sizeBytes": 833592736,
+          "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+          "elapsedSeconds": 84.03100000001723,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+          "redirectCount": 1,
+          "allowedOrigins": [
+            "modelscope.cn",
+            "cdn-lfs-cn-1.modelscope.cn"
+          ],
+          "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+          "status": "PASS"
+        },
+        {
+          "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+          "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+          "file": "mmproj-F16.gguf",
+          "sha256": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798",
+          "sizeBytes": 204987104,
+          "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+          "elapsedSeconds": 21.70400000002701,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=mmproj-F16.gguf",
+          "redirectCount": 1,
+          "allowedOrigins": [
+            "modelscope.cn",
+            "cdn-lfs-cn-1.modelscope.cn"
+          ],
+          "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+          "status": "PASS"
+        }
+      ],
+      "outputs": [
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r1\\0-blue-256x256.png",
+          "imageSha256": "0d7a776c27ff08ec7b355d5db3e629b589f1dd153f367d71c1eb4e95f76e229a",
+          "width": 256,
+          "height": 256,
+          "expectedColor": "blue",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"blue\"\n}"
+                }
+              }
+            ],
+            "created": 1794454339,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 96,
+              "total_tokens": 108,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-PXpaeQ3DksQRU3XCZgOWKEqsQ4z7227P",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 96,
+              "prompt_ms": 1050.629,
+              "prompt_per_token_ms": 10.944052083333332,
+              "prompt_per_second": 91.37383415078016,
+              "predicted_n": 12,
+              "predicted_ms": 864.948,
+              "predicted_per_token_ms": 78.63163636363636,
+              "predicted_per_second": 12.717527527666405
+            }
+          },
+          "elapsedSeconds": 1.9220000000022992,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1262944256,
+            "WorkingSetSize": 1226022912,
+            "PagefileUsage": 1061879808,
+            "PeakPagefileUsage": 1097707520,
+            "PrivateUsage": 1061879808
+          }
+        },
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r1\\1-red-1024x1024.png",
+          "imageSha256": "f0ecd7252848b1ea453e7f155f4635895258974e7f3fe7f9f0496173e0d21e33",
+          "width": 1024,
+          "height": 1024,
+          "expectedColor": "red",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"red\"\n}"
+                }
+              }
+            ],
+            "created": 1794454353,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 1056,
+              "total_tokens": 1068,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-zwZCMWqcgptJZWgZVnHXiRBpACpdVsB8",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 1056,
+              "prompt_ms": 13176.121,
+              "prompt_per_token_ms": 12.47738731060606,
+              "prompt_per_second": 80.14498348945034,
+              "predicted_n": 12,
+              "predicted_ms": 886.341,
+              "predicted_per_token_ms": 80.57645454545455,
+              "predicted_per_second": 12.410573357206765
+            }
+          },
+          "elapsedSeconds": 14.09400000000096,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1410375680,
+            "WorkingSetSize": 1368707072,
+            "PagefileUsage": 1178320896,
+            "PeakPagefileUsage": 1219837952,
+            "PrivateUsage": 1178320896
+          }
+        },
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r1\\2-green-128x1024.png",
+          "imageSha256": "a07595003dc70f681016fcaca80321e799a5353460742ae3ecbf5131597653a0",
+          "width": 128,
+          "height": 1024,
+          "expectedColor": "green",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"green\"\n}"
+                }
+              }
+            ],
+            "created": 1794454356,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 160,
+              "total_tokens": 172,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-xh2RbipHIWN5eitK5umbsgGIfsRGZLFC",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 160,
+              "prompt_ms": 1424.264,
+              "prompt_per_token_ms": 8.90165,
+              "prompt_per_second": 112.33872371975983,
+              "predicted_n": 12,
+              "predicted_ms": 995.341,
+              "predicted_per_token_ms": 90.48554545454546,
+              "predicted_per_second": 11.051488886723245
+            }
+          },
+          "elapsedSeconds": 2.4219999999986612,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1410375680,
+            "WorkingSetSize": 1358020608,
+            "PagefileUsage": 1171390464,
+            "PeakPagefileUsage": 1219837952,
+            "PrivateUsage": 1171390464
+          }
+        },
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r1\\3-blue-1024x128.png",
+          "imageSha256": "16f19dab3aac698307043b4de6ac94b71fbf4e70514f81788f74e6c2169a38a4",
+          "width": 1024,
+          "height": 128,
+          "expectedColor": "blue",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"blue\"\n}"
+                }
+              }
+            ],
+            "created": 1794454359,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 160,
+              "total_tokens": 172,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-TemfIk2c1HKTVpGwWDFfOa2XyjsmmWt1",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 160,
+              "prompt_ms": 1830.315,
+              "prompt_per_token_ms": 11.43946875,
+              "prompt_per_second": 87.41664686133261,
+              "predicted_n": 12,
+              "predicted_ms": 1402.353,
+              "predicted_per_token_ms": 127.48663636363636,
+              "predicted_per_second": 7.843959402518482
+            }
+          },
+          "elapsedSeconds": 3.25,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1410375680,
+            "WorkingSetSize": 1356615680,
+            "PagefileUsage": 1165643776,
+            "PeakPagefileUsage": 1219837952,
+            "PrivateUsage": 1165643776
+          }
+        }
+      ],
+      "workload": {
+        "contextTokens": 4096,
+        "batchTokens": 512,
+        "microBatchTokens": 512,
+        "parallelSequences": 1,
+        "promptCacheBytes": 0,
+        "contextCheckpointSlots": 0,
+        "maxImages": 1,
+        "maxWidth": 1024,
+        "maxHeight": 1024,
+        "maxPixels": 1048576,
+        "minImageTokens": 64,
+        "maxImageTokens": 1024,
+        "imageBatchMaxTokens": 1024,
+        "speculativeDecoding": "none",
+        "gpuLayers": 0
+      },
+      "scope": "Measured CPU paired vision inputs and native allocations for this exact engine, content and workload. Peak process counters are observations, not a universal upper bound. No product adapter or capability READY assertion.",
+      "binarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+      "argv": [
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "-m",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "--mmproj",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "62122",
+        "--threads",
+        "4",
+        "--threads-batch",
+        "4",
+        "--ctx-size",
+        "4096",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "512",
+        "--parallel",
+        "1",
+        "--gpu-layers",
+        "0",
+        "--no-mmproj-offload",
+        "--no-webui",
+        "--no-warmup",
+        "--spec-type",
+        "none",
+        "--cache-ram",
+        "0",
+        "--ctx-checkpoints",
+        "0",
+        "--image-min-tokens",
+        "64",
+        "--image-max-tokens",
+        "1024",
+        "--mtmd-batch-max-tokens",
+        "1024",
+        "--log-verbosity",
+        "4",
+        "--offline"
+      ],
+      "pid": 32300,
+      "nativeMemoryLines": [
+        "0.00.005.682 I cmn  common_param:   - CPU     : Intel(R) Core(TM) i7-14700F (98137 MiB, 51230 MiB free)",
+        "0.00.037.279 I srv    load_model: [mtmd] estimated worst-case memory usage of mmproj is 195.48 MiB (took 15.09 ms)",
+        "0.00.794.520 I common_memory_breakdown_print: | memory breakdown [MiB] | total   free    self   model   context   compute    unaccounted |",
+        "0.00.943.369 I common_params_fit_impl: projected to use 870 MiB of host memory vs. 98137 MiB of total host memory",
+        "0.00.943.394 I common_params_fit_impl: will leave 97267 >= 1219 MiB of system memory, no changes needed",
+        "0.01.060.602 I print_info: file size   = 784.52 MiB (8.52 BPW) ",
+        "0.01.864.519 I load_tensors:   CPU_Mapped model buffer size =   763.78 MiB",
+        "0.01.878.801 I llama_context: n_seq_max             = 1",
+        "0.01.878.801 I llama_context: n_ctx                 = 4096",
+        "0.01.878.802 I llama_context: n_batch               = 512",
+        "0.01.878.802 I llama_context: n_ubatch              = 512",
+        "0.01.879.129 I llama_context:        CPU  output buffer size =     0.95 MiB",
+        "0.01.894.041 I llama_kv_cache:        CPU KV buffer size =    48.00 MiB",
+        "0.01.894.067 I llama_kv_cache: size =   48.00 MiB (  4096 cells,   6 layers,  1/1 seqs), K (f16):   24.00 MiB, V (f16):   24.00 MiB",
+        "0.01.901.241 I llama_memory_recurrent:        CPU RS buffer size =    19.27 MiB",
+        "0.01.901.268 I llama_memory_recurrent: size =   19.27 MiB (     1 cells,  24 layers,  1 seqs  0 rs_seq), R (f32):    1.27 MiB, S (f32):   18.00 MiB, P (f32):    0.00 MiB",
+        "0.01.911.296 I sched_reserve:        CPU compute buffer size =    39.02 MiB",
+        "0.01.912.944 W load_hparams: Qwen-VL models require at minimum 1024 image tokens to function correctly on grounding tasks",
+        "0.01.912.948 W load_hparams: if you encounter problems with accuracy, try adding --image-min-tokens 1024",
+        "0.01.912.952 I load_hparams: image_size:         768",
+        "0.01.912.957 I load_hparams: model size:         195.48 MiB",
+        "0.01.912.959 I load_hparams: metadata size:      0.05 MiB",
+        "0.02.212.032 I get_dummy_batch: warmup with image size = 1024 x 1024",
+        "0.02.494.230 I slot   load_model: id  0 | task -1 | new slot, n_ctx = 4096",
+        "0.02.822.243 I reserve_compute_meta:        CPU compute buffer size =     4.88 MiB",
+        "0.03.238.580 I decoding image batch 1/1, n_tokens_batch = 64",
+        "0.12.881.607 I decoding image batch 1/2, n_tokens_batch = 512",
+        "0.15.074.878 I decoding image batch 2/2, n_tokens_batch = 512",
+        "0.19.408.405 I decoding image batch 1/1, n_tokens_batch = 128",
+        "0.21.918.375 I decoding image batch 1/1, n_tokens_batch = 128"
+      ],
+      "logSha256": "2aa07c9f6c9cffb29eeb65bc53c1d7e175ae0a84a2517dd1276cf9c3a23e5367",
+      "peakCounters": {
+        "PeakWorkingSetSize": 1410375680,
+        "PeakPagefileUsage": 1219837952,
+        "PrivateUsage": 1219772416
+      },
+      "monitorErrors": [],
+      "finishedAt": "2026-11-12T03:32:41.121622+00:00",
+      "probeSourceSha256": "bd5e91fcce137647db890d46cb0628ff8b3fc7fd411a2d3465d043e11c7b7fca",
+      "rawRecordPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r1\\result.json",
+      "rawRecordSha256": "e28123bde2f74c1c60947c5c32e6d837c37d6aebd67a3e8453e977c02e7b789a"
+    },
+    {
+      "status": "NATIVE_MEASUREMENTS_CAPTURED",
+      "startedAt": "2026-11-12T03:36:06.843628+00:00",
+      "sources": [
+        {
+          "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+          "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+          "file": "Qwen3.5-0.8B-Q8_0.gguf",
+          "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+          "sizeBytes": 833592736,
+          "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+          "elapsedSeconds": 84.03100000001723,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+          "redirectCount": 1,
+          "allowedOrigins": [
+            "modelscope.cn",
+            "cdn-lfs-cn-1.modelscope.cn"
+          ],
+          "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+          "status": "PASS"
+        },
+        {
+          "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+          "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+          "file": "mmproj-F16.gguf",
+          "sha256": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798",
+          "sizeBytes": 204987104,
+          "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+          "elapsedSeconds": 21.70400000002701,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=mmproj-F16.gguf",
+          "redirectCount": 1,
+          "allowedOrigins": [
+            "modelscope.cn",
+            "cdn-lfs-cn-1.modelscope.cn"
+          ],
+          "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+          "status": "PASS"
+        }
+      ],
+      "outputs": [
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r2\\0-blue-256x256.png",
+          "imageSha256": "0d7a776c27ff08ec7b355d5db3e629b589f1dd153f367d71c1eb4e95f76e229a",
+          "width": 256,
+          "height": 256,
+          "expectedColor": "blue",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"blue\"\n}"
+                }
+              }
+            ],
+            "created": 1794454583,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 1056,
+              "total_tokens": 1068,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-8YSCEcdkSor5yh6XIcz1Rcc6or5lCnd9",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 1056,
+              "prompt_ms": 12920.055,
+              "prompt_per_token_ms": 12.234900568181818,
+              "prompt_per_second": 81.73339819373834,
+              "predicted_n": 12,
+              "predicted_ms": 1014.643,
+              "predicted_per_token_ms": 92.24027272727272,
+              "predicted_per_second": 10.841251553502069
+            }
+          },
+          "elapsedSeconds": 13.96900000000096,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1408516096,
+            "WorkingSetSize": 1368162304,
+            "PagefileUsage": 1178902528,
+            "PeakPagefileUsage": 1217884160,
+            "PrivateUsage": 1178902528
+          }
+        },
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r2\\1-red-1024x1024.png",
+          "imageSha256": "f0ecd7252848b1ea453e7f155f4635895258974e7f3fe7f9f0496173e0d21e33",
+          "width": 1024,
+          "height": 1024,
+          "expectedColor": "red",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"red\"\n}"
+                }
+              }
+            ],
+            "created": 1794454597,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 1056,
+              "total_tokens": 1068,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-ApUIxAzn5Q5Mliy3RlgfdNTuiu7TxONv",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 1056,
+              "prompt_ms": 12595.473,
+              "prompt_per_token_ms": 11.92753125,
+              "prompt_per_second": 83.83964619669305,
+              "predicted_n": 12,
+              "predicted_ms": 1218.644,
+              "predicted_per_token_ms": 110.78581818181819,
+              "predicted_per_second": 9.026426093264318
+            }
+          },
+          "elapsedSeconds": 13.859000000000378,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1421500416,
+            "WorkingSetSize": 1368260608,
+            "PagefileUsage": 1177444352,
+            "PeakPagefileUsage": 1231011840,
+            "PrivateUsage": 1177444352
+          }
+        },
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r2\\2-green-128x1024.png",
+          "imageSha256": "a07595003dc70f681016fcaca80321e799a5353460742ae3ecbf5131597653a0",
+          "width": 128,
+          "height": 1024,
+          "expectedColor": "green",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"green\"\n}"
+                }
+              }
+            ],
+            "created": 1794454615,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 1124,
+              "total_tokens": 1136,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-acuwiVQeXmqaqkJv2nTgm3cD5L4LyGzK",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 1124,
+              "prompt_ms": 16201.931,
+              "prompt_per_token_ms": 14.414529359430606,
+              "prompt_per_second": 69.37444678662068,
+              "predicted_n": 12,
+              "predicted_ms": 1211.775,
+              "predicted_per_token_ms": 110.16136363636365,
+              "predicted_per_second": 9.077592787439912
+            }
+          },
+          "elapsedSeconds": 17.45300000000134,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1427881984,
+            "WorkingSetSize": 1385615360,
+            "PagefileUsage": 1206308864,
+            "PeakPagefileUsage": 1237233664,
+            "PrivateUsage": 1206308864
+          }
+        },
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r2\\3-blue-1024x128.png",
+          "imageSha256": "16f19dab3aac698307043b4de6ac94b71fbf4e70514f81788f74e6c2169a38a4",
+          "width": 1024,
+          "height": 128,
+          "expectedColor": "blue",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"blue\"\n}"
+                }
+              }
+            ],
+            "created": 1794454630,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 1124,
+              "total_tokens": 1136,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-4LUh3oFgWS61Z3N2f4WyY1y1u1UXSmnO",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 1124,
+              "prompt_ms": 14137.027,
+              "prompt_per_token_ms": 12.57742615658363,
+              "prompt_per_second": 79.50752304568705,
+              "predicted_n": 12,
+              "predicted_ms": 878.169,
+              "predicted_per_token_ms": 79.83354545454546,
+              "predicted_per_second": 12.526062751019452
+            }
+          },
+          "elapsedSeconds": 15.0779999999977,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1428828160,
+            "WorkingSetSize": 1378504704,
+            "PagefileUsage": 1190031360,
+            "PeakPagefileUsage": 1238171648,
+            "PrivateUsage": 1190031360
+          }
+        }
+      ],
+      "workload": {
+        "contextTokens": 4096,
+        "batchTokens": 512,
+        "microBatchTokens": 512,
+        "parallelSequences": 1,
+        "promptCacheBytes": 0,
+        "contextCheckpointSlots": 0,
+        "maxImages": 1,
+        "maxWidth": 1024,
+        "maxHeight": 1024,
+        "maxPixels": 1048576,
+        "minImageTokens": 1024,
+        "maxImageTokens": 1024,
+        "imageBatchMaxTokens": 1024,
+        "speculativeDecoding": "none",
+        "gpuLayers": 0
+      },
+      "scope": "Measured CPU paired vision inputs and native allocations for this exact engine, content and workload. Peak process counters are observations, not a universal upper bound. No product adapter or capability READY assertion.",
+      "binarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+      "argv": [
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "-m",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "--mmproj",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "61715",
+        "--threads",
+        "4",
+        "--threads-batch",
+        "4",
+        "--ctx-size",
+        "4096",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "512",
+        "--parallel",
+        "1",
+        "--gpu-layers",
+        "0",
+        "--no-mmproj-offload",
+        "--no-webui",
+        "--spec-type",
+        "none",
+        "--cache-ram",
+        "0",
+        "--ctx-checkpoints",
+        "0",
+        "--image-min-tokens",
+        "1024",
+        "--image-max-tokens",
+        "1024",
+        "--mtmd-batch-max-tokens",
+        "1024",
+        "--log-verbosity",
+        "4",
+        "--offline"
+      ],
+      "pid": 20592,
+      "nativeMemoryLines": [
+        "0.00.003.042 I cmn  common_param:   - CPU     : Intel(R) Core(TM) i7-14700F (98137 MiB, 49591 MiB free)",
+        "0.00.029.136 I srv    load_model: [mtmd] estimated worst-case memory usage of mmproj is 273.54 MiB (took 20.36 ms)",
+        "0.00.509.421 I common_memory_breakdown_print: | memory breakdown [MiB] | total   free    self   model   context   compute    unaccounted |",
+        "0.00.595.400 I common_params_fit_impl: projected to use 870 MiB of host memory vs. 98137 MiB of total host memory",
+        "0.00.595.412 I common_params_fit_impl: will leave 97267 >= 1297 MiB of system memory, no changes needed",
+        "0.00.667.484 I print_info: file size   = 784.52 MiB (8.52 BPW) ",
+        "0.01.149.358 I load_tensors:   CPU_Mapped model buffer size =   763.78 MiB",
+        "0.01.157.318 I llama_context: n_seq_max             = 1",
+        "0.01.157.319 I llama_context: n_ctx                 = 4096",
+        "0.01.157.319 I llama_context: n_batch               = 512",
+        "0.01.157.320 I llama_context: n_ubatch              = 512",
+        "0.01.157.576 I llama_context:        CPU  output buffer size =     0.95 MiB",
+        "0.01.172.465 I llama_kv_cache:        CPU KV buffer size =    48.00 MiB",
+        "0.01.172.475 I llama_kv_cache: size =   48.00 MiB (  4096 cells,   6 layers,  1/1 seqs), K (f16):   24.00 MiB, V (f16):   24.00 MiB",
+        "0.01.178.019 I llama_memory_recurrent:        CPU RS buffer size =    19.27 MiB",
+        "0.01.178.216 I llama_memory_recurrent: size =   19.27 MiB (     1 cells,  24 layers,  1 seqs  0 rs_seq), R (f32):    1.27 MiB, S (f32):   18.00 MiB, P (f32):    0.00 MiB",
+        "0.01.185.642 I sched_reserve:        CPU compute buffer size =    39.02 MiB",
+        "0.01.366.632 I load_hparams: image_size:         768",
+        "0.01.366.640 I load_hparams: model size:         195.48 MiB",
+        "0.01.366.642 I load_hparams: metadata size:      0.05 MiB",
+        "0.01.553.326 I get_dummy_batch: warmup with image size = 1024 x 1024",
+        "0.01.561.865 I get_dummy_batch: warmup with image size = 1024 x 1024",
+        "0.01.567.725 I reserve_compute_meta:        CPU compute buffer size =    78.06 MiB",
+        "0.01.668.465 I slot   load_model: id  0 | task -1 | new slot, n_ctx = 4096",
+        "0.09.528.707 I decoding image batch 1/2, n_tokens_batch = 512",
+        "0.12.145.982 I decoding image batch 2/2, n_tokens_batch = 512",
+        "0.23.332.672 I decoding image batch 1/2, n_tokens_batch = 512",
+        "0.25.621.371 I decoding image batch 2/2, n_tokens_batch = 512",
+        "0.39.273.086 I decoding image batch 1/3, n_tokens_batch = 512",
+        "0.41.873.183 I decoding image batch 2/3, n_tokens_batch = 512",
+        "0.45.154.292 I decoding image batch 3/3, n_tokens_batch = 68",
+        "0.55.907.949 I decoding image batch 1/3, n_tokens_batch = 512",
+        "0.58.292.592 I decoding image batch 2/3, n_tokens_batch = 512",
+        "1.00.768.040 I decoding image batch 3/3, n_tokens_batch = 68"
+      ],
+      "logSha256": "f80dd22580c11804d5c2e37f81dfeade2945cf063780a6b3845c2ae2a3104a09",
+      "peakCounters": {
+        "PeakWorkingSetSize": 1428828160,
+        "PeakPagefileUsage": 1238171648,
+        "PrivateUsage": 1229258752
+      },
+      "monitorErrors": [],
+      "finishedAt": "2026-11-12T03:37:11.418892+00:00",
+      "probeSourceSha256": "d028c93042d5f0ab446f91aff52bac2479e5f7f5972ff7388351a64e442f28f3",
+      "rawRecordPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r2\\result.json",
+      "rawRecordSha256": "d0253baf46ac68dba5c6cbcd2a4152e8d504d3a8adb880346089cf2f5a7a49ba"
+    },
+    {
+      "status": "NATIVE_MEASUREMENTS_CAPTURED",
+      "startedAt": "2026-11-12T03:43:42.927237+00:00",
+      "sources": [
+        {
+          "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+          "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+          "file": "Qwen3.5-0.8B-Q8_0.gguf",
+          "sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+          "sizeBytes": 833592736,
+          "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+          "elapsedSeconds": 84.03100000001723,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=Qwen3.5-0.8B-Q8_0.gguf",
+          "redirectCount": 1,
+          "allowedOrigins": [
+            "modelscope.cn",
+            "cdn-lfs-cn-1.modelscope.cn"
+          ],
+          "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+          "status": "PASS"
+        },
+        {
+          "repository": "unsloth/Qwen3.5-0.8B-MTP-GGUF",
+          "revision": "3bec95a4bc613f19c4a38afd2cec6383aa2535ad",
+          "file": "mmproj-F16.gguf",
+          "sha256": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798",
+          "sizeBytes": 204987104,
+          "localPath": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+          "elapsedSeconds": 21.70400000002701,
+          "sourceUrl": "https://modelscope.cn/api/v1/models/unsloth/Qwen3.5-0.8B-MTP-GGUF/repo?Revision=3bec95a4bc613f19c4a38afd2cec6383aa2535ad&FilePath=mmproj-F16.gguf",
+          "redirectCount": 1,
+          "allowedOrigins": [
+            "modelscope.cn",
+            "cdn-lfs-cn-1.modelscope.cn"
+          ],
+          "scope": "Full source-bound validation asset only; no product install, registration or runtime acceptance",
+          "status": "PASS"
+        }
+      ],
+      "outputs": [
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r3\\0-red-1x1023.png",
+          "imageSha256": "181ee08a56ce7c088cbcf0a1b2ce1f954b6952dc884280af369c132f8218d82f",
+          "width": 1,
+          "height": 1023,
+          "expectedColor": "red",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\"color\": \"red\"}"
+                }
+              }
+            ],
+            "created": 1794455064,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 26,
+              "prompt_tokens": 2080,
+              "total_tokens": 2106,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-sweOPOVNGDmIADpYCjQqk40meh6uwEUy",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 2080,
+              "prompt_ms": 34889.185,
+              "prompt_per_token_ms": 16.773646634615382,
+              "prompt_per_second": 59.617328407069415,
+              "predicted_n": 26,
+              "predicted_ms": 3052.479,
+              "predicted_per_token_ms": 122.09916,
+              "predicted_per_second": 8.190064534432507
+            }
+          },
+          "elapsedSeconds": 38.01499999999942,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1534496768,
+            "WorkingSetSize": 1492221952,
+            "PagefileUsage": 1302663168,
+            "PeakPagefileUsage": 1343102976,
+            "PrivateUsage": 1302663168
+          }
+        },
+        {
+          "imagePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r3\\1-blue-1023x1.png",
+          "imageSha256": "888f79f6a0189449bea8b153603fde4f4b39f1c1085735d002f15423ebaa87dc",
+          "width": 1023,
+          "height": 1,
+          "expectedColor": "blue",
+          "response": {
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"color\": \"blue\"\n}"
+                }
+              }
+            ],
+            "created": 1794455099,
+            "model": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+            "system_fingerprint": "b0-dde879bc4f954b809892fd0d660515f42536394a",
+            "object": "chat.completion",
+            "usage": {
+              "completion_tokens": 12,
+              "prompt_tokens": 2080,
+              "total_tokens": 2092,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "id": "chatcmpl-rqKYjcMU4KEecr2cUTLuu8nAUKMJ6twM",
+            "timings": {
+              "cache_n": 0,
+              "prompt_n": 2080,
+              "prompt_ms": 33920.359,
+              "prompt_per_token_ms": 16.307864903846152,
+              "prompt_per_second": 61.32010572175843,
+              "predicted_n": 12,
+              "predicted_ms": 1034.139,
+              "predicted_per_token_ms": 94.01263636363636,
+              "predicted_per_second": 10.636867964557958
+            }
+          },
+          "elapsedSeconds": 35.03200000000288,
+          "memoryAfter": {
+            "PeakWorkingSetSize": 1572225024,
+            "WorkingSetSize": 1516814336,
+            "PagefileUsage": 1334980608,
+            "PeakPagefileUsage": 1382821888,
+            "PrivateUsage": 1334980608
+          }
+        }
+      ],
+      "workload": {
+        "contextTokens": 4096,
+        "batchTokens": 512,
+        "microBatchTokens": 512,
+        "parallelSequences": 1,
+        "promptCacheBytes": 0,
+        "contextCheckpointSlots": 0,
+        "maxImages": 1,
+        "maxWidth": 1024,
+        "maxHeight": 1024,
+        "maxPixels": 1048576,
+        "minImageTokens": 1024,
+        "maxImageTokens": 1024,
+        "nativeTokenLimitsAreHints": true,
+        "imageBatchMaxTokens": 1024,
+        "speculativeDecoding": "none",
+        "gpuLayers": 0
+      },
+      "scope": "Measured CPU paired vision inputs and native allocations for this exact engine, content and workload. Peak process counters are observations, not a universal upper bound. No product adapter or capability READY assertion.",
+      "binarySha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+      "argv": [
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "-m",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\Qwen3.5-0.8B-Q8_0.gguf",
+        "--mmproj",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\unsloth__Qwen3.5-0.8B-MTP-GGUF\\mmproj-F16.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "54350",
+        "--threads",
+        "4",
+        "--threads-batch",
+        "4",
+        "--ctx-size",
+        "4096",
+        "--batch-size",
+        "512",
+        "--ubatch-size",
+        "512",
+        "--parallel",
+        "1",
+        "--gpu-layers",
+        "0",
+        "--no-mmproj-offload",
+        "--no-webui",
+        "--spec-type",
+        "none",
+        "--cache-ram",
+        "0",
+        "--ctx-checkpoints",
+        "0",
+        "--image-min-tokens",
+        "1024",
+        "--image-max-tokens",
+        "1024",
+        "--mtmd-batch-max-tokens",
+        "1024",
+        "--log-verbosity",
+        "4",
+        "--offline"
+      ],
+      "pid": 15636,
+      "nativeMemoryLines": [
+        "0.00.003.283 I cmn  common_param:   - CPU     : Intel(R) Core(TM) i7-14700F (98137 MiB, 50961 MiB free)",
+        "0.00.046.883 I srv    load_model: [mtmd] estimated worst-case memory usage of mmproj is 273.54 MiB (took 26.15 ms)",
+        "0.00.609.648 I common_memory_breakdown_print: | memory breakdown [MiB] | total   free    self   model   context   compute    unaccounted |",
+        "0.00.689.928 I common_params_fit_impl: projected to use 870 MiB of host memory vs. 98137 MiB of total host memory",
+        "0.00.689.939 I common_params_fit_impl: will leave 97267 >= 1297 MiB of system memory, no changes needed",
+        "0.00.767.661 I print_info: file size   = 784.52 MiB (8.52 BPW) ",
+        "0.01.192.226 I load_tensors:   CPU_Mapped model buffer size =   763.78 MiB",
+        "0.01.199.747 I llama_context: n_seq_max             = 1",
+        "0.01.199.747 I llama_context: n_ctx                 = 4096",
+        "0.01.199.748 I llama_context: n_batch               = 512",
+        "0.01.199.748 I llama_context: n_ubatch              = 512",
+        "0.01.199.892 I llama_context:        CPU  output buffer size =     0.95 MiB",
+        "0.01.214.753 I llama_kv_cache:        CPU KV buffer size =    48.00 MiB",
+        "0.01.214.761 I llama_kv_cache: size =   48.00 MiB (  4096 cells,   6 layers,  1/1 seqs), K (f16):   24.00 MiB, V (f16):   24.00 MiB",
+        "0.01.219.885 I llama_memory_recurrent:        CPU RS buffer size =    19.27 MiB",
+        "0.01.219.895 I llama_memory_recurrent: size =   19.27 MiB (     1 cells,  24 layers,  1 seqs  0 rs_seq), R (f32):    1.27 MiB, S (f32):   18.00 MiB, P (f32):    0.00 MiB",
+        "0.01.226.934 I sched_reserve:        CPU compute buffer size =    39.02 MiB",
+        "0.01.426.263 I load_hparams: image_size:         768",
+        "0.01.426.272 I load_hparams: model size:         195.48 MiB",
+        "0.01.426.273 I load_hparams: metadata size:      0.05 MiB",
+        "0.01.648.543 I get_dummy_batch: warmup with image size = 1024 x 1024",
+        "0.01.658.764 I get_dummy_batch: warmup with image size = 1024 x 1024",
+        "0.01.665.336 I reserve_compute_meta:        CPU compute buffer size =    78.06 MiB",
+        "0.01.755.913 I slot   load_model: id  0 | task -1 | new slot, n_ctx = 4096",
+        "0.25.549.419 I decoding image batch 1/4, n_tokens_batch = 512",
+        "0.28.470.286 I decoding image batch 2/4, n_tokens_batch = 512",
+        "0.31.560.054 I decoding image batch 3/4, n_tokens_batch = 512",
+        "0.34.114.420 I decoding image batch 4/4, n_tokens_batch = 512",
+        "1.01.702.265 I decoding image batch 1/4, n_tokens_batch = 512",
+        "1.04.989.002 I decoding image batch 2/4, n_tokens_batch = 512"
+      ],
+      "logSha256": "22d521da7d812dd501016a1b3a50cbbcfd8662210d50d33c1292fcd12f7fc035",
+      "peakCounters": {
+        "PeakWorkingSetSize": 1572225024,
+        "PeakPagefileUsage": 1382821888,
+        "PrivateUsage": 1382764544
+      },
+      "monitorErrors": [],
+      "finishedAt": "2026-11-12T03:45:01.152713+00:00",
+      "probeSourceSha256": "2ec2917dd71ca46a7501399c4aed6ad7a99061a3638db71dd434035ba5c029da",
+      "rawRecordPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-resource-checks-20261112-r3\\result.json",
+      "rawRecordSha256": "1a9dc9f18186d9314f2ef45ce5181492f3975248343879eb2a9d21ef6081a4c6",
+      "nativeBatchLogCoverage": [
+        {
+          "expectedBatches": 4,
+          "observedBatches": 4,
+          "loggedImageTokens": 2048
+        },
+        {
+          "expectedBatches": 4,
+          "observedBatches": 2,
+          "loggedImageTokens": 1024
+        }
+      ],
+      "logLimit": "The second request returned its complete response before process termination, but its buffered native log contains only 2 of 4 batches. Its complete total prompt count is 2080; only the first request has a complete native 2048 image-token batch trace."
+    }
+  ],
+  "declaredMaximumImageTokens": 1024,
+  "actualImageTokensPerCase": [
+    1024,
+    1024,
+    1092,
+    1092
+  ],
+  "finding": "With image-min-tokens=image-max-tokens=1024, the locked helper produces 1092 image tokens for each 128x1024 and 1024x128 input. The native CLI maximum alone is not a hard encoded-token bound. An actual 1x1023 image yields 2048 image tokens with a complete native trace. Its transposed case also returns 2080 total prompt tokens but the final native batch log is incomplete. Source inspection locates the overrun in independent ceil alignment after minimum-pixel upscaling without reapplying the maximum.",
+  "requiredFollowup": "Bind preprocessing and actual encoded-token validation to the resource envelope; preserve the old v2 text plan digest and recovery behavior. Complete budget and input-bound tests before admitting main+projector installations.",
+  "geometryAnalysis": {
+    "maxTokens": 2048,
+    "examples": [
+      {
+        "width": 1,
+        "height": 1023,
+        "resizedWidth": 64,
+        "resizedHeight": 32768
+      },
+      {
+        "width": 1023,
+        "height": 1,
+        "resizedWidth": 32768,
+        "resizedHeight": 64
+      }
+    ],
+    "violations": 1046617,
+    "dimensionPairs": 1048576,
+    "scope": "Exhaustive JavaScript float32 transcription of the pinned native resize arithmetic for integer width/height 1..1024, alignment 32 and min=max=1048576 pixels. This is analytical sizing evidence, not 1048576 native inference cases. Native extreme-shape observations are recorded independently.",
+    "engineRevision": "dde879bc4f954b809892fd0d660515f42536394a",
+    "sourceRelativePath": "source/tools/mtmd/mtmd-image.cpp",
+    "function": "img_tool::calc_size_preserved_ratio",
+    "sourceSha256": "d82fcb52effcb84cbd0492ea2c02ccd643f6aa608fc2eec9129646a9a54e4f3f"
+  }
+}
