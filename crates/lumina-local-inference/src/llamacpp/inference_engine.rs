@@ -28,10 +28,10 @@ pub(super) struct GenerationContext<'a> {
 }
 
 pub(super) struct LoadedModel {
-    pub model: LlamaModel,
-    pub templates: LoadedChatTemplates,
     /// Multimodal context for vision models. None for text-only models.
     pub mtmd_ctx: Option<MtmdContext>,
+    pub templates: LoadedChatTemplates,
+    pub model: LlamaModel,
 }
 
 pub(super) struct LoadedChatTemplates {

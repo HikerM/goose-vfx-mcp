@@ -1,0 +1,172 @@
+{
+  "cli": "D:\\Project\\goose\\target\\debug\\lumina.exe",
+  "model": "Qwen/Qwen3-1.7B-GGUF:runtime-asset-guard-q8_0",
+  "assets": [
+    {
+      "role": "main",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+      "size": 1834426016,
+      "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a"
+    }
+  ],
+  "registryUsesExtendedWindowsPaths": false,
+  "scriptSha256": "e9252d9c33f4dac8a4a62652df1865b0f20788a1ad5283831ad943e744ae8efd",
+  "textOnly": true,
+  "output": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-asset-guard-text-r5",
+  "command": [
+    "D:\\Project\\goose\\target\\debug\\lumina.exe",
+    "acp"
+  ],
+  "stages": [
+    "unoccupied access probes",
+    "actual product text generation",
+    "idle cached asset probes",
+    "second text request with in-flight probes",
+    "graceful process exit",
+    "released access probes"
+  ],
+  "renameProbeSemantics": "Request DELETE access required for Windows rename; never rename/delete the model",
+  "scope": "Actual legacy local Provider asset lifetime. Text-only mode does not prove old-engine projector compatibility. No managed Runtime READY or vision quality claim.",
+  "status": "PASS",
+  "startedAt": "2026-11-12T06:29:44.159432+00:00",
+  "probes": [
+    {
+      "phase": "before_process",
+      "at": "2026-11-12T06:29:49.259568+00:00",
+      "role": "main",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+      "read": {
+        "allowed": true,
+        "winerror": null
+      },
+      "writeAccess": {
+        "allowed": true,
+        "winerror": null
+      },
+      "renameDeleteAccess": {
+        "allowed": true,
+        "winerror": null
+      },
+      "exclusiveLock": {
+        "allowed": true,
+        "winerror": null
+      }
+    },
+    {
+      "phase": "idle_after_real_generation",
+      "at": "2026-11-12T06:31:06.031336+00:00",
+      "role": "main",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+      "read": {
+        "allowed": true,
+        "winerror": null
+      },
+      "writeAccess": {
+        "allowed": false,
+        "winerror": 32
+      },
+      "renameDeleteAccess": {
+        "allowed": false,
+        "winerror": 32
+      },
+      "exclusiveLock": {
+        "allowed": false,
+        "winerror": 33
+      }
+    },
+    {
+      "phase": "second_prompt_in_flight",
+      "at": "2026-11-12T06:31:06.135507+00:00",
+      "role": "main",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+      "read": {
+        "allowed": true,
+        "winerror": null
+      },
+      "writeAccess": {
+        "allowed": false,
+        "winerror": 32
+      },
+      "renameDeleteAccess": {
+        "allowed": false,
+        "winerror": 32
+      },
+      "exclusiveLock": {
+        "allowed": false,
+        "winerror": 33
+      }
+    },
+    {
+      "phase": "after_process_exit",
+      "at": "2026-11-12T06:32:33.116099+00:00",
+      "role": "main",
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\Qwen__Qwen3-1.7B-GGUF\\Qwen3-1.7B-Q8_0.gguf",
+      "read": {
+        "allowed": true,
+        "winerror": null
+      },
+      "writeAccess": {
+        "allowed": true,
+        "winerror": null
+      },
+      "renameDeleteAccess": {
+        "allowed": true,
+        "winerror": null
+      },
+      "exclusiveLock": {
+        "allowed": true,
+        "winerror": null
+      }
+    }
+  ],
+  "weightCopies": 0,
+  "originalRegistryModified": false,
+  "actualRenameAttempted": false,
+  "cliSha256": "f70b810ce32ac215cf88999d51bfdeca47086a13f7a0d889ec5eea00ac6646be",
+  "registrySha256": "d8da15ab210ef7026b8ce39f05624952a9bded4fa0cc1516ed71847919cbdbd0",
+  "pid": 5872,
+  "firstPrompt": {
+    "result": {
+      "stopReason": "end_turn",
+      "usage": {
+        "totalTokens": 2742,
+        "inputTokens": 2741,
+        "outputTokens": 1
+      }
+    },
+    "text": "4"
+  },
+  "secondResponseObservedBeforeProbeEnded": false,
+  "secondPrompt": {
+    "result": {
+      "stopReason": "end_turn",
+      "usage": {
+        "totalTokens": 2965,
+        "inputTokens": 2773,
+        "outputTokens": 192
+      }
+    },
+    "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,"
+  },
+  "nativeEvents": [
+    {
+      "message": "Selected local inference execution mode",
+      "backend": "llamacpp",
+      "gpu_layers": 0,
+      "execution": "cpu"
+    },
+    {
+      "message": "Loaded local inference model",
+      "backend": "llamacpp",
+      "model": "Qwen/Qwen3-1.7B-GGUF:runtime-asset-guard-q8_0",
+      "model_load_ms": 2621
+    }
+  ],
+  "cliExitCode": 0,
+  "assetHashesUnchanged": true,
+  "finishedAt": "2026-11-12T06:32:35.118092+00:00",
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-asset-guard-text-r5\\evidence.json",
+    "sha256": "d5d76f2924e852edf0579166876c186e464ada7a5d0b2abd86908c494aa5c3ae"
+  }
+}

@@ -1214,6 +1214,25 @@ enum LocalModelsCommand {
     WaitJob { id: String },
     #[command(about = "Run the durable installation worker until Ctrl+C")]
     InstallationWorker,
+    #[command(
+        about = "Generate with a verified installed version and its frozen CPU runtime profile"
+    )]
+    Generate {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+        #[arg(long, required_unless_present = "request", conflicts_with = "request")]
+        prompt: Option<String>,
+        #[arg(long, conflicts_with = "prompt")]
+        request: Option<PathBuf>,
+        #[arg(long, requires = "prompt")]
+        image: Option<PathBuf>,
+        #[arg(long, default_value_t = 256)]
+        max_tokens: u32,
+        #[arg(long, default_value_t = 180)]
+        timeout_secs: u64,
+    },
     /// Search ModelScope for local models
     #[command(about = "Search ModelScope for local GGUF models")]
     Search {
@@ -2190,6 +2209,29 @@ async fn handle_local_models_command(
         LocalModelsCommand::InstallationWorker => {
             installations.service().await?;
             tokio::signal::ctrl_c().await?;
+        }
+        LocalModelsCommand::Generate {
+            version_id,
+            engine,
+            prompt,
+            request,
+            image,
+            max_tokens,
+            timeout_secs,
+        } => {
+            crate::local_models_runtime::generate_installed(
+                &installations,
+                crate::local_models_runtime::InstalledGeneration {
+                    version_id,
+                    engine,
+                    prompt,
+                    request,
+                    image,
+                    max_tokens,
+                    timeout_secs,
+                },
+            )
+            .await?;
         }
         LocalModelsCommand::Search { query, limit } => {
             println!("Searching ModelScope for '{}'...", query);

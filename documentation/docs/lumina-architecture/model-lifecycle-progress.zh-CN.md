@@ -20,8 +20,8 @@ M1 已验证的来源、观察存储和冻结计划基础增量提交为 `8da22c
 | M0 全量契约和技术验证 | VERIFIED，完整工作区 lint 失败保留 | ML-01～07、全类别真实试验、确切引擎/来源/组件/许可证事实、SQLite v4、状态契约、最新 CPU/CUDA 和完整 recipe；见阶段退出复核 | 产品接入属于 M1～M6；视频质量、旧 Whisper 和完整工作区 lint 仍未通过 |
 | M1 来源解析和完整依赖 | IN_PROGRESS，固定 CPU 视觉档案已验证 | 实际发现服务、远程 GGUF、已知组件配对、SQLite v6 观察绑定、CPU 资源预算、不可变计划与入队；固定主模型/projector 的资源档案、有界 PNG 输入、真实多模态计数及旧文本 v2 计划兼容通过 | 更完整的组件角色与档案、GPU 和其他多模态预算、全部入口和受管安装交接；受限账号正例由用户延期 |
 | M2 可靠安装和数据迁移 | IN_PROGRESS，真实双组件安装与旧 registry 保护已验证 | 应用服务、ACP/CLI、启动恢复、schema v15 共享 blob 准入、分阶段空间预算和三层有界调度；真实主模型/projector 并发安装、旧 registry 原字节备份及旧 CLI 回退通过；本批 273 项测试、核心严格 Clippy、CLI 构建及实际 self-test 通过 | 计划生成阶段的保守空间检查与非传输阶段的增量重新准入、旧入口统一、多分片验收与性能基准、跨域别名和运行引用保护、卸载/回收、迁移后受管关系及完整阶段验收 |
-| M3 Runtime 和核心真实验收 | PLANNED | 既有 Dense/MoE CPU 文本 smoke 与小模型一次严格工具闭环可运行 | 新 LaunchConfig 和 Runtime 接入、完整文本/工具/视觉验收 |
-| M4 全部类型和加速 | PLANNED，M0 探针已交接 | 全类别实际 Runtime 技术记录；Embedding、Reranker、音频、图像、MTP/DFlash 探针通过；视频内容与旧 Whisper 失败保留 | 产品 Adapter、受管安装、类型化服务、质量与边界验收、视频和 Whisper 修复 |
+| M3 Runtime 和核心真实验收 | IN_PROGRESS，新 CLI 基础链路已验证 | 运行资产保护、冻结参数、受管 helper 和聊天适配已实现；核心 202 项回归与严格 Clippy、完整 CLI、五个真实生成/拒绝场景、旧文本运行引用、PowerShell 矩阵及 35B self-test 通过 | 完整文本/工具/多轮/视觉套件、能力证据登记、会话/服务接入、运行资源调度及旧引擎兼容缺口 |
+| M4 全部类型和加速 | IN_PROGRESS，向量适配提前并行推进 | Embedding/Reranker 适配器 13 项协议回归通过；两个固定模型的真实资源与最大批次测量通过；M0 全类别引擎探针可复用；视频质量与旧 Whisper 失败保留 | 向量正式资源档案、受管安装与产品调用；音频/图像/视频等完整 Adapter、类型化服务、质量与边界验收、MTP/DFlash 接入 |
 | M5 完整模型中心 | PLANNED | 完整界面与服务契约已编写 | 实际页面、SDK、任务及能力状态接入和尺寸验收 |
 | M6 系统验收和发行 | PLANNED | 原计划需求与验收映射 | 全类别、硬件、旧功能、安装包和回退验收 |
 
@@ -500,3 +500,33 @@ schema v14 让失败或阻塞任务释放容量时保留已经同步的下载抵
 [实际 35B self-test](./model-lifecycle-evidence/2026-11-12-selftest-model-assets-r1.json)使用本批构建和更新后的 recipe 完成一次真实工具调用，返回 39 项通过、0 失败、1 个不计入通过的辅助入口。原生测试日志、报告内容及读回 SHA256 一致，模型最终总结准确保留范围边界；运行前后源码、recipe、二进制及相关输入的冻结摘要一致。该结果是上述专项的模型工具闭环验证，不另计为新增 39 项独立测试，也不代表 M3 Runtime READY。
 
 本批完成的是 M1 视觉预算与 M2 迁移保护增量，M1/M2 整体仍为 IN_PROGRESS。下一批 ML-20/21 需同时保护正式版本、安装临时引用、旧别名和实际运行引用。只读核对发现旧别名可通过任意 main/shard/projector 路径指向受管版本或 blob，registry 锁与受管版本锁目前不在同一协调范围；不能先扫描一次旧 JSON 后删除，也不能以进程内已加载列表替代运行 guard。应在实际登记提交和卸载提交处统一协调、重检目标状态，并持运行 guard 到 native 对象实际释放；恢复也必须重新核对引用。此项随受管卸载及运行接入继续实施，本批旧删除仍只解除登记。
+
+## M4 向量资源与原生边界测量
+
+[固定向量档案实测](./model-lifecycle-evidence/2026-11-12-m4-vector-resource-protocol.json)使用已有 Qwen3 Embedding 0.6B Q8 与 BGE Reranker v2 M3 Q4_K_M、同一确切 CPU helper，未下载或复制权重。Context/Batch/Microbatch 512、单序列、CPU 四线程、GPU 0、F16 K/V、Flash Attention on；关闭提示缓存、检查点、自动适配和推测解码。每个模型三个双语检索场景均将正确文档排第一，但不替代正式二十场景门槛。
+
+Embedding 的十六条、每条 511 token 批次通过，512 token 原生请求返回 400；Reranker 的十六条、每个配对 512 token 批次通过，513 token 原生请求返回 500。产品适配器必须在推理前拒绝超界配对，不能把服务错误当正常重排结果。现有协议回归也拒绝固定引擎的缺失 embedding 分数哨兵，同时允许普通负 logit。
+
+Windows 内存采样分别取得 719 和 303 个样本，目标间隔 50 ms，实际最大间隔 78 ms；同时记录操作系统累计峰值。两个模型的峰值工作集分别为 628,539,392 和 542,519,296 字节，采样私有内存峰值分别为 208,420,864 和 418,484,224 字节。候选预算分别保留 64 MiB compute、256/512 MiB auxiliary，独立全额计入权重，Embedding 另计 56 MiB KV；候选总额为 1,033,415,168 和 1,042,356,640 字节。该余量来自固定输入边界的保守工程估计，尚未登记为正式资源准入，也不构成任意硬件、输入或并发下的通用内存上限。
+
+113 个原始证据文件的大小与 SHA256 已逐项复核。两个 helper 均已终止并等待退出。后续工作是将精确参数和资源档案接入正常计划、安装、受管 owner 及产品命令，并用已固定的二十个双语场景通过实际 Rust 适配器验收；本轮不产生能力 READY。
+
+## M3 受管运行与真实 CLI 增量
+
+[实现和构建记录](./model-lifecycle-evidence/2026-11-12-m3-runtime-assets-verification.json)覆盖实际文件占用保护、旧 Provider 缓存身份、冻结启动参数、受管 helper、完整消息/工具/PNG 请求预检以及向量协议适配器。修正 Windows 测试连接模式、路径断言和测试类型别名后，最终核心回归为 202 项通过、0 失败、4 项明确跳过；其中三个是由父测试调用的子进程辅助入口，一个需要真实 GGUF 环境，不计为通过。核心 crate 全 targets 严格 Clippy 通过。
+
+完整 CLI 构建通过，用时 15 分 22 秒，SHA256 为 `f70b810ce32ac215cf88999d51bfdeca47086a13f7a0d889ec5eea00ac6646be`；原有核心 605 项及 CLI 6 项警告仍保留。[真实产品调用](./model-lifecycle-evidence/2026-11-12-m3-installed-generation.json)复用已登记 `paired-vision-v1` 安装及原主模型/projector，未复制权重。文本请求返回 `4`，提示/生成 token 为 30/2；真实 PNG 请求返回 `red`，提示/生成 token 为 1058/2，图像摘要与输入一致。超出完整上下文、非法输出额度和损坏 PNG 三个反例均被拒绝；各命令后 helper 退出已确认，模型和二进制摘要未变化。这是固定 CPU 档案的基础链路验证，不替代完整多轮、工具和视觉质量套件。
+
+[旧 Provider 运行引用证明](./model-lifecycle-evidence/2026-11-12-m3-legacy-runtime-assets.json)使用此前已验证的 Qwen3-1.7B 文本资产。实际输出 `4` 后保持同一 ACP 进程和缓存，再发起第二次真实生成；生成期间和空闲缓存期间，Windows 写入/删除访问及独占字节锁均被拒绝，退出后恢复，权重前后完整摘要一致。测试只申请访问权限，没有写入、重命名或删除模型。
+
+旧视觉配对兼容仍未通过：直接把深层受管路径登记到旧 Provider 时，本批与上一版二进制都报无法打开文件；使用 Windows 扩展路径后，旧进程内引擎对该 Qwen3.5 MTP 文件报缺少 `blk.24.ssm_conv1d.weight`。新受管 helper 已成功执行同一双组件安装，但不能因此宣称旧进程内引擎或旧 projector 路径通过。旧文本证明、新受管视觉证明与单元生命周期测试各自保留范围。
+
+[PowerShell 最终矩阵](./model-lifecycle-evidence/2026-11-12-runtime-assets-powershell-gate.json)在 5.1/7 和 LF/CRLF 四组合均通过 69 项专项、0 失败、3 个不计为通过的辅助入口，命名测试集合一致；静态、解析与十三条结果门禁反例也通过。矩阵明确使用最终预编译测试程序；此前 socket fixture 与 harness 作用域失败记录保留。
+
+[实际 35B self-test](./model-lifecycle-evidence/2026-11-12-selftest-runtime-assets-r1.json)随后使用新 CLI 和正式 `runtime-assets` recipe，模型实际调用一次 PowerShell/Cargo 入口，返回 69/0/3；测试名称、报告内容与哈希、最终模型摘要及运行前后冻结输入均核对通过。该记录不另计新增 69 项独立测试，也不产生能力 READY。
+
+本批是已验证增量，M3/M4 整体仍为 IN_PROGRESS。后续将同一受管生命周期用于向量及媒体能力，并完成正式资源准入、统一服务、Validator 和全部阶段验收。
+
+## M4 视频单变量排查
+
+[一次 VAE direct-conv 对照](./model-lifecycle-evidence/2026-11-12-m4-video-direct-conv-diagnostic.json)保留原模型、seed、尺寸和帧数，只切换实际可生效的 CPU VAE 卷积实现路径。运行成功退出，但新 AVI 与原基线 SHA 完全相同，十七帧解码摘要也逐帧相同；实际查看的 0/8/16 帧仍有明显绿色方块，运动方向未满足提示，状态保持 QUALITY_FAILED。此实验没有改变卷积的 F16 精度，不能表示已经排除精度原因。下一步在固定 latent 上独立回放同一 VAE，以减少反复完整采样并区分解码和编码问题；诊断实现与验收仍在继续。

@@ -276,3 +276,17 @@ Validator 使用真实模型和真实 Runtime，生成结果必须实际可读�
 每份证据绑定文件摘要集合、引擎构建、启动配置、规则与验证套件版本。相关维度变化使对应证据 STALE；不相关的展示字段变化不触发全量重验。用户模型任务与基准验证任务分离，超时或资源失败不等价于模型结构不兼容。
 
 业务任务事件存入证据存储，包含阶段、文件、状态和测量；不为每次轮询新增普通日志。错误与安全事件使用既有日志体系，明确敏感字段脱敏、证据分页、保留和清理。媒体证据按文件引用存储，不把大二进制写入数据库或 ACP 普通文本。
+
+## 当前受管 Runtime 实现边界
+
+`RuntimeAssetGuard` 持有实际文件的只读句柄和共享锁，生命周期覆盖 native 加载、缓存及析构。旧 llama 路径同时保护主文件、实际 GGUF 分片和 projector；仅 MLX 实际加载 draft 时保护对应目录。Windows 句柄拒绝其他写入和删除访问；其他平台的共享锁是协作协议，不能替代卸载事务、路径协调和持久化引用。运行保护不表示 ML-20/21 卸载及回收已经完成。
+
+已有 `LaunchConfig` 新增完整可选 workload 的兼容序列化字段。对有资源准入的安装，启动必须与冻结 workload、精确 helper build、组件、CPU/GPU、线程、KV、batch、缓存及视觉边界一致。历史无 admission 的 Manifest 仍可进行身份校验，但不能因此获得资源准入或能力 READY。
+
+`NativeHelperRuntime` 从已登记不可变版本启动本地 helper，验证安装内容和二进制摘要，使用实例凭据及启动后模型属性核对实际进程。一个受管目录当前最多持有一个 helper 许可；这只是并发上限，不是完整资源队列，也不能用安装时的历史硬件观察代替运行时重新准入。停止、启动错误及正常析构必须等待子进程退出后才释放文件占用。Windows 使用 kill-on-close job；标准进程创建到 job 关联仍存在短暂窗口，非 Windows 的强制父进程退出清理尚未实现。
+
+`NativeChatAdapter` 借用 owner，固定同一份消息、工具和 PNG 字节，先对完整输入调用原生 token 计数，再校验输出额度并生成。属于同一 owner 的适配器共享整个操作的独占许可，涵盖图片预处理、计数和生成。如果请求被取消或传输失败，无法证明 native 操作已结束，则该 helper 不再接受后续请求，必须停止并重新启动；关闭 HTTP 连接不视为已经释放推理容量。
+
+产品 CLI 入口为 `local-models generate --version-id <id> --engine <path>`，输入使用 `--prompt`，或 `--request` 的类型化 JSON；有已验证视觉资源档案时可随 prompt 添加 `--image`。成功结果回传实际 LaunchConfig、token 使用、输入摘要和 helper 退出确认。该调用不会自动登记能力 READY；正式文本、工具、多轮与视觉 Validator 仍须独立完成。
+
+Embedding/Reranker 当前实现类型化协议和精确模型内容绑定；固定 helper 的 Rerank 分数是原始 classifier logit，允许正常负数，拒绝缺失 rank embedding 的精确失败哨兵 `-1000000`。现有裸 endpoint/token 构造不等于受管运行接入；正式使用还须连接资源档案、正常安装和同一 owner 的进程、请求与占用生命周期。

@@ -1,0 +1,321 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-12T06:18:02.383396+00:00",
+  "cases": [
+    {
+      "name": "text",
+      "command": [
+        "D:\\Project\\goose\\target\\debug\\lumina.exe",
+        "local-models",
+        "generate",
+        "--version-id",
+        "paired-vision-v1",
+        "--engine",
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "--timeout-secs",
+        "180",
+        "--prompt",
+        "Compute 2 + 2. Reply only with the numeral. Do not use tools.",
+        "--max-tokens",
+        "64"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 47.32800000000134,
+      "stdoutSha256": "e6fbd3487f0310be21052c6b6e6dd05d20f0055f0e4a354d62e19653c7731ce2",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "response": {
+          "id": "chatcmpl-EgbIcy4B9dZuha94hk3kGW4gp2U8IzPW",
+          "content": "4",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "prompt_tokens": 30,
+            "completion_tokens": 2,
+            "total_tokens": 32
+          },
+          "launch_digest": "9c29e5023241a0aad2cf3c7c8269f45b86a70e9c645894b6cfd5a9efd9a9e226",
+          "request_digest": "ce0052d54b99800660c98a4d2a32e392ea1493aacd9b5bedfa84715a756c80ba",
+          "image_digests": []
+        },
+        "launch": {
+          "installation_id": "paired-vision-model",
+          "version_id": "paired-vision-v1",
+          "manifest_digest": "9ac4178bfd9b6a2fa97a10abd00399724e30a6d9eacf9e7d32a4beb27fa25b65",
+          "runtime": {
+            "adapter_id": "llama-helper",
+            "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+            "binding_version": "native-http-v1",
+            "platform": "x86_64-pc-windows-msvc",
+            "features": [
+              "cpu",
+              "dflash",
+              "embedding",
+              "mtmd",
+              "mtp",
+              "reranking"
+            ],
+            "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+          },
+          "capabilities": [
+            "text",
+            "vision"
+          ],
+          "component_files": {
+            "main": [
+              "files/06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf"
+            ],
+            "vision_projector": [
+              "files/ee275613917c4741bec75f78252a646413b4014f534ce8631d9f155378f7ece7.gguf"
+            ]
+          },
+          "parameters": {
+            "adapter": "llama_cpp",
+            "chat_template": {
+              "kind": "embedded"
+            },
+            "context_length": 4096,
+            "gpu_layers": 0,
+            "cpu_threads": 4,
+            "kv_key_type": "f16",
+            "kv_value_type": "f16",
+            "batch_size": 512,
+            "flash_attention": true,
+            "workload": {
+              "context_tokens": 4096,
+              "batch_tokens": 512,
+              "parallel_sequences": 1,
+              "recurrent_rollback_slots": 0,
+              "kv_key_type": "f16",
+              "kv_value_type": "f16",
+              "prompt_cache_bytes": 0,
+              "context_checkpoint_slots": 0,
+              "vision": {
+                "resize_policy": "qwen3_vl_native_v1",
+                "max_images": 1,
+                "max_input_width": 1024,
+                "max_input_height": 1024,
+                "max_input_bytes": 8388608,
+                "native_min_image_tokens": 1024,
+                "native_max_image_tokens": 1024,
+                "max_encoded_image_tokens": 2048,
+                "microbatch_tokens": 512,
+                "image_batch_tokens": 1024,
+                "cpu_threads": 4
+              }
+            }
+          },
+          "mode": {
+            "kind": "helper",
+            "port": 59006
+          }
+        },
+        "helper_stopped": true,
+        "helper_exit_code": 1,
+        "stdout_log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-m2-vision-install-r1\\app\\data\\model-lifecycle\\runtime-runs\\3d2f44ca0fdb2369de130023c2d74819\\native-cfd02e05-575a-4848-aa72-5f47425017d7.stdout.log",
+        "stderr_log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-m2-vision-install-r1\\app\\data\\model-lifecycle\\runtime-runs\\3d2f44ca0fdb2369de130023c2d74819\\native-cfd02e05-575a-4848-aa72-5f47425017d7.stderr.log"
+      }
+    },
+    {
+      "name": "vision",
+      "command": [
+        "D:\\Project\\goose\\target\\debug\\lumina.exe",
+        "local-models",
+        "generate",
+        "--version-id",
+        "paired-vision-v1",
+        "--engine",
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "--timeout-secs",
+        "180",
+        "--prompt",
+        "Identify the single dominant color in this image. Reply with only red, green, or blue.",
+        "--image",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\m1-vision-preflight-r1\\0.png",
+        "--max-tokens",
+        "64"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 78.07800000000134,
+      "stdoutSha256": "661ffe144035df0421ee43d1978ed00d57524bdb6ef33b9876fe65e7e251f693",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "response": {
+          "id": "chatcmpl-TT7FyKWgUEW6cR4OuONg1BzFHZA8M6ev",
+          "content": "red",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "prompt_tokens": 1058,
+            "completion_tokens": 2,
+            "total_tokens": 1060
+          },
+          "launch_digest": "2017f446552ecd7c9c06e6624092c31122dc5a12181eff0ad5a0beeb90aa69ce",
+          "request_digest": "63c9fb06c0263d5ab9382becdf71709e3a35f60370a30a1faa07b8a78871e586",
+          "image_digests": [
+            "f0ecd7252848b1ea453e7f155f4635895258974e7f3fe7f9f0496173e0d21e33"
+          ]
+        },
+        "launch": {
+          "installation_id": "paired-vision-model",
+          "version_id": "paired-vision-v1",
+          "manifest_digest": "9ac4178bfd9b6a2fa97a10abd00399724e30a6d9eacf9e7d32a4beb27fa25b65",
+          "runtime": {
+            "adapter_id": "llama-helper",
+            "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+            "binding_version": "native-http-v1",
+            "platform": "x86_64-pc-windows-msvc",
+            "features": [
+              "cpu",
+              "dflash",
+              "embedding",
+              "mtmd",
+              "mtp",
+              "reranking"
+            ],
+            "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+          },
+          "capabilities": [
+            "text",
+            "vision"
+          ],
+          "component_files": {
+            "main": [
+              "files/06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf"
+            ],
+            "vision_projector": [
+              "files/ee275613917c4741bec75f78252a646413b4014f534ce8631d9f155378f7ece7.gguf"
+            ]
+          },
+          "parameters": {
+            "adapter": "llama_cpp",
+            "chat_template": {
+              "kind": "embedded"
+            },
+            "context_length": 4096,
+            "gpu_layers": 0,
+            "cpu_threads": 4,
+            "kv_key_type": "f16",
+            "kv_value_type": "f16",
+            "batch_size": 512,
+            "flash_attention": true,
+            "workload": {
+              "context_tokens": 4096,
+              "batch_tokens": 512,
+              "parallel_sequences": 1,
+              "recurrent_rollback_slots": 0,
+              "kv_key_type": "f16",
+              "kv_value_type": "f16",
+              "prompt_cache_bytes": 0,
+              "context_checkpoint_slots": 0,
+              "vision": {
+                "resize_policy": "qwen3_vl_native_v1",
+                "max_images": 1,
+                "max_input_width": 1024,
+                "max_input_height": 1024,
+                "max_input_bytes": 8388608,
+                "native_min_image_tokens": 1024,
+                "native_max_image_tokens": 1024,
+                "max_encoded_image_tokens": 2048,
+                "microbatch_tokens": 512,
+                "image_batch_tokens": 1024,
+                "cpu_threads": 4
+              }
+            }
+          },
+          "mode": {
+            "kind": "helper",
+            "port": 61121
+          }
+        },
+        "helper_stopped": true,
+        "helper_exit_code": 1,
+        "stdout_log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-m2-vision-install-r1\\app\\data\\model-lifecycle\\runtime-runs\\4e594c28673127c36d24718531267533\\native-1df434b6-0071-4f08-9b9c-b0ee8923895b.stdout.log",
+        "stderr_log": "D:\\Project\\goose\\target\\lifecycle-validation\\m1-m2-vision-install-r1\\app\\data\\model-lifecycle\\runtime-runs\\4e594c28673127c36d24718531267533\\native-1df434b6-0071-4f08-9b9c-b0ee8923895b.stderr.log"
+      }
+    },
+    {
+      "name": "context-overflow",
+      "command": [
+        "D:\\Project\\goose\\target\\debug\\lumina.exe",
+        "local-models",
+        "generate",
+        "--version-id",
+        "paired-vision-v1",
+        "--engine",
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "--timeout-secs",
+        "180",
+        "--prompt",
+        "hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello hello ",
+        "--max-tokens",
+        "3000"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 34.65599999999904,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "a97dd21469582458a682afc7b1f6073fdb6d1e4aac92a91218bbe60f38b0402d",
+      "stderr": "Error: Complete chat prompt and output exceed the frozen context\n"
+    },
+    {
+      "name": "invalid-output-budget",
+      "command": [
+        "D:\\Project\\goose\\target\\debug\\lumina.exe",
+        "local-models",
+        "generate",
+        "--version-id",
+        "paired-vision-v1",
+        "--engine",
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "--timeout-secs",
+        "180",
+        "--prompt",
+        "hello",
+        "--max-tokens",
+        "4096"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 0.030999999999039574,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e6b34e99bfa471bf67a13cd2637001d4474ed389c3a3490e482ae0c881ee7f79",
+      "stderr": "Error: Output budget must leave room for a nonempty input prompt\n"
+    },
+    {
+      "name": "invalid-image",
+      "command": [
+        "D:\\Project\\goose\\target\\debug\\lumina.exe",
+        "local-models",
+        "generate",
+        "--version-id",
+        "paired-vision-v1",
+        "--engine",
+        "D:\\Project\\goose\\target\\runtime-engines\\llama-cpp\\dde879bc4f954b809892fd0d660515f42536394a\\build-cpu\\bin\\Release\\llama-server.exe",
+        "--timeout-secs",
+        "180",
+        "--prompt",
+        "Describe",
+        "--image",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\installed-generation-r1\\invalid.png",
+        "--max-tokens",
+        "64"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 0.06299999999828287,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "30b127e72a287ef0af8e9f33ad0c6fabfca95b34cdfe9f00d143eb7667598747",
+      "stderr": "Error: Encoded image exceeds the vision byte limit or has no complete PNG header\n"
+    }
+  ],
+  "initialHelperPids": [],
+  "weightCopies": 0,
+  "scope": "Actual product CLI uses a registered immutable installation, authenticated native helper, bounded input preflight and actual generation. No capability READY record is created.",
+  "cliSha256": "f70b810ce32ac215cf88999d51bfdeca47086a13f7a0d889ec5eea00ac6646be",
+  "engineSha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+  "assetsUnchanged": true,
+  "helperExitConfirmed": true,
+  "finishedAt": "2026-11-12T06:21:14.124423+00:00",
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\installed-generation-r1\\evidence.json",
+    "sha256": "0caeb6b83ee32a36f0f2385e013d098919c568f03bddc41a661a5e883b468b4c"
+  }
+}

@@ -1,0 +1,814 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-12T06:20:03.686230+00:00",
+  "executionMode": "prebuilt-test-executables",
+  "sourceSha256": "b0242b43bcbbc3cf6d27595aeed0f643980fccdfcadf374632bb323c6c290f20",
+  "sourceIdentities": {
+    "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1": "b0242b43bcbbc3cf6d27595aeed0f643980fccdfcadf374632bb323c6c290f20",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\test-runtime-assets-summary-r1.ps1": "7ed47eb8fc2d45a2bbffb5227d6e24e1b3cddf17ed64af2b820af46bb8e14920",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\invoke-runtime-assets-prebuilt-r1.ps1": "19afb3c049355bbee444bc4bbc6958f4cc01512be686ed6e70dcba207bf91de6",
+    "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1": "64b78250d3a0011417d68a5d256406c82c827f0e9c5064ba59e27dcdae0ea240"
+  },
+  "executions": [
+    {
+      "label": "git-head",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-version",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$PSVersionTable.PSVersion.ToString()"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-static-test-lumina-cache-install",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-static-test-runtime-assets-summary-r1",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\test-runtime-assets-summary-r1.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-static-invoke-runtime-assets-prebuilt-r1",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\invoke-runtime-assets-prebuilt-r1.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-lf-parse-test-lumina-cache-install",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-lf-test-lumina-cache-install.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-lf-parse-test-runtime-assets-summary-r1",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-lf-test-runtime-assets-summary-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-lf-parse-invoke-runtime-assets-prebuilt-r1",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-lf-invoke-runtime-assets-prebuilt-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-lf-summary-fixtures",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-lf-test-runtime-assets-summary-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-lf-test-lumina-cache-install.ps1",
+        "-SupportPath",
+        "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-lf-suite",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-lf-invoke-runtime-assets-prebuilt-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-lf-test-lumina-cache-install.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app",
+        "-ExecutableManifest",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\executables.json",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "5.1.26100.9818",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime",
+        "targets": [
+          {
+            "target": "runtime_assets_unit",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\runtime_assets_unit-run.log"
+          },
+          {
+            "target": "native_runtime_unit",
+            "passed": 12,
+            "failed": 0,
+            "ignored": 2,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\native_runtime_unit-run.log"
+          },
+          {
+            "target": "chat_runtime_unit",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\chat_runtime_unit-run.log"
+          },
+          {
+            "target": "lifecycle_asset_use",
+            "passed": 7,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\lifecycle_asset_use-run.log"
+          },
+          {
+            "target": "lifecycle_launch_binding",
+            "passed": 9,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\lifecycle_launch_binding-run.log"
+          },
+          {
+            "target": "lifecycle_native_runtime",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\lifecycle_native_runtime-run.log"
+          },
+          {
+            "target": "lifecycle_vector_runtime",
+            "passed": 13,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log"
+          }
+        ],
+        "passed": 69,
+        "failed": 0,
+        "ignored": 3,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log",
+        "scope": "Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-lf-report.json",
+          "sha256": "10147e652edde7473ceb51b90ede8acd1f75156ba4f6398e4c75f99b127b8c02",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime\",\"targets\":[{\"target\":\"runtime_assets_unit\",\"passed\":16,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\runtime_assets_unit-run.log\"},{\"target\":\"native_runtime_unit\",\"passed\":12,\"failed\":0,\"ignored\":2,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\native_runtime_unit-run.log\"},{\"target\":\"chat_runtime_unit\",\"passed\":10,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\chat_runtime_unit-run.log\"},{\"target\":\"lifecycle_asset_use\",\"passed\":7,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\lifecycle_asset_use-run.log\"},{\"target\":\"lifecycle_launch_binding\",\"passed\":9,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\lifecycle_launch_binding-run.log\"},{\"target\":\"lifecycle_native_runtime\",\"passed\":2,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\lifecycle_native_runtime-run.log\"},{\"target\":\"lifecycle_vector_runtime\",\"passed\":13,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\"}],\"passed\":69,\"failed\":0,\"ignored\":3,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-lf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\",\"scope\":\"Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.\"}\n"
+        }
+      },
+      "nativeLogSha256": {
+        "runtime_assets_unit": "2aad3459a8f35a3e37b91af216aa89162bb4b09810099b047ff0d7771f649b6d",
+        "native_runtime_unit": "0db8eb5e71d8f2d41191b4c69ebd91c5ce0e0740b256b385a6208ccde8b1c03a",
+        "chat_runtime_unit": "0cd1ea8aed8fce7782399537ddd3135aa6e4e1c2ea015c2b500ade8c90290195",
+        "lifecycle_asset_use": "a5cbd0a23119d7b9f318426f1ec04666b57e4c7acb6436eda918b0a1cd8069dc",
+        "lifecycle_launch_binding": "da61c8bfe2b29a442f7a5c2a9bb34204ac664a0df5ffc55ad47609513a735ffd",
+        "lifecycle_native_runtime": "446d26ad6cabe7bd15e7fa932521da5b92d2406e3c9cc27deb671a373c4b3f50",
+        "lifecycle_vector_runtime": "043b28526189847955496ac817e75e96de805a9f56e2c8519b0a24a896d2e1ab"
+      }
+    },
+    {
+      "label": "powershell.exe-crlf-parse-test-lumina-cache-install",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-crlf-test-lumina-cache-install.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-crlf-parse-test-runtime-assets-summary-r1",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-crlf-test-runtime-assets-summary-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-crlf-parse-invoke-runtime-assets-prebuilt-r1",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-crlf-invoke-runtime-assets-prebuilt-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-crlf-summary-fixtures",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-crlf-test-runtime-assets-summary-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-crlf-test-lumina-cache-install.ps1",
+        "-SupportPath",
+        "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "powershell.exe-crlf-suite",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-crlf-invoke-runtime-assets-prebuilt-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\powershell.exe-crlf-test-lumina-cache-install.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app",
+        "-ExecutableManifest",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\executables.json",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "5.1.26100.9818",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime",
+        "targets": [
+          {
+            "target": "runtime_assets_unit",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\runtime_assets_unit-run.log"
+          },
+          {
+            "target": "native_runtime_unit",
+            "passed": 12,
+            "failed": 0,
+            "ignored": 2,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\native_runtime_unit-run.log"
+          },
+          {
+            "target": "chat_runtime_unit",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\chat_runtime_unit-run.log"
+          },
+          {
+            "target": "lifecycle_asset_use",
+            "passed": 7,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\lifecycle_asset_use-run.log"
+          },
+          {
+            "target": "lifecycle_launch_binding",
+            "passed": 9,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\lifecycle_launch_binding-run.log"
+          },
+          {
+            "target": "lifecycle_native_runtime",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\lifecycle_native_runtime-run.log"
+          },
+          {
+            "target": "lifecycle_vector_runtime",
+            "passed": 13,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log"
+          }
+        ],
+        "passed": 69,
+        "failed": 0,
+        "ignored": 3,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log",
+        "scope": "Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\powershell.exe-crlf-report.json",
+          "sha256": "58004e3187e421d1650ef68591a3f66a9935ad9b4c6e302cb1c95360f5add635",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime\",\"targets\":[{\"target\":\"runtime_assets_unit\",\"passed\":16,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\runtime_assets_unit-run.log\"},{\"target\":\"native_runtime_unit\",\"passed\":12,\"failed\":0,\"ignored\":2,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\native_runtime_unit-run.log\"},{\"target\":\"chat_runtime_unit\",\"passed\":10,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\chat_runtime_unit-run.log\"},{\"target\":\"lifecycle_asset_use\",\"passed\":7,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\lifecycle_asset_use-run.log\"},{\"target\":\"lifecycle_launch_binding\",\"passed\":9,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\lifecycle_launch_binding-run.log\"},{\"target\":\"lifecycle_native_runtime\",\"passed\":2,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\lifecycle_native_runtime-run.log\"},{\"target\":\"lifecycle_vector_runtime\",\"passed\":13,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\"}],\"passed\":69,\"failed\":0,\"ignored\":3,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\powershell.exe-crlf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\",\"scope\":\"Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.\"}\n"
+        }
+      },
+      "nativeLogSha256": {
+        "runtime_assets_unit": "66add2cc55db094b2dbcff36e795a51a9cc54d6218ef77855a4aa696baacc8f7",
+        "native_runtime_unit": "7124c47cc10450e207052713ea1548d05a7b9beda6f928ca6c9f77c88dbd6d44",
+        "chat_runtime_unit": "e641f67123fc69dae81f57e82d5be1bfc0dbd65d327942f8ab6412303724e3ed",
+        "lifecycle_asset_use": "b74510be4d6c0ad24c83c03fa0bf69645902021d5f8c97744d0a75dc42a01709",
+        "lifecycle_launch_binding": "07361448aea278f9986461847ed7bed6b9eab3712844dfff4381b82670c5e1d7",
+        "lifecycle_native_runtime": "74636fe30e8f2cf2c2ef326602479825b226f9cc8683cdfbf9f0dccde8bf2dcd",
+        "lifecycle_vector_runtime": "da9f5c7d7ab74f116889ad3e42425fe0c89a17c42338e917fe3936b2ede72415"
+      }
+    },
+    {
+      "label": "pwsh-version",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$PSVersionTable.PSVersion.ToString()"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-static-test-lumina-cache-install",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\bin\\test-lumina-cache-install.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-static-test-runtime-assets-summary-r1",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\test-runtime-assets-summary-r1.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-static-invoke-runtime-assets-prebuilt-r1",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\home\\skills\\powershell-code-quality\\scripts\\Test-PowerShellQuality.ps1",
+        "-Path",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\invoke-runtime-assets-prebuilt-r1.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-lf-parse-test-lumina-cache-install",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-lf-test-lumina-cache-install.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-lf-parse-test-runtime-assets-summary-r1",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-lf-test-runtime-assets-summary-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-lf-parse-invoke-runtime-assets-prebuilt-r1",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-lf-invoke-runtime-assets-prebuilt-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-lf-summary-fixtures",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-lf-test-runtime-assets-summary-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-lf-test-lumina-cache-install.ps1",
+        "-SupportPath",
+        "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-lf-suite",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-lf-invoke-runtime-assets-prebuilt-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-lf-test-lumina-cache-install.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app",
+        "-ExecutableManifest",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\executables.json",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "7.6.9",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime",
+        "targets": [
+          {
+            "target": "runtime_assets_unit",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\runtime_assets_unit-run.log"
+          },
+          {
+            "target": "native_runtime_unit",
+            "passed": 12,
+            "failed": 0,
+            "ignored": 2,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\native_runtime_unit-run.log"
+          },
+          {
+            "target": "chat_runtime_unit",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\chat_runtime_unit-run.log"
+          },
+          {
+            "target": "lifecycle_asset_use",
+            "passed": 7,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\lifecycle_asset_use-run.log"
+          },
+          {
+            "target": "lifecycle_launch_binding",
+            "passed": 9,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\lifecycle_launch_binding-run.log"
+          },
+          {
+            "target": "lifecycle_native_runtime",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\lifecycle_native_runtime-run.log"
+          },
+          {
+            "target": "lifecycle_vector_runtime",
+            "passed": 13,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log"
+          }
+        ],
+        "passed": 69.0,
+        "failed": 0.0,
+        "ignored": 3.0,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log",
+        "scope": "Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-lf-report.json",
+          "sha256": "595284af25b8d0bc4196dfcbbebeffea4559b0cd7d8d5a4a53f70a062724d265",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime\",\"targets\":[{\"target\":\"runtime_assets_unit\",\"passed\":16,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\runtime_assets_unit-run.log\"},{\"target\":\"native_runtime_unit\",\"passed\":12,\"failed\":0,\"ignored\":2,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\native_runtime_unit-run.log\"},{\"target\":\"chat_runtime_unit\",\"passed\":10,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\chat_runtime_unit-run.log\"},{\"target\":\"lifecycle_asset_use\",\"passed\":7,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\lifecycle_asset_use-run.log\"},{\"target\":\"lifecycle_launch_binding\",\"passed\":9,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\lifecycle_launch_binding-run.log\"},{\"target\":\"lifecycle_native_runtime\",\"passed\":2,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\lifecycle_native_runtime-run.log\"},{\"target\":\"lifecycle_vector_runtime\",\"passed\":13,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\"}],\"passed\":69.0,\"failed\":0.0,\"ignored\":3.0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-lf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\",\"scope\":\"Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.\"}\n"
+        }
+      },
+      "nativeLogSha256": {
+        "runtime_assets_unit": "5ec4d4d7985a756fc1778057c78610c7c7ff42f263c92b77a0d364b0de011fb2",
+        "native_runtime_unit": "c532c02da4509c8da1c22eda4e7502fcc89d537e9a710909e9803ad64f9994f2",
+        "chat_runtime_unit": "b08ca841a85d5e9fee4180496b66714c4eeee03af22b71f0ffa163c23c467b2f",
+        "lifecycle_asset_use": "c8a068bd4584d2270bc3a3a9b1f37f3e3078c87c774828e1fceaffe144c10cfc",
+        "lifecycle_launch_binding": "a4de84e355cf25d69bb7425c674f2e57ba18fe41af0f1875a1cfb4403435f011",
+        "lifecycle_native_runtime": "50d3a7022496b64cdd96e6a26620eea6c1ec60cc72243d79aa7cfaae7d06d89d",
+        "lifecycle_vector_runtime": "4a6350bd61d5308b0d1a1663866feb3be29c3063869afbe32d88606e614df9d8"
+      }
+    },
+    {
+      "label": "pwsh-crlf-parse-test-lumina-cache-install",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-crlf-test-lumina-cache-install.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-crlf-parse-test-runtime-assets-summary-r1",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-crlf-test-runtime-assets-summary-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-crlf-parse-invoke-runtime-assets-prebuilt-r1",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-Command",
+        "$errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile('E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-crlf-invoke-runtime-assets-prebuilt-r1.ps1', [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { throw ($errors | Out-String) }; 'PARSE_PASS'"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-crlf-summary-fixtures",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-crlf-test-runtime-assets-summary-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-crlf-test-lumina-cache-install.ps1",
+        "-SupportPath",
+        "D:\\Project\\goose\\bin\\test-lumina-real-text.ps1"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "pwsh-crlf-suite",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-crlf-invoke-runtime-assets-prebuilt-r1.ps1",
+        "-ScriptPath",
+        "E:\\Codex\\temp\\runtime-assets-powershell-r3\\pwsh-crlf-test-lumina-cache-install.ps1",
+        "-RepositoryRoot",
+        "D:\\Project\\goose",
+        "-ApplicationRoot",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app",
+        "-ExecutableManifest",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\executables.json",
+        "-ReportPath",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-report.json"
+      ],
+      "exitCode": 0,
+      "version": "7.6.9",
+      "summary": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "ruleId": "LMCI000",
+        "exitCode": 0,
+        "target": "runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime",
+        "targets": [
+          {
+            "target": "runtime_assets_unit",
+            "passed": 16,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\runtime_assets_unit-run.log"
+          },
+          {
+            "target": "native_runtime_unit",
+            "passed": 12,
+            "failed": 0,
+            "ignored": 2,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\native_runtime_unit-run.log"
+          },
+          {
+            "target": "chat_runtime_unit",
+            "passed": 10,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\chat_runtime_unit-run.log"
+          },
+          {
+            "target": "lifecycle_asset_use",
+            "passed": 7,
+            "failed": 0,
+            "ignored": 1,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\lifecycle_asset_use-run.log"
+          },
+          {
+            "target": "lifecycle_launch_binding",
+            "passed": 9,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\lifecycle_launch_binding-run.log"
+          },
+          {
+            "target": "lifecycle_native_runtime",
+            "passed": 2,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\lifecycle_native_runtime-run.log"
+          },
+          {
+            "target": "lifecycle_vector_runtime",
+            "passed": 13,
+            "failed": 0,
+            "ignored": 0,
+            "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log"
+          }
+        ],
+        "passed": 69.0,
+        "failed": 0.0,
+        "ignored": 3.0,
+        "logPath": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-app\\runtime-assets-app\\lifecycle_vector_runtime-run.log",
+        "scope": "Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.",
+        "report": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\pwsh-crlf-report.json",
+          "sha256": "f584dd6eb9d5fa06d266870b54126a9b5ec3a81662d5797939561051e820bf2f",
+          "content": "{\"schemaVersion\":1,\"status\":\"PASS\",\"ruleId\":\"LMCI000\",\"exitCode\":0,\"target\":\"runtime_assets_unit,native_runtime_unit,chat_runtime_unit,lifecycle_asset_use,lifecycle_launch_binding,lifecycle_native_runtime,lifecycle_vector_runtime\",\"targets\":[{\"target\":\"runtime_assets_unit\",\"passed\":16,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\runtime_assets_unit-run.log\"},{\"target\":\"native_runtime_unit\",\"passed\":12,\"failed\":0,\"ignored\":2,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\native_runtime_unit-run.log\"},{\"target\":\"chat_runtime_unit\",\"passed\":10,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\chat_runtime_unit-run.log\"},{\"target\":\"lifecycle_asset_use\",\"passed\":7,\"failed\":0,\"ignored\":1,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\lifecycle_asset_use-run.log\"},{\"target\":\"lifecycle_launch_binding\",\"passed\":9,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\lifecycle_launch_binding-run.log\"},{\"target\":\"lifecycle_native_runtime\",\"passed\":2,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\lifecycle_native_runtime-run.log\"},{\"target\":\"lifecycle_vector_runtime\",\"passed\":13,\"failed\":0,\"ignored\":0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\"}],\"passed\":69.0,\"failed\":0.0,\"ignored\":3.0,\"logPath\":\"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\runtime-assets-powershell-r3\\\\pwsh-crlf-app\\\\runtime-assets-app\\\\lifecycle_vector_runtime-run.log\",\"scope\":\"Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.\"}\n"
+        }
+      },
+      "nativeLogSha256": {
+        "runtime_assets_unit": "c1dabf301903bdc3ed332b79cd2184739063d19b7702cb5bfcd60145fedbbe56",
+        "native_runtime_unit": "838ac95ee31192693125e8737290948da32c466c0c42f935a21cffc2a102b64a",
+        "chat_runtime_unit": "5bb22385a7707e6b4853d70bfb462e4217b4ab94d1fa8cf37d19c0f4047300fc",
+        "lifecycle_asset_use": "785ddb1c76d0fd5242a772a44213c2f019ed204e3b7a2a54e27992dd381d5df2",
+        "lifecycle_launch_binding": "1ccb6e5bcad42483dbf211a7891be076b97e7cf599165ae67bd4f412a82ccc97",
+        "lifecycle_native_runtime": "d1c98be1891ba072f09dd2e8677a39b8d914be94e4789d7db47b44025304f58f",
+        "lifecycle_vector_runtime": "f54507466cb4e85d44a32efe106db8ad83edadcc56faec33c54a5997d82f62ad"
+      }
+    }
+  ],
+  "gitHead": "ba4a1daf4e495ed084a815a75cdce0e547e0ecca",
+  "expected": {
+    "runtime_assets_unit": {
+      "passed": 16,
+      "failed": 0,
+      "ignored": 0
+    },
+    "native_runtime_unit": {
+      "passed": 12,
+      "failed": 0,
+      "ignored": 2
+    },
+    "chat_runtime_unit": {
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0
+    },
+    "lifecycle_asset_use": {
+      "passed": 7,
+      "failed": 0,
+      "ignored": 1
+    },
+    "lifecycle_launch_binding": {
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0
+    },
+    "lifecycle_native_runtime": {
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    },
+    "lifecycle_vector_runtime": {
+      "passed": 13,
+      "failed": 0,
+      "ignored": 0
+    }
+  },
+  "executableManifestSha256": "c4744beb6fd899ee68496807ce9be42dc65a8f41b4496c0ef393a7a0f6bd345e",
+  "buildLog": "target\\lifecycle-validation\\runtime-assets-tests-r4.log",
+  "buildLogSha256": "438359024196cc13b536893410ef8235b9b38877c5ba5775bb1e789e2adf4d2a",
+  "namedTests": {
+    "runtime_assets_unit": [
+      "runtime_assets::tests::backend_destructor_runs_while_asset_guard_is_still_alive",
+      "runtime_assets::tests::backend_load_failure_releases_all_protected_assets",
+      "runtime_assets::tests::cancelling_load_awaiter_keeps_assets_until_blocking_backend_really_returns",
+      "runtime_assets::tests::draft_assets_change_only_the_mlx_cache_identity",
+      "runtime_assets::tests::generation_overrides_keep_the_loaded_model_cache_identity",
+      "runtime_assets::tests::invalid_native_metadata_fails_before_backend_and_releases_guards",
+      "runtime_assets::tests::llama_loading_ignores_unused_mlx_non_gguf_and_missing_drafts",
+      "runtime_assets::tests::missing_native_sibling_fails_before_backend_and_releases_initial_guards",
+      "runtime_assets::tests::mlx_wrapper_and_generation_draft_guard_protect_their_own_directories",
+      "runtime_assets::tests::model_cache_identity_changes_for_asset_and_backend_loading_inputs",
+      "runtime_assets::tests::native_loading_protects_unregistered_main_siblings",
+      "runtime_assets::tests::native_single_file_split_count_does_not_require_other_split_fields",
+      "runtime_assets::tests::native_split_scan_does_not_apply_the_managed_header_budget",
+      "runtime_assets::tests::native_split_scan_matches_c_string_keys_when_discovering_siblings",
+      "runtime_assets::tests::native_split_scan_skips_non_utf8_and_large_metadata_before_locking_siblings",
+      "runtime_assets::tests::split_looking_filename_without_split_metadata_does_not_lock_a_sibling"
+    ],
+    "native_runtime_unit": [
+      "lifecycle::native_runtime::process_tests::argument_builder_rejects_unmeasured_split_main_and_unbound_parameters",
+      "lifecycle::native_runtime::process_tests::binary_identity_and_single_store_runtime_permit_are_enforced",
+      "lifecycle::native_runtime::process_tests::cancelled_blocking_preparation_drops_its_eventual_child_owner",
+      "lifecycle::native_runtime::process_tests::cancelling_a_waiter_does_not_release_or_poison_the_active_operation",
+      "lifecycle::native_runtime::process_tests::error_unwind_reaps_child_and_only_then_releases_runtime_assets",
+      "lifecycle::native_runtime::process_tests::explicit_stop_reaps_child_before_releasing_assets_and_permit",
+      "lifecycle::native_runtime::process_tests::incomplete_native_operation_requires_a_new_runtime",
+      "lifecycle::native_runtime::process_tests::inline_template_digest_is_verified_before_native_execution",
+      "lifecycle::native_runtime::process_tests::measured_text_arguments_disable_automatic_fit_and_unbudgeted_caches",
+      "lifecycle::native_runtime::process_tests::preparation_cancellation_is_visible_to_the_blocking_owner",
+      "lifecycle::native_runtime::process_tests::vision_arguments_bind_projector_encoder_limits_and_microbatch",
+      "lifecycle::native_runtime::process_tests::windows_parent_termination_closes_job_and_reaps_child"
+    ],
+    "chat_runtime_unit": [
+      "lifecycle::chat_runtime::tests::actual_png_bytes_are_frozen_and_hashed_in_the_only_request_body",
+      "lifecycle::chat_runtime::tests::adapters_for_one_owner_share_capacity_before_image_preflight",
+      "lifecycle::chat_runtime::tests::completion_model_usage_choice_and_tool_integrity_are_checked",
+      "lifecycle::chat_runtime::tests::excessive_zero_overflow_or_wrong_preflight_never_generates",
+      "lifecycle::chat_runtime::tests::frozen_body_is_identical_for_native_preflight_and_generation",
+      "lifecycle::chat_runtime::tests::historical_multi_image_non_png_and_unadmitted_vision_never_reach_http",
+      "lifecycle::chat_runtime::tests::invalid_tool_history_capability_json_and_text_budgets_send_no_http",
+      "lifecycle::chat_runtime::tests::native_errors_and_oversized_responses_are_not_generations",
+      "lifecycle::chat_runtime::tests::timeout_or_dropped_future_does_not_send_a_generation_after_preflight",
+      "lifecycle::chat_runtime::tests::tool_history_uses_function_json_and_resolved_call_ids"
+    ],
+    "lifecycle_asset_use": [
+      "another_process_holds_assets_until_normal_or_forced_process_exit",
+      "exclusive_conflict_fails_without_leaking_earlier_shared_locks",
+      "hard_linked_external_files_are_accepted_and_lock_the_same_asset",
+      "invalid_later_asset_releases_files_already_acquired",
+      "shared_guards_canonicalize_deduplicate_sort_and_release_on_last_drop",
+      "symbolic_directory_aliases_resolve_to_the_original_asset",
+      "windows_read_handles_prevent_write_rename_and_delete_until_drop"
+    ],
+    "lifecycle_launch_binding": [
+      "admitted_launch_cannot_switch_execution_mode_or_use_an_unconstrained_adapter",
+      "complete_workload_cannot_be_omitted_or_increase_caches_parallelism_and_rollback",
+      "context_batch_precision_threads_and_gpu_cannot_drift_after_admission",
+      "copied_unmeasured_workload_and_speculative_components_are_not_a_launch_approval",
+      "historical_contract_without_admission_retains_identity_only_binding",
+      "paired_vision_plan_prepared_through_repository_accepts_exact_cpu_helper_launch",
+      "recorded_text_v2_digest_and_complete_launch_binding_remain_compatible",
+      "self_consistent_manifest_cannot_relabel_an_unmeasured_runtime_or_resource_profile",
+      "vision_input_and_encoder_execution_limits_are_bound_even_for_text_only_requests"
+    ],
+    "lifecycle_native_runtime": [
+      "unregistered_launch_never_creates_logs_or_spawns_a_binary",
+      "zero_startup_timeout_is_rejected_before_preparation"
+    ],
+    "lifecycle_vector_runtime": [
+      "causal_last_pooling_accepts_511_tokens_below_the_native_context_boundary",
+      "constructor_binds_manifest_runtime_capability_and_exact_specialized_parameters",
+      "embedding_uses_real_batch_endpoint_and_restores_input_index_order",
+      "endpoint_requires_literal_loopback_matching_port_and_no_hidden_target",
+      "invalid_inputs_are_rejected_before_any_http_request",
+      "invalid_or_excessive_token_counts_never_reach_inference",
+      "malformed_embedding_protocol_indices_dimensions_and_values_are_rejected",
+      "request_deadline_and_dropped_future_stop_further_batch_requests",
+      "rerank_pair_budget_includes_all_three_native_special_tokens",
+      "rerank_rejects_missing_duplicate_out_of_range_unsorted_and_nonfinite_scores",
+      "rerank_rejects_the_native_missing_embedding_sentinel",
+      "reranker_preserves_raw_negative_logits_and_complete_indices",
+      "transport_rejects_redirect_http_failure_non_json_and_oversized_bodies"
+    ]
+  },
+  "finishedAt": "2026-11-12T06:20:54.207026+00:00",
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-powershell-r3\\evidence.json",
+    "sha256": "137dec63a5eeed599a36f763370c0f122d127c3bb41e327464c1e2659597f5a1"
+  }
+}

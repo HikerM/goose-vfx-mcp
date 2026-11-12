@@ -144,6 +144,8 @@ mod imp {
                 streamed_response,
             } = if let Some(draft_model_path) = &request.draft_model_path {
                 if matches!(loaded.model.model_mut(), Model::Gemma4(_)) {
+                    let _draft_assets = crate::runtime_assets::acquire_mlx_assets(draft_model_path)
+                        .map_err(mlx_error)?;
                     let weights_stream = Stream::new_with_device(&Device::new(DeviceType::Cpu, 0));
                     let mut assistant =
                         load_gemma4_assistant_model(draft_model_path, &stream, &weights_stream)

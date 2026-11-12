@@ -15,6 +15,7 @@ mod mlx;
 pub(crate) mod multimodal;
 #[cfg(feature = "mlx")]
 mod native_tool_parsing;
+mod runtime_assets;
 pub(crate) mod thinking_output;
 #[cfg(feature = "mlx")]
 mod tool_emulation;
@@ -23,9 +24,8 @@ mod tool_parsing;
 use anyhow::Result;
 use async_stream::try_stream;
 use async_trait::async_trait;
-use backend::{BackendLoadedModel, LocalInferenceBackend};
+use backend::LocalInferenceBackend;
 use llamacpp::{LlamaCppBackend, LLAMACPP_BACKEND_ID};
-use local_model_registry::ChatTemplate;
 use lumina_provider_types::base::{MessageStream, Provider, ProviderDescriptor, ProviderMetadata};
 use lumina_provider_types::conversation::message::{
     Message, MessageContent, SystemNotificationType,
@@ -37,6 +37,7 @@ use lumina_provider_types::model::ModelConfig;
 use lumina_provider_types::request_log::{start_log, LoggerHandleExt, RequestLogHandle};
 use mlx::{MlxBackend, MLX_BACKEND_ID};
 use rmcp::model::Tool;
+use runtime_assets::LoadedModelHandle;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -54,7 +55,7 @@ struct ModelSlot {
 enum ModelSlotState {
     Empty,
     Loading,
-    Loaded(Box<dyn BackendLoadedModel>),
+    Loaded(LoadedModelHandle),
 }
 
 impl ModelSlot {
@@ -70,20 +71,37 @@ impl ModelSlot {
 struct ModelCacheKey {
     backend_id: &'static str,
     model_id: String,
-    chat_template: ChatTemplate,
+    load_identity: String,
 }
 
 impl ModelCacheKey {
     fn new(
         backend_id: &'static str,
         model_id: impl Into<String>,
-        chat_template: ChatTemplate,
-    ) -> Self {
-        Self {
+        resolved: &ResolvedModelPaths,
+        settings: &local_model_registry::ModelSettings,
+    ) -> Result<Self> {
+        let identity = json!({
+            "model": resolved.model_path,
+            "shards": resolved.shard_paths,
+            "projector": resolved.mmproj_path,
+            "draft": (backend_id == MLX_BACKEND_ID).then_some(&resolved.draft_model_path),
+            "draft_shards": (backend_id == MLX_BACKEND_ID).then_some(&resolved.draft_shard_paths),
+            "context": settings.context_size,
+            "batch": settings.n_batch,
+            "gpu_layers": settings.n_gpu_layers,
+            "threads": settings.n_threads,
+            "mlock": settings.use_mlock,
+            "flash_attention": settings.flash_attention,
+            "chat_template": settings.chat_template,
+        });
+        Ok(Self {
             backend_id,
             model_id: model_id.into(),
-            chat_template,
-        }
+            load_identity: lifecycle::Sha256Digest::of_serializable(&identity)?
+                .as_str()
+                .to_owned(),
+        })
     }
 }
 
@@ -179,8 +197,10 @@ pub async fn is_model_loaded(model_name: &str) -> Result<bool, ProviderError> {
     let key = ModelCacheKey::new(
         backend.id(),
         model_name.to_string(),
-        resolved.settings.chat_template,
-    );
+        &resolved,
+        &resolved.settings,
+    )
+    .map_err(registry_provider_error)?;
     let Some(slot) = runtime.model_slot(&key) else {
         return Ok(false);
     };
@@ -245,11 +265,13 @@ pub const LOCAL_LLM_MODEL_CONFIG_KEY: &str = "LOCAL_LLM_MODEL";
 #[derive(Clone)]
 pub(crate) struct ResolvedModelPaths {
     pub model_path: PathBuf,
+    pub shard_paths: Vec<PathBuf>,
     pub context_limit: usize,
     pub settings: crate::local_model_registry::ModelSettings,
     pub mmproj_path: Option<PathBuf>,
     pub backend_id: Option<String>,
     pub draft_model_path: Option<PathBuf>,
+    pub draft_shard_paths: Vec<PathBuf>,
 }
 
 fn registry_provider_error(error: anyhow::Error) -> ProviderError {
@@ -283,16 +305,29 @@ fn resolve_model_path(model_id: &str) -> Result<Option<ResolvedModelPaths>> {
                 .flatten()
         })
         .filter(|draft_model| draft_model != model_id);
-    let draft_model_path = draft_model
-        .as_deref()
-        .and_then(|id| registry.get_model(id).map(|entry| entry.local_path.clone()));
+    let draft_entry = draft_model.as_deref().and_then(|id| registry.get_model(id));
+    let draft_model_path = draft_entry.map(|entry| entry.local_path.clone());
     Ok(Some(ResolvedModelPaths {
         model_path: entry.local_path.clone(),
+        shard_paths: entry
+            .shard_files
+            .iter()
+            .map(|shard| shard.local_path.clone())
+            .collect(),
         context_limit: ctx,
         settings,
         mmproj_path,
         backend_id,
         draft_model_path,
+        draft_shard_paths: draft_entry
+            .map(|entry| {
+                entry
+                    .shard_files
+                    .iter()
+                    .map(|shard| shard.local_path.clone())
+                    .collect()
+            })
+            .unwrap_or_default(),
     }))
 }
 
@@ -678,8 +713,10 @@ impl Provider for LocalInferenceProvider {
         let cache_key = ModelCacheKey::new(
             backend.id(),
             model_config.model_name.clone(),
-            model_settings.chat_template.clone(),
-        );
+            &resolved,
+            &model_settings,
+        )
+        .map_err(registry_provider_error)?;
         let model_slot = self.runtime.get_or_create_model_slot(cache_key.clone());
         let runtime = self.runtime.clone();
 
@@ -775,7 +812,8 @@ impl Provider for LocalInferenceProvider {
                         let backend_for_load = backend.clone();
                         let load_started = std::time::Instant::now();
                         let loaded = match tokio::task::spawn_blocking(move || {
-                            backend_for_load.load_model(
+                            LoadedModelHandle::load(
+                                backend_for_load.as_ref(),
                                 &model_id,
                                 &resolved_for_load,
                                 &settings_for_load,

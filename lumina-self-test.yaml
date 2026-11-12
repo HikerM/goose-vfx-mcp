@@ -30,7 +30,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, model-cache-install, model-assets"
+    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, model-cache-install, model-assets, runtime-assets"
 
   - key: test_depth
     input_type: string
@@ -57,7 +57,13 @@ parameters:
     description: "Clean up test artifacts after completion"
 
 instructions: |
-  {% if test_phases == "model-assets" %}
+  {% if test_phases == "runtime-assets" %}
+  Validate runtime asset lifetime, frozen launch binding and vector adapter protocols through
+  the actual developer shell tool. Invoke the fixed entry exactly once and summarize its JSON,
+  including report read-back and individual target counts. The ignored subprocess helper is
+  exercised by parent tests, not counted as passed. These tests are not real inference or
+  capability READY acceptance. Preserve inherited D:/E: caches and temporary directories.
+  {% elif test_phases == "model-assets" %}
   Validate legacy registry preservation and bounded vision installation admission through
   the actual developer shell tool. Invoke the fixed validation entry exactly once and
   summarize its returned JSON, including the report read-back and individual target counts.
@@ -167,7 +173,18 @@ extensions:
     name: extensionmanager
 
 prompt: |
-  {% if test_phases == "model-assets" %}
+  {% if test_phases == "runtime-assets" %}
+  Execute the runtime asset, launch binding and vector protocol tests with your developer shell tool.
+  Your first action must be the shell call below. Work only in D:/Project/goose, preserve
+  inherited D:/E: caches and temporary directories, and do not delegate or create worktrees.
+  Run exactly once `powershell.exe -NoProfile -File bin\test-lumina-cache-install.ps1 -Suite runtime-assets -ReportPath "{{ workspace_dir }}/runtime_assets_validation.json"`.
+  Set timeout_secs to 600. Do not add directory inspection, pipes, redirection, or manual Cargo calls.
+  Summarize only the returned JSON: status, per-target and total passed/failed/ignored counts,
+  scope, and report path. A nonzero exit, timeout, missing stdout, truncated output or tool error
+  is FAIL. After failure, stop with the actual failure summary; do not retry or manufacture output.
+  The subprocess helper is explicitly ignored at top level and invoked by parent tests;
+  never count it as passed. Actual inference, uninstall recovery and capability READY need separate evidence.
+  {% elif test_phases == "model-assets" %}
   Execute the legacy registry and vision admission tests now using your developer shell tool.
   Your first action must be the shell call below. Work only in D:/Project/goose, preserve
   inherited D:/E: caches and temporary directories, and do not delegate or create worktrees.

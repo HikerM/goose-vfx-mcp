@@ -572,6 +572,9 @@ pub enum RuntimeParameters {
         kv_value_type: String,
         batch_size: u32,
         flash_attention: bool,
+        /// Admitted launches bind the full execution workload; legacy launches may omit it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        workload: Option<super::ResourceWorkload>,
     },
     Whisper {
         cpu_threads: u32,
@@ -595,6 +598,8 @@ pub enum RuntimeParameters {
 }
 
 impl LaunchConfig {
+    /// Legacy manifests without admission retain identity-only validation.
+    /// An adapter must enforce the bound workload before producing runtime readiness evidence.
     pub fn validate_binding(&self, manifest: &ModelManifest) -> Result<()> {
         manifest.validate()?;
         ensure!(
@@ -631,11 +636,108 @@ impl LaunchConfig {
             actual == expected,
             "Launch component files differ from the installation"
         );
+        if let Some(admission) = &manifest.plan.admission {
+            admission.validate(&manifest.plan, manifest.plan_accepted_at)?;
+            ensure!(
+                self.runtime == super::baseline_pairing_runtime()?
+                    && matches!(self.mode, RuntimeExecutionMode::Helper { port } if port > 0),
+                "Frozen resource admission requires the measured native CPU helper runtime"
+            );
+            self.parameters.validate_resource_binding(admission)?;
+            let expected_roles = if admission.envelope.workload.vision.is_some() {
+                BTreeSet::from([ComponentRole::Main, ComponentRole::VisionProjector])
+            } else {
+                BTreeSet::from([ComponentRole::Main])
+            };
+            ensure!(
+                self.component_files
+                    .keys()
+                    .copied()
+                    .collect::<BTreeSet<_>>()
+                    == expected_roles,
+                "Frozen CPU launch does not support additional or speculative components"
+            );
+        }
         Ok(())
     }
 
     pub fn digest(&self) -> Result<Sha256Digest> {
         Sha256Digest::of_serializable(self)
+    }
+}
+
+impl RuntimeParameters {
+    fn validate_resource_binding(&self, admission: &super::PlanAdmission) -> Result<()> {
+        let Self::LlamaCpp {
+            context_length,
+            gpu_layers,
+            cpu_threads,
+            kv_key_type,
+            kv_value_type,
+            batch_size,
+            flash_attention,
+            workload,
+            ..
+        } = self
+        else {
+            bail!("Runtime parameters cannot enforce the frozen GGUF resource workload");
+        };
+        let workload = workload
+            .as_ref()
+            .context("Launch parameters are missing the complete frozen resource workload")?;
+        ensure!(
+            workload == &admission.envelope.workload,
+            "Launch resource workload differs from its frozen admission"
+        );
+        let cache_name = |kind| match kind {
+            super::ResourceCacheType::F16 => "f16",
+            super::ResourceCacheType::F32 => "f32",
+        };
+        ensure!(
+            *context_length == workload.context_tokens
+                && *batch_size == workload.batch_tokens
+                && kv_key_type == cache_name(workload.kv_key_type)
+                && kv_value_type == cache_name(workload.kv_value_type),
+            "Launch context, batch or KV precision differs from its frozen workload"
+        );
+        // Under target/lifecycle-validation, native CPU auto resolved to enabled:
+        // m1-native-resource-checks-20261101-r2/runtime.redacted.log:205 and
+        // m1-vision-resource-checks-20261112-r{2,3}/runtime.redacted.log:214.
+        ensure!(
+            *gpu_layers == 0 && *cpu_threads == 4 && *flash_attention,
+            "Frozen CPU resource profiles require zero GPU layers, four threads and flash attention"
+        );
+        ensure!(
+            workload.batch_tokens == 512
+                && workload.parallel_sequences == 1
+                && workload.recurrent_rollback_slots == 0
+                && workload.kv_key_type == super::ResourceCacheType::F16
+                && workload.kv_value_type == super::ResourceCacheType::F16
+                && workload.prompt_cache_bytes == 0
+                && workload.context_checkpoint_slots == 0,
+            "No measured CPU launch profile supports this cache or speculative workload"
+        );
+        if let Some(vision) = &workload.vision {
+            vision.validate()?;
+            ensure!(
+                workload.context_tokens == 4096
+                    && *cpu_threads == vision.cpu_threads
+                    && admission.budget.rules_version == super::VISION_RESOURCE_RULES_VERSION
+                    && admission.envelope.evidence_id == super::VISION_RESOURCE_EVIDENCE,
+                "Vision launch has no matching measured resource profile"
+            );
+        } else {
+            // The v2 JSON predates thread and microbatch fields. Its registered r2
+            // measurement fixes both thread counts to four and microbatch to 512.
+            ensure!(
+                workload.context_tokens == 2048
+                    && admission.budget.rules_version == super::RESOURCE_RULES_VERSION
+                    && admission.envelope.evidence_id
+                        == "m1:native-resource-measurements:r2:37.02MiB-compute-0.95MiB-output-with-explicit-headroom",
+                "Text launch has no matching measured resource profile"
+            );
+        }
+        Ok(())
     }
 }
 

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-12",
+  "status": "VERIFIED_INCREMENT",
+  "scope": "Runtime asset protection, frozen native helper and chat requests, installed-generation CLI, vector protocol adapters. M3/M4 stage acceptance and capability READY remain incomplete.",
+  "tests": {
+    "passed": 202,
+    "failed": 0,
+    "ignored": 4,
+    "summaries": [
+      [
+        161,
+        0,
+        2
+      ],
+      [
+        7,
+        0,
+        1
+      ],
+      [
+        10,
+        0,
+        1
+      ],
+      [
+        9,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        13,
+        0,
+        0
+      ]
+    ],
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-assets-tests-r4.log",
+    "sha256": "438359024196cc13b536893410ef8235b9b38877c5ba5775bb1e789e2adf4d2a"
+  },
+  "clippy": {
+    "result": "PASS",
+    "command": "bin/cargo.cmd clippy -p lumina-local-inference --no-default-features --all-targets --offline --locked -- -D warnings",
+    "logSha256": "1f057d11f2d75c13e078ee547c938fdb562f6e9b7fbc01a46a308f190fd4400b",
+    "scope": "Core crate only; original vendor warnings and workspace warning debt remain."
+  },
+  "build": {
+    "result": "PASS",
+    "package": "lumina-agent-cli",
+    "cliSha256": "f70b810ce32ac215cf88999d51bfdeca47086a13f7a0d889ec5eea00ac6646be",
+    "logSha256": "7f783592c6d5a6805d991f2e40fb29d30db13572b5e2d3c5bc12276824cffce3",
+    "elapsed": "15m22s",
+    "existingWarnings": {
+      "lumina-agent": 605,
+      "lumina-agent-cli": 6
+    }
+  },
+  "relatedEvidence": [
+    "2026-11-12-m3-installed-generation.json",
+    "2026-11-12-m3-legacy-runtime-assets.json",
+    "2026-11-12-runtime-assets-powershell-gate.json",
+    "2026-11-12-selftest-runtime-assets-r1.json",
+    "2026-11-12-m4-video-direct-conv-diagnostic.json"
+  ],
+  "knownFailures": [
+    {
+      "kind": "legacy_plain_long_path",
+      "currentEvidence": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-asset-guard-r1\\evidence.json",
+      "previousBinaryEvidence": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-asset-guard-old-long-path-r1\\evidence.json",
+      "result": "Both binaries fail to open the unprefixed managed long path."
+    },
+    {
+      "kind": "legacy_qwen35_mtp_pair",
+      "evidence": "D:\\Project\\goose\\target\\lifecycle-validation\\runtime-asset-guard-r2\\evidence.json",
+      "result": "Extended path opens, but embedded engine fails on missing blk.24.ssm_conv1d.weight. New managed helper generation passed; no legacy projector success is claimed."
+    }
+  ],
+  "harnessCorrections": [
+    "Windows accepted sockets explicitly restore blocking mode; test teardown preserves the first panic.",
+    "Junction fixture uses canonical command-compatible paths; projector expectation uses canonical paths.",
+    "PowerShell prebuilt harness passes ReportPath explicitly when dot-sourcing.",
+    "Legacy text probe distinguishes writable external models from read-only published models and uses zero projector sizes for the text-only registry schema."
+  ],
+  "limitations": [
+    "macOS MLX runtime unverified on this Windows host.",
+    "Uninstall/GC and persistent cross-domain deletion coordination are not implemented by file guards.",
+    "One helper per managed store is not a global resource queue or fresh memory admission.",
+    "Windows spawn-to-job-assignment has a short non-atomic window; abrupt parent cleanup on other systems is pending.",
+    "Vector owner/resource/product integration, full tool closure and capability evidence registration remain pending."
+  ]
+}

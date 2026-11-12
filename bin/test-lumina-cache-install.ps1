@@ -3,7 +3,7 @@ param(
     [string]$RepositoryRoot,
     [string]$ApplicationRoot = $env:LUMINA_PATH_ROOT,
     [string]$ReportPath,
-    [ValidateSet('cache-install', 'model-assets')][string]$Suite = 'cache-install'
+    [ValidateSet('cache-install', 'model-assets', 'runtime-assets')][string]$Suite = 'cache-install'
 )
 
 function Get-CacheInstallSummary {
@@ -14,10 +14,22 @@ function Get-CacheInstallSummary {
 
     $summaries = @(Get-LifecycleTestResults -Text $Text)
     $expectedIgnored = 0
-    if ($Target -eq 'legacy_registry') {
-        $expectedIgnored = 1
-        if ($Text -notmatch '(?m)^test legacy_registry_child \.\.\. ignored, subprocess helper for legacy registry locking and CAS tests\r?$') {
-            throw (New-RealTextException 'LMCI004' 'The ignored registry helper must be identified explicitly.')
+    $helpers = @{
+        legacy_registry = 'legacy_registry_child ... ignored, subprocess helper for legacy registry locking and CAS tests'
+        lifecycle_asset_use = 'runtime_asset_guard_child ... ignored, subprocess helper for runtime asset lifetime tests'
+        native_runtime_unit = @(
+            'lifecycle::native_runtime::process_tests::child_holds_liveness_lock ... ignored, controlled child process for owner lifetime tests',
+            'lifecycle::native_runtime::process_tests::owner_parent_holds_child ... ignored, controlled parent process for abrupt-exit job tests'
+        )
+    }
+    if ($helpers.ContainsKey($Target)) {
+        $expectedHelpers = @($helpers[$Target])
+        $expectedIgnored = $expectedHelpers.Count
+        foreach ($helper in $expectedHelpers) {
+            $helperPattern = '(?m)^test ' + [regex]::Escape($helper) + '\r?$'
+            if ($Text -notmatch $helperPattern) {
+                throw (New-RealTextException 'LMCI004' 'The ignored subprocess helper must be identified explicitly.')
+            }
         }
     }
     if ($summaries.Count -ne 1 -or $summaries[0].Result -ne 'ok' -or
@@ -51,10 +63,22 @@ function Invoke-CacheInstallValidation {
         $targets = @('legacy_registry', 'lifecycle_vision_resources')
         $scope = 'Legacy preservation and bounded vision admission. The ignored subprocess helper is exercised by parent tests, not counted as passed. Real installation and Runtime READY need separate evidence.'
     }
+    if ($SelectedSuite -eq 'runtime-assets') {
+        $targets = @('runtime_assets_unit', 'native_runtime_unit', 'chat_runtime_unit',
+            'lifecycle_asset_use', 'lifecycle_launch_binding', 'lifecycle_native_runtime', 'lifecycle_vector_runtime')
+        $scope = 'Runtime asset lifetime, frozen launch binding and vector adapter protocol tests. The subprocess helper is exercised by parent tests, not counted as passed. Real inference and capability READY require separate evidence.'
+    }
     $results = @()
+    $unitFilters = @{
+        runtime_assets_unit = 'runtime_assets::tests'
+        native_runtime_unit = 'lifecycle::native_runtime::process_tests'
+        chat_runtime_unit = 'lifecycle::chat_runtime::tests'
+    }
     foreach ($target in $targets) {
+        $selection = @('--test', $target)
+        if ($unitFilters.ContainsKey($target)) { $selection = @('--lib', $unitFilters[$target]) }
         $arguments = @('test', '--quiet', '-p', 'lumina-local-inference', '--no-default-features',
-            '--offline', '--locked', '--test', $target, '--', '--format=pretty')
+            '--offline', '--locked') + $selection + @('--', '--format=pretty')
         $execution = Invoke-LifecycleCargo -Root $rootPath -ChildRoot $child -LogName ($target + '-run.log') -CargoArguments $arguments
         $summary = Get-CacheInstallSummary -Text (Get-RealTextUtf8 -LiteralPath $execution.LogPath) -Target $target
         $results += [pscustomobject]@{

@@ -1,0 +1,485 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-12",
+  "status": "MEASURED_NATIVE_PROFILES",
+  "summary": {
+    "status": "PASS",
+    "scope": "Measured native vector profiles; no admission certificate, managed product runtime, or READY claim.",
+    "environment": {
+      "operatingSystem": "Microsoft Windows 11 专业版",
+      "recordedAt": "2026-11-12T06:06:07.0861905Z",
+      "osVersion": "10.0.26200",
+      "totalVisibleMemoryKiB": 100492744,
+      "processors": [
+        {
+          "Name": "Intel(R) Core(TM) i7-14700F",
+          "NumberOfCores": 20,
+          "NumberOfLogicalProcessors": 28
+        }
+      ]
+    },
+    "scriptPath": "target\\lifecycle-validation\\probe-m4-vector-resources-r1.py",
+    "scriptSha256": "401a828c79f870e82804b643bba5f1148b713420e742e07a50624fb3c6978020",
+    "profiles": [
+      {
+        "task": "embedding",
+        "status": "PASS",
+        "resultFile": "embedding/result.json",
+        "resultSha256": "38a3df2c3e18e5fb1e527e43d92257d019ab8fd97399519dd8477e573771eddf",
+        "sampleCount": 719,
+        "observedMaxSampleGapSeconds": 0.07800000000133878,
+        "peakWorkingSetBytes": 628539392,
+        "sampledPeakPrivateBytes": 208420864,
+        "osPeakCommitBytes": 208420864,
+        "phases": {
+          "loading": {
+            "sampleCount": 13,
+            "WorkingSetSize": 596021248,
+            "PrivateUsage": 202887168,
+            "PeakWorkingSetSize": 596021248,
+            "PeakPagefileUsage": 202895360
+          },
+          "max_token_item_batch": {
+            "sampleCount": 668,
+            "WorkingSetSize": 628539392,
+            "PrivateUsage": 208420864,
+            "PeakWorkingSetSize": 628539392,
+            "PeakPagefileUsage": 208420864
+          },
+          "post_workload_idle": {
+            "sampleCount": 19,
+            "WorkingSetSize": 628539392,
+            "PrivateUsage": 208420864,
+            "PeakWorkingSetSize": 628539392,
+            "PeakPagefileUsage": 208420864
+          },
+          "semantic_batch": {
+            "sampleCount": 17,
+            "WorkingSetSize": 599265280,
+            "PrivateUsage": 203894784,
+            "PeakWorkingSetSize": 599265280,
+            "PeakPagefileUsage": 203894784
+          },
+          "token_boundary_setup": {
+            "sampleCount": 2,
+            "WorkingSetSize": 599605248,
+            "PrivateUsage": 204234752,
+            "PeakWorkingSetSize": 599605248,
+            "PeakPagefileUsage": 204242944
+          }
+        },
+        "httpExchangeCount": 52,
+        "helperWaitCompleted": true,
+        "helperExitCode": 1,
+        "cases": [
+          {
+            "kind": "bilingual_semantics",
+            "query": "What is the capital of France?",
+            "expectedTopIndex": 0,
+            "cosineScores": [
+              0.7957121212074387,
+              0.20150020395912815,
+              0.23181388697203273,
+              0.3281694202821771,
+              0.27420961366646585,
+              0.3412155459675707
+            ],
+            "passed": true
+          },
+          {
+            "kind": "bilingual_semantics",
+            "query": "How can I arrange a Python list in ascending order?",
+            "expectedTopIndex": 1,
+            "cosineScores": [
+              0.1749329297893945,
+              0.8309150094621989,
+              0.13169324589234438,
+              0.1869419074636089,
+              0.24285655537713133,
+              0.19635220460719363
+            ],
+            "passed": true
+          },
+          {
+            "kind": "bilingual_semantics",
+            "query": "植物怎样利用太阳能制造养分？",
+            "expectedTopIndex": 2,
+            "cosineScores": [
+              0.12023817199030394,
+              0.2030369603249741,
+              0.59910380658687,
+              0.29579256134062315,
+              0.28599988721286407,
+              0.26218998819561995
+            ],
+            "passed": true
+          },
+          {
+            "kind": "max_token_item_batch",
+            "items": 16,
+            "tokensPerItem": [
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511,
+              511
+            ],
+            "inputBytes": 16320,
+            "passed": true
+          },
+          {
+            "kind": "token_boundary_rejection",
+            "tokens": 512,
+            "httpStatus": 400,
+            "passed": true
+          }
+        ]
+      },
+      {
+        "task": "reranker",
+        "status": "PASS",
+        "resultFile": "reranker/result.json",
+        "resultSha256": "5f79dcacb915e44469151f70901d4e460a34644b60ca14c3bb2cd4109c3c097f",
+        "sampleCount": 303,
+        "observedMaxSampleGapSeconds": 0.07800000000133878,
+        "peakWorkingSetBytes": 542519296,
+        "sampledPeakPrivateBytes": 418484224,
+        "osPeakCommitBytes": 418492416,
+        "phases": {
+          "loading": {
+            "sampleCount": 24,
+            "WorkingSetSize": 461545472,
+            "PrivateUsage": 409985024,
+            "PeakWorkingSetSize": 464003072,
+            "PeakPagefileUsage": 409993216
+          },
+          "max_token_item_batch": {
+            "sampleCount": 240,
+            "WorkingSetSize": 542502912,
+            "PrivateUsage": 418484224,
+            "PeakWorkingSetSize": 542502912,
+            "PeakPagefileUsage": 418492416
+          },
+          "post_workload_idle": {
+            "sampleCount": 13,
+            "WorkingSetSize": 542519296,
+            "PrivateUsage": 418484224,
+            "PeakWorkingSetSize": 542519296,
+            "PeakPagefileUsage": 418492416
+          },
+          "semantic_batch": {
+            "sampleCount": 25,
+            "WorkingSetSize": 521793536,
+            "PrivateUsage": 414097408,
+            "PeakWorkingSetSize": 521793536,
+            "PeakPagefileUsage": 414105600
+          },
+          "token_boundary_setup": {
+            "sampleCount": 1,
+            "WorkingSetSize": 521801728,
+            "PrivateUsage": 414105600,
+            "PeakWorkingSetSize": 521801728,
+            "PeakPagefileUsage": 414113792
+          }
+        },
+        "httpExchangeCount": 50,
+        "helperWaitCompleted": true,
+        "helperExitCode": 1,
+        "cases": [
+          {
+            "kind": "bilingual_semantics",
+            "query": "What is the capital of France?",
+            "expectedTopIndex": 0,
+            "scores": [
+              {
+                "index": 0,
+                "relevance_score": 7.2738847732543945
+              },
+              {
+                "index": 5,
+                "relevance_score": -10.828600883483887
+              },
+              {
+                "index": 1,
+                "relevance_score": -10.950065612792969
+              },
+              {
+                "index": 3,
+                "relevance_score": -11.00072193145752
+              },
+              {
+                "index": 2,
+                "relevance_score": -11.001511573791504
+              },
+              {
+                "index": 4,
+                "relevance_score": -11.006195068359375
+              }
+            ],
+            "passed": true
+          },
+          {
+            "kind": "bilingual_semantics",
+            "query": "How can I arrange a Python list in ascending order?",
+            "expectedTopIndex": 1,
+            "scores": [
+              {
+                "index": 1,
+                "relevance_score": 0.31998512148857117
+              },
+              {
+                "index": 0,
+                "relevance_score": -10.967960357666016
+              },
+              {
+                "index": 3,
+                "relevance_score": -11.0033540725708
+              },
+              {
+                "index": 2,
+                "relevance_score": -11.007675170898438
+              },
+              {
+                "index": 5,
+                "relevance_score": -11.008962631225586
+              },
+              {
+                "index": 4,
+                "relevance_score": -11.009624481201172
+              }
+            ],
+            "passed": true
+          },
+          {
+            "kind": "bilingual_semantics",
+            "query": "植物怎样利用太阳能制造养分？",
+            "expectedTopIndex": 2,
+            "scores": [
+              {
+                "index": 2,
+                "relevance_score": -1.02392578125
+              },
+              {
+                "index": 4,
+                "relevance_score": -10.953254699707031
+              },
+              {
+                "index": 1,
+                "relevance_score": -10.973637580871582
+              },
+              {
+                "index": 5,
+                "relevance_score": -10.994071006774902
+              },
+              {
+                "index": 3,
+                "relevance_score": -10.996922492980957
+              },
+              {
+                "index": 0,
+                "relevance_score": -11.008350372314453
+              }
+            ],
+            "passed": true
+          },
+          {
+            "kind": "max_token_item_batch",
+            "items": 16,
+            "pairTokens": [
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512,
+              512
+            ],
+            "inputBytes": 16229,
+            "passed": true
+          },
+          {
+            "kind": "token_boundary_rejection",
+            "pairTokens": 513,
+            "httpStatus": 500,
+            "passed": true
+          }
+        ]
+      }
+    ],
+    "integrationRequirements": [
+      "Bind the explicit measured no-cache, fit-off, spec-none, F16 K/V and flash-on flags into production Specialized parameters and LaunchConfig identity.",
+      "Use conservative additional memory margins; native buffer logs and OS peaks are observations, not a universal bound.",
+      "Keep BGE KV at zero; account separately for CPU_REPACK and compute/output buffers.",
+      "Validate managed owner installation, launch, stop and asset locks separately; Python direct protocol probes do not certify them."
+    ],
+    "samplingNote": "Requested interval 50 ms; actual timer scheduling can delay samples. OS cumulative peak counters come from the same child process handle. Peak commit is not labeled sampled private peak.",
+    "integrityVerified": true,
+    "recommendationFile": "envelope-recommendation.json",
+    "sourceHashesFile": "source-hashes.json",
+    "actualFlagNote": "Per-profile result.argv is the complete executed argument vector. Both logs confirm flash_attn enabled. The named 20-case product acceptance fixture is separate and was not run here."
+  },
+  "proposedEnvelope": {
+    "status": "PROPOSED_NOT_REGISTERED",
+    "scope": "Conservative engineering allowances based on this fixed native build and the measured bounded workloads; not a universal memory upper bound or an admission certificate.",
+    "commonBindingRequirements": {
+      "contextTokens": 512,
+      "batchTokens": 512,
+      "microbatchTokens": 512,
+      "parallelSequences": 1,
+      "cpuThreads": 4,
+      "batchCpuThreads": 4,
+      "gpuLayers": 0,
+      "flashAttention": "on",
+      "cacheTypeK": "f16",
+      "cacheTypeV": "f16",
+      "promptCacheMiB": 0,
+      "contextCheckpoints": 0,
+      "cachePrompt": false,
+      "cacheIdleSlots": false,
+      "cacheReuse": 0,
+      "autoFit": false,
+      "speculativeType": "none",
+      "warmup": false,
+      "maxBatchItems": 16,
+      "maxInputBytes": 8192,
+      "maxBatchBytes": 65536
+    },
+    "profiles": [
+      {
+        "profile": "qwen3-embedding-06b-q8-v1",
+        "weightBytes": 639150592,
+        "kvCacheBytes": 58720256,
+        "recurrentCacheBytes": 0,
+        "dynamicCacheBytes": 0,
+        "computeBufferBytes": 67108864,
+        "auxiliaryBufferBytes": 268435456,
+        "proposedHostMemoryRequiredBytes": 1033415168,
+        "measuredNativeComputeMiB": 28.52,
+        "measuredNativeOutputMiB": 0.58,
+        "measuredSampledPrivatePeakBytes": 208420864,
+        "measuredOsPeakWorkingSetBytes": 628539392,
+        "reasoning": [
+          "64 MiB compute allowance is more than twice the native compute plus output report (29.10 MiB); it includes output allocation and rounding margin.",
+          "256 MiB auxiliary allowance exceeds the entire sampled process private peak of 198.765625 MiB by about 29 percent. It deliberately does not subtract KV or compute allocations from the private peak.",
+          "Full GGUF file size is charged independently even though sampled resident mapped pages are smaller. The 56 MiB KV allocation is charged separately and matches the measured native F16 K/V report."
+        ]
+      },
+      {
+        "profile": "bge-reranker-v2-m3-q4km-v1",
+        "weightBytes": 438376864,
+        "kvCacheBytes": 0,
+        "recurrentCacheBytes": 0,
+        "dynamicCacheBytes": 0,
+        "computeBufferBytes": 67108864,
+        "auxiliaryBufferBytes": 536870912,
+        "proposedHostMemoryRequiredBytes": 1042356640,
+        "measuredNativeComputeMiB": 20.51,
+        "measuredNativeOutputMiB": 0.96,
+        "measuredNativeCpuRepackMiB": 128.81,
+        "measuredSampledPrivatePeakBytes": 418484224,
+        "measuredOsPeakWorkingSetBytes": 542519296,
+        "reasoning": [
+          "64 MiB compute allowance is about three times the native compute plus output report (21.47 MiB); it includes output allocation and rounding margin.",
+          "512 MiB auxiliary allowance exceeds the entire sampled process private peak of 399.09765625 MiB by about 28 percent and covers the observed 128.81 MiB CPU_REPACK allocation. Repack is accounted within auxiliary and is not added a second time.",
+          "The full GGUF file size remains a separate weight charge; mapped-buffer log sizes are rounded and are not treated as exact file or physical allocation totals.",
+          "This fixed BERT encoder has no autoregressive KV allocation in the actual native context. Zero KV is specific to this content/profile/build; unknown encoder architectures must remain unassessed."
+        ]
+      }
+    ],
+    "limitations": [
+      "Each profile was measured once on Windows 11 x64 with an Intel Core i7-14700F and this exact helper binary. Other builds, CPU backends, platforms, model content, parameter changes or concurrency require separate evidence.",
+      "The requested sample interval was 50 ms; actual maximum interval was 78 ms. Short-lived private allocations can be missed. Cumulative OS peak working-set and peak-commit counters are retained separately.",
+      "The 16-item token-limit batch was measured; the allowed 65536-byte aggregate maximum across every possible input layout was not exhausted. Byte limits and the small response cap must remain enforced.",
+      "Runtime-owned serialization of complete operations is needed so concurrent tokenization or requests do not exceed the single-operation scope.",
+      "The 20-case product acceptance set is future validation; these native 3-query semantic results do not satisfy that separate acceptance gate."
+    ]
+  },
+  "sourceHashes": {
+    "observedAt": "2026-11-12T06:08:14.090424+00:00",
+    "observedAfterRun": true,
+    "note": "Auditable source identities for local protocol and allocator interpretation. Executed binary identity is independently verified in each result.",
+    "files": [
+      {
+        "path": "target/lifecycle-validation/probe-m4-vector-resources-r1.py",
+        "sizeBytes": 23214,
+        "sha256": "401a828c79f870e82804b643bba5f1148b713420e742e07a50624fb3c6978020"
+      },
+      {
+        "path": "crates/lumina-local-inference/src/lifecycle/vector_runtime.rs",
+        "sizeBytes": 8256,
+        "sha256": "b918570fc2b0b703f2f49ab74436bb2ad0b34f6bfada5730b5cf18e84036064b"
+      },
+      {
+        "path": "crates/lumina-local-inference/src/lifecycle/vector_runtime/binding.rs",
+        "sizeBytes": 5688,
+        "sha256": "f15355218d2421767373c9fce735d443ed6c0599367174321ced4e686a1deb11"
+      },
+      {
+        "path": "crates/lumina-local-inference/src/lifecycle/vector_runtime/http.rs",
+        "sizeBytes": 7841,
+        "sha256": "ac1de0b0772d70434865484b9e525de4bde00bbf64e8a92c439a784017a3afe2"
+      },
+      {
+        "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/source/common/arg.cpp",
+        "sizeBytes": 223926,
+        "sha256": "83cd576c95940ac4f84059da3c5b34914c15a94a834a608743389f2d43f25ea2"
+      },
+      {
+        "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/source/common/common.h",
+        "sizeBytes": 58120,
+        "sha256": "d43b2f128d8162e2fdc374f1f55d22c37b54b3f65001459237c57f5ba8cddb1f"
+      },
+      {
+        "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/source/tools/server/server-context.cpp",
+        "sizeBytes": 304310,
+        "sha256": "5fae51fa9164f0e5c3e185a4d8834bc805d58ae6de1a4269929cdcbe840c9551"
+      },
+      {
+        "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/source/tools/server/server-common.cpp",
+        "sizeBytes": 79532,
+        "sha256": "b686729ed7d098e2f0c3da1ba28325d0e6d30721dab09f71cb9b53f342710ddb"
+      },
+      {
+        "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/source/src/llama-context.cpp",
+        "sizeBytes": 172132,
+        "sha256": "63645057d8f017d651544499fc1f3bcff5997cf25270b06479558ebfb5f9f3d2"
+      },
+      {
+        "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/source/src/llama-kv-cache.cpp",
+        "sizeBytes": 98387,
+        "sha256": "40205d197380761b373658d6206f4ccd91455b4f2f45a3e35c18c3f9ea0ee6f3"
+      },
+      {
+        "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/source/src/llama-model-loader.cpp",
+        "sizeBytes": 82846,
+        "sha256": "b856b513340e9e86ab81e2d8d110fedd07b60f508e0e4f8513690150f8efd7e1"
+      }
+    ]
+  },
+  "evidenceDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-vector-resource-protocol-20261112-r1",
+  "integrity": {
+    "fileCount": 113,
+    "sha256": "1a48ca0f545e92a61520a6ca40db4f7f07c00bca5f3febc486fb6fe68e8329f2"
+  },
+  "scope": "Actual fixed native helper measurements and bounded protocol checks. Product admission, managed vector runtime integration and 20-case acceptance are pending; no capability READY is created."
+}
