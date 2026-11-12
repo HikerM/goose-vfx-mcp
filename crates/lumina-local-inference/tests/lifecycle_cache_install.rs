@@ -19,6 +19,9 @@ mod failure_cases;
 #[path = "lifecycle_cache_install/storage_cases.rs"]
 mod storage_cases;
 
+#[path = "lifecycle_cache_install/concurrency_cases.rs"]
+mod concurrency_cases;
+
 fn control_request(
     id: &str,
     version: u64,

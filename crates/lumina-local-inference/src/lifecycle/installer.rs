@@ -15,6 +15,12 @@ use super::{
 
 pub(crate) const INSTALLATION_TASK_LIMIT: usize = 2;
 
+#[derive(Clone, Copy)]
+pub(crate) enum TransferSlot {
+    File,
+    Http,
+}
+
 pub(crate) struct InstallationTaskPermit {
     _job: File,
     _slot: File,
@@ -101,6 +107,19 @@ impl InstallationStore {
                     _job: job,
                     _slot: slot,
                 }));
+            }
+        }
+        Ok(None)
+    }
+
+    pub(crate) fn try_transfer_slot(&self, slot: TransferSlot) -> Result<Option<File>> {
+        let namespace = match slot {
+            TransferSlot::File => "file-slots",
+            TransferSlot::Http => "http-slots",
+        };
+        for index in 0..4 {
+            if let Some(slot) = self.try_lock(namespace, &index.to_string())? {
+                return Ok(Some(slot));
             }
         }
         Ok(None)

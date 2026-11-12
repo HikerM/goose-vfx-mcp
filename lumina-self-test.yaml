@@ -176,6 +176,7 @@ prompt: |
   database reopen recovery, bounded recovery pages and legacy input adoption boundaries,
   application startup recovery, startup submission barriers, background job discovery,
   shared task slots across installation services and contended shared-blob publication,
+  shared file and HTTP slot waits with pause and checkpoint-preserving shutdown,
   versioned pause/resume/cancel controls and checkpoint-preserving graceful shutdown,
   durable control deduplication, historical result replay, concurrent compare-and-swap,
   receipt transaction rollback and schema upgrade boundaries, durable per-file retry budgets,

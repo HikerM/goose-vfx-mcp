@@ -13,6 +13,7 @@ pub mod installation_input;
 pub mod installer;
 pub mod metadata;
 pub mod modelscope;
+mod network_ranges;
 pub mod network_worker;
 pub mod planning;
 pub mod policy;
