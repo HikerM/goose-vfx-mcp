@@ -377,6 +377,7 @@ Embedding/Reranker 当前实现类型化协议和精确模型内容绑定；固�
 | `intents` | 该模型支持的协议任务子集，第一项为默认安装变体 |
 | `assets` | 以角色为键的对象。每个角色提供 ModelScope 的 `repository`、40 位提交 `revision`、仓库内 GGUF 文件 `file`、`sha256` 和 `sizeBytes` |
 | `defaults` | 模型自己的 `width`、`height`、`dimensionMultiple`、`negativePrompt`、`steps`、`cfgScale`、`seed`、`samplers` 和 `schedulers`。两组选项的第一项为默认值。需要流偏移的模型可指定 `flowShift` |
+| `defaults.minimumSteps`、`defaults.maximumSteps` | 模型接受的采样步数范围，包含两个端点。两个字段均可单独省略，分别沿用协议下限 1 和上限 2147483647。默认步数必须落在该范围内。对话参数说明和执行校验读取同一范围。 |
 | `defaults.video` | 视频模型另配 `frames`、`minimumFrames`、`frameStep`、`fps`、`fpsConstraint`、`audioMode`。可用 `supportedFps` 指定递增的帧率选项，其中应包含默认帧率。省略时只接受默认帧率 |
 
 目录加载会检查全部条目。任一条目无效时，错误写入日志，本次外部目录不生效，内置档案仍可用。新档案只适用于现有协议能够表达的模型。安装流程核对仓库版本、组件角色、文件摘要与大小；任务目录据实际安装生成对话可用参数。档案内容和协议的变更产生新的参数身份。资源准入、质量和发布结果需要对实际权重及请求另行验证。

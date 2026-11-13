@@ -108,7 +108,7 @@ impl Definition {
             defaults.dimension_multiple,
             None,
         )?;
-        compile::integer("steps", defaults.steps, 1, 1, 0)?;
+        defaults.validate_step_range()?;
         compile::cfg(defaults.cfg_scale)?;
         compile::text("negativePrompt", &defaults.negative_prompt, false)?;
         ensure!(
@@ -273,6 +273,151 @@ mod tests {
             .variants
             .values()
             .all(|v| v.observed_parameters.is_none()));
+    }
+
+    #[test]
+    fn rejects_invalid_bounds_and_defaults_and_preserves_unspecified_ranges() {
+        let first = image_definition();
+        let original: Definition = serde_json::from_value(first.clone()).unwrap();
+        let serialized = serde_json::to_value(&original.defaults).unwrap();
+        assert!(serialized.get("minimumSteps").is_none());
+        assert!(serialized.get("maximumSteps").is_none());
+        assert_eq!(original.defaults.step_range(), 1..=i32::MAX as u32);
+        let original_id = load_models(vec![first.clone()]).unwrap()["new-checkpoint"]
+            .parameter_schema_id
+            .clone();
+        assert_eq!(
+            original_id,
+            "generation-profile-87af1944ed3bc0e5296e5f7fc9421accc6ac4af6f42ab7c46c261f923f979459"
+        );
+        for (minimum, maximum) in [
+            (Some(0), None),
+            (None, Some(0)),
+            (Some(5), None),
+            (None, Some(3)),
+            (Some(8), Some(4)),
+            (None, Some(i32::MAX as u32 + 1)),
+        ] {
+            let mut row = first.clone();
+            row["defaults"]["minimumSteps"] = json!(minimum);
+            row["defaults"]["maximumSteps"] = json!(maximum);
+            assert!(load_models(vec![row]).is_err());
+        }
+        for (minimum, maximum) in [(Some(2), None), (None, Some(6)), (Some(4), Some(4))] {
+            let mut row = first.clone();
+            row["defaults"]["minimumSteps"] = json!(minimum);
+            row["defaults"]["maximumSteps"] = json!(maximum);
+            let model = load_models(vec![row])
+                .unwrap()
+                .remove("new-checkpoint")
+                .unwrap();
+            assert_ne!(model.parameter_schema_id, original_id);
+            assert_eq!(
+                model.defaults.step_range(),
+                minimum.unwrap_or(1)..=maximum.unwrap_or(i32::MAX as u32)
+            );
+        }
+    }
+
+    #[test]
+    fn two_checkpoint_models_describe_and_compile_their_own_step_bounds() {
+        // The catalog is process-scoped. Each child starts with the specified operator catalog.
+        const CHILD: &str = "LUMINA_STEP_RANGE_FIXTURE";
+        if std::env::var_os(CHILD).is_none() {
+            let mut short = image_definition();
+            short["defaults"]["minimumSteps"] = json!(2);
+            short["defaults"]["maximumSteps"] = json!(5);
+            let mut long = image_definition();
+            long["name"] = json!("long-checkpoint");
+            long["assets"]["main"]["sha256"] = json!("2".repeat(64));
+            long["defaults"]["steps"] = json!(20);
+            long["defaults"]["minimumSteps"] = json!(10);
+            long["defaults"]["maximumSteps"] = json!(30);
+            let dir = tempfile::tempdir().unwrap();
+            let catalog = dir.path().join("catalog.json");
+            std::fs::write(
+                &catalog,
+                serde_json::to_vec(&json!({"schemaVersion":1,"models":[short,long]})).unwrap(),
+            )
+            .unwrap();
+            let child = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "two_checkpoint_models_describe_and_compile_their_own_step_bounds",
+                    "--nocapture",
+                ])
+                .env("LUMINA_GENERATION_CATALOG", catalog)
+                .env(CHILD, "1")
+                .output()
+                .unwrap();
+            assert!(
+                child.status.success()
+                    && String::from_utf8_lossy(&child.stdout).contains("1 passed"),
+                "{} {}",
+                String::from_utf8_lossy(&child.stdout),
+                String::from_utf8_lossy(&child.stderr)
+            );
+            return;
+        }
+        for (name, default, lo, hi) in [
+            ("new-checkpoint", 4u32, 2u32, 5u32),
+            ("long-checkpoint", 20, 10, 30),
+        ] {
+            let profile = GenerationProfile::installation_profile(name).unwrap();
+            let service = GenerationParameterService::new(
+                profile,
+                GenerationModelBinding {
+                    installation_id: name.into(),
+                    version_id: "fixture".into(),
+                    manifest_digest: Sha256Digest::of_bytes(name.as_bytes()),
+                    runtime: profile.runtime_build(),
+                    target_capabilities: profile.required_capabilities(),
+                    assets: profile
+                        .recorded_assets()
+                        .into_iter()
+                        .map(|(role, (sha256, size_bytes))| {
+                            (
+                                role,
+                                GenerationAssetBinding {
+                                    artifact_id: "fixture".into(),
+                                    sha256,
+                                    size_bytes,
+                                },
+                            )
+                        })
+                        .collect(),
+                },
+            )
+            .unwrap();
+            let step = &service.descriptor().fields["steps"];
+            assert_eq!(
+                (step.minimum, step.maximum, step.default.as_ref()),
+                (Some(lo.into()), Some(hi.into()), Some(&json!(default)))
+            );
+            let request = |steps: Option<u32>| GenerationTaskRequest {
+                session_id: "session".into(),
+                job_id: "job".into(),
+                parameters: GenerationParameters::Image(DiffusionImageParameters {
+                    prompt: Some("cup".into()),
+                    steps,
+                    ..Default::default()
+                }),
+            };
+            for (given, expected) in [(None, default), (Some(lo), lo), (Some(hi), hi)] {
+                let task = service.compile(request(given)).unwrap();
+                assert!(task.arguments().windows(2).any(|pair| pair
+                    == [
+                        NativeGenerationArgument::Literal("--steps".into()),
+                        NativeGenerationArgument::Literal(expected.to_string())
+                    ]));
+            }
+            for bad in [lo - 1, hi + 1] {
+                let error = service.compile(request(Some(bad))).unwrap_err();
+                assert_eq!(
+                    (&*error.issues[0].field, &*error.issues[0].code),
+                    ("steps", "out_of_range")
+                );
+            }
+        }
     }
 
     #[test]

@@ -208,12 +208,13 @@ fn descriptor(
             .into(),
     );
     fields.insert("seed".into(), seed);
+    let step_range = defaults.step_range();
     fields.insert(
         "steps".into(),
         numeric(
             json!(defaults.steps),
-            1.,
-            Some(f64::from(i32::MAX)),
+            f64::from(*step_range.start()),
+            Some(f64::from(*step_range.end())),
             Some(1.),
             "steps",
             evidence,

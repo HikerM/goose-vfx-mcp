@@ -25,11 +25,30 @@ pub(super) struct Defaults {
     pub dimension_multiple: u32,
     pub negative_prompt: String,
     pub steps: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub minimum_steps: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub maximum_steps: Option<u32>,
     pub cfg_scale: f32,
     pub seed: u32,
     pub samplers: Vec<GenerationSampler>,
     pub schedulers: Vec<GenerationScheduler>,
     pub video: Option<VideoDefaults>,
+}
+
+impl Defaults {
+    pub(super) fn step_range(&self) -> std::ops::RangeInclusive<u32> {
+        self.minimum_steps.unwrap_or(1)..=self.maximum_steps.unwrap_or(i32::MAX as u32)
+    }
+
+    fn validate_step_range(&self) -> anyhow::Result<()> {
+        let range = self.step_range();
+        anyhow::ensure!(
+            *range.start() > 0 && *range.end() <= i32::MAX as u32 && range.contains(&self.steps),
+            "Step bounds must be positive native integers and contain the default step count"
+        );
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -116,6 +135,10 @@ static MODELS: LazyLock<BTreeMap<String, Model>> = LazyLock::new(|| {
             .keys()
             .all(|variant| ids.insert(variant.as_str())));
         assert!(model.defaults.dimension_multiple > 0);
+        model
+            .defaults
+            .validate_step_range()
+            .expect("invalid bundled step range");
         for names in [
             model
                 .defaults
@@ -136,10 +159,11 @@ static MODELS: LazyLock<BTreeMap<String, Model>> = LazyLock::new(|| {
         }
         for variant in model.variants.values() {
             if let Some(observed) = &variant.observed_parameters {
-                let (sampler, scheduler) = match observed {
-                    EffectiveGenerationParameters::Image(p) => (p.sampler, p.scheduler),
-                    EffectiveGenerationParameters::Video(p) => (p.sampler, p.scheduler),
+                let (sampler, scheduler, steps) = match observed {
+                    EffectiveGenerationParameters::Image(p) => (p.sampler, p.scheduler, p.steps),
+                    EffectiveGenerationParameters::Video(p) => (p.sampler, p.scheduler, p.steps),
                 };
+                assert!(model.defaults.step_range().contains(&steps));
                 assert!(model.defaults.samplers.contains(&sampler));
                 assert!(model.defaults.schedulers.contains(&scheduler));
             }

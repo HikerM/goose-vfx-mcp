@@ -500,6 +500,22 @@ fn select_option<T: Copy + PartialEq>(
     }
 }
 
+fn generation_steps(
+    defaults: &inventory::Defaults,
+    requested: Option<u32>,
+) -> GenerationParameterResult<u32> {
+    let value = requested.unwrap_or(defaults.steps);
+    if defaults.step_range().contains(&value) {
+        Ok(value)
+    } else {
+        Err(issue(
+            "steps",
+            "out_of_range",
+            "Step count falls outside the selected model's supported range",
+        ))
+    }
+}
+
 fn image(
     defaults: &super::inventory::Defaults,
     value: DiffusionImageParameters,
@@ -520,8 +536,7 @@ fn image(
         defaults.dimension_multiple,
         value.aspect_ratio,
     )?;
-    let steps = value.steps.unwrap_or(defaults.steps);
-    integer("steps", steps, 1, 1, 0)?;
+    let steps = generation_steps(defaults, value.steps)?;
     let batch_count = value.batch_count.unwrap_or(1);
     integer("batchCount", batch_count, 1, 1, 0)?;
     if u64::from(width) * u64::from(height) * u64::from(batch_count) > i64::MAX as u64 / 16 {
@@ -570,8 +585,7 @@ fn video(
         defaults.dimension_multiple,
         value.aspect_ratio,
     )?;
-    let steps = value.steps.unwrap_or(defaults.steps);
-    integer("steps", steps, 1, 1, 0)?;
+    let steps = generation_steps(defaults, value.steps)?;
     let cfg_scale = value.cfg_scale.unwrap_or(defaults.cfg_scale);
     cfg(cfg_scale)?;
     let timing = defaults.video.as_ref().expect("video timing");
