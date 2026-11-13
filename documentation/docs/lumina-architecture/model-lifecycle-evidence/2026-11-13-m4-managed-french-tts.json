@@ -46,5 +46,16 @@
     "installedFilesRehashed": 2
   },
   "relatedNativeOutput": "2026-11-13-m4-external-french-tts.json",
-  "limits": "This check does not run inference or publish a chat result."
+  "limits": "Chat discovery ran through a local session and its MCP extension. Speech generation or media publication in that chat and Electron interaction were outside the check.",
+  "chatDiscovery": {
+    "entry": "native_tasks.list",
+    "test": "agents::platform_extensions::native_tasks::tests::chat_discovers_installed_external_speech_parameters",
+    "installedIdentityMatchesOnReopen": true,
+    "language": "french",
+    "temperature": 0.699999988079071,
+    "matchedWeightSha256": "ae7e6d536c20245d216a7ec9404124cf67f913380bf41a6380c55d6ca9dbaef5",
+    "log": "target/lifecycle-validation/m4-chat-french-install-r1.log",
+    "logSha256": "ec64a60e14f4f411d324ce6c5b10db59f97e50aed9e1c90f5add5e18434aa328",
+    "passed": 1
+  }
 }
