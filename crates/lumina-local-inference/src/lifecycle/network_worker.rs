@@ -241,7 +241,10 @@ async fn download_file<F: Fn() -> i64>(
                 if completed.saturating_sub(persisted) >= RANGE_BYTES
                     && completed < record.expected_bytes
                 {
-                    output.sync_data()?;
+                    super::worker_control::sync_with_lease(
+                        || output.sync_data(),
+                        || execution.checkpoint().map(|_| ()),
+                    )?;
                     record = execution.repository.checkpoint_synced_file(
                         &execution.lease,
                         &record.artifact_id,
@@ -311,7 +314,10 @@ async fn download_file<F: Fn() -> i64>(
         }
         .into());
     }
-    output.sync_all()?;
+    super::worker_control::sync_with_lease(
+        || output.sync_all(),
+        || execution.checkpoint().map(|_| ()),
+    )?;
     execution.repository.checkpoint_synced_file(
         &execution.lease,
         &record.artifact_id,

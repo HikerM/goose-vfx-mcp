@@ -325,7 +325,11 @@ impl InstallationStore {
             copied == manifest.installed_files[id].size_bytes,
             "Installation source was truncated during copy"
         );
-        temporary.as_file().sync_all()?;
+        let written = temporary.as_file();
+        super::worker_control::sync_with_lease(
+            || written.sync_all(),
+            || execution.checkpoint().map(|_| ()),
+        )?;
         let temporary = temporary.into_temp_path();
         let temporary_name = RepositoryPath::parse(
             temporary
@@ -462,7 +466,11 @@ impl InstallationStore {
                 .context("Manifest has no directory")?;
             let mut temporary = tempfile::NamedTempFile::new_in(directory)?;
             temporary.write_all(&manifest_bytes)?;
-            temporary.as_file().sync_all()?;
+            let written = temporary.as_file();
+            super::worker_control::sync_with_lease(
+                || written.sync_all(),
+                || execution.checkpoint().map(|_| ()),
+            )?;
             execution.checkpoint()?;
             temporary
                 .into_temp_path()

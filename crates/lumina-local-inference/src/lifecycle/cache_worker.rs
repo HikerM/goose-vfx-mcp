@@ -197,7 +197,10 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
             if completed.saturating_sub(persisted) >= 64 * 1024 * 1024
                 && completed < record.expected_bytes
             {
-                output.sync_data()?;
+                super::worker_control::sync_with_lease(
+                    || output.sync_data(),
+                    || self.checkpoint().map(|_| ()),
+                )?;
                 record = self.repository.checkpoint_synced_file(
                     &self.lease,
                     &record.artifact_id,
@@ -227,7 +230,10 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
             }
             .into());
         }
-        output.sync_all()?;
+        super::worker_control::sync_with_lease(
+            || output.sync_all(),
+            || self.checkpoint().map(|_| ()),
+        )?;
         self.repository.checkpoint_synced_file(
             &self.lease,
             &record.artifact_id,
