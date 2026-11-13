@@ -1,140 +1,17 @@
 use super::*;
 use serde_json::json;
 
-const DIFFUSION_REVISION: &str = "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0";
-const CPU_BINARY: &str = "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043";
-const CUDA_BINARY: &str = "11e555cb67afd5d480de2ca25e40addb0cbea70cca37822b92c98f7383a0a4b5";
-pub(super) const SD_PROMPT: &str =
-    "a photograph of a red apple on a wooden table, studio lighting, high quality";
-pub(super) const SD_NEGATIVE: &str = "blurry, distorted, low quality";
-pub(super) const H3_PROMPT: &str = "A single red apple on a wooden table slowly rolls to the right. Fixed camera, natural daylight. Soft rolling sound, no speech.";
-pub(super) const FIRST_FRAME_SHA: &str =
-    "2370e2963c2bbf8186f899684d7b60985f0196ac5c620c08c6e7522d1d49a034";
-
 impl GenerationProfile {
     pub fn required_capabilities(self) -> BTreeSet<ModelCapability> {
         if self.is_image() {
             BTreeSet::from([ModelCapability::ImageGeneration])
+        } else if self.intent() == crate::lifecycle::NativeTaskIntent::TextToVideo {
+            BTreeSet::from([ModelCapability::VideoGeneration])
         } else {
             BTreeSet::from([
                 ModelCapability::VideoGeneration,
                 ModelCapability::AudioGeneration,
             ])
-        }
-    }
-
-    pub fn task_variant(self) -> &'static str {
-        match self {
-            Self::Sd15CpuTextToImage => "sd15/text_to_image",
-            Self::H3CudaTextToVideoAudio => "minimax_h3/text_to_video_audio",
-            Self::H3CudaFirstFrameToVideoAudio => "minimax_h3/first_frame_to_video_audio",
-        }
-    }
-
-    pub fn parameter_schema_id(self) -> &'static str {
-        if self.is_image() {
-            "sd15-image-parameters-v1"
-        } else {
-            "minimax-h3-video-parameters-v1"
-        }
-    }
-
-    pub fn runtime_build(self) -> RuntimeBuild {
-        RuntimeBuild {
-            adapter_id: "diffusion-cpp-native-generation-v1".into(),
-            engine_revision: DIFFUSION_REVISION.into(),
-            binding_version: self.parameter_schema_id().into(),
-            platform: "windows-x86_64".into(),
-            features: BTreeSet::from([if self.is_image() {
-                "cpu"
-            } else {
-                "cuda-sm120a"
-            }
-            .into()]),
-            binary_sha256: Sha256Digest::parse(if self.is_image() {
-                CPU_BINARY
-            } else {
-                CUDA_BINARY
-            })
-            .expect("pinned digest"),
-        }
-    }
-
-    /// Recorded identities are allowlists, not assertions that these files are installed.
-    pub fn recorded_assets(self) -> BTreeMap<GenerationAssetRole, (Sha256Digest, u64)> {
-        let entries: &[(GenerationAssetRole, &str, u64)] = if self.is_image() {
-            &[(
-                GenerationAssetRole::Main,
-                "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
-                2_132_584_864,
-            )]
-        } else {
-            &[
-                (
-                    GenerationAssetRole::Main,
-                    "dd948e08ad0ba3c71bd42f368e283dd82e790f5122a63b276e22a3e0283d0c10",
-                    11_420_663_904,
-                ),
-                (
-                    GenerationAssetRole::TextEncoder,
-                    "11e6efe70a57ce7f4838c47bdbd1a1c4b8ce10e2b7747f1b065990b70f4b05fc",
-                    18_218_065_024,
-                ),
-                (
-                    GenerationAssetRole::VideoVae,
-                    "2806d06d195d41a351a4a838125e9ddea09abb2770e1ef6bb9168409d1d393d9",
-                    5_207_785_056,
-                ),
-                (
-                    GenerationAssetRole::AudioVae,
-                    "45764b28074abab09ec9fa1447b3eed3113b2e6878c177bab5bce0572064edf4",
-                    302_904_896,
-                ),
-            ]
-        };
-        entries
-            .iter()
-            .map(|(role, sha, size)| {
-                (
-                    *role,
-                    (Sha256Digest::parse(*sha).expect("pinned digest"), *size),
-                )
-            })
-            .collect()
-    }
-
-    pub(super) fn is_image(self) -> bool {
-        self == Self::Sd15CpuTextToImage
-    }
-    pub(super) fn requires_first_frame(self) -> bool {
-        self == Self::H3CudaFirstFrameToVideoAudio
-    }
-    pub(super) fn evidence(self) -> &'static str {
-        if self.is_image() {
-            "2026-11-01-native-image-feasibility.json"
-        } else {
-            "2026-11-12-h3-native-video-smoke.json"
-        }
-    }
-
-    pub(super) fn engine(self) -> FrozenGenerationEngine {
-        FrozenGenerationEngine {
-            cpu_threads: if self.is_image() { 12 } else { 8 },
-            backend: if self.is_image() {
-                "cpu"
-            } else {
-                "diffusion=cuda0,te=cpu,vae=cpu"
-            }
-            .into(),
-            parameters_backend: "cpu".into(),
-            rng: "cpu".into(),
-            sampler_rng: "cpu".into(),
-            flash_attention: "auto".into(),
-            cache_mode: "disabled".into(),
-            flow_shift: (!self.is_image()).then_some(12),
-            max_vram_gib: (!self.is_image()).then_some(8),
-            disable_prefetch: !self.is_image(),
-            output_format: if self.is_image() { "png" } else { "avi" }.into(),
         }
     }
 }
@@ -204,6 +81,29 @@ impl GenerationParameterService {
         })
     }
 
+    /// Older diffusion descriptors included a speech-only note in the hashed presentation text.
+    pub fn matches_descriptor_digest(&self, expected: &Sha256Digest) -> anyhow::Result<bool> {
+        if Sha256Digest::of_serializable(&self.descriptor)? == *expected {
+            return Ok(true);
+        }
+        if !matches!(
+            self.profile,
+            GenerationProfile::Sd15CpuTextToImage
+                | GenerationProfile::H3CudaTextToVideoAudio
+                | GenerationProfile::H3CudaFirstFrameToVideoAudio
+        ) {
+            return Ok(false);
+        }
+        let mut old = self.descriptor.clone();
+        old.limitations = [
+            "Pinned model/Runtime-specific compiler; no general all-model support",
+            "No managed generation resource envelope or execution owner exists yet; even smoke defaults cannot execute through this API",
+            "A matching observed request is not quality acceptance, repeatability, release or runtime readiness",
+            "PocketTTS language/speaking-rate/emotion controls are unsupported by its pinned session; speech needs its own voice-bound adapter, not diffusion parameters",
+        ].map(str::to_owned).into();
+        Ok(Sha256Digest::of_serializable(&old)? == *expected)
+    }
+
     pub fn descriptor(&self) -> &GenerationParameterDescriptor {
         &self.descriptor
     }
@@ -258,10 +158,10 @@ fn descriptor(
 ) -> GenerationParameterDescriptor {
     let evidence = profile.evidence();
     let image = profile.is_image();
-    let dimension = if image { 512 } else { 256 };
+    let defaults = profile.defaults();
     // request.cpp::align_image_size uses VAE scale * diffusion down-factor:
     // SD1.5 = 8*8; H3 = 16*2. Reject instead of silently padding the user's size.
-    let multiple = if image { 64 } else { 32 };
+    let multiple = defaults.dimension_multiple;
     let mut fields = BTreeMap::new();
     let mut prompt = field("string", None, evidence);
     prompt.constraints = vec![
@@ -271,13 +171,9 @@ fn descriptor(
     fields.insert("prompt".into(), prompt);
     fields.insert(
         "negativePrompt".into(),
-        field(
-            "string",
-            Some(json!(if image { SD_NEGATIVE } else { "" })),
-            evidence,
-        ),
+        field("string", Some(json!(defaults.negative_prompt)), evidence),
     );
-    for name in ["width", "height"] {
+    for (name, dimension) in [("width", defaults.width), ("height", defaults.height)] {
         fields.insert(
             name.into(),
             numeric(
@@ -299,7 +195,7 @@ fn descriptor(
         .push("Constraint on width/height; does not choose an implicit resolution".into());
     fields.insert("aspectRatio".into(), ratio);
     let mut seed = numeric(
-        json!({"kind":"value","value":42}),
+        json!({"kind":"value","value":defaults.seed}),
         0.,
         Some(f64::from(u32::MAX)),
         Some(1.),
@@ -315,7 +211,7 @@ fn descriptor(
     fields.insert(
         "steps".into(),
         numeric(
-            json!(if image { 20 } else { 8 }),
+            json!(defaults.steps),
             1.,
             Some(f64::from(i32::MAX)),
             Some(1.),
@@ -326,7 +222,7 @@ fn descriptor(
     fields.insert(
         "cfgScale".into(),
         numeric(
-            json!(if image { 7.0 } else { 1.0 }),
+            json!(f64::from(defaults.cfg_scale)),
             0.,
             Some(f64::from(f32::MAX)),
             None,
@@ -334,20 +230,20 @@ fn descriptor(
             evidence,
         ),
     );
-    let mut sampler = field(
-        "enum",
-        Some(json!(if image { "euler_a" } else { "euler" })),
-        evidence,
-    );
-    sampler.enum_values = if image {
-        vec![json!("euler_a"), json!("euler")]
-    } else {
-        vec![json!("euler")]
-    };
+    let mut sampler = field("enum", Some(json!(defaults.samplers[0])), evidence);
+    sampler.enum_values = defaults
+        .samplers
+        .iter()
+        .map(|sampler| json!(sampler))
+        .collect();
     sampler.constraints.push("Other native samplers are not bound by this adapter profile; quality outside the recorded request is unverified".into());
     fields.insert("sampler".into(), sampler);
-    let mut scheduler = field("enum", Some(json!("discrete")), evidence);
-    scheduler.enum_values.push(json!("discrete"));
+    let mut scheduler = field("enum", Some(json!(defaults.schedulers[0])), evidence);
+    scheduler.enum_values = defaults
+        .schedulers
+        .iter()
+        .map(|value| json!(value))
+        .collect();
     fields.insert("scheduler".into(), scheduler);
     if image {
         fields.insert(
@@ -376,45 +272,59 @@ fn descriptor(
             unsupported("No inpainting model/variant is bound"),
         );
     } else {
+        let timing = defaults.video.as_ref().expect("video timing");
         let mut frames = numeric(
-            json!(22),
-            5.,
+            json!(timing.frames),
+            f64::from(timing.minimum_frames),
             Some(f64::from(i32::MAX)),
-            Some(17.),
+            Some(f64::from(timing.frame_step)),
             "frames",
             evidence,
         );
-        frames.constraints.push(
-            "frames = 5 + 17*n; native align_video_frames would otherwise change the request"
-                .into(),
-        );
+        frames.constraints.push(format!(
+            "frames = {} + {}*n; native align_video_frames would otherwise change the request",
+            timing.minimum_frames, timing.frame_step
+        ));
         fields.insert("frames".into(), frames);
         let mut fps = numeric(
-            json!(24),
-            24.,
-            Some(24.),
+            json!(timing.fps),
+            f64::from(timing.supported_fps.first().copied().unwrap_or(timing.fps)),
+            Some(f64::from(
+                timing.supported_fps.last().copied().unwrap_or(timing.fps),
+            )),
             Some(1.),
             "frames/second",
             evidence,
         );
-        fps.constraints
-            .push("H3 overrides all other FPS values; this adapter rejects them".into());
+        fps.constraints.push(timing.fps_constraint.clone());
+        fps.enum_values = timing
+            .supported_fps
+            .iter()
+            .map(|rate| json!(rate))
+            .collect();
         fields.insert("fps".into(), fps);
         let mut duration = field("number", None, evidence);
         duration.unit = Some("seconds".into());
-        duration.constraints.push("durationSeconds*24 must be an integral 5+17*n frame count and equal explicit frames; no rounding".into());
+        let rate = if timing.supported_fps.is_empty() {
+            timing.fps.to_string()
+        } else {
+            "fps".to_owned()
+        };
+        duration.constraints.push(format!("durationSeconds*{rate} must be an integral {}+{}*n frame count and equal explicit frames; no rounding",timing.minimum_frames,timing.frame_step));
         fields.insert("durationSeconds".into(), duration);
         let mut first = if profile.requires_first_frame() {
             field("session_media_reference", None, evidence)
-        } else {
+        } else if profile.has_first_frame_variant() {
             unsupported("Use the separate first-frame-to-video-audio variant")
+        } else {
+            unsupported("This model has no registered first-frame input variant")
         };
         if profile.requires_first_frame() {
             first.constraints.push("Required same-session verified PNG/JPEG result, <=32MiB; owner must revalidate content SHA and decoded geometry".into());
         }
         fields.insert("firstFrame".into(), first);
-        let mut audio = field("enum", Some(json!("joint_audio_video")), evidence);
-        audio.enum_values.push(json!("joint_audio_video"));
+        let mut audio = field("enum", Some(json!(timing.audio_mode)), evidence);
+        audio.enum_values.push(json!(timing.audio_mode));
         fields.insert("audioMode".into(), audio);
         fields.insert(
             "endFrame".into(),
@@ -434,9 +344,8 @@ fn descriptor(
         execution_status: GenerationExecutionStatus::NeedsResourceAdmission, evidence: evidence.into(),
         limitations: vec![
             "Pinned model/Runtime-specific compiler; no general all-model support".into(),
-            "No managed generation resource envelope or execution owner exists yet; even smoke defaults cannot execute through this API".into(),
+            "Execution requires the selected model and runtime to pass resource admission".into(),
             "A matching observed request is not quality acceptance, repeatability, release or runtime readiness".into(),
-            "PocketTTS language/speaking-rate/emotion controls are unsupported by its pinned session; speech needs its own voice-bound adapter, not diffusion parameters".into(),
         ],
     }
 }

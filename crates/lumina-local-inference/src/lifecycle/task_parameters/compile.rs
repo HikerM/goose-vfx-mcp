@@ -44,19 +44,17 @@ impl GenerationParameterService {
         identity("jobId", &request.job_id)?;
         validate_float_fields(&request.parameters)?;
         let supplied = parameter_values(&request.parameters)?;
-        let parameters = match (self.profile, request.parameters) {
-            (GenerationProfile::Sd15CpuTextToImage, GenerationParameters::Image(value)) => {
-                EffectiveGenerationParameters::Image(image(value)?)
+        let parameters = match request.parameters {
+            GenerationParameters::Image(value) if self.profile.is_image() => {
+                EffectiveGenerationParameters::Image(image(self.profile.defaults(), value)?)
             }
-            (
-                GenerationProfile::H3CudaTextToVideoAudio
-                | GenerationProfile::H3CudaFirstFrameToVideoAudio,
-                GenerationParameters::Video(value),
-            ) => EffectiveGenerationParameters::Video(video(
-                self.profile,
-                &request.session_id,
-                value,
-            )?),
+            GenerationParameters::Video(value) if !self.profile.is_image() => {
+                EffectiveGenerationParameters::Video(video(
+                    self.profile,
+                    &request.session_id,
+                    value,
+                )?)
+            }
             _ => {
                 return Err(issue(
                     "parameters.task",
@@ -150,8 +148,9 @@ impl GenerationParameterService {
         if previous.binding != self.binding
             || previous.profile != self.profile
             || previous.schema_version != GENERATION_PARAMETER_SCHEMA
-            || previous.descriptor_digest
-                != Sha256Digest::of_serializable(&self.descriptor).map_err(internal)?
+            || !self
+                .matches_descriptor_digest(&previous.descriptor_digest)
+                .map_err(internal)?
         {
             return Err(issue(
                 "binding",
@@ -386,7 +385,7 @@ fn canonical_result_id(value: &str) -> GenerationParameterResult<()> {
     Ok(())
 }
 
-fn text(field: &str, value: &str, required: bool) -> GenerationParameterResult<()> {
+pub(super) fn text(field: &str, value: &str, required: bool) -> GenerationParameterResult<()> {
     if (required && value.trim().is_empty()) || value.len() > 16_384 || value.contains('\0') {
         return Err(issue(
             field,
@@ -404,7 +403,7 @@ fn text(field: &str, value: &str, required: bool) -> GenerationParameterResult<(
     Ok(())
 }
 
-fn integer(
+pub(super) fn integer(
     field: &str,
     value: u32,
     minimum: u32,
@@ -421,7 +420,7 @@ fn integer(
     Ok(())
 }
 
-fn geometry(
+pub(super) fn geometry(
     width: u32,
     height: u32,
     multiple: u32,
@@ -459,7 +458,7 @@ fn geometry(
     })
 }
 
-fn cfg(value: f32) -> GenerationParameterResult<()> {
+pub(super) fn cfg(value: f32) -> GenerationParameterResult<()> {
     if !value.is_finite() || value < 0. {
         return Err(issue(
             "cfgScale",
@@ -476,24 +475,52 @@ fn fresh_seed() -> u32 {
             .expect("UUID prefix"),
     )
 }
-fn seed(value: Option<GenerationSeed>) -> u32 {
+fn seed(value: Option<GenerationSeed>, default: u32) -> u32 {
     match value {
-        None => 42,
+        None => default,
         Some(GenerationSeed::Value { value }) => value,
         Some(GenerationSeed::New) => fresh_seed(),
     }
 }
 
-fn image(value: Sd15ImageParameters) -> GenerationParameterResult<EffectiveImageParameters> {
+fn select_option<T: Copy + PartialEq>(
+    field: &str,
+    allowed: &[T],
+    requested: Option<T>,
+) -> GenerationParameterResult<T> {
+    let value = requested.unwrap_or(allowed[0]);
+    if allowed.contains(&value) {
+        Ok(value)
+    } else {
+        Err(issue(
+            field,
+            "unsupported_by_profile",
+            "Value is not supported by the selected model profile",
+        ))
+    }
+}
+
+fn image(
+    defaults: &super::inventory::Defaults,
+    value: DiffusionImageParameters,
+) -> GenerationParameterResult<EffectiveImageParameters> {
     let prompt = value.prompt.unwrap_or_default();
     let negative_prompt = value
         .negative_prompt
-        .unwrap_or_else(|| profiles::SD_NEGATIVE.into());
+        .unwrap_or_else(|| defaults.negative_prompt.clone());
     text("prompt", &prompt, true)?;
     text("negativePrompt", &negative_prompt, false)?;
-    let (width, height) = (value.width.unwrap_or(512), value.height.unwrap_or(512));
-    let aspect_ratio = geometry(width, height, 64, value.aspect_ratio)?;
-    let steps = value.steps.unwrap_or(20);
+    let (width, height) = (
+        value.width.unwrap_or(defaults.width),
+        value.height.unwrap_or(defaults.height),
+    );
+    let aspect_ratio = geometry(
+        width,
+        height,
+        defaults.dimension_multiple,
+        value.aspect_ratio,
+    )?;
+    let steps = value.steps.unwrap_or(defaults.steps);
     integer("steps", steps, 1, 1, 0)?;
     let batch_count = value.batch_count.unwrap_or(1);
     integer("batchCount", batch_count, 1, 1, 0)?;
@@ -504,7 +531,7 @@ fn image(value: Sd15ImageParameters) -> GenerationParameterResult<EffectiveImage
             "Batch geometry exceeds native tensor representation",
         ));
     }
-    let cfg_scale = value.cfg_scale.unwrap_or(7.);
+    let cfg_scale = value.cfg_scale.unwrap_or(defaults.cfg_scale);
     cfg(cfg_scale)?;
     Ok(EffectiveImageParameters {
         prompt,
@@ -512,11 +539,11 @@ fn image(value: Sd15ImageParameters) -> GenerationParameterResult<EffectiveImage
         width,
         height,
         aspect_ratio,
-        seed: seed(value.seed),
+        seed: seed(value.seed, defaults.seed),
         steps,
         cfg_scale,
-        sampler: value.sampler.unwrap_or(GenerationSampler::EulerA),
-        scheduler: value.scheduler.unwrap_or(GenerationScheduler::Discrete),
+        sampler: select_option("sampler", &defaults.samplers, value.sampler)?,
+        scheduler: select_option("scheduler", &defaults.schedulers, value.scheduler)?,
         batch_count,
     })
 }
@@ -524,30 +551,38 @@ fn image(value: Sd15ImageParameters) -> GenerationParameterResult<EffectiveImage
 fn video(
     profile: GenerationProfile,
     session_id: &str,
-    value: H3VideoParameters,
+    value: DiffusionVideoParameters,
 ) -> GenerationParameterResult<EffectiveVideoParameters> {
     let prompt = value.prompt.unwrap_or_default();
-    let negative_prompt = value.negative_prompt.unwrap_or_default();
+    let defaults = profile.defaults();
+    let negative_prompt = value
+        .negative_prompt
+        .unwrap_or_else(|| defaults.negative_prompt.clone());
     text("prompt", &prompt, true)?;
     text("negativePrompt", &negative_prompt, false)?;
-    let (width, height) = (value.width.unwrap_or(256), value.height.unwrap_or(256));
-    let aspect_ratio = geometry(width, height, 32, value.aspect_ratio)?;
-    let steps = value.steps.unwrap_or(8);
+    let (width, height) = (
+        value.width.unwrap_or(defaults.width),
+        value.height.unwrap_or(defaults.height),
+    );
+    let aspect_ratio = geometry(
+        width,
+        height,
+        defaults.dimension_multiple,
+        value.aspect_ratio,
+    )?;
+    let steps = value.steps.unwrap_or(defaults.steps);
     integer("steps", steps, 1, 1, 0)?;
-    let cfg_scale = value.cfg_scale.unwrap_or(1.);
+    let cfg_scale = value.cfg_scale.unwrap_or(defaults.cfg_scale);
     cfg(cfg_scale)?;
-    let fps = value.fps.unwrap_or(24);
-    if fps != 24 {
-        return Err(issue(
-            "fps",
-            "unsupported_by_model",
-            "MiniMax-H3 requires 24 FPS; native override is not accepted",
-        ));
+    let timing = defaults.video.as_ref().expect("video timing");
+    let fps = value.fps.unwrap_or(timing.fps);
+    if fps != timing.fps && !timing.supported_fps.contains(&fps) {
+        return Err(issue("fps", "unsupported_by_model", &timing.fps_constraint));
     }
     let duration_frames = if let Some(seconds) = value.duration_seconds {
         let frames = seconds * f64::from(fps);
         if !seconds.is_finite()
-            || frames < 5.
+            || frames < f64::from(timing.minimum_frames)
             || frames > f64::from(i32::MAX)
             || (frames - frames.round()).abs() > 1e-9
         {
@@ -561,7 +596,7 @@ fn video(
     } else {
         None
     };
-    let frames = value.frames.or(duration_frames).unwrap_or(22);
+    let frames = value.frames.or(duration_frames).unwrap_or(timing.frames);
     if duration_frames.is_some_and(|duration| duration != frames) {
         return Err(issue(
             "durationSeconds,frames,fps",
@@ -569,7 +604,13 @@ fn video(
             "Duration, frames and FPS disagree",
         ));
     }
-    integer("frames", frames, 5, 17, 5)?;
+    integer(
+        "frames",
+        frames,
+        timing.minimum_frames,
+        timing.frame_step,
+        timing.minimum_frames % timing.frame_step,
+    )?;
     if u64::from(width) * u64::from(height) * u64::from(frames) > i64::MAX as u64 / 24 {
         return Err(issue(
             "frames",
@@ -577,14 +618,7 @@ fn video(
             "Video geometry exceeds native tensor representation",
         ));
     }
-    let sampler = value.sampler.unwrap_or(GenerationSampler::Euler);
-    if sampler != GenerationSampler::Euler {
-        return Err(issue(
-            "sampler",
-            "unsupported_by_profile",
-            "This H3 profile binds Euler; other samplers are unverified",
-        ));
-    }
+    let sampler = select_option("sampler", &defaults.samplers, value.sampler)?;
     match &value.first_frame {
         Some(input) if profile.requires_first_frame() => {
             canonical_result_id(&input.result_id)?;
@@ -614,6 +648,14 @@ fn video(
             ))
         }
     }
+    let audio_mode = value.audio_mode.unwrap_or(timing.audio_mode);
+    if audio_mode != timing.audio_mode {
+        return Err(issue(
+            "audioMode",
+            "unsupported_by_profile",
+            "The installed model cannot produce this audio mode",
+        ));
+    }
     Ok(EffectiveVideoParameters {
         prompt,
         negative_prompt,
@@ -621,20 +663,18 @@ fn video(
         width,
         height,
         aspect_ratio,
-        seed: seed(value.seed),
+        seed: seed(value.seed, defaults.seed),
         steps,
         cfg_scale,
         sampler,
-        scheduler: value.scheduler.unwrap_or(GenerationScheduler::Discrete),
+        scheduler: select_option("scheduler", &defaults.schedulers, value.scheduler)?,
         frames,
         fps,
         duration: GenerationDuration {
             numerator: frames,
             denominator: fps,
         },
-        audio_mode: value
-            .audio_mode
-            .unwrap_or(GenerationAudioMode::JointAudioVideo),
+        audio_mode,
     })
 }
 
@@ -642,40 +682,14 @@ fn observation(
     profile: GenerationProfile,
     parameters: &EffectiveGenerationParameters,
 ) -> GenerationObservation {
-    let matches_observed_request = match parameters {
-        EffectiveGenerationParameters::Image(value) => {
-            value.prompt == profiles::SD_PROMPT
-                && value.negative_prompt == profiles::SD_NEGATIVE
-                && (
-                    value.width,
-                    value.height,
-                    value.seed,
-                    value.steps,
-                    value.batch_count,
-                ) == (512, 512, 42, 20, 1)
-                && value.cfg_scale == 7.
-                && value.sampler == GenerationSampler::EulerA
+    let mut normalized = parameters.clone();
+    if let EffectiveGenerationParameters::Video(video) = &mut normalized {
+        if let Some(reference) = &mut video.first_frame {
+            reference.session_id.clear();
+            reference.result_id.clear();
         }
-        EffectiveGenerationParameters::Video(value) => {
-            value.prompt == profiles::H3_PROMPT
-                && value.negative_prompt.is_empty()
-                && (
-                    value.width,
-                    value.height,
-                    value.seed,
-                    value.steps,
-                    value.frames,
-                    value.fps,
-                ) == (256, 256, 42, 8, 22, 24)
-                && value.cfg_scale == 1.
-                && value.first_frame.as_ref().is_none_or(|input| {
-                    input.sha256.as_str() == profiles::FIRST_FRAME_SHA
-                        && input.size_bytes == 467_603
-                        && (input.width, input.height) == (512, 512)
-                        && input.mime_type == "image/png"
-                })
-        }
-    };
+    }
+    let matches_observed_request = profile.observed_parameters() == Some(&normalized);
     GenerationObservation {
         evidence: profile.evidence().into(),
         matches_observed_request,
@@ -699,35 +713,38 @@ fn arguments(snapshot: &GenerationParameterSnapshot) -> Vec<NativeGenerationArgu
         }
         .into(),
     );
-    let (prompt, negative, width, height, seed, steps, cfg, sampler) = match &snapshot.parameters {
-        EffectiveGenerationParameters::Image(value) => {
-            pair("--batch-count", value.batch_count.to_string());
-            (
-                &value.prompt,
-                &value.negative_prompt,
-                value.width,
-                value.height,
-                value.seed,
-                value.steps,
-                value.cfg_scale,
-                value.sampler,
-            )
-        }
-        EffectiveGenerationParameters::Video(value) => {
-            pair("--fps", value.fps.to_string());
-            pair("--video-frames", value.frames.to_string());
-            (
-                &value.prompt,
-                &value.negative_prompt,
-                value.width,
-                value.height,
-                value.seed,
-                value.steps,
-                value.cfg_scale,
-                value.sampler,
-            )
-        }
-    };
+    let (prompt, negative, width, height, seed, steps, cfg, sampler, scheduler) =
+        match &snapshot.parameters {
+            EffectiveGenerationParameters::Image(value) => {
+                pair("--batch-count", value.batch_count.to_string());
+                (
+                    &value.prompt,
+                    &value.negative_prompt,
+                    value.width,
+                    value.height,
+                    value.seed,
+                    value.steps,
+                    value.cfg_scale,
+                    value.sampler,
+                    value.scheduler,
+                )
+            }
+            EffectiveGenerationParameters::Video(value) => {
+                pair("--fps", value.fps.to_string());
+                pair("--video-frames", value.frames.to_string());
+                (
+                    &value.prompt,
+                    &value.negative_prompt,
+                    value.width,
+                    value.height,
+                    value.seed,
+                    value.steps,
+                    value.cfg_scale,
+                    value.sampler,
+                    value.scheduler,
+                )
+            }
+        };
     for (flag, value) in [
         ("-p", prompt.clone()),
         ("-n", negative.clone()),
@@ -736,16 +753,8 @@ fn arguments(snapshot: &GenerationParameterSnapshot) -> Vec<NativeGenerationArgu
         ("-s", seed.to_string()),
         ("--steps", steps.to_string()),
         ("--cfg-scale", cfg.to_string()),
-        (
-            "--sampling-method",
-            if sampler == GenerationSampler::Euler {
-                "euler"
-            } else {
-                "euler_a"
-            }
-            .into(),
-        ),
-        ("--scheduler", "discrete".into()),
+        ("--sampling-method", sampler.native_name().into()),
+        ("--scheduler", scheduler.native_name().into()),
         ("--threads", snapshot.engine.cpu_threads.to_string()),
         ("--backend", snapshot.engine.backend.clone()),
         (
@@ -771,26 +780,65 @@ fn arguments(snapshot: &GenerationParameterSnapshot) -> Vec<NativeGenerationArgu
     if snapshot.engine.disable_prefetch {
         args.push(Literal("--disable-prefetch".into()));
     }
-    if snapshot.profile.is_image() {
-        args.extend([Literal("-m".into()), Component(GenerationAssetRole::Main)]);
-    } else {
-        for (flag, role) in [
-            ("--diffusion-model", GenerationAssetRole::Main),
-            ("--llm", GenerationAssetRole::TextEncoder),
-            ("--vae", GenerationAssetRole::VideoVae),
-            ("--audio-vae", GenerationAssetRole::AudioVae),
-        ] {
-            args.extend([Literal(flag.into()), Component(role)]);
-        }
-        if let EffectiveGenerationParameters::Video(value) = &snapshot.parameters {
-            if let Some(input) = &value.first_frame {
-                args.extend([
-                    Literal("--init-img".into()),
-                    InputResult(input.result_id.clone()),
-                ]);
-            }
+    for asset in snapshot.profile.weight_sources() {
+        args.extend([
+            Literal(snapshot.profile.component_argument(asset.role).into()),
+            Component(asset.role),
+        ]);
+    }
+    if let EffectiveGenerationParameters::Video(value) = &snapshot.parameters {
+        if let Some(input) = &value.first_frame {
+            args.extend([
+                Literal("--init-img".into()),
+                InputResult(input.result_id.clone()),
+            ]);
         }
     }
     args.extend([Literal("-o".into()), Output]);
     args
+}
+
+#[cfg(test)]
+mod model_defaults_tests {
+    use super::*;
+
+    #[test]
+    fn two_image_models_compile_different_geometry_defaults_and_samplers() {
+        let first = GenerationProfile::Sd15CpuTextToImage.defaults();
+        let second: inventory::Defaults = serde_json::from_value(json!({
+            "width": 480, "height": 320, "dimensionMultiple": 32,
+            "steps": 4, "cfgScale": 2.5, "negativePrompt": "", "seed": 17,
+            "samplers": ["euler"], "schedulers": ["karras"]
+        }))
+        .unwrap();
+        let prompt = DiffusionImageParameters {
+            prompt: Some("a blue cup".into()),
+            ..Default::default()
+        };
+        let a = image(first, prompt.clone()).unwrap();
+        let b = image(&second, prompt.clone()).unwrap();
+        assert_eq!(
+            (a.width, a.height, a.steps, a.seed, a.sampler),
+            (512, 512, 20, 42, GenerationSampler::EulerA)
+        );
+        assert_eq!(
+            (b.width, b.height, b.steps, b.seed, b.sampler),
+            (480, 320, 4, 17, GenerationSampler::Euler)
+        );
+        assert_eq!(b.cfg_scale, 2.5);
+        assert_eq!(a.scheduler, GenerationScheduler::Discrete);
+        assert_eq!(b.scheduler, GenerationScheduler::Karras);
+        let mut custom_scheduler = prompt.clone();
+        custom_scheduler.scheduler = Some(GenerationScheduler::Karras);
+        assert!(image(first, custom_scheduler.clone()).is_err());
+        assert!(image(&second, custom_scheduler).is_ok());
+        let mut custom = prompt.clone();
+        custom.width = Some(480);
+        assert!(image(first, custom.clone()).is_err());
+        assert!(image(&second, custom).is_ok());
+        let mut exclusive = prompt;
+        exclusive.sampler = Some(GenerationSampler::EulerA);
+        assert!(image(first, exclusive.clone()).is_ok());
+        assert!(image(&second, exclusive).is_err());
+    }
 }

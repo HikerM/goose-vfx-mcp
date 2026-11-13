@@ -105,6 +105,203 @@ fn disabled_diffusion_cache_uses_the_native_default_for_images_and_video() {
 }
 
 #[test]
+fn pinned_profiles_expose_only_bound_schedulers_and_first_frame_inputs() {
+    let wan = GenerationProfile::installation_profile("wan21-13b-cpu").unwrap();
+    for profile in [
+        GenerationProfile::Sd15CpuTextToImage,
+        GenerationProfile::H3CudaTextToVideoAudio,
+        GenerationProfile::H3CudaFirstFrameToVideoAudio,
+        wan,
+    ] {
+        let engine = service(profile);
+        let desc = engine.descriptor();
+        assert!(desc
+            .limitations
+            .iter()
+            .all(|message| !message.contains("PocketTTS")));
+        if profile == wan {
+            let first = &desc.fields["firstFrame"];
+            assert_eq!(first.support, GenerationParameterSupport::Unsupported);
+            assert!(first.constraints[0].contains("no registered"));
+        }
+        if profile == GenerationProfile::H3CudaTextToVideoAudio {
+            assert!(desc.fields["firstFrame"].constraints[0].contains("separate"));
+        }
+        if profile == GenerationProfile::H3CudaFirstFrameToVideoAudio {
+            assert_eq!(
+                desc.fields["firstFrame"].support,
+                GenerationParameterSupport::NativeSupported
+            );
+        }
+        let mut req = if profile.intent() == NativeTaskIntent::TextToImage {
+            image()
+        } else {
+            video()
+        };
+        if let GenerationParameters::Video(v) = &mut req {
+            if profile == GenerationProfile::H3CudaFirstFrameToVideoAudio {
+                v.first_frame = Some(input());
+            }
+        }
+        let accepted = &desc.fields["scheduler"];
+        let task = engine.compile(request(req.clone())).unwrap();
+        assert_eq!(
+            accepted.default,
+            Some(json!(literal_after(&task, "--scheduler")))
+        );
+        for value in &accepted.enum_values {
+            let mut json = serde_json::to_value(request(req.clone())).unwrap();
+            json["parameters"]["parameters"]["scheduler"] = value.clone();
+            let task = engine.compile_json(json).unwrap();
+            assert_eq!(Some(literal_after(&task, "--scheduler")), value.as_str());
+        }
+        assert!(!accepted.enum_values.contains(&json!("karras")));
+        let mut unbound = serde_json::to_value(request(req)).unwrap();
+        unbound["parameters"]["parameters"]["scheduler"] = json!("karras");
+        let error = engine.compile_json(unbound).unwrap_err();
+        assert_eq!(error.issues[0].field, "scheduler");
+        assert_eq!(error.issues[0].code, "unsupported_by_profile");
+    }
+}
+
+#[test]
+fn persisted_v1_snapshot_digests_reopen_for_the_exact_model_and_variant() {
+    // Frozen by compiling these requests against the earlier Windows build.
+    for (profile, req, old_descriptor, old_snapshot) in [
+        (
+            GenerationProfile::Sd15CpuTextToImage,
+            image(),
+            "f5e1ad23bbbec1d4652ea8f3a3b5fcd44a468c89f783ae0e9e2a59e1324779c9",
+            "e6097f45510d154a1e2313f6a643528383ed47d16afd81bb4015e6b88defd2d2",
+        ),
+        (
+            GenerationProfile::H3CudaTextToVideoAudio,
+            video(),
+            "bf3fd491360ef7d5d9748fe557b46341ff3cdedc6ae7162ddd075e7fee0fcb7d",
+            "3b9e439cf8906ab09f696390e6896da3f7b65f88795512b2cf12a00451935155",
+        ),
+        (
+            GenerationProfile::H3CudaFirstFrameToVideoAudio,
+            GenerationParameters::Video(H3VideoParameters {
+                prompt: Some(H3_PROMPT.into()),
+                first_frame: Some(input()),
+                ..Default::default()
+            }),
+            "1b079cf7e2e285d4565e15657835e01cdce814a02142443f6a428c32d7b8017a",
+            "83a3dddff65c40fbbf9e5437198d6faf160690216d45b868817c6bccc233f7b0",
+        ),
+    ] {
+        let engine = service(profile);
+        let task = engine.compile(request(req)).unwrap();
+        let mut stored = record(&task);
+        let digest = Sha256Digest::parse(old_descriptor).unwrap();
+        assert_ne!(digest, stored.snapshot.descriptor_digest);
+        assert!(engine.matches_descriptor_digest(&digest).unwrap());
+        assert!(!engine
+            .matches_descriptor_digest(&Sha256Digest::of_bytes(b"other contract"))
+            .unwrap());
+        stored.snapshot.descriptor_digest = digest;
+        stored.snapshot_digest = Sha256Digest::parse(old_snapshot).unwrap();
+        assert_eq!(stored.snapshot.digest().unwrap(), stored.snapshot_digest);
+        let patch = if profile.intent() == NativeTaskIntent::TextToImage {
+            GenerationParameters::Image(Default::default())
+        } else {
+            GenerationParameters::Video(Default::default())
+        };
+        let child = engine
+            .reuse_result("session-a", &stored, RESULT, "job-2", patch)
+            .unwrap();
+        assert_eq!(child.snapshot().parameters, stored.snapshot.parameters);
+        assert_eq!(
+            child.snapshot().descriptor_digest,
+            task.snapshot().descriptor_digest
+        );
+        assert_eq!(
+            child.snapshot().parent.as_ref().unwrap().snapshot_digest,
+            stored.snapshot_digest
+        );
+    }
+}
+
+#[test]
+fn installed_video_models_use_distinct_timing_audio_and_encoder_contracts() {
+    let wan = GenerationProfile::installation_profile("wan21-13b-cpu").unwrap();
+    let h3 = GenerationProfile::H3CudaTextToVideoAudio;
+    for (profile, fps, frames, audio, encoder) in [
+        (wan, 8, 17, GenerationAudioMode::VideoOnly, "--t5xxl"),
+        (h3, 24, 22, GenerationAudioMode::JointAudioVideo, "--llm"),
+    ] {
+        let engine = service(profile);
+        let prepared = engine.compile(request(video())).unwrap();
+        let EffectiveGenerationParameters::Video(parameters) = &prepared.snapshot().parameters
+        else {
+            panic!("expected video")
+        };
+        assert_eq!(
+            (parameters.fps, parameters.frames, parameters.audio_mode),
+            (fps, frames, audio)
+        );
+        assert!(prepared.arguments().windows(2).any(|args| args
+            == [
+                NativeGenerationArgument::Literal(encoder.into()),
+                NativeGenerationArgument::Component(GenerationAssetRole::TextEncoder)
+            ]));
+        let mut wrong = H3VideoParameters {
+            prompt: Some("A dog runs".into()),
+            ..Default::default()
+        };
+        wrong.fps = Some(if fps == 8 { 24 } else { 8 });
+        assert!(engine
+            .compile(request(GenerationParameters::Video(wrong.clone())))
+            .is_err());
+        wrong.fps = None;
+        wrong.audio_mode = Some(if audio == GenerationAudioMode::VideoOnly {
+            GenerationAudioMode::JointAudioVideo
+        } else {
+            GenerationAudioMode::VideoOnly
+        });
+        assert!(engine
+            .compile(request(GenerationParameters::Video(wrong)))
+            .is_err());
+    }
+    assert_ne!(wan.required_capabilities(), h3.required_capabilities());
+    assert!(!wan
+        .recorded_assets()
+        .contains_key(&GenerationAssetRole::AudioVae));
+}
+
+#[test]
+fn wan_resource_request_and_observed_arguments_are_bound_to_the_cpu_video_model() {
+    let evidence: Value = serde_json::from_str(include_str!("../../../documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-01-native-video-feasibility.json")).unwrap();
+    let argv = evidence["argv"].as_array().unwrap();
+    let prompt = argv[argv.iter().position(|a| a == "-p").unwrap() + 1]
+        .as_str()
+        .unwrap();
+    let profile = GenerationProfile::installation_profile("wan21-13b-cpu").unwrap();
+    let engine = service(profile);
+    let input = H3VideoParameters {
+        prompt: Some(prompt.into()),
+        ..Default::default()
+    };
+    let task = engine
+        .compile(request(GenerationParameters::Video(input.clone())))
+        .unwrap();
+    assert_eq!(evidence["status"], "QUALITY_FAILED");
+    assert!(task.snapshot().observation.matches_observed_request);
+    assert!(!task.snapshot().observation.quality_acceptance_complete);
+    let mut changed = input;
+    changed.seed = Some(GenerationSeed::Value { value: 999 });
+    assert!(
+        !engine
+            .compile(request(GenerationParameters::Video(changed)))
+            .unwrap()
+            .snapshot()
+            .observation
+            .matches_observed_request
+    );
+}
+
+#[test]
 fn profiles_match_independent_published_engine_and_weight_evidence() {
     let sd:Value=serde_json::from_str(include_str!("../../../documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-01-native-image-feasibility.json")).unwrap();
     let h3:Value=serde_json::from_str(include_str!("../../../documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-12-h3-native-video-smoke.json")).unwrap();

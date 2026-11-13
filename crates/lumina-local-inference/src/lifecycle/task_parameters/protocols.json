@@ -1,0 +1,101 @@
+{
+  "sd-cpp/checkpoint-image-cpu-v1": {
+    "runtime": {
+      "adapter_id": "diffusion-cpp-native-generation-v1",
+      "engine_revision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+      "binding_version": "sd15-image-parameters-v1",
+      "platform": "windows-x86_64",
+      "features": [
+        "cpu"
+      ],
+      "binary_sha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043"
+    },
+    "engine": {
+      "cpuThreads": 12,
+      "backend": "cpu",
+      "parametersBackend": "cpu",
+      "rng": "cpu",
+      "samplerRng": "cpu",
+      "flashAttention": "auto",
+      "cacheMode": "disabled",
+      "maxVramGib": null,
+      "disablePrefetch": false,
+      "outputFormat": "png"
+    },
+    "arguments": {
+      "main": "-m"
+    },
+    "intents": [
+      "text_to_image"
+    ],
+    "audioMode": null
+  },
+  "sd-cpp/joint-av-llm-cuda-v1": {
+    "runtime": {
+      "adapter_id": "diffusion-cpp-native-generation-v1",
+      "engine_revision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+      "binding_version": "minimax-h3-video-parameters-v1",
+      "platform": "windows-x86_64",
+      "features": [
+        "cuda-sm120a"
+      ],
+      "binary_sha256": "11e555cb67afd5d480de2ca25e40addb0cbea70cca37822b92c98f7383a0a4b5"
+    },
+    "engine": {
+      "cpuThreads": 8,
+      "backend": "diffusion=cuda0,te=cpu,vae=cpu",
+      "parametersBackend": "cpu",
+      "rng": "cpu",
+      "samplerRng": "cpu",
+      "flashAttention": "auto",
+      "cacheMode": "disabled",
+      "maxVramGib": 8,
+      "disablePrefetch": true,
+      "outputFormat": "avi"
+    },
+    "arguments": {
+      "main": "--diffusion-model",
+      "text_encoder": "--llm",
+      "video_vae": "--vae",
+      "audio_vae": "--audio-vae"
+    },
+    "intents": [
+      "text_to_video_with_audio",
+      "first_frame_to_video_with_audio"
+    ],
+    "audioMode": "joint_audio_video"
+  },
+  "sd-cpp/video-t5-cpu-v1": {
+    "runtime": {
+      "adapter_id": "diffusion-cpp-native-generation-v1",
+      "engine_revision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+      "binding_version": "wan21-t2v-parameters-v1",
+      "platform": "windows-x86_64",
+      "features": [
+        "cpu"
+      ],
+      "binary_sha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043"
+    },
+    "engine": {
+      "cpuThreads": 12,
+      "backend": "cpu",
+      "parametersBackend": "cpu",
+      "rng": "cpu",
+      "samplerRng": "cpu",
+      "flashAttention": "auto",
+      "cacheMode": "disabled",
+      "maxVramGib": null,
+      "disablePrefetch": false,
+      "outputFormat": "avi"
+    },
+    "arguments": {
+      "main": "--diffusion-model",
+      "text_encoder": "--t5xxl",
+      "video_vae": "--vae"
+    },
+    "intents": [
+      "text_to_video"
+    ],
+    "audioMode": "video_only"
+  }
+}

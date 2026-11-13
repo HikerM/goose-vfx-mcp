@@ -5,6 +5,8 @@
 //! requires resource admission. A native smoke observation cannot grant admission.
 
 mod compile;
+mod inventory;
+pub use inventory::GenerationProfile;
 mod profiles;
 mod registry;
 
@@ -19,10 +21,13 @@ pub const GENERATION_PARAMETER_SCHEMA: u32 = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum GenerationProfile {
-    Sd15CpuTextToImage,
-    H3CudaTextToVideoAudio,
-    H3CudaFirstFrameToVideoAudio,
+pub enum NativeTaskIntent {
+    TextToImage,
+    TextToVideo,
+    TextToVideoWithAudio,
+    FirstFrameToVideoWithAudio,
+    SpeechSynthesis,
+    Transcription,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -125,22 +130,70 @@ pub enum GenerationSeed {
     New,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum GenerationSampler {
-    Euler,
-    EulerA,
+// The engine and the wire contract use identical spellings, including punctuation.
+macro_rules! diffusion_options {
+    ($name:ident { $($variant:ident => $native:literal),+ $(,)? }) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+        pub enum $name {
+            $(#[serde(rename = $native)] $variant),+
+        }
+
+        impl $name {
+            fn native_name(self) -> &'static str {
+                match self { $(Self::$variant => $native),+ }
+            }
+        }
+    };
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum GenerationScheduler {
-    Discrete,
-}
+diffusion_options!(GenerationSampler {
+    Euler => "euler",
+    EulerA => "euler_a",
+    Heun => "heun",
+    Dpm2 => "dpm2",
+    DpmPlusPlus2sA => "dpm++2s_a",
+    DpmPlusPlus2m => "dpm++2m",
+    DpmPlusPlus2mv2 => "dpm++2mv2",
+    Ipndm => "ipndm",
+    IpndmV => "ipndm_v",
+    Lcm => "lcm",
+    DdimTrailing => "ddim_trailing",
+    Tcd => "tcd",
+    ResMultistep => "res_multistep",
+    Res2s => "res_2s",
+    ErSde => "er_sde",
+    EulerCfgPp => "euler_cfg_pp",
+    EulerACfgPp => "euler_a_cfg_pp",
+    EulerGe => "euler_ge",
+    DpmPlusPlus2mSde => "dpm++2m_sde",
+    DpmPlusPlus2mSdeBt => "dpm++2m_sde_bt",
+    Lms => "lms",
+});
+
+diffusion_options!(GenerationScheduler {
+    Discrete => "discrete",
+    Karras => "karras",
+    Exponential => "exponential",
+    Ays => "ays",
+    Gits => "gits",
+    SgmUniform => "sgm_uniform",
+    Simple => "simple",
+    Smoothstep => "smoothstep",
+    KlOptimal => "kl_optimal",
+    Lcm => "lcm",
+    BongTangent => "bong_tangent",
+    Ltx2 => "ltx2",
+    LogitNormal => "logit_normal",
+    Flux2 => "flux2",
+    Flux => "flux",
+    Beta => "beta",
+    LladaImage => "llada_image",
+});
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GenerationAudioMode {
+    VideoOnly,
     JointAudioVideo,
 }
 
@@ -151,11 +204,15 @@ pub struct GenerationAspectRatio {
     pub height: u32,
 }
 
+/// Historical Rust API names for the shared diffusion request types.
+pub type Sd15ImageParameters = DiffusionImageParameters;
+pub type H3VideoParameters = DiffusionVideoParameters;
+
 /// The same typed optional fields are used for creation and explicit patches.
 /// Missing patch fields inherit; null cannot remove a required input or select a model.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct Sd15ImageParameters {
+pub struct DiffusionImageParameters {
     pub prompt: Option<String>,
     pub negative_prompt: Option<String>,
     pub width: Option<u32>,
@@ -171,7 +228,7 @@ pub struct Sd15ImageParameters {
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
-pub struct H3VideoParameters {
+pub struct DiffusionVideoParameters {
     pub prompt: Option<String>,
     pub negative_prompt: Option<String>,
     pub first_frame: Option<GenerationMediaInput>,
@@ -198,8 +255,8 @@ pub struct H3VideoParameters {
     deny_unknown_fields
 )]
 pub enum GenerationParameters {
-    Image(Sd15ImageParameters),
-    Video(H3VideoParameters),
+    Image(DiffusionImageParameters),
+    Video(DiffusionVideoParameters),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -317,7 +374,30 @@ pub struct FrozenGenerationEngine {
     pub flow_shift: Option<u32>,
     pub max_vram_gib: Option<u32>,
     pub disable_prefetch: bool,
-    pub output_format: String,
+    pub output_format: GenerationOutputFormat,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum GenerationOutputFormat {
+    Png,
+    Avi,
+}
+
+impl GenerationOutputFormat {
+    pub fn extension(self) -> &'static str {
+        match self {
+            Self::Png => "png",
+            Self::Avi => "avi",
+        }
+    }
+
+    pub fn mime(self) -> &'static str {
+        match self {
+            Self::Png => "image/png",
+            Self::Avi => "video/x-msvideo",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

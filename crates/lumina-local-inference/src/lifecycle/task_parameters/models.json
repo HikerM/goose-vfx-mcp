@@ -1,0 +1,281 @@
+{
+  "sd15-cpu": {
+    "adapterProtocol": "sd-cpp/checkpoint-image-cpu-v1",
+    "variants": {
+      "sd15_cpu_text_to_image": {
+        "intent": "text_to_image",
+        "taskVariant": "sd15/text_to_image",
+        "observedParameters": {
+          "task": "image",
+          "parameters": {
+            "prompt": "a photograph of a red apple on a wooden table, studio lighting, high quality",
+            "negativePrompt": "blurry, distorted, low quality",
+            "width": 512,
+            "height": 512,
+            "aspectRatio": {
+              "width": 1,
+              "height": 1
+            },
+            "seed": 42,
+            "steps": 20,
+            "cfgScale": 7.0,
+            "sampler": "euler_a",
+            "scheduler": "discrete",
+            "batchCount": 1
+          }
+        }
+      }
+    },
+    "installProfile": "sd15_cpu_text_to_image",
+    "defaults": {
+      "width": 512,
+      "height": 512,
+      "dimensionMultiple": 64,
+      "negativePrompt": "blurry, distorted, low quality",
+      "steps": 20,
+      "cfgScale": 7.0,
+      "seed": 42,
+      "schedulers": [
+        "discrete"
+      ],
+      "samplers": [
+        "euler_a",
+        "euler"
+      ]
+    },
+    "evidence": "2026-11-01-native-image-feasibility.json",
+    "assets": [
+      {
+        "role": "main",
+        "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+        "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f",
+        "file": "stable-diffusion-v1-5-FP16.gguf",
+        "sha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+        "sizeBytes": 2132584864
+      }
+    ],
+    "parameterSchemaId": "sd15-image-parameters-v1"
+  },
+  "minimax-h3-cuda": {
+    "adapterProtocol": "sd-cpp/joint-av-llm-cuda-v1",
+    "variants": {
+      "h3_cuda_text_to_video_audio": {
+        "intent": "text_to_video_with_audio",
+        "taskVariant": "minimax_h3/text_to_video_audio",
+        "observedParameters": {
+          "task": "video",
+          "parameters": {
+            "prompt": "A single red apple on a wooden table slowly rolls to the right. Fixed camera, natural daylight. Soft rolling sound, no speech.",
+            "negativePrompt": "",
+            "width": 256,
+            "height": 256,
+            "aspectRatio": {
+              "width": 1,
+              "height": 1
+            },
+            "seed": 42,
+            "steps": 8,
+            "cfgScale": 1.0,
+            "sampler": "euler",
+            "scheduler": "discrete",
+            "firstFrame": null,
+            "frames": 22,
+            "fps": 24,
+            "duration": {
+              "numerator": 22,
+              "denominator": 24
+            },
+            "audioMode": "joint_audio_video"
+          }
+        }
+      },
+      "h3_cuda_first_frame_to_video_audio": {
+        "intent": "first_frame_to_video_with_audio",
+        "taskVariant": "minimax_h3/first_frame_to_video_audio",
+        "observedParameters": {
+          "task": "video",
+          "parameters": {
+            "prompt": "A single red apple on a wooden table slowly rolls to the right. Fixed camera, natural daylight. Soft rolling sound, no speech.",
+            "negativePrompt": "",
+            "width": 256,
+            "height": 256,
+            "aspectRatio": {
+              "width": 1,
+              "height": 1
+            },
+            "seed": 42,
+            "steps": 8,
+            "cfgScale": 1.0,
+            "sampler": "euler",
+            "scheduler": "discrete",
+            "firstFrame": {
+              "sessionId": "",
+              "resultId": "",
+              "sha256": "2370e2963c2bbf8186f899684d7b60985f0196ac5c620c08c6e7522d1d49a034",
+              "sizeBytes": 467603,
+              "mimeType": "image/png",
+              "width": 512,
+              "height": 512
+            },
+            "frames": 22,
+            "fps": 24,
+            "duration": {
+              "numerator": 22,
+              "denominator": 24
+            },
+            "audioMode": "joint_audio_video"
+          }
+        }
+      }
+    },
+    "installProfile": "h3_cuda_text_to_video_audio",
+    "defaults": {
+      "width": 256,
+      "height": 256,
+      "dimensionMultiple": 32,
+      "negativePrompt": "",
+      "steps": 8,
+      "cfgScale": 1.0,
+      "seed": 42,
+      "schedulers": [
+        "discrete"
+      ],
+      "samplers": [
+        "euler"
+      ],
+      "video": {
+        "frames": 22,
+        "minimumFrames": 5,
+        "frameStep": 17,
+        "fps": 24,
+        "fpsConstraint": "H3 overrides all other FPS values; this adapter rejects them",
+        "audioMode": "joint_audio_video"
+      },
+      "flowShift": 12
+    },
+    "evidence": "2026-11-12-h3-native-video-smoke.json",
+    "assets": [
+      {
+        "role": "main",
+        "repository": "leejet/MiniMax-H3-GGUF",
+        "revision": "a09574553b7d47a064cffcfd6898d4501c315c76",
+        "file": "minimax_h3_fl2va_pruned-Q4_K_M.gguf",
+        "sha256": "dd948e08ad0ba3c71bd42f368e283dd82e790f5122a63b276e22a3e0283d0c10",
+        "sizeBytes": 11420663904
+      },
+      {
+        "role": "text_encoder",
+        "repository": "leejet/MiniMax-H3-GGUF",
+        "revision": "a09574553b7d47a064cffcfd6898d4501c315c76",
+        "file": "qwen3vl_32b_minimax_h3-Q4_K_M.gguf",
+        "sha256": "11e6efe70a57ce7f4838c47bdbd1a1c4b8ce10e2b7747f1b065990b70f4b05fc",
+        "sizeBytes": 18218065024
+      },
+      {
+        "role": "video_vae",
+        "repository": "convertor/minimax-h3-gguf",
+        "revision": "2c1d402845a06200b19987e787f2112fa078a0e2",
+        "file": "minimax_h3_video_vae_fp16-f16.gguf",
+        "sha256": "2806d06d195d41a351a4a838125e9ddea09abb2770e1ef6bb9168409d1d393d9",
+        "sizeBytes": 5207785056
+      },
+      {
+        "role": "audio_vae",
+        "repository": "convertor/minimax-h3-gguf",
+        "revision": "2c1d402845a06200b19987e787f2112fa078a0e2",
+        "file": "minimax_h3_audio_vae_fp32-f16.gguf",
+        "sha256": "45764b28074abab09ec9fa1447b3eed3113b2e6878c177bab5bce0572064edf4",
+        "sizeBytes": 302904896
+      }
+    ],
+    "parameterSchemaId": "minimax-h3-video-parameters-v1"
+  },
+  "wan21-13b-cpu": {
+    "adapterProtocol": "sd-cpp/video-t5-cpu-v1",
+    "variants": {
+      "wan21_13b_cpu_text_to_video": {
+        "intent": "text_to_video",
+        "taskVariant": "wan2.1/text_to_video",
+        "observedParameters": {
+          "task": "video",
+          "parameters": {
+            "prompt": "A small brown dog runs from left to right across green grass in daylight, fixed camera, realistic video.",
+            "negativePrompt": "static, still frame, blurry, low quality, distorted anatomy",
+            "width": 256,
+            "height": 256,
+            "aspectRatio": {
+              "width": 1,
+              "height": 1
+            },
+            "seed": 42,
+            "steps": 20,
+            "cfgScale": 6.0,
+            "sampler": "euler",
+            "scheduler": "discrete",
+            "firstFrame": null,
+            "frames": 17,
+            "fps": 8,
+            "duration": {
+              "numerator": 17,
+              "denominator": 8
+            },
+            "audioMode": "video_only"
+          }
+        }
+      }
+    },
+    "installProfile": "wan21_13b_cpu_text_to_video",
+    "defaults": {
+      "width": 256,
+      "height": 256,
+      "dimensionMultiple": 16,
+      "negativePrompt": "static, still frame, blurry, low quality, distorted anatomy",
+      "steps": 20,
+      "cfgScale": 6.0,
+      "seed": 42,
+      "schedulers": [
+        "discrete"
+      ],
+      "samplers": [
+        "euler"
+      ],
+      "video": {
+        "frames": 17,
+        "minimumFrames": 1,
+        "frameStep": 4,
+        "fps": 8,
+        "fpsConstraint": "This CPU profile has recorded output timing at 8 FPS.",
+        "audioMode": "video_only"
+      },
+      "flowShift": 3
+    },
+    "evidence": "2026-11-01-native-video-feasibility.json",
+    "assets": [
+      {
+        "role": "main",
+        "repository": "calcuis/wan-1.3b-gguf",
+        "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+        "file": "wan2.1_t2v_1.3b-q8_0.gguf",
+        "sizeBytes": 1587083488,
+        "sha256": "e6db35de304f0b5b4b4689d41b95fa853fff747581bea75adac25939a73dbead"
+      },
+      {
+        "role": "text_encoder",
+        "repository": "calcuis/wan-1.3b-gguf",
+        "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+        "file": "umt5-xxl-encoder-q4_k_m.gguf",
+        "sizeBytes": 3655145312,
+        "sha256": "17cf97a5bbbc60a646d6105b832b6f657ce904a8a1ad970e4b59df0c67584a40"
+      },
+      {
+        "role": "video_vae",
+        "repository": "calcuis/wan-1.3b-gguf",
+        "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+        "file": "pig_wan_vae_fp32-f16.gguf",
+        "sizeBytes": 253875904,
+        "sha256": "290e463b9d6680146cfd06e5740adb918b239ac8aef1f64f9d4d35fa11747bcd"
+      }
+    ],
+    "parameterSchemaId": "wan21-t2v-parameters-v1"
+  }
+}
