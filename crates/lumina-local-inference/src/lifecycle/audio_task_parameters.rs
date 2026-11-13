@@ -1,9 +1,12 @@
 //! Model-specific offline audio parameter compilers. These produce bound plans, not
 //! execution permission; the managed owner must verify inputs and admit resources.
 
+mod models;
 mod profiles;
+mod reuse;
 mod services;
 
+pub use reuse::*;
 pub use services::*;
 
 use super::{
@@ -18,11 +21,12 @@ use std::collections::{BTreeMap, BTreeSet};
 pub const AUDIO_TASK_PARAMETER_SCHEMA: u32 = 1;
 pub const AUDIO_TASK_PARAMETER_EVIDENCE: &str = "2026-11-01-audio-asr-tts-feasibility.json";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum AudioTaskProfile {
-    PocketTtsEnglishCpu,
-    Qwen3Asr06bCpu,
+pub use models::AudioTaskProfile;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AudioTaskProtocol {
+    PocketTtsOffline,
+    Qwen3AsrOffline,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -146,6 +150,8 @@ pub struct AudioTaskSnapshotMetadata {
     /// PocketTTS captures voice, seed and several options in prepare(), not run().
     /// Neither adapter permits reuse of a previously prepared native session.
     pub requires_new_native_preparation: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub derivation: Option<AudioTaskDerivation>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

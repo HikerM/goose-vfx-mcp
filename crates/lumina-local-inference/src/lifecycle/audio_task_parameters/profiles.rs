@@ -2,67 +2,57 @@ use super::*;
 use serde_json::json;
 
 const REVISION: &str = "c0cd77fa80285f8113883e0de06ffc781cf502f6";
-const BINARY: &str = "da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787";
+const LEGACY_BINARY: &str = "da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787";
+const LONG_PATH_BINARY: &str = "b319916421e54024ba4229462e1a577f368627176fc538d3be6d4a8a5398394f";
 
 impl AudioTaskProfile {
+    pub fn for_parameter_schema(schema: &str) -> Option<Self> {
+        Self::registered().find(|profile| profile.schema_id() == schema)
+    }
+
     pub fn runtime_build(self) -> RuntimeBuild {
+        let mut build = self.legacy_runtime_build();
+        build.binary_sha256 = Sha256Digest::parse(LONG_PATH_BINARY).expect("pinned digest");
+        build.features.insert("windows-long-path-aware".into());
+        build
+    }
+
+    pub fn legacy_runtime_build(self) -> RuntimeBuild {
         RuntimeBuild {
             adapter_id: "audio-cpp-offline-parameters-v1".into(),
             engine_revision: REVISION.into(),
             binding_version: self.schema_id().into(),
             platform: "windows-x86_64".into(),
             features: BTreeSet::from(["cpu".into()]),
-            binary_sha256: Sha256Digest::parse(BINARY).expect("pinned digest"),
+            binary_sha256: Sha256Digest::parse(LEGACY_BINARY).expect("pinned digest"),
         }
     }
 
     pub fn recorded_model(self) -> (Sha256Digest, u64) {
-        let (sha, size) = match self {
-            Self::PocketTtsEnglishCpu => (
-                "3f71cf6a51f93c2f2e554e98970a3f49fb9a98d0c64bed5a815e65be3d2ff588",
-                127_867_968,
-            ),
-            Self::Qwen3Asr06bCpu => (
-                "5c53bbb9a6b2ade85c16c290c560658ca18b78a23c323378528f1f945683fcbe",
-                1_151_279_968,
-            ),
-        };
-        (Sha256Digest::parse(sha).expect("pinned digest"), size)
+        if let Some((_, digest, size)) = self.external_weight() {
+            return (digest, size);
+        }
+        let weights = &self.record().weights;
+        (
+            Sha256Digest::parse(weights.sha256).expect("pinned digest"),
+            weights.size,
+        )
     }
 
     pub fn recorded_model_spec(self) -> (Sha256Digest, u64) {
-        let (sha, size) = match self {
-            Self::PocketTtsEnglishCpu => (
-                "dd430cdc4c54ef04899c88272ba5b3561ffb121b9be4a1d9829c8fa0478750e8",
-                15_862,
-            ),
-            Self::Qwen3Asr06bCpu => (
-                "0cdc4bc56a2c11d092fff7a5ebe08612ecfc09d0310f845de26ea800b5bb5465",
-                14_197,
-            ),
-        };
-        (Sha256Digest::parse(sha).expect("pinned digest"), size)
+        let spec = &self.record().spec;
+        (
+            Sha256Digest::parse(spec.sha256).expect("pinned digest"),
+            spec.size,
+        )
     }
 
     pub fn capability(self) -> ModelCapability {
-        match self {
-            Self::PocketTtsEnglishCpu => ModelCapability::SpeechSynthesis,
-            Self::Qwen3Asr06bCpu => ModelCapability::Transcription,
-        }
-    }
-
-    pub(super) fn schema_id(self) -> &'static str {
-        match self {
-            Self::PocketTtsEnglishCpu => "pocket-tts-english-offline-parameters-v1",
-            Self::Qwen3Asr06bCpu => "qwen3-asr-0.6b-offline-parameters-v1",
-        }
+        self.record().capability
     }
 
     pub(super) fn family(self) -> &'static str {
-        match self {
-            Self::PocketTtsEnglishCpu => "pocket_tts",
-            Self::Qwen3Asr06bCpu => "qwen3_asr",
-        }
+        self.record().family
     }
 
     pub(super) fn validate(
@@ -78,7 +68,8 @@ impl AudioTaskProfile {
                 ));
             }
         }
-        if binding.runtime != self.runtime_build() {
+        if binding.runtime != self.runtime_build() && binding.runtime != self.legacy_runtime_build()
+        {
             return Err(invalid(
                 "binding.runtime",
                 "unsupported_runtime",
@@ -126,15 +117,7 @@ impl AudioTaskProfile {
             component_binding_digest: digest(&(&binding.model, &binding.model_spec))?
                 .as_str()
                 .into(),
-            task_variant: format!(
-                "{}/offline/{}",
-                self.family(),
-                if self == Self::PocketTtsEnglishCpu {
-                    "english_voice_reference"
-                } else {
-                    "transcription"
-                }
-            ),
+            task_variant: self.task_variant().into(),
             parameter_schema_id: self.schema_id().into(),
         })
     }
@@ -206,33 +189,50 @@ fn field(
     }
 }
 
-fn limitations() -> Vec<String> {
+fn limitations(profile: AudioTaskProfile) -> Vec<String> {
+    let defaults = if profile.external_weight().is_some() {
+        "Model-specific defaults come from the configured catalog; quality and resource measurements are required for this weight"
+    } else {
+        "Defaults are explicit compiler settings based on pinned native source; the historical smoke report did not freeze every request option"
+    };
     vec![
         "Exact model, explicit spec and CPU executable only; not a universal audio schema".into(),
         "Resource admission, verified input handles and managed execution are still required; no READY or quality acceptance is granted".into(),
         "Create only; parent-result patches and native prepared-session reuse are not provided by this adapter".into(),
-        "Defaults are explicit compiler settings based on pinned native source; the historical smoke report did not freeze every request option".into(),
+        defaults.into(),
         "Input references are metadata until the session owner verifies the same content digest, bytes and decoded samples".into(),
     ]
 }
 
 pub(super) fn pocket_descriptor(
+    profile: AudioTaskProfile,
     binding: AudioTaskModelBinding,
     identity: TaskParameterIdentity,
 ) -> PocketTtsDescriptor {
     let source = "src/models/pocket_tts/session.cpp";
+    let (language, temperature) = profile.pocket_settings();
+    let temperature_constraint = if profile == AudioTaskProfile::PocketTtsEnglishCpu {
+        "Finite and positive; captured during prepare; English builtin default explicitly passed"
+    } else {
+        "Finite and positive; the installed model default is explicitly passed"
+    };
+    let language_constraint = if profile == AudioTaskProfile::PocketTtsEnglishCpu {
+        "This exact English weight is fixed at load; the PocketTTS request contract does not accept language"
+    } else {
+        "The installed weight selects its language at load time"
+    };
     let mut fields = BTreeMap::new();
     for (name, value) in [
         ("text", field("string", true, None, "--text", "1..16384 UTF-8 bytes, no NUL or standalone native option token", source)),
         ("voiceReference", field("session_audio_reference", true, None, "--voice-ref", "Same-session verified WAV; <=30 seconds, no silent truncation; owner must revalidate", "src/models/pocket_tts/voice_conditioner.cpp")),
         ("seed", field("u32", false, None, "--seed", "Omission generates and records a concrete seed before persistence; captured during prepare", source)),
-        ("temperature", field("f32", false, Some(json!(0.3_f32)), "--temperature", "Finite and positive; captured during prepare; English builtin default explicitly passed", "src/models/pocket_tts/assets.cpp")),
+        ("temperature", field("f32", false, Some(json!(temperature)), "--temperature", temperature_constraint, "src/models/pocket_tts/assets.cpp")),
         ("maxFrames", field("u32", false, Some(json!(0)), "--request-option max_frames", "0..i32::MAX; 0 is native text-derived cap, not a fixed duration or resource limit", source)),
         ("textChunkTokens", field("u32", false, Some(json!(50)), "--request-option text_chunk_tokens", "1..i32::MAX; tokenizer tokens per text chunk, not image steps or output audio frames", source)),
         ("framesAfterEos", field("i32", false, Some(json!(-1)), "--request-option frames_after_eos", "-1 or non-negative; -1 retains model/text-derived EOS tail", source)),
     ] { fields.insert(name.into(), value); }
     let unsupported = [
-        ("language", "This exact English weight is fixed at load; the PocketTTS request contract does not accept language"),
+        ("language", language_constraint),
         ("emotion", "PocketTTS session rejects runtime style controls"),
         ("speed", "PocketTTS session rejects runtime speaking-rate controls"),
         ("speakingRate", "PocketTTS session rejects runtime speaking-rate controls"),
@@ -245,23 +245,30 @@ pub(super) fn pocket_descriptor(
         binding,
         fields,
         unsupported,
-        model_language: "english".into(),
+        model_language: language.into(),
         output_sample_rate: 24_000,
-        evidence: AUDIO_TASK_PARAMETER_EVIDENCE.into(),
-        limitations: limitations(),
+        evidence: profile.evidence().into(),
+        limitations: limitations(profile),
     }
 }
 
 pub(super) fn asr_descriptor(
+    profile: AudioTaskProfile,
     binding: AudioTaskModelBinding,
     identity: TaskParameterIdentity,
 ) -> Qwen3AsrDescriptor {
     let source = "src/models/qwen3_asr/session.cpp";
+    let (languages, language, max_tokens) = profile.asr_settings();
+    let language_constraint = if profile.external_weight().is_some() {
+        "Choose a recognition language declared by this installed model"
+    } else {
+        "Recognized language label; source-supported choices, only English has the referenced smoke evidence"
+    };
     let fields = [
         ("audio", field("session_audio_reference", true, None, "--audio", "Same-session verified WAV, 8k..192k Hz, mono/stereo, <=256MiB encoded and decoded protocol bounds; not memory admission", source)),
         ("context", field("string", false, Some(json!("")), "--text", "At most 16384 UTF-8 bytes, no NUL or standalone native option token; supplied as ASR context", source)),
-        ("language", field("enum", false, Some(json!("auto")), "--language", "Recognized language label; source-supported choices, only English has the referenced smoke evidence", "src/models/qwen3_asr/assets.cpp")),
-        ("maxTokens", field("u32", false, Some(json!(512)), "--max-tokens", "1..i32::MAX native option representation; actual prompt+output context and memory still require admission", source)),
+        ("language", field("enum", false, Some(json!(language)), "--language", language_constraint, "src/models/qwen3_asr/assets.cpp")),
+        ("maxTokens", field("u32", false, Some(json!(max_tokens)), "--max-tokens", "1..i32::MAX native option representation; actual prompt+output context and memory still require admission", source)),
         ("chunking", field("fixed_or_whole_file", false, Some(json!({"kind":"fixed","seconds":30.0})), "--audio-chunk-mode/--audio-chunk-seconds", "Fixed: finite positive seconds producing >=1 sample; WholeFile carries no ignored duration; VAD and timestamps need extra assets", source)),
     ].into_iter().map(|(key, value)| (key.into(), value)).collect();
     let unsupported = [
@@ -278,8 +285,8 @@ pub(super) fn asr_descriptor(
         binding,
         fields,
         unsupported,
-        recognition_languages: Qwen3AsrLanguage::all(),
-        evidence: AUDIO_TASK_PARAMETER_EVIDENCE.into(),
-        limitations: limitations(),
+        recognition_languages: languages,
+        evidence: profile.evidence().into(),
+        limitations: limitations(profile),
     }
 }

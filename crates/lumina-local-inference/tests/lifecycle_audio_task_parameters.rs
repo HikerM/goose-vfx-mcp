@@ -4,6 +4,9 @@ use std::collections::BTreeSet;
 
 const RESULT: &str = "019a1111-2222-8333-8444-555555555555";
 
+#[path = "support/audio_task_reuse.rs"]
+mod audio_task_reuse;
+
 fn binding(profile: AudioTaskProfile) -> AudioTaskModelBinding {
     let (sha256, size_bytes) = profile.recorded_model();
     let model = AudioTaskAssetBinding {
@@ -87,8 +90,132 @@ fn string(value: &str) -> NativeAudioArgument {
 }
 
 #[test]
+fn external_audio_models_select_their_own_language_options_and_defaults() {
+    const TEST: &str = "external_audio_models_select_their_own_language_options_and_defaults";
+    if std::env::var_os("LUMINA_AUDIO_CONTRACT_CHILD").is_none() {
+        let dir = tempfile::tempdir().unwrap();
+        let catalog = dir.path().join("catalog.json");
+        let models = [
+            ("speech-fr", json!({"protocol":"pocket_tts_offline","language":"french","temperature":0.7})),
+            ("speech-es", json!({"protocol":"pocket_tts_offline","language":"spanish","temperature":0.5})),
+            ("asr-zh", json!({"protocol":"qwen3_asr_offline","languages":["chinese"],"defaultLanguage":"chinese","maxTokens":128})),
+        ].map(|(name, parameters)| json!({
+            "name":name, "repository":"example/audio", "revision":"a".repeat(40),
+            "file":format!("{name}.gguf"), "sha256":Sha256Digest::of_bytes(name.as_bytes()),
+            "sizeBytes":1024, "parameters":parameters
+        }));
+        std::fs::write(
+            &catalog,
+            serde_json::to_vec(&json!({"schemaVersion":1, "models":models})).unwrap(),
+        )
+        .unwrap();
+        let result = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", TEST, "--nocapture"])
+            .env("LUMINA_AUDIO_CATALOG", &catalog)
+            .env("LUMINA_AUDIO_CONTRACT_CHILD", "1")
+            .output()
+            .unwrap();
+        assert!(
+            result.status.success() && String::from_utf8_lossy(&result.stdout).contains("1 passed"),
+            "{}\n{}",
+            String::from_utf8_lossy(&result.stdout),
+            String::from_utf8_lossy(&result.stderr)
+        );
+        return;
+    }
+    let profile = |name| {
+        AudioTaskProfile::registered()
+            .find(|p| p.installation_name() == name)
+            .unwrap()
+    };
+    for (name, language, temperature) in [
+        ("speech-fr", "french", 0.7_f32),
+        ("speech-es", "spanish", 0.5),
+    ] {
+        let selected = profile(name);
+        let service = PocketTtsParameterService::new(binding(selected)).unwrap();
+        let descriptor = service.descriptor();
+        assert_eq!(descriptor.model_language, language);
+        assert_eq!(
+            descriptor.fields["temperature"].default,
+            Some(json!(temperature))
+        );
+        let task = service.compile(tts()).unwrap();
+        assert_eq!(
+            flag(task.arguments(), "--load-option"),
+            &string(&format!("language={language}"))
+        );
+        assert_eq!(task.snapshot().parameters.temperature, temperature);
+        assert_eq!(
+            serde_json::from_value::<AudioTaskProfile>(json!(selected)).unwrap(),
+            selected
+        );
+    }
+    let service = Qwen3AsrParameterService::new(binding(profile("asr-zh"))).unwrap();
+    assert_eq!(
+        service.descriptor().recognition_languages,
+        [Qwen3AsrLanguage::Chinese]
+    );
+    let task = service.compile(asr()).unwrap();
+    assert_eq!(
+        task.snapshot().parameters.language,
+        Qwen3AsrLanguage::Chinese
+    );
+    assert_eq!(task.snapshot().parameters.max_tokens, 128);
+    let mut request = asr();
+    request.language = Some(Qwen3AsrLanguage::English);
+    assert!(service.compile(request.clone()).is_err());
+    assert!(asr_service().compile(request).is_ok());
+    assert_ne!(
+        profile("speech-fr").runtime_build().binding_version,
+        profile("speech-es").runtime_build().binding_version
+    );
+    assert!(serde_json::from_value::<AudioTaskProfile>(json!("unknown")).is_err());
+}
+
+#[test]
+fn protocol_dispatch_rejects_cross_family_registration_and_preserves_old_versions() {
+    let tts = AudioTaskProfile::PocketTtsEnglishCpu;
+    let asr = AudioTaskProfile::Qwen3Asr06bCpu;
+    assert_eq!(tts.protocol(), AudioTaskProtocol::PocketTtsOffline);
+    assert_eq!(asr.protocol(), AudioTaskProtocol::Qwen3AsrOffline);
+    for profile in AudioTaskProfile::registered() {
+        assert_eq!(
+            AudioTaskProfile::for_parameter_schema(&profile.runtime_build().binding_version),
+            Some(profile)
+        );
+    }
+    assert!(AudioTaskProfile::for_parameter_schema("unsupported-schema").is_none());
+    assert!(PocketTtsParameterService::for_profile(asr, binding(asr)).is_err());
+    assert!(Qwen3AsrParameterService::for_profile(tts, binding(tts)).is_err());
+    for runtime in [tts.legacy_runtime_build(), tts.runtime_build()] {
+        let mut installed = binding(tts);
+        installed.runtime = runtime;
+        let from_catalog = PocketTtsParameterService::for_profile(tts, installed.clone()).unwrap();
+        assert_eq!(
+            from_catalog.descriptor(),
+            PocketTtsParameterService::new(installed)
+                .unwrap()
+                .descriptor()
+        );
+    }
+    for runtime in [asr.legacy_runtime_build(), asr.runtime_build()] {
+        let mut installed = binding(asr);
+        installed.runtime = runtime;
+        let from_catalog = Qwen3AsrParameterService::for_profile(asr, installed.clone()).unwrap();
+        assert_eq!(
+            from_catalog.descriptor(),
+            Qwen3AsrParameterService::new(installed)
+                .unwrap()
+                .descriptor()
+        );
+    }
+}
+
+#[test]
 fn audio_profiles_match_independent_recorded_binary_weights_and_explicit_specs() {
     let evidence: Value = serde_json::from_str(include_str!("../../../documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-01-audio-asr-tts-feasibility.json")).unwrap();
+    let long_paths: Value = serde_json::from_str(include_str!("../../../documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-13-m4-audio-windows-longpath.json")).unwrap();
     for (profile, family) in [
         (AudioTaskProfile::PocketTtsEnglishCpu, "pocket_tts"),
         (AudioTaskProfile::Qwen3Asr06bCpu, "qwen3_asr"),
@@ -100,8 +227,14 @@ fn audio_profiles_match_independent_recorded_binary_weights_and_explicit_specs()
             .find(|m| m["family"] == family)
             .unwrap();
         assert_eq!(
-            profile.runtime_build().binary_sha256.as_str(),
+            profile.legacy_runtime_build().binary_sha256.as_str(),
             evidence["binarySha256"].as_str().unwrap()
+        );
+        assert_eq!(
+            profile.runtime_build().binary_sha256.as_str(),
+            long_paths["package"]["independentRepackageSha256"]
+                .as_str()
+                .unwrap()
         );
         assert_eq!(
             profile.runtime_build().engine_revision,

@@ -3,22 +3,24 @@ use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
 pub struct PocketTtsParameterService {
+    profile: AudioTaskProfile,
     descriptor: PocketTtsDescriptor,
 }
 
 pub struct Qwen3AsrParameterService {
+    profile: AudioTaskProfile,
     descriptor: Qwen3AsrDescriptor,
 }
 
 #[derive(Debug, Clone)]
 pub struct PocketTtsPreparedTask {
-    snapshot: PocketTtsSnapshot,
+    pub(super) snapshot: PocketTtsSnapshot,
     arguments: Vec<NativeAudioArgument>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Qwen3AsrPreparedTask {
-    snapshot: Qwen3AsrSnapshot,
+    pub(super) snapshot: Qwen3AsrSnapshot,
     arguments: Vec<NativeAudioArgument>,
 }
 
@@ -60,9 +62,18 @@ impl Qwen3AsrSnapshot {
 
 impl PocketTtsParameterService {
     pub fn new(binding: AudioTaskModelBinding) -> GenerationParameterResult<Self> {
-        let identity = AudioTaskProfile::PocketTtsEnglishCpu.validate(&binding)?;
+        let profile = profile_for_binding(AudioTaskProtocol::PocketTtsOffline, &binding)?;
+        Self::for_profile(profile, binding)
+    }
+
+    pub fn for_profile(
+        profile: AudioTaskProfile,
+        binding: AudioTaskModelBinding,
+    ) -> GenerationParameterResult<Self> {
+        let identity = validate_protocol(profile, AudioTaskProtocol::PocketTtsOffline, &binding)?;
         Ok(Self {
-            descriptor: profiles::pocket_descriptor(binding, identity),
+            profile,
+            descriptor: profiles::pocket_descriptor(profile, binding, identity),
         })
     }
 
@@ -91,7 +102,8 @@ impl PocketTtsParameterService {
         {
             return Err(invalid("voiceReference", "protocol_limit", "Voice reference exceeds the 30-second adapter bound; implicit truncation is disabled"));
         }
-        let temperature = request.temperature.unwrap_or(0.3);
+        let (language, default_temperature) = self.profile.pocket_settings();
+        let temperature = request.temperature.unwrap_or(default_temperature);
         if !temperature.is_finite() || temperature <= 0. {
             return Err(invalid(
                 "temperature",
@@ -137,8 +149,8 @@ impl PocketTtsParameterService {
             eos_threshold: -4.,
             truncate_clone_audio: false,
         };
-        let mut args = common_arguments(AudioTaskProfile::PocketTtsEnglishCpu, "tts");
-        literal(&mut args, "--load-option", "language=english");
+        let mut args = common_arguments(self.profile, "tts");
+        literal(&mut args, "--load-option", format!("language={language}"));
         literal(&mut args, "--text", &parameters.text);
         args.extend([
             NativeAudioArgument::Literal("--voice-ref".into()),
@@ -177,9 +189,18 @@ impl PocketTtsParameterService {
 
 impl Qwen3AsrParameterService {
     pub fn new(binding: AudioTaskModelBinding) -> GenerationParameterResult<Self> {
-        let identity = AudioTaskProfile::Qwen3Asr06bCpu.validate(&binding)?;
+        let profile = profile_for_binding(AudioTaskProtocol::Qwen3AsrOffline, &binding)?;
+        Self::for_profile(profile, binding)
+    }
+
+    pub fn for_profile(
+        profile: AudioTaskProfile,
+        binding: AudioTaskModelBinding,
+    ) -> GenerationParameterResult<Self> {
+        let identity = validate_protocol(profile, AudioTaskProtocol::Qwen3AsrOffline, &binding)?;
         Ok(Self {
-            descriptor: profiles::asr_descriptor(binding, identity),
+            profile,
+            descriptor: profiles::asr_descriptor(profile, binding, identity),
         })
     }
 
@@ -200,7 +221,16 @@ impl Qwen3AsrParameterService {
         media("audio", &request.session_id, &request.audio)?;
         let context = request.context.unwrap_or_default();
         native_text("context", &context, false)?;
-        let max_tokens = request.max_tokens.unwrap_or(512);
+        let (_, default_language, default_max_tokens) = self.profile.asr_settings();
+        let language = request.language.unwrap_or(default_language);
+        if !self.descriptor.recognition_languages.contains(&language) {
+            return Err(invalid(
+                "language",
+                "unsupported_by_model",
+                "Language is not declared by the selected model",
+            ));
+        }
+        let max_tokens = request.max_tokens.unwrap_or(default_max_tokens);
         bounded_int("maxTokens", max_tokens, 1)?;
         let chunking = request
             .chunking
@@ -222,12 +252,12 @@ impl Qwen3AsrParameterService {
         let parameters = EffectiveQwen3AsrParameters {
             audio: request.audio,
             context,
-            language: request.language.unwrap_or(Qwen3AsrLanguage::Auto),
+            language,
             max_tokens,
             chunking,
             return_timestamps: false,
         };
-        let mut args = common_arguments(AudioTaskProfile::Qwen3Asr06bCpu, "asr");
+        let mut args = common_arguments(self.profile, "asr");
         args.extend([
             NativeAudioArgument::Literal("--audio".into()),
             NativeAudioArgument::Input(parameters.audio.clone()),
@@ -287,6 +317,36 @@ impl ModelTaskParameterAdapter for Qwen3AsrParameterService {
     }
 }
 
+fn profile_for_binding(
+    protocol: AudioTaskProtocol,
+    binding: &AudioTaskModelBinding,
+) -> GenerationParameterResult<AudioTaskProfile> {
+    AudioTaskProfile::for_parameter_schema(&binding.runtime.binding_version)
+        .filter(|profile| profile.protocol() == protocol)
+        .ok_or_else(|| {
+            invalid(
+                "binding.runtime",
+                "unsupported_runtime",
+                "No model with this parameter schema implements the requested audio protocol",
+            )
+        })
+}
+
+fn validate_protocol(
+    profile: AudioTaskProfile,
+    expected: AudioTaskProtocol,
+    binding: &AudioTaskModelBinding,
+) -> GenerationParameterResult<TaskParameterIdentity> {
+    if profile.protocol() != expected {
+        return Err(invalid(
+            "binding.runtime",
+            "protocol_mismatch",
+            "Registered audio model uses a different execution protocol",
+        ));
+    }
+    profile.validate(binding)
+}
+
 fn parse_request<T: DeserializeOwned>(
     value: Value,
     unsupported: &BTreeMap<String, String>,
@@ -320,10 +380,11 @@ fn metadata(
         cpu_threads: 4,
         execution_status: AudioTaskExecutionStatus::NeedsResourceAdmission,
         requires_new_native_preparation: true,
+        derivation: None,
     })
 }
 
-fn identity(field: &str, value: &str) -> GenerationParameterResult<()> {
+pub(super) fn identity(field: &str, value: &str) -> GenerationParameterResult<()> {
     if value.trim().is_empty() || value.len() > 256 || value.chars().any(char::is_control) {
         return Err(invalid(
             field,
