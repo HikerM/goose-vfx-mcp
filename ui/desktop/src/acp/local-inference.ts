@@ -5,8 +5,20 @@ import type {
   LocalInferenceModelDownloadRequest_unstable,
   LocalInferenceModelDto,
   LocalInferenceModelSettingsDto,
+  NativeTaskIdentityDto,
+  NativeTaskIntentDto,
 } from '@hikerm/lumina-sdk';
 import { getAcpClient } from './acpConnection';
+
+export async function listInstalledTasks(sessionId: string, intent: NativeTaskIntentDto) {
+  const client = await getAcpClient();
+  return (await client.lumina.localInferenceTasksList_unstable({ sessionId, intent })).tasks;
+}
+
+export async function describeInstalledTask(sessionId: string, identity: NativeTaskIdentityDto) {
+  const client = await getAcpClient();
+  return client.lumina.localInferenceTasksDescribe_unstable({ sessionId, identity });
+}
 
 export type LocalModelResponse = LocalInferenceModelDto;
 export type DownloadProgress = LocalInferenceDownloadProgressDto & {

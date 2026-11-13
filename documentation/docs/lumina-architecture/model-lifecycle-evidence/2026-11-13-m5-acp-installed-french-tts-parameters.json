@@ -1,0 +1,117 @@
+{
+  "scope": "M5 desktop parameter catalog over the production ACP stdio transport on Windows",
+  "finishedAt": "2026-11-13T11:48:18.991893+00:00",
+  "invocation": [
+    "target/debug/lumina.exe",
+    "acp"
+  ],
+  "status": "passed",
+  "protocolVersion": 1,
+  "serverExitCode": 0,
+  "sessionId": "20261113_1",
+  "inputs": {
+    "cliSha256": "b1e937bfd1d906fc478570491c96ed10f55bcc81aa4f5f91c032fb5a89d123de",
+    "catalogSha256": "732e0ff7e5ba7b1223764f75d3b4624fd39ff177ba9a6231af7240d1d74a261b",
+    "modelSha256": "ae7e6d536c20245d216a7ec9404124cf67f913380bf41a6380c55d6ca9dbaef5",
+    "modelBytes": 128117408,
+    "storeSetup": "An SQLite backup of the installed French acceptance store and hard links to its original immutable blobs and version files were opened under a fresh application root. The version weight and published manifest were rehashed before starting the CLI."
+  },
+  "identity": {
+    "installationId": "acceptance-pocket-tts-fr-q8-cpu",
+    "versionId": "version:c527a22d-48f7-43b9-b449-d6c0d8dbd28b",
+    "manifestDigest": "2cd426e28af5fff8fc2b85135dc074955c9b89831cb09ad44a4e6bfdd098365a",
+    "runtimeDigest": "80897162079e1c789d62fc66542cc36a163bbede57972495957c3660a58b5132",
+    "componentBindingDigest": "d29e27360e2350f7a43f98333bd46d7f270625143e92501be6cefc0940e6ae60",
+    "taskVariant": "pocket-tts-fr-q8-cpu",
+    "parameterSchemaId": "audio-profile-80e61bc81ba3a0c6397d86d9c72a31485f7026437a450488dd3c8c2e085c5e57"
+  },
+  "wire": {
+    "requests": 12,
+    "openedSession": "session/new",
+    "listMethod": "_lumina/unstable/local-inference/tasks/list",
+    "describeMethod": "_lumina/unstable/local-inference/tasks/describe",
+    "intent": "speech_synthesis",
+    "family": "pocket_tts",
+    "listedTasks": 1,
+    "listEqualsDescription": true,
+    "rejectedIdentityFields": [
+      "installationId",
+      "versionId",
+      "manifestDigest",
+      "runtimeDigest",
+      "componentBindingDigest",
+      "taskVariant",
+      "parameterSchemaId"
+    ],
+    "eachMismatchedIdentityStatus": "not_found",
+    "unregisteredSessionError": {
+      "code": -32002,
+      "message": "ACP protocol error",
+      "data": "acp_protocol_error"
+    }
+  },
+  "parameters": {
+    "modelLanguage": "french",
+    "sampleRateHz": 24000,
+    "fields": {
+      "framesAfterEos": {
+        "valueType": "i32",
+        "required": false,
+        "nativeOption": "--request-option frames_after_eos",
+        "default": -1
+      },
+      "maxFrames": {
+        "valueType": "u32",
+        "required": false,
+        "nativeOption": "--request-option max_frames",
+        "default": 0
+      },
+      "seed": {
+        "valueType": "u32",
+        "required": false,
+        "nativeOption": "--seed",
+        "default": null
+      },
+      "temperature": {
+        "valueType": "f32",
+        "required": false,
+        "nativeOption": "--temperature",
+        "default": 0.699999988079071
+      },
+      "text": {
+        "valueType": "string",
+        "required": true,
+        "nativeOption": "--text",
+        "default": null
+      },
+      "textChunkTokens": {
+        "valueType": "u32",
+        "required": false,
+        "nativeOption": "--request-option text_chunk_tokens",
+        "default": 50
+      },
+      "voiceReference": {
+        "valueType": "session_audio_reference",
+        "required": true,
+        "nativeOption": "--voice-ref",
+        "default": null
+      }
+    },
+    "unsupported": [
+      "emotion",
+      "language",
+      "pitchShift",
+      "speakingRate",
+      "speed",
+      "streaming",
+      "voiceId"
+    ]
+  },
+  "artifacts": {
+    "target/lifecycle-validation/m5-acp-native-parameters/probe.py": "e4f57d0e704a839ca324919beaa22588c187b717a3288aea14f55b6d962e110b",
+    "target/lifecycle-validation/m5-acp-native-parameters/r2/wire.jsonl": "a69edb67dd87ab0519f554d874579a5f51df8bd56575b88af4b4dab4229bdf84",
+    "target/lifecycle-validation/m5-acp-native-parameters/r2/result.json": "fe36c09b5b4ec59f4815efca52e4de45ecefc0ae4a539184b0113c368698f116"
+  },
+  "firstAttempt": "The probe expected an internal error label in the unregistered-session response. ACP sanitizes that label; the repeated run asserted the on-wire -32002 rejection and preserved its full error.",
+  "limits": "This run exercised the installed-model list and describe methods used by the desktop client. No desktop window was operated and no synthesis or submission request was made."
+}

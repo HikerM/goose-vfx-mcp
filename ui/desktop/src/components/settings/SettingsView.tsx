@@ -77,10 +77,12 @@ export default function SettingsView({
   onClose,
   setView,
   viewOptions,
+  sessionIds = [],
 }: {
   onClose: () => void;
   setView: (view: View, viewOptions?: ViewOptions) => void;
   viewOptions: SettingsViewOptions;
+  sessionIds?: string[];
 }) {
   const [activeTab, setActiveTab] = useState('models');
   const hasTrackedInitialTab = useRef(false);
@@ -236,7 +238,7 @@ export default function SettingsView({
                     value="local-inference"
                     className="mt-0 focus-visible:outline-none focus-visible:ring-0"
                   >
-                    <LocalInferenceSection />
+                    <LocalInferenceSection sessionIds={sessionIds} />
                   </TabsContent>
                 )}
 

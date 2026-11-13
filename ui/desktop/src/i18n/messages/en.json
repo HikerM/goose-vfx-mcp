@@ -6280,5 +6280,80 @@
   },
   "userMessage.forkSessionTitle": {
     "defaultMessage": "Create a new session with the edited message"
+  },
+  "installedTasks.title": {
+    "defaultMessage": "Installed model parameters"
+  },
+  "installedTasks.session": {
+    "defaultMessage": "Chat session"
+  },
+  "installedTasks.intent": {
+    "defaultMessage": "Task"
+  },
+  "installedTasks.model": {
+    "defaultMessage": "Installed model and variant"
+  },
+  "installedTasks.openChat": {
+    "defaultMessage": "Open a chat to inspect the local models available to it."
+  },
+  "installedTasks.loading": {
+    "defaultMessage": "Loading model parameters…"
+  },
+  "installedTasks.empty": {
+    "defaultMessage": "No installed model offers this task."
+  },
+  "installedTasks.missing": {
+    "defaultMessage": "This installed version is no longer available. Refresh the model list."
+  },
+  "installedTasks.refresh": {
+    "defaultMessage": "Refresh model list"
+  },
+  "installedTasks.required": {
+    "defaultMessage": "Required"
+  },
+  "installedTasks.default": {
+    "defaultMessage": "Default: {value}"
+  },
+  "installedTasks.min": {
+    "defaultMessage": "Minimum: {value}"
+  },
+  "installedTasks.max": {
+    "defaultMessage": "Maximum: {value}"
+  },
+  "installedTasks.step": {
+    "defaultMessage": "Increment: {value}"
+  },
+  "installedTasks.options": {
+    "defaultMessage": "Choices: {values}"
+  },
+  "installedTasks.language": {
+    "defaultMessage": "Model language: {language}"
+  },
+  "installedTasks.rate": {
+    "defaultMessage": "Output sample rate: {rate} Hz"
+  },
+  "installedTasks.unsupported": {
+    "defaultMessage": "Unsupported parameters"
+  },
+  "installedTasks.unknown": {
+    "defaultMessage": "Support unverified"
+  },
+  "installedTasks.textToImage": {
+    "defaultMessage": "Text to image"
+  },
+  "installedTasks.textToVideo": {
+    "defaultMessage": "Text to video"
+  },
+  "installedTasks.textToVideoWithAudio": {
+    "defaultMessage": "Text to video with audio"
+  },
+  "installedTasks.frameToVideo": {
+    "defaultMessage": "First frame to video with audio"
+  },
+  "installedTasks.speech": {
+    "defaultMessage": "Speech synthesis"
+  },
+  "installedTasks.transcription": {
+    "defaultMessage": "Transcription"
   }
 }

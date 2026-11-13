@@ -5167,5 +5167,80 @@
   },
   "mediaResult.retry": {
     "defaultMessage": "重试"
+  },
+  "installedTasks.title": {
+    "defaultMessage": "已安装模型参数"
+  },
+  "installedTasks.session": {
+    "defaultMessage": "对话"
+  },
+  "installedTasks.intent": {
+    "defaultMessage": "任务"
+  },
+  "installedTasks.model": {
+    "defaultMessage": "已安装模型与变体"
+  },
+  "installedTasks.openChat": {
+    "defaultMessage": "打开一个对话，即可查看该对话可用的本地模型。"
+  },
+  "installedTasks.loading": {
+    "defaultMessage": "正在加载模型参数…"
+  },
+  "installedTasks.empty": {
+    "defaultMessage": "没有已安装的模型支持此任务。"
+  },
+  "installedTasks.missing": {
+    "defaultMessage": "该模型版本已不可用，请刷新模型列表。"
+  },
+  "installedTasks.refresh": {
+    "defaultMessage": "刷新模型列表"
+  },
+  "installedTasks.required": {
+    "defaultMessage": "必填"
+  },
+  "installedTasks.default": {
+    "defaultMessage": "默认值：{value}"
+  },
+  "installedTasks.min": {
+    "defaultMessage": "最小值：{value}"
+  },
+  "installedTasks.max": {
+    "defaultMessage": "最大值：{value}"
+  },
+  "installedTasks.step": {
+    "defaultMessage": "增量：{value}"
+  },
+  "installedTasks.options": {
+    "defaultMessage": "可选值：{values}"
+  },
+  "installedTasks.language": {
+    "defaultMessage": "模型语言：{language}"
+  },
+  "installedTasks.rate": {
+    "defaultMessage": "输出采样率：{rate} Hz"
+  },
+  "installedTasks.unsupported": {
+    "defaultMessage": "不支持的参数"
+  },
+  "installedTasks.unknown": {
+    "defaultMessage": "支持情况未验证"
+  },
+  "installedTasks.textToImage": {
+    "defaultMessage": "文生图"
+  },
+  "installedTasks.textToVideo": {
+    "defaultMessage": "文生视频"
+  },
+  "installedTasks.textToVideoWithAudio": {
+    "defaultMessage": "文生有声视频"
+  },
+  "installedTasks.frameToVideo": {
+    "defaultMessage": "首帧图生有声视频"
+  },
+  "installedTasks.speech": {
+    "defaultMessage": "语音合成"
+  },
+  "installedTasks.transcription": {
+    "defaultMessage": "语音转文字"
   }
 }
