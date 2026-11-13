@@ -15,6 +15,9 @@ use super::{
 
 pub(crate) const INSTALLATION_TASK_LIMIT: usize = 2;
 
+#[cfg(windows)]
+mod promote;
+
 #[derive(Clone, Copy)]
 pub(crate) enum TransferSlot {
     File,
@@ -354,6 +357,28 @@ impl InstallationStore {
         Ok(())
     }
 
+    pub(super) fn generation_publication_remaining(&self, manifest: &ModelManifest) -> Result<u64> {
+        let staged = installation_directory(manifest, false)?;
+        let path =
+            |relative: &str| RepositoryPath::parse(format!("{}/{}", staged.as_str(), relative));
+        let mut remaining = if self.existing(&path("manifest.json")?)?.is_some() {
+            0
+        } else {
+            serde_json::to_vec(manifest)?.len() as u64
+        };
+        for installed in manifest.installed_files.values() {
+            if self
+                .existing(&path(installed.relative_path.as_str())?)?
+                .is_none()
+            {
+                remaining = remaining
+                    .checked_add(installed.size_bytes)
+                    .context("Installation disk budget overflow")?;
+            }
+        }
+        Ok(remaining)
+    }
+
     fn prepare_files<F: Fn() -> i64>(
         &self,
         execution: &InstallationExecution<'_, F>,
@@ -396,8 +421,17 @@ impl InstallationStore {
             manifest_bytes.len() as u64
         };
         let mut counted_blobs = BTreeSet::new();
+        let promote = manifest.plan.rules_version == super::GENERATION_INSTALL_RULES_VERSION;
+        if promote {
+            ensure!(
+                cfg!(windows)
+                    && transfer_root == self.transfer_directory(&execution.lease.job_id)?,
+                "Generation publication requires its managed Windows transfer directory"
+            );
+        }
         for installed in manifest.installed_files.values() {
-            if counted_blobs.insert(&installed.computed_sha256)
+            if !promote
+                && counted_blobs.insert(&installed.computed_sha256)
                 && !self
                     .target(&Self::blob_path(&installed.computed_sha256)?)?
                     .exists()
@@ -436,18 +470,30 @@ impl InstallationStore {
                     .iter()
                     .find(|file| &file.artifact_id == id)
                     .context("Accepted transfer is missing")?;
-                self.copy_file(
-                    execution,
-                    manifest,
-                    id,
-                    transfer_root,
-                    &transfer.relative_path,
-                    &blob,
-                )?;
-                remaining = remaining
-                    .checked_sub(installed.size_bytes)
-                    .context("Published blob exceeds its remaining budget")?;
-                reserve(remaining)?;
+                if promote {
+                    #[cfg(windows)]
+                    promote::verified_transfer(
+                        execution,
+                        manifest,
+                        id,
+                        transfer_root,
+                        &transfer.relative_path,
+                        &blob_path,
+                    )?;
+                } else {
+                    self.copy_file(
+                        execution,
+                        manifest,
+                        id,
+                        transfer_root,
+                        &transfer.relative_path,
+                        &blob,
+                    )?;
+                    remaining = remaining
+                        .checked_sub(installed.size_bytes)
+                        .context("Published blob exceeds its remaining budget")?;
+                    reserve(remaining)?;
+                }
             }
             self.verify_file(execution, manifest, id, &self.root, &blob)?;
             Self::make_read_only(&blob_path)?;
@@ -663,6 +709,17 @@ impl InstallationStore {
             journal.stage != InstallationCommitStage::Staging,
             "Installation preparation has not completed"
         );
+        let verify_published = || {
+            verify_installation_directory_with_progress(&self.root, &manifest, true, |_| {
+                execution.checkpoint().map(|_| ())
+            })
+        };
+        #[cfg(windows)]
+        let mut verified_publication = None;
+        #[cfg(not(windows))]
+        let verified_publication = None;
+        #[cfg(windows)]
+        let published_tree;
         if journal.stage == InstallationCommitStage::Prepared {
             let final_relative = installation_directory(&manifest, true)?;
             let (parent, _) = final_relative
@@ -703,11 +760,18 @@ impl InstallationStore {
                     "Both staged and published installation directories exist"
                 );
             }
-            let witness =
-                verify_installation_directory_with_progress(&self.root, &manifest, true, |_| {
-                    execution.checkpoint().map(|_| ())
-                })?;
+            #[cfg(windows)]
+            {
+                let directory = self.root.join(final_relative.as_str()).join("files");
+                published_tree = super::files::pin_directory_tree(&directory).ok();
+            }
+            let witness = verify_published()?;
             journal = execution.advance(&witness, InstallationCommitStage::FilesCommitted)?;
+            // Only reuse a witness while both its files and their directory tree are pinned.
+            #[cfg(windows)]
+            if published_tree.is_some() {
+                verified_publication = Some(witness);
+            }
         }
         ensure!(
             journal.stage == InstallationCommitStage::FilesCommitted,
@@ -715,10 +779,10 @@ impl InstallationStore {
         );
         self.verify_blobs(&manifest, |_| execution.checkpoint().map(|_| ()))?;
         self.verify_read_only_version(&manifest)?;
-        let witness =
-            verify_installation_directory_with_progress(&self.root, &manifest, true, |_| {
-                execution.checkpoint().map(|_| ())
-            })?;
+        let witness = match verified_publication {
+            Some(witness) => witness,
+            None => verify_published()?,
+        };
         execution.advance(&witness, InstallationCommitStage::Registered)?;
         repository
             .installed_version(&manifest.version_id)?

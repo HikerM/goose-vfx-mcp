@@ -5,11 +5,13 @@
 //! requires resource admission. A native smoke observation cannot grant admission.
 
 mod compile;
+mod install;
 mod inventory;
 pub use inventory::GenerationProfile;
 mod profiles;
 mod registry;
 
+pub use install::{GENERATION_INSTALL_RULES_VERSION, LEGACY_GENERATION_INSTALL_RULES_VERSION};
 pub use registry::*;
 
 use super::{ComponentRole, ModelCapability, ModelManifest, RuntimeBuild, Sha256Digest};

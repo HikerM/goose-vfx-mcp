@@ -32,7 +32,7 @@ pub use variants::*;
 mod components;
 pub use components::*;
 
-fn source_artifact_id(
+pub(super) fn source_artifact_id(
     snapshot_id: &str,
     path: &RepositoryPath,
     purpose: FilePurpose,
@@ -59,6 +59,10 @@ pub struct RepositoryInventory {
 
 impl RepositoryInventory {
     pub fn artifact(&self, path: &RepositoryPath, purpose: FilePurpose) -> Result<Artifact> {
+        ensure!(
+            !matches!(purpose, FilePurpose::RuntimeDistributionConfig(_)),
+            "Engine distribution files cannot be selected from a ModelScope inventory"
+        );
         self.validate()?;
         let file = self.files.get(path.as_str()).context(ModelSourceError {
             code: LifecycleErrorCode::SourceNotFound,
@@ -327,6 +331,10 @@ pub(crate) fn pinned_artifact_url(
     artifact: &Artifact,
     snapshot: &RepositorySnapshot,
 ) -> Result<reqwest::Url> {
+    ensure!(
+        !matches!(artifact.purpose, FilePurpose::RuntimeDistributionConfig(_)),
+        "Engine distribution files do not have ModelScope download URLs"
+    );
     artifact.validate()?;
     snapshot.validate()?;
     ensure!(

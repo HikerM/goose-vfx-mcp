@@ -61,6 +61,23 @@ fn read_map<T: DeserializeOwned + Serialize>(
 }
 
 impl LifecycleRepository {
+    pub(crate) fn catalog_artifact(&self, id: &str) -> Result<Option<Artifact>> {
+        let connection = self
+            .connection
+            .lock()
+            .map_err(|_| anyhow!("Model database lock poisoned"))?;
+        let stored = connection
+            .query_row(
+                "SELECT digest, payload FROM catalog_artifacts WHERE id = ?1",
+                [id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()?;
+        stored
+            .map(|(digest, payload)| read_record(digest, payload))
+            .transpose()
+    }
+
     pub fn save_catalog(&self, catalog: &ModelCatalogSnapshot) -> Result<()> {
         catalog.validate()?;
         let mut connection = self

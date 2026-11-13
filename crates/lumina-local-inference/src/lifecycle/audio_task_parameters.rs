@@ -1,11 +1,13 @@
 //! Model-specific offline audio parameter compilers. These produce bound plans, not
 //! execution permission; the managed owner must verify inputs and admit resources.
 
+mod install;
 mod models;
 mod profiles;
 mod reuse;
 mod services;
 
+pub use install::{AUDIO_INSTALL_RULES_VERSION, LEGACY_AUDIO_INSTALL_RULES_VERSION};
 pub use reuse::*;
 pub use services::*;
 
@@ -54,6 +56,7 @@ impl AudioTaskModelBinding {
     /// The spec is an explicit installed metadata artifact, never the GGUF's embedded spec.
     pub fn from_manifest(manifest: &ModelManifest) -> anyhow::Result<Self> {
         manifest.validate()?;
+        AudioTaskProfile::for_installation_assets(&manifest.plan)?;
         let mut assets = BTreeMap::new();
         for component in manifest.plan.dependencies.components.values() {
             anyhow::ensure!(

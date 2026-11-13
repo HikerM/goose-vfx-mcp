@@ -7,7 +7,6 @@ use std::sync::Arc;
 use super::{
     CacheInstallRequest, InstallPlan, InstallationStore, InstallationWorkerControl,
     InstalledVersion, LifecycleRepository, ModelScopeInstallRequest, Sha256Digest,
-    PREPARED_GGUF_PLAN_RULES_VERSION,
 };
 
 pub const INSTALLATION_INPUT_RULES_VERSION: &str = "installation-input-v1";
@@ -70,12 +69,19 @@ impl InstallationInput {
     pub(crate) fn validate_plan(&self, plan: &InstallPlan) -> Result<()> {
         self.validate()?;
         ensure!(
-            plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION,
+            plan.is_managed_install_plan(),
             "Installation input requires an accepted frozen GGUF plan"
         );
         if let InstallationSource::LocalCache { files } = &self.source {
             ensure!(
-                plan.artifacts.keys().eq(files.keys())
+                plan.artifacts
+                    .iter()
+                    .filter(|(_, a)| !matches!(
+                        a.purpose,
+                        super::FilePurpose::RuntimeDistributionConfig(_)
+                    ))
+                    .map(|(id, _)| id)
+                    .eq(files.keys())
                     && plan
                         .artifacts
                         .values()

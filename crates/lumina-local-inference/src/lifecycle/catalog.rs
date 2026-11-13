@@ -64,6 +64,14 @@ impl ModelCatalogSnapshot {
                 self.snapshots.contains_key(&artifact.snapshot_id),
                 "Artifact source is not in the model catalog"
             );
+            if let FilePurpose::RuntimeDistributionConfig(profile) = artifact.purpose {
+                ensure!(
+                    artifact
+                        == &profile
+                            .distribution_artifact(&self.snapshots[&artifact.snapshot_id])?,
+                    "Runtime spec is not bound to its pinned model snapshot"
+                );
+            }
             ensure!(
                 source_paths.insert((&artifact.snapshot_id, artifact.path.as_str())),
                 "Duplicate catalog file identity"

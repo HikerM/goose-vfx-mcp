@@ -183,7 +183,11 @@ impl LifecycleRepository {
         use super::super::files::{
             checked_local_path, open_for_verification, require_single_link_file,
         };
-        if plan.rules_version != crate::lifecycle::PREPARED_GGUF_PLAN_RULES_VERSION {
+        // Promotion gives the downloaded allocation to the blob. There is no extra
+        // blob allocation to credit, even when another installation owns that digest.
+        if !plan.is_managed_install_plan()
+            || plan.rules_version == crate::lifecycle::GENERATION_INSTALL_RULES_VERSION
+        {
             return Ok(0);
         }
         let mut copies = BTreeMap::new();
@@ -283,11 +287,27 @@ impl LifecycleRepository {
         } else {
             Self::reserve_blob_credits(connection, job, input, &plan)?
         };
-        let remaining = plan
+        let mut remaining = plan
             .required_disk_bytes
             .checked_sub(credit)
             .and_then(|bytes| bytes.checked_sub(blob_credit))
             .context("Storage credits exceed the installation storage peak")?;
+        let mut publication = false;
+        if plan.rules_version == crate::lifecycle::GENERATION_INSTALL_RULES_VERSION {
+            if let Some(journal) = Self::read_commit_by(connection, &job.id)? {
+                ensure!(
+                    journal.manifest.plan.digest()? == job.plan_digest,
+                    "Staging journal belongs to another plan"
+                );
+                remaining = if journal.stage == InstallationCommitStage::Staging {
+                    InstallationStore::open(&input.store_root)?
+                        .generation_publication_remaining(&journal.manifest)?
+                } else {
+                    0
+                };
+                publication = true;
+            }
+        }
         if !inactive {
             let other = Self::other_storage_by(connection, &job.id, &volume)?;
             let free = fs2::available_space(&input.store_root)?.min(limit);
@@ -296,7 +316,9 @@ impl LifecycleRepository {
             }
         }
         let reservation = StorageReservation {
-            rules_version: if credit == 0 && blob_credit == 0 {
+            rules_version: if publication {
+                PUBLICATION_STORAGE_RULES_VERSION
+            } else if credit == 0 && blob_credit == 0 {
                 STORAGE_RESERVATION_RULES_VERSION
             } else {
                 TRANSFER_STORAGE_RULES_VERSION

@@ -295,6 +295,8 @@ pub enum FilePurpose {
     GgufWeight,
     Tokenizer,
     RuntimeConfig,
+    /// The owning model snapshot selects a spec shipped with the pinned engine distribution.
+    RuntimeDistributionConfig(super::AudioTaskProfile),
     ChatTemplate,
 }
 
@@ -343,6 +345,7 @@ impl Artifact {
                 filename.as_str(),
                 "chat_template.jinja" | "chat_template.json"
             ),
+            FilePurpose::RuntimeDistributionConfig(profile) => profile.matches_spec_artifact(self),
         };
         ensure!(
             allowed,
@@ -660,6 +663,10 @@ impl LaunchConfig {
     /// Legacy manifests without admission retain identity-only validation.
     /// An adapter must enforce the bound workload before producing runtime readiness evidence.
     pub fn validate_binding(&self, manifest: &ModelManifest) -> Result<()> {
+        ensure!(
+            !manifest.plan.is_native_task_install_plan(),
+            "An install-only native task plan does not authorize a chat runtime launch"
+        );
         manifest.validate()?;
         ensure!(
             self.installation_id == manifest.installation_id
@@ -933,6 +940,21 @@ pub struct InstallPlan {
 }
 
 impl InstallPlan {
+    pub(crate) fn is_native_task_install_plan(&self) -> bool {
+        matches!(
+            self.rules_version.as_str(),
+            super::AUDIO_INSTALL_RULES_VERSION
+                | super::LEGACY_AUDIO_INSTALL_RULES_VERSION
+                | super::GENERATION_INSTALL_RULES_VERSION
+                | super::LEGACY_GENERATION_INSTALL_RULES_VERSION
+        )
+    }
+
+    pub(crate) fn is_managed_install_plan(&self) -> bool {
+        self.rules_version == super::PREPARED_GGUF_PLAN_RULES_VERSION
+            || self.is_native_task_install_plan()
+    }
+
     pub fn digest(&self) -> Result<Sha256Digest> {
         Sha256Digest::of_serializable(self)
     }
@@ -959,10 +981,11 @@ impl InstallPlan {
             "Missing runtime identity"
         );
         ensure!(
-            matches!(
-                self.hardware,
-                HardwareCompatibility::Runnable | HardwareCompatibility::Limited
-            ),
+            (self.is_native_task_install_plan() && self.hardware == HardwareCompatibility::Unknown)
+                || matches!(
+                    self.hardware,
+                    HardwareCompatibility::Runnable | HardwareCompatibility::Limited
+                ),
             "Hardware does not satisfy the installation profile"
         );
         ensure!(
@@ -1023,6 +1046,33 @@ impl InstallPlan {
                 .as_ref()
                 .context("Prepared plan has no frozen admission profile")?
                 .validate(self, now)?;
+        }
+        if matches!(
+            self.rules_version.as_str(),
+            super::GENERATION_INSTALL_RULES_VERSION
+                | super::LEGACY_GENERATION_INSTALL_RULES_VERSION
+        ) {
+            super::GenerationProfile::validate_installation_assets(self)?;
+        }
+        if matches!(
+            self.rules_version.as_str(),
+            super::AUDIO_INSTALL_RULES_VERSION | super::LEGACY_AUDIO_INSTALL_RULES_VERSION
+        ) {
+            let profile = super::AudioTaskProfile::for_installation_assets(self)?;
+            ensure!(
+                self.admission.is_none()
+                    && self.hardware == HardwareCompatibility::Unknown
+                    && self.required_disk_bytes == profile.install_peak_bytes(),
+                "Invalid install-only audio admission or storage budget"
+            );
+        } else {
+            ensure!(
+                !self
+                    .artifacts
+                    .values()
+                    .any(|a| matches!(a.purpose, FilePurpose::RuntimeDistributionConfig(_))),
+                "Runtime distribution config requires a pinned audio installation plan"
+            );
         }
         Ok(())
     }

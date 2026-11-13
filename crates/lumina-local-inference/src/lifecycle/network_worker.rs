@@ -151,6 +151,9 @@ async fn download_file<F: Fn() -> i64>(
     headers: &HeaderMap,
 ) -> Result<()> {
     let artifact = &plan.artifacts[&original.artifact_id];
+    if let FilePurpose::RuntimeDistributionConfig(profile) = artifact.purpose {
+        return execution.copy_runtime_spec(plan, original, profile);
+    }
     let snapshot = &plan.snapshots[&artifact.snapshot_id];
     let url = pinned_artifact_url(artifact, snapshot)?;
     let path = execution
@@ -469,8 +472,7 @@ where
                 .read_plan(&job.plan_id)?
                 .context("Network installation plan is missing")?;
             ensure!(
-                plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION
-                    && plan.digest()? == job.plan_digest,
+                plan.is_managed_install_plan() && plan.digest()? == job.plan_digest,
                 "Network installation requires its accepted immutable plan"
             );
             super::failure::validate_installation_store_admission(

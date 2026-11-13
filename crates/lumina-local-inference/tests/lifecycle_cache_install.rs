@@ -1921,6 +1921,61 @@ fn installing_fixture(fixture: &Fixture) -> (WorkerLease, ModelManifest, PathBuf
 }
 
 #[test]
+fn resumed_registration_rechecks_published_files_after_handles_close() {
+    let fixture = Fixture::new(true);
+    let (lease, manifest, transfer_root) = installing_fixture(&fixture);
+    let job = fixture.repository.read_job(&lease.job_id).unwrap().unwrap();
+    fixture
+        .store
+        .prepare(
+            &fixture.repository,
+            &lease,
+            job.version,
+            &manifest,
+            &transfer_root,
+            || 40,
+        )
+        .unwrap();
+    let root = fixture.store.root();
+    let staged = root.join(installation_directory(&manifest, false).unwrap().as_str());
+    let published = root.join(installation_directory(&manifest, true).unwrap().as_str());
+    std::fs::create_dir_all(published.parent().unwrap()).unwrap();
+    std::fs::rename(staged, &published).unwrap();
+    let witness = verify_installation_directory(root, &manifest, true).unwrap();
+    let job = fixture.repository.read_job(&lease.job_id).unwrap().unwrap();
+    fixture
+        .repository
+        .advance_installation_commit(
+            &lease,
+            job.version,
+            &witness,
+            InstallationCommitStage::FilesCommitted,
+            41,
+        )
+        .unwrap();
+    drop(witness);
+    let installed = manifest.installed_files.values().next().unwrap();
+    let path = published.join(installed.relative_path.as_str());
+    allow_test_write(&path);
+    let mut changed = fixture.bytes.clone();
+    *changed.last_mut().unwrap() ^= 1;
+    std::fs::write(&path, changed).unwrap();
+    let mut permissions = std::fs::metadata(&path).unwrap().permissions();
+    permissions.set_readonly(true);
+    std::fs::set_permissions(&path, permissions).unwrap();
+    let error = fixture
+        .store
+        .commit(&fixture.repository, &lease, || 42)
+        .unwrap_err();
+    assert!(format!("{error:#}").contains("SHA256"));
+    assert!(fixture
+        .repository
+        .installed_version(&manifest.version_id)
+        .unwrap()
+        .is_none());
+}
+
+#[test]
 fn direct_repository_commits_cannot_override_the_durable_destination() {
     let fixture = Fixture::new(true);
     let (lease, manifest, _) = installing_fixture(&fixture);

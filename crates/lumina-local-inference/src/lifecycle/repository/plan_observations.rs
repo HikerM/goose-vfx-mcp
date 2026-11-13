@@ -12,10 +12,7 @@ pub(super) const SCHEMA: &str = include_str!("migrations/0006.sql");
 pub const OBSERVED_GGUF_PLAN_RULES_VERSION: &str = "modelscope-gguf-plan-v1";
 
 pub(crate) fn requires_gguf_observations(plan: &InstallPlan) -> bool {
-    matches!(
-        plan.rules_version.as_str(),
-        OBSERVED_GGUF_PLAN_RULES_VERSION | PREPARED_GGUF_PLAN_RULES_VERSION
-    )
+    plan.rules_version == OBSERVED_GGUF_PLAN_RULES_VERSION || plan.is_managed_install_plan()
 }
 
 pub fn gguf_observation_evidence_id(id: &Sha256Digest) -> String {
@@ -31,6 +28,9 @@ fn validate_bindings(
     plan: &InstallPlan,
     bindings: &BTreeMap<String, Sha256Digest>,
 ) -> Result<Vec<GgufObservationRecord>> {
+    if plan.is_native_task_install_plan() {
+        plan.validate_for_install(i64::MIN, u64::MAX)?;
+    }
     ensure!(
         plan.admission.is_some() == (plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION),
         "Plan rules do not match its frozen admission profile"

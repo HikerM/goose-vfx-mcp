@@ -250,6 +250,9 @@ impl GenerationProfile {
     pub(super) fn weight_sources(self) -> &'static [WeightSource] {
         &self.model().assets
     }
+    pub(super) fn is_external(self) -> bool {
+        self.0.starts_with("external_")
+    }
     pub(super) fn is_image(self) -> bool {
         self.intent() == NativeTaskIntent::TextToImage
     }

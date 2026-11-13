@@ -1,12 +1,75 @@
 use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::fs::File;
 use std::io::{BufReader, Read, Seek};
 use std::path::{Path, PathBuf};
 
 use super::{
     FilePurpose, GgufReadLimits, InstallPlan, LifecycleErrorCode, RepositoryPath, Sha256Digest,
 };
+
+#[cfg(windows)]
+pub(super) fn pin_directory_tree(path: &Path) -> Result<Vec<File>> {
+    use std::path::{Component, Prefix};
+    let mut parts = path.components();
+    let drive = match parts.next() {
+        Some(Component::Prefix(prefix)) => match prefix.kind() {
+            Prefix::Disk(drive) | Prefix::VerbatimDisk(drive) => drive.to_ascii_uppercase(),
+            _ => anyhow::bail!("Task output root must be a local disk path"),
+        },
+        _ => anyhow::bail!("Task output root must be absolute"),
+    };
+    ensure!(
+        matches!(parts.next(), Some(Component::RootDir)),
+        "Task output root must be absolute"
+    );
+    let mut path = PathBuf::from(format!("\\\\?\\{}:\\", char::from(drive)));
+    let mut paths = vec![path.clone()];
+    for part in parts {
+        let Component::Normal(name) = part else {
+            anyhow::bail!("Task output root has an unsafe component");
+        };
+        let name = name.to_str().context("Task output path must be UTF-8")?;
+        ensure!(
+            !name.ends_with(['.', ' ']) && !name.contains(':'),
+            "Task output root has an ambiguous component"
+        );
+        path.push(name);
+        paths.push(path.clone());
+    }
+    ensure!(
+        paths.len() > 1,
+        "Volume root is not a task output directory"
+    );
+    paths.iter().map(|path| pin_directory(path)).collect()
+}
+
+#[cfg(windows)]
+pub(super) fn pin_directory(path: &Path) -> Result<File> {
+    use std::os::windows::fs::OpenOptionsExt;
+    let file = std::fs::OpenOptions::new()
+        .access_mode(0x80)
+        .share_mode(1)
+        .custom_flags(0x0200_0000 | 0x0020_0000)
+        .open(path)?;
+    let metadata = file.metadata()?;
+    ensure!(
+        metadata.is_dir() && !is_redirect(&metadata),
+        "Task output directory is a reparse point or not a directory"
+    );
+    Ok(file)
+}
+
+#[cfg(not(windows))]
+pub(super) fn pin_directory(_: &Path) -> Result<File> {
+    anyhow::bail!("Guarded native task output paths are currently implemented only on Windows")
+}
+
+#[cfg(not(windows))]
+pub(super) fn pin_directory_tree(_: &Path) -> Result<Vec<File>> {
+    anyhow::bail!("Guarded native task output paths are currently implemented only on Windows")
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -169,6 +232,18 @@ pub(crate) fn verify_artifact_file_with_progress(
     artifact_id: &str,
     root: &Path,
     relative_path: &RepositoryPath,
+    progress: impl FnMut(u64) -> Result<()>,
+) -> Result<VerifiedArtifactFile> {
+    let path = checked_local_path(root, relative_path)?;
+    let file = open_for_verification(&path)?;
+    verify_open_artifact(plan, artifact_id, file, relative_path, progress)
+}
+
+pub(super) fn verify_open_artifact(
+    plan: &InstallPlan,
+    artifact_id: &str,
+    mut file: std::fs::File,
+    relative_path: &RepositoryPath,
     mut progress: impl FnMut(u64) -> Result<()>,
 ) -> Result<VerifiedArtifactFile> {
     let artifact = plan
@@ -176,8 +251,6 @@ pub(crate) fn verify_artifact_file_with_progress(
         .get(artifact_id)
         .context("Artifact is absent from the installation plan")?;
     artifact.validate()?;
-    let path = checked_local_path(root, relative_path)?;
-    let mut file = open_for_verification(&path)?;
     let before = file.metadata()?;
     ensure!(before.is_file(), "Artifact is not a regular file");
     let expected_bytes = artifact.size_bytes.context("Artifact size is unknown")?;
@@ -233,10 +306,9 @@ pub(crate) fn verify_artifact_file_with_progress(
             !inspection.tensors.is_empty(),
             "GGUF weight contains no tensors"
         );
-        if matches!(
-            plan.rules_version.as_str(),
-            super::OBSERVED_GGUF_PLAN_RULES_VERSION | super::PREPARED_GGUF_PLAN_RULES_VERSION
-        ) {
+        if plan.rules_version == super::OBSERVED_GGUF_PLAN_RULES_VERSION
+            || plan.is_managed_install_plan()
+        {
             let evidence = super::gguf_header_evidence_id(artifact_id, &inspection.header_digest);
             ensure!(
                 plan.dependencies
@@ -430,12 +502,12 @@ pub(crate) fn require_single_link_file(file: &std::fs::File) -> Result<()> {
 }
 
 #[cfg(windows)]
-fn is_redirect(metadata: &std::fs::Metadata) -> bool {
+pub(super) fn is_redirect(metadata: &std::fs::Metadata) -> bool {
     use std::os::windows::fs::MetadataExt;
     metadata.file_attributes() & 0x400 != 0
 }
 
 #[cfg(not(windows))]
-fn is_redirect(metadata: &std::fs::Metadata) -> bool {
+pub(super) fn is_redirect(metadata: &std::fs::Metadata) -> bool {
     metadata.file_type().is_symlink()
 }

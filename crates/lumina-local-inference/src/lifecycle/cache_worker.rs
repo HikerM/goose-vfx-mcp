@@ -14,7 +14,6 @@ use super::{
     InstallPlan, InstallationCommitStage, InstallationStore, InstalledVersion, JobStatus,
     LifecycleErrorCode, LifecycleJob, LifecycleRepository, LifecycleStage, ModelSourceError,
     ResumeValidator, Sha256Digest, TransferCheckpoint, WorkerLease,
-    PREPARED_GGUF_PLAN_RULES_VERSION,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -104,6 +103,63 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
             remaining -= count as u64;
         }
         Ok(hasher)
+    }
+
+    pub(crate) fn copy_runtime_spec(
+        &self,
+        plan: &InstallPlan,
+        record: &FileTransferRecord,
+        profile: super::AudioTaskProfile,
+    ) -> Result<()> {
+        let artifact = &plan.artifacts[&record.artifact_id];
+        ensure!(
+            profile.matches_spec_artifact(artifact),
+            "Runtime spec is not pinned to this installation"
+        );
+        let bytes = profile.runtime_spec_bytes()?;
+        let path = self
+            .store
+            .transfer_file_path(&self.lease.job_id, &record.relative_path)?;
+        let mut target = super::files::open_exclusive_transfer(&path)?;
+        self.checkpoint()?;
+        // A packaged spec is at most 16 KiB, so its only durable checkpoint is the complete file.
+        let record = if record.checkpoint.completed_bytes > 0
+            || matches!(record.state, FileTransferState::Failed { .. })
+        {
+            self.repository.restart_file(
+                &self.lease,
+                &record.artifact_id,
+                record.version,
+                FileRestartReason::PartialContentMismatch,
+                (self.clock)(),
+            )?
+        } else {
+            record.clone()
+        };
+        self.repository.require_installation_space(
+            &self.lease.job_id,
+            self.store,
+            bytes.len() as u64,
+        )?;
+        target.set_len(0)?;
+        target.rewind()?;
+        target.write_all(bytes)?;
+        super::worker_control::sync_with_lease(
+            || target.sync_all(),
+            || self.checkpoint().map(|_| ()),
+        )?;
+        self.repository.checkpoint_synced_file(
+            &self.lease,
+            &record.artifact_id,
+            record.version,
+            TransferCheckpoint {
+                completed_bytes: bytes.len() as u64,
+                prefix_sha256: Sha256Digest::of_bytes(bytes),
+                resume_validator: ResumeValidator::Unknown,
+            },
+            (self.clock)(),
+        )?;
+        Ok(())
     }
 
     fn copy_file(
@@ -312,6 +368,10 @@ impl<F: Fn() -> i64> InstallExecution<'_, F> {
                         |_| self.checkpoint().map(|_| ()),
                     )
                     .map(|_| ())
+                } else if let super::FilePurpose::RuntimeDistributionConfig(profile) =
+                    plan.artifacts[&file.artifact_id].purpose
+                {
+                    self.copy_runtime_spec(&plan, &file, profile)
                 } else {
                     self.copy_file(
                         &plan,
@@ -499,8 +559,7 @@ pub(crate) fn install_from_local_cache_controlled(
             .read_plan(&job.plan_id)?
             .context("Cache installation plan is missing")?;
         ensure!(
-            plan.rules_version == PREPARED_GGUF_PLAN_RULES_VERSION
-                && plan.digest()? == job.plan_digest,
+            plan.is_managed_install_plan() && plan.digest()? == job.plan_digest,
             "Cache import requires the accepted frozen installation plan"
         );
         super::failure::validate_installation_store_admission(
@@ -510,11 +569,6 @@ pub(crate) fn install_from_local_cache_controlled(
             &plan,
             clock(),
         )?;
-        ensure!(
-            plan.artifacts.keys().eq(request.source_files.keys()),
-            "Cache source selection does not match the installation plan"
-        );
-        ensure!(plan.artifacts.values().all(|artifact| artifact.source_sha256.is_some()), "Local cache import requires pinned source checksums; unproven historical files require migration review");
         let input = super::InstallationInput::new(
             store,
             request.installation_id.clone(),
@@ -523,6 +577,7 @@ pub(crate) fn install_from_local_cache_controlled(
                 files: request.source_files.clone(),
             },
         )?;
+        input.validate_plan(&plan)?;
         repository.adopt_installation_input(&job.id, &input, clock())?;
         let lease = repository.claim(&job.id, job.version, worker_name, clock(), 120)?;
         let execution = InstallExecution {
