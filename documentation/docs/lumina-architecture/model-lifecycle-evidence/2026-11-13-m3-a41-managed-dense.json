@@ -1,0 +1,80 @@
+{
+  "scope": "Actual registered CPU text capability; frozen single-turn content, multi-turn history and one-token limit.",
+  "store": "D:/Project/goose/target/lifecycle-validation/m2-network-concurrency-r1/app/data/model-lifecycle",
+  "engine": "D:/Project/goose/target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/build-cpu/bin/Release/llama-server.exe",
+  "version_id": "network-concurrency-version-1",
+  "validation": {
+    "evidence": {
+      "installation_id": "network-concurrency-real-model",
+      "capability": "text",
+      "identity": {
+        "manifest_digest": "38bc574b962c4411b63e5ffd65a4a1c5ffde075f1df3057349248ff66550d46c",
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "launch_digest": "97a87f7824e871053cb37d4dfe6161ba8ef9f837f86c072ab4a54fbdd2170b91",
+        "suite_version": "managed-chat-a41-v1"
+      },
+      "status": "failed",
+      "input_digest": "8511eded1fb7b3db55d23dd4efbbd5c183b842cf8e9b36ce5024d1610c270844",
+      "output_digest": "9e24032af76e345ba0b2444872ab3c79ab7c9fd8bf02597e30182bf5d8cb6158",
+      "evidence_path": "chat-validation/9e24032af76e345ba0b2444872ab3c79ab7c9fd8bf02597e30182bf5d8cb6158.json",
+      "validated_at": 1794552316
+    },
+    "structure": "dense",
+    "correct": 6,
+    "completed": 10,
+    "minimum": 8,
+    "dialogs_passed": 3,
+    "dialogs_completed": 3,
+    "output_limit_passed": true,
+    "failure": null
+  },
+  "reopened_status": {
+    "version_id": "network-concurrency-version-1",
+    "capability": "text",
+    "status": "failed",
+    "reason": null,
+    "evidence": {
+      "installation_id": "network-concurrency-real-model",
+      "capability": "text",
+      "identity": {
+        "manifest_digest": "38bc574b962c4411b63e5ffd65a4a1c5ffde075f1df3057349248ff66550d46c",
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "launch_digest": "97a87f7824e871053cb37d4dfe6161ba8ef9f837f86c072ab4a54fbdd2170b91",
+        "suite_version": "managed-chat-a41-v1"
+      },
+      "status": "failed",
+      "input_digest": "8511eded1fb7b3db55d23dd4efbbd5c183b842cf8e9b36ce5024d1610c270844",
+      "output_digest": "9e24032af76e345ba0b2444872ab3c79ab7c9fd8bf02597e30182bf5d8cb6158",
+      "evidence_path": "chat-validation/9e24032af76e345ba0b2444872ab3c79ab7c9fd8bf02597e30182bf5d8cb6158.json",
+      "validated_at": 1794552316
+    }
+  }
+}

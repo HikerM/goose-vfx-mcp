@@ -1,0 +1,76 @@
+{
+  "test": "managed_validator_registers_verified_results_for_both_installed_models",
+  "log_sha256": "5a8868b56cd33e04e484d55ed92d85889ff9d0f7607ad127de9aac513eba7ccf",
+  "records": [
+    {
+      "version_id": "version:fedc1b66-cfcb-477f-a63b-148bff0d19c6",
+      "evidence": {
+        "installation_id": "acceptance-embedding",
+        "capability": "embedding",
+        "identity": {
+          "manifest_digest": "8644c94d4b8e35601574ddb0214308fc202e90f05d59ff3d5a9150942cf752c8",
+          "runtime": {
+            "adapter_id": "llama-helper",
+            "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+            "binding_version": "native-http-v1",
+            "platform": "x86_64-pc-windows-msvc",
+            "features": [
+              "cpu",
+              "dflash",
+              "embedding",
+              "mtmd",
+              "mtp",
+              "reranking"
+            ],
+            "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+          },
+          "launch_digest": "d929c7a5ba2ebe339990748d8972c50dbf1724f54e9d6d4e79f9c66c05547f95",
+          "suite_version": "managed-vector-relevance-v1"
+        },
+        "status": "ready",
+        "input_digest": "a471f719e0c6efc652d1cf9e492b9c9d483b6ebb9f5f86e7a965e99375bc6d6c",
+        "output_digest": "70729c437abc2013afde9208af3244159f4170c4af7695475e9977329ef97cae",
+        "evidence_path": "vector-validation/70729c437abc2013afde9208af3244159f4170c4af7695475e9977329ef97cae.json",
+        "validated_at": 1794549946
+      },
+      "correct": 18,
+      "total": 20,
+      "minimum": 18
+    },
+    {
+      "version_id": "version:12129e67-5ff9-4dda-bf91-8eb7af631496",
+      "evidence": {
+        "installation_id": "acceptance-reranker",
+        "capability": "reranking",
+        "identity": {
+          "manifest_digest": "a066fc84d2fd93349f72d972b3ef52432b0d98115b2fdce837a3382cf9459cac",
+          "runtime": {
+            "adapter_id": "llama-helper",
+            "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+            "binding_version": "native-http-v1",
+            "platform": "x86_64-pc-windows-msvc",
+            "features": [
+              "cpu",
+              "dflash",
+              "embedding",
+              "mtmd",
+              "mtp",
+              "reranking"
+            ],
+            "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+          },
+          "launch_digest": "3edeba8ebeefcc9f52740e92c815d3ac09555352d82ef8c17676abea21545cc7",
+          "suite_version": "managed-vector-relevance-v1"
+        },
+        "status": "ready",
+        "input_digest": "a471f719e0c6efc652d1cf9e492b9c9d483b6ebb9f5f86e7a965e99375bc6d6c",
+        "output_digest": "c8bde1aa7c23eaffc34cde4468dccbbc6eb3f288c5ccf93d9f3d96d5ddd40dc1",
+        "evidence_path": "vector-validation/c8bde1aa7c23eaffc34cde4468dccbbc6eb3f288c5ccf93d9f3d96d5ddd40dc1.json",
+        "validated_at": 1794549994
+      },
+      "correct": 19,
+      "total": 20,
+      "minimum": 18
+    }
+  ]
+}
