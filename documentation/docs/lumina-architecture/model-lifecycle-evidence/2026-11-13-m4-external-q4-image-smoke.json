@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "scope": "Direct native image generation with Q4_0 weights absent from the bundled inventory. Manual visual check of two requests for one prompt.",
+  "modelDefinition": {
+    "intents": [
+      "text_to_image"
+    ],
+    "name": "sd15-q4-external",
+    "assets": {
+      "main": {
+        "sha256": "c2f6e92f9d08d69cc673a1003528ac8199274b3c0eaec88d5fbefe5af67bd42b",
+        "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+        "sizeBytes": 1747190784,
+        "file": "stable-diffusion-v1-5-Q4_0.gguf",
+        "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f"
+      }
+    },
+    "adapterProtocol": "sd-cpp/checkpoint-image-cpu-v1",
+    "defaults": {
+      "schedulers": [
+        "discrete"
+      ],
+      "width": 512,
+      "cfgScale": 7,
+      "height": 512,
+      "samplers": [
+        "euler_a",
+        "euler"
+      ],
+      "seed": 42,
+      "steps": 20,
+      "negativePrompt": "",
+      "dimensionMultiple": 64
+    }
+  },
+  "engineSha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043",
+  "downloadSource": "ModelScope",
+  "inputVerifiedBytes": 1747190784,
+  "samples": [
+    {
+      "width": 256,
+      "height": 256,
+      "steps": 4,
+      "seed": 42,
+      "negativePrompt": "",
+      "prompt": "a photograph of a red apple on a wooden table, studio lighting, high quality",
+      "sampler": "euler_a",
+      "scheduler": "discrete",
+      "nativeSeconds": 11.74,
+      "outputBytes": 153393,
+      "outputSha256": "46ba3671dfb1622be7e2db6b23aa628ddfb0ba6497ede2943fc065a1c53df2b1",
+      "nativeLogSha256": "a346dae21709243c6cdb632467c176114326a797afce6d9354ef541b36350600",
+      "localOutput": "target/lifecycle-validation/m4-external-q4-native-smoke-r1/output.png",
+      "semanticCheck": "FAIL",
+      "visualObservation": "No recognizable apple. The image shows red and yellow bands and rectangular shapes."
+    },
+    {
+      "width": 512,
+      "height": 512,
+      "steps": 20,
+      "seed": 42,
+      "negativePrompt": "",
+      "prompt": "a photograph of a red apple on a wooden table, studio lighting, high quality",
+      "sampler": "euler_a",
+      "scheduler": "discrete",
+      "nativeSeconds": 192.73,
+      "outputBytes": 359029,
+      "outputSha256": "6f5ffab8c01a2aec3d4ec9b6d95d9d6926c85e1fff38dd4af6af4d48955eceb2",
+      "nativeLogSha256": "17c07377c42cc7ff477ccc5e57eefb004e6c5937d386cbf013a85826df0d6dd7",
+      "localOutput": "target/lifecycle-validation/m4-external-q4-native-default-r1/output.png",
+      "semanticCheck": "PASS",
+      "visualObservation": "A single recognizable red apple sits on a brown horizontal surface."
+    }
+  ],
+  "limits": "Both resolution and steps change between the two samples. This does not isolate either parameter or establish repeatability, managed execution, chat publication or readiness."
+}
