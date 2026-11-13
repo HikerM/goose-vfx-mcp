@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "scope": "Two local-provider CLI recipe attempts followed by three same-checkout libtest executables running the registered CPU models on Windows. The test executables were built earlier than the CLI. Capability results are scoped to the listed executables, engine, models and suites.",
+  "cli": {
+    "path": "target/debug/lumina.exe",
+    "sha256": "1628e79a83472e0d262acb1b52c1e785be164dd526eba4baa7b41b59a959afe4"
+  },
+  "cliBuildLog": {
+    "path": "target/lifecycle-validation/m4-model-catalog-cli-build-r2.log",
+    "sha256": "73972342da60b0357cae6435b64caffebfe1a44579f92326b2f5f10d00bfd01b"
+  },
+  "verifiedGenerationProfileHelp": {
+    "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r1/plan-generation-help.txt",
+    "sha256": "26698ebd83214ebfed305839c8c82b4bfe59a9994b1471069f3e2b4f2449c8d5"
+  },
+  "inferenceEngine": {
+    "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/build-cpu/bin/Release/llama-server.exe",
+    "sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+  },
+  "recipeAttempts": [
+    {
+      "phase": "managed-capabilities",
+      "status": "INCOMPLETE",
+      "localProviderModel": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:media-forwarding-recipe",
+      "recipeSha256AtStart": "350d959e8314e947c83ae840c7b764b76d0092b947bb3811cb858be66bf2589f",
+      "testStartObserved": false,
+      "errors": [
+        {
+          "toolId": "VhvwZ4KeCE5UhOcRJxwtfIAOOwoIMN2P",
+          "cause": "Cargo CMD shim rejected shell metacharacters",
+          "exitCode": 2
+        },
+        {
+          "toolId": "mJQpZjSEh9tcOY3zvjzKP9O9fcnXRuOy",
+          "cause": "Timed out waiting for the shared Cargo artifact directory lock",
+          "timeoutSeconds": 900
+        },
+        {
+          "toolId": "b22ZvNnpjWggRKp6C7NXLH2OFACMyFim",
+          "cause": "Timed out waiting for the shared Cargo artifact directory lock",
+          "timeoutSeconds": 900
+        }
+      ],
+      "termination": "Stopped this recipe after lock timeout to avoid duplicate test processes.",
+      "result": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r1/result.json",
+        "sha256": "5398c8993ac8c57966d6cdb3ec82aef3bcf3785177b49e4b165fd96fdc13a52c"
+      },
+      "rawEvents": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r1/run.jsonl",
+        "sha256": "7d40de05b8c2ef1afb4cde9cd619b91d10552b3cc6cadb8fe47b2459abadb42a"
+      }
+    },
+    {
+      "phase": "managed-chat",
+      "status": "INCOMPLETE",
+      "localProviderModel": "Abiray/Qwen3.6-35B-A3B-Q4_K_M-GGUF:media-forwarding-recipe",
+      "recipeSha256AtStart": "350d959e8314e947c83ae840c7b764b76d0092b947bb3811cb858be66bf2589f",
+      "testStartObserved": false,
+      "errors": [
+        {
+          "toolId": "I8Ucg6sR6RKGPWGQBwa4A2S79ql7E4vZ",
+          "cause": "Cargo CMD shim rejected shell metacharacters",
+          "exitCode": 2
+        },
+        {
+          "toolId": "oHeXV1poIIZdsNWalsPEg9hxIjzhObsr",
+          "cause": "Timed out waiting for the shared Cargo artifact directory lock",
+          "timeoutSeconds": 300
+        }
+      ],
+      "termination": "Stopped this recipe after lock timeout to avoid duplicate test processes.",
+      "result": {
+        "path": "target/lifecycle-validation/m4-managed-chat-recipe-20261113-r1/result.json",
+        "sha256": "413ec1a90fc6d0e00182fd1c3df301ef0bae29e261763d334d4ede4fc36550ed"
+      },
+      "rawEvents": {
+        "path": "target/lifecycle-validation/m4-managed-chat-recipe-20261113-r1/run.jsonl",
+        "sha256": "c3d8e924d59cc00e2ea75768ebae8629abbc03c393ed559d329c861a0f1471e0"
+      }
+    }
+  ],
+  "directSuites": [
+    {
+      "suite": "vision",
+      "status": "PASS",
+      "test": "managed_vision_suite_checks_changed_images_and_multiturn_on_the_registered_pair",
+      "startedAt": "2026-11-13T09:54:04.690736+00:00",
+      "finishedAt": "2026-11-13T09:59:21.627429+00:00",
+      "testExecutable": {
+        "path": "target/debug/deps/lifecycle_managed_vision-5d9e6bbc0fbf1ec8.exe",
+        "sha256": "348895028166aed665301642b74633fe6dfefd7263f6008912c1ee06489a2c8a",
+        "modifiedAt": "2026-11-13T07:13:31.335393+00:00"
+      },
+      "previousBuildLog": {
+        "path": "target/lifecycle-validation/m3-a43-managed-vision-r1.log",
+        "sha256": "4ee478a11858677a546c8d0101bc71c623bfe628eaac1d9b6477deaccabc014d"
+      },
+      "testList": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/vision-test-list.txt",
+        "sha256": "bbf883e194f3643608872a9676379af69eb3c71eb06e3bdde638da8b1bd18955"
+      },
+      "testResult": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 313.23s",
+      "rawLog": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/direct-vision.log",
+        "sha256": "0e93801b0a1a3d30b829a6378390370ed4d2aed75d5ba1af7b095a801bed6dd7"
+      },
+      "runRecord": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/direct-vision.json",
+        "sha256": "4295e113ff68f7c8164a25b32ef62a2116a954666fef148973fb3e96f14ce437"
+      },
+      "results": [
+        {
+          "installationId": "paired-vision-model",
+          "capability": "vision",
+          "suiteVersion": "managed-vision-a43-v1",
+          "manifestDigest": "9ac4178bfd9b6a2fa97a10abd00399724e30a6d9eacf9e7d32a4beb27fa25b65",
+          "verdict": "ready",
+          "sqliteReopenMatchesEvidence": true,
+          "persistedOutput": {
+            "path": "target/lifecycle-validation/m1-m2-vision-install-r1/app/data/model-lifecycle/vision-validation/8d507c78115c78ba30c3e0f16fc6eb216847193d898f9babcdd8d4e7290c8898.json",
+            "sha256": "8d507c78115c78ba30c3e0f16fc6eb216847193d898f9babcdd8d4e7290c8898"
+          },
+          "score": {
+            "correct": 10,
+            "completed": 10,
+            "replacements_passed": 4,
+            "dialogs_passed": 3,
+            "dialogs_completed": 3
+          }
+        }
+      ]
+    },
+    {
+      "suite": "vectors",
+      "status": "PASS",
+      "test": "managed_validator_registers_verified_results_for_both_installed_models",
+      "startedAt": "2026-11-13T09:59:21.629729+00:00",
+      "finishedAt": "2026-11-13T10:01:24.188087+00:00",
+      "testExecutable": {
+        "path": "target/debug/deps/lifecycle_managed_vectors-bf3994bdd9db5d7c.exe",
+        "sha256": "f45f2fb7899d6a68f67aa7278631d92485a67d69e11dc5c30de0b6d410170772",
+        "modifiedAt": "2026-11-13T08:10:52.121670+00:00"
+      },
+      "previousBuildLog": {
+        "path": "target/lifecycle-validation/m3-managed-vector-validation-r1.log",
+        "sha256": "5a8868b56cd33e04e484d55ed92d85889ff9d0f7607ad127de9aac513eba7ccf"
+      },
+      "testList": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/vectors-test-list.txt",
+        "sha256": "caf71c6b95d072fc1dac511e64f2ffa64af350898f565038dbfe88cf9e3b171f"
+      },
+      "testResult": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 120.83s",
+      "rawLog": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/direct-vectors.log",
+        "sha256": "55040228129e5d4e4adfdffcf1a3fd51b24a052cf5d96d2215922c4c1b9e618e"
+      },
+      "runRecord": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/direct-vectors.json",
+        "sha256": "e9d67ac5535cbdbdcda10cb61e2fa1f487ed1e928f90dc6853adff8f52ab4ff0"
+      },
+      "results": [
+        {
+          "installationId": "acceptance-embedding",
+          "capability": "embedding",
+          "suiteVersion": "managed-vector-relevance-v1",
+          "manifestDigest": "8644c94d4b8e35601574ddb0214308fc202e90f05d59ff3d5a9150942cf752c8",
+          "verdict": "ready",
+          "sqliteReopenMatchesEvidence": true,
+          "persistedOutput": {
+            "path": "target/lifecycle-validation/m4-managed-vectors-20261112-r1/app/data/model-lifecycle/vector-validation/ebf135e3f022203ad9e7fd5b0ce0cb412805e39ba2f09108ac4a8eadc101faef.json",
+            "sha256": "ebf135e3f022203ad9e7fd5b0ce0cb412805e39ba2f09108ac4a8eadc101faef"
+          },
+          "score": {
+            "correct": 18,
+            "completed": 20,
+            "total": 20,
+            "minimum": 18
+          }
+        },
+        {
+          "installationId": "acceptance-reranker",
+          "capability": "reranking",
+          "suiteVersion": "managed-vector-relevance-v1",
+          "manifestDigest": "a066fc84d2fd93349f72d972b3ef52432b0d98115b2fdce837a3382cf9459cac",
+          "verdict": "ready",
+          "sqliteReopenMatchesEvidence": true,
+          "persistedOutput": {
+            "path": "target/lifecycle-validation/m4-managed-vectors-20261112-r1/app/data/model-lifecycle/vector-validation/bc76b6fb9f29cfc6f0a692e961bd4cb869f0e70963bfda9220c871aec8e7f16b.json",
+            "sha256": "bc76b6fb9f29cfc6f0a692e961bd4cb869f0e70963bfda9220c871aec8e7f16b"
+          },
+          "score": {
+            "correct": 19,
+            "completed": 20,
+            "total": 20,
+            "minimum": 18
+          }
+        }
+      ]
+    },
+    {
+      "suite": "chat",
+      "status": "FAILED_BEFORE_INFERENCE",
+      "test": "registered_model_runs_the_frozen_a41_suite_and_reopens_its_evidence",
+      "startedAt": "2026-11-13T10:01:27.142755+00:00",
+      "finishedAt": "2026-11-13T10:06:52.923066+00:00",
+      "testExecutable": {
+        "path": "target/debug/deps/lifecycle_managed_chat-9542e1c9d6d4b938.exe",
+        "sha256": "6d921ab0cf39a5b2fa47c5c1a16946edcd25c7f9cc4756f2fe064a4b09a0a3b4",
+        "modifiedAt": "2026-11-13T07:13:51.056711+00:00"
+      },
+      "previousBuildLog": {
+        "path": "target/lifecycle-validation/m3-a41-managed-chat-20261113-r1/cargo-r2.log",
+        "sha256": "7d8b849ccc2c4b688a81cda5b51a6c3594c41ab14a3a4e9ef6fae24c7001e588"
+      },
+      "testList": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/chat-test-list.txt",
+        "sha256": "11ba276f09d3bdf2423e63586fcefc9a98f5f6ef7746f43b8bb636da4fb7d471"
+      },
+      "testResult": "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 324.46s",
+      "exitCode": 101,
+      "rawLog": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/direct-chat.log",
+        "sha256": "d04c39af85b593f32e2d319e9f214c766839fe6e1d0d3c82dbe82e4118e98f87"
+      },
+      "runRecord": {
+        "path": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/direct-chat.json",
+        "sha256": "e958a9db942b0ef345a4ddf10645867da8e903d79325f9a77e2923e7965635d1"
+      },
+      "versionId": "version:acceptance-text-qwen35-4b",
+      "startupBudgetSeconds": 180,
+      "error": "Native helper startup timed out during preparation: deadline has elapsed",
+      "freshScore": null,
+      "freshValidationReport": null,
+      "historicalCapabilityEvidence": {
+        "path": "documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-13-m3-qwen35-4b-a41.json",
+        "sha256": "2cff79f02456ca2d6c0266cd8edeaebbc96388bac4d28153dad648caf92556d4"
+      }
+    }
+  ]
+}
