@@ -38,6 +38,47 @@ pub struct HardwareResourceSnapshot {
     pub disk_free_bytes: u64,
 }
 
+impl HardwareResourceSnapshot {
+    pub(crate) fn available_host_bytes(&self) -> Option<u64> {
+        self.devices
+            .iter()
+            .filter(|device| {
+                device.kind == "cpu"
+                    && device.free_bytes > 0
+                    && device.free_bytes <= device.total_bytes
+            })
+            .map(|device| device.free_bytes)
+            .max()
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct HelperMemoryAdmission {
+    pub observed_at: i64,
+    pub required_bytes: u64,
+    pub available_bytes: u64,
+}
+
+impl HelperMemoryAdmission {
+    pub(super) fn from_observation(
+        required: Option<u64>,
+        hardware: &HardwareResourceSnapshot,
+    ) -> Result<Self> {
+        let required_bytes = required
+            .filter(|size| *size > 0)
+            .context("Installed helper workload has no host memory budget")?;
+        let available_bytes = hardware
+            .available_host_bytes()
+            .context("Current available host memory could not be measured")?;
+        ensure!(available_bytes >= required_bytes, "Insufficient host memory for helper startup: {required_bytes} bytes required, {available_bytes} bytes available");
+        Ok(Self {
+            observed_at: hardware.observed_at,
+            required_bytes,
+            available_bytes,
+        })
+    }
+}
+
 pub fn probe_hardware_resources(
     _backend: &LlamaBackend,
     storage: &Path,
@@ -356,12 +397,7 @@ pub fn assess_resource_budget(
     if let Some(cache) = vector_cache {
         kv = cache;
     }
-    let available = hardware
-        .devices
-        .iter()
-        .filter(|d| d.kind == "cpu" && d.free_bytes > 0 && d.free_bytes <= d.total_bytes)
-        .map(|d| d.free_bytes)
-        .max();
+    let available = hardware.available_host_bytes();
     if available.is_none() {
         reasons.push("Host memory could not be measured".into());
     }

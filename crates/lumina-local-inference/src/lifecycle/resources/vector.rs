@@ -167,15 +167,7 @@ pub fn validate_vector_admission(admission: &PlanAdmission) -> Result<VectorRunt
         envelope.auxiliary_buffer_bytes,
     ])?;
     let peak_disk = super::sum([super::product(&[profile.model_bytes(), 3])?, 16 * MIB])?;
-    let available = admission
-        .hardware
-        .devices
-        .iter()
-        .filter(|device| {
-            device.kind == "cpu" && device.free_bytes > 0 && device.free_bytes <= device.total_bytes
-        })
-        .map(|device| device.free_bytes)
-        .max();
+    let available = admission.hardware.available_host_bytes();
     ensure!(
         admission.runtime_profile == baseline_vector_install_profile(profile)?
             && envelope.component_digests.len() == 1

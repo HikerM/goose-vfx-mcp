@@ -1,0 +1,42 @@
+{
+  "scope": "Reopened the previously installed embedding and reranking versions and ran both measured native CPU helpers. Each model answered all 20 fixed bilingual relevance cases. Host memory was observed immediately before helper spawn.",
+  "test": "managed_validator_registers_verified_results_for_both_installed_models",
+  "test_exit_code": 0,
+  "duration_seconds": 152.92,
+  "records": [
+    {
+      "capability": "embedding",
+      "profile": "qwen3_embedding06b_q8",
+      "manifest_sha256": "8644c94d4b8e35601574ddb0214308fc202e90f05d59ff3d5a9150942cf752c8",
+      "helper_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+      "content_suite": "managed-vector-relevance-v1",
+      "cases_completed": 20,
+      "correct": 18,
+      "required": 18,
+      "managed_status": "ready",
+      "memory_admission": {
+        "observed_at": 1794557605,
+        "required_bytes": 1033415168,
+        "available_bytes": 58337550336
+      },
+      "report_sha256": "7417cc2fbf7f713e0416680e4f5a860e6a250bee70cf9e18178b8bd967eb8a20"
+    },
+    {
+      "capability": "reranking",
+      "profile": "bge_reranker_v2_m3_q4_km",
+      "manifest_sha256": "a066fc84d2fd93349f72d972b3ef52432b0d98115b2fdce837a3382cf9459cac",
+      "helper_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e",
+      "content_suite": "managed-vector-relevance-v1",
+      "cases_completed": 20,
+      "correct": 19,
+      "required": 18,
+      "managed_status": "ready",
+      "memory_admission": {
+        "observed_at": 1794557672,
+        "required_bytes": 1042356640,
+        "available_bytes": 58889846784
+      },
+      "report_sha256": "a72fac3f07c9fe2d1be2b257959eb1d9db5b299cbf34dc68248407e31bc31bb6"
+    }
+  ]
+}

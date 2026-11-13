@@ -2,6 +2,120 @@ use super::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::time::Instant;
 
+#[test]
+fn helper_startup_requires_current_host_memory_for_the_installed_workload() {
+    use crate::lifecycle::{HardwareMemoryDevice, HardwareResourceSnapshot};
+    let mut hardware = HardwareResourceSnapshot {
+        observed_at: 100,
+        devices: vec![HardwareMemoryDevice {
+            index: 0,
+            backend: "CPU".into(),
+            name: "CPU".into(),
+            description: "fixture".into(),
+            kind: "cpu".into(),
+            total_bytes: 4096,
+            free_bytes: 2048,
+        }],
+        storage_volume: "test".into(),
+        disk_free_bytes: 0,
+    };
+    let admitted = HelperMemoryAdmission::from_observation(Some(2048), &hardware).unwrap();
+    assert_eq!(
+        (
+            admitted.available_bytes,
+            admitted.required_bytes,
+            admitted.observed_at
+        ),
+        (2048, 2048, 100)
+    );
+    for missing in [None, Some(0), Some(2049)] {
+        assert!(HelperMemoryAdmission::from_observation(missing, &hardware).is_err());
+    }
+    hardware.devices[0].free_bytes = 1;
+    assert!(HelperMemoryAdmission::from_observation(Some(2048), &hardware).is_err());
+    hardware.devices[0].free_bytes = 8192;
+    assert!(HelperMemoryAdmission::from_observation(Some(2048), &hardware).is_err());
+    hardware.devices[0].free_bytes = 4096;
+    hardware.devices[0].kind = "gpu".into();
+    assert!(HelperMemoryAdmission::from_observation(Some(2048), &hardware).is_err());
+}
+
+fn wait_until_slot_occupied(root: &Path, deadline: Instant) {
+    loop {
+        for index in 0..RUNTIME_WAIT_SLOTS {
+            let name = format!("wait-{index}");
+            if root.join(format!("locks/runtime/{name}.lock")).exists() {
+                let slot = runtime_lock(root, &name).unwrap();
+                if !try_runtime_lock(&slot).unwrap() {
+                    return;
+                }
+            }
+        }
+        assert!(
+            Instant::now() < deadline,
+            "waiter did not claim a queue slot"
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    }
+}
+
+#[test]
+fn contended_runtime_queue_bounds_waiters_and_admits_after_owner_release() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let owner = acquire_runtime_permit(root).unwrap();
+    let cancelled = AtomicBool::new(false);
+    let deadline = Instant::now() + Duration::from_secs(10);
+    let occupied: Vec<File> = (0..RUNTIME_WAIT_SLOTS)
+        .map(|index| {
+            let slot = runtime_lock(root, &format!("wait-{index}")).unwrap();
+            assert!(try_runtime_lock(&slot).unwrap());
+            slot
+        })
+        .collect();
+    assert!(wait_for_runtime_permit(root, deadline, &cancelled)
+        .unwrap_err()
+        .to_string()
+        .contains("queue is full"));
+    drop(occupied);
+    std::thread::scope(|scope| {
+        let waiter = scope.spawn(|| wait_for_runtime_permit(root, deadline, &cancelled));
+        wait_until_slot_occupied(root, deadline);
+        drop(owner);
+        let acquired = waiter.join().unwrap().unwrap();
+        assert!(acquire_runtime_permit(root).is_err());
+        drop(acquired);
+    });
+    acquire_runtime_permit(root).unwrap();
+}
+
+#[test]
+fn timeout_and_cancellation_leave_the_active_helper_and_wait_slot_intact() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let _owner = acquire_runtime_permit(root).unwrap();
+    let cancelled = AtomicBool::new(false);
+    let short = Instant::now() + Duration::from_millis(100);
+    assert!(wait_for_runtime_permit(root, short, &cancelled)
+        .unwrap_err()
+        .to_string()
+        .contains("Timed out"));
+    let deadline = Instant::now() + Duration::from_secs(10);
+    std::thread::scope(|scope| {
+        let waiter = scope.spawn(|| wait_for_runtime_permit(root, deadline, &cancelled));
+        wait_until_slot_occupied(root, deadline);
+        cancelled.store(true, Ordering::Release);
+        assert!(waiter
+            .join()
+            .unwrap()
+            .unwrap_err()
+            .to_string()
+            .contains("cancelled"));
+    });
+    assert!(acquire_runtime_permit(root).is_err());
+    assert!(try_runtime_lock(&runtime_lock(root, "wait-0").unwrap()).unwrap());
+}
+
 fn text_config() -> LaunchConfig {
     let fixture: Value = serde_json::from_str(include_str!(
         "../fixtures/lifecycle-vision/frozen-text-v2-plan.json"

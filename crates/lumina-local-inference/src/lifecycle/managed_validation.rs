@@ -426,6 +426,7 @@ pub async fn run_managed_vector_validation(
     let evidence = binding.register(repository, store, &serde_json::json!({
             "binding": binding,
             "actual_launch": launch, "actual_launch_digest":actual_digest,
+            "memory_admission": runtime.memory_admission(),
             "installed_files": installed.manifest.installed_files,
             "rules_version": installed.manifest.plan.rules_version,
             "cases":cases, "correct":correct, "minimum":suite.minimum_top1_correct, "total":suite.cases.len(),

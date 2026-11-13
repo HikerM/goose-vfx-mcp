@@ -410,6 +410,7 @@ pub async fn run_managed_chat_validation(
         "binding": binding,
         "actual_launch": launch,
         "actual_launch_digest": launch.digest()?,
+        "memory_admission": runtime.memory_admission(),
         "target_capabilities_from_plan": installed.manifest.plan.target_capabilities,
         "tested_capability": ModelCapability::Text,
         "gguf_classification": classification,

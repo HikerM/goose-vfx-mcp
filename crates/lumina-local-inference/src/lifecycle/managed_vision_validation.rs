@@ -274,9 +274,19 @@ pub async fn run_managed_vision_validation(
     };
     let failure = result.err().map(|err| format!("{err:#}"));
     let binding = ReportBinding::new(&launch, profile, suite_digest(), location, status)?;
-    let evidence=binding.register(repository,store,&serde_json::json!({"binding":binding,"actual_launch":launch,"actual_launch_digest":launch.digest()?,
-        "installed_files":installation.manifest.installed_files,"cases":cases,"correct":correct,"minimum":suite.minimum_correct,"failure":failure,
-        "log_directory":logs.file_name().and_then(|p|p.to_str())}))?;
+    let report = serde_json::json!({
+        "binding": binding,
+        "actual_launch": launch,
+        "actual_launch_digest": launch.digest()?,
+        "memory_admission": runtime.memory_admission(),
+        "installed_files": installation.manifest.installed_files,
+        "cases": cases,
+        "correct": correct,
+        "minimum": suite.minimum_correct,
+        "failure": failure,
+        "log_directory": logs.file_name().and_then(|p| p.to_str()),
+    });
+    let evidence = binding.register(repository, store, &report)?;
     Ok(ManagedVisionValidation {
         evidence,
         correct,

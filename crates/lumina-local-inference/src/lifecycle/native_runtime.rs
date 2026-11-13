@@ -17,13 +17,14 @@ use std::time::Duration;
 
 use super::files::{checked_local_path, open_for_verification, require_single_link_file};
 use super::{
-    installation_directory, ComponentRole, InstallationStore, InstalledVersion, LaunchChatTemplate,
-    LaunchConfig, LifecycleRepository, RepositoryPath, ResourceWorkload, RuntimeAssetGuard,
-    RuntimeExecutionMode, RuntimeParameters, Sha256Digest, VectorRuntimeProfile,
+    installation_directory, ComponentRole, HelperMemoryAdmission, InstallationStore,
+    InstalledVersion, LaunchChatTemplate, LaunchConfig, LifecycleRepository, RepositoryPath,
+    ResourceWorkload, RuntimeAssetGuard, RuntimeExecutionMode, RuntimeParameters, Sha256Digest,
+    VectorRuntimeProfile,
 };
 
-/// Owns one authenticated native process, not capability validation or a resource queue.
-/// The installation's historical memory observation is not a fresh admission measurement.
+/// Owns one authenticated native process and its installation-store execution permit.
+/// Available host memory is sampled after acquiring the store permit and verifying the model.
 /// Windows also uses a kill-on-close job after spawning; assignment has a short
 /// non-atomic startup window. Other platforms currently guarantee orderly owner
 /// cleanup only, not cleanup after abrupt parent termination.
@@ -31,6 +32,7 @@ pub struct NativeHelperRuntime {
     process: GuardedChild,
     config: LaunchConfig,
     workload: ResourceWorkload,
+    memory_admission: HelperMemoryAdmission,
     endpoint: Url,
     bearer_token: String,
     model_alias: String,
@@ -192,7 +194,15 @@ impl NativeHelperRuntime {
         let cancellation = PreparationCancellation(Arc::new(AtomicBool::new(false)));
         let cancelled = Arc::clone(&cancellation.0);
         let preparation = tokio::task::spawn_blocking(move || {
-            Self::spawn(&root, installed, config, &binary, &logs, &cancelled)
+            Self::spawn(
+                &root,
+                installed,
+                config,
+                &binary,
+                &logs,
+                &cancelled,
+                deadline.into_std(),
+            )
         });
         let mut runtime = tokio::time::timeout_at(deadline, preparation)
             .await
@@ -211,32 +221,31 @@ impl NativeHelperRuntime {
         binary: &Path,
         logs: &Path,
         cancelled: &AtomicBool,
+        deadline: std::time::Instant,
     ) -> Result<Self> {
         ensure!(
             !cancelled.load(Ordering::Acquire),
             "Native helper startup was cancelled"
         );
-        let workload = installed
+        let admission = installed
             .manifest
             .plan
             .admission
             .as_ref()
-            .context("Native helper requires frozen resource admission")?
-            .envelope
-            .workload
-            .clone();
+            .context("Native helper requires frozen resource admission")?;
+        let workload = admission.envelope.workload.clone();
         let port = match config.mode {
             RuntimeExecutionMode::Helper { port } => port,
             RuntimeExecutionMode::InProcess => {
                 bail!("Native helper cannot execute an in-process launch")
             }
         };
+        let permit = wait_for_runtime_permit(root, deadline, cancelled)?;
         let reservation = TcpListener::bind((Ipv4Addr::LOCALHOST, port))
             .context("Native helper loopback port is unavailable")?;
         let port = reservation.local_addr()?.port();
         config.mode = RuntimeExecutionMode::Helper { port };
         config.validate_binding(&installed.manifest)?;
-        let permit = acquire_runtime_permit(root)?;
         let relative = installation_directory(&installed.manifest, true)?;
         let directory = checked_local_path(root, &relative)?;
         let manifest_path =
@@ -305,6 +314,15 @@ impl NativeHelperRuntime {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x0800_0000);
         }
+        let _runtime = crate::InferenceRuntime::get_or_init()?;
+        let hardware = super::resources::probe_initialized_hardware_resources(
+            root,
+            chrono::Utc::now().timestamp(),
+        )?;
+        let memory_admission = HelperMemoryAdmission::from_observation(
+            admission.budget.host_memory_required_bytes,
+            &hardware,
+        )?;
         // The helper cannot inherit this listener. Authenticated identity checks
         // reject a different process if it wins the short bind handoff race.
         ensure!(
@@ -334,6 +352,7 @@ impl NativeHelperRuntime {
             process,
             config,
             workload,
+            memory_admission,
             endpoint,
             bearer_token,
             model_alias,
@@ -422,6 +441,9 @@ impl NativeHelperRuntime {
 
     pub fn actual_config(&self) -> &LaunchConfig {
         &self.config
+    }
+    pub fn memory_admission(&self) -> &HelperMemoryAdmission {
+        &self.memory_admission
     }
     pub fn endpoint(&self) -> &Url {
         &self.endpoint
@@ -591,7 +613,71 @@ async fn bounded_json(mut response: reqwest::Response) -> Result<Value> {
     serde_json::from_slice(&bytes).context("Native helper response is not valid JSON")
 }
 
+const RUNTIME_WAIT_SLOTS: usize = 4;
+
+pub(super) fn wait_for_runtime_permit(
+    root: &Path,
+    deadline: std::time::Instant,
+    cancelled: &AtomicBool,
+) -> Result<File> {
+    let check = || -> Result<()> {
+        ensure!(
+            !cancelled.load(Ordering::Acquire),
+            "Native runtime wait was cancelled"
+        );
+        ensure!(
+            std::time::Instant::now() < deadline,
+            "Timed out waiting for native runtime capacity"
+        );
+        Ok(())
+    };
+    check()?;
+    let host = runtime_lock(root, "host")?;
+    if try_runtime_lock(&host)? {
+        return Ok(host);
+    }
+    let mut slot = None;
+    for index in 0..RUNTIME_WAIT_SLOTS {
+        let candidate = runtime_lock(root, &format!("wait-{index}"))?;
+        if try_runtime_lock(&candidate)? {
+            slot = Some(candidate);
+            break;
+        }
+    }
+    let _slot = slot.context("Native runtime wait queue is full")?;
+    loop {
+        check()?;
+        if try_runtime_lock(&host)? {
+            return Ok(host);
+        }
+        std::thread::sleep(
+            Duration::from_millis(25)
+                .min(deadline.saturating_duration_since(std::time::Instant::now())),
+        );
+    }
+}
+
+fn try_runtime_lock(file: &File) -> Result<bool> {
+    match FileExt::try_lock_exclusive(file) {
+        Ok(()) => Ok(true),
+        Err(error) if error.raw_os_error() == fs2::lock_contended_error().raw_os_error() => {
+            Ok(false)
+        }
+        Err(error) => Err(error.into()),
+    }
+}
+
+#[cfg(test)]
 fn acquire_runtime_permit(root: &Path) -> Result<File> {
+    let file = runtime_lock(root, "host")?;
+    ensure!(
+        try_runtime_lock(&file)?,
+        "A native runtime already occupies this installation store"
+    );
+    Ok(file)
+}
+
+fn runtime_lock(root: &Path, name: &str) -> Result<File> {
     for relative in ["locks", "locks/runtime"] {
         let path = root.join(relative);
         match std::fs::create_dir(&path) {
@@ -604,7 +690,7 @@ fn acquire_runtime_permit(root: &Path) -> Result<File> {
             "Runtime lock parent is not a directory"
         );
     }
-    let relative = RepositoryPath::parse("locks/runtime/host.lock")?;
+    let relative = RepositoryPath::parse(format!("locks/runtime/{name}.lock"))?;
     let path = root.join(relative.as_str());
     if path.try_exists()? {
         checked_local_path(root, &relative)?;
@@ -619,12 +705,10 @@ fn acquire_runtime_permit(root: &Path) -> Result<File> {
     let file = options.open(path)?;
     checked_local_path(root, &relative)?;
     require_single_link_file(&file)?;
-    FileExt::try_lock_exclusive(&file)
-        .context("A native runtime already occupies this installation store")?;
     Ok(file)
 }
 
-pub(super) fn verify_binary(path: &Path, expected: &Sha256Digest) -> Result<()> {
+fn verify_binary(path: &Path, expected: &Sha256Digest) -> Result<()> {
     let mut file = open_for_verification(path)?;
     let mut hash = Sha256::new();
     let mut buffer = [0u8; 64 * 1024];
