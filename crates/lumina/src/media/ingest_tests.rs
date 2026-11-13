@@ -157,6 +157,9 @@ async fn real_session_roundtrip_persists_refs_and_hydrates_only_provider_copy() 
         fixture.data_dir.join("outputs")
     );
     let request = request("call-roundtrip");
+    let request_message = Message::assistant()
+        .with_generated_id()
+        .with_content(MessageContent::ToolRequest(request.clone()));
     let original = mixed_response(&request.id);
     let mut published = original.clone();
     fixture.persist(&request, &mut published).await;
@@ -210,9 +213,6 @@ async fn real_session_roundtrip_persists_refs_and_hydrates_only_provider_copy() 
             }
         );
     }
-    let request_message = Message::assistant()
-        .with_generated_id()
-        .with_content(MessageContent::ToolRequest(request));
     fixture
         .manager
         .add_message(&fixture.session_id, &request_message)
@@ -297,6 +297,56 @@ async fn duplicate_events_reuse_results_and_changed_bytes_cannot_replace_them() 
         result(&hydrated).content,
         result(&mixed_response(&request.id)).content
     );
+    fixture.finish().await;
+}
+
+#[cfg(all(windows, feature = "local-inference"))]
+#[tokio::test]
+async fn native_outputs_hydrate_only_for_the_tool_call_that_produced_them() {
+    let fixture = Fixture::new().await;
+    let storage = fixture.manager.storage();
+    let store = MediaResultStore::new(storage.pool().await.unwrap().clone());
+    let root = store
+        .register_output_root(&storage.media_output_directory())
+        .await
+        .unwrap();
+    let request = PublishMediaRequest {
+        result_id: uuid::Uuid::new_v4().to_string(),
+        session_id: fixture.session_id.clone(),
+        association: MediaAssociation::ToolCall {
+            tool_call_id: "native-call".into(),
+        },
+        job_id: "native-job".into(),
+        root_id: root.root_id,
+        kind: MediaKind::Image,
+        source: MediaSource::LocalModel {
+            installation_id: "native-test".into(),
+            version_id: "version".into(),
+            runtime: crate::media::MediaRuntimeBuild {
+                adapter_id: "fixture".into(),
+                engine_revision: "revision".into(),
+                binary_sha256: "ab".repeat(32),
+            },
+            generation_config_sha256: "ef".repeat(32),
+            input_refs: Vec::new(),
+        },
+    };
+    let BeginMediaPublish::Staging(mut stage) = store.begin_publish(request).await.unwrap() else {
+        panic!("Expected new result")
+    };
+    stage.write_all(&image(false, [1, 2, 3])).unwrap();
+    let item = store.publish(stage).await.unwrap();
+    for (id, permitted) in [("native-call", true), ("unrelated-call", false)] {
+        let message = Message::user().with_generated_id().with_tool_response(
+            id,
+            Ok(CallToolResult::success(vec![native_result_link(&item)])),
+        );
+        let hydrated = fixture.hydrate(message).await;
+        assert_eq!(
+            matches!(result(&hydrated).content[0].raw, RawContent::Image(_)),
+            permitted
+        );
+    }
     fixture.finish().await;
 }
 

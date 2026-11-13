@@ -5,6 +5,8 @@ pub mod chatrecall;
 pub mod code_execution;
 pub mod developer;
 pub mod ext_manager;
+#[cfg(feature = "local-inference")]
+pub mod native_tasks;
 pub mod orchestrator;
 pub mod summarize;
 pub mod summon;
@@ -28,6 +30,20 @@ pub use ext_manager::SEARCH_AVAILABLE_EXTENSIONS_TOOL_NAME;
 pub static PLATFORM_EXTENSIONS: Lazy<HashMap<&'static str, PlatformExtensionDef>> = Lazy::new(
     || {
         let mut map = HashMap::new();
+
+        #[cfg(feature = "local-inference")]
+        map.insert(
+            native_tasks::EXTENSION_NAME,
+            PlatformExtensionDef {
+                name: native_tasks::EXTENSION_NAME,
+                display_name: "Local Model Tasks",
+                description: "Discover installed local task models, run them with their own parameters, and reuse session results.",
+                default_enabled: true,
+                unprefixed_tools: false,
+                hidden: false,
+                client_factory: |ctx| Box::new(native_tasks::NativeTasksClient::new(ctx)),
+            },
+        );
 
         map.insert(
             analyze::EXTENSION_NAME,

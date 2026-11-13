@@ -1305,6 +1305,10 @@ impl SessionManager {
 }
 
 pub struct SessionStorage {
+    #[cfg(feature = "local-inference")]
+    native_installations: std::sync::OnceLock<
+        Arc<lumina_providers::local_inference::lifecycle::InstallationApplication>,
+    >,
     pool: Pool<Sqlite>,
     initialized: tokio::sync::OnceCell<()>,
     session_dir: PathBuf,
@@ -1558,8 +1562,38 @@ impl SessionStorage {
         Self {
             pool: Self::create_pool(&db_path),
             initialized: tokio::sync::OnceCell::new(),
+            #[cfg(feature = "local-inference")]
+            native_installations: Default::default(),
             session_dir,
         }
+    }
+
+    #[cfg(feature = "local-inference")]
+    pub(crate) fn bind_native_installations(
+        &self,
+        host: Arc<lumina_providers::local_inference::lifecycle::InstallationApplication>,
+    ) -> Result<()> {
+        self.native_installations
+            .set(host)
+            .map_err(|_| anyhow::anyhow!("Installation service already bound"))
+    }
+
+    #[cfg(feature = "local-inference")]
+    pub(crate) fn native_installations(
+        &self,
+    ) -> Arc<lumina_providers::local_inference::lifecycle::InstallationApplication> {
+        self.native_installations
+            .get_or_init(|| {
+                Arc::new(
+                    lumina_providers::local_inference::lifecycle::InstallationApplication::new(
+                        self.session_dir
+                            .parent()
+                            .expect("SessionStorage has a data directory"),
+                        Arc::new(lumina_providers::local_inference::hf_models::modelscope_token),
+                    ),
+                )
+            })
+            .clone()
     }
 
     pub(crate) fn media_output_directory(&self) -> PathBuf {
@@ -1589,6 +1623,14 @@ impl SessionStorage {
                 }
                 let media = crate::media::MediaResultStore::new(self.pool.clone());
                 media.initialize().await?;
+                #[cfg(feature = "local-inference")]
+                crate::media::TaskConfigurationStore::new(self.pool.clone())
+                    .initialize()
+                    .await?;
+                #[cfg(feature = "local-inference")]
+                crate::media::NativeTaskJobs::new(self.pool.clone())
+                    .initialize()
+                    .await?;
                 // File verification runs after schema transactions commit. Recovery
                 // failures must not make unrelated conversations unavailable.
                 match media.recover().await {

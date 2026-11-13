@@ -1,7 +1,7 @@
 use super::*;
 
 #[cfg(not(feature = "local-inference"))]
-fn local_inference_unavailable() -> agent_client_protocol::Error {
+pub(super) fn local_inference_unavailable() -> agent_client_protocol::Error {
     agent_client_protocol::Error::invalid_params().data("Local inference not enabled")
 }
 

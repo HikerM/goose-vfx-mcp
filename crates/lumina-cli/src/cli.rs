@@ -1231,6 +1231,25 @@ enum LocalModelsCommand {
         #[arg(long)]
         engine: PathBuf,
     },
+    #[command(about = "List supported tasks and their parameter contracts for installed models")]
+    ListTasks {
+        #[arg(long, value_enum)]
+        intent: crate::local_model_tasks::TaskIntent,
+    },
+    #[command(about = "Execute a model-specific request for an existing session message")]
+    RunTask {
+        #[arg(long)]
+        session_id: String,
+        #[arg(long)]
+        message_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+        #[arg(
+            long,
+            help = "JSON file containing the listed identity and model-specific request"
+        )]
+        request: PathBuf,
+    },
     #[command(
         about = "Validate the installed vector model against the fixed retrieval or ranking suite"
     )]
@@ -2319,6 +2338,24 @@ async fn handle_local_models_command(
                 &installations,
                 &version_id,
                 &engine,
+            )
+            .await?;
+        }
+        LocalModelsCommand::ListTasks { intent } => {
+            crate::local_model_tasks::list_tasks(&installations, intent).await?;
+        }
+        LocalModelsCommand::RunTask {
+            session_id,
+            message_id,
+            engine,
+            request,
+        } => {
+            crate::local_model_tasks::run_task(
+                &installations,
+                &session_id,
+                &message_id,
+                &engine,
+                &request,
             )
             .await?;
         }

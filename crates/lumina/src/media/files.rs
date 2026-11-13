@@ -213,6 +213,32 @@ pub(crate) fn rename(_: &File, _: &Path) -> Result<()> {
     anyhow::bail!("Guarded media publication is not yet implemented for this platform")
 }
 
+#[cfg(windows)]
+pub(crate) fn discard_pending(file: &File) -> Result<()> {
+    use std::os::windows::io::AsRawHandle;
+    use windows_sys::Win32::Storage::FileSystem::{
+        FileDispositionInfo, SetFileInformationByHandle, FILE_DISPOSITION_INFO,
+    };
+    let disposition = FILE_DISPOSITION_INFO { DeleteFile: true };
+    let ok = unsafe {
+        SetFileInformationByHandle(
+            file.as_raw_handle(),
+            FileDispositionInfo,
+            std::ptr::from_ref(&disposition).cast(),
+            std::mem::size_of_val(&disposition) as u32,
+        )
+    };
+    if ok == 0 {
+        return Err(MediaAccessError::io(std::io::Error::last_os_error()).into());
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+pub(crate) fn discard_pending(_: &File) -> Result<()> {
+    anyhow::bail!("Guarded media publication is not yet implemented for this platform")
+}
+
 pub(crate) fn digest(file: &mut File) -> Result<String> {
     file.seek(SeekFrom::Start(0))?;
     let mut digest = Sha256::new();
@@ -225,16 +251,13 @@ pub(crate) fn digest(file: &mut File) -> Result<String> {
         digest.update(&bytes[..count]);
     }
     file.seek(SeekFrom::Start(0))?;
-    Ok(digest
-        .finalize()
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
+    Ok(hex_digest(&digest.finalize()))
+}
+
+pub(crate) fn hex_digest(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 pub(crate) fn request_digest(value: &impl serde::Serialize) -> Result<String> {
-    Ok(Sha256::digest(serde_json::to_vec(value)?)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
+    Ok(hex_digest(&Sha256::digest(serde_json::to_vec(value)?)))
 }

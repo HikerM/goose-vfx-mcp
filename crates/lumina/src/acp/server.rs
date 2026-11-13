@@ -107,6 +107,7 @@ mod local_inference;
 mod manage_sessions;
 mod mcp_platform;
 mod media;
+mod native_tasks;
 mod new_session;
 mod onboarding;
 mod project_workspace;
@@ -1123,6 +1124,8 @@ impl LuminaAcpAgent {
         let session_manager = Arc::new(SessionManager::new(options.data_dir.clone()));
 
         let storage = session_manager.storage().clone();
+        #[cfg(feature = "local-inference")]
+        storage.bind_native_installations(Arc::clone(&local_installations))?;
         storage.pool().await?;
         ProjectService::new(storage)
             .interrupt_abandoned_runs()

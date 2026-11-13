@@ -107,6 +107,30 @@ impl Fixture {
     }
 }
 
+#[cfg(windows)]
+#[tokio::test]
+async fn aborting_a_partial_write_only_discards_its_own_file() {
+    let fixture = Fixture::new().await;
+    let first = fixture.request(MediaKind::Image);
+    let second = fixture.request(MediaKind::Image);
+    let partial = fixture.stage(first.clone(), b"partial").await;
+    let other = fixture.stage(second, &png()).await;
+    let pending_path = partial.directory.path.join(stage_name(&first.result_id));
+    fixture.store.abort_staged(partial).await.unwrap();
+    assert!(!pending_path.exists());
+    assert_eq!(
+        fixture
+            .store
+            .record(&first.session_id, &first.result_id)
+            .await
+            .unwrap()
+            .unwrap()
+            .state,
+        "failed"
+    );
+    fixture.store.publish(other).await.unwrap();
+}
+
 fn png() -> Vec<u8> {
     let image = image::RgbImage::from_pixel(3, 2, image::Rgb([255, 0, 0]));
     let mut bytes = Cursor::new(Vec::new());

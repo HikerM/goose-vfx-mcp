@@ -149,7 +149,7 @@ pub(crate) fn inspect(file: &mut File) -> Result<ValidatedMedia> {
         );
         return match &header[8..12] {
             b"WAVE" => wav(file, size),
-            b"AVI " => avi(file, size),
+            b"AVI " => avi(file, size, true),
             _ => Err(unsupported()),
         };
     }
@@ -280,7 +280,20 @@ fn list(file: &mut File, all: &[Chunk], kind: &[u8; 4]) -> Result<Chunk> {
     found.context("Missing AVI list")
 }
 
-fn avi(file: &mut File, size: u64) -> Result<ValidatedMedia> {
+pub(crate) fn inspect_video_only(file: &mut File) -> Result<ValidatedMedia> {
+    let size = file.metadata()?.len();
+    ensure!((12..=MAX_MEDIA_BYTES).contains(&size), "Invalid AVI length");
+    let header = read_at(file, 0, 12)?;
+    ensure!(
+        &header[..4] == b"RIFF"
+            && &header[8..] == b"AVI "
+            && u64::from(u32_at(&header, 4)?) + 8 == size,
+        "Invalid AVI container"
+    );
+    avi(file, size, false)
+}
+
+fn avi(file: &mut File, size: u64, allow_audio: bool) -> Result<ValidatedMedia> {
     let top = chunks(file, 12, size)?;
     ensure!(
         top.iter()
@@ -293,7 +306,7 @@ fn avi(file: &mut File, size: u64) -> Result<ValidatedMedia> {
     let avih = singleton(&headers, b"avih")?;
     ensure!(avih.bytes == 56, "Unsupported AVI main header");
     let main = read_at(file, avih.data, 56)?;
-    if u32_at(&main, 24)? == 2 {
+    if allow_audio && u32_at(&main, 24)? == 2 {
         return inspect_video_audio(file);
     }
     let width = u32_at(&main, 32)?;

@@ -168,6 +168,19 @@ async fn publish_inline(
     }
 }
 
+#[cfg(feature = "local-inference")]
+pub(crate) fn native_result_link(result: &MediaResultRef) -> Content {
+    let mut link = resource(&Content::text(""), result);
+    if let RawContent::ResourceLink(resource) = &mut link.raw {
+        resource
+            .meta
+            .get_or_insert_default()
+            .0
+            .insert("lumina.localModelResult".into(), json!(true));
+    }
+    link
+}
+
 fn resource(content: &Content, result: &MediaResultRef) -> Content {
     let mut meta = match &content.raw {
         RawContent::Image(image) => image.meta.clone().unwrap_or_default(),
@@ -294,9 +307,17 @@ fn reference(
     (marker.schema_version == 1
         && marker.session_id == session_id
         && marker.result_id == canonical
-        && marker.result_id == result_id(session_id, call_id, index)
+        && (is_local_model_link(link) || marker.result_id == result_id(session_id, call_id, index))
         && link.uri == format!("{URI_PREFIX}{canonical}"))
     .then_some(marker)
+}
+
+fn is_local_model_link(link: &RawResource) -> bool {
+    link.meta
+        .as_ref()
+        .and_then(|meta| meta.0.get("lumina.localModelResult"))
+        .and_then(serde_json::Value::as_bool)
+        == Some(true)
 }
 
 fn unavailable(link: &mut RawResource, code: &str) {
@@ -315,23 +336,33 @@ async fn hydrate(
     call_id: &str,
     marker: Reference,
     link: &RawResource,
-) -> Result<RawContent> {
+) -> Result<Option<RawContent>> {
     let mut content = store.open_content(session_id, &marker.result_id).await?;
     let result = content.result();
     ensure!(
-        result.bytes <= MAX_INLINE_BYTES as u64
-            && Some(result.bytes) == link.size.map(u64::from)
+        Some(result.bytes) == link.size.map(u64::from)
             && link.mime_type.as_ref() == Some(&result.mime)
             && link.name == result.file_name
             && result.association
                 == MediaAssociation::ToolCall {
                     tool_call_id: call_id.to_owned()
                 }
-            && matches!(&result.source, MediaSource::Mcp { tool_call_id, .. } if tool_call_id == call_id),
+            && match &result.source {
+                MediaSource::LocalModel { .. } => is_local_model_link(link),
+                MediaSource::Mcp { tool_call_id, .. } =>
+                    !is_local_model_link(link) && tool_call_id == call_id,
+            },
         "Media reference does not match its verified tool result"
     );
     let kind = result.kind;
     let mime_type = result.mime.clone();
+    if kind == MediaKind::Video {
+        return Ok(None);
+    }
+    ensure!(
+        result.bytes <= MAX_INLINE_BYTES as u64,
+        "Inline media exceeds the request limit"
+    );
     ensure!(
         matches!(
             (kind, mime_type.as_str()),
@@ -355,14 +386,14 @@ async fn hydrate(
         MediaKind::Image => {
             let mut meta = link.meta.clone().unwrap_or_default();
             meta.0.remove(RESULT_META);
-            Ok(RawContent::Image(RawImageContent {
+            Ok(Some(RawContent::Image(RawImageContent {
                 data,
                 mime_type,
                 meta: (!meta.0.is_empty()).then_some(meta),
-            }))
+            })))
         }
-        MediaKind::Audio => Ok(RawContent::Audio(RawAudioContent { data, mime_type })),
-        MediaKind::Video => unreachable!("Video was rejected before reading"),
+        MediaKind::Audio => Ok(Some(RawContent::Audio(RawAudioContent { data, mime_type }))),
+        MediaKind::Video => unreachable!("Video stays a verified resource link"),
     }
 }
 
@@ -397,7 +428,13 @@ pub(crate) async fn hydrate_tool_media(
                     unavailable(link, "invalid_reference");
                     continue;
                 };
-                let length = link.size.map(|size| size as usize).unwrap_or(usize::MAX);
+                let length = if is_local_model_link(link)
+                    && link.mime_type.as_deref() == Some("video/x-msvideo")
+                {
+                    0
+                } else {
+                    link.size.map(|size| size as usize).unwrap_or(usize::MAX)
+                };
                 if references > MAX_REQUEST_REFERENCES
                     || length > MAX_INLINE_BYTES
                     || length > remaining
@@ -418,7 +455,8 @@ pub(crate) async fn hydrate_tool_media(
                     continue;
                 };
                 match hydrate(store, session_id, &response.id, marker, link).await {
-                    Ok(raw) => content.raw = raw,
+                    Ok(Some(raw)) => content.raw = raw,
+                    Ok(None) => {}
                     Err(_) => unavailable(link, "missing_or_inaccessible"),
                 }
             }

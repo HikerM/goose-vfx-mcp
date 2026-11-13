@@ -9,6 +9,8 @@ compile_error!("Features `rustls-tls` and `native-tls` are mutually exclusive");
 pub mod cli;
 pub mod commands;
 #[cfg(feature = "local-inference")]
+mod local_model_tasks;
+#[cfg(feature = "local-inference")]
 mod local_models_runtime;
 pub mod logging;
 pub mod project_tracker;

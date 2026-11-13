@@ -253,6 +253,20 @@ impl MediaResultStore {
         }))
     }
 
+    pub async fn abort_staged(&self, staged: StagedMedia) -> Result<()> {
+        let updated = sqlx::query("UPDATE media_results_v1 SET state='failed' WHERE result_id=? AND session_id=? AND request_digest=? AND identity=? AND state='writing'")
+            .bind(&staged.request.result_id)
+            .bind(&staged.request.session_id)
+            .bind(files::request_digest(&staged.request)?)
+            .bind(&staged.identity)
+            .execute(&self.pool).await?;
+        ensure!(
+            updated.rows_affected() == 1,
+            "Media preparation ownership changed"
+        );
+        files::discard_pending(&staged.file)
+    }
+
     pub async fn publish(&self, staged: StagedMedia) -> Result<MediaResultRef> {
         let prepared = self.prepare(staged).await?;
         self.commit(prepared).await
@@ -260,56 +274,61 @@ impl MediaResultStore {
 
     async fn prepare(&self, mut staged: StagedMedia) -> Result<PreparedMedia> {
         let result_id = staged.request.result_id.clone();
-        let checked = tokio::task::spawn_blocking(move || -> Result<PreparedMedia> {
-            staged.file.sync_all().map_err(MediaAccessError::io)?;
-            let verified = formats::inspect(&mut staged.file)?;
-            ensure!(
-                verified.kind == staged.request.kind,
-                "Decoded media kind differs from the requested task"
-            );
-            let bytes = staged.file.metadata()?.len();
-            let sha256 = files::digest(&mut staged.file)?;
-            let request = &staged.request;
-            let file_name = format!("{}.{}", request.result_id, verified.extension);
-            let result = MediaResultRef {
-                schema_version: 1,
-                result_id: request.result_id.clone(),
-                session_id: request.session_id.clone(),
-                association: request.association.clone(),
-                job_id: request.job_id.clone(),
-                kind: verified.kind,
-                mime: verified.mime.into(),
-                relative_path: format!("{}/{}", relative_directory(request), file_name),
-                file_name,
-                bytes,
-                sha256,
-                created_at: staged.created_at,
-                root_id: request.root_id.clone(),
-                spec: verified.spec,
-                ownership: ownership(&request.source),
-                source: request.source.clone(),
-            };
-            Ok(PreparedMedia { staged, result })
+        let (staged, checked) = tokio::task::spawn_blocking(move || {
+            let checked = inspect_staged(&mut staged);
+            (staged, checked)
         })
         .await?;
-        let prepared = match checked {
-            Ok(value) => value,
+        let result = match checked {
+            Ok(result) => result,
             Err(error) => {
-                sqlx::query("UPDATE media_results_v1 SET state='failed' WHERE result_id=? AND state='writing'")
-                    .bind(&result_id).execute(&self.pool).await?;
+                self.abort_staged(staged).await?;
                 return Err(error);
             }
         };
         let updated = sqlx::query("UPDATE media_results_v1 SET state='prepared',payload=? WHERE result_id=? AND state='writing' AND identity=?")
-            .bind(serde_json::to_string(&prepared.result)?).bind(&result_id).bind(&prepared.staged.identity)
+            .bind(serde_json::to_string(&result)?).bind(&result_id).bind(&staged.identity)
             .execute(&self.pool).await?;
         ensure!(
             updated.rows_affected() == 1,
             "Media preparation ownership changed"
         );
-        Ok(prepared)
+        Ok(PreparedMedia { staged, result })
     }
+}
 
+fn inspect_staged(staged: &mut StagedMedia) -> Result<MediaResultRef> {
+    staged.file.sync_all().map_err(MediaAccessError::io)?;
+    let verified = formats::inspect(&mut staged.file)?;
+    ensure!(
+        verified.kind == staged.request.kind,
+        "Decoded media kind differs from the requested task"
+    );
+    let bytes = staged.file.metadata()?.len();
+    let sha256 = files::digest(&mut staged.file)?;
+    let request = &staged.request;
+    let file_name = format!("{}.{}", request.result_id, verified.extension);
+    Ok(MediaResultRef {
+        schema_version: 1,
+        result_id: request.result_id.clone(),
+        session_id: request.session_id.clone(),
+        association: request.association.clone(),
+        job_id: request.job_id.clone(),
+        kind: verified.kind,
+        mime: verified.mime.into(),
+        relative_path: format!("{}/{}", relative_directory(request), file_name),
+        file_name,
+        bytes,
+        sha256,
+        created_at: staged.created_at,
+        root_id: request.root_id.clone(),
+        spec: verified.spec,
+        ownership: ownership(&request.source),
+        source: request.source.clone(),
+    })
+}
+
+impl MediaResultStore {
     async fn commit(&self, prepared: PreparedMedia) -> Result<MediaResultRef> {
         files::rename(
             &prepared.staged.file,

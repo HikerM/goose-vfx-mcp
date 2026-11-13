@@ -114,6 +114,22 @@ impl LuminaAcpAgent {
         result
     }
 
+    #[custom_method(NativeTaskListRequest)]
+    async fn dispatch_native_task_list(
+        &self,
+        req: NativeTaskListRequest,
+    ) -> Result<NativeTaskListResponse, agent_client_protocol::Error> {
+        self.on_native_task_list(req).await
+    }
+
+    #[custom_method(NativeTaskDescribeRequest)]
+    async fn dispatch_native_task_describe(
+        &self,
+        req: NativeTaskDescribeRequest,
+    ) -> Result<NativeTaskDescribeResponse, agent_client_protocol::Error> {
+        self.on_native_task_describe(req).await
+    }
+
     #[custom_method(MediaReadRequest)]
     async fn dispatch_media_read(
         &self,
