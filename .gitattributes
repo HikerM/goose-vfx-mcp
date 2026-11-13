@@ -1,3 +1,4 @@
 crates/lumina/src/agents/snapshots/*.snap linguist-language=Text
 crates/lumina-local-inference/src/lifecycle/audio_task_parameters/pocket_tts.json -text
 crates/lumina-local-inference/src/lifecycle/audio_task_parameters/qwen3_asr.json -text
+crates/lumina-local-inference/src/lifecycle/task_resources/*.json -text

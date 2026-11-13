@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "kind": "pocket_tts_fixed_steps",
+      "measurementSha256": "23b532506f8001122e9370c323f0c301cd7991dcdb37be135e71dc9f146e677f",
+      "maxFrames": 32,
+      "framesAfterEos": 32,
+      "shortText": {
+        "shape": "normalized_ascii_sentence",
+        "requiredChunkTokens": 50,
+        "maximumNormalizedTokens": 32,
+        "digestTag": "pocket-english-one-chunk-32-steps-v1"
+      }
+    }
+  ]
+}

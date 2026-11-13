@@ -299,6 +299,28 @@ fn wan_resource_request_and_observed_arguments_are_bound_to_the_cpu_video_model(
             .observation
             .matches_observed_request
     );
+    let hardware = HardwareResourceSnapshot {
+        observed_at: 1000,
+        disk_free_bytes: 1 << 40,
+        storage_volume: "test-volume".into(),
+        devices: vec![HardwareMemoryDevice {
+            index: 0,
+            backend: "CPU".into(),
+            name: "CPU".into(),
+            description: "test CPU".into(),
+            kind: "cpu".into(),
+            total_bytes: 1 << 35,
+            free_bytes: 1 << 34,
+        }],
+    };
+    let TaskResourceAssessment::NeedsProfiling(detail) =
+        assess_task_resources(&task.into(), &hardware, 1000).unwrap()
+    else {
+        panic!("unmeasured CPU profile should require profiling")
+    };
+    assert!(!detail.key.requires_gpu);
+    assert_eq!(detail.evidence, "2026-11-01-native-video-feasibility.json");
+    assert!(detail.missing.iter().all(|entry| !entry.contains("CUDA")));
 }
 
 #[test]

@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 2,
+  "rulesVersion": "native-task-resources-v1",
+  "key": {
+    "kind": "tts",
+    "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+    "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+    "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+    "requiresGpu": false
+  },
+  "provenance": {
+    "runnerSha256": "7b858f76a92e292ebe8be2c0f6f0f2954b6a77b1c3ddbdb4384137c9d6982716",
+    "fixtureSha256": "824752fd10537bddf99cc61e5c3a04fa860524693c38d9b1afb8f54a27d192dd",
+    "executionEvidenceSha256": "8878d632a6b59b537b8f613bd87795d96a96411ef13e10f0039138c19f224369"
+  },
+  "snapshotDigest": "2f4790a30e47fe9642d272f3e727064911518f45784af497e8180ba3419481c5",
+  "hardware": {
+    "observed_at": 1794567589,
+    "devices": [
+      {
+        "index": 0,
+        "backend": "CPU",
+        "name": "CPU",
+        "description": "Intel(R) Core(TM) i7-14700F",
+        "kind": "cpu",
+        "total_bytes": 102904569856,
+        "free_bytes": 57542225920
+      }
+    ],
+    "storage_volume": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-pocket-bounded-job-c8-r1\\output-root\\native",
+    "disk_free_bytes": 31327543296
+  },
+  "controllerPeakCommitBytes": 20877312,
+  "lifecycleTree": {
+    "processIds": [
+      23428,
+      45148,
+      52888,
+      58244,
+      62064
+    ],
+    "peakJobCommitBytes": 1749893120,
+    "summedPeakWorkingSetBytes": 505741312,
+    "samplesSha256": "22b7148241e48e9768d74b55ec04cc0348b12e7719434a3021330f72d66ab389"
+  },
+  "native": {
+    "pid": 62064,
+    "peakWorkingSetBytes": 433455104,
+    "peakCommitBytes": 1735753728,
+    "elapsedMillis": 2054,
+    "exitCode": 0,
+    "processTreeExited": true,
+    "memorySamplesSha256": "22b7148241e48e9768d74b55ec04cc0348b12e7719434a3021330f72d66ab389",
+    "observedOutputPeakBytes": 305187
+  },
+  "publication": {
+    "kind": "media",
+    "process": {
+      "pid": 52888,
+      "peakWorkingSetBytes": 33095680,
+      "peakCommitBytes": 7688192,
+      "elapsedMillis": 13333,
+      "exitCode": 0,
+      "processTreeExited": true,
+      "memorySamplesSha256": "22b7148241e48e9768d74b55ec04cc0348b12e7719434a3021330f72d66ab389",
+      "observedOutputPeakBytes": 1052434
+    },
+    "implementation": "media::task_output::import_readers",
+    "implementationSourcesSha256": "833f1131eaf9e727c76773c3c60bb9b2b1f1e2c12e0cad51bf58e96b50e5e364",
+    "helperBinarySha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e",
+    "inputSha256": "d37b4ef20e6cdb8fcb6fed24cf0475e875a461ccf4025287bae602eedc82e7e0",
+    "publishedSha256": "d37b4ef20e6cdb8fcb6fed24cf0475e875a461ccf4025287bae602eedc82e7e0",
+    "publishedBytes": 122924,
+    "peakDirectoryBytes": 1052434,
+    "reopenedVerified": true
+  },
+  "gpu": {
+    "status": "cpu_only"
+  },
+  "nativeExitedBeforePublication": true,
+  "reviewedBudget": {
+    "hostRamBytes": 2281701376,
+    "gpuMemory": [],
+    "temporaryOutputBytes": 1048576,
+    "publicationCopyBytes": 1048576,
+    "publicationScratchBytes": 3145728,
+    "outputByteLimit": 1048576,
+    "timeoutSeconds": 30
+  }
+}

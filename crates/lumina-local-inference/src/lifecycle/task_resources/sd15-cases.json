@@ -1,0 +1,9 @@
+[
+  {"prompt":"a photograph of a red apple on a wooden table, studio lighting, high quality","negativePrompt":"blurry, distorted, low quality","seed":42},
+  {"prompt":"cat","negativePrompt":"blur","seed":0},
+  {"prompt":"海边的红色灯塔","negativePrompt":"模糊","seed":2147483648},
+  {"prompt":"123456789012345678901234567890123456789012345678901234567890123456789012345","negativePrompt":"987654321098765432109876543210987654321098765432109876543210987654321098765","seed":4294967295},
+  {"prompt":"A blue sailboat crossing a lake.","negativePrompt":"grainy","seed":137},
+  {"prompt":"一只猫坐在蓝色的窗台上","negativePrompt":"失焦","seed":2026},
+  {"prompt":"cat BREAK a second scene","negativePrompt":"blur","seed":0}
+]
