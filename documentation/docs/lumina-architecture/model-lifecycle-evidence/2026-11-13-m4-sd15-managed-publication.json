@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-13",
+  "status": "managed_owner_and_publication_passed_previous_build",
+  "installationId": "acceptance-sd15",
+  "versionId": "version:acceptance-sd15",
+  "manifestDigest": "d98d66eced5b91efa52839b0b5f019256d2d3d34ba2d937f62d5f31201f0bb7c",
+  "engine": {
+    "adapterId": "diffusion-cpp-native-generation-v1",
+    "engineRevision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+    "binarySha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043"
+  },
+  "model": {
+    "artifactId": "779ca6d275eb6bcd4d7cd811e24dc071e7c545ab33b755eed1a316633227ace5",
+    "sha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+    "sizeBytes": 2132584864
+  },
+  "parameters": {
+    "prompt": "a photograph of a red apple on a wooden table, studio lighting, high quality",
+    "negativePrompt": "blurry, distorted, low quality",
+    "width": 512,
+    "height": 512,
+    "aspectRatio": {
+      "width": 1,
+      "height": 1
+    },
+    "seed": 42,
+    "steps": 20,
+    "cfgScale": 7.0,
+    "sampler": "euler_a",
+    "scheduler": "discrete",
+    "batchCount": 1
+  },
+  "managedSession": {
+    "sessionId": "20261113_1",
+    "jobId": "native:a88cf97b1448cc038674ad37115e6d332b5a2ccbf4e135b37fc6726761e4f857",
+    "toolCallId": "sd15-image-request",
+    "resultId": "499ae5f8-1048-812a-ba1c-94ca8a16d0a1",
+    "snapshotDigest": "b7b1bbb98be009afc2e323c606b82ccf9e690672956852bd71fc7cd1c4dbca64",
+    "reopenedVerified": true,
+    "relativeOutput": "id-32303236313131335f31/id-6e61746976653a61383863663937623134343863633033383637346164333731313565366433333262356132636362663465313335623337666336373236373631653466383537/499ae5f8-1048-812a-ba1c-94ca8a16d0a1.png",
+    "bytes": 467679,
+    "pngSha256": "bf81e68d0129b2b1cc7534abf5a1b10ba2b45ab3dc0e4f4313d0306a6a0245b7",
+    "mime": "image/png",
+    "width": 512,
+    "height": 512
+  },
+  "measuredWindowsJob": {
+    "elapsedSeconds": 626.766,
+    "jobAfterCleanup": {
+      "TotalProcesses": 5,
+      "ActiveProcesses": 0,
+      "TotalTerminatedProcesses": 0,
+      "ProcessIds": [],
+      "peakJobCommitBytes": 4113149952
+    },
+    "exitCode": 0,
+    "treeExited": true,
+    "checkoutMismatchAtReview": "Checkout differs from measured implementation: crates/lumina-local-inference/src/lifecycle/native_task_runtime.rs",
+    "driverSources": {
+      "crates/lumina-local-inference/src/lifecycle/native_task_runtime.rs": "4cc4ec9fc873990e323a6d1827b0946680ad2c5055c6bbdccc940fce3506fd04",
+      "crates/lumina-local-inference/src/lifecycle/native_task_runtime/output.rs": "110e72f2963582fb0b9b93c0e3c2175f8a25db4b5f1404f528d03f18de79c9e0",
+      "crates/lumina-local-inference/src/lifecycle/native_task_runtime/plan.rs": "8ac773b12e94deed0136e6c4dc4b2a6e078d4814d030b9c10e686bb48555ae3e",
+      "crates/lumina-local-inference/src/lifecycle/native_task_runtime/process.rs": "ab2830ce2c001163a1417be9fe9899ec695f6c6192f7eb3cfe144063292a3cdd",
+      "crates/lumina-local-inference/src/lifecycle/task_parameters.rs": "9fa9031904c2daab95e0a5dc97656f4fc1c51f224c4376def5d53e95c89936c8",
+      "crates/lumina-local-inference/src/lifecycle/task_parameters/compile.rs": "710ef3bbbbf71887bf748398dea14db4ff89eda555876e7e01a91c1fda91ff1a",
+      "crates/lumina-local-inference/src/lifecycle/task_parameters/inventory.rs": "cb26bcaf8929de80d82044b419672e861d7a22ad1b600d34fc906950ac0019af",
+      "crates/lumina-local-inference/src/lifecycle/task_parameters/models.json": "455f643934d41f5a84fca2ccc33fadcda77ea03c2a3d7cc3bb7d8cce894ab40a",
+      "crates/lumina-local-inference/src/lifecycle/task_parameters/protocols.json": "9f51dc5a880f7e01a213aaa3607df5fa048b123c652737df70de6b1cda2e4c9f",
+      "crates/lumina-local-inference/src/lifecycle/task_resources/sd15_probe.rs": "348892e024c170ef3e428d7104738996c73e0d7dd2010edf4fa40a1510ffce62",
+      "crates/lumina/src/media/domain.rs": "24c4ed709d7eab8a3d1b2f3a661569013395ae51c77a8ecd4c47f66546320add",
+      "crates/lumina/src/media/files.rs": "6557024309ac0204c8d13452f41c4dbfc6a66fb39c7f101845ff1da051a24cbb",
+      "crates/lumina/src/media/formats.rs": "65f9161777747ec075a0e75e50791e58ef2da414f260c07b7373150076fd118b",
+      "crates/lumina/src/media/store.rs": "9c1220423119f2cca7621d643e518765a2abf21194a89a90d2748c7f74720c13",
+      "crates/lumina/src/media/task_configuration.rs": "5449f228a5414ebbbf2a82e484cf09339150b8ecedeb11fdef9548003d2bed8d",
+      "crates/lumina/src/media/task_output.rs": "a46c0976a23cf482c8bb0a7177f2a8a4c9b3979420fa0f37989f12e68c961f18",
+      "crates/lumina/src/media/task_service.rs": "ad0afd0b09856ebb1cbab611b817c1faf77577e8a14e165b0547158eea569749",
+      "crates/lumina/src/session/session_manager.rs": "a21320d7d4bb04e255fa2b202239318274517d6d3f85665d95641110d787271c",
+      "crates/lumina/tests/support/sd15_publication_probe.rs": "df8a4a16d11a2bd54946c4ad30d32f0d037e0f15645f83693956a01dea2f0b99"
+    },
+    "helperDigests": {
+      "sd-cli.exe": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043",
+      "lumina-0f56576afdecccba.exe": "dfbb2530d43cd80455b0fb99e8a400dcc6ba831b2f9981c3cf79c90615e25ce4",
+      "lumina_local_inference-092f3d23db9e36fc.exe": "4a7791d33958144a7ba78e469f9b7acf92363d160bafacf0e199435048074a70"
+    }
+  },
+  "evidenceDirectory": "target/lifecycle-validation/m4-sd15-job-image-20261113-r1",
+  "artifacts": {
+    "driver.json": "39ab1a29aa9a65a5d15a5ee65a56c9be2f109054894e866755944c6e2beffa9a",
+    "fixture.json": "94e6a9cff8861049c52832020310e5b6bbdd11d20d39c87599f5f24b2a0539f3",
+    "owner.json": "60e6e13b5f58ce8a1b2141a2dfc6b309e21f1b6a84b5351dcd3a23b0e4a852a0",
+    "publication.json": "7b81a8e8a043c44ef9b3f5f7a0e5091c74fc8b778b4b0f71b6830c01d5684e3b",
+    "result.json": "349b04c83212da930971d03318ac863c64186e2c82dbbb3cf9098c28c9ba40d4",
+    "lifecycle.stdout.log": "195ceb13fbb75e7ef540ca6d946353c25a5ca26b36dd742eea6681fa3893d209",
+    "tree.jsonl": "caa9df8e86cf89be07afb56d807de076ffcabf8ccac03d9e656bfcb876e661ff"
+  },
+  "scope": "The installed adapter produced a PNG identical to the pinned CLI output and reopened it through the managed session media database. This run used a bounded test receipt. Its source comparison rejected resource registration after production sources changed. Production chat invocation requires a reviewed current-build record."
+}

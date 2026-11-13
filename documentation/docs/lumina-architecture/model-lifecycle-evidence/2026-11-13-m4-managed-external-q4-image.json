@@ -1,0 +1,56 @@
+{
+  "scope": "Managed external Q4 image installation, activation and parameter catalog discovery after restart on Windows",
+  "test": "install_from_observed_generation_assets_and_reopen_task_catalog",
+  "log": {
+    "path": "target/lifecycle-validation/m4-external-q4-managed-install-r1.log",
+    "sha256": "b622a06abd83be57d742983d7939bcce4b6bdc1b924f660793ba986673ff3af8"
+  },
+  "identity": {
+    "installationId": "acceptance-sd15-q4-external",
+    "versionId": "version:acceptance-sd15-q4-external",
+    "manifestDigest": "eb3c6e04f0ab82ec5701afd59114254505ef66e82e0c5bf12d4a38069bf12256",
+    "runtimeDigest": "acdf7fae528058af5ce6b608969ae4973b29989ea1fe1d5ff66be1cc88fa255d",
+    "componentBindingDigest": "1cc84d0a0f5e9ab432ad267962b590b98ca6cdfd75e1e938c7d0dd350c1c8128",
+    "taskVariant": "sd15-q4-external/text_to_image",
+    "parameterSchemaId": "generation-profile-8bdf41d10369ee26e15bdc3b916ea2e2addcf53543ebeffce5f93693d27d1dad"
+  },
+  "catalogModel": {
+    "intents": [
+      "text_to_image"
+    ],
+    "name": "sd15-q4-external",
+    "assets": {
+      "main": {
+        "sha256": "c2f6e92f9d08d69cc673a1003528ac8199274b3c0eaec88d5fbefe5af67bd42b",
+        "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+        "sizeBytes": 1747190784,
+        "file": "stable-diffusion-v1-5-Q4_0.gguf",
+        "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f"
+      }
+    },
+    "adapterProtocol": "sd-cpp/checkpoint-image-cpu-v1",
+    "defaults": {
+      "schedulers": [
+        "discrete"
+      ],
+      "width": 512,
+      "cfgScale": 7,
+      "height": 512,
+      "samplers": [
+        "euler_a",
+        "euler"
+      ],
+      "seed": 42,
+      "steps": 20,
+      "negativePrompt": "",
+      "dimensionMultiple": 64
+    }
+  },
+  "onReopen": {
+    "activeVersionMatches": true,
+    "publishedManifestMatchesDatabase": true,
+    "installedWeightRehashed": true
+  },
+  "relatedNativeOutput": "2026-11-13-m4-external-q4-image-smoke.json",
+  "limits": "Managed chat submission and publication of this Q4 model remain unverified by this check."
+}

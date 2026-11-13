@@ -1,0 +1,50 @@
+{
+  "scope": "Managed installation, restart and task discovery for an external French PocketTTS weight on Windows",
+  "test": "install_and_discover_managed_audio",
+  "log": {
+    "path": "target/lifecycle-validation/m4-managed-french-tts-r1.log",
+    "sha256": "9b0c28a42d745ba2000438209f0b67a036e5715cc2fe13295281af87668a8336"
+  },
+  "identity": {
+    "installationId": "acceptance-pocket-tts-fr-q8-cpu",
+    "versionId": "version:c527a22d-48f7-43b9-b449-d6c0d8dbd28b",
+    "manifestDigest": "2cd426e28af5fff8fc2b85135dc074955c9b89831cb09ad44a4e6bfdd098365a",
+    "runtimeDigest": "80897162079e1c789d62fc66542cc36a163bbede57972495957c3660a58b5132",
+    "componentBindingDigest": "d29e27360e2350f7a43f98333bd46d7f270625143e92501be6cefc0940e6ae60",
+    "taskVariant": "pocket-tts-fr-q8-cpu",
+    "parameterSchemaId": "audio-profile-80e61bc81ba3a0c6397d86d9c72a31485f7026437a450488dd3c8c2e085c5e57"
+  },
+  "files": [
+    {
+      "file": "model_specs/pocket_tts.json",
+      "sizeBytes": 15862,
+      "sha256": "dd430cdc4c54ef04899c88272ba5b3561ffb121b9be4a1d9829c8fa0478750e8"
+    },
+    {
+      "file": "PocketTTS-GGUF/french/pocket-tts-french-q8_0.gguf",
+      "sizeBytes": 128117408,
+      "sha256": "ae7e6d536c20245d216a7ec9404124cf67f913380bf41a6380c55d6ca9dbaef5"
+    }
+  ],
+  "catalogModel": {
+    "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+    "parameters": {
+      "language": "french",
+      "temperature": 0.7,
+      "protocol": "pocket_tts_offline"
+    },
+    "name": "pocket-tts-fr-q8-cpu",
+    "sha256": "ae7e6d536c20245d216a7ec9404124cf67f913380bf41a6380c55d6ca9dbaef5",
+    "file": "PocketTTS-GGUF/french/pocket-tts-french-q8_0.gguf",
+    "sizeBytes": 128117408,
+    "repository": "audio-cpp/audio.cpp-gguf"
+  },
+  "onReopen": {
+    "sameDescriptor": true,
+    "sqliteActiveVersionMatches": true,
+    "publishedManifestMatchesDatabase": true,
+    "installedFilesRehashed": 2
+  },
+  "relatedNativeOutput": "2026-11-13-m4-external-french-tts.json",
+  "limits": "This check does not run inference or publish a chat result."
+}
