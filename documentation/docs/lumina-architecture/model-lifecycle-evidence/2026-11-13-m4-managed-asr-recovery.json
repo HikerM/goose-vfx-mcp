@@ -1,0 +1,29 @@
+{
+  "scope": "Existing Qwen3-ASR managed installation job resumed, installation directory verified, service shut down and reopened, same active exact descriptor resolved. Audio transcription quality and runtime admission have separate acceptance suites.",
+  "status": "passed",
+  "jobId": "job:e161d9ed-256b-464f-9ded-b0e403eb6158",
+  "rulesVersion": "modelscope-audio-cpp-install-only-v1",
+  "runtimeBinarySha256": "da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787",
+  "identity": {
+    "installationId": "acceptance-qwen3-asr",
+    "versionId": "version:0ef2fa24-6fb3-406c-bf41-36035603f49e",
+    "manifestDigest": "08542a1a6838d1bbc1dd1b12aca277f78cfc1621bf38911cac5adf6d2488431a",
+    "runtimeDigest": "7146349c4a10950544300d52e9e9daf523752d3b32312d8d67f151415e2a9ecb",
+    "componentBindingDigest": "e7d151a6a7f49f4632fa2401408502d0d2e21b2c7ff20d8ef7fd9764d41b91ba",
+    "taskVariant": "qwen3_asr/offline/transcription",
+    "parameterSchemaId": "qwen3-asr-0.6b-offline-parameters-v1"
+  },
+  "verifiedInstalledFiles": [
+    {
+      "sha256": "0cdc4bc56a2c11d092fff7a5ebe08612ecfc09d0310f845de26ea800b5bb5465",
+      "sizeBytes": 14197
+    },
+    {
+      "sha256": "5c53bbb9a6b2ade85c16c290c560658ca18b78a23c323378528f1f945683fcbe",
+      "sizeBytes": 1151279968
+    }
+  ],
+  "test": "install_and_discover_managed_audio",
+  "log": "target/lifecycle-validation/m4-managed-asr-recovery-r3.log",
+  "logSha256": "97f79f037c739ac495d32df8705df22175d2d79ff9108d6eacc465cc5105800c"
+}

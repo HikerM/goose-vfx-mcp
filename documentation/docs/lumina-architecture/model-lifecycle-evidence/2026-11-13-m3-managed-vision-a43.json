@@ -1,0 +1,460 @@
+{
+  "status": "passed",
+  "scope": "A43 on this installed model and projector using 10 frozen simple synthetic images, 4 paired replacements and 3 visual conversations. The acceptance test reopened the SQLite database and compared the exact registered verdict.",
+  "versionId": "paired-vision-v1",
+  "modelFiles": [
+    {
+      "path": "mmproj-F16.gguf",
+      "size_bytes": 204987104,
+      "source_sha256": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798"
+    },
+    {
+      "path": "Qwen3.5-0.8B-Q8_0.gguf",
+      "size_bytes": 833592736,
+      "source_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262"
+    }
+  ],
+  "result": {
+    "evidence": {
+      "installation_id": "paired-vision-model",
+      "capability": "vision",
+      "identity": {
+        "manifest_digest": "9ac4178bfd9b6a2fa97a10abd00399724e30a6d9eacf9e7d32a4beb27fa25b65",
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "launch_digest": "b709896d84d566220448d91bf56ea391c6f540c29ac5f43d8df82a99aab4b9a5",
+        "suite_version": "managed-vision-a43-v1"
+      },
+      "status": "ready",
+      "input_digest": "0977f04df72dca38c7c92353bcdc5d7aae7d8f41c8f166f6d0db263e8d07e987",
+      "output_digest": "c2b8e2c30c4e57bcefdb79e0dabe317c58316515ce8482c919b26475fbcf8f9c",
+      "evidence_path": "vision-validation/c2b8e2c30c4e57bcefdb79e0dabe317c58316515ce8482c919b26475fbcf8f9c.json",
+      "validated_at": 1794554369
+    },
+    "correct": 10,
+    "completed": 10,
+    "replacements_passed": 4,
+    "dialogs_passed": 3,
+    "dialogs_completed": 3,
+    "failure": null
+  },
+  "testLog": "target/lifecycle-validation/m3-a43-managed-vision-r1.log",
+  "testLogSha256": "4ee478a11858677a546c8d0101bc71c623bfe628eaac1d9b6477deaccabc014d",
+  "transcript": {
+    "binding": {
+      "identity": {
+        "manifest_digest": "9ac4178bfd9b6a2fa97a10abd00399724e30a6d9eacf9e7d32a4beb27fa25b65",
+        "runtime": {
+          "adapter_id": "llama-helper",
+          "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+          "binding_version": "native-http-v1",
+          "platform": "x86_64-pc-windows-msvc",
+          "features": [
+            "cpu",
+            "dflash",
+            "embedding",
+            "mtmd",
+            "mtp",
+            "reranking"
+          ],
+          "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+        },
+        "launch_digest": "b709896d84d566220448d91bf56ea391c6f540c29ac5f43d8df82a99aab4b9a5",
+        "suite_version": "managed-vision-a43-v1"
+      },
+      "installation_id": "paired-vision-model",
+      "version_id": "paired-vision-v1",
+      "profile": null,
+      "input_digest": "0977f04df72dca38c7c92353bcdc5d7aae7d8f41c8f166f6d0db263e8d07e987",
+      "engine_location_digest": "8e55c385df9aacf3df06d2a79d38224af701a123184277b697470ae23b52b840",
+      "status": "ready",
+      "validated_at": 1794554369
+    },
+    "actual_launch": {
+      "installation_id": "paired-vision-model",
+      "version_id": "paired-vision-v1",
+      "manifest_digest": "9ac4178bfd9b6a2fa97a10abd00399724e30a6d9eacf9e7d32a4beb27fa25b65",
+      "runtime": {
+        "adapter_id": "llama-helper",
+        "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+        "binding_version": "native-http-v1",
+        "platform": "x86_64-pc-windows-msvc",
+        "features": [
+          "cpu",
+          "dflash",
+          "embedding",
+          "mtmd",
+          "mtp",
+          "reranking"
+        ],
+        "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+      },
+      "capabilities": [
+        "text",
+        "vision"
+      ],
+      "component_files": {
+        "main": [
+          "files/06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf"
+        ],
+        "vision_projector": [
+          "files/ee275613917c4741bec75f78252a646413b4014f534ce8631d9f155378f7ece7.gguf"
+        ]
+      },
+      "parameters": {
+        "adapter": "llama_cpp",
+        "chat_template": {
+          "kind": "embedded"
+        },
+        "context_length": 4096,
+        "gpu_layers": 0,
+        "cpu_threads": 4,
+        "kv_key_type": "f16",
+        "kv_value_type": "f16",
+        "batch_size": 512,
+        "flash_attention": true,
+        "workload": {
+          "context_tokens": 4096,
+          "batch_tokens": 512,
+          "parallel_sequences": 1,
+          "recurrent_rollback_slots": 0,
+          "kv_key_type": "f16",
+          "kv_value_type": "f16",
+          "prompt_cache_bytes": 0,
+          "context_checkpoint_slots": 0,
+          "vision": {
+            "resize_policy": "qwen3_vl_native_v1",
+            "max_images": 1,
+            "max_input_width": 1024,
+            "max_input_height": 1024,
+            "max_input_bytes": 8388608,
+            "native_min_image_tokens": 1024,
+            "native_max_image_tokens": 1024,
+            "max_encoded_image_tokens": 2048,
+            "microbatch_tokens": 512,
+            "image_batch_tokens": 1024,
+            "cpu_threads": 4
+          }
+        }
+      },
+      "mode": {
+        "kind": "helper",
+        "port": 53185
+      }
+    },
+    "actual_launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+    "installed_files": {
+      "33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566": {
+        "artifact_id": "33ccd4be6155cb945d39fdf615b346677eee68c62c63f889020a3adb795b4566",
+        "relative_path": "files/ee275613917c4741bec75f78252a646413b4014f534ce8631d9f155378f7ece7.gguf",
+        "computed_sha256": "ea8519d0c6240e465a0265d6912f73d750a17ca7d42150281b778b8b59f05798",
+        "size_bytes": 204987104,
+        "verification_evidence": "346779ed61cd3c37dc2834b1fbcdc62f0b7f2a0eab82065012ef9b07be1729ed"
+      },
+      "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e": {
+        "artifact_id": "c3f03c2a1d520f39ad018063ede09175e9741f5b2d0e0e3b38920cf18938ff9e",
+        "relative_path": "files/06dfcfc08d224606ffde82352a024e42a738c85d8c10300c4eec4f09f9f7dc9f.gguf",
+        "computed_sha256": "c54f8b67069c70085b98440de696b44da8250250ac69a961b41133def876e262",
+        "size_bytes": 833592736,
+        "verification_evidence": "cb9b34f0c47f39538346d4d23157db40e9284f9c5dbd8cdfd93b8b338dcafa85"
+      }
+    },
+    "cases": {
+      "images": [
+        {
+          "id": "solid-red",
+          "request_digest": "e239029ff9c4aca65fdc7c4a30a830aafc32aae8f50a955960a88a24b31fa40a",
+          "response": {
+            "id": "chatcmpl-DcyZAwm2PMJVep3SH3vBRmCCfZuxWIDg",
+            "content": "red",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1052,
+              "completion_tokens": 2,
+              "total_tokens": 1054
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "e239029ff9c4aca65fdc7c4a30a830aafc32aae8f50a955960a88a24b31fa40a",
+            "image_digests": [
+              "8cd751ba4b95bc2b9b958717cd3dd27e89e6709057787196a19c61f63ebf9374"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "solid-blue",
+          "request_digest": "d43c417519b3ac22b840781fcbe46ea63dad6946677f7927e0859295cfc87f85",
+          "response": {
+            "id": "chatcmpl-fqUz4Yln4qZv1M0skZNaInhEVyMmOV2w",
+            "content": "blue",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1052,
+              "completion_tokens": 2,
+              "total_tokens": 1054
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "d43c417519b3ac22b840781fcbe46ea63dad6946677f7927e0859295cfc87f85",
+            "image_digests": [
+              "d6d17ffe11deac7022bc4af854e50c019a0ab47f9ea4c5de6e8527a86f11fe9d"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "dots-2",
+          "request_digest": "4fcec7ba99439445781510aeae750169c8f2650f6d5a483bd980e461f527555a",
+          "response": {
+            "id": "chatcmpl-S9kz9WxTmi3bNFWkklx5SwehZlK0P4Xg",
+            "content": "2",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1052,
+              "completion_tokens": 2,
+              "total_tokens": 1054
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "4fcec7ba99439445781510aeae750169c8f2650f6d5a483bd980e461f527555a",
+            "image_digests": [
+              "4f23ca5fcffacc201152c4650f735e3c71561ae11bc100684a805f925fe0c859"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "dots-3",
+          "request_digest": "16e8d3dad3a61c7a10210124aa71527a030a9a6b8f2db6296b17d80c356d1730",
+          "response": {
+            "id": "chatcmpl-Tmv0efsJEQ50XbhMPHO21h91QPGa2rDE",
+            "content": "3",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1052,
+              "completion_tokens": 2,
+              "total_tokens": 1054
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "16e8d3dad3a61c7a10210124aa71527a030a9a6b8f2db6296b17d80c356d1730",
+            "image_digests": [
+              "48ff58605021ec300a88c5f4b0b32ebe4ed6547500f22b6d75585c1d627bd236"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "triangle",
+          "request_digest": "fb0876913c70cf2ade42fb6df5f6f2db943856f5498382f992011b51671c35b3",
+          "response": {
+            "id": "chatcmpl-N8BD40o2qj67NzqGY7HzmbNwli56BjPK",
+            "content": "triangle",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1050,
+              "completion_tokens": 2,
+              "total_tokens": 1052
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "fb0876913c70cf2ade42fb6df5f6f2db943856f5498382f992011b51671c35b3",
+            "image_digests": [
+              "01a6ed1027b5e9e7e4e4381fb5ccec6979e2fa9193d92df6c6f9982d0f113c25"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "square",
+          "request_digest": "9bc1167c5eae76001c44eed88e282e24b39b52074c3009a1145280675782e92d",
+          "response": {
+            "id": "chatcmpl-oWZ5W5d44y5vzMkGqjX1cdHgUNJJ4GPw",
+            "content": "square",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1050,
+              "completion_tokens": 2,
+              "total_tokens": 1052
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "9bc1167c5eae76001c44eed88e282e24b39b52074c3009a1145280675782e92d",
+            "image_digests": [
+              "f7cbf8cdfe942932478eab0f3ed537fa4cb0992eb6165575606ef126e0cda87e"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "red-left",
+          "request_digest": "39a7cd2e2b67c688f312dcbda61a9c658631ef2756c6aa070f045590a49e7e4b",
+          "response": {
+            "id": "chatcmpl-CCH55XHshT04V5vmgW4tKEvp6dnE9GoQ",
+            "content": "left",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1052,
+              "completion_tokens": 2,
+              "total_tokens": 1054
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "39a7cd2e2b67c688f312dcbda61a9c658631ef2756c6aa070f045590a49e7e4b",
+            "image_digests": [
+              "944ad5c06587fac780a278c5f5d5ccadfb8fde4220428812ee6afc1d982a9552"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "red-right",
+          "request_digest": "f40784b484ea881522be3c1890da142e3299830f983ed4e6e6d0722f810d694f",
+          "response": {
+            "id": "chatcmpl-vfkfvWJO7v4PZ2JPVKc2ngoanFu8V9mS",
+            "content": "right",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1052,
+              "completion_tokens": 2,
+              "total_tokens": 1054
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "f40784b484ea881522be3c1890da142e3299830f983ed4e6e6d0722f810d694f",
+            "image_digests": [
+              "ee678497fb3920dbf026b4cf2bd007f150a7f66bae98168f1c0239e2e0030980"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "word-cat",
+          "request_digest": "aee0dda5602e3b25961f96c8545f2f14c1012f532972447b554ce3c4d2336f97",
+          "response": {
+            "id": "chatcmpl-6CvU4I1GZq4vUMGNDRnDTe8SnpmF3hyE",
+            "content": "cat",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1049,
+              "completion_tokens": 2,
+              "total_tokens": 1051
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "aee0dda5602e3b25961f96c8545f2f14c1012f532972447b554ce3c4d2336f97",
+            "image_digests": [
+              "db1df1d7a3bb06348075760350dfbb1d10a68e3852733c2d768f9e7c481577de"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "word-dog",
+          "request_digest": "e425c7810e4d636d0cdd32033f215fa10036a4c95b39f9b4fcd0f3e58b430bc3",
+          "response": {
+            "id": "chatcmpl-m2cl90bFL3hoRMwhXN0Mb0BsbXcEmd1M",
+            "content": "DOG",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1049,
+              "completion_tokens": 2,
+              "total_tokens": 1051
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "e425c7810e4d636d0cdd32033f215fa10036a4c95b39f9b4fcd0f3e58b430bc3",
+            "image_digests": [
+              "3efe12bfa33358554ab8b66b01f1d1c4dbeabf8eefaa13850210e81f210de4f8"
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "dialogs": [
+        {
+          "id": "solid-blue",
+          "request_digest": "6f09d0af52c92e2016adc0d86936b2dbac422e1f7b632d66d5a712e0ad16568d",
+          "response": {
+            "id": "chatcmpl-x0XUKxqeALm6BEKfNQQY6aj3lXQxZZ89",
+            "content": "blue",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1083,
+              "completion_tokens": 2,
+              "total_tokens": 1085
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "6f09d0af52c92e2016adc0d86936b2dbac422e1f7b632d66d5a712e0ad16568d",
+            "image_digests": [
+              "d6d17ffe11deac7022bc4af854e50c019a0ab47f9ea4c5de6e8527a86f11fe9d"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "dots-3",
+          "request_digest": "58351d6dfc58fb1ec8719210c8f50460ea5a281e008787c9fdb47ff9d84c0532",
+          "response": {
+            "id": "chatcmpl-gx4CLgoub30LlHYxCtuvN8qxUIjru1r9",
+            "content": "2",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1084,
+              "completion_tokens": 2,
+              "total_tokens": 1086
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "58351d6dfc58fb1ec8719210c8f50460ea5a281e008787c9fdb47ff9d84c0532",
+            "image_digests": [
+              "48ff58605021ec300a88c5f4b0b32ebe4ed6547500f22b6d75585c1d627bd236"
+            ]
+          },
+          "passed": true
+        },
+        {
+          "id": "red-left",
+          "request_digest": "e678be134a3d26ff34932fa9e356f6c69aa6c7312f130ed2d56022ffd14454ac",
+          "response": {
+            "id": "chatcmpl-r6aQTnbDz5Ef8ZwDzA0M5ubO5Ddvz9tM",
+            "content": "right",
+            "tool_calls": [],
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 1079,
+              "completion_tokens": 2,
+              "total_tokens": 1081
+            },
+            "launch_digest": "fabf4b844893c2999a2ae9eb79bcb1a5dbfbe0d96b76d4e1431d8909a6765536",
+            "request_digest": "e678be134a3d26ff34932fa9e356f6c69aa6c7312f130ed2d56022ffd14454ac",
+            "image_digests": [
+              "944ad5c06587fac780a278c5f5d5ccadfb8fde4220428812ee6afc1d982a9552"
+            ]
+          },
+          "passed": true
+        }
+      ],
+      "replacements_passed": 4
+    },
+    "correct": 10,
+    "minimum": 8,
+    "failure": null,
+    "log_directory": "5360080e-d1cc-4bf0-afe3-4139fb9873d8"
+  }
+}

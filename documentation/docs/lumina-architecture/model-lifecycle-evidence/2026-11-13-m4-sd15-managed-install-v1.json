@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "status": "PASS",
+  "scope": "SD1.5 managed installation from source-observed cached GGUF and task catalog resolution after reopening the installation service.",
+  "job": {
+    "id": "job:acceptance-sd15",
+    "stage": "installed",
+    "status": "completed",
+    "plan_id": "generation-plan:87a6666b-2f49-4d0c-bba6-de32cde0e826",
+    "plan_digest": "3f568cab97a349fa764f16ccea5a35ef81031dcf428b2a2acc98961ae5f014dd",
+    "generation": 3,
+    "accepted_at": 1794552969,
+    "updated_at": 1794553792,
+    "lease_owner": null
+  },
+  "installationRules": "modelscope-diffusion-install-only-v1",
+  "plannedPeakBytes": 6414531808,
+  "model": {
+    "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+    "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f",
+    "file": "stable-diffusion-v1-5-FP16.gguf",
+    "localCachePath": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__stable-diffusion-v1-5-GGUF\\stable-diffusion-v1-5-FP16.gguf",
+    "bytes": 2132584864,
+    "sourceSha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+    "installedSha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+    "installedFile": "target\\lifecycle-validation\\m4-managed-generation-20261113-r1\\model-lifecycle\\installations\\d81b12ca7b155caa49f433f11e201a8f1cfd684b4392db0582e8c2b1720395c3\\af8175f9128f456597d81e4a20196780aa600e6ee10813053f483bd95d386444\\files\\f0de5b5cd34f7e83fb6ca3dab203df85d83a54314d084d1963a600abe5d548d9.gguf",
+    "verificationEvidence": "084eaacc8625beaec25982bc457b37b15a54feff74eae2d2c4ef4453064eec82"
+  },
+  "reopenedTask": {
+    "installationId": "acceptance-sd15",
+    "versionId": "version:acceptance-sd15",
+    "manifestDigest": "04c337099b6e4cad93ace72168d97e18d214ee7b9b92c26806066ad6ed76dceb",
+    "runtimeDigest": "acdf7fae528058af5ce6b608969ae4973b29989ea1fe1d5ff66be1cc88fa255d",
+    "componentBindingDigest": "af39531beae867ffdff3d1aef70a7c40ab8b8cf5d3315f9b8d0a952858de8dd6",
+    "taskVariant": "sd15/text_to_image",
+    "parameterSchemaId": "sd15-image-parameters-v1"
+  },
+  "databaseIntegrity": "ok",
+  "capabilityEvidenceRows": 0,
+  "finalLogicalManagedPayloadBytes": {
+    "transfers": 2132584864,
+    "blobs": 2132584864,
+    "staging": 0,
+    "installations": 2132584864
+  },
+  "manifestFile": {
+    "path": "target/lifecycle-validation/m4-managed-generation-20261113-r1/model-lifecycle/installations/d81b12ca7b155caa49f433f11e201a8f1cfd684b4392db0582e8c2b1720395c3/af8175f9128f456597d81e4a20196780aa600e6ee10813053f483bd95d386444/manifest.json",
+    "sha256": "04c337099b6e4cad93ace72168d97e18d214ee7b9b92c26806066ad6ed76dceb"
+  },
+  "testCommand": "cargo test --offline -j 1 -p lumina-local-inference --test lifecycle_managed_generation -- --exact install_from_observed_generation_assets_and_reopen_task_catalog --ignored --nocapture",
+  "acceptanceLog": {
+    "path": "target/lifecycle-validation/m4-managed-generation-20261113-r1/sd15-offline-r1.log",
+    "sha256": "911685cfef635a08ac4dd638b00729830278b41c6e6639c99438f2abfa9df297"
+  },
+  "testResult": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 864.02s",
+  "sourceObservation": {
+    "path": "target/lifecycle-validation/m4-managed-generation-20261113-r1/sd15-source-observation.json",
+    "sha256": "e7e98a4de45a5dc250890d3466dde380905c78c7ce2559e052c2aff6a04b3122",
+    "headerReads": [
+      {
+        "artifact_id": "779ca6d275eb6bcd4d7cd811e24dc071e7c545ab33b755eed1a316633227ace5",
+        "path": "stable-diffusion-v1-5-FP16.gguf",
+        "header_digest": "fd52cc611796e161ed9fd27222252829c143b8521e84e9ac6f0434f885efb079",
+        "bytes_fetched": 131072,
+        "range_http_requests": 2
+      }
+    ]
+  },
+  "verificationLimits": "The v1 run used the three-copy installation protocol. The final directory lengths are a post-run observation. No media inference, rendered result, dynamic parameter scheduling, quality or capability READY was tested."
+}

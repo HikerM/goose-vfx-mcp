@@ -15,6 +15,10 @@ M1 已验证的来源、观察存储和冻结计划基础增量提交为 `8da22c
 
 ## 阶段状态
 
+2026-11-13 的 A43 受管验收使用 Qwen3.5-0.8B Q8 和配套 F16 视觉投影。模型答对 10/10 张合成图，4/4 组换图对照和 3/3 组多轮对话通过，重开数据库后仍能读取同一份 READY 记录。[A43 验收及逐次输出](./model-lifecycle-evidence/2026-11-13-m3-managed-vision-a43.json)
+
+SD1.5 的受管安装通过缓存校验、注册和重启后的任务目录回读。Qwen3-ASR 恢复了原安装任务，校验后重开服务，读回了对应版本和参数描述。两项验收覆盖安装恢复和模型发现，生成或识别质量由各自的任务套件记录。[SD1.5 安装验收](./model-lifecycle-evidence/2026-11-13-m4-sd15-managed-install-v1.json) · [ASR 恢复验收](./model-lifecycle-evidence/2026-11-13-m4-managed-asr-recovery.json)
+
 | 阶段 | 当前状态 | 已取得证据 | 尚需完成 |
 | --- | --- | --- | --- |
 | M0 全量契约和技术验证 | VERIFIED，完整工作区 lint 失败保留 | ML-01～07、全类别真实试验、确切引擎/来源/组件/许可证事实、SQLite v4、状态契约、最新 CPU/CUDA 和完整 recipe；见阶段退出复核 | 产品接入属于 M1～M6；视频质量、旧 Whisper 和完整工作区 lint 仍未通过 |
