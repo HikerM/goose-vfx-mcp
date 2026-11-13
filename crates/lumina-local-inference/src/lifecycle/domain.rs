@@ -719,7 +719,8 @@ impl LaunchConfig {
                     "Vector installation content differs from the admitted profile"
                 );
             } else {
-                self.parameters.validate_resource_binding(admission)?;
+                self.parameters
+                    .validate_resource_binding(admission, manifest)?;
             }
             let expected_roles = if admission.envelope.workload.vision.is_some() {
                 BTreeSet::from([ComponentRole::Main, ComponentRole::VisionProjector])
@@ -744,7 +745,11 @@ impl LaunchConfig {
 }
 
 impl RuntimeParameters {
-    fn validate_resource_binding(&self, admission: &super::PlanAdmission) -> Result<()> {
+    fn validate_resource_binding(
+        &self,
+        admission: &super::PlanAdmission,
+        manifest: &ModelManifest,
+    ) -> Result<()> {
         let Self::LlamaCpp {
             context_length,
             gpu_layers,
@@ -804,15 +809,12 @@ impl RuntimeParameters {
                 "Vision launch has no matching measured resource profile"
             );
         } else {
-            // The v2 JSON predates thread and microbatch fields. Its registered r2
-            // measurement fixes both thread counts to four and microbatch to 512.
             ensure!(
                 workload.context_tokens == 2048
-                    && admission.budget.rules_version == super::RESOURCE_RULES_VERSION
-                    && admission.envelope.evidence_id
-                        == "m1:native-resource-measurements:r2:37.02MiB-compute-0.95MiB-output-with-explicit-headroom",
+                    && admission.budget.rules_version == super::RESOURCE_RULES_VERSION,
                 "Text launch has no matching measured resource profile"
             );
+            super::text_plan::validate_text_launch(admission, manifest)?;
         }
         Ok(())
     }

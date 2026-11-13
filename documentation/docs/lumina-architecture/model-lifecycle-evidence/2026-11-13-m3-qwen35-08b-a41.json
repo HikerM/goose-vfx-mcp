@@ -1,0 +1,155 @@
+{
+  "scope": "Actual registered Qwen3.5-0.8B-Q8 CPU A41 validation, 19 unique request digests, persisted SQLite verdict and transcript bytes independently read after helper exit.",
+  "test_exit_code": 101,
+  "test_fixture_sha256": "8511eded1fb7b3db55d23dd4efbbd5c183b842cf8e9b36ce5024d1610c270844",
+  "arch": "dense",
+  "installation_id": "network-concurrency-real-model",
+  "version_id": "network-concurrency-version-1",
+  "evidence": {
+    "installation_id": "network-concurrency-real-model",
+    "capability": "text",
+    "identity": {
+      "manifest_digest": "38bc574b962c4411b63e5ffd65a4a1c5ffde075f1df3057349248ff66550d46c",
+      "runtime": {
+        "adapter_id": "llama-helper",
+        "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+        "binding_version": "native-http-v1",
+        "platform": "x86_64-pc-windows-msvc",
+        "features": [
+          "cpu",
+          "dflash",
+          "embedding",
+          "mtmd",
+          "mtp",
+          "reranking"
+        ],
+        "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+      },
+      "launch_digest": "97a87f7824e871053cb37d4dfe6161ba8ef9f837f86c072ab4a54fbdd2170b91",
+      "suite_version": "managed-chat-a41-v1"
+    },
+    "status": "failed",
+    "input_digest": "8511eded1fb7b3db55d23dd4efbbd5c183b842cf8e9b36ce5024d1610c270844",
+    "output_digest": "9e24032af76e345ba0b2444872ab3c79ab7c9fd8bf02597e30182bf5d8cb6158",
+    "evidence_path": "chat-validation/9e24032af76e345ba0b2444872ab3c79ab7c9fd8bf02597e30182bf5d8cb6158.json",
+    "validated_at": 1794552316
+  },
+  "reopened_status": "failed",
+  "single": [
+    {
+      "id": "add",
+      "actual": "41",
+      "passed": true
+    },
+    {
+      "id": "subtract",
+      "actual": "19",
+      "passed": false
+    },
+    {
+      "id": "first-letter",
+      "actual": "M",
+      "passed": true
+    },
+    {
+      "id": "order",
+      "actual": "2, 5, 8",
+      "passed": true
+    },
+    {
+      "id": "last-word",
+      "actual": "pine",
+      "passed": true
+    },
+    {
+      "id": "color",
+      "actual": "yellow",
+      "passed": false
+    },
+    {
+      "id": "time",
+      "actual": "12",
+      "passed": false
+    },
+    {
+      "id": "weekday",
+      "actual": "星期五",
+      "passed": false
+    },
+    {
+      "id": "classification",
+      "actual": "书包",
+      "passed": true
+    },
+    {
+      "id": "count",
+      "actual": "3",
+      "passed": true
+    }
+  ],
+  "dialogs": [
+    {
+      "id": "remember-key",
+      "actual": [
+        "OK",
+        "LIME-472"
+      ],
+      "passed": true
+    },
+    {
+      "id": "apply-update",
+      "actual": [
+        "收到",
+        "收到",
+        "西桥"
+      ],
+      "passed": true
+    },
+    {
+      "id": "select-earlier",
+      "actual": [
+        "OK",
+        "M",
+        "COBALT"
+      ],
+      "passed": true
+    }
+  ],
+  "limit": {
+    "request": {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "List the numbers from one to thirty in English, in order, without stopping early."
+            }
+          ]
+        }
+      ],
+      "tools": [],
+      "max_output_tokens": 1,
+      "temperature": 0.0,
+      "seed": 42
+    },
+    "response": {
+      "id": "chatcmpl-EMnFtI1wYPznzwE19BBS1R7hr7dSAyA0",
+      "content": "1",
+      "tool_calls": [],
+      "finish_reason": "length",
+      "usage": {
+        "prompt_tokens": 29,
+        "completion_tokens": 1,
+        "total_tokens": 30
+      },
+      "launch_digest": "c53e838824d9f7f1be977a01027d7cedec241bf2bca1e795e2c07a681f415aab",
+      "request_digest": "86f7bbe1944401ccb9c3952548177bdd82116ea5ad7b6908a1c997d49937876c",
+      "image_digests": []
+    },
+    "passed": true
+  },
+  "completed": 10,
+  "correct": 6,
+  "minimum": 8
+}

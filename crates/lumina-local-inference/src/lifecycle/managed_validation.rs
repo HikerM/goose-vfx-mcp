@@ -66,6 +66,7 @@ fn input_digest() -> Sha256Digest {
 #[serde(untagged)]
 pub(super) enum ValidationProfile {
     Vector(VectorRuntimeProfile),
+    Text(super::ModelStructure),
     Vision,
 }
 
@@ -73,6 +74,7 @@ impl ValidationProfile {
     pub(super) fn directory(self) -> &'static str {
         match self {
             Self::Vector(_) => REPORT_DIR,
+            Self::Text(_) => "chat-validation",
             Self::Vision => "vision-validation",
         }
     }
@@ -80,6 +82,7 @@ impl ValidationProfile {
     fn suite(self) -> &'static str {
         match self {
             Self::Vector(_) => SUITE_VERSION,
+            Self::Text(_) => "managed-chat-a41-v1",
             Self::Vision => "managed-vision-a43-v1",
         }
     }
@@ -87,6 +90,7 @@ impl ValidationProfile {
     fn capability(self) -> ModelCapability {
         match self {
             Self::Vector(profile) => profile.capability(),
+            Self::Text(_) => ModelCapability::Text,
             Self::Vision => ModelCapability::Vision,
         }
     }

@@ -1,0 +1,206 @@
+{
+  "scope": "Actual fixed Qwen3.5-4B Q4_K_M installation from the existing pinned local cache via the application service. Native helper A41 suite, actual 19 requests and reopened SQLite evidence.",
+  "test_exit_code": 0,
+  "end_to_end_test_seconds": 1195.39,
+  "version_id": "version:acceptance-text-qwen35-4b",
+  "installation_id": "acceptance-text-qwen35-4b",
+  "resource_profile": {
+    "id": "measured-qwen35-4b-q4km-text-cpu",
+    "rules_version": "runtime-install-profile-v1",
+    "runtime": {
+      "adapter_id": "llama-helper",
+      "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+      "binding_version": "native-http-v1",
+      "platform": "x86_64-pc-windows-msvc",
+      "features": [
+        "cpu",
+        "dflash",
+        "embedding",
+        "mtmd",
+        "mtp",
+        "reranking"
+      ],
+      "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+    },
+    "architectures": [
+      "qwen35"
+    ],
+    "capabilities": [
+      "text"
+    ],
+    "required_roles": [
+      "main"
+    ],
+    "evidence_ids": [
+      "cpu-text-measurement-v1:78776f846ad80bf0d548ba1219d6c253217b42010a7d66a077359d63582ffd24"
+    ]
+  },
+  "budget": {
+    "rules_version": "local-resource-budget-v2",
+    "binding_digest": "2222e9622543b25edb03ca837765330049409669c9d286490b69ef0a0c241afc",
+    "compatibility": "runnable",
+    "weight_bytes": 2708804608,
+    "kv_cache_bytes": 67108864,
+    "recurrent_cache_bytes": 52690944,
+    "dynamic_cache_bytes": 0,
+    "compute_buffer_bytes": 134217728,
+    "auxiliary_buffer_bytes": 2684354560,
+    "host_memory_required_bytes": 5647176704,
+    "host_memory_available_bytes": 54857080832,
+    "peak_incremental_disk_bytes": 8143191040,
+    "blocking_reasons": []
+  },
+  "job_final_state": "completed",
+  "installation_stage_generations": [
+    1,
+    2,
+    3
+  ],
+  "evidence": {
+    "installation_id": "acceptance-text-qwen35-4b",
+    "capability": "text",
+    "identity": {
+      "manifest_digest": "a671d50f02eeab0334cb88df2b42db17be64ab80e69aa4f58aca45f9f44e4d29",
+      "runtime": {
+        "adapter_id": "llama-helper",
+        "engine_revision": "dde879bc4f954b809892fd0d660515f42536394a",
+        "binding_version": "native-http-v1",
+        "platform": "x86_64-pc-windows-msvc",
+        "features": [
+          "cpu",
+          "dflash",
+          "embedding",
+          "mtmd",
+          "mtp",
+          "reranking"
+        ],
+        "binary_sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+      },
+      "launch_digest": "17cc4db60bede904b33079ca196eb33fde7f74daf9c759223e0b99057283c145",
+      "suite_version": "managed-chat-a41-v1"
+    },
+    "status": "ready",
+    "input_digest": "8511eded1fb7b3db55d23dd4efbbd5c183b842cf8e9b36ce5024d1610c270844",
+    "output_digest": "7ae04409580cbd4081b13b0d1baf0259345c732fc38eeaa86b0826b48f5c360a",
+    "evidence_path": "chat-validation/7ae04409580cbd4081b13b0d1baf0259345c732fc38eeaa86b0826b48f5c360a.json",
+    "validated_at": 1794555150
+  },
+  "reopened_status": "ready",
+  "single": [
+    {
+      "id": "add",
+      "actual": "41",
+      "passed": true
+    },
+    {
+      "id": "subtract",
+      "actual": "9",
+      "passed": true
+    },
+    {
+      "id": "first-letter",
+      "actual": "M",
+      "passed": true
+    },
+    {
+      "id": "order",
+      "actual": "2,5,8",
+      "passed": true
+    },
+    {
+      "id": "last-word",
+      "actual": "pine",
+      "passed": true
+    },
+    {
+      "id": "color",
+      "actual": "Green",
+      "passed": true
+    },
+    {
+      "id": "time",
+      "actual": "2",
+      "passed": true
+    },
+    {
+      "id": "weekday",
+      "actual": "星期三",
+      "passed": false
+    },
+    {
+      "id": "classification",
+      "actual": "书包",
+      "passed": true
+    },
+    {
+      "id": "count",
+      "actual": "4",
+      "passed": false
+    }
+  ],
+  "dialogs": [
+    {
+      "id": "remember-key",
+      "actual": [
+        "OK",
+        "LIME-472"
+      ],
+      "passed": true
+    },
+    {
+      "id": "apply-update",
+      "actual": [
+        "收到",
+        "收到",
+        "西桥"
+      ],
+      "passed": true
+    },
+    {
+      "id": "select-earlier",
+      "actual": [
+        "OK",
+        "M",
+        "COBALT"
+      ],
+      "passed": true
+    }
+  ],
+  "limit": {
+    "request": {
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "List the numbers from one to thirty in English, in order, without stopping early."
+            }
+          ]
+        }
+      ],
+      "tools": [],
+      "max_output_tokens": 1,
+      "temperature": 0.0,
+      "seed": 42
+    },
+    "response": {
+      "id": "chatcmpl-13HaXVGYCY1hcZn7bLqTsC5hC14MZKSV",
+      "content": "One",
+      "tool_calls": [],
+      "finish_reason": "length",
+      "usage": {
+        "prompt_tokens": 29,
+        "completion_tokens": 1,
+        "total_tokens": 30
+      },
+      "launch_digest": "29fff826701395e461592c1a58ab9c37444e872305df994d4fde2b5cca241973",
+      "request_digest": "dc723b7f8906aea9d6022fa35cd64f061efb18ee55cf48abf59d5c6011ca8461",
+      "image_digests": []
+    },
+    "passed": true
+  },
+  "completed": 10,
+  "correct": 8,
+  "minimum": 8
+}

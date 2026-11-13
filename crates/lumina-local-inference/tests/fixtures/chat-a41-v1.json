@@ -1,0 +1,31 @@
+{
+  "schema": "managed-chat-a41-v1",
+  "minimumCorrect": 8,
+  "maxOutputTokens": 64,
+  "cases": [
+    {"id":"add","prompt":"What is 24 plus 17? Reply only with the number.","answers":["41"]},
+    {"id":"subtract","prompt":"A box contains 14 pens. Five are removed. Reply only with the number of pens remaining.","answers":["9","nine"]},
+    {"id":"first-letter","prompt":"Write only the first letter of the word museum.","answers":["m"]},
+    {"id":"order","prompt":"Sort 8, 2, 5 from smallest to largest. Return just the three numbers separated by commas, without spaces.","answers":["2,5,8","2, 5, 8"]},
+    {"id":"last-word","prompt":"Which word comes last in the phrase 'river stone pine'? Give only that word.","answers":["pine"]},
+    {"id":"color","prompt":"Which color do you get by mixing blue and yellow paint? Reply only with the English color word.","answers":["green"]},
+    {"id":"time","prompt":"The train leaves at 09:00 and arrives at 11:00 the same day. Reply only with the number of hours.","answers":["2","two"]},
+    {"id":"weekday","prompt":"明天是星期五，今天是星期几？只回答表示星期几的中文词。","answers":["星期四","周四","礼拜四"]},
+    {"id":"classification","prompt":"苹果、梨和书包之中，哪项不是水果？只回答该物品名称。","answers":["书包"]},
+    {"id":"count","prompt":"请数出这组字母中 A 的个数：A B A C A。只回答阿拉伯数字。","answers":["3"]}
+  ],
+  "dialogs": [
+    {"id":"remember-key","turns":[
+      {"prompt":"Remember this locker code for this conversation: LIME-472. Reply with the single word OK.","answers":["OK"]},
+      {"prompt":"What is the locker code I gave earlier? Reply with only the code.","answers":["LIME-472"]}]},
+    {"id":"apply-update","turns":[
+      {"prompt":"记住本次值班地点为东站。只回复“收到”。","answers":["收到"]},
+      {"prompt":"更正：值班地点改为西桥。只回复“收到”。","answers":["收到"]},
+      {"prompt":"现在应该去哪个值班地点？只写地点。","answers":["西桥"]}]},
+    {"id":"select-earlier","turns":[
+      {"prompt":"Remember these labels in order: first is COBALT, second is MANGO. Respond with only OK.","answers":["OK"]},
+      {"prompt":"For the second label, give just its first letter.","answers":["M"]},
+      {"prompt":"Now give the entire first label from the original pair. Only that label.","answers":["COBALT"]}]}
+  ],
+  "limitProbe":{"prompt":"List the numbers from one to thirty in English, in order, without stopping early.","maxOutputTokens":1}
+}

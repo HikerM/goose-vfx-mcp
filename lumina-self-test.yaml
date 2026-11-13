@@ -32,7 +32,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, managed-capabilities, model-cache-install, model-assets, runtime-assets, media-forwarding"
+    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, managed-capabilities, managed-chat, model-cache-install, model-assets, runtime-assets, media-forwarding"
 
   - key: test_depth
     input_type: string
@@ -59,7 +59,10 @@ parameters:
     description: "Clean up test artifacts after completion"
 
 instructions: |
-  {% if test_phases == "managed-capabilities" %}
+  {% if test_phases == "managed-chat" %}
+  Use the developer shell to assess the caller's installed model and engine with the fixed A41 suite.
+  Preserve the actual model responses, per-model verdict and persisted evidence.
+  {% elif test_phases == "managed-capabilities" %}
   Exercise the exact registered model versions supplied by the caller. Use the real
   developer shell and retain the per-model scores and database reopen verdicts.
   Report a missing store, engine or version as UNVERIFIED for the affected suite.
@@ -189,7 +192,14 @@ extensions:
     name: extensionmanager
 
 prompt: |
-  {% if test_phases == "managed-capabilities" %}
+  {% if test_phases == "managed-chat" %}
+  From D:/Project/goose, run `bin\cargo.cmd test --offline -p lumina-local-inference --test lifecycle_managed_chat -- --ignored --nocapture`.
+  Use the caller's LUMINA_CHAT_VALIDATION_STORE, LUMINA_CHAT_VALIDATION_VERSION,
+  LUMINA_CHAT_VALIDATION_ENGINE, LUMINA_CHAT_VALIDATION_STRUCTURE and LUMINA_CHAT_VALIDATION_REPORT.
+  The report path must be new and on D: or E:. Allow sufficient time for the native model's 19 requests.
+  Read the actual report and summarize the single-turn score, three dialog results, output limit
+  and verdict after reopening the registry. Report missing inputs as UNVERIFIED and failed cases as observed.
+  {% elif test_phases == "managed-capabilities" %}
   In the Windows developer shell, run these commands separately from D:/Project/goose.
   The caller supplies LUMINA_VISION_STORE, LUMINA_VISION_ENGINE, LUMINA_VISION_VERSION,
   LUMINA_VECTOR_STORE, LUMINA_VECTOR_ENGINE, LUMINA_EMBEDDING_VERSION and LUMINA_RERANK_VERSION.

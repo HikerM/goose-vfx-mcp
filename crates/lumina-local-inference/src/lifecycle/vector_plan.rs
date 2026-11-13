@@ -3,6 +3,21 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::*;
 
+#[derive(Clone, Copy)]
+pub(super) enum SingleModelTask {
+    Text,
+    Vector,
+}
+
+impl SingleModelTask {
+    fn namespace(self) -> &'static str {
+        match self {
+            Self::Text => "text",
+            Self::Vector => "vector",
+        }
+    }
+}
+
 fn profile_for_artifact(artifact: &Artifact) -> Result<VectorRuntimeProfile> {
     artifact.validate()?;
     [
@@ -28,16 +43,32 @@ impl LifecycleRepository {
         hardware: &HardwareResourceSnapshot,
         now: i64,
     ) -> Result<ObservedPlanAssessment> {
+        self.prepare_single_model_plan(SingleModelTask::Vector, observation, hardware, now)
+    }
+
+    pub(super) fn prepare_single_model_plan(
+        &self,
+        task: SingleModelTask,
+        observation: &ComponentObservation,
+        hardware: &HardwareResourceSnapshot,
+        now: i64,
+    ) -> Result<ObservedPlanAssessment> {
         observation.validate()?;
         ensure!(
             observation.role == ComponentRole::Main && observation.files.len() == 1,
-            "Vector planning requires exactly one main GGUF file"
+            "Planning this runtime requires exactly one main GGUF file"
         );
         let file = &observation.files[0];
-        let profile = profile_for_artifact(&file.artifact)?;
-        let runtime_profile = baseline_vector_install_profile(profile)?;
-        let envelope =
-            baseline_vector_resource_envelope(profile, std::slice::from_ref(observation))?;
+        let (runtime_profile, envelope) = match task {
+            SingleModelTask::Vector => {
+                let profile = profile_for_artifact(&file.artifact)?;
+                (
+                    baseline_vector_install_profile(profile)?,
+                    baseline_vector_resource_envelope(profile, std::slice::from_ref(observation))?,
+                )
+            }
+            SingleModelTask::Text => super::text_plan::measured_text_plan_inputs(observation)?,
+        };
         let classification = classify_gguf(
             &file.artifact,
             &file.artifact.snapshot_id,
@@ -46,9 +77,10 @@ impl LifecycleRepository {
             &[],
         )?;
         let identity = Sha256Digest::of_serializable(&(observation.digest()?, &runtime_profile))?;
-        let model_id = format!("vector-model:{}", identity.as_str());
-        let variant_id = format!("vector-variant:{}", identity.as_str());
-        let component_id = format!("vector-component:{}", identity.as_str());
+        let namespace = task.namespace();
+        let model_id = format!("{namespace}-model:{}", identity.as_str());
+        let variant_id = format!("{namespace}-variant:{}", identity.as_str());
+        let component_id = format!("{namespace}-component:{}", identity.as_str());
         let evidence_ids = runtime_profile.evidence_ids.clone();
         let artifact_ids = BTreeSet::from([file.artifact.id.clone()]);
         let catalog = ModelCatalogSnapshot {
@@ -102,7 +134,7 @@ impl LifecycleRepository {
         self.save_gguf_observation(file, now)?;
         self.prepare_observed_plan(
             &ObservedPlanRequest {
-                id: format!("vector-plan:{}", uuid::Uuid::new_v4()),
+                id: format!("{namespace}-plan:{}", uuid::Uuid::new_v4()),
                 model_id,
                 variant_id,
                 target_capabilities: runtime_profile.capabilities.clone(),
@@ -127,6 +159,17 @@ impl InstallationApplication {
         revision: &str,
         path: RepositoryPath,
     ) -> Result<ObservedPlanAssessment> {
+        self.prepare_single_model_plan(SingleModelTask::Vector, repository, revision, path)
+            .await
+    }
+
+    pub(super) async fn prepare_single_model_plan(
+        &self,
+        task: SingleModelTask,
+        repository: ModelScopeRepository,
+        revision: &str,
+        path: RepositoryPath,
+    ) -> Result<ObservedPlanAssessment> {
         ensure!(
             path.as_str().to_ascii_lowercase().ends_with(".gguf"),
             ModelSourceError {
@@ -139,11 +182,17 @@ impl InstallationApplication {
         let inspected = provider
             .inspect_repository(repository, revision, token.as_deref())
             .await?;
-        profile_for_artifact(
-            &inspected
-                .inventory
-                .artifact(&path, FilePurpose::GgufWeight)?,
-        )?;
+        let artifact = inspected
+            .inventory
+            .artifact(&path, FilePurpose::GgufWeight)?;
+        match task {
+            SingleModelTask::Vector => {
+                profile_for_artifact(&artifact)?;
+            }
+            SingleModelTask::Text => {
+                super::text_plan::verify_text_source(&artifact, &inspected.inventory.snapshot)?
+            }
+        }
         let component = provider
             .inspect_selected_component(
                 &inspected.inventory,
@@ -164,13 +213,14 @@ impl InstallationApplication {
                 store.root(),
                 chrono::Utc::now().timestamp(),
             )?;
-            repository.prepare_vector_plan(
+            repository.prepare_single_model_plan(
+                task,
                 &component.observation,
                 &hardware,
                 chrono::Utc::now().timestamp(),
             )
         })
         .await
-        .context("Vector plan preparation task failed")?
+        .context("Model plan preparation task failed")?
     }
 }

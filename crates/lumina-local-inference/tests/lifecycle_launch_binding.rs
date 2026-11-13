@@ -514,6 +514,27 @@ fn copied_unmeasured_workload_and_speculative_components_are_not_a_launch_approv
 }
 
 #[test]
+fn old_text_weights_cannot_be_relabelled_as_the_measured_four_billion_parameter_model() {
+    let mut manifest = text_manifest();
+    let admission = manifest.plan.admission.as_mut().unwrap();
+    let measurement =
+        "cpu-text-measurement-v1:78776f846ad80bf0d548ba1219d6c253217b42010a7d66a077359d63582ffd24";
+    admission.runtime_profile.id = "measured-qwen35-4b-q4km-text-cpu".into();
+    admission
+        .runtime_profile
+        .evidence_ids
+        .insert(measurement.into());
+    admission.envelope.evidence_id = measurement.into();
+    admission.envelope.compute_buffer_bytes = 128 * 1024 * 1024;
+    admission.envelope.auxiliary_buffer_bytes = 2560 * 1024 * 1024;
+    reseal_admission(&mut manifest);
+    let error = launch(&manifest).validate_binding(&manifest).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("no matching measured CPU profile"));
+}
+
+#[test]
 fn historical_contract_without_admission_retains_identity_only_binding() {
     let mut manifest = text_manifest();
     let mut original = launch(&manifest);
