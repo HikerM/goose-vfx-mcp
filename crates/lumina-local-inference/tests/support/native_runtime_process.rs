@@ -423,6 +423,23 @@ fn inline_template_digest_is_verified_before_native_execution() {
 }
 
 #[test]
+fn helper_verification_observes_cancellation_between_reads() {
+    let temp = tempfile::tempdir().unwrap();
+    let binary = temp.path().join("helper-bytes");
+    let bytes = vec![3; 192 * 1024];
+    std::fs::write(&binary, &bytes).unwrap();
+    let mut checks = 0;
+    let error = verify_binary_with_progress(&binary, &Sha256Digest::of_bytes(&bytes), || {
+        checks += 1;
+        anyhow::ensure!(checks < 2, "startup cancelled");
+        Ok(())
+    })
+    .unwrap_err();
+    assert_eq!(checks, 2);
+    assert_eq!(error.to_string(), "startup cancelled");
+}
+
+#[test]
 fn binary_identity_and_single_store_runtime_permit_are_enforced() {
     let temp = tempfile::tempdir().unwrap();
     let binary = temp.path().join("helper-bytes");

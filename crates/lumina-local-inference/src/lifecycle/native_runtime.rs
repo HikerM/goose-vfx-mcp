@@ -223,10 +223,18 @@ impl NativeHelperRuntime {
         cancelled: &AtomicBool,
         deadline: std::time::Instant,
     ) -> Result<Self> {
-        ensure!(
-            !cancelled.load(Ordering::Acquire),
-            "Native helper startup was cancelled"
-        );
+        let checkpoint = || {
+            ensure!(
+                !cancelled.load(Ordering::Acquire),
+                "Native helper startup was cancelled"
+            );
+            ensure!(
+                std::time::Instant::now() < deadline,
+                "Native helper startup timed out during preparation"
+            );
+            Ok(())
+        };
+        checkpoint()?;
         let admission = installed
             .manifest
             .plan
@@ -258,12 +266,9 @@ impl NativeHelperRuntime {
             paths.push(checked_local_path(&directory, &file.relative_path)?);
         }
         let assets = RuntimeAssetGuard::acquire(paths)?;
-        InstallationStore::open(root)?.verify_installed_version(&installed)?;
-        ensure!(
-            !cancelled.load(Ordering::Acquire),
-            "Native helper startup was cancelled"
-        );
-        verify_binary(&binary, &config.runtime.binary_sha256)?;
+        InstallationStore::open(root)?
+            .verify_installed_version_with_progress(&installed, |_| checkpoint())?;
+        verify_binary_with_progress(&binary, &config.runtime.binary_sha256, checkpoint)?;
         let model_alias = format!("lumina-{}", config.digest()?.as_str());
         let arguments = helper_arguments(&config, &directory, &model_alias)?;
         let model_path =
@@ -325,10 +330,7 @@ impl NativeHelperRuntime {
         )?;
         // The helper cannot inherit this listener. Authenticated identity checks
         // reject a different process if it wins the short bind handoff race.
-        ensure!(
-            !cancelled.load(Ordering::Acquire),
-            "Native helper startup was cancelled"
-        );
+        checkpoint()?;
         drop(reservation);
         let child = command
             .spawn()
@@ -708,12 +710,21 @@ fn runtime_lock(root: &Path, name: &str) -> Result<File> {
     Ok(file)
 }
 
-fn verify_binary(path: &Path, expected: &Sha256Digest) -> Result<()> {
+pub(super) fn verify_binary(path: &Path, expected: &Sha256Digest) -> Result<()> {
+    verify_binary_with_progress(path, expected, || Ok(()))
+}
+
+pub(super) fn verify_binary_with_progress(
+    path: &Path,
+    expected: &Sha256Digest,
+    mut checkpoint: impl FnMut() -> Result<()>,
+) -> Result<()> {
     let mut file = open_for_verification(path)?;
     let mut hash = Sha256::new();
     let mut buffer = [0u8; 64 * 1024];
     let mut total = 0u64;
     loop {
+        checkpoint()?;
         let count = file.read(&mut buffer)?;
         if count == 0 {
             break;

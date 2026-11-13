@@ -145,13 +145,21 @@ impl InstallationStore {
     }
 
     pub(crate) fn verify_installed_version(&self, installed: &InstalledVersion) -> Result<()> {
+        self.verify_installed_version_with_progress(installed, |_| Ok(()))
+    }
+
+    pub(crate) fn verify_installed_version_with_progress(
+        &self,
+        installed: &InstalledVersion,
+        mut progress: impl FnMut(u64) -> Result<()>,
+    ) -> Result<()> {
         let manifest = &installed.manifest;
         ensure!(
             Sha256Digest::of_serializable(manifest)? == installed.manifest_digest,
             "Installed manifest digest differs from its version"
         );
-        super::verify_installation_directory(&self.root, manifest, true)?;
-        self.verify_blobs(manifest, |_| Ok(()))?;
+        verify_installation_directory_with_progress(&self.root, manifest, true, &mut progress)?;
+        self.verify_blobs(manifest, progress)?;
         self.verify_read_only_version(manifest)
     }
 
