@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "status": "PASS",
+  "scope": "Windows debug/test build of the registered Qwen3.5-4B dense CPU installation, directly exercised through Cargo's real managed-chat integration test.",
+  "previousAttempt": {
+    "path": "documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-13-managed-capability-and-chat-replay.json",
+    "sha256": "fdc339ea3ffaf4ceb2d4c1f0b277d9b71cc7b175e5f3ca63fceb585aceed05a1"
+  },
+  "priorFailure": "The previous build timed out before launching the helper. The test process had read approximately 4.17 GB; no helper log was created. The same store has host.lock and no persistent wait-N.lock files.",
+  "change": "Optimize the sha2 0.11 debug-profile dependency. Installed weights, distinct shared blobs and helper digest are fully verified, with the existing 180-second startup deadline. Stage reporting now identifies which preparation or slot wait timed out.",
+  "sameMachineHashMeasurement": {
+    "application": "Qwen3.5-4B, dense, version:acceptance-text-qwen35-4b",
+    "measurement": "Rust SHA-256 sequential reads in 1 MiB chunks, twice across different physical managed files; elapsed seconds include filesystem and CPU. Base and comparison both link the same already-built dependency rlibs. Only SHA-256 crate optimization was varied; filesystem cache was not flushed.",
+    "baselineRlib": "target/debug/deps/libsha2-010e9f305db94906.rlib",
+    "dependency": "sha2 0.11.0",
+    "baseline": [
+      {
+        "file": "target/lifecycle-validation/m3-a41-managed-chat-20261113-r1/model-lifecycle/installations/2f2ddd6709ede7c927a6ea085acb545707db111373b7ed3266c1e1f7ce34e3df/6313a571e0ae1954c48306aa6c1deb6b71e2171fcf09b4f84d3ee8b085700f26/files/baf1ed50ebd1076fb6c9b2d3055ccdf6f674da6c24615b07c4dbcfd99fbac348.gguf",
+        "bytes": 2708804608,
+        "seconds": 45.304,
+        "sha256": "c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a"
+      },
+      {
+        "file": "target/lifecycle-validation/m3-a41-managed-chat-20261113-r1/model-lifecycle/blobs/sha256/c1/c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a",
+        "bytes": 2708804608,
+        "seconds": 45.899,
+        "sha256": "c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a"
+      }
+    ],
+    "optimized": [
+      {
+        "file": "target/lifecycle-validation/m3-a41-managed-chat-20261113-r1/model-lifecycle/installations/2f2ddd6709ede7c927a6ea085acb545707db111373b7ed3266c1e1f7ce34e3df/6313a571e0ae1954c48306aa6c1deb6b71e2171fcf09b4f84d3ee8b085700f26/files/baf1ed50ebd1076fb6c9b2d3055ccdf6f674da6c24615b07c4dbcfd99fbac348.gguf",
+        "bytes": 2708804608,
+        "seconds": 2.845,
+        "sha256": "c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a"
+      },
+      {
+        "file": "target/lifecycle-validation/m3-a41-managed-chat-20261113-r1/model-lifecycle/blobs/sha256/c1/c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a",
+        "bytes": 2708804608,
+        "seconds": 2.72,
+        "sha256": "c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a"
+      }
+    ],
+    "comparisonPythonOpenSsl": [
+      {
+        "stage": "installations",
+        "bytes": 2708804608,
+        "sha256": "c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a",
+        "seconds": 7.497053300001426,
+        "processCpuSeconds": 6.1875
+      },
+      {
+        "stage": "blobs",
+        "bytes": 2708804608,
+        "sha256": "c1c33fb44b3cea1d296174d58dc9f1449a0150cbc353679b7ad86955c240d49a",
+        "seconds": 6.029768699998385,
+        "processCpuSeconds": 5.609375
+      }
+    ],
+    "combinedBaselineSeconds": 91.203,
+    "combinedOptimizedSeconds": 5.565,
+    "storeRuntimeLockFiles": [
+      "host.lock"
+    ],
+    "priorFailure": "target/lifecycle-validation/m4-managed-capabilities-recipe-20261113-r2/direct-chat.log",
+    "source": {
+      "path": "target/lifecycle-validation/m4-managed-chat-startup-20261113-r1/verification-timings.json",
+      "sha256": "9b7f9ce7dd3c0265dea5e98ebd871a33e2978c7ab3e50998b031d1341ef079b3"
+    },
+    "startupInferenceLimit": "Host load and operating system caching can affect elapsed time. The measurement compares complete SHA verification of two files; it does not isolate initial process contention."
+  },
+  "build": {
+    "target": {
+      "path": "target/debug/deps/lifecycle_managed_chat-85ad57b567c6eb10.exe",
+      "sha256": "66e49ee67b97457998c45ac77e0f9efc502c09c76661a195f76d3d2650cba92c"
+    },
+    "modified": "2026-11-13T10:48:22.485561+00:00",
+    "cargoLog": {
+      "path": "target/lifecycle-validation/m4-managed-chat-startup-20261113-r1/cargo-chat.log",
+      "sha256": "ac765a61ed41e8ba6de3a8fa19ba85641c1d806f6f2f7f3c102fab9ecce322e0"
+    },
+    "cargoCommand": "bin/cargo.cmd test --offline -p lumina-local-inference --test lifecycle_managed_chat -- --ignored --nocapture",
+    "originalSha2Fingerprint": "sha2-010e9f305db94906",
+    "currentSha2Fingerprint": "sha2-f1cc3655e79fa9c1",
+    "debugSha2OptLevel": 3
+  },
+  "startupStageRegression": {
+    "log": {
+      "path": "target/lifecycle-validation/m4-managed-chat-startup-20261113-r1/startup-stage-regression.log",
+      "sha256": "24aa1dd9d6638fbc95cddf785975c070296450dfe595c93eb50357d0f455126f"
+    },
+    "status": "PASS"
+  },
+  "acceptance": {
+    "testResult": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 85.84s",
+    "version": "version:acceptance-text-qwen35-4b",
+    "manifestDigest": "a671d50f02eeab0334cb88df2b42db17be64ab80e69aa4f58aca45f9f44e4d29",
+    "modelsTested": 1,
+    "engine": {
+      "path": "target/runtime-engines/llama-cpp/dde879bc4f954b809892fd0d660515f42536394a/build-cpu/bin/Release/llama-server.exe",
+      "sha256": "5031f8cc21505b931581b96e37270e1cc8c6c378d38b3dfc9b1c254db8f9c58e"
+    },
+    "installedCapability": "text",
+    "structure": "dense",
+    "singleCorrect": 8,
+    "singleCompleted": 10,
+    "dialogsPassed": 3,
+    "dialogsCompleted": 3,
+    "dialogTurns": 8,
+    "outputLimit": {
+      "maxTokens": 1,
+      "observedTokens": 1,
+      "finishReason": "length"
+    },
+    "totalRequests": 19,
+    "memoryAdmission": {
+      "observed_at": 1794566916,
+      "required_bytes": 5647176704,
+      "available_bytes": 53762867200
+    },
+    "report": {
+      "path": "target/lifecycle-validation/m4-managed-chat-startup-20261113-r1/chat-verdict.json",
+      "sha256": "4a50c73b3157d4faddf324f4cf994cfe6f99b79eefa089931290682ae051da81"
+    },
+    "transcript": {
+      "path": "target/lifecycle-validation/m3-a41-managed-chat-20261113-r1/model-lifecycle/chat-validation/459d788fc3d7b07a34b4602a8f358a7572f5741c2daf355986c7b408d0dcfc01.json",
+      "sha256": "459d788fc3d7b07a34b4602a8f358a7572f5741c2daf355986c7b408d0dcfc01"
+    },
+    "reopenedStatus": "ready",
+    "reopenedEvidenceMatches": true,
+    "sqliteIntegrity": "ok"
+  }
+}

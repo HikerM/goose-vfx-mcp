@@ -115,6 +115,10 @@ pctx_config = { path = "third_party/pctx_config" }
 [profile.dev.package."*"]
 debug = false
 
+# Managed startup checks every byte of both published weights and shared blobs.
+[profile.dev.package."sha2:0.11.0"]
+opt-level = 3
+
 [profile.dev.package.lumina-v8-engine]
 debug = false
 opt-level = 1

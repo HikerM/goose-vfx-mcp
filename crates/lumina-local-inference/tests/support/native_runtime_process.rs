@@ -3,6 +3,25 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::time::Instant;
 
 #[test]
+fn helper_preparation_deadline_reports_the_current_stage_and_honors_cancellation() {
+    let startup = HelperStartup::new(Instant::now());
+    let worker = startup.clone();
+    worker.enter("verifying the installed model and shared blobs");
+    let cancelled = AtomicBool::new(false);
+    let error = worker.checkpoint(&cancelled).unwrap_err();
+    assert_eq!(error.to_string(), startup.timeout());
+    assert!(error
+        .to_string()
+        .contains("verifying the installed model and shared blobs"));
+    cancelled.store(true, Ordering::Release);
+    assert!(worker
+        .checkpoint(&cancelled)
+        .unwrap_err()
+        .to_string()
+        .contains("cancelled"));
+}
+
+#[test]
 fn helper_startup_requires_current_host_memory_for_the_installed_workload() {
     use crate::lifecycle::{HardwareMemoryDevice, HardwareResourceSnapshot};
     let mut hardware = HardwareResourceSnapshot {
@@ -38,6 +57,12 @@ fn helper_startup_requires_current_host_memory_for_the_installed_workload() {
     hardware.devices[0].free_bytes = 4096;
     hardware.devices[0].kind = "gpu".into();
     assert!(HelperMemoryAdmission::from_observation(Some(2048), &hardware).is_err());
+}
+
+#[test]
+fn helper_owner_keeps_send_and_sync_with_retained_input_guards() {
+    fn assert_send_sync<T: Send + Sync>() {}
+    assert_send_sync::<NativeHelperRuntime>();
 }
 
 fn wait_until_slot_occupied(root: &Path, deadline: Instant) {
@@ -486,23 +511,8 @@ fn controlled_child(root: &Path) -> GuardedChild {
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(0x0800_0000);
-    }
-    #[cfg(windows)]
-    let job = windows_job::KillOnCloseJob::new().unwrap();
-    let mut owner = GuardedChild {
-        child: Some(command.spawn().unwrap()),
-        exit_status: None,
-        assets: Some(assets),
-        permit: Some(permit),
-        #[cfg(windows)]
-        job,
-    };
-    #[cfg(windows)]
-    owner.job.assign(owner.child.as_ref().unwrap()).unwrap();
+    let mut owner =
+        GuardedChild::spawn(&mut command, assets, Arc::new(permit), Vec::new()).unwrap();
     let deadline = Instant::now() + Duration::from_secs(10);
     while !root.join("child-ready").exists() {
         assert!(
@@ -565,19 +575,36 @@ async fn cancelled_blocking_preparation_drops_its_eventual_child_owner() {
     let (ready_tx, ready_rx) = tokio::sync::oneshot::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
     let (dropped_tx, dropped_rx) = tokio::sync::oneshot::channel();
-    struct DropWitness(Option<tokio::sync::oneshot::Sender<()>>);
+    struct DropWitness {
+        root: PathBuf,
+        sender: Option<tokio::sync::oneshot::Sender<()>>,
+    }
     impl Drop for DropWitness {
         fn drop(&mut self) {
-            if let Some(sender) = self.0.take() {
+            let file = OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(self.root.join("child-alive.lock"))
+                .unwrap();
+            FileExt::try_lock_exclusive(&file).expect("retained input guard must outlive child");
+            if let Some(sender) = self.sender.take() {
                 let _ = sender.send(());
             }
         }
     }
     let preparation = tokio::task::spawn_blocking(move || {
-        let owner = controlled_child(&root);
+        let mut owner = controlled_child(&root);
+        owner
+            .retained
+            .get_mut()
+            .unwrap()
+            .push(Box::new(DropWitness {
+                root,
+                sender: Some(dropped_tx),
+            }));
         ready_tx.send(()).unwrap();
         release_rx.recv_timeout(Duration::from_secs(10)).unwrap();
-        (owner, DropWitness(Some(dropped_tx)))
+        owner
     });
     ready_rx.await.unwrap();
     assert!(!asset_is_exclusively_available(temp.path()));
@@ -587,6 +614,13 @@ async fn cancelled_blocking_preparation_drops_its_eventual_child_owner() {
         .await
         .unwrap()
         .unwrap();
+    tokio::time::timeout(Duration::from_secs(10), async {
+        while acquire_runtime_permit(temp.path()).is_err() {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
     assert_child_exited_and_guards_released(temp.path());
 }
 
@@ -630,7 +664,7 @@ fn windows_parent_termination_closes_job_and_reaps_child() {
     }
 
     let temp = tempfile::tempdir().unwrap();
-    let job = windows_job::KillOnCloseJob::new().unwrap();
+    let job = windows_job::KillOnCloseJob::with_process_limit(false).unwrap();
     let child = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
@@ -650,6 +684,7 @@ fn windows_parent_termination_closes_job_and_reaps_child() {
         exit_status: None,
         assets: None,
         permit: None,
+        retained: std::sync::Mutex::new(Vec::new()),
         job,
     };
     parent.job.assign(parent.child.as_ref().unwrap()).unwrap();

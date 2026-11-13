@@ -88,16 +88,27 @@ impl Drop for NativeRequestGuard<'_> {
     }
 }
 
-struct GuardedChild {
+pub(super) struct GuardedChild {
     child: Option<Child>,
     exit_status: Option<ExitStatus>,
     assets: Option<RuntimeAssetGuard>,
-    permit: Option<File>,
+    permit: Option<Arc<File>>,
+    retained: std::sync::Mutex<Vec<Box<dyn Send>>>,
     #[cfg(windows)]
     job: windows_job::KillOnCloseJob,
 }
 
-struct PreparationCancellation(Arc<AtomicBool>);
+pub(super) struct PreparationCancellation(Arc<AtomicBool>);
+
+impl PreparationCancellation {
+    pub(super) fn new() -> Self {
+        Self(Arc::new(AtomicBool::new(false)))
+    }
+
+    pub(super) fn flag(&self) -> Arc<AtomicBool> {
+        Arc::clone(&self.0)
+    }
+}
 
 impl Drop for PreparationCancellation {
     fn drop(&mut self) {
@@ -106,15 +117,103 @@ impl Drop for PreparationCancellation {
 }
 
 impl GuardedChild {
+    pub(super) fn spawn(
+        command: &mut Command,
+        assets: RuntimeAssetGuard,
+        permit: Arc<File>,
+        retained: Vec<Box<dyn Send>>,
+    ) -> Result<Self> {
+        Self::spawn_with_policy(command, assets, permit, retained, false)
+    }
+
+    pub(super) fn spawn_single_process_task(
+        command: &mut Command,
+        assets: RuntimeAssetGuard,
+        permit: Arc<File>,
+        retained: Vec<Box<dyn Send>>,
+    ) -> Result<Self> {
+        Self::spawn_with_policy(command, assets, permit, retained, true)
+    }
+
+    fn spawn_with_policy(
+        command: &mut Command,
+        assets: RuntimeAssetGuard,
+        permit: Arc<File>,
+        retained: Vec<Box<dyn Send>>,
+        single_process_task: bool,
+    ) -> Result<Self> {
+        #[cfg(not(windows))]
+        ensure!(
+            !single_process_task,
+            "Finite native tasks require Windows job containment"
+        );
+        #[cfg(windows)]
+        let job = windows_job::KillOnCloseJob::with_process_limit(single_process_task)?;
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+            const CREATE_SUSPENDED: u32 = 0x0000_0004;
+            command.creation_flags(
+                CREATE_NO_WINDOW
+                    | if single_process_task {
+                        CREATE_SUSPENDED
+                    } else {
+                        0
+                    },
+            );
+        }
+        let process = Self {
+            child: Some(
+                command
+                    .spawn()
+                    .context("Native helper could not be started")?,
+            ),
+            exit_status: None,
+            assets: Some(assets),
+            permit: Some(permit),
+            retained: std::sync::Mutex::new(retained),
+            #[cfg(windows)]
+            job,
+        };
+        #[cfg(windows)]
+        {
+            let child = process.child.as_ref().expect("new child");
+            process.job.assign(child)?;
+            if single_process_task {
+                windows_job::resume_created_task(child)?;
+            }
+        }
+        Ok(process)
+    }
+
+    pub(super) fn take_stdout(&mut self) -> Result<std::process::ChildStdout> {
+        self.child
+            .as_mut()
+            .and_then(|child| child.stdout.take())
+            .context("Native helper stdout pipe is unavailable")
+    }
+
+    pub(super) fn take_stderr(&mut self) -> Result<std::process::ChildStderr> {
+        self.child
+            .as_mut()
+            .and_then(|child| child.stderr.take())
+            .context("Native helper stderr pipe is unavailable")
+    }
+
     fn record_exit(&mut self, status: ExitStatus) -> ExitStatus {
         self.child.take();
         self.exit_status = Some(status);
         self.assets.take();
+        self.retained
+            .get_mut()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clear();
         self.permit.take();
         status
     }
 
-    fn try_wait(&mut self) -> Result<Option<ExitStatus>> {
+    pub(super) fn try_wait(&mut self) -> Result<Option<ExitStatus>> {
         if let Some(status) = self.exit_status {
             return Ok(Some(status));
         }
@@ -126,7 +225,7 @@ impl GuardedChild {
         Ok(status.map(|status| self.record_exit(status)))
     }
 
-    fn stop(&mut self) -> Result<ExitStatus> {
+    pub(super) fn stop(&mut self) -> Result<ExitStatus> {
         if let Some(status) = self.try_wait()? {
             return Ok(status);
         }
@@ -157,7 +256,50 @@ impl Drop for GuardedChild {
             if let Some(permit) = self.permit.take() {
                 std::mem::forget(permit);
             }
+            for retained in self
+                .retained
+                .get_mut()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .drain(..)
+            {
+                std::mem::forget(retained);
+            }
         }
+    }
+}
+
+#[derive(Clone)]
+struct HelperStartup {
+    deadline: std::time::Instant,
+    stage: tokio::sync::watch::Sender<&'static str>,
+}
+
+impl HelperStartup {
+    fn new(deadline: std::time::Instant) -> Self {
+        Self {
+            deadline,
+            stage: tokio::sync::watch::channel("scheduling preparation").0,
+        }
+    }
+
+    fn enter(&self, stage: &'static str) {
+        self.stage.send_replace(stage);
+    }
+
+    fn timeout(&self) -> String {
+        format!(
+            "Native helper startup timed out while {}",
+            *self.stage.borrow()
+        )
+    }
+
+    fn checkpoint(&self, cancelled: &AtomicBool) -> Result<()> {
+        ensure!(
+            !cancelled.load(Ordering::Acquire),
+            "Native helper startup was cancelled"
+        );
+        ensure!(std::time::Instant::now() < self.deadline, self.timeout());
+        Ok(())
     }
 }
 
@@ -191,8 +333,10 @@ impl NativeHelperRuntime {
             .build()?;
         // The blocking task owns every guard and the child it creates. Cancelling
         // this await drops its eventual result, which still kills and reaps it.
-        let cancellation = PreparationCancellation(Arc::new(AtomicBool::new(false)));
-        let cancelled = Arc::clone(&cancellation.0);
+        let cancellation = PreparationCancellation::new();
+        let cancelled = cancellation.flag();
+        let startup = HelperStartup::new(deadline.into_std());
+        let worker_startup = startup.clone();
         let preparation = tokio::task::spawn_blocking(move || {
             Self::spawn(
                 &root,
@@ -201,12 +345,12 @@ impl NativeHelperRuntime {
                 &binary,
                 &logs,
                 &cancelled,
-                deadline.into_std(),
+                &worker_startup,
             )
         });
         let mut runtime = tokio::time::timeout_at(deadline, preparation)
             .await
-            .context("Native helper startup timed out during preparation")?
+            .with_context(|| startup.timeout())?
             .context("Native helper preparation task failed")??;
         runtime
             .wait_for_authenticated_model(&client, deadline)
@@ -221,19 +365,9 @@ impl NativeHelperRuntime {
         binary: &Path,
         logs: &Path,
         cancelled: &AtomicBool,
-        deadline: std::time::Instant,
+        startup: &HelperStartup,
     ) -> Result<Self> {
-        let checkpoint = || {
-            ensure!(
-                !cancelled.load(Ordering::Acquire),
-                "Native helper startup was cancelled"
-            );
-            ensure!(
-                std::time::Instant::now() < deadline,
-                "Native helper startup timed out during preparation"
-            );
-            Ok(())
-        };
+        let checkpoint = || startup.checkpoint(cancelled);
         checkpoint()?;
         let admission = installed
             .manifest
@@ -248,7 +382,9 @@ impl NativeHelperRuntime {
                 bail!("Native helper cannot execute an in-process launch")
             }
         };
-        let permit = wait_for_runtime_permit(root, deadline, cancelled)?;
+        startup.enter("waiting for the runtime slot");
+        let permit = wait_for_runtime_permit(root, startup.deadline, cancelled)?;
+        startup.enter("binding the launch and locking installed assets");
         let reservation = TcpListener::bind((Ipv4Addr::LOCALHOST, port))
             .context("Native helper loopback port is unavailable")?;
         let port = reservation.local_addr()?.port();
@@ -266,9 +402,12 @@ impl NativeHelperRuntime {
             paths.push(checked_local_path(&directory, &file.relative_path)?);
         }
         let assets = RuntimeAssetGuard::acquire(paths)?;
+        startup.enter("verifying the installed model and shared blobs");
         InstallationStore::open(root)?
             .verify_installed_version_with_progress(&installed, |_| checkpoint())?;
+        startup.enter("verifying the helper binary");
         verify_binary_with_progress(&binary, &config.runtime.binary_sha256, checkpoint)?;
+        startup.enter("preparing launch arguments and logs");
         let model_alias = format!("lumina-{}", config.digest()?.as_str());
         let arguments = helper_arguments(&config, &directory, &model_alias)?;
         let model_path =
@@ -295,8 +434,6 @@ impl NativeHelperRuntime {
             uuid::Uuid::new_v4().simple()
         );
         let endpoint = Url::parse(&format!("http://127.0.0.1:{port}/"))?;
-        #[cfg(windows)]
-        let job = windows_job::KillOnCloseJob::new()?;
         let mut command = Command::new(&binary);
         command
             .args(arguments)
@@ -314,11 +451,7 @@ impl NativeHelperRuntime {
             }
         }
         command.env("LLAMA_API_KEY", &bearer_token);
-        #[cfg(windows)]
-        {
-            use std::os::windows::process::CommandExt;
-            command.creation_flags(0x0800_0000);
-        }
+        startup.enter("checking available runtime resources");
         let _runtime = crate::InferenceRuntime::get_or_init()?;
         let hardware = super::resources::probe_initialized_hardware_resources(
             root,
@@ -332,24 +465,8 @@ impl NativeHelperRuntime {
         // reject a different process if it wins the short bind handoff race.
         checkpoint()?;
         drop(reservation);
-        let child = command
-            .spawn()
-            .context("Native helper could not be started")?;
-        let process = GuardedChild {
-            child: Some(child),
-            exit_status: None,
-            assets: Some(assets),
-            permit: Some(permit),
-            #[cfg(windows)]
-            job,
-        };
-        // std::process does not expose an atomic spawn-with-job operation. A
-        // hard parent kill in this short spawn-to-assignment window remains a
-        // limitation; every recoverable assignment failure is killed and waited.
-        #[cfg(windows)]
-        process
-            .job
-            .assign(process.child.as_ref().expect("newly spawned child"))?;
+        startup.enter("starting the native process");
+        let process = GuardedChild::spawn(&mut command, assets, Arc::new(permit), Vec::new())?;
         Ok(Self {
             process,
             config,
@@ -500,7 +617,7 @@ fn validate_model_properties(
 
 #[cfg(windows)]
 mod windows_job {
-    use anyhow::{Context, Result};
+    use anyhow::{ensure, Context, Result};
     use std::ffi::c_void;
     use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
     use std::process::Child;
@@ -541,6 +658,18 @@ mod windows_job {
         peak_job_memory: usize,
     }
 
+    #[repr(C)]
+    #[derive(Default)]
+    struct ThreadEntry {
+        size: u32,
+        usage: u32,
+        id: u32,
+        owner_pid: u32,
+        base_priority: i32,
+        delta_priority: i32,
+        flags: u32,
+    }
+
     #[link(name = "kernel32")]
     unsafe extern "system" {
         fn CreateJobObjectW(attributes: *const c_void, name: *const u16) -> *mut c_void;
@@ -551,12 +680,72 @@ mod windows_job {
             bytes: u32,
         ) -> i32;
         fn AssignProcessToJobObject(job: *mut c_void, process: *mut c_void) -> i32;
+        fn CreateToolhelp32Snapshot(flags: u32, pid: u32) -> *mut c_void;
+        fn Thread32First(snapshot: *mut c_void, entry: *mut ThreadEntry) -> i32;
+        fn Thread32Next(snapshot: *mut c_void, entry: *mut ThreadEntry) -> i32;
+        fn OpenThread(access: u32, inherit: i32, id: u32) -> *mut c_void;
+        fn GetProcessIdOfThread(thread: *mut c_void) -> u32;
+        fn ResumeThread(thread: *mut c_void) -> u32;
     }
 
     pub(super) struct KillOnCloseJob(OwnedHandle);
 
+    /// The stable std Command API releases the primary thread handle. A process
+    /// created suspended has not executed user code yet. Recover its one initial
+    /// thread, check its owner and resume only after assigning the restricted job.
+    pub(super) fn resume_created_task(child: &Child) -> Result<()> {
+        const SNAP_THREADS: u32 = 4;
+        const QUERY_AND_RESUME: u32 = 0x0800 | 0x0002;
+        const NO_MORE_FILES: i32 = 18;
+        let raw = unsafe { CreateToolhelp32Snapshot(SNAP_THREADS, 0) };
+        if raw as isize == -1 {
+            return Err(std::io::Error::last_os_error().into());
+        }
+        let snapshot = unsafe { OwnedHandle::from_raw_handle(raw) };
+        let size = std::mem::size_of::<ThreadEntry>() as u32;
+        let mut entry = ThreadEntry {
+            size,
+            ..Default::default()
+        };
+        let mut ok = unsafe { Thread32First(snapshot.as_raw_handle(), &mut entry) };
+        let mut primary = None;
+        while ok != 0 {
+            if entry.size >= 16 && entry.owner_pid == child.id() {
+                ensure!(
+                    primary.replace(entry.id).is_none(),
+                    "Suspended task has more than one thread"
+                );
+            }
+            entry.size = size;
+            ok = unsafe { Thread32Next(snapshot.as_raw_handle(), &mut entry) };
+        }
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() != Some(NO_MORE_FILES) {
+            return Err(error.into());
+        }
+        let id = primary.context("Suspended task primary thread was not found")?;
+        let raw = unsafe { OpenThread(QUERY_AND_RESUME, 0, id) };
+        if raw.is_null() {
+            return Err(std::io::Error::last_os_error().into());
+        }
+        let thread = unsafe { OwnedHandle::from_raw_handle(raw) };
+        ensure!(
+            unsafe { GetProcessIdOfThread(thread.as_raw_handle()) } == child.id(),
+            "Suspended task thread identity changed"
+        );
+        let previous = unsafe { ResumeThread(thread.as_raw_handle()) };
+        if previous == u32::MAX {
+            return Err(std::io::Error::last_os_error().into());
+        }
+        ensure!(
+            previous == 1,
+            "Suspended task did not resume from its initial suspend count"
+        );
+        Ok(())
+    }
+
     impl KillOnCloseJob {
-        pub(super) fn new() -> Result<Self> {
+        pub(super) fn with_process_limit(single_process: bool) -> Result<Self> {
             // An unnamed, non-inheritable handle gives this owner the last job
             // handle, so abrupt parent exit also terminates assigned children.
             let raw = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
@@ -567,7 +756,8 @@ mod windows_job {
             let handle = unsafe { OwnedHandle::from_raw_handle(raw) };
             let information = ExtendedLimitInformation {
                 basic: BasicLimitInformation {
-                    limit_flags: 0x0000_2000,
+                    limit_flags: 0x0000_2000 | if single_process { 0x0000_0008 } else { 0 },
+                    active_process_limit: u32::from(single_process),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -670,7 +860,7 @@ fn try_runtime_lock(file: &File) -> Result<bool> {
 }
 
 #[cfg(test)]
-fn acquire_runtime_permit(root: &Path) -> Result<File> {
+pub(super) fn acquire_runtime_permit(root: &Path) -> Result<File> {
     let file = runtime_lock(root, "host")?;
     ensure!(
         try_runtime_lock(&file)?,
