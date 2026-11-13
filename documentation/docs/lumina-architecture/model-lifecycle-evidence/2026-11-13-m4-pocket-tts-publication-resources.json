@@ -1,0 +1,1060 @@
+{
+  "schema": "pocket-tts-managed-profile-review-v1",
+  "status": "ordinary_production_verified_for_exact_and_bounded_english_tts",
+  "modelEvidence": "2026-11-13-m4-audio-windows-longpath.json",
+  "scope": "Three separate fixed English workloads, same reference voice, audio.cpp CPU engine, and an isolated real session. Each generated WAV was reopened from SQLite and verified against the complete effective configuration.",
+  "productionRegistration": "Six previous exact/default or seed-equivalent requests and five distinct canonical English sentences in the measured short-text domain passed the authorized production workflow. One of the five changed both text and seed relative to all full-tree measurement samples.",
+  "runs": [
+    {
+      "text": "The red apple is on the wooden table.",
+      "key": {
+        "kind": "tts",
+        "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+        "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+        "workloadDigest": "51900f6bb36f3b5bdc3993283fcc4eb264ad88b4c0a588713db32d89a1c33b8e",
+        "requiresGpu": false
+      },
+      "receiptSnapshot": "d112840b39b46ddeb31e322669efb6cd6e1b0577744146789896dbc2be306cff",
+      "peakJobCommitBytes": 1739739136,
+      "summedPeakWorkingSetBytes": 496197632,
+      "controllerBytes": 20582400,
+      "nativeElapsedMs": 3189,
+      "hostElapsedMs": 17462,
+      "nativeOutputPeakBytes": 230488,
+      "publicationDirectoryPeakBytes": 1044754,
+      "publishedBytes": 115244,
+      "publishedSha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+      "memberCount": 5,
+      "reopenedVerified": true,
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-pocket-job-tree-c1-r2/measurement.json",
+        "bytes": 3011,
+        "sha256": "691325746681570e0dc4cf295db219245a696e743927e9bce8f2007180b92473"
+      },
+      "execution": {
+        "path": "target/lifecycle-validation/m4-pocket-job-tree-c1-r2/execution-evidence.json",
+        "bytes": 6418,
+        "sha256": "43b7407be789b69ecd6b578dfd9329e044c21891c79a9d390444bc201c754fdf"
+      }
+    },
+    {
+      "text": "Please read the short note aloud.",
+      "key": {
+        "kind": "tts",
+        "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+        "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+        "workloadDigest": "f9d1dde6629ec03a5f32c9d549f916e0bc65a6c9ebfddc9119cd69c84401cf2f",
+        "requiresGpu": false
+      },
+      "receiptSnapshot": "6651528acd65b15e1f597dd7a1fe6716399ddf94dcb18189c48cce421f6e9319",
+      "peakJobCommitBytes": 1728475136,
+      "summedPeakWorkingSetBytes": 482471936,
+      "controllerBytes": 20602880,
+      "nativeElapsedMs": 1598,
+      "hostElapsedMs": 14583,
+      "nativeOutputPeakBytes": 207448,
+      "publicationDirectoryPeakBytes": 1033234,
+      "publishedBytes": 103724,
+      "publishedSha256": "1336813694b74bfd39f1ffaa0559c741ece15df68c097e7df01c59448eef14c9",
+      "memberCount": 5,
+      "reopenedVerified": true,
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-pocket-job-tree-c2-r2/measurement.json",
+        "bytes": 3011,
+        "sha256": "81561c9856a292a4ebe7c0e52fd4caebcb492e42f72ec5160ef6d2e8bbf6a979"
+      },
+      "execution": {
+        "path": "target/lifecycle-validation/m4-pocket-job-tree-c2-r2/execution-evidence.json",
+        "bytes": 6413,
+        "sha256": "e9806b36e140de367ff7b7be9b37b2097824c39bc9459cf3cb871b3fb254dfc3"
+      }
+    },
+    {
+      "text": "The morning train leaves at nine. We can walk to the station after breakfast.",
+      "key": {
+        "kind": "tts",
+        "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+        "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+        "workloadDigest": "c83c9ddc990d59c37b8d492ae3b36c3582b9fe9c93f7f693e5b17c378c940230",
+        "requiresGpu": false
+      },
+      "receiptSnapshot": "63e02b8f18af57e1c9bbdfd7bda6b43b6bf875167c36a8cd471ade32a2c11ac2",
+      "peakJobCommitBytes": 1989296128,
+      "summedPeakWorkingSetBytes": 744673280,
+      "controllerBytes": 20643840,
+      "nativeElapsedMs": 3599,
+      "hostElapsedMs": 24970,
+      "nativeOutputPeakBytes": 537688,
+      "publicationDirectoryPeakBytes": 1198354,
+      "publishedBytes": 268844,
+      "publishedSha256": "3ac5e45d8af3f60c6bff8c1044b00f87effd5fc4ee41a5a765112af11a6d2405",
+      "memberCount": 5,
+      "reopenedVerified": true,
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-pocket-job-tree-c3-r2/measurement.json",
+        "bytes": 3011,
+        "sha256": "d70eb038eebf293174454f08483c69e9f1c4afaca13c7fc1969ed2598f7b01dc"
+      },
+      "execution": {
+        "path": "target/lifecycle-validation/m4-pocket-job-tree-c3-r2/execution-evidence.json",
+        "bytes": 6457,
+        "sha256": "e503b68fa4c29cfdd30089e0166e9c8f4db7952a5cbf5344a08d7e33ead63286"
+      }
+    }
+  ],
+  "hardware": {
+    "index": 0,
+    "backend": "CPU",
+    "name": "CPU",
+    "description": "Intel(R) Core(TM) i7-14700F",
+    "kind": "cpu",
+    "total_bytes": 102904569856,
+    "free_bytes": 60012249088
+  },
+  "ownerAndHost": {
+    "D:\\Project\\goose\\target\\debug\\deps\\lumina-0f56576afdecccba.exe": "3d565bfdf442985f24aeb34bb5636594807c6db3175dce460bf4a51436a433cc",
+    "D:\\Project\\goose\\target\\debug\\deps\\lumina_local_inference-092f3d23db9e36fc.exe": "09cdb955aac266e7d9bf9221ab97e82fce695733e3864b8d53ea5175d7510233",
+    "D:\\Project\\goose\\target\\runtime-engines\\audio-cpp\\c0cd77fa80285f8113883e0de06ffc781cf502f6\\validated-binaries\\b319916421e54024ba4229462e1a577f368627176fc538d3be6d4a8a5398394f\\audiocpp_cli.exe": "b319916421e54024ba4229462e1a577f368627176fc538d3be6d4a8a5398394f"
+  },
+  "runnerSha256": "3daedb9a89fe8cf84c08a97540ac2e7c9b1ea18bc8750fba722d62f874d4ce4b",
+  "controllerSha256": "2b606510f069f5288c6353764dd205b905a5d7bf48bbeca94c1db94a620f06e5",
+  "checkoutDifferences": {
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/profiles.rs": {
+      "built": "ef7b1e9bac5eeba3b7f8e0d1705054c2cf8a764973212f4259d30186248f7d55",
+      "checkout": "109ceb88c83e8b25a76f16de02670028780cf1e016f9f7b2623c3653feac8e3e"
+    },
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/services.rs": {
+      "built": "d421e7982dd7ac7a5ab6fad736c0cb1e24635b76fc167e19d916630d53fc9d37",
+      "checkout": "5fe69486f5952f0783b3bc25d515c18881829f4892ae46d3703ab1b5b9026764"
+    },
+    "crates/lumina-local-inference/src/lifecycle/native_task_runtime.rs": {
+      "built": "09893448864f2218de94b7196e7eda37c62d41f8b052a595603abb7672a8af2b",
+      "checkout": "4cc4ec9fc873990e323a6d1827b0946680ad2c5055c6bbdccc940fce3506fd04"
+    },
+    "crates/lumina/src/media/task_configuration.rs": {
+      "built": "90010a129afd4a561ad6a1d5949f6226a604fcf4d7bc3c6d5834e174a7008f5e",
+      "checkout": "5449f228a5414ebbbf2a82e484cf09339150b8ecedeb11fdef9548003d2bed8d"
+    }
+  },
+  "boundsReview": {
+    "revision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+    "sources": [
+      {
+        "upstreamPath": "src/models/pocket_tts/session.cpp",
+        "sha256": "cea706c538af01b0875efa6c4ca70378876473cabd0fc0578db77ace76f079b0"
+      },
+      {
+        "upstreamPath": "src/models/pocket_tts/acoustic_model.cpp",
+        "sha256": "5cd1e0e79ecbd7a1bea21704946f0237c72fc3c2f021c1c4228024c96c4d46f6"
+      },
+      {
+        "upstreamPath": "src/models/pocket_tts/mimi_decoder.cpp",
+        "sha256": "1e654b153f4ae122694dd2b51b311dfa9590769efbe3bf3863d1027bbcbb55d5"
+      },
+      {
+        "upstreamPath": "src/models/pocket_tts/assets.cpp",
+        "sha256": "d6d4013541dc7dc612032582e3c65774220ffe3a9ef0d50df947b7d1298c9a71"
+      }
+    ],
+    "observations": [
+      "Offline session.cpp splits the text first, then prepares text embeddings, builds the acoustic cache, decodes and appends audio once per tokenizer chunk. Equal UTF-8 byte length or characters alone do not establish equal chunk counts or capacities.",
+      "max_frames=0 uses ceil((tokens/3 + 2) * model frame rate) per chunk. Voice preparation, text and EOS behavior can change generated frames. The three default cases retain distinct resource keys.",
+      "An explicit positive max_frames fixes the acoustic cap per chunk. With frames_after_eos set equal to max_frames the EOS break cannot occur before the fixed cap, irrespective of seed. The fixed sentence, tokenizer, voice waveform and all other controls must still match.",
+      "The acoustic RNG is seeded in begin_stream and changes latent values; noise_clamp=-1 uses ordinary fixed-size normal sampling. The acoustic graph and cache capacities depend on prompt/voice shape and max steps. The waveform still changes with seed.",
+      "For these exact weights the mono decoder produces 1920 PCM samples per acoustic step. The proposed one-chunk 32-step seed sweep therefore checks 61440 samples, PCM16 mono 24 kHz, 122924 WAV bytes and three independently generated fingerprints."
+    ],
+    "candidate": {
+      "text": "Please read the short note aloud.",
+      "maxFrames": 32,
+      "framesAfterEos": 32,
+      "textChunkTokens": 50,
+      "temperature": 0.3,
+      "noiseClamp": -1,
+      "seedsSelected": [
+        0,
+        2147483648,
+        4294967295
+      ],
+      "eligibility": "Resource reuse awaits observed managed publication, bounded shape verification and one common conservative budget; default requests remain exact.",
+      "nativeSamples": [
+        {
+          "seed": 0,
+          "wavBytes": 122924,
+          "frames": 61440,
+          "maxAmplitude": 14709,
+          "waveSha256": "e8fdf08b26ddfb240c9f86a7f286f509993992409b84dc08c9654b8ca4d41681",
+          "recognized": "Please read the short note aloud.",
+          "diagnostic": {
+            "path": "target/lifecycle-validation/m4-pocket-bounded-32-seed0-r1/diagnostic.json",
+            "sha256": "0e4591a0ef3baa43184b373816671ef7c0d801729d9a3518a134fbb15661c7fc"
+          },
+          "nativeSynthesisMillis": 1516,
+          "nativeRecognitionMillis": 228735,
+          "managedOwner": {
+            "log": "target/lifecycle-validation/m4-pocket-fixed-owner-c4-r1/owner.log",
+            "logSha256": "01c66b1d3a3b2c5249bd9adbccf0cd87175284d6c3e16583edb2db1c7e1a7752",
+            "outputRecordSha256": "466a1db8ec4650b07e043917d6d79645cdb6f3be6b1f6d7c1e6acc08b5d46f97",
+            "snapshotDigest": "481815d0a022476593870f77578f50d08945595a93af0dd85af2a90bdc1df793",
+            "resourceKey": {
+              "kind": "tts",
+              "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+              "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+              "workloadDigest": "59b791d80f5d038800333c82a870f3a5e8cd5b5ef5ce19e5d21dc9c10c660dc8",
+              "requiresGpu": false
+            }
+          }
+        },
+        {
+          "seed": 2147483648,
+          "wavBytes": 122924,
+          "frames": 61440,
+          "maxAmplitude": 16414,
+          "waveSha256": "238f70002737901c32a9568d08bd28877a866a615c4f8df78b4cd99a1c994c69",
+          "recognized": "Please read the short note aloud.",
+          "diagnostic": {
+            "path": "target/lifecycle-validation/m4-pocket-bounded-32-seed1-r1/diagnostic.json",
+            "sha256": "e1a275c0ee3a1163c49d315a10425108b2a146eb02d61e69248963aa1cd6d7f2"
+          },
+          "nativeSynthesisMillis": 2046,
+          "nativeRecognitionMillis": 2797,
+          "managedOwner": {
+            "log": "target/lifecycle-validation/m4-pocket-fixed-owner-c5-r1/owner.log",
+            "logSha256": "03438f52516214bd52cd1651a45a76d2c9938c0883bc4852914b661deff6ac4f",
+            "outputRecordSha256": "3ae5c10abd35c5be7912d2a90fddedde4b28282f8effd9c76687a56d8c62e193",
+            "snapshotDigest": "5427c4011550b040e59f38f3a4f0ee3f084404bc049864b1e488b338dc843ebc",
+            "resourceKey": {
+              "kind": "tts",
+              "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+              "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+              "workloadDigest": "59b791d80f5d038800333c82a870f3a5e8cd5b5ef5ce19e5d21dc9c10c660dc8",
+              "requiresGpu": false
+            }
+          }
+        },
+        {
+          "seed": 4294967295,
+          "wavBytes": 122924,
+          "frames": 61440,
+          "maxAmplitude": 17453,
+          "waveSha256": "55d3b5145870849bdd1eb53333cb665ac8c9ae931f1d578caf7ab4a1f3f0182e",
+          "recognized": "Please read the short note aloud.",
+          "diagnostic": {
+            "path": "target/lifecycle-validation/m4-pocket-bounded-32-seed2-r1/diagnostic.json",
+            "sha256": "c1e186a72c6789b0d44e2cfe2738cb480e5bd56a0171b263dc4cea62a6b89220"
+          },
+          "nativeSynthesisMillis": 2235,
+          "nativeRecognitionMillis": 3578,
+          "managedOwner": {
+            "log": "target/lifecycle-validation/m4-pocket-fixed-owner-c6-r1/owner.log",
+            "logSha256": "00163b473bc82ab50d09a08d8738de8441b1f61e16215b12ab43a93cfc820874",
+            "outputRecordSha256": "0b297e217f374432145b07ed7a8aeb2fb140a1d6b3f564eb3929d87c14541db0",
+            "snapshotDigest": "7106b6a54ddbf70880daad3ccb6ee35b8803d5d5cf29ed15cbef3550b6e9a76f",
+            "resourceKey": {
+              "kind": "tts",
+              "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+              "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+              "workloadDigest": "59b791d80f5d038800333c82a870f3a5e8cd5b5ef5ce19e5d21dc9c10c660dc8",
+              "requiresGpu": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  "budgetPolicy": "For each effective key aggregate every measured run, including earlier defaults. Add the controller peak to max(kernel process-tree committed peak, sum of lifetime peak working sets), add 25% and round up to 64 MiB. Double measured temporary output and round up to MiB for both output and copy; separately double total measured publication directory and round up to MiB. Double the largest recorded host or native elapsed time, round up to 10 seconds with a 30 second floor.",
+  "reviewedRuns": [
+    {
+      "case": 1,
+      "inputText": "The red apple is on the wooden table.",
+      "seed": 42,
+      "maxFrames": 0,
+      "hardware": {
+        "index": 0,
+        "backend": "CPU",
+        "name": "CPU",
+        "description": "Intel(R) Core(TM) i7-14700F",
+        "kind": "cpu",
+        "total_bytes": 102904569856,
+        "free_bytes": 22107668480
+      },
+      "snapshotDigest": "00ee1f2341668899812880623943ef2f7e507a9301f5b7d16a350ec920000c0b",
+      "workloadDigest": "51900f6bb36f3b5bdc3993283fcc4eb264ad88b4c0a588713db32d89a1c33b8e",
+      "committedPeakBytes": 1740267520,
+      "summedWorkingSetPeakBytes": 495435776,
+      "nativeMillis": 5452,
+      "hostMillis": 69875,
+      "publishedSha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+      "publishedBytes": 115244,
+      "reopenedVerified": true,
+      "evidenceFile": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-1.json",
+      "evidenceSha256": "309f6e67c7ce053d610429b637c6ea9eaeb2f0d9530e2fbb167407e499ba870b",
+      "budget": {
+        "hostRamBytes": 2214592512,
+        "gpuMemory": [],
+        "temporaryOutputBytes": 1048576,
+        "publicationCopyBytes": 1048576,
+        "publicationScratchBytes": 2097152,
+        "outputByteLimit": 1048576,
+        "timeoutSeconds": 140
+      }
+    },
+    {
+      "case": 2,
+      "inputText": "Please read the short note aloud.",
+      "seed": 42,
+      "maxFrames": 0,
+      "hardware": {
+        "index": 0,
+        "backend": "CPU",
+        "name": "CPU",
+        "description": "Intel(R) Core(TM) i7-14700F",
+        "kind": "cpu",
+        "total_bytes": 102904569856,
+        "free_bytes": 20673159168
+      },
+      "snapshotDigest": "e6a124481393ed6ecd68c5d7ca10517976dc49c0159f01e7e12f97dd1aa9ff63",
+      "workloadDigest": "f9d1dde6629ec03a5f32c9d549f916e0bc65a6c9ebfddc9119cd69c84401cf2f",
+      "committedPeakBytes": 1727397888,
+      "summedWorkingSetPeakBytes": 481316864,
+      "nativeMillis": 8043,
+      "hostMillis": 30193,
+      "publishedSha256": "1336813694b74bfd39f1ffaa0559c741ece15df68c097e7df01c59448eef14c9",
+      "publishedBytes": 103724,
+      "reopenedVerified": true,
+      "evidenceFile": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-2.json",
+      "evidenceSha256": "18af9183690854ca2aab507c7a1be700ad1e7abf767b2361edf46e96cd37ff39",
+      "budget": {
+        "hostRamBytes": 2214592512,
+        "gpuMemory": [],
+        "temporaryOutputBytes": 1048576,
+        "publicationCopyBytes": 1048576,
+        "publicationScratchBytes": 2097152,
+        "outputByteLimit": 1048576,
+        "timeoutSeconds": 70
+      }
+    },
+    {
+      "case": 3,
+      "inputText": "The morning train leaves at nine. We can walk to the station after breakfast.",
+      "seed": 42,
+      "maxFrames": 0,
+      "hardware": {
+        "index": 0,
+        "backend": "CPU",
+        "name": "CPU",
+        "description": "Intel(R) Core(TM) i7-14700F",
+        "kind": "cpu",
+        "total_bytes": 102904569856,
+        "free_bytes": 20387078144
+      },
+      "snapshotDigest": "92069e05b8a189e298300a2f0d6b37adb2fa1c9dc647ef56c3153778f66c3ff1",
+      "workloadDigest": "c83c9ddc990d59c37b8d492ae3b36c3582b9fe9c93f7f693e5b17c378c940230",
+      "committedPeakBytes": 1990778880,
+      "summedWorkingSetPeakBytes": 744312832,
+      "nativeMillis": 16078,
+      "hostMillis": 29503,
+      "publishedSha256": "3ac5e45d8af3f60c6bff8c1044b00f87effd5fc4ee41a5a765112af11a6d2405",
+      "publishedBytes": 268844,
+      "reopenedVerified": true,
+      "evidenceFile": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-3.json",
+      "evidenceSha256": "0649457c53438eaf803b1ed831607d8ce4fb5601d93ddb2c2a5c9869f13f0041",
+      "budget": {
+        "hostRamBytes": 2550136832,
+        "gpuMemory": [],
+        "temporaryOutputBytes": 2097152,
+        "publicationCopyBytes": 2097152,
+        "publicationScratchBytes": 3145728,
+        "outputByteLimit": 2097152,
+        "timeoutSeconds": 60
+      }
+    },
+    {
+      "case": 4,
+      "inputText": "Please read the short note aloud.",
+      "seed": 0,
+      "maxFrames": 32,
+      "hardware": {
+        "index": 0,
+        "backend": "CPU",
+        "name": "CPU",
+        "description": "Intel(R) Core(TM) i7-14700F",
+        "kind": "cpu",
+        "total_bytes": 102904569856,
+        "free_bytes": 19868102656
+      },
+      "snapshotDigest": "1456bdc593be0a12765118af78bd3f856f8aa0b703abbc7aa547c58dff85e5bf",
+      "workloadDigest": "59b791d80f5d038800333c82a870f3a5e8cd5b5ef5ce19e5d21dc9c10c660dc8",
+      "committedPeakBytes": 1750028288,
+      "summedWorkingSetPeakBytes": 506687488,
+      "nativeMillis": 7735,
+      "hostMillis": 24071,
+      "publishedSha256": "e8fdf08b26ddfb240c9f86a7f286f509993992409b84dc08c9654b8ca4d41681",
+      "publishedBytes": 122924,
+      "reopenedVerified": true,
+      "evidenceFile": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-4.json",
+      "evidenceSha256": "70d5c9ce3b92b9383478dfb38c37765a87d8aabc00d2a1e398d2804a1f8afb5c",
+      "budget": {
+        "hostRamBytes": 2281701376,
+        "gpuMemory": [],
+        "temporaryOutputBytes": 1048576,
+        "publicationCopyBytes": 1048576,
+        "publicationScratchBytes": 3145728,
+        "outputByteLimit": 1048576,
+        "timeoutSeconds": 80
+      }
+    },
+    {
+      "case": 5,
+      "inputText": "Please read the short note aloud.",
+      "seed": 2147483648,
+      "maxFrames": 32,
+      "hardware": {
+        "index": 0,
+        "backend": "CPU",
+        "name": "CPU",
+        "description": "Intel(R) Core(TM) i7-14700F",
+        "kind": "cpu",
+        "total_bytes": 102904569856,
+        "free_bytes": 20085706752
+      },
+      "snapshotDigest": "821a046c69919f85494d7f9f1d8caaefc3cce92045017ddb7c830f1409a552f5",
+      "workloadDigest": "59b791d80f5d038800333c82a870f3a5e8cd5b5ef5ce19e5d21dc9c10c660dc8",
+      "committedPeakBytes": 1750691840,
+      "summedWorkingSetPeakBytes": 506118144,
+      "nativeMillis": 6591,
+      "hostMillis": 37398,
+      "publishedSha256": "238f70002737901c32a9568d08bd28877a866a615c4f8df78b4cd99a1c994c69",
+      "publishedBytes": 122924,
+      "reopenedVerified": true,
+      "evidenceFile": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-5.json",
+      "evidenceSha256": "d83c4263ac89f443c6985ca23bbb1e0d3c196c96f814fe9d27f522c45e260fa2",
+      "budget": {
+        "hostRamBytes": 2281701376,
+        "gpuMemory": [],
+        "temporaryOutputBytes": 1048576,
+        "publicationCopyBytes": 1048576,
+        "publicationScratchBytes": 3145728,
+        "outputByteLimit": 1048576,
+        "timeoutSeconds": 80
+      }
+    },
+    {
+      "case": 6,
+      "inputText": "Please read the short note aloud.",
+      "seed": 4294967295,
+      "maxFrames": 32,
+      "hardware": {
+        "index": 0,
+        "backend": "CPU",
+        "name": "CPU",
+        "description": "Intel(R) Core(TM) i7-14700F",
+        "kind": "cpu",
+        "total_bytes": 102904569856,
+        "free_bytes": 21546405888
+      },
+      "snapshotDigest": "1c1e5445fc962b03c34d274b94cf239c118de032296f16a1dd214db7fb29a88d",
+      "workloadDigest": "59b791d80f5d038800333c82a870f3a5e8cd5b5ef5ce19e5d21dc9c10c660dc8",
+      "committedPeakBytes": 1751871488,
+      "summedWorkingSetPeakBytes": 505528320,
+      "nativeMillis": 3248,
+      "hostMillis": 39735,
+      "publishedSha256": "55d3b5145870849bdd1eb53333cb665ac8c9ae931f1d578caf7ab4a1f3f0182e",
+      "publishedBytes": 122924,
+      "reopenedVerified": true,
+      "evidenceFile": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-6.json",
+      "evidenceSha256": "e23d9206f0a725444e61ec35366807076264c82f55bda623f7ce3453b45d12b9",
+      "budget": {
+        "hostRamBytes": 2281701376,
+        "gpuMemory": [],
+        "temporaryOutputBytes": 1048576,
+        "publicationCopyBytes": 1048576,
+        "publicationScratchBytes": 3145728,
+        "outputByteLimit": 1048576,
+        "timeoutSeconds": 80
+      }
+    }
+  ],
+  "reviewedBuild": {
+    "helperSha256": "dfbb2530d43cd80455b0fb99e8a400dcc6ba831b2f9981c3cf79c90615e25ce4",
+    "sourceDifferences": {
+      "crates/lumina-local-inference/src/lifecycle/audio_task_parameters.rs": {
+        "built": "2fc469375915cce6416d5d06cdb0bb1a7def25da47a89d7cb944b63812c4f5bf",
+        "checkout": "4726f30a5fd5d1b8959cc9c10db0e23ead4773e2555d6e853f897a35d1554373"
+      },
+      "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/models.rs": {
+        "built": "ef67413aabc43696403e3c791d1f859dad22950aa63469ef3b171ae914c5fb96",
+        "checkout": "ee2e24e1c1f367cadd69a5defd73ff8fc7d7fda252845b689599de09940b71fa"
+      },
+      "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/profiles.rs": {
+        "built": "109ceb88c83e8b25a76f16de02670028780cf1e016f9f7b2623c3653feac8e3e",
+        "checkout": "d8c2d239446b1c38ce377750115b6b0b2aa9921e9ec06cd542326b240e164d9f"
+      },
+      "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/services.rs": {
+        "built": "5fe69486f5952f0783b3bc25d515c18881829f4892ae46d3703ab1b5b9026764",
+        "checkout": "ca471864a3cb2006c185af3748994a7897b0068baa9c3fe06f4893d9ecbc1594"
+      }
+    },
+    "assessment": "The current checkout adds explicit per-model audio declarations. The pinned measurements bind the actual compiled suite and installed component digests. The exact publication path and all waveforms were verified. Require final replay to confirm that the English mapping yields the same effective workload and bytes."
+  },
+  "boundedEnglishText": {
+    "status": "Four calibration inputs and an independently held-out utterance with a held-out seed completed normal resource admission, generated and published output, reopened state and rejected out-of-domain text.",
+    "scope": "Pinned English GGUF, explicit specification, CPU engine with four threads, fixed reference voice, maxFrames=framesAfterEos=32 and textChunkTokens=50. One already-normalized ASCII sentence beginning with uppercase letter, words of English letters separated by a single space and ending in one period, up to 31 characters inclusive. All other settings remain bound to the effective workload.",
+    "tokenizerVerification": {
+      "cases": [
+        {
+          "text": "I.",
+          "normalizedScalars": 3,
+          "tokens": 2,
+          "ids": "268 263"
+        },
+        {
+          "text": "Hello there.",
+          "normalizedScalars": 13,
+          "tokens": 3,
+          "ids": "2994 310 263"
+        },
+        {
+          "text": "Go home.",
+          "normalizedScalars": 9,
+          "tokens": 3,
+          "ids": "1053 648 263"
+        },
+        {
+          "text": "Fresh blue rain falls now.",
+          "normalizedScalars": 27,
+          "tokens": 9,
+          "ids": "496 280 1028 1944 2574 1167 261 372 263"
+        },
+        {
+          "text": "Sphinx of black quartz.",
+          "normalizedScalars": 24,
+          "tokens": 9,
+          "ids": "446 1419 356 568 272 1196 1839 690 263"
+        },
+        {
+          "text": "Zqzqzqzqzqzqzqzqzqzqzqzqzqzqzq.",
+          "normalizedScalars": 32,
+          "tokens": 31,
+          "ids": "1557 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 690 3937 263"
+        }
+      ],
+      "max": {
+        "text": "QQKWKWKKWQJXWZWJXKWWJXQZQZWZWK.",
+        "normalizedScalars": 32,
+        "tokens": 32,
+        "ids": "260 2175 2175 2194 1563 2194 1563 2194 2194 1563 2175 2649 2890 1563 3964 1563 2649 2890 2194 1563 1563 2649 2890 2175 3964 2175 3964 1563 3964 1563 2194 263"
+      },
+      "counts": {
+        "2": 1,
+        "3": 2,
+        "9": 2,
+        "31": 427,
+        "32": 86
+      },
+      "oracleSha256": "5d87dc007191c4c7b9516b4bb2524f9511671e3a8d1f1b2aa43a3cd3918d2105",
+      "modelSha256": "d461765ae179566678c93091c5fa6f2984c31bbe990bf1aa62d92c64d91bc3f6"
+    },
+    "rationale": "The built-in English text conditioner leaves this grammar unchanged. Its embedded 4000-piece unigram SentencePiece model uses identity normalization, a single leading word marker and one marker per space; every accepted letter, period and marker has a normal inventory piece. With no unknown expansion or added BOS/EOS, at most 32 normalized scalars yield at most 32 tokens in one chunk. The CPU tiered graph floors prompt capacity at 32, gathering up to 32 embeddings. A fixed 32-step generation cap and 32-step EOS tail force the same number of generated frames in each one-chunk run. The review keeps the measured 32-token endpoint and smaller prompts. Resource admission does not guarantee intelligibility of arbitrary strings.",
+    "nativeSourceSha256": {
+      "src/framework/tokenizers/sentencepiece.cpp": "cc86ca90adcd8b61d3f579eccf075c68220ef6ac73b5344519e098a40fe75196",
+      "src/models/pocket_tts/assets.cpp": "d6d4013541dc7dc612032582e3c65774220ffe3a9ef0d50df947b7d1298c9a71",
+      "src/models/pocket_tts/text_conditioner.cpp": "f8eea972a919334f7ac4b6b67a4361d8ee1ab22dc1d0f62e0e0767d886377467",
+      "src/models/pocket_tts/session.cpp": "cea706c538af01b0875efa6c4ca70378876473cabd0fc0578db77ace76f079b0",
+      "src/framework/runtime/session.cpp": "ea8b5b1da58a2f6b8578f3db98491ddf86dd55e02f73cd20edadd261d3f7a282",
+      "src/models/pocket_tts/acoustic_model.cpp": "5cd1e0e79ecbd7a1bea21704946f0237c72fc3c2f021c1c4228024c96c4d46f6",
+      "src/framework/assets/tensor_source.cpp": "b58e4261c8a90e7e90aa852a71a71e46d8a5a6a56fb5879a9c80654dc1c131b9"
+    },
+    "nativeEvidence": [
+      {
+        "text": "I.",
+        "seed": 0,
+        "pcm": [
+          24000,
+          1,
+          2,
+          61440
+        ],
+        "wavSha256": "7d0fa62034051d9847be48aed30cdb8b3b82f66f9e6bf06c04aedcc8db6fa029",
+        "traceSha256": "1163931f445d0f76fd0d8383dc79aab13e9ed1dabef1a0086b66f54793b5735c",
+        "duration": 2.2810000000026776,
+        "asr": {
+          "text": "I.",
+          "transcript": "I. I.",
+          "wordSequenceEqual": false
+        },
+        "run": "target/lifecycle-validation/m4-pocket-independent-c7-r1"
+      },
+      {
+        "text": "Hello there.",
+        "seed": 2147483648,
+        "pcm": [
+          24000,
+          1,
+          2,
+          61440
+        ],
+        "wavSha256": "d37b4ef20e6cdb8fcb6fed24cf0475e875a461ccf4025287bae602eedc82e7e0",
+        "traceSha256": "7924ca9a8e610808e09c2a22bbbc2448125bebb35e88acd73cfa39f46a7af154",
+        "duration": 2.6560000000026776,
+        "asr": {
+          "text": "Hello there.",
+          "transcript": "Hello there.",
+          "wordSequenceEqual": true
+        },
+        "run": "target/lifecycle-validation/m4-pocket-independent-c8-r1"
+      },
+      {
+        "text": "Fresh blue rain falls now.",
+        "seed": 4294967295,
+        "pcm": [
+          24000,
+          1,
+          2,
+          61440
+        ],
+        "wavSha256": "64c039c994952504e27ff8f65844f7c5c3b6657d3b6c12f2a36f6dcf74524937",
+        "traceSha256": "72560a5c1e18be8efe5e14d475eb32725a6fff1f149fe5e2d749edd21f9f57e4",
+        "duration": 2.7659999999887077,
+        "asr": {
+          "text": "Fresh blue rain falls now.",
+          "transcript": "Fresh blue rain falls now.",
+          "wordSequenceEqual": true
+        },
+        "run": "target/lifecycle-validation/m4-pocket-independent-c9-r1"
+      },
+      {
+        "text": "QQKWKWKKWQJXWZWJXKWWJXQZQZWZWK.",
+        "seed": 17,
+        "pcm": [
+          24000,
+          1,
+          2,
+          61440
+        ],
+        "wavSha256": "78b681b7cfddc720a259ebd629e4d5e55cac39a9d2bdcc2aa135945ddaf62af2",
+        "traceSha256": "d3a5bec72f8d4d1a0bfbb6c3c7b9632af41dd73fef7172eeec324561a97f29ff",
+        "duration": 2.0930000000080327,
+        "run": "target/lifecycle-validation/m4-pocket-independent-c10-r1"
+      },
+      {
+        "text": "A cloud floats by.",
+        "seed": 123456,
+        "pcm": [
+          24000,
+          1,
+          2,
+          61440
+        ],
+        "wavSha256": "0a8972407031cbb12e16ab49c4d5afc06700f4242a751a91da36b840baa39fcf",
+        "traceSha256": "53be904924d0e20c545b2623c3daf1fa7981083f8a719d62bbe1343e2c3fed82",
+        "duration": 3.5939999999973224,
+        "asr": {
+          "text": "A cloud floats by.",
+          "transcript": "A cloud floats by.",
+          "wordSequenceEqual": true
+        },
+        "run": "target/lifecycle-validation/m4-pocket-independent-c11-r1"
+      }
+    ],
+    "coldSidecarTest": [
+      {
+        "phase": "cold",
+        "cache": [
+          {
+            "name": "audiocpp-gguf\\27f1fee20e7bbd38\\tokenizer.model",
+            "size": 59339,
+            "sha256": "d461765ae179566678c93091c5fa6f2984c31bbe990bf1aa62d92c64d91bc3f6"
+          }
+        ],
+        "sha256": "95828f4030c2f5dac1d0a79a1856bb70605a4341df876625c9dac386c5820721",
+        "trace": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-pocket-cold-sidecar-r1\\cold.log"
+      },
+      {
+        "phase": "warm",
+        "cache": [
+          {
+            "name": "audiocpp-gguf\\27f1fee20e7bbd38\\tokenizer.model",
+            "size": 59339,
+            "sha256": "d461765ae179566678c93091c5fa6f2984c31bbe990bf1aa62d92c64d91bc3f6"
+          }
+        ],
+        "sha256": "95828f4030c2f5dac1d0a79a1856bb70605a4341df876625c9dac386c5820721",
+        "trace": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-pocket-cold-sidecar-r1\\warm.log"
+      }
+    ],
+    "qualityObservation": "The independent Qwen3 ASR reproduced all three ordinary short sentences, including the held-out sentence. It transcribed the one-letter utterance I. as I. I.; the artificial 32-token upper-bound string was tested solely for resource shape.",
+    "conditionCatalog": {
+      "path": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-conditions.json",
+      "sha256": "aec0984fc1ed9c02c4a5b39d2f413eabbb3d5f102e5547144dd45cc067b5f79b",
+      "engineAndComponentIdentitySource": "23b532506f8001122e9370c323f0c301cd7991dcdb37be135e71dc9f146e677f",
+      "binding": "The typed rules reader validates the source-pinned catalog and resolves its anchor against verified registered measurement records. Runtime and component digests come from the reviewed record. Other engines or assets retain exact input and seed keys."
+    },
+    "reviewedMeasurements": [
+      {
+        "case": 7,
+        "record": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-7.json",
+        "sha256": "7d48aac2af0b65cee76e152cfa292125d882b1efdbcbcad6dbf63774c494bf75",
+        "effectiveText": "I.",
+        "seed": 0,
+        "snapshotDigest": "7233816072ee0707eb4f5233994a7b8023acfae27622f0ac7505bc9460f4db88",
+        "key": {
+          "kind": "tts",
+          "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+          "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+          "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+          "requiresGpu": false
+        },
+        "peakJobCommitBytes": 1752285184,
+        "summedWsBytes": 506478592,
+        "publishedSha256": "7d0fa62034051d9847be48aed30cdb8b3b82f66f9e6bf06c04aedcc8db6fa029",
+        "nativeElapsedMs": 1867,
+        "publicationElapsedMs": 13243,
+        "nativeDiskPeakBytes": 305187,
+        "publicationDiskPeakBytes": 1052434,
+        "reviewedBudget": {
+          "hostRamBytes": 2281701376,
+          "gpuMemory": [],
+          "temporaryOutputBytes": 1048576,
+          "publicationCopyBytes": 1048576,
+          "publicationScratchBytes": 3145728,
+          "outputByteLimit": 1048576,
+          "timeoutSeconds": 30
+        }
+      },
+      {
+        "case": 8,
+        "record": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-8.json",
+        "sha256": "94210025e8ee88265982544f106776aa67b2069744951952da94cab9aaa93331",
+        "effectiveText": "Hello there.",
+        "seed": 2147483648,
+        "snapshotDigest": "2f4790a30e47fe9642d272f3e727064911518f45784af497e8180ba3419481c5",
+        "key": {
+          "kind": "tts",
+          "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+          "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+          "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+          "requiresGpu": false
+        },
+        "peakJobCommitBytes": 1749893120,
+        "summedWsBytes": 505741312,
+        "publishedSha256": "d37b4ef20e6cdb8fcb6fed24cf0475e875a461ccf4025287bae602eedc82e7e0",
+        "nativeElapsedMs": 2054,
+        "publicationElapsedMs": 13333,
+        "nativeDiskPeakBytes": 305187,
+        "publicationDiskPeakBytes": 1052434,
+        "reviewedBudget": {
+          "hostRamBytes": 2281701376,
+          "gpuMemory": [],
+          "temporaryOutputBytes": 1048576,
+          "publicationCopyBytes": 1048576,
+          "publicationScratchBytes": 3145728,
+          "outputByteLimit": 1048576,
+          "timeoutSeconds": 30
+        }
+      },
+      {
+        "case": 9,
+        "record": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-9.json",
+        "sha256": "178a3f33adf1457ca833cfec838f2ca4cc1ec38d50ed8c30507be6b88f965dd3",
+        "effectiveText": "Fresh blue rain falls now.",
+        "seed": 4294967295,
+        "snapshotDigest": "eb6d48f22a3e43f4b0613c9baf7f0f61d53d321ae772ba9a4efc1c1917ead926",
+        "key": {
+          "kind": "tts",
+          "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+          "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+          "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+          "requiresGpu": false
+        },
+        "peakJobCommitBytes": 1750360064,
+        "summedWsBytes": 505765888,
+        "publishedSha256": "64c039c994952504e27ff8f65844f7c5c3b6657d3b6c12f2a36f6dcf74524937",
+        "nativeElapsedMs": 2033,
+        "publicationElapsedMs": 7668,
+        "nativeDiskPeakBytes": 305187,
+        "publicationDiskPeakBytes": 1052434,
+        "reviewedBudget": {
+          "hostRamBytes": 2281701376,
+          "gpuMemory": [],
+          "temporaryOutputBytes": 1048576,
+          "publicationCopyBytes": 1048576,
+          "publicationScratchBytes": 3145728,
+          "outputByteLimit": 1048576,
+          "timeoutSeconds": 30
+        }
+      },
+      {
+        "case": 10,
+        "record": "crates/lumina-local-inference/src/lifecycle/task_resources/pocket-tts-cpu-case-10.json",
+        "sha256": "23b532506f8001122e9370c323f0c301cd7991dcdb37be135e71dc9f146e677f",
+        "effectiveText": "QQKWKWKKWQJXWZWJXKWWJXQZQZWZWK.",
+        "seed": 17,
+        "snapshotDigest": "c0b9f147c9ab8826fc167b2765126e9da964d762956253bef6d1a035b2db8286",
+        "key": {
+          "kind": "tts",
+          "runtimeDigest": "49217e95b57dd8d19e8b472cefbee538419e5ba3b044b888d20bcec15173ddd2",
+          "componentsDigest": "1eb7ab8d2cbdf35cbce2e02baafcf28eecbe76b6e2a5498176fd0b5557de0334",
+          "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+          "requiresGpu": false
+        },
+        "peakJobCommitBytes": 1751220224,
+        "summedWsBytes": 507490304,
+        "publishedSha256": "78b681b7cfddc720a259ebd629e4d5e55cac39a9d2bdcc2aa135945ddaf62af2",
+        "nativeElapsedMs": 1726,
+        "publicationElapsedMs": 6995,
+        "nativeDiskPeakBytes": 305187,
+        "publicationDiskPeakBytes": 1052434,
+        "reviewedBudget": {
+          "hostRamBytes": 2281701376,
+          "gpuMemory": [],
+          "temporaryOutputBytes": 1048576,
+          "publicationCopyBytes": 1048576,
+          "publicationScratchBytes": 3145728,
+          "outputByteLimit": 1048576,
+          "timeoutSeconds": 30
+        }
+      }
+    ],
+    "buildEvidence": [
+      {
+        "case": 7,
+        "binarySourceDifferences": {},
+        "ownerSourceDifferences": {},
+        "publicationHostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 8,
+        "binarySourceDifferences": {},
+        "ownerSourceDifferences": {},
+        "publicationHostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 9,
+        "binarySourceDifferences": {},
+        "ownerSourceDifferences": {},
+        "publicationHostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 10,
+        "binarySourceDifferences": {},
+        "ownerSourceDifferences": {},
+        "publicationHostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      }
+    ],
+    "budgetPolicy": "Same group-wise worst observed whole-tree memory and time policy as the exact cases. Include the separately verified 59,339-byte cold tokenizer sidecar in temporary storage before doubling/rounding up and track publication-copy and scratch independently.",
+    "productionReplays": [
+      {
+        "case": 11,
+        "heldOut": true,
+        "text": "A cloud floats by.",
+        "seed": 123456,
+        "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+        "snapshotDigest": "583827800473d161d6bd0c4af5236a5e90693adf349a2af8df4abcf71e015f90",
+        "resultId": "30112750-2b0f-861a-9644-bf0f7826b6fb",
+        "mime": "audio/wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 2560000,
+          "sampleRate": 24000,
+          "channels": 1,
+          "sampleFrames": 61440
+        },
+        "wav": "target/lifecycle-validation/m4-pocket-production-c11-r10/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/30112750-2b0f-861a-9644-bf0f7826b6fb.wav",
+        "wavSha256": "0a8972407031cbb12e16ab49c4d5afc06700f4242a751a91da36b840baa39fcf",
+        "evidence": "target/lifecycle-validation/m4-pocket-production-c11-r10/production.json",
+        "evidenceSha256": "45f41a12f7e8a984048cf411a7fdd6145614605fbf941331f69dbbb9e63fafa1",
+        "hostSha256": "d3417e39a538a63ab1c4910237d4442c3b0ad78b53bacc5f01701febe1084664",
+        "reopenedVerified": true,
+        "outOfDomainTextRejected": true
+      },
+      {
+        "case": 7,
+        "heldOut": false,
+        "text": "I.",
+        "seed": 0,
+        "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+        "snapshotDigest": "94328a1475cb7acd7d242d27a44de8a487bdd784233713040c405d3311cc9e3b",
+        "resultId": "cb2831c7-9c90-86f1-8a1b-cab4bd46e527",
+        "mime": "audio/wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 2560000,
+          "sampleRate": 24000,
+          "channels": 1,
+          "sampleFrames": 61440
+        },
+        "wav": "target/lifecycle-validation/m4-pocket-production-c7-r10/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/cb2831c7-9c90-86f1-8a1b-cab4bd46e527.wav",
+        "wavSha256": "7d0fa62034051d9847be48aed30cdb8b3b82f66f9e6bf06c04aedcc8db6fa029",
+        "evidence": "target/lifecycle-validation/m4-pocket-production-c7-r10/production.json",
+        "evidenceSha256": "f75f2a924b8cf322c3797331665505ac761a714c35eea72766199270f1de3b30",
+        "hostSha256": "d3417e39a538a63ab1c4910237d4442c3b0ad78b53bacc5f01701febe1084664",
+        "reopenedVerified": true,
+        "outOfDomainTextRejected": true
+      },
+      {
+        "case": 8,
+        "heldOut": false,
+        "text": "Hello there.",
+        "seed": 2147483648,
+        "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+        "snapshotDigest": "17cf7ed6cc1ef766b40aae2d99b94da957a32982272832f6386cd6bd4d586e0a",
+        "resultId": "2318a937-2ee1-8b77-8e6f-1df43949200d",
+        "mime": "audio/wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 2560000,
+          "sampleRate": 24000,
+          "channels": 1,
+          "sampleFrames": 61440
+        },
+        "wav": "target/lifecycle-validation/m4-pocket-production-c8-r10/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/2318a937-2ee1-8b77-8e6f-1df43949200d.wav",
+        "wavSha256": "d37b4ef20e6cdb8fcb6fed24cf0475e875a461ccf4025287bae602eedc82e7e0",
+        "evidence": "target/lifecycle-validation/m4-pocket-production-c8-r10/production.json",
+        "evidenceSha256": "6daf458f049df9d6e3708395fdc2bde9420c9621032b8dd622b3ec54ef5713b9",
+        "hostSha256": "d3417e39a538a63ab1c4910237d4442c3b0ad78b53bacc5f01701febe1084664",
+        "reopenedVerified": true,
+        "outOfDomainTextRejected": true
+      },
+      {
+        "case": 9,
+        "heldOut": false,
+        "text": "Fresh blue rain falls now.",
+        "seed": 4294967295,
+        "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+        "snapshotDigest": "a85b0bca1b7eb4c0b0d56369bb83bfbe5ef2d9fb3d5fd6756c53909480eaf1a3",
+        "resultId": "5c29e488-3696-8d50-a44a-d0cf8c7df35d",
+        "mime": "audio/wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 2560000,
+          "sampleRate": 24000,
+          "channels": 1,
+          "sampleFrames": 61440
+        },
+        "wav": "target/lifecycle-validation/m4-pocket-production-c9-r10/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/5c29e488-3696-8d50-a44a-d0cf8c7df35d.wav",
+        "wavSha256": "64c039c994952504e27ff8f65844f7c5c3b6657d3b6c12f2a36f6dcf74524937",
+        "evidence": "target/lifecycle-validation/m4-pocket-production-c9-r10/production.json",
+        "evidenceSha256": "6fefe6d7ca303169988523c3c70c8decda088dc34a9306f27233ca918d3b3329",
+        "hostSha256": "d3417e39a538a63ab1c4910237d4442c3b0ad78b53bacc5f01701febe1084664",
+        "reopenedVerified": true,
+        "outOfDomainTextRejected": true
+      },
+      {
+        "case": 10,
+        "heldOut": false,
+        "text": "QQKWKWKKWQJXWZWJXKWWJXQZQZWZWK.",
+        "seed": 17,
+        "workloadDigest": "2cd8d699867c9f22bb0a3fe6e0c6ab04695b5edc7432135e12c7e69a2a2bca5c",
+        "snapshotDigest": "dfb9c6b527f39d3cb30d3dd364140d2a3ae9802e0569c5e6ef08773ba1296e4a",
+        "resultId": "5d352d0b-8788-8174-a7ff-3c25520ad553",
+        "mime": "audio/wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 2560000,
+          "sampleRate": 24000,
+          "channels": 1,
+          "sampleFrames": 61440
+        },
+        "wav": "target/lifecycle-validation/m4-pocket-production-c10-r10/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/5d352d0b-8788-8174-a7ff-3c25520ad553.wav",
+        "wavSha256": "78b681b7cfddc720a259ebd629e4d5e55cac39a9d2bdcc2aa135945ddaf62af2",
+        "evidence": "target/lifecycle-validation/m4-pocket-production-c10-r10/production.json",
+        "evidenceSha256": "c9821a067ae154748ea649915d775f97dfaa012729ec7c67f94f446b7ec28a8f",
+        "hostSha256": "d3417e39a538a63ab1c4910237d4442c3b0ad78b53bacc5f01701febe1084664",
+        "reopenedVerified": true,
+        "outOfDomainTextRejected": true
+      }
+    ]
+  },
+  "categoricalLimitations": {
+    "defaultFrameBudget": "maxFrames=0 or framesAfterEos=-1 depends on content and stopping. The current implementation preserves exact text, seed and other parameters.",
+    "fixedFrameBudget": "Within the reviewed single-sentence spelling and measured 32-step shape, new input text and seed share the same bound. The separate original 33-character utterance may vary seed. All remaining parameters, the reference voice and actual asset/runtime identities stay bound.",
+    "hardware": "The reviewed six records currently require the same observed Windows CPU hardware identity, total RAM and exact model/spec/engine identities.",
+    "quality": "Clipping, non-silence, and independent transcription are tracked separately from memory and disk checks."
+  },
+  "ordinaryProductionReplay": {
+    "status": "passed_six_r9_positive_and_negative_replays",
+    "firstRequest": "The red apple is on the wooden table.",
+    "productionEvidence": "target\\lifecycle-validation\\m4-pocket-production-c1-r8\\host.stderr.log",
+    "nativeDiagnosis": "When Windows private TEMP is passed as a canonical verbatim path the engine appends a literal dot component to the model root and reports missing model root. The identical model, binary, options and input succeeded in a fresh ordinary-drive-path scratch directory. The native owner is being corrected and the results must be replayed.",
+    "controlledComparisons": [
+      "target\\lifecycle-validation\\m4-pocket-production-path-triage-r1\\extended\\report.json",
+      "target\\lifecycle-validation\\m4-pocket-production-path-triage-r1\\ordinary\\report.json"
+    ],
+    "r8FailureStatus": "failed_before_native_output_on_r8",
+    "productionTempFixSourceSha256": "9e1ff5b6f71afd8d66abd5672a807cbcf5fdba0edce00bab5769c442ff5a3ed7",
+    "results": [
+      {
+        "case": 1,
+        "output": "target/lifecycle-validation/m4-pocket-production-c1-r9/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/85b7591f-9987-82ef-8434-a14dfaafc16e.wav",
+        "media": "85b7591f-9987-82ef-8434-a14dfaafc16e",
+        "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+        "durationMicros": 2400000,
+        "configuredSeed": 42,
+        "snapshotDigest": "1063a0056129b9250cc840e304f5185720719386cba1d7444db26475baa33047",
+        "productionEvidence": "target/lifecycle-validation/m4-pocket-production-c1-r9/production.json",
+        "productionEvidenceSha256": "ebaf78a508409ea2089c4dbb8b25e02db22ebc27869c0fa4ae5bcb8c13184295",
+        "hostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 2,
+        "output": "target/lifecycle-validation/m4-pocket-production-c2-r9/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/45d4ce8f-530a-87ce-b38e-bf34942ec091.wav",
+        "media": "45d4ce8f-530a-87ce-b38e-bf34942ec091",
+        "sha256": "1336813694b74bfd39f1ffaa0559c741ece15df68c097e7df01c59448eef14c9",
+        "durationMicros": 2160000,
+        "configuredSeed": 42,
+        "snapshotDigest": "a7709ad156a7674b0fa597d4089637194a74a437e824d8d5afdbc9d4ddca17ce",
+        "productionEvidence": "target/lifecycle-validation/m4-pocket-production-c2-r9/production.json",
+        "productionEvidenceSha256": "39fc5e133e99e9ff3947bdd0ef0fb96d3ffde468c0e03218231466b08006b901",
+        "hostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 3,
+        "output": "target/lifecycle-validation/m4-pocket-production-c3-r9/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/a27bd1cd-e8e0-8e70-b5ac-1f8dae439f31.wav",
+        "media": "a27bd1cd-e8e0-8e70-b5ac-1f8dae439f31",
+        "sha256": "3ac5e45d8af3f60c6bff8c1044b00f87effd5fc4ee41a5a765112af11a6d2405",
+        "durationMicros": 5600000,
+        "configuredSeed": 42,
+        "snapshotDigest": "2a4e7c83537d598a4e3146863400ddf6e192a18f5e6c0b89c09f9d7179dc99a2",
+        "productionEvidence": "target/lifecycle-validation/m4-pocket-production-c3-r9/production.json",
+        "productionEvidenceSha256": "917b48d2d0adecbf4e2ca63d45f8a9c8b77eb8b0c46ea3b7f1b73d53ba56aeff",
+        "hostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 4,
+        "output": "target/lifecycle-validation/m4-pocket-production-c4-r9/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/68fc1632-5ad3-8e1a-8a5a-f74a0890656b.wav",
+        "media": "68fc1632-5ad3-8e1a-8a5a-f74a0890656b",
+        "sha256": "e8fdf08b26ddfb240c9f86a7f286f509993992409b84dc08c9654b8ca4d41681",
+        "durationMicros": 2560000,
+        "configuredSeed": 0,
+        "snapshotDigest": "cbd36a3422653224cea012c9b879ed07149a90b5b20dc1ad73da38cae8a859f6",
+        "productionEvidence": "target/lifecycle-validation/m4-pocket-production-c4-r9/production.json",
+        "productionEvidenceSha256": "91eb61271e61eb721269fee2ce3fdd579f2a21fe537b832c06a4a236d7b3e1e9",
+        "hostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 5,
+        "output": "target/lifecycle-validation/m4-pocket-production-c5-r9/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/30e26236-9f85-8026-92e4-03d2eea19c9e.wav",
+        "media": "30e26236-9f85-8026-92e4-03d2eea19c9e",
+        "sha256": "238f70002737901c32a9568d08bd28877a866a615c4f8df78b4cd99a1c994c69",
+        "durationMicros": 2560000,
+        "configuredSeed": 2147483648,
+        "snapshotDigest": "258d657a0ed70ac3cc54e337dfc228063fccb98a6ebaa165e73ed0a8f88f1c36",
+        "productionEvidence": "target/lifecycle-validation/m4-pocket-production-c5-r9/production.json",
+        "productionEvidenceSha256": "82615b5527b91e2700b4d39424bdc025e146940c8c1a4060d4fadaf5675c1574",
+        "hostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      },
+      {
+        "case": 6,
+        "output": "target/lifecycle-validation/m4-pocket-production-c6-r9/output-root/publication/outputs/id-7265736f757263652d70726f62652d73657373696f6e/id-6d656173757265/dd6d4e64-19f4-8418-b49c-87c587fe0a24.wav",
+        "media": "dd6d4e64-19f4-8418-b49c-87c587fe0a24",
+        "sha256": "55d3b5145870849bdd1eb53333cb665ac8c9ae931f1d578caf7ab4a1f3f0182e",
+        "durationMicros": 2560000,
+        "configuredSeed": 4294967295,
+        "snapshotDigest": "0b8c556a5fedcf70242b0a36c8ad28338fc1a07267cb3f2771cce25c3ff45169",
+        "productionEvidence": "target/lifecycle-validation/m4-pocket-production-c6-r9/production.json",
+        "productionEvidenceSha256": "f0e2f13845690e2d4fec89926210389ba319df7102a0f95852623712dd9ad88b",
+        "hostSha256": "0a374a9f4a8ca086d28ffb71f8bd4a12e65e835956d9ddf52071c501eb35049e"
+      }
+    ]
+  }
+}

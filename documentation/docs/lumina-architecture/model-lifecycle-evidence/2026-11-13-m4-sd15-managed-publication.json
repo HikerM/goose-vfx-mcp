@@ -1,6 +1,6 @@
 {
   "date": "2026-11-13",
-  "status": "managed_owner_and_publication_passed_previous_build",
+  "status": "production_native_chat_tool_passed_for_measured_profile",
   "installationId": "acceptance-sd15",
   "versionId": "version:acceptance-sd15",
   "manifestDigest": "d98d66eced5b91efa52839b0b5f019256d2d3d34ba2d937f62d5f31201f0bb7c",
@@ -93,5 +93,65 @@
     "lifecycle.stdout.log": "195ceb13fbb75e7ef540ca6d946353c25a5ca26b36dd742eea6681fa3893d209",
     "tree.jsonl": "caa9df8e86cf89be07afb56d807de076ffcabf8ccac03d9e656bfcb876e661ff"
   },
-  "scope": "The installed adapter produced a PNG identical to the pinned CLI output and reopened it through the managed session media database. This run used a bounded test receipt. Its source comparison rejected resource registration after production sources changed. Production chat invocation requires a reviewed current-build record."
+  "scope": "The native_tasks__run chat extension produced and reopened a real session PNG for the recorded installed model, exact prompt, seed, 512x512 geometry and 20-step CPU profile. Other image workloads and desktop UI interaction require their own verification.",
+  "currentBuild": {
+    "evidenceDirectory": "target/lifecycle-validation/m4-sd15-job-image-20261113-r2",
+    "trustedRecordCandidate": "crates/lumina-local-inference/src/lifecycle/task_resources/sd15-cpu-512-euler-a.json",
+    "trustedRecordSha256": "aac4362892ac3c7bd151a9f7cec264a8c0217eec84f18b791ae6e96085154f29",
+    "hostAndOwnerSourcesMatchCheckout": true,
+    "measuredHostPeakBytes": 4144312320,
+    "reviewedBudget": {
+      "hostRamBytes": 5234491392,
+      "gpuMemory": [],
+      "temporaryOutputBytes": 2097152,
+      "publicationCopyBytes": 2097152,
+      "publicationScratchBytes": 3145728,
+      "outputByteLimit": 2097152,
+      "timeoutSeconds": 1260
+    },
+    "margins": "25 percent host above the observed maximum rounded to 64 MiB; twice observed disk rounded to MiB; twice the slower full lifecycle rounded to minutes.",
+    "processCount": 5,
+    "jobCommitBytes": 4114046976,
+    "summedPeakWorkingSetBytes": 3960426496,
+    "nativeMillis": 228959,
+    "hostMillis": 326211,
+    "publishedPath": "id-32303236313131335f31/id-6e61746976653a61383863663937623134343863633033383637346164333731313565366433333262356132636362663465313335623337666336373236373631653466383537/499ae5f8-1048-812a-ba1c-94ca8a16d0a1.png",
+    "publishedPngSha256": "bf81e68d0129b2b1cc7534abf5a1b10ba2b45ab3dc0e4f4313d0306a6a0245b7",
+    "publishedBytes": 467679,
+    "reopened": true,
+    "artifacts": {
+      "fixture.json": "4046327bba57d75e660fa00148ba5d651490fb2457ed305361c5577ce936e5c2",
+      "driver.json": "c7d4728ef9ef8e0af38b6c8180c7082e5aa910d1296d8adbf31da97786c4a483",
+      "publication.json": "480d739be7ce30c41ff716e3f470c3cb8ca46567fc97f88e7384d422dcdae3c0",
+      "owner.json": "a3346d1aedd372c0a9488cd590a9ee412db0ba70b598eaa35c4059a6a49e2709",
+      "tree.jsonl": "aecdf6854618ee2ba46ffc4e72de25a360fa7d91382886482c414bb2972e0ce6"
+    }
+  },
+  "productionTool": {
+    "tool": "native_tasks__run",
+    "runDirectory": "target/lifecycle-validation/m4-sd15-production-tool-20261113-r1",
+    "testExecutableSha256": "d3417e39a538a63ab1c4910237d4442c3b0ad78b53bacc5f01701febe1084664",
+    "resourceRecordSha256": "aac4362892ac3c7bd151a9f7cec264a8c0217eec84f18b791ae6e96085154f29",
+    "toolResponseSha256": "967bbc88a31bb878aaff0e1a405f5027f235a5d095b34edc562d01e7f737768e",
+    "resultId": "499ae5f8-1048-812a-ba1c-94ca8a16d0a1",
+    "sessionId": "20261113_1",
+    "jobId": "native:a88cf97b1448cc038674ad37115e6d332b5a2ccbf4e135b37fc6726761e4f857",
+    "association": {
+      "associationKind": "tool_call",
+      "toolCallId": "sd15-image-request"
+    },
+    "uri": "lumina-media://result/499ae5f8-1048-812a-ba1c-94ca8a16d0a1",
+    "relativeMediaPath": "id-32303236313131335f31/id-6e61746976653a61383863663937623134343863633033383637346164333731313565366433333262356132636362663465313335623337666336373236373631653466383537/499ae5f8-1048-812a-ba1c-94ca8a16d0a1.png",
+    "width": 512,
+    "height": 512,
+    "reopenedVerified": true,
+    "sha256": "bf81e68d0129b2b1cc7534abf5a1b10ba2b45ab3dc0e4f4313d0306a6a0245b7",
+    "bytes": 467679,
+    "sameSnapshotAndBytesAsMeasured": true,
+    "verifiedFinalGenerationSources": {
+      "compile.rs": "8d0730a3ab1bc95eb663ada04e0da57facd3023150ec7831c3d8ab06172df928",
+      "inventory.rs": "4d727e11279874fbf8f57f112f6fadb72a167b57edcd4d6335e9e29b80c7f363"
+    },
+    "snapshotDigest": "b7b1bbb98be009afc2e323c606b82ccf9e690672956852bd71fc7cd1c4dbca64"
+  }
 }
