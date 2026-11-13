@@ -3,6 +3,7 @@ import { Recipe } from './recipe';
 import type { LuminaApp } from './types/apps';
 import type { Settings, SettingKey } from './utils/settings';
 import { defaultSettings } from './utils/settings';
+import type { DesktopMediaAPI } from './types/desktopMedia';
 
 // Mapping from settings keys to their old localStorage keys for lazy migration
 const localStorageKeyMap: Partial<Record<SettingKey, string>> = {
@@ -114,7 +115,7 @@ export interface CreateChatWindowOptions {
 }
 
 // Define the API types in a single place
-type ElectronAPI = {
+type ElectronAPI = DesktopMediaAPI & {
   platform: string;
   arch: string;
   reactReady: () => void;
@@ -206,6 +207,10 @@ type AppConfigAPI = {
 };
 
 const electronAPI: ElectronAPI = {
+  mediaOpen: (identity) => ipcRenderer.invoke('media-open', identity),
+  mediaPreview: (request) => ipcRenderer.invoke('media-preview', request),
+  mediaAction: (request) => ipcRenderer.invoke('media-action', request),
+  mediaClose: (handleId) => ipcRenderer.invoke('media-close', handleId),
   platform: process.platform,
   arch: process.arch,
   reactReady: () => ipcRenderer.send('react-ready'),

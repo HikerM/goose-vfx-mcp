@@ -3,6 +3,7 @@ import {
   app,
   App,
   BrowserWindow,
+  clipboard,
   dialog,
   globalShortcut,
   ipcMain,
@@ -12,6 +13,7 @@ import {
   Notification,
   powerMonitor,
   powerSaveBlocker,
+  protocol,
   screen,
   session,
   shell,
@@ -64,8 +66,23 @@ import type { LuminaApp } from './types/apps';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { BLOCKED_PROTOCOLS, WEB_PROTOCOLS } from './utils/urlSecurity';
 import { buildCSP } from './utils/csp';
+import { DesktopMediaBridge } from './desktopMediaBridge';
+import type { DesktopMediaActionRequest, DesktopMediaPreviewRequest } from './types/desktopMedia';
+import type { MediaResultIdentity } from './components/media/types';
 
 app.setName('Lumina');
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'lumina-media',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+    },
+  },
+]);
 
 // =======================================================================
 // Native menu localization
@@ -945,6 +962,89 @@ const windowMap = new Map<number, BrowserWindow>();
 const appWindows = new Map<string, BrowserWindow>();
 
 const luminaServeLeases = new LuminaServeLeaseRegistry(log);
+let desktopMediaBridge: DesktopMediaBridge | null = null;
+
+async function initializeDesktopMedia(): Promise<void> {
+  const networkSession = session.fromPartition('lumina-media-network');
+  networkSession.setCertificateVerifyProc((request, callback) => {
+    if (!isTrustedHost(request.hostname)) {
+      callback(-3);
+      return;
+    }
+    callback(verifyBackendCertificate(request.hostname, request.certificate.fingerprint) ? 0 : -2);
+  });
+  const proxyUrl =
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy ||
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy;
+  if (proxyUrl)
+    await networkSession.setProxy({
+      proxyRules: proxyUrl,
+      proxyBypassRules: process.env.NO_PROXY || process.env.no_proxy || '',
+    });
+  const bridge = new DesktopMediaBridge({
+    getLease: (windowId) => luminaServeLeases.get(windowId),
+    fetch: (url, init) => networkSession.fetch(url, init),
+    chooseSavePath: async (windowId, fileName) => {
+      const window = BrowserWindow.fromId(windowId);
+      if (!window || window.isDestroyed()) throw new Error('Media access is unavailable.');
+      const result = await dialog.showSaveDialog(window, {
+        defaultPath: fileName,
+        properties: ['showOverwriteConfirmation', 'createDirectory', 'dontAddToRecent'],
+      });
+      return result.canceled ? null : (result.filePath ?? null);
+    },
+    openPath: (filePath) => shell.openPath(filePath),
+    revealPath: (filePath) => shell.showItemInFolder(filePath),
+    copyPath: (filePath) => clipboard.writeText(filePath),
+  });
+  desktopMediaBridge = bridge;
+  const rendererSession = session.fromPartition('persist:lumina');
+  rendererSession.webRequest.onBeforeRequest(
+    { urls: ['lumina-media://*/*'] },
+    (details, callback) => {
+      const contents = details.webContents;
+      const window = contents && BrowserWindow.fromWebContents(contents);
+      const allowed =
+        !!contents &&
+        !contents.isDestroyed() &&
+        !!window &&
+        !window.isDestroyed() &&
+        details.frame === contents.mainFrame &&
+        isTrustedAppUrl(contents.getURL(), getAppUrl().toString()) &&
+        bridge.authorizeProtocol(details.url, window.id);
+      callback({ cancel: !allowed });
+    }
+  );
+  rendererSession.protocol.handle('lumina-media', (request) => bridge.serve(request));
+  app.on('browser-window-created', (_event, window) => {
+    const windowId = window.id;
+    window.on('closed', () => bridge.closeWindow(windowId));
+    window.webContents.on('did-start-navigation', (_event, _url, isInPlace, isMainFrame) => {
+      if (isMainFrame && !isInPlace) bridge.closeWindow(windowId);
+    });
+    window.webContents.on('render-process-gone', () => bridge.closeWindow(windowId));
+  });
+}
+
+function trustedMediaWindow(event: IpcMainInvokeEvent): number {
+  if (!desktopMediaBridge || !isTrustedRendererSender(event))
+    throw new Error('Media access is unavailable.');
+  return BrowserWindow.fromWebContents(event.sender)!.id;
+}
+ipcMain.handle('media-open', (event, identity: MediaResultIdentity) =>
+  desktopMediaBridge!.open(trustedMediaWindow(event), identity)
+);
+ipcMain.handle('media-preview', (event, request: DesktopMediaPreviewRequest) =>
+  desktopMediaBridge!.preview(trustedMediaWindow(event), request)
+);
+ipcMain.handle('media-action', (event, request: DesktopMediaActionRequest) =>
+  desktopMediaBridge!.action(trustedMediaWindow(event), request)
+);
+ipcMain.handle('media-close', (event, handleId: string) =>
+  desktopMediaBridge!.close(trustedMediaWindow(event), handleId)
+);
 
 const windowPowerSaveBlockers = new Map<number, number>(); // windowId -> blockerId
 // Track pending initial messages per window
@@ -1268,7 +1368,7 @@ const createChat = async (
     luminaServeLease = null;
   }
 
-  if (!app.isPackaged) {
+  if (!app.isPackaged && process.env.ENABLE_PLAYWRIGHT !== 'true') {
     installExtension(REACT_DEVELOPER_TOOLS, {
       loadExtensionOptions: { allowFileAccess: true },
       session: mainWindow.webContents.session,
@@ -2660,6 +2760,7 @@ async function appMain() {
   });
 
   await configureProxy();
+  await initializeDesktopMedia();
 
   // Ensure Windows shims are available before any MCP processes are spawned
   if (process.platform === 'win32' && desktopLuminaPathRoot) {

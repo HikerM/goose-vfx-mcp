@@ -5101,5 +5101,71 @@
   },
   "navigation.itemMcpCenter": {
     "defaultMessage": "MCP 中心"
+  },
+  "mediaResult.previewUnavailable": {
+    "defaultMessage": "此结果暂时无法预览。"
+  },
+  "mediaResult.loading": {
+    "defaultMessage": "正在加载预览…"
+  },
+  "mediaResult.previewError": {
+    "defaultMessage": "无法预览此文件，可能是格式不受支持或文件已损坏。"
+  },
+  "mediaResult.publishing": {
+    "defaultMessage": "正在保存并登记文件。"
+  },
+  "mediaResult.missing": {
+    "defaultMessage": "结果文件已丢失。"
+  },
+  "mediaResult.accessDenied": {
+    "defaultMessage": "没有访问结果文件的权限。"
+  },
+  "mediaResult.tampered": {
+    "defaultMessage": "结果文件已被修改或损坏。"
+  },
+  "mediaResult.unsafePath": {
+    "defaultMessage": "无法验证结果文件的位置。"
+  },
+  "mediaResult.unsupportedFormat": {
+    "defaultMessage": "暂不支持此媒体格式。"
+  },
+  "mediaResult.ioUnavailable": {
+    "defaultMessage": "结果文件暂时无法访问。"
+  },
+  "mediaResult.open": {
+    "defaultMessage": "打开文件"
+  },
+  "mediaResult.reveal": {
+    "defaultMessage": "在文件夹中显示"
+  },
+  "mediaResult.copyPath": {
+    "defaultMessage": "复制路径"
+  },
+  "mediaResult.saveAs": {
+    "defaultMessage": "另存为"
+  },
+  "mediaResult.actionBusy": {
+    "defaultMessage": "正在{action}…"
+  },
+  "mediaResult.actionCompleted": {
+    "defaultMessage": "{action}：已完成。"
+  },
+  "mediaResult.actionCancelled": {
+    "defaultMessage": "{action}：已取消。"
+  },
+  "mediaResult.actionFailed": {
+    "defaultMessage": "{action}：失败。"
+  },
+  "mediaResult.channels": {
+    "defaultMessage": "{count} 声道"
+  },
+  "mediaResult.readError": {
+    "defaultMessage": "无法加载此媒体结果。"
+  },
+  "mediaResult.notFound": {
+    "defaultMessage": "此媒体结果已不在登记记录中。"
+  },
+  "mediaResult.retry": {
+    "defaultMessage": "重试"
   }
 }

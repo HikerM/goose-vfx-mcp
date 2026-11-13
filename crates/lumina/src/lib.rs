@@ -27,6 +27,7 @@ pub mod logging;
 pub mod lumina_apps;
 pub mod mcp_platform;
 pub mod mcp_utils;
+pub mod media;
 pub mod model_config;
 pub mod oauth;
 pub mod permission;

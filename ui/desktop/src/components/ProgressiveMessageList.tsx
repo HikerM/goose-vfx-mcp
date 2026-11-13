@@ -270,15 +270,17 @@ export default function ProgressiveMessageList({
         const previousResolvedModel = currentResolvedModel ? getPreviousResolvedModel(index) : null;
         const showModelChangeDisclosure = Boolean(
           currentResolvedModel &&
-            previousResolvedModel &&
-            currentResolvedModel !== previousResolvedModel
+          previousResolvedModel &&
+          currentResolvedModel !== previousResolvedModel
         );
 
         const messageKey = message.id ?? `msg-${index}-${message.created}`;
 
         return (
           <Fragment key={messageKey}>
-            {showModelChangeDisclosure && currentResolvedModel && previousResolvedModel &&
+            {showModelChangeDisclosure &&
+              currentResolvedModel &&
+              previousResolvedModel &&
               renderModelChangeDisclosure(previousResolvedModel, currentResolvedModel)}
             <div
               className={`relative ${index === 0 ? 'mt-0' : 'mt-4'} ${isUser ? 'user' : 'assistant'} ${messageIsInChain ? 'in-chain' : ''}`}
@@ -286,7 +288,11 @@ export default function ProgressiveMessageList({
             >
               {isUser ? (
                 !hasOnlyToolResponses(message) && (
-                  <UserMessage message={message} onMessageUpdate={onMessageUpdate} />
+                  <UserMessage
+                    sessionId={chat.sessionId}
+                    message={message}
+                    onMessageUpdate={onMessageUpdate}
+                  />
                 )
               ) : (
                 <LuminaMessage

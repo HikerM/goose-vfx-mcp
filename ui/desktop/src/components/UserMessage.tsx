@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ImagePreview from './ImagePreview';
 import AudioPreview from './AudioPreview';
+import MediaResourceLink from './media/MediaResourceLink';
 import MarkdownContent from './MarkdownContent';
-import { getAudioContent, getTextAndImageContent, type Message } from '../types/message';
+import {
+  getAudioContent,
+  getResourceLinks,
+  getTextAndImageContent,
+  type Message,
+} from '../types/message';
 import MessageCopyLink from './MessageCopyLink';
 import { formatMessageTimestamp } from '../utils/timeUtils';
 import Edit from './icons/Edit';
@@ -74,11 +80,12 @@ const i18n = defineMessages({
 });
 
 interface UserMessageProps {
+  sessionId?: string;
   message: Message;
   onMessageUpdate?: (messageId: string, newContent: string, editType?: 'fork' | 'edit') => void;
 }
 
-export default function UserMessage({ message, onMessageUpdate }: UserMessageProps) {
+export default function UserMessage({ message, onMessageUpdate, sessionId }: UserMessageProps) {
   const intl = useIntl();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -88,6 +95,7 @@ export default function UserMessage({ message, onMessageUpdate }: UserMessagePro
 
   const { textContent, imagePaths } = getTextAndImageContent(message);
   const audioContent = getAudioContent(message);
+  const resourceLinks = getResourceLinks(message);
   const timestamp = formatMessageTimestamp(message.created);
 
   // Effect to handle message content changes and ensure persistence
@@ -265,7 +273,7 @@ export default function UserMessage({ message, onMessageUpdate }: UserMessagePro
           // Normal message display
           <div className="message flex justify-end w-full">
             <div
-              className={`flex-col min-w-0 max-w-[85%] ${audioContent.length > 0 ? 'w-full' : 'w-fit'}`}
+              className={`flex-col min-w-0 max-w-[85%] ${audioContent.length > 0 || resourceLinks.length > 0 ? 'w-full' : 'w-fit'}`}
             >
               <div className="flex flex-col group">
                 {textContent.trim() && (
@@ -290,14 +298,17 @@ export default function UserMessage({ message, onMessageUpdate }: UserMessagePro
                 {audioContent.map((audio, index) => (
                   <AudioPreview key={index} data={audio.data} mimeType={audio.mimeType} />
                 ))}
+                {resourceLinks.map((resource) => (
+                  <MediaResourceLink key={resource.uri} resource={resource} sessionId={sessionId} />
+                ))}
 
                 <div className="relative h-[22px] flex justify-end text-right">
                   <div className="absolute w-40 font-mono right-0 text-xs text-text-secondary pt-1 transition-all duration-200 group-hover:-translate-y-4 group-hover:opacity-0">
                     {timestamp}
                   </div>
                   <div className="absolute right-0 pt-1 flex items-center gap-2">
-                    {/* The text-only edit controller does not preserve audio content. */}
-                    {audioContent.length === 0 && (
+                    {/* The text-only edit controller does not preserve media references. */}
+                    {audioContent.length === 0 && resourceLinks.length === 0 && (
                       <button
                         onClick={handleEditClick}
                         onKeyDown={(e) => {

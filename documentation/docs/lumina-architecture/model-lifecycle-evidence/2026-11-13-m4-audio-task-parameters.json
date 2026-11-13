@@ -1,0 +1,69 @@
+{
+  "status": "PASS_PARAMETER_MODULE_SCOPE",
+  "recordedAt": "2026-11-13T03:22:03.683467+00:00",
+  "scope": "Independent typed PocketTTS English CPU and Qwen3-ASR 0.6B CPU parameter compilers, with regression of the earlier image/video parameter module. No native synthesis/transcription, resource admission or conversation execution performed.",
+  "sourceSha256": {
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters.rs": "1965df4dd5bc78a346a32456353099c4e39ca2c8edc6bf93cc01de3721418582",
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/profiles.rs": "e654c9f43821e8c2c35e14f457dbd599652ed660a33a71914c01ad1f3998b520",
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/services.rs": "65f6ab1e89b4f1d1ed7280cf017e1ca1d87d83a3507d08d7c8aa0806daa13ea3",
+    "crates/lumina-local-inference/tests/lifecycle_audio_task_parameters.rs": "cb5c1f181948e5e9f71bad1e96a8d7432bee952abcef16d9ce2682a892b6d5ee"
+  },
+  "testCommand": "bin/cargo.cmd test -p lumina-local-inference --test lifecycle_task_parameters --test lifecycle_audio_task_parameters --offline --locked",
+  "exitCode": 0,
+  "audioTestCount": 13,
+  "imageVideoTestCount": 15,
+  "testNames": [
+    "audio_profiles_match_independent_recorded_binary_weights_and_explicit_specs",
+    "changed_model_spec_runtime_capability_or_duplicate_artifact_is_rejected",
+    "qwen_language_context_token_limit_and_chunking_have_asr_specific_arguments",
+    "pocket_settings_are_passed_before_native_preparation_without_resource_promotion",
+    "pocket_voice_limit_rejects_excess_instead_of_enabling_native_truncation",
+    "qwen_whole_file_mode_has_no_ignored_duration_and_default_language_is_auto",
+    "nonfinite_and_invalid_numeric_requests_fail_before_serialization",
+    "typed_registries_select_independent_model_schemas_and_cannot_cross_resolve",
+    "inputs_are_session_scoped_canonical_and_bounded_without_claiming_file_verification",
+    "pocket_default_seed_is_concrete_and_snapshot_roundtrip_preserves_voice_and_settings",
+    "different_version_and_voice_produce_distinct_frozen_snapshots",
+    "native_option_like_text_is_rejected_but_shell_text_remains_one_literal",
+    "unsupported_unknown_and_cross_model_options_fail_instead_of_disappearing",
+    "a_different_task_adapter_does_not_inherit_diffusion_request_or_descriptor_types",
+    "invalid_geometry_nonfinite_cfg_and_implicit_asset_loading_fail_at_named_fields",
+    "model_switch_selects_a_new_schema_and_defaults_instead_of_reusing_image_options",
+    "unknown_options_and_unsupported_model_controls_are_not_silently_ignored",
+    "native_plan_has_symbolic_paths_and_never_interprets_prompt_as_shell",
+    "defaults_and_advanced_values_reach_native_arguments_without_resource_promotion",
+    "h3_native_fps_frame_alignment_and_duration_conflicts_are_rejected_without_clamping",
+    "variant_and_component_runtime_binding_cannot_be_swapped",
+    "profiles_match_independent_published_engine_and_weight_evidence",
+    "duration_only_patch_updates_frames_but_keeps_seed_and_resolution",
+    "snapshot_roundtrip_and_single_field_regeneration_preserve_inputs_seed_and_other_values",
+    "explicit_new_seed_is_recorded_once_and_inherited_on_later_regeneration",
+    "cross_session_model_change_unknown_target_and_tampered_snapshot_cannot_be_reused",
+    "reuse_rejects_nonfinite_duration_patches_instead_of_inheriting_parent_frames",
+    "reuse_rejects_nonfinite_cfg_patches_for_both_models_instead_of_inheriting"
+  ],
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-all-task-parameters-r2.log",
+    "sha256": "d1eed16c78df1dd18eb2a1825fc371f592b9b3939bf86da799b15385068f1452"
+  },
+  "crossReview": [
+    "Native CLI, model spec, preparation and run stages inspected; enabled options have actual consumers.",
+    "Pocket voice, seed, temperature and several generation settings require new native preparation.",
+    "Qwen language context/token limit and fixed/whole-file chunk mode use distinct fields; no H3 request or option inheritance."
+  ],
+  "priorFailure": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-all-task-parameters-r1.log",
+    "sha256": "3a688f14cccc7863eead27e8e29e2bc75fb832b024bd55ab1bb1805b87b20a37",
+    "audioPassed": 12,
+    "audioFailed": 1,
+    "imageVideoTestsRun": false,
+    "cause": "Serde internally tagged unit variant WholeFile ignored extra fields. Replaced with an empty struct variant, retaining the JSON shape and strengthening unknown-field and missing-field regression assertions."
+  },
+  "limitations": [
+    "Create-only: audio parent result patch is not implemented.",
+    "All prepared requests still need resource admission and trusted owner input resolution.",
+    "Native process owner, output publication and Agent/MCP conversation entrypoints remain unconnected.",
+    "Existing real audio quality evidence covers English only; declared native language options do not prove multilingual quality.",
+    "This record does not claim strict Clippy for the newly added audio module."
+  ]
+}

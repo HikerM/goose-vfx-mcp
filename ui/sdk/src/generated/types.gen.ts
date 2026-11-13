@@ -1437,6 +1437,134 @@ export type McpServerStdio = {
     } | null;
 };
 
+export type MediaAccessPurposeDto = 'preview' | 'open' | 'reveal' | 'copy_path' | 'save_as';
+
+export type MediaAccessRequest_unstable = {
+    sessionId: string;
+    resultId: string;
+    purpose: MediaAccessPurposeDto;
+};
+
+export type MediaAccessResponse_unstable = {
+    ticket: string;
+    expiresInMs: number;
+};
+
+export type MediaAssociationDto = {
+    messageId: string;
+    associationKind: 'message';
+} | {
+    toolCallId: string;
+    associationKind: 'tool_call';
+};
+
+export type MediaAvailabilityDto = 'available' | 'publishing' | 'missing' | 'access_denied' | 'tampered' | 'unsafe_path' | 'unsupported_format' | 'io_unavailable';
+
+export type MediaInputRefDto = {
+    messageId: string;
+    kind: 'message';
+} | {
+    resultId: string;
+    kind: 'media_result';
+} | {
+    sha256: string;
+    kind: 'content_digest';
+};
+
+export type MediaKindDto = 'image' | 'audio' | 'video';
+
+export type MediaOwnershipDto = 'application_generated' | 'application_imported';
+
+export type MediaReadRequest_unstable = {
+    sessionId: string;
+    /**
+     * Canonical UUID assigned when the result was reserved for publication.
+     */
+    resultId: string;
+};
+
+export type MediaReadResponse_unstable = {
+    result: MediaResultDto;
+    availability: MediaAvailabilityDto;
+    status: 'found';
+} | {
+    status: 'notFound';
+};
+
+export type MediaReleaseRequest_unstable = {
+    ticket: string;
+};
+
+export type MediaReleaseResponse_unstable = {
+    [key: string]: never;
+};
+
+export type MediaResultDto = {
+    schemaVersion: number;
+    resultId: string;
+    sessionId: string;
+    association: MediaAssociationDto;
+    jobId: string;
+    kind: MediaKindDto;
+    mime: string;
+    fileName: string;
+    bytes: number;
+    sha256: string;
+    /**
+     * Unix milliseconds, fixed when publication was first reserved.
+     */
+    createdAt: number;
+    rootId: string;
+    /**
+     * Relative to the registered output root; this is not an openable URL.
+     */
+    relativePath: string;
+    spec: MediaSpecDto;
+    ownership: MediaOwnershipDto;
+    source: MediaSourceDto;
+};
+
+export type MediaRuntimeBuildDto = {
+    adapterId: string;
+    engineRevision: string;
+    binarySha256: string;
+};
+
+export type MediaSourceDto = {
+    installationId: string;
+    versionId: string;
+    runtime: MediaRuntimeBuildDto;
+    generationConfigSha256: string;
+    inputRefs: Array<MediaInputRefDto>;
+    kind: 'local_model';
+} | {
+    serverId: string;
+    toolName: string;
+    toolCallId: string;
+    inputRefs: Array<MediaInputRefDto>;
+    kind: 'mcp';
+};
+
+export type MediaSpecDto = {
+    width: number;
+    height: number;
+    kind: 'image';
+} | {
+    durationMicros: number;
+    sampleRate: number;
+    channels: number;
+    sampleFrames: number;
+    kind: 'audio';
+} | {
+    width: number;
+    height: number;
+    durationMicros: number;
+    frameCount: number;
+    fpsNumerator: number;
+    fpsDenominator: number;
+    kind: 'video';
+};
+
 /**
  * Wire mirror of the conversation `MessageUsage` (this crate cannot depend on
  * lumina-provider-types); field names and serde casing MUST stay in parity.
@@ -1467,6 +1595,167 @@ export type MessageUsageData = {
 export type MessageUsageUpdate = {
     messageId?: string | null;
     usage: MessageUsageData;
+};
+
+export type ModelInstallationFailureCode = 'SOURCE_NOT_FOUND' | 'SOURCE_AUTH_REQUIRED' | 'SOURCE_FORBIDDEN' | 'SOURCE_TIMEOUT' | 'SOURCE_RATE_LIMITED' | 'SOURCE_UNAVAILABLE' | 'SOURCE_PARTIAL_FAILURE' | 'REVISION_UNRESOLVED' | 'REVISION_CHANGED' | 'NO_GGUF' | 'GGUF_INVALID' | 'FORMAT_FORBIDDEN' | 'SHARD_INCOMPLETE' | 'DEPENDENCY_MISSING' | 'DEPENDENCY_INCOMPATIBLE' | 'DEPENDENCY_UNVERIFIED' | 'RUNTIME_UNSUPPORTED' | 'HARDWARE_INSUFFICIENT' | 'DISK_INSUFFICIENT' | 'HASH_MISMATCH' | 'DESTINATION_LOCKED' | 'PLAN_STALE' | 'STATE_CONFLICT' | 'DOWNLOAD_FAILED' | 'INSTALL_FAILED' | 'START_FAILED' | 'VALIDATION_FAILED' | 'CANCELLED';
+
+export type ModelInstallationFailureDto = {
+    jobId: string;
+    jobVersion: number;
+    code: ModelInstallationFailureCode;
+    stage: ModelInstallationStage;
+    origin: ModelInstallationFailureOrigin;
+    artifactId?: string | null;
+    messageKey: string;
+    messageArgs: {
+        [key: string]: string;
+    };
+    retryable: boolean;
+    recoverable: boolean;
+    causeId: string;
+    automaticRetryAt?: number | null;
+    isCurrent: boolean;
+    occurredAt: number;
+};
+
+export type ModelInstallationFailureOrigin = 'credentials' | 'admission' | 'transfer' | 'verification' | 'commit';
+
+export type ModelInstallationFileEventDto = {
+    sequence: number;
+    artifactId: string;
+    version: number;
+    generation: number;
+    completedBytes: number;
+    expectedBytes: number;
+    status: ModelInstallationFileStatus;
+    failureCode?: ModelInstallationFailureCode | null;
+    restartReason?: ModelInstallationFileRestartReason | null;
+    updatedAt: number;
+};
+
+export type ModelInstallationFileFailureDto = {
+    code: ModelInstallationFailureCode;
+    stage: ModelInstallationStage;
+    failedAt: number;
+    retryAfterSeconds?: number | null;
+};
+
+export type ModelInstallationFileRestartReason = 'range_unavailable' | 'validator_changed' | 'partial_content_mismatch' | 'hash_mismatch';
+
+export type ModelInstallationFileRetryDto = {
+    jobId: string;
+    artifactId: string;
+    policyVersion: string;
+    maxAttempts: number;
+    cycle: number;
+    cycleAttempts: number;
+    recordedAttempts: number;
+    historyOrigin: ModelInstallationRetryHistoryOrigin;
+    trackingStartedAt: number;
+    state: ModelInstallationFileRetryState;
+    nextRetryAt?: number | null;
+    lastFailure?: ModelInstallationFileFailureDto | null;
+    version: number;
+    updatedAt: number;
+};
+
+export type ModelInstallationFileRetryState = 'ready' | 'active' | 'waiting' | 'exhausted' | 'needs_action' | 'verified';
+
+export type ModelInstallationFileStatus = 'pending' | 'downloading' | 'downloaded' | 'verified' | 'failed';
+
+export type ModelInstallationJobAction = 'pause' | 'resume' | 'cancel' | 'retry';
+
+export type ModelInstallationJobControlRequest_unstable = {
+    jobId: string;
+    expectedVersion: number;
+    action: ModelInstallationJobAction;
+    idempotencyKey: string;
+};
+
+export type ModelInstallationJobControlResponse_unstable = {
+    job: ModelInstallationJobDto;
+    replayed: boolean;
+};
+
+export type ModelInstallationJobDto = {
+    id: string;
+    planId: string;
+    planDigest: string;
+    stage: ModelInstallationStage;
+    status: ModelInstallationJobStatus;
+    version: number;
+    generation: number;
+    acceptedAt: number;
+    updatedAt: number;
+};
+
+export type ModelInstallationJobEventDto = {
+    sequence: number;
+    job: ModelInstallationJobDto;
+};
+
+export type ModelInstallationJobEventsRequest_unstable = {
+    jobId: string;
+    afterJobSequence?: number;
+    afterFileSequence?: number;
+    limit?: number;
+};
+
+export type ModelInstallationJobEventsResponse_unstable = {
+    jobEvents: Array<ModelInstallationJobEventDto>;
+    fileEvents: Array<ModelInstallationFileEventDto>;
+    nextJobSequence: number;
+    nextFileSequence: number;
+    hasMoreJobEvents: boolean;
+    hasMoreFileEvents: boolean;
+};
+
+export type ModelInstallationJobStatus = 'queued' | 'running' | 'paused' | 'cancelling' | 'cancelled' | 'completed' | 'blocked' | 'failed';
+
+export type ModelInstallationJobsListRequest_unstable = {
+    afterId?: string | null;
+    limit?: number;
+};
+
+export type ModelInstallationJobsListResponse_unstable = {
+    jobs: Array<ModelInstallationJobDto>;
+    fileRetries?: Array<ModelInstallationFileRetryDto>;
+    failures?: Array<ModelInstallationFailureDto>;
+    storageReservations?: Array<ModelInstallationStorageDto>;
+    nextAfterId?: string | null;
+    serviceState: ModelInstallationServiceState;
+};
+
+export type ModelInstallationRetryHistoryOrigin = 'from_enqueue' | 'legacy_untracked';
+
+export type ModelInstallationServiceState = 'dormant' | 'recovering' | 'ready' | 'stopped' | 'failed';
+
+export type ModelInstallationStage = 'discovered' | 'repository_verified' | 'files_discovered' | 'model_classified' | 'dependencies_resolved' | 'compatibility_checked' | 'ready_to_install' | 'downloading' | 'verifying' | 'installing' | 'installed' | 'starting' | 'validating';
+
+export type ModelInstallationStorageDto = {
+    jobId: string;
+    planDigest: string;
+    volumeId?: string | null;
+    peakBytes: number;
+    reservedBytes: number;
+    state: ModelInstallationStorageState;
+    version: number;
+    createdAt: number;
+    updatedAt: number;
+};
+
+export type ModelInstallationStorageState = 'needs_admission' | 'held' | 'released';
+
+export type ModelInstallationSubmitRequest_unstable = {
+    planId: string;
+    planDigest: string;
+    installationId: string;
+    idempotencyKey: string;
+};
+
+export type ModelInstallationSubmitResponse_unstable = {
+    job: ModelInstallationJobDto;
+    versionId: string;
 };
 
 /**

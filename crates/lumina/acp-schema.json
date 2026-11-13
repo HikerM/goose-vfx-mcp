@@ -2,6 +2,519 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "LuminaExtensions",
   "$defs": {
+    "MediaReadRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "resultId": {
+          "type": "string",
+          "description": "Canonical UUID assigned when the result was reserved for publication."
+        }
+      },
+      "required": [
+        "sessionId",
+        "resultId"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/read"
+    },
+    "MediaReadResponse_unstable": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "result": {
+              "$ref": "#/$defs/MediaResultDto"
+            },
+            "availability": {
+              "$ref": "#/$defs/MediaAvailabilityDto"
+            },
+            "status": {
+              "type": "string",
+              "const": "found"
+            }
+          },
+          "required": [
+            "status",
+            "result",
+            "availability"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "const": "notFound"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/read"
+    },
+    "MediaResultDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resultId": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "association": {
+          "$ref": "#/$defs/MediaAssociationDto"
+        },
+        "jobId": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/MediaKindDto"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "integer",
+          "description": "Unix milliseconds, fixed when publication was first reserved."
+        },
+        "rootId": {
+          "type": "string"
+        },
+        "relativePath": {
+          "type": "string",
+          "description": "Relative to the registered output root; this is not an openable URL."
+        },
+        "spec": {
+          "$ref": "#/$defs/MediaSpecDto"
+        },
+        "ownership": {
+          "$ref": "#/$defs/MediaOwnershipDto"
+        },
+        "source": {
+          "$ref": "#/$defs/MediaSourceDto"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "resultId",
+        "sessionId",
+        "association",
+        "jobId",
+        "kind",
+        "mime",
+        "fileName",
+        "bytes",
+        "sha256",
+        "createdAt",
+        "rootId",
+        "relativePath",
+        "spec",
+        "ownership",
+        "source"
+      ]
+    },
+    "MediaAssociationDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "messageId": {
+              "type": "string"
+            },
+            "associationKind": {
+              "type": "string",
+              "const": "message"
+            }
+          },
+          "required": [
+            "associationKind",
+            "messageId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "toolCallId": {
+              "type": "string"
+            },
+            "associationKind": {
+              "type": "string",
+              "const": "tool_call"
+            }
+          },
+          "required": [
+            "associationKind",
+            "toolCallId"
+          ]
+        }
+      ]
+    },
+    "MediaKindDto": {
+      "type": "string",
+      "enum": [
+        "image",
+        "audio",
+        "video"
+      ]
+    },
+    "MediaSpecDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "image"
+            }
+          },
+          "required": [
+            "kind",
+            "width",
+            "height"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationMicros": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sampleRate": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "channels": {
+              "type": "integer",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "sampleFrames": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "audio"
+            }
+          },
+          "required": [
+            "kind",
+            "durationMicros",
+            "sampleRate",
+            "channels",
+            "sampleFrames"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "durationMicros": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "frameCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fpsNumerator": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fpsDenominator": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "video"
+            }
+          },
+          "required": [
+            "kind",
+            "width",
+            "height",
+            "durationMicros",
+            "frameCount",
+            "fpsNumerator",
+            "fpsDenominator"
+          ]
+        }
+      ]
+    },
+    "MediaOwnershipDto": {
+      "type": "string",
+      "enum": [
+        "application_generated",
+        "application_imported"
+      ]
+    },
+    "MediaSourceDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "installationId": {
+              "type": "string"
+            },
+            "versionId": {
+              "type": "string"
+            },
+            "runtime": {
+              "$ref": "#/$defs/MediaRuntimeBuildDto"
+            },
+            "generationConfigSha256": {
+              "type": "string"
+            },
+            "inputRefs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MediaInputRefDto"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "local_model"
+            }
+          },
+          "required": [
+            "kind",
+            "installationId",
+            "versionId",
+            "runtime",
+            "generationConfigSha256",
+            "inputRefs"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "serverId": {
+              "type": "string"
+            },
+            "toolName": {
+              "type": "string"
+            },
+            "toolCallId": {
+              "type": "string"
+            },
+            "inputRefs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MediaInputRefDto"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "mcp"
+            }
+          },
+          "required": [
+            "kind",
+            "serverId",
+            "toolName",
+            "toolCallId",
+            "inputRefs"
+          ]
+        }
+      ]
+    },
+    "MediaRuntimeBuildDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "adapterId": {
+          "type": "string"
+        },
+        "engineRevision": {
+          "type": "string"
+        },
+        "binarySha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "adapterId",
+        "engineRevision",
+        "binarySha256"
+      ]
+    },
+    "MediaInputRefDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "messageId": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "message"
+            }
+          },
+          "required": [
+            "kind",
+            "messageId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resultId": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "media_result"
+            }
+          },
+          "required": [
+            "kind",
+            "resultId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "content_digest"
+            }
+          },
+          "required": [
+            "kind",
+            "sha256"
+          ]
+        }
+      ]
+    },
+    "MediaAvailabilityDto": {
+      "type": "string",
+      "enum": [
+        "available",
+        "publishing",
+        "missing",
+        "access_denied",
+        "tampered",
+        "unsafe_path",
+        "unsupported_format",
+        "io_unavailable"
+      ]
+    },
+    "MediaAccessRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "resultId": {
+          "type": "string"
+        },
+        "purpose": {
+          "$ref": "#/$defs/MediaAccessPurposeDto"
+        }
+      },
+      "required": [
+        "sessionId",
+        "resultId",
+        "purpose"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/access"
+    },
+    "MediaAccessPurposeDto": {
+      "type": "string",
+      "enum": [
+        "preview",
+        "open",
+        "reveal",
+        "copy_path",
+        "save_as"
+      ]
+    },
+    "MediaAccessResponse_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ticket": {
+          "type": "string"
+        },
+        "expiresInMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "ticket",
+        "expiresInMs"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/access"
+    },
+    "MediaReleaseRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ticket": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ticket"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/release"
+    },
+    "MediaReleaseResponse_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/release"
+    },
     "AddSessionExtensionRequest_unstable": {
       "type": "object",
       "properties": {
@@ -12935,6 +13448,713 @@
         }
       ]
     },
+    "ModelInstallationSubmitRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planId": {
+          "type": "string"
+        },
+        "planDigest": {
+          "type": "string"
+        },
+        "installationId": {
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "planId",
+        "planDigest",
+        "installationId",
+        "idempotencyKey"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/submit"
+    },
+    "ModelInstallationSubmitResponse_unstable": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "$ref": "#/$defs/ModelInstallationJobDto"
+        },
+        "versionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "job",
+        "versionId"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/submit"
+    },
+    "ModelInstallationJobDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "planId": {
+          "type": "string"
+        },
+        "planDigest": {
+          "type": "string"
+        },
+        "stage": {
+          "$ref": "#/$defs/ModelInstallationStage"
+        },
+        "status": {
+          "$ref": "#/$defs/ModelInstallationJobStatus"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "acceptedAt": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "planId",
+        "planDigest",
+        "stage",
+        "status",
+        "version",
+        "generation",
+        "acceptedAt",
+        "updatedAt"
+      ]
+    },
+    "ModelInstallationStage": {
+      "type": "string",
+      "enum": [
+        "discovered",
+        "repository_verified",
+        "files_discovered",
+        "model_classified",
+        "dependencies_resolved",
+        "compatibility_checked",
+        "ready_to_install",
+        "downloading",
+        "verifying",
+        "installing",
+        "installed",
+        "starting",
+        "validating"
+      ]
+    },
+    "ModelInstallationJobStatus": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "paused",
+        "cancelling",
+        "cancelled",
+        "completed",
+        "blocked",
+        "failed"
+      ]
+    },
+    "ModelInstallationJobsListRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "afterId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "default": 64,
+          "minimum": 0
+        }
+      },
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/jobs/list"
+    },
+    "ModelInstallationJobsListResponse_unstable": {
+      "type": "object",
+      "properties": {
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelInstallationJobDto"
+          }
+        },
+        "fileRetries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelInstallationFileRetryDto"
+          },
+          "default": []
+        },
+        "failures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelInstallationFailureDto"
+          },
+          "default": []
+        },
+        "storageReservations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelInstallationStorageDto"
+          },
+          "default": []
+        },
+        "nextAfterId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "serviceState": {
+          "$ref": "#/$defs/ModelInstallationServiceState"
+        }
+      },
+      "required": [
+        "jobs",
+        "serviceState"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/jobs/list"
+    },
+    "ModelInstallationFileRetryDto": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "artifactId": {
+          "type": "string"
+        },
+        "policyVersion": {
+          "type": "string"
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycle": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycleAttempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recordedAttempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "historyOrigin": {
+          "$ref": "#/$defs/ModelInstallationRetryHistoryOrigin"
+        },
+        "trackingStartedAt": {
+          "type": "integer"
+        },
+        "state": {
+          "$ref": "#/$defs/ModelInstallationFileRetryState"
+        },
+        "nextRetryAt": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "lastFailure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelInstallationFileFailureDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "updatedAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jobId",
+        "artifactId",
+        "policyVersion",
+        "maxAttempts",
+        "cycle",
+        "cycleAttempts",
+        "recordedAttempts",
+        "historyOrigin",
+        "trackingStartedAt",
+        "state",
+        "version",
+        "updatedAt"
+      ]
+    },
+    "ModelInstallationRetryHistoryOrigin": {
+      "type": "string",
+      "enum": [
+        "from_enqueue",
+        "legacy_untracked"
+      ]
+    },
+    "ModelInstallationFileRetryState": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "active",
+        "waiting",
+        "exhausted",
+        "needs_action",
+        "verified"
+      ]
+    },
+    "ModelInstallationFileFailureDto": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/ModelInstallationFailureCode"
+        },
+        "stage": {
+          "$ref": "#/$defs/ModelInstallationStage"
+        },
+        "failedAt": {
+          "type": "integer"
+        },
+        "retryAfterSeconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "code",
+        "stage",
+        "failedAt"
+      ]
+    },
+    "ModelInstallationFailureCode": {
+      "type": "string",
+      "enum": [
+        "SOURCE_NOT_FOUND",
+        "SOURCE_AUTH_REQUIRED",
+        "SOURCE_FORBIDDEN",
+        "SOURCE_TIMEOUT",
+        "SOURCE_RATE_LIMITED",
+        "SOURCE_UNAVAILABLE",
+        "SOURCE_PARTIAL_FAILURE",
+        "REVISION_UNRESOLVED",
+        "REVISION_CHANGED",
+        "NO_GGUF",
+        "GGUF_INVALID",
+        "FORMAT_FORBIDDEN",
+        "SHARD_INCOMPLETE",
+        "DEPENDENCY_MISSING",
+        "DEPENDENCY_INCOMPATIBLE",
+        "DEPENDENCY_UNVERIFIED",
+        "RUNTIME_UNSUPPORTED",
+        "HARDWARE_INSUFFICIENT",
+        "DISK_INSUFFICIENT",
+        "HASH_MISMATCH",
+        "DESTINATION_LOCKED",
+        "PLAN_STALE",
+        "STATE_CONFLICT",
+        "DOWNLOAD_FAILED",
+        "INSTALL_FAILED",
+        "START_FAILED",
+        "VALIDATION_FAILED",
+        "CANCELLED"
+      ]
+    },
+    "ModelInstallationFailureDto": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "jobVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "code": {
+          "$ref": "#/$defs/ModelInstallationFailureCode"
+        },
+        "stage": {
+          "$ref": "#/$defs/ModelInstallationStage"
+        },
+        "origin": {
+          "$ref": "#/$defs/ModelInstallationFailureOrigin"
+        },
+        "artifactId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "messageKey": {
+          "type": "string"
+        },
+        "messageArgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "recoverable": {
+          "type": "boolean"
+        },
+        "causeId": {
+          "type": "string"
+        },
+        "automaticRetryAt": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "isCurrent": {
+          "type": "boolean"
+        },
+        "occurredAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jobId",
+        "jobVersion",
+        "code",
+        "stage",
+        "origin",
+        "messageKey",
+        "messageArgs",
+        "retryable",
+        "recoverable",
+        "causeId",
+        "isCurrent",
+        "occurredAt"
+      ]
+    },
+    "ModelInstallationFailureOrigin": {
+      "type": "string",
+      "enum": [
+        "credentials",
+        "admission",
+        "transfer",
+        "verification",
+        "commit"
+      ]
+    },
+    "ModelInstallationStorageDto": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "planDigest": {
+          "type": "string"
+        },
+        "volumeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "peakBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reservedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "$ref": "#/$defs/ModelInstallationStorageState"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "createdAt": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "jobId",
+        "planDigest",
+        "peakBytes",
+        "reservedBytes",
+        "state",
+        "version",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ModelInstallationStorageState": {
+      "type": "string",
+      "enum": [
+        "needs_admission",
+        "held",
+        "released"
+      ]
+    },
+    "ModelInstallationServiceState": {
+      "type": "string",
+      "enum": [
+        "dormant",
+        "recovering",
+        "ready",
+        "stopped",
+        "failed"
+      ]
+    },
+    "ModelInstallationJobEventsRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "afterJobSequence": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0
+        },
+        "afterFileSequence": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0
+        },
+        "limit": {
+          "type": "integer",
+          "default": 64,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "jobId"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/jobs/events"
+    },
+    "ModelInstallationJobEventsResponse_unstable": {
+      "type": "object",
+      "properties": {
+        "jobEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelInstallationJobEventDto"
+          }
+        },
+        "fileEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelInstallationFileEventDto"
+          }
+        },
+        "nextJobSequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextFileSequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hasMoreJobEvents": {
+          "type": "boolean"
+        },
+        "hasMoreFileEvents": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "jobEvents",
+        "fileEvents",
+        "nextJobSequence",
+        "nextFileSequence",
+        "hasMoreJobEvents",
+        "hasMoreFileEvents"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/jobs/events"
+    },
+    "ModelInstallationJobEventDto": {
+      "type": "object",
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "job": {
+          "$ref": "#/$defs/ModelInstallationJobDto"
+        }
+      },
+      "required": [
+        "sequence",
+        "job"
+      ]
+    },
+    "ModelInstallationFileEventDto": {
+      "type": "object",
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "artifactId": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/$defs/ModelInstallationFileStatus"
+        },
+        "failureCode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelInstallationFailureCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "restartReason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelInstallationFileRestartReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updatedAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sequence",
+        "artifactId",
+        "version",
+        "generation",
+        "completedBytes",
+        "expectedBytes",
+        "status",
+        "updatedAt"
+      ]
+    },
+    "ModelInstallationFileStatus": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "downloading",
+        "downloaded",
+        "verified",
+        "failed"
+      ]
+    },
+    "ModelInstallationFileRestartReason": {
+      "type": "string",
+      "enum": [
+        "range_unavailable",
+        "validator_changed",
+        "partial_content_mismatch",
+        "hash_mismatch"
+      ]
+    },
+    "ModelInstallationJobControlRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "jobId": {
+          "type": "string"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "action": {
+          "$ref": "#/$defs/ModelInstallationJobAction"
+        },
+        "idempotencyKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jobId",
+        "expectedVersion",
+        "action",
+        "idempotencyKey"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/jobs/control"
+    },
+    "ModelInstallationJobAction": {
+      "type": "string",
+      "enum": [
+        "pause",
+        "resume",
+        "cancel",
+        "retry"
+      ]
+    },
+    "ModelInstallationJobControlResponse_unstable": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "$ref": "#/$defs/ModelInstallationJobDto"
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "job",
+        "replayed"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/installations/jobs/control"
+    },
     "LocalInferenceModelDownloadRequest_unstable": {
       "type": "object",
       "properties": {
@@ -14401,6 +15621,33 @@
                 {
                   "allOf": [
                     {
+                      "$ref": "#/$defs/MediaReadRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/media/read",
+                  "title": "MediaReadRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/MediaAccessRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/media/access",
+                  "title": "MediaAccessRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/MediaReleaseRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/media/release",
+                  "title": "MediaReleaseRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
                       "$ref": "#/$defs/AddSessionExtensionRequest_unstable"
                     }
                   ],
@@ -15634,6 +16881,42 @@
                 {
                   "allOf": [
                     {
+                      "$ref": "#/$defs/ModelInstallationSubmitRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/local-inference/installations/submit",
+                  "title": "ModelInstallationSubmitRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/ModelInstallationJobsListRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/local-inference/installations/jobs/list",
+                  "title": "ModelInstallationJobsListRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/ModelInstallationJobEventsRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/local-inference/installations/jobs/events",
+                  "title": "ModelInstallationJobEventsRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/ModelInstallationJobControlRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/local-inference/installations/jobs/control",
+                  "title": "ModelInstallationJobControlRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
                       "$ref": "#/$defs/LocalInferenceModelDownloadRequest_unstable"
                     }
                   ],
@@ -15841,6 +17124,30 @@
               "anyOf": [
                 {
                   "anyOf": [
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/MediaReadResponse_unstable"
+                        }
+                      ],
+                      "title": "MediaReadResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/MediaAccessResponse_unstable"
+                        }
+                      ],
+                      "title": "MediaAccessResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/MediaReleaseResponse_unstable"
+                        }
+                      ],
+                      "title": "MediaReleaseResponse_unstable"
+                    },
                     {
                       "allOf": [
                         {
@@ -16656,6 +17963,38 @@
                         }
                       ],
                       "title": "LocalInferenceModelsListResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/ModelInstallationSubmitResponse_unstable"
+                        }
+                      ],
+                      "title": "ModelInstallationSubmitResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/ModelInstallationJobsListResponse_unstable"
+                        }
+                      ],
+                      "title": "ModelInstallationJobsListResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/ModelInstallationJobEventsResponse_unstable"
+                        }
+                      ],
+                      "title": "ModelInstallationJobEventsResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/ModelInstallationJobControlResponse_unstable"
+                        }
+                      ],
+                      "title": "ModelInstallationJobControlResponse_unstable"
                     },
                     {
                       "allOf": [

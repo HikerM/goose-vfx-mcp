@@ -1,0 +1,607 @@
+{
+  "status": "PASS_BROWSER_COMPONENT_SCOPE",
+  "startedAt": "2026-11-13T02:36:30.377Z",
+  "cases": [
+    {
+      "name": "t2va",
+      "viewport": [
+        480,
+        400
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 480,
+        "width": 480,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "t2va-480x400-en-initial.png",
+        "t2va-480x400-en-seek.png"
+      ],
+      "settledScreenshot": "t2va-480x400-en-settled.png"
+    },
+    {
+      "name": "t2va",
+      "viewport": [
+        930,
+        700
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 930,
+        "width": 930,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "t2va-930x700-en-initial.png",
+        "t2va-930x700-en-seek.png"
+      ],
+      "settledScreenshot": "t2va-930x700-en-settled.png"
+    },
+    {
+      "name": "t2va",
+      "viewport": [
+        1366,
+        768
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 1366,
+        "width": 1366,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "t2va-1366x768-en-initial.png",
+        "t2va-1366x768-en-seek.png"
+      ],
+      "settledScreenshot": "t2va-1366x768-en-settled.png"
+    },
+    {
+      "name": "t2va",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 1920,
+        "width": 1920,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "t2va-1920x1080-en-initial.png",
+        "t2va-1920x1080-en-seek.png"
+      ],
+      "settledScreenshot": "t2va-1920x1080-en-settled.png"
+    },
+    {
+      "name": "t2va",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 2560,
+        "width": 2560,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "t2va-2560x1440-en-initial.png",
+        "t2va-2560x1440-en-seek.png"
+      ],
+      "settledScreenshot": "t2va-2560x1440-en-settled.png"
+    },
+    {
+      "name": "first_frame_plus_text",
+      "viewport": [
+        480,
+        400
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 480,
+        "width": 480,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "first_frame_plus_text-480x400-en-initial.png",
+        "first_frame_plus_text-480x400-en-seek.png"
+      ],
+      "settledScreenshot": "first_frame_plus_text-480x400-en-settled.png"
+    },
+    {
+      "name": "first_frame_plus_text",
+      "viewport": [
+        930,
+        700
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 930,
+        "width": 930,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "first_frame_plus_text-930x700-en-initial.png",
+        "first_frame_plus_text-930x700-en-seek.png"
+      ],
+      "settledScreenshot": "first_frame_plus_text-930x700-en-settled.png"
+    },
+    {
+      "name": "first_frame_plus_text",
+      "viewport": [
+        1366,
+        768
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 1366,
+        "width": 1366,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "first_frame_plus_text-1366x768-en-initial.png",
+        "first_frame_plus_text-1366x768-en-seek.png"
+      ],
+      "settledScreenshot": "first_frame_plus_text-1366x768-en-settled.png"
+    },
+    {
+      "name": "first_frame_plus_text",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 1920,
+        "width": 1920,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "first_frame_plus_text-1920x1080-en-initial.png",
+        "first_frame_plus_text-1920x1080-en-seek.png"
+      ],
+      "settledScreenshot": "first_frame_plus_text-1920x1080-en-settled.png"
+    },
+    {
+      "name": "first_frame_plus_text",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "locale": "en",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 2560,
+        "width": 2560,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "first_frame_plus_text-2560x1440-en-initial.png",
+        "first_frame_plus_text-2560x1440-en-seek.png"
+      ],
+      "settledScreenshot": "first_frame_plus_text-2560x1440-en-settled.png"
+    },
+    {
+      "name": "t2va",
+      "viewport": [
+        930,
+        700
+      ],
+      "locale": "zh-CN",
+      "initial": {
+        "paused": true,
+        "time": 0,
+        "duration": 0.933,
+        "width": 256,
+        "height": 256,
+        "autoplay": false
+      },
+      "layout": {
+        "scrollWidth": 930,
+        "width": 930,
+        "playerVisible": true,
+        "headingVisible": true,
+        "metadataVisible": true
+      },
+      "after": {
+        "paused": true,
+        "time": 0.4665,
+        "totalFrames": 21,
+        "droppedFrames": 0
+      },
+      "keyboardPlayPause": true,
+      "nativeSeek": true,
+      "screenshots": [
+        "t2va-930x700-zh-CN-initial.png",
+        "t2va-930x700-zh-CN-seek.png"
+      ],
+      "settledScreenshot": "t2va-930x700-zh-CN-settled.png"
+    }
+  ],
+  "scope": "Current MediaResultCard with actual H3 WebM derivatives and current Tailwind/CSP, browser playback and layout only. Local HTTP test host; not managed H3 installation, production media store, Electron protocol, file actions or complete video/audio quality acceptance.",
+  "inputProof": {
+    "path": "D:\\Project\\goose\\documentation\\docs\\lumina-architecture\\model-lifecycle-evidence\\2026-11-12-h3-native-video-smoke.json",
+    "sha256": "215dccf8c9be94a68721b2a40acd9db593fb3f200b45fcafda92347bb37be87e"
+  },
+  "inputs": [
+    {
+      "source": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\t2va-preview.webm",
+      "sha256": "bd9adffc1d888860660e00899c3bc1b555bd004fd5872325a2a6bb22b0abd296",
+      "presentation": {
+        "sessionId": "t2va",
+        "resultId": "12345678-1234-4234-8234-123456789ab0",
+        "kind": "video",
+        "fileName": "t2va-preview.webm",
+        "mime": "video/webm",
+        "bytes": 65636,
+        "spec": {
+          "kind": "video",
+          "width": 256,
+          "height": 256,
+          "durationMicros": 916667,
+          "frameCount": 22,
+          "fpsNumerator": 24,
+          "fpsDenominator": 1
+        }
+      }
+    },
+    {
+      "source": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\first-frame-preview.webm",
+      "sha256": "a704388b409a5af51334209f4aec41f601db1625f876a0153d731769832a9636",
+      "presentation": {
+        "sessionId": "first_frame_plus_text",
+        "resultId": "12345678-1234-4234-8234-123456789ab1",
+        "kind": "video",
+        "fileName": "first-frame-preview.webm",
+        "mime": "video/webm",
+        "bytes": 70908,
+        "spec": {
+          "kind": "video",
+          "width": 256,
+          "height": 256,
+          "durationMicros": 916667,
+          "frameCount": 22,
+          "fpsNumerator": 24,
+          "fpsDenominator": 1
+        }
+      }
+    }
+  ],
+  "sourceSha256": {
+    "src/components/media/MediaResultCard.tsx": "a89885fdca15bbb28b0557a6e84348a757eefa9f6a79c9ab526a4eeaec760e70",
+    "src/components/media/types.ts": "44648c6411a5573abf9a6b8ec9c52a1c8f7fb612c043857efc02e89ab7258faa",
+    "src/styles/main.css": "432959aa2e3f8f32cf0712aaa73846eca096ce4abf3ca2acdcb6f72c6ba8f6b5",
+    "src/theme/theme-tokens.ts": "2755c6187304f84978afc138d54a849c033d8330ba2dcc4cafa636e21081e38c",
+    "src/utils/csp.ts": "483dbc89e517fe987aebd0163045e2bc817a4fbc8148e86c1a5c36b767be31e1",
+    "index.html": "9ee5711065879d304cf11bce9837b5b354f0c6992f6a207263b68bb4c5aedc9b"
+  },
+  "cssSha256": "f7bf48130448486820a3cd80027ea15370caeaf2c58983bb9a380da456c89a36",
+  "scriptSha256": "199f0852ff1f6369c8ece786e1f87b98056f8d22c178e711fd4d7e719864b382",
+  "qaInventory": {
+    "viewports": [
+      [
+        480,
+        400
+      ],
+      [
+        930,
+        700
+      ],
+      [
+        1366,
+        768
+      ],
+      [
+        1920,
+        1080
+      ],
+      [
+        2560,
+        1440
+      ]
+    ],
+    "cases": [
+      "t2va",
+      "first_frame_plus_text"
+    ],
+    "checks": [
+      "no autoplay",
+      "native keyboard play/pause",
+      "seek via native timeline",
+      "duration and decoded dimensions",
+      "metadata and player controls visible in initial viewport, horizontal fit",
+      "selected-frame screenshots at each viewport",
+      "conversation deactivation pauses playback",
+      "missing availability removes player then recovery restores it",
+      "Chinese labels",
+      "no JS or CSP errors"
+    ],
+    "exclusions": [
+      "file actions",
+      "managed H3 generation",
+      "Electron production protocol",
+      "audio listening quality",
+      "long video stability"
+    ]
+  },
+  "harnessRetries": [
+    {
+      "failure": "Persistent REPL callback retained the prior closed host URL before any run-3 case completed.",
+      "resolution": "Pass the current QA host explicitly to the case function."
+    },
+    {
+      "failure": "Immediate pause assertion after a state-changing input ran before the media event completed.",
+      "resolution": "Observe the paused, non-ended state within 500 ms to avoid mistaking the short clip ending for a successful pause."
+    }
+  ],
+  "stateChecks": {
+    "inactivePauses": true,
+    "inactiveCannotPlay": true,
+    "reactivationAllowsPlay": true,
+    "missingRemovesPlayer": true,
+    "restoredDoesNotAutoplay": true,
+    "chineseMissingLabel": true
+  },
+  "browserVersion": "157.0.8103.40",
+  "browserErrors": [],
+  "finishedAt": "2026-11-13T02:41:48.593Z",
+  "visualReview": {
+    "reviewer": "Assistant",
+    "scope": "Both native H3 preview derivatives in the actual MediaResultCard; five viewport layouts, post-seek frames and Chinese missing-file state reviewed.",
+    "findings": "Initial 480x400 control overflow fixed by viewport-relative maximum video height. Final controls and metadata fit, image proportions remain square, no horizontal overflow or clipped labels. Native initial loading animation fades after rendering settles.",
+    "priorRuns": [
+      "run-1: small-window controls below initial viewport",
+      "run-2: Chinese fixture descriptors were not flattened; English matrix passed, Chinese signoff invalid"
+    ],
+    "remaining": "Product Electron transport/file actions, full temporal and audio quality, long-running H3 stability and managed generation remain separate."
+  },
+  "screenshotSha256": {
+    "conversation-inactive.png": "3c7c80ae48ac2f79021f9283e1058feaee07c6765b146bfb9b19a88a43cdad8b",
+    "first_frame_plus_text-1366x768-en-initial.png": "ebece8743dbe4e491d056a873cf9118adfbeff521992dd61a832f6dd2e8807d5",
+    "first_frame_plus_text-1366x768-en-seek.png": "561d59421c0b42262ed3b25708ea7cc19540402930f92e6d0b145dc34baba461",
+    "first_frame_plus_text-1366x768-en-settled.png": "cb39b1daaa03b131ae62a698176a4288f8bc5754197a73792bfccc2c1cb99ee1",
+    "first_frame_plus_text-1920x1080-en-initial.png": "1869e015328c17c0a40d4230cc743d1313cae86e2987f79ff55f579b5affa6a5",
+    "first_frame_plus_text-1920x1080-en-seek.png": "3a76f7c2bf4996f03e6e51368f7d143fd7b58fca135b786c5784c14ed7477898",
+    "first_frame_plus_text-1920x1080-en-settled.png": "2c90168c4e0754a4de7fe3edde9b1fda3f4856854e1268ee81677025a0644ac4",
+    "first_frame_plus_text-2560x1440-en-initial.png": "14722d6a647121ad98ac072fa16f1f3a4f2855e8272e4d1c0a72c4b5dcdc268e",
+    "first_frame_plus_text-2560x1440-en-seek.png": "3d1b5cca3b79d08c85a89adddfabcd039b97c00892f6309eb2b64e18536f3e35",
+    "first_frame_plus_text-2560x1440-en-settled.png": "cb8b006b6a947b2de5474fa895e137b1d19fa0335bbe18e625cc7e682ce85922",
+    "first_frame_plus_text-480x400-en-initial.png": "35fbd1984b463e3a6e40475e66bb64911d95b05341ba3532fc6045510116b1b7",
+    "first_frame_plus_text-480x400-en-seek.png": "ecfa366eb116b8c728eba2381aed56bc30bfa00fdf824ae2d1b233357fe96ce3",
+    "first_frame_plus_text-480x400-en-settled.png": "91f689b062e2325a5ebbf4ef7096be5c2da94597b532e9b2a12b612184c6403e",
+    "first_frame_plus_text-930x700-en-initial.png": "55846383d7adb68d4b44bd70cb1baa2d1cb01d5d1cf3e98ca4d32d84d40be788",
+    "first_frame_plus_text-930x700-en-seek.png": "b4f2e661058023842f879914bf8ebb4d3bb3e8ba7478ce0dd5c1c3bf93add89b",
+    "first_frame_plus_text-930x700-en-settled.png": "8a45a27a259f70d1d38fdf78db98d81c81423053876de2079398c7778ebd5e37",
+    "t2va-1366x768-en-initial.png": "2f7d6605d3471a4078d3afbd70b027e9a58eed88d0e6b0be686f11e1e2066014",
+    "t2va-1366x768-en-seek.png": "9d5a7266aef0fd0d7b785cf8bd6009b1c86210c768b4047b73ea4559b227c72a",
+    "t2va-1366x768-en-settled.png": "708622d071ae7cd5fabb1bf55ff696301efa2d1cc50099ecd35cd43d5cab5431",
+    "t2va-1920x1080-en-initial.png": "d95e79a13eba7a132db8fd39837f865c3b5b58ecda0bb7fdbdba20314d70eed3",
+    "t2va-1920x1080-en-seek.png": "28c1077370d20c7ea64df2200ba1316f392a5182a175f829b15f90c91efbe39f",
+    "t2va-1920x1080-en-settled.png": "bcdfdfd4e7160ee1f6912507101c089f1da2a63f526040af32ee872b44caf436",
+    "t2va-2560x1440-en-initial.png": "dca5821e7ff8e1f3e2441fbdb295c31470f26e43ce7ae84e42cd8f3b0a3d4387",
+    "t2va-2560x1440-en-seek.png": "8b6251e09d6703cc3703fe2e5288295405b98446b155fcab7f51092bb2412162",
+    "t2va-2560x1440-en-settled.png": "644746b2e0ba0a714ed365b7dd462e1998a6cb60dc9b3fd1e6b3b04165bdeaa0",
+    "t2va-480x400-en-initial.png": "e7469810f3cd4a0d7daf0a7fe2011a0730328a133aa678ce7c77903315e254df",
+    "t2va-480x400-en-seek.png": "92310ee94457dd8236f989dbf2e1909c9f219cf48156bd1192a1a50d389ecc77",
+    "t2va-480x400-en-settled.png": "2829e56adccb10addea0e53badd3654ba30cdc7c260fe5564ab3fac9b695a391",
+    "t2va-930x700-en-initial.png": "ff4d52f067ab544b92c316dfc2c797f73d5ecfb1fb68931b9cc6ec5f06640d35",
+    "t2va-930x700-en-seek.png": "5223037d4328bf91797f1baa474abbec7e197b1b472850fe185a1ab2b63e260c",
+    "t2va-930x700-en-settled.png": "81e0ddc0a7b4d85fe09b0ff3574f9a482bb807a1bd7be20415c1b838dd08881d",
+    "t2va-930x700-zh-CN-initial.png": "03847e50d926c7833126356ad20afd7d263600b8688d6b3e356e18f00e7239e4",
+    "t2va-930x700-zh-CN-seek.png": "477405d748eda7ddb4ef6432a628860774ce7666cbfd302e4c3265f12789faea",
+    "t2va-930x700-zh-CN-settled.png": "81e0ddc0a7b4d85fe09b0ff3574f9a482bb807a1bd7be20415c1b838dd08881d",
+    "zh-CN-file-unavailable.png": "2e6d78704a0005e18648542d0a25c3fc7df64168a150af24045dfae2c34252ee"
+  },
+  "requests": [
+    {
+      "case": "t2va",
+      "range": "bytes=0-",
+      "status": 206
+    },
+    {
+      "case": "first_frame_plus_text",
+      "range": "bytes=0-",
+      "status": 206
+    },
+    {
+      "case": "t2va",
+      "range": "bytes=0-",
+      "status": 206
+    },
+    {
+      "case": "first_frame_plus_text",
+      "range": "bytes=0-",
+      "status": 206
+    },
+    {
+      "case": "t2va",
+      "range": "bytes=0-",
+      "status": 206
+    }
+  ],
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-h3-media-card-r1\\run-3\\result.json",
+    "sha256": "2cccb1c70e7c411c205c88ec4eb97bdf4741337940e84b2a7114bf132aa9293c"
+  }
+}

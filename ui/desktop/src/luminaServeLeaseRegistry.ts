@@ -4,6 +4,7 @@ export const LUMINA_SERVE_EXITED_USER_MESSAGE =
   "This window's Lumina backend stopped. Close this window and open a new chat to start a new backend. If this keeps happening, restart Lumina Desktop.";
 
 export interface LuminaServeLease {
+  kind: 'managed-local' | 'external';
   acpUrl: string;
   secretKey: string;
   cleanup: () => Promise<void>;
@@ -21,6 +22,7 @@ export class LuminaServeLeaseRegistry {
 
   create(result: LuminaServeResult, secretKey: string): LuminaServeLease {
     const lease: LuminaServeLease = {
+      kind: 'managed-local',
       acpUrl: result.acpUrl,
       secretKey,
       cleanup: result.cleanup,
@@ -76,6 +78,7 @@ export class LuminaServeLeaseRegistry {
     cleanup: () => Promise<void> = async () => undefined
   ): LuminaServeLease {
     return {
+      kind: 'external',
       acpUrl,
       secretKey,
       cleanup,

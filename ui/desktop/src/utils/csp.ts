@@ -66,12 +66,12 @@ export function buildCSP(externalBackend?: ExternalBackendConfig): string {
     "default-src 'self';" +
     "style-src 'self' 'unsafe-inline';" +
     "script-src 'self' 'unsafe-inline';" +
-    "img-src 'self' data: https:;" +
+    "img-src 'self' data: https: lumina-media:;" +
     `connect-src ${connectSrc};` +
     "object-src 'none';" +
     "frame-src 'self' https: http:;" +
     "font-src 'self' data: https:;" +
-    "media-src 'self' mediastream: blob:;" +
+    "media-src 'self' mediastream: blob: lumina-media:;" +
     "form-action 'none';" +
     "base-uri 'self';" +
     "manifest-src 'self';" +

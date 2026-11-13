@@ -1,0 +1,743 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-12T11:25:30.844946+00:00",
+  "status": "NATIVE_SMOKE_GENERATED_QUALITY_ACCEPTANCE_INCOMPLETE",
+  "scope": "Two frozen MiniMax H3 native GPU smoke cases; not managed installation, READY capability, product playback, or stability acceptance.",
+  "cudaBuild": {
+    "status": "PASS",
+    "startedAt": "2026-11-12T10:02:46.107876+00:00",
+    "sourceRevision": "c6dfa9def12fd0cb36ac7149ba30a75792bedbf0",
+    "ggmlRevision": "c57b71a3448809d07d49360273201bb5a5e7cafb",
+    "sourcePatches": {
+      "examples/cli/main.cpp": "86eee7d33115e8e47c1916d3d9718bdd02cae1612ea8d6b34ef06eeb59a6cba3",
+      "src/pipeline/video.cpp": "93a99f80201b445bab288b4de06314fc0b7dde6cd7f4e20a22027614a4375473",
+      "src/pipeline/video_latent_diagnostic.h": "ac4f18812e8d38a2e298f3c7077a74409512c8d7457463f78ecc764857fee5b3"
+    },
+    "scope": "Pinned source plus existing diagnostic patches. CUDA engine build and device discovery only; no H3 generation or capability readiness.",
+    "buildJobs": 1,
+    "commands": [
+      {
+        "phase": "configure",
+        "argv": [
+          "D:\\DevTools\\CMake\\PFiles64\\CMake\\bin\\cmake.exe",
+          "-S",
+          "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\source",
+          "-B",
+          "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cuda",
+          "-G",
+          "Visual Studio 17 2022",
+          "-A",
+          "x64",
+          "-T",
+          "cuda=12.9",
+          "-DCMAKE_GENERATOR_INSTANCE=C:/Program Files/Microsoft Visual Studio/2022/Community",
+          "-DCUDAToolkit_ROOT=C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.9",
+          "-DSD_GGML_SOURCE_DIR=D:\\Project\\goose\\target\\runtime-engines\\diffusion-ggml\\c57b71a3448809d07d49360273201bb5a5e7cafb\\source",
+          "-DSD_CUDA=ON",
+          "-DCMAKE_CUDA_ARCHITECTURES=120a-real",
+          "-DSD_BUILD_EXAMPLES=ON",
+          "-DSD_WEBP=OFF",
+          "-DSD_WEBM=OFF",
+          "-DGGML_OPENMP=OFF",
+          "-DGGML_CUDA_NCCL=OFF",
+          "-DGGML_CUDA_CUTLASS_PATH:PATH=",
+          "-DGGML_CUDA_CCCL_VERSION:STRING=",
+          "-DGGML_CUDA_FA=ON",
+          "-DGGML_CUDA_FA_ALL_QUANTS=OFF",
+          "-DCMAKE_CXX_FLAGS=/MP1"
+        ],
+        "exitCode": 0,
+        "logSha256": "629fa6bc77851461741e3b460de30ca071831cf9438ff9ac14ef2d5e283ebbf0"
+      },
+      {
+        "phase": "build",
+        "argv": [
+          "D:\\DevTools\\CMake\\PFiles64\\CMake\\bin\\cmake.exe",
+          "--build",
+          "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cuda",
+          "--config",
+          "Release",
+          "--target",
+          "sd-cli",
+          "--parallel",
+          "1"
+        ],
+        "exitCode": 0,
+        "logSha256": "6476c033fae6daff207ef6e6406b7f2810fbfdfed8729b2acebd3ca78ea5750f"
+      }
+    ],
+    "binary": {
+      "path": "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cuda\\bin\\Release\\sd-cli.exe",
+      "sha256": "11e555cb67afd5d480de2ca25e40addb0cbea70cca37822b92c98f7383a0a4b5"
+    },
+    "deviceDiscovery": {
+      "exitCode": 0,
+      "logSha256": "37b750a6a60cd511b544918bef28f06cc8db8166cc933a5cb65dd488c7b51a83"
+    },
+    "finishedAt": "2026-11-12T10:56:27.879444+00:00"
+  },
+  "controllerProbe": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\controller-probe-r1\\retest-r2\\result.json",
+    "bytes": 8885,
+    "sha256": "8fcd1a6b3a217b36df2f3ddee7b3366f7f62c8c2a94430098e93e7ff1eb1583e"
+  },
+  "ffmpeg": {
+    "path": "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\ffmpeg-9.0.2-essentials_build\\bin\\ffmpeg.exe",
+    "bytes": 105423872,
+    "sha256": "3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec"
+  },
+  "ffprobe": {
+    "path": "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\ffmpeg-9.0.2-essentials_build\\bin\\ffprobe.exe",
+    "bytes": 105221120,
+    "sha256": "f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52"
+  },
+  "derivativeEncoding": {
+    "video": "VP9 CRF20",
+    "audio": "Opus 96k",
+    "videoMap": "0:v:0",
+    "audioMap": "0:a:0",
+    "trimmed": false,
+    "audioResampledForOpus": true
+  },
+  "cases": [
+    {
+      "case": "t2va",
+      "result": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\result.json",
+        "bytes": 35242,
+        "sha256": "7a1a4908703afa4399f66ece018762def9f67613b9bb8468d54b13a67a98fbde"
+      },
+      "startedAt": "2026-11-12T11:00:46.126132+00:00",
+      "finishedAt": "2026-11-12T11:11:46.797456+00:00",
+      "argv": [
+        "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cuda\\bin\\Release\\sd-cli.exe",
+        "-M",
+        "vid_gen",
+        "--diffusion-model",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\leejet__MiniMax-H3-GGUF\\minimax_h3_fl2va_pruned-Q4_K_M.gguf",
+        "--llm",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\leejet__MiniMax-H3-GGUF\\qwen3vl_32b_minimax_h3-Q4_K_M.gguf",
+        "--vae",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\convertor__minimax-h3-gguf\\minimax_h3_video_vae_fp16-f16.gguf",
+        "--audio-vae",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\convertor__minimax-h3-gguf\\minimax_h3_audio_vae_fp32-f16.gguf",
+        "--backend",
+        "diffusion=cuda0,te=cpu,vae=cpu",
+        "--params-backend",
+        "cpu",
+        "--threads",
+        "8",
+        "--rng",
+        "cpu",
+        "--flash-attn",
+        "auto",
+        "--sampling-method",
+        "euler",
+        "--scheduler",
+        "discrete",
+        "--steps",
+        "8",
+        "--cfg-scale",
+        "1.0",
+        "--flow-shift",
+        "12",
+        "-W",
+        "256",
+        "-H",
+        "256",
+        "--fps",
+        "24",
+        "--video-frames",
+        "22",
+        "-s",
+        "42",
+        "-p",
+        "A single red apple on a wooden table slowly rolls to the right. Fixed camera, natural daylight. Soft rolling sound, no speech.",
+        "-o",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\t2va.avi",
+        "--max-vram",
+        "cuda0=8",
+        "--disable-prefetch"
+      ],
+      "provenance": {
+        "script": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\run-h3-gpu-native-r1.py",
+          "bytes": 31982,
+          "sha256": "0c42bd43424f27dd9c801370211b493611ba9efccff3c57a4d2b93b35de5916a"
+        },
+        "configuration": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\run-config.json",
+          "bytes": 6830,
+          "sha256": "ea0cd193616970d0f55259fbbb5675a970dc7b67914dfeb6b7bd88ad42449bcc"
+        },
+        "frozenInputs": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-source-compatibility-20261112-r1\\minimal-validation-inputs.json",
+          "bytes": 6328,
+          "sha256": "1a98380002914de6b0a146b8d60c4080f9d63eab509194e6ae13329ea5ca30b8"
+        },
+        "weightEvidence": {
+          "path": "D:\\Project\\goose\\documentation\\docs\\lumina-architecture\\model-lifecycle-evidence\\2026-11-12-h3-full-weight-downloads.json",
+          "bytes": 4596,
+          "sha256": "38f593d4652947f2c020cb4a7cc06650fefbc263c1062a4569af2f473d10297a"
+        },
+        "cudaBuild": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-cuda-build-20261112-r1\\result.json",
+          "bytes": 3071,
+          "sha256": "94f6e00aad906c5acf2c99255a7884695d370ead9150f648d5ab5a91dad965a0"
+        },
+        "ffmpegEvidence": {
+          "path": "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\runtime-provenance.json",
+          "bytes": 12131,
+          "sha256": "c6fa4039525ae7f7722ce0958cdbebb3a991dbc3e4173f1927152aca8a153141"
+        },
+        "hashUtility": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\recipe_verification.py",
+          "bytes": 4067,
+          "sha256": "0878d613ebd94b869b78b2b6d7024e47354ae82cd3c115a698d84cb705b7d1a8"
+        }
+      },
+      "sourcePatches": {
+        "examples/cli/main.cpp": "86eee7d33115e8e47c1916d3d9718bdd02cae1612ea8d6b34ef06eeb59a6cba3",
+        "src/pipeline/video.cpp": "93a99f80201b445bab288b4de06314fc0b7dde6cd7f4e20a22027614a4375473",
+        "src/pipeline/video_latent_diagnostic.h": "ac4f18812e8d38a2e298f3c7077a74409512c8d7457463f78ecc764857fee5b3"
+      },
+      "generationElapsedSeconds": 215.85900000000402,
+      "generationIncludes": "Native process startup, loading, sampling, VAE decode and AVI output; excludes whole-weight preflight SHA256 and external decoding.",
+      "memoryPeakBytes": {
+        "WorkingSetSize": 34760192000,
+        "PeakWorkingSetSize": 34772787200,
+        "PrivateUsage": 38969528320,
+        "PagefileUsage": 38969528320,
+        "PeakPagefileUsage": 38969593856
+      },
+      "memoryScope": "Same native PID: sampled working set/private bytes and OS-reported process peaks; not VRAM or a system-wide peak",
+      "processTreeExitConfirmed": true,
+      "source": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\t2va.avi",
+        "bytes": 366348,
+        "sha256": "53ba7cf790ce0e052129c33ec6f84a9b22b0b0b430726c89dac92e7beb67c4e3"
+      },
+      "video": {
+        "width": 256,
+        "height": 256,
+        "frames": 22,
+        "fps": 24,
+        "durationSeconds": 0.9166666666666666,
+        "fullDecode": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\full-video.rgb",
+          "bytes": 4325376,
+          "sha256": "0b4792e03c7fdbb567d0a50b4af7607c856baea4013fa6b7b0298760979cbfb7"
+        }
+      },
+      "frameCount": 22,
+      "audio": {
+        "sampleRate": 32000,
+        "channels": 2,
+        "sampleFrames": 29600,
+        "durationSeconds": 0.925,
+        "finiteDecodedSamples": true,
+        "absolutePeak": 0.043701171875,
+        "rms": 0.0024969187117343623,
+        "fullDecode": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\full-audio.f32le",
+          "bytes": 236800,
+          "sha256": "cc3a678b2ab5a0cb5a179210bdf83754b422d7d4c9a894a062b3cf70d72b3106"
+        },
+        "listeningDerivative": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\audio-review.wav",
+          "bytes": 118444,
+          "sha256": "1b5856b6adf9b635a20b18a1843d1661356d76febd54408e97b3625557be7c9a"
+        }
+      },
+      "visualReview": {
+        "reviewer": "Assistant visual inspection of original reference where applicable and output frames 0,10,21",
+        "selectedFrames": [
+          {
+            "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\frames\\frame-000.png",
+            "bytes": 106592,
+            "sha256": "db80827b3cdf4ff2bf6a5d46e6c6751f624c025547a3d55d271407440f903efc"
+          },
+          {
+            "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\frames\\frame-010.png",
+            "bytes": 108080,
+            "sha256": "af8ceea5ef225f99460d7cb0b2c0ead354e06317936eaaaf251f7c66d55b07be"
+          },
+          {
+            "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\frames\\frame-021.png",
+            "bytes": 107076,
+            "sha256": "fb3e2ac39c0f2308643f1fc6434d5c2b9a47dd73b40e034a23668b6e491eab3a"
+          }
+        ],
+        "observations": [
+          "Recognizable red apple on a wooden surface",
+          "Apple moves right across selected frames",
+          "No green block artifacts observed in selected frames"
+        ],
+        "scope": "Selected-frame review only; audio audition and full temporal quality assessment remain pending."
+      },
+      "preview": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\t2va-preview.webm",
+        "bytes": 65636,
+        "sha256": "bd9adffc1d888860660e00899c3bc1b555bd004fd5872325a2a6bb22b0abd296"
+      },
+      "previewProbeCommand": [
+        "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\ffmpeg-9.0.2-essentials_build\\bin\\ffprobe.exe",
+        "-v",
+        "error",
+        "-count_frames",
+        "-show_streams",
+        "-show_format",
+        "-of",
+        "json",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\t2va-preview.webm"
+      ],
+      "previewStreams": [
+        {
+          "index": 0,
+          "codec_name": "vp9",
+          "codec_long_name": "Google VP9",
+          "profile": "Profile 0",
+          "codec_type": "video",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "vp09.00.11.08",
+          "width": 256,
+          "height": 256,
+          "coded_width": 256,
+          "coded_height": 256,
+          "has_b_frames": 0,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "1:1",
+          "pix_fmt": "yuv420p",
+          "level": -99,
+          "color_range": "pc",
+          "color_space": "bt470bg",
+          "field_order": "progressive",
+          "refs": 1,
+          "r_frame_rate": "24/1",
+          "avg_frame_rate": "24/1",
+          "time_base": "1/1000",
+          "start_pts": 0,
+          "start_time": "0.000000",
+          "nb_read_frames": "22",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          },
+          "tags": {
+            "ENCODER": "Lavc63.1.102 libvpx-vp9",
+            "DURATION": "00:00:00.917000000"
+          }
+        },
+        {
+          "index": 1,
+          "codec_name": "opus",
+          "codec_long_name": "Opus (Opus Interactive Audio Codec)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "opus",
+          "sample_fmt": "fltp",
+          "sample_rate": "48000",
+          "channels": 2,
+          "channel_layout": "stereo",
+          "bits_per_sample": 0,
+          "initial_padding": 312,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/1000",
+          "start_pts": 6,
+          "start_time": "0.006000",
+          "nb_read_frames": "47",
+          "extradata_size": 19,
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          },
+          "tags": {
+            "ENCODER": "Lavc63.1.102 libopus",
+            "DURATION": "00:00:00.933000000"
+          }
+        }
+      ],
+      "previewDecodeCommand": [
+        "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\ffmpeg-9.0.2-essentials_build\\bin\\ffmpeg.exe",
+        "-hide_banner",
+        "-nostdin",
+        "-v",
+        "error",
+        "-xerror",
+        "-i",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\t2va\\t2va-preview.webm",
+        "-map",
+        "0:v:0",
+        "-map",
+        "0:a:0",
+        "-f",
+        "null",
+        "-"
+      ],
+      "previewFullDecodeExitCode": 0
+    },
+    {
+      "case": "first_frame_plus_text",
+      "result": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\result.json",
+        "bytes": 36838,
+        "sha256": "bae0771649c20851d0ad5309ece1760816e5bfb93ae89734fb179f962d251ee7"
+      },
+      "startedAt": "2026-11-12T11:13:25.624746+00:00",
+      "finishedAt": "2026-11-12T11:18:57.493157+00:00",
+      "argv": [
+        "D:\\Project\\goose\\target\\runtime-engines\\diffusion-cpp\\c6dfa9def12fd0cb36ac7149ba30a75792bedbf0\\build-cuda\\bin\\Release\\sd-cli.exe",
+        "-M",
+        "vid_gen",
+        "--diffusion-model",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\leejet__MiniMax-H3-GGUF\\minimax_h3_fl2va_pruned-Q4_K_M.gguf",
+        "--llm",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\leejet__MiniMax-H3-GGUF\\qwen3vl_32b_minimax_h3-Q4_K_M.gguf",
+        "--vae",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\convertor__minimax-h3-gguf\\minimax_h3_video_vae_fp16-f16.gguf",
+        "--audio-vae",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\convertor__minimax-h3-gguf\\minimax_h3_audio_vae_fp32-f16.gguf",
+        "--backend",
+        "diffusion=cuda0,te=cpu,vae=cpu",
+        "--params-backend",
+        "cpu",
+        "--threads",
+        "8",
+        "--rng",
+        "cpu",
+        "--flash-attn",
+        "auto",
+        "--sampling-method",
+        "euler",
+        "--scheduler",
+        "discrete",
+        "--steps",
+        "8",
+        "--cfg-scale",
+        "1.0",
+        "--flow-shift",
+        "12",
+        "-W",
+        "256",
+        "-H",
+        "256",
+        "--fps",
+        "24",
+        "--video-frames",
+        "22",
+        "-s",
+        "42",
+        "-p",
+        "A single red apple on a wooden table slowly rolls to the right. Fixed camera, natural daylight. Soft rolling sound, no speech.",
+        "--init-img",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\image-runtime-results\\sd15-red-apple-seed42.png",
+        "-o",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\first_frame_plus_text.avi",
+        "--max-vram",
+        "cuda0=8",
+        "--disable-prefetch"
+      ],
+      "provenance": {
+        "script": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\run-h3-gpu-native-r1.py",
+          "bytes": 31982,
+          "sha256": "0c42bd43424f27dd9c801370211b493611ba9efccff3c57a4d2b93b35de5916a"
+        },
+        "configuration": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\run-config.json",
+          "bytes": 6830,
+          "sha256": "ea0cd193616970d0f55259fbbb5675a970dc7b67914dfeb6b7bd88ad42449bcc"
+        },
+        "frozenInputs": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-source-compatibility-20261112-r1\\minimal-validation-inputs.json",
+          "bytes": 6328,
+          "sha256": "1a98380002914de6b0a146b8d60c4080f9d63eab509194e6ae13329ea5ca30b8"
+        },
+        "weightEvidence": {
+          "path": "D:\\Project\\goose\\documentation\\docs\\lumina-architecture\\model-lifecycle-evidence\\2026-11-12-h3-full-weight-downloads.json",
+          "bytes": 4596,
+          "sha256": "38f593d4652947f2c020cb4a7cc06650fefbc263c1062a4569af2f473d10297a"
+        },
+        "cudaBuild": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-cuda-build-20261112-r1\\result.json",
+          "bytes": 3071,
+          "sha256": "94f6e00aad906c5acf2c99255a7884695d370ead9150f648d5ab5a91dad965a0"
+        },
+        "ffmpegEvidence": {
+          "path": "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\runtime-provenance.json",
+          "bytes": 12131,
+          "sha256": "c6fa4039525ae7f7722ce0958cdbebb3a991dbc3e4173f1927152aca8a153141"
+        },
+        "hashUtility": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\recipe_verification.py",
+          "bytes": 4067,
+          "sha256": "0878d613ebd94b869b78b2b6d7024e47354ae82cd3c115a698d84cb705b7d1a8"
+        }
+      },
+      "sourcePatches": {
+        "examples/cli/main.cpp": "86eee7d33115e8e47c1916d3d9718bdd02cae1612ea8d6b34ef06eeb59a6cba3",
+        "src/pipeline/video.cpp": "93a99f80201b445bab288b4de06314fc0b7dde6cd7f4e20a22027614a4375473",
+        "src/pipeline/video_latent_diagnostic.h": "ac4f18812e8d38a2e298f3c7077a74409512c8d7457463f78ecc764857fee5b3"
+      },
+      "generationElapsedSeconds": 189.38999999999942,
+      "generationIncludes": "Native process startup, loading, sampling, VAE decode and AVI output; excludes whole-weight preflight SHA256 and external decoding.",
+      "memoryPeakBytes": {
+        "WorkingSetSize": 36297195520,
+        "PeakWorkingSetSize": 36331814912,
+        "PrivateUsage": 40628252672,
+        "PagefileUsage": 40628252672,
+        "PeakPagefileUsage": 40628322304
+      },
+      "memoryScope": "Same native PID: sampled working set/private bytes and OS-reported process peaks; not VRAM or a system-wide peak",
+      "processTreeExitConfirmed": true,
+      "source": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\first_frame_plus_text.avi",
+        "bytes": 368844,
+        "sha256": "4e5587bc3c2010f277c791ca307568e3f7fab81a10096f55cf23b9aff741aa16"
+      },
+      "video": {
+        "width": 256,
+        "height": 256,
+        "frames": 22,
+        "fps": 24,
+        "durationSeconds": 0.9166666666666666,
+        "fullDecode": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\full-video.rgb",
+          "bytes": 4325376,
+          "sha256": "b625324d8ebb0ba3137a7497dbfd838ecd751d227636c2bffa0aa353d7de6349"
+        }
+      },
+      "frameCount": 22,
+      "audio": {
+        "sampleRate": 32000,
+        "channels": 2,
+        "sampleFrames": 29600,
+        "durationSeconds": 0.925,
+        "finiteDecodedSamples": true,
+        "absolutePeak": 0.062591552734375,
+        "rms": 0.0041692360212637735,
+        "fullDecode": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\full-audio.f32le",
+          "bytes": 236800,
+          "sha256": "064c6c2e1396b8962902f79108bd4561e2e77fcaeea082320040069185767a43"
+        },
+        "listeningDerivative": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\audio-review.wav",
+          "bytes": 118444,
+          "sha256": "b4478d33d87f1a7c06eab5e3cc546ab4b7a67a5da8711705e5a7785f9df2f236"
+        }
+      },
+      "visualReview": {
+        "reviewer": "Assistant visual inspection of original reference where applicable and output frames 0,10,21",
+        "selectedFrames": [
+          {
+            "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\frames\\frame-000.png",
+            "bytes": 96010,
+            "sha256": "8245f6c9390d4d900f90411e8fdcc4ffb97c091f4dfa1ac4cbcc9dace1294168"
+          },
+          {
+            "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\frames\\frame-010.png",
+            "bytes": 95154,
+            "sha256": "f51dfe3adef7fe0bb01b1ccbb798649eb7d653ab7402f5e74c99970561c5ee43"
+          },
+          {
+            "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\frames\\frame-021.png",
+            "bytes": 95348,
+            "sha256": "e553078a008c4a2189960a938af38b6970b1d894212577184890be37f39e82bd"
+          }
+        ],
+        "observations": [
+          "Recognizable red apple on a wooden surface",
+          "Apple moves right across selected frames",
+          "No green block artifacts observed in selected frames",
+          "Reference apple appearance and wooden scene retained"
+        ],
+        "scope": "Selected-frame review only; audio audition and full temporal quality assessment remain pending."
+      },
+      "preview": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\first-frame-preview.webm",
+        "bytes": 70908,
+        "sha256": "a704388b409a5af51334209f4aec41f601db1625f876a0153d731769832a9636"
+      },
+      "previewProbeCommand": [
+        "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\ffmpeg-9.0.2-essentials_build\\bin\\ffprobe.exe",
+        "-v",
+        "error",
+        "-count_frames",
+        "-show_streams",
+        "-show_format",
+        "-of",
+        "json",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\first-frame-preview.webm"
+      ],
+      "previewStreams": [
+        {
+          "index": 0,
+          "codec_name": "vp9",
+          "codec_long_name": "Google VP9",
+          "profile": "Profile 0",
+          "codec_type": "video",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "vp09.00.11.08",
+          "width": 256,
+          "height": 256,
+          "coded_width": 256,
+          "coded_height": 256,
+          "has_b_frames": 0,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "1:1",
+          "pix_fmt": "yuv420p",
+          "level": -99,
+          "color_range": "pc",
+          "color_space": "bt470bg",
+          "field_order": "progressive",
+          "refs": 1,
+          "r_frame_rate": "24/1",
+          "avg_frame_rate": "24/1",
+          "time_base": "1/1000",
+          "start_pts": 0,
+          "start_time": "0.000000",
+          "nb_read_frames": "22",
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          },
+          "tags": {
+            "ENCODER": "Lavc63.1.102 libvpx-vp9",
+            "DURATION": "00:00:00.917000000"
+          }
+        },
+        {
+          "index": 1,
+          "codec_name": "opus",
+          "codec_long_name": "Opus (Opus Interactive Audio Codec)",
+          "codec_type": "audio",
+          "codec_tag_string": "[0][0][0][0]",
+          "codec_tag": "0x0000",
+          "mime_codec_string": "opus",
+          "sample_fmt": "fltp",
+          "sample_rate": "48000",
+          "channels": 2,
+          "channel_layout": "stereo",
+          "bits_per_sample": 0,
+          "initial_padding": 312,
+          "r_frame_rate": "0/0",
+          "avg_frame_rate": "0/0",
+          "time_base": "1/1000",
+          "start_pts": 6,
+          "start_time": "0.006000",
+          "nb_read_frames": "47",
+          "extradata_size": 19,
+          "disposition": {
+            "default": 0,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          },
+          "tags": {
+            "ENCODER": "Lavc63.1.102 libopus",
+            "DURATION": "00:00:00.933000000"
+          }
+        }
+      ],
+      "previewDecodeCommand": [
+        "D:\\Project\\goose\\target\\runtime-engines\\ffmpeg\\9.0.2\\ffmpeg-9.0.2-essentials_build\\bin\\ffmpeg.exe",
+        "-hide_banner",
+        "-nostdin",
+        "-v",
+        "error",
+        "-xerror",
+        "-i",
+        "D:\\Project\\goose\\target\\lifecycle-validation\\h3-gpu-native-20261112-r1\\first_frame_plus_text\\first-frame-preview.webm",
+        "-map",
+        "0:v:0",
+        "-map",
+        "0:a:0",
+        "-f",
+        "null",
+        "-"
+      ],
+      "previewFullDecodeExitCode": 0
+    }
+  ],
+  "remainingAcceptance": [
+    "Audio audition and audiovisual semantic alignment",
+    "Same-seed repeat",
+    "Different-seed variation",
+    "Longer videos and stability",
+    "Measured GPU resource profile",
+    "Managed installation/runtime/service",
+    "Persistent media video format validation",
+    "Desktop chat playback and file actions"
+  ]
+}

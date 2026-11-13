@@ -106,6 +106,7 @@ mod load_session;
 mod local_inference;
 mod manage_sessions;
 mod mcp_platform;
+mod media;
 mod new_session;
 mod onboarding;
 mod project_workspace;
@@ -261,6 +262,7 @@ type LocalInstallationApplication =
 type LocalInstallationApplication = ();
 
 pub struct LuminaAcpAgent {
+    media_access_owner: crate::media::MediaAccessOwner,
     #[cfg(feature = "local-inference")]
     local_installations: Arc<LocalInstallationApplication>,
     sessions: Arc<Mutex<HashMap<String, LuminaAcpSession>>>,
@@ -1067,14 +1069,22 @@ impl LuminaAcpAgent {
         options: LuminaAcpAgentOptions,
         trusted_mcp_platform_service: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
     ) -> Result<Self> {
-        Self::new_with_application_services(options, trusted_mcp_platform_service, None).await
+        Self::new_with_application_services(options, trusted_mcp_platform_service, None, None).await
     }
 
     pub(crate) async fn new_with_application_services(
         options: LuminaAcpAgentOptions,
         trusted_mcp_platform_service: Option<Arc<OnceCell<Arc<McpPlatformService>>>>,
         _local_installations: Option<Arc<LocalInstallationApplication>>,
+        media_access: Option<crate::media::MediaAccessStore>,
     ) -> Result<Self> {
+        let media_access = match media_access {
+            Some(store) => store,
+            None => crate::media::MediaAccessStore::new(
+                crate::media::MAX_MEDIA_ACCESS_TICKETS,
+                crate::media::MAX_MEDIA_ACCESS_LIFETIME,
+            )?,
+        };
         #[cfg(feature = "local-inference")]
         let local_installations = {
             crate::providers::local_inference::configure_local_inference();
@@ -1138,6 +1148,7 @@ impl LuminaAcpAgent {
         let agent_manager = Arc::new(AgentManager::new(agent_config, None).await?);
 
         Ok(Self {
+            media_access_owner: media_access.create_owner(),
             #[cfg(feature = "local-inference")]
             local_installations,
             sessions: Arc::new(Mutex::new(HashMap::new())),
@@ -3896,6 +3907,7 @@ impl LuminaAcpAgent {
             .lock()
             .await
             .insert(session_id.to_string());
+        self.media_access_owner.revoke_session(session_id);
         self.closed_session_agents
             .lock()
             .await
@@ -4049,6 +4061,8 @@ where
     Box::pin(async move {
         use futures::{AsyncWriteExt, StreamExt};
 
+        let _media_connection = handler.agent.media_access_owner.disconnect_guard();
+
         let (disconnected, disconnect) = tokio::sync::oneshot::channel();
         let incoming = async_stream::stream! {
             let lines = bounded_validated_acp_lines(read);
@@ -4177,6 +4191,7 @@ impl agent_client_protocol::ConnectTo<Client> for LuminaAgentConnection {
         client: impl agent_client_protocol::ConnectTo<SacpAgent>,
     ) -> std::result::Result<(), agent_client_protocol::Error> {
         let agent = self.server.create_agent().await.internal_err()?;
+        let _media_connection = agent.media_access_owner.disconnect_guard();
         let handler = match self.transport_mcp_platform_write_session {
             Some(session) => LuminaAcpHandler {
                 agent,

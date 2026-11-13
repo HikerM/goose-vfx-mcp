@@ -1,6 +1,21 @@
 {
   "methods": [
     {
+      "method": "_lumina/unstable/media/read",
+      "requestType": "MediaReadRequest_unstable",
+      "responseType": "MediaReadResponse_unstable"
+    },
+    {
+      "method": "_lumina/unstable/media/access",
+      "requestType": "MediaAccessRequest_unstable",
+      "responseType": "MediaAccessResponse_unstable"
+    },
+    {
+      "method": "_lumina/unstable/media/release",
+      "requestType": "MediaReleaseRequest_unstable",
+      "responseType": "MediaReleaseResponse_unstable"
+    },
+    {
       "method": "_lumina/unstable/session/extensions/add",
       "requestType": "AddSessionExtensionRequest_unstable",
       "responseType": "EmptyResponse"
@@ -684,6 +699,26 @@
       "method": "_lumina/unstable/local-inference/models/list",
       "requestType": "LocalInferenceModelsListRequest_unstable",
       "responseType": "LocalInferenceModelsListResponse_unstable"
+    },
+    {
+      "method": "_lumina/unstable/local-inference/installations/submit",
+      "requestType": "ModelInstallationSubmitRequest_unstable",
+      "responseType": "ModelInstallationSubmitResponse_unstable"
+    },
+    {
+      "method": "_lumina/unstable/local-inference/installations/jobs/list",
+      "requestType": "ModelInstallationJobsListRequest_unstable",
+      "responseType": "ModelInstallationJobsListResponse_unstable"
+    },
+    {
+      "method": "_lumina/unstable/local-inference/installations/jobs/events",
+      "requestType": "ModelInstallationJobEventsRequest_unstable",
+      "responseType": "ModelInstallationJobEventsResponse_unstable"
+    },
+    {
+      "method": "_lumina/unstable/local-inference/installations/jobs/control",
+      "requestType": "ModelInstallationJobControlRequest_unstable",
+      "responseType": "ModelInstallationJobControlResponse_unstable"
     },
     {
       "method": "_lumina/unstable/local-inference/models/download",

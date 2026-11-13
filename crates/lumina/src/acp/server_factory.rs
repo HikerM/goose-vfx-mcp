@@ -17,6 +17,9 @@ pub struct AcpServerFactoryConfig {
 }
 
 pub struct AcpServer {
+    media_access: crate::media::MediaAccessStore,
+    media_reaper: std::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
+    media_shutdown: std::sync::atomic::AtomicBool,
     #[cfg(feature = "local-inference")]
     local_installations:
         OnceCell<Arc<crate::providers::local_inference::lifecycle::InstallationApplication>>,
@@ -29,6 +32,13 @@ pub struct AcpServer {
 impl AcpServer {
     pub fn new(config: AcpServerFactoryConfig) -> Self {
         Self {
+            media_access: crate::media::MediaAccessStore::new(
+                crate::media::MAX_MEDIA_ACCESS_TICKETS,
+                crate::media::MAX_MEDIA_ACCESS_LIFETIME,
+            )
+            .expect("Fixed media access limits are valid"),
+            media_reaper: std::sync::Mutex::new(None),
+            media_shutdown: std::sync::atomic::AtomicBool::new(false),
             #[cfg(feature = "local-inference")]
             local_installations: OnceCell::new(),
             config,
@@ -39,6 +49,7 @@ impl AcpServer {
     }
 
     pub async fn shutdown(&self) {
+        self.stop_media_access();
         #[cfg(feature = "local-inference")]
         if let Some(host) = self.local_installations.get() {
             if let Err(error) = host.shutdown().await {
@@ -49,6 +60,47 @@ impl AcpServer {
             service.shutdown_worker().await;
         } else if let Some(service) = self.mcp_platform_service.get() {
             service.shutdown_worker().await;
+        }
+    }
+
+    pub(crate) fn media_access_store(&self) -> crate::media::MediaAccessStore {
+        self.media_access.clone()
+    }
+
+    fn start_media_reaper(&self) {
+        let mut task = self
+            .media_reaper
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if task.is_some()
+            || self
+                .media_shutdown
+                .load(std::sync::atomic::Ordering::Acquire)
+        {
+            return;
+        }
+        let store = self.media_access.clone();
+        *task = Some(tokio::spawn(async move {
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(15));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            loop {
+                interval.tick().await;
+                store.reap_expired();
+            }
+        }));
+    }
+
+    fn stop_media_access(&self) {
+        self.media_shutdown
+            .store(true, std::sync::atomic::Ordering::Release);
+        self.media_access.close();
+        if let Some(task) = self
+            .media_reaper
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .take()
+        {
+            task.abort();
         }
     }
 
@@ -101,6 +153,7 @@ impl AcpServer {
     }
 
     pub async fn create_agent(&self) -> Result<Arc<LuminaAcpAgent>> {
+        self.start_media_reaper();
         let config = crate::config::Config::global();
         let disable_session_naming = config.get_lumina_disable_session_naming().unwrap_or(false);
         let scheduler = self.scheduler().await?;
@@ -141,11 +194,18 @@ impl AcpServer {
             },
             Some(self.trusted_mcp_platform_service.clone()),
             local_installations,
+            Some(self.media_access.clone()),
         )
         .await?;
         info!("Created new ACP agent");
 
         Ok(Arc::new(agent))
+    }
+}
+
+impl Drop for AcpServer {
+    fn drop(&mut self) {
+        self.stop_media_access();
     }
 }
 

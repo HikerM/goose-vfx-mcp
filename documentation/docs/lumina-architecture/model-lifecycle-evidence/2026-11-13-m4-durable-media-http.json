@@ -1,0 +1,516 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-13T03:01:51.130702+00:00",
+  "finishedAt": "2026-11-13T03:02:12.181933+00:00",
+  "scope": "Real frozen lumina serve process; authenticated WebSocket ACP session/load and media read/access/release; HTTP content/HEAD/single-Range and rejection paths; native action-path response guard retention/cancellation using non-mutating Win32 access probes. Not Electron shell, clipboard, save-dialog or packaged desktop acceptance; no new inference or media generation.",
+  "sourceEvidence": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\result.json",
+  "sourceEvidenceSha256": "58156a8e29a500ef5162986a51334ad8a71360b9f867689f8b167aa88194acd7",
+  "cliSha256": "a87c50ce9c47319ef45ca43bd11233333f981caafdd73bd28ecb0184e9dc3e49",
+  "frozenSources": {
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\access.rs": "7454b1c1286faa09fe6164e0d98856eb6f70f24d97a9c2bbc8571dd289808400",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\store.rs": "ba43bc8032de528873b484866a80f48e8daf09f09a94347aff79123cb3fbe728",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\files.rs": "3aba448f747b4b30b2449386a4aa730fc271c49a8d07eadcb7978fc04b943734",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\formats.rs": "e389f2d48051fc7151f923431edff4c84256dfd2d199df794954b80a43cbfcae",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\transport\\media.rs": "e37c28b111ff53c5461bb1b138b81f4b79a1a8ed5ac5b7c6e35c27d446806a73",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\transport\\mod.rs": "05bfd923f9b4eb964970dd6e07899a585a7abf51b7c8dbe5b065efdbed6af516",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server\\media.rs": "c94b1bd2d95912b6d9a08acdfba4fd696b6f2030f72f1068d3262625dd851699",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server_factory.rs": "1f1238c4a0ac9a95bd419333ebe9c3f6383b831b91582bad2f3f3d0cf64f27be",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server.rs": "5352459a7c01d0f6cc6370b9ddd4b81a29b8136279044fa558aa0014746484dc",
+    "D:\\Project\\goose\\crates\\lumina-sdk-types\\src\\custom_requests\\media.rs": "abf3b288176c31084189e27116c63408c3ee67f8f65b77315983a8ebdfb174c7"
+  },
+  "sessionId": "20261113_1",
+  "resultId": "a95e9512-5bd6-8432-ac5c-3cfca9357af5",
+  "outputBytes": 115244,
+  "outputSha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+  "processResources": {
+    "serverStarted": {
+      "at": "2026-11-13T03:01:52.356918+00:00",
+      "workingSetBytes": 27070464,
+      "privateBytes": 9789440,
+      "peakWorkingSetBytes": 27070464,
+      "readTransferBytes": 212,
+      "writeTransferBytes": 212,
+      "readOperations": 2
+    },
+    "primarySessionLoaded": {
+      "at": "2026-11-13T03:02:00.031968+00:00",
+      "workingSetBytes": 77131776,
+      "privateBytes": 28209152,
+      "peakWorkingSetBytes": 81043456,
+      "readTransferBytes": 17202893,
+      "writeTransferBytes": 17920,
+      "readOperations": 4268
+    },
+    "allMediaRequestsFinished": {
+      "at": "2026-11-13T03:02:12.075377+00:00",
+      "workingSetBytes": 83324928,
+      "privateBytes": 32370688,
+      "peakWorkingSetBytes": 90558464,
+      "readTransferBytes": 70300345,
+      "writeTransferBytes": 319547,
+      "readOperations": 16865
+    }
+  },
+  "disconnectRevocation": [
+    {
+      "secondsRemaining": 15.0,
+      "value": true
+    }
+  ],
+  "actions": [
+    {
+      "purpose": "open",
+      "firstLine": {
+        "path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\app\\data\\outputs\\id-32303236313131335f31\\id-746f6f6c3a31653438663134303861373937323535376233656136613164346438343539363731313037323165333935346335623564323034346438633461386662633366\\a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+        "fileName": "a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+        "mime": "audio/wav",
+        "bytes": 115244,
+        "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870"
+      },
+      "heldAfterTicketRelease": {
+        "write": {
+          "opened": false,
+          "winError": 32,
+          "desiredAccess": 1073741824,
+          "elapsedSeconds": 0.0
+        },
+        "delete": {
+          "opened": false,
+          "winError": 32,
+          "desiredAccess": 65536,
+          "elapsedSeconds": 0.0
+        }
+      },
+      "ownerDisconnectedWhileHeld": false,
+      "releaseObservations": [
+        {
+          "write": {
+            "opened": false,
+            "winError": 32,
+            "desiredAccess": 1073741824,
+            "elapsedSeconds": 0.0
+          },
+          "delete": {
+            "opened": false,
+            "winError": 32,
+            "desiredAccess": 65536,
+            "elapsedSeconds": 0.0
+          }
+        },
+        {
+          "write": {
+            "opened": true,
+            "winError": 0,
+            "desiredAccess": 1073741824,
+            "elapsedSeconds": 0.0
+          },
+          "delete": {
+            "opened": true,
+            "winError": 0,
+            "desiredAccess": 65536,
+            "elapsedSeconds": 0.0
+          }
+        }
+      ],
+      "nativeShellOrClipboardInvoked": false
+    },
+    {
+      "purpose": "reveal",
+      "firstLine": {
+        "path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\app\\data\\outputs\\id-32303236313131335f31\\id-746f6f6c3a31653438663134303861373937323535376233656136613164346438343539363731313037323165333935346335623564323034346438633461386662633366\\a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+        "fileName": "a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+        "mime": "audio/wav",
+        "bytes": 115244,
+        "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870"
+      },
+      "heldAfterTicketRelease": {
+        "write": {
+          "opened": false,
+          "winError": 32,
+          "desiredAccess": 1073741824,
+          "elapsedSeconds": 0.0
+        },
+        "delete": {
+          "opened": false,
+          "winError": 32,
+          "desiredAccess": 65536,
+          "elapsedSeconds": 0.0
+        }
+      },
+      "ownerDisconnectedWhileHeld": false,
+      "releaseObservations": [
+        {
+          "write": {
+            "opened": false,
+            "winError": 32,
+            "desiredAccess": 1073741824,
+            "elapsedSeconds": 0.0
+          },
+          "delete": {
+            "opened": true,
+            "winError": 0,
+            "desiredAccess": 65536,
+            "elapsedSeconds": 0.0
+          }
+        },
+        {
+          "write": {
+            "opened": true,
+            "winError": 0,
+            "desiredAccess": 1073741824,
+            "elapsedSeconds": 0.0
+          },
+          "delete": {
+            "opened": true,
+            "winError": 0,
+            "desiredAccess": 65536,
+            "elapsedSeconds": 0.0
+          }
+        }
+      ],
+      "nativeShellOrClipboardInvoked": false
+    },
+    {
+      "purpose": "copy_path",
+      "firstLine": {
+        "path": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\app\\data\\outputs\\id-32303236313131335f31\\id-746f6f6c3a31653438663134303861373937323535376233656136613164346438343539363731313037323165333935346335623564323034346438633461386662633366\\a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+        "fileName": "a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+        "mime": "audio/wav",
+        "bytes": 115244,
+        "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870"
+      },
+      "heldAfterTicketRelease": {
+        "write": {
+          "opened": false,
+          "winError": 32,
+          "desiredAccess": 1073741824,
+          "elapsedSeconds": 0.0
+        },
+        "delete": {
+          "opened": false,
+          "winError": 32,
+          "desiredAccess": 65536,
+          "elapsedSeconds": 0.0
+        }
+      },
+      "ownerDisconnectedWhileHeld": true,
+      "releaseObservations": [
+        {
+          "write": {
+            "opened": false,
+            "winError": 32,
+            "desiredAccess": 1073741824,
+            "elapsedSeconds": 0.0
+          },
+          "delete": {
+            "opened": false,
+            "winError": 32,
+            "desiredAccess": 65536,
+            "elapsedSeconds": 0.0
+          }
+        },
+        {
+          "write": {
+            "opened": true,
+            "winError": 0,
+            "desiredAccess": 1073741824,
+            "elapsedSeconds": 0.0
+          },
+          "delete": {
+            "opened": true,
+            "winError": 0,
+            "desiredAccess": 65536,
+            "elapsedSeconds": 0.0
+          }
+        }
+      ],
+      "nativeShellOrClipboardInvoked": false
+    }
+  ],
+  "serverExitCode": 0,
+  "gracefulShutdownSeconds": 0.0629999999946449,
+  "originalMediaAndMessagesUnchanged": true,
+  "databaseIntegrity": "ok",
+  "noSessionPromptCalls": true,
+  "nativeActionGuardPurposes": [
+    "open",
+    "reveal",
+    "copy_path"
+  ],
+  "notCovered": [
+    "Electron shell/clipboard/save-dialog actions",
+    "Packaged application",
+    "Five-minute expiry latency",
+    "Large-media multi-chunk response (source WAV is smaller than 1MiB)"
+  ],
+  "artifacts": {
+    "database-after.json": {
+      "bytes": 5093,
+      "sha256": "34a4b9432f5a7077e6ac0a89c774a01ac0a934a6ec3fa936408bed728ee33052"
+    },
+    "database-before.json": {
+      "bytes": 5093,
+      "sha256": "34a4b9432f5a7077e6ac0a89c774a01ac0a934a6ec3fa936408bed728ee33052"
+    },
+    "http-exchanges.json": {
+      "bytes": 34183,
+      "sha256": "77d82a8eaef6070ff1025fa4dbc7f6735828fa5ff5902ab305a221ca9dcff7cd"
+    },
+    "media-read.json": {
+      "bytes": 1641,
+      "sha256": "1bcecfb6409a57f84e49059022ff0b149cbce7abcf286ecada597ecd3b02d177"
+    },
+    "owner-a.acp.jsonl": {
+      "bytes": 60954,
+      "sha256": "5ea0934f3377fda7a44b786f3ff2751b6deb33dcb5b00bd23472e4cc9724946c"
+    },
+    "owner-b.acp.jsonl": {
+      "bytes": 25522,
+      "sha256": "c92163a08547a8a638e722075906fb6378d3a25d03d7d5d79d0d38883366a6bd"
+    },
+    "progress.json": {
+      "bytes": 73,
+      "sha256": "5f6286521ea07033c6a002c062b45528bb83ff3db1498cb535a328afe3c06d82"
+    },
+    "serve.stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "serve.stdout.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "runner": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-http-runner-r2.py",
+    "sha256": "99631f9c17e1e51a316486e2aae9f0574cbc6d588ba8959f68eb25b30f354f6c"
+  },
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-http-e2e-r2\\result.json",
+    "sha256": "53565ff3423c703253910c2e2df76930294beb3f7effbdae721376c966fe13a0"
+  },
+  "httpStatusCounts": {
+    "401": 2,
+    "404": 12,
+    "200": 7,
+    "206": 6,
+    "416": 2,
+    "403": 6
+  },
+  "httpChecks": [
+    {
+      "label": "missing-secret",
+      "method": "GET",
+      "status": 401,
+      "bytes": 0
+    },
+    {
+      "label": "query-secret-rejected",
+      "method": "GET",
+      "status": 401,
+      "bytes": 0
+    },
+    {
+      "label": "missing-ticket",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "wrong-ticket",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "wrong-purpose",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "duplicate-ticket",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "foreign-session",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "foreign-result",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "head-after-other-owner-release",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0
+    },
+    {
+      "label": "full-content",
+      "method": "GET",
+      "status": 200,
+      "bytes": 115244
+    },
+    {
+      "label": "closed-range",
+      "method": "GET",
+      "status": 206,
+      "bytes": 20
+    },
+    {
+      "label": "open-range",
+      "method": "GET",
+      "status": 206,
+      "bytes": 115200
+    },
+    {
+      "label": "suffix-range",
+      "method": "GET",
+      "status": 206,
+      "bytes": 16
+    },
+    {
+      "label": "head-range",
+      "method": "HEAD",
+      "status": 206,
+      "bytes": 0
+    },
+    {
+      "label": "multi-range-rejected",
+      "method": "GET",
+      "status": 416,
+      "bytes": 0
+    },
+    {
+      "label": "past-end-range",
+      "method": "GET",
+      "status": 416,
+      "bytes": 0
+    },
+    {
+      "label": "concurrent-range-1",
+      "method": "GET",
+      "status": 206,
+      "bytes": 100
+    },
+    {
+      "label": "concurrent-range-0",
+      "method": "GET",
+      "status": 206,
+      "bytes": 100
+    },
+    {
+      "label": "released-ticket",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "save-as-full-read",
+      "method": "GET",
+      "status": 200,
+      "bytes": 115244
+    },
+    {
+      "label": "closed-session-ticket",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "disconnected-owner-ticket",
+      "method": "HEAD",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "remaining-owner-independent",
+      "method": "HEAD",
+      "status": 200,
+      "bytes": 0
+    },
+    {
+      "label": "open-missing-local-marker",
+      "method": "GET",
+      "status": 403,
+      "bytes": 0
+    },
+    {
+      "label": "open-browser-origin-rejected",
+      "method": "GET",
+      "status": 403,
+      "bytes": 0
+    },
+    {
+      "label": "open-guard-stream",
+      "method": "GET",
+      "status": 200,
+      "bytes": null
+    },
+    {
+      "label": "open-one-shot-replay",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "reveal-missing-local-marker",
+      "method": "GET",
+      "status": 403,
+      "bytes": 0
+    },
+    {
+      "label": "reveal-browser-origin-rejected",
+      "method": "GET",
+      "status": 403,
+      "bytes": 0
+    },
+    {
+      "label": "reveal-guard-stream",
+      "method": "GET",
+      "status": 200,
+      "bytes": null
+    },
+    {
+      "label": "reveal-one-shot-replay",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    },
+    {
+      "label": "copy_path-missing-local-marker",
+      "method": "GET",
+      "status": 403,
+      "bytes": 0
+    },
+    {
+      "label": "copy_path-browser-origin-rejected",
+      "method": "GET",
+      "status": 403,
+      "bytes": 0
+    },
+    {
+      "label": "copy_path-guard-stream",
+      "method": "GET",
+      "status": 200,
+      "bytes": null
+    },
+    {
+      "label": "copy_path-one-shot-replay",
+      "method": "GET",
+      "status": 404,
+      "bytes": 0
+    }
+  ],
+  "priorFailure": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-http-e2e-r1\\result.json",
+    "cause": "The first runner shadowed the imported http module with a local connection variable. Runner r2 fixes that validator error; the first failure is preserved."
+  }
+}

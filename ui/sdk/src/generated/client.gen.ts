@@ -130,6 +130,20 @@ import type {
   LuminaSessionNotification_unstable,
   LuminaToolCallRequest_unstable,
   LuminaToolCallResponse_unstable,
+  MediaAccessRequest_unstable,
+  MediaAccessResponse_unstable,
+  MediaReadRequest_unstable,
+  MediaReadResponse_unstable,
+  MediaReleaseRequest_unstable,
+  MediaReleaseResponse_unstable,
+  ModelInstallationJobControlRequest_unstable,
+  ModelInstallationJobControlResponse_unstable,
+  ModelInstallationJobEventsRequest_unstable,
+  ModelInstallationJobEventsResponse_unstable,
+  ModelInstallationJobsListRequest_unstable,
+  ModelInstallationJobsListResponse_unstable,
+  ModelInstallationSubmitRequest_unstable,
+  ModelInstallationSubmitResponse_unstable,
   OnboardingImportApplyRequest_unstable,
   OnboardingImportApplyResponse_unstable,
   OnboardingImportScanRequest_unstable,
@@ -267,6 +281,13 @@ import {
   zLocalInferenceModelsListResponse_unstable,
   zLuminaSessionNotification_unstable,
   zLuminaToolCallResponse_unstable,
+  zMediaAccessResponse_unstable,
+  zMediaReadResponse_unstable,
+  zMediaReleaseResponse_unstable,
+  zModelInstallationJobControlResponse_unstable,
+  zModelInstallationJobEventsResponse_unstable,
+  zModelInstallationJobsListResponse_unstable,
+  zModelInstallationSubmitResponse_unstable,
   zOnboardingImportApplyResponse_unstable,
   zOnboardingImportScanResponse_unstable,
   zParseRecipeResponse_unstable,
@@ -302,6 +323,40 @@ import {
 
 export class LuminaExtClient {
   constructor(private conn: ExtMethodProvider) {}
+
+  async mediaRead_unstable(
+    params: MediaReadRequest_unstable,
+  ): Promise<MediaReadResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/media/read",
+      params,
+    );
+    return zMediaReadResponse_unstable.parse(raw) as MediaReadResponse_unstable;
+  }
+
+  async mediaAccess_unstable(
+    params: MediaAccessRequest_unstable,
+  ): Promise<MediaAccessResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/media/access",
+      params,
+    );
+    return zMediaAccessResponse_unstable.parse(
+      raw,
+    ) as MediaAccessResponse_unstable;
+  }
+
+  async mediaRelease_unstable(
+    params: MediaReleaseRequest_unstable,
+  ): Promise<MediaReleaseResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/media/release",
+      params,
+    );
+    return zMediaReleaseResponse_unstable.parse(
+      raw,
+    ) as MediaReleaseResponse_unstable;
+  }
 
   async sessionExtensionsAdd_unstable(
     params: AddSessionExtensionRequest_unstable,
@@ -1370,6 +1425,54 @@ export class LuminaExtClient {
     return zLocalInferenceModelsListResponse_unstable.parse(
       raw,
     ) as LocalInferenceModelsListResponse_unstable;
+  }
+
+  async localInferenceInstallationsSubmit_unstable(
+    params: ModelInstallationSubmitRequest_unstable,
+  ): Promise<ModelInstallationSubmitResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/local-inference/installations/submit",
+      params,
+    );
+    return zModelInstallationSubmitResponse_unstable.parse(
+      raw,
+    ) as ModelInstallationSubmitResponse_unstable;
+  }
+
+  async localInferenceInstallationsJobsList_unstable(
+    params: ModelInstallationJobsListRequest_unstable,
+  ): Promise<ModelInstallationJobsListResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/local-inference/installations/jobs/list",
+      params,
+    );
+    return zModelInstallationJobsListResponse_unstable.parse(
+      raw,
+    ) as ModelInstallationJobsListResponse_unstable;
+  }
+
+  async localInferenceInstallationsJobsEvents_unstable(
+    params: ModelInstallationJobEventsRequest_unstable,
+  ): Promise<ModelInstallationJobEventsResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/local-inference/installations/jobs/events",
+      params,
+    );
+    return zModelInstallationJobEventsResponse_unstable.parse(
+      raw,
+    ) as ModelInstallationJobEventsResponse_unstable;
+  }
+
+  async localInferenceInstallationsJobsControl_unstable(
+    params: ModelInstallationJobControlRequest_unstable,
+  ): Promise<ModelInstallationJobControlResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/local-inference/installations/jobs/control",
+      params,
+    );
+    return zModelInstallationJobControlResponse_unstable.parse(
+      raw,
+    ) as ModelInstallationJobControlResponse_unstable;
   }
 
   async localInferenceModelsDownload_unstable(

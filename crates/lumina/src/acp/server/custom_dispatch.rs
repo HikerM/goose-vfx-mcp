@@ -114,6 +114,30 @@ impl LuminaAcpAgent {
         result
     }
 
+    #[custom_method(MediaReadRequest)]
+    async fn dispatch_media_read(
+        &self,
+        req: MediaReadRequest,
+    ) -> Result<MediaReadResponse, agent_client_protocol::Error> {
+        self.on_media_read(req).await
+    }
+
+    #[custom_method(MediaAccessRequest)]
+    async fn dispatch_media_access(
+        &self,
+        req: MediaAccessRequest,
+    ) -> Result<MediaAccessResponse, agent_client_protocol::Error> {
+        self.on_media_access(req).await
+    }
+
+    #[custom_method(MediaReleaseRequest)]
+    async fn dispatch_media_release(
+        &self,
+        req: MediaReleaseRequest,
+    ) -> Result<MediaReleaseResponse, agent_client_protocol::Error> {
+        self.on_media_release(req).await
+    }
+
     #[custom_method(AddSessionExtensionRequest)]
     async fn dispatch_add_session_extension(
         &self,

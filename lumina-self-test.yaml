@@ -24,6 +24,7 @@ activities:
   - Validate durable control receipts, concurrent state-version conflicts, atomic rollback, and schema upgrades
   - Validate legacy registry preservation and bounded vision installation admission
   - Validate inline ACP audio in live, restored, history and tool-result messages
+  - Validate durable MCP media references, verified output bytes and scoped access across session restart
   - Generate comprehensive test report
 
 parameters:
@@ -59,10 +60,11 @@ parameters:
 
 instructions: |
   {% if test_phases == "media-forwarding" %}
-  Validate real MCP audio/resource-link delivery through the product ACP backend and persisted
-  session replay. Call the fixed validation entry exactly once. It starts an isolated local-model
-  session with one controlled MCP fixture, checks live notifications, restarts ACP and checks
-  the SQLite-backed replay. Report the actual exit status and returned scope. The audio was
+  Validate real MCP audio/resource-link delivery and durable media publication through the product
+  ACP backend and persisted session replay. Call the fixed validation entry exactly once. It starts
+  an isolated local-model session with one controlled MCP fixture, checks live references, verified
+  output bytes, scoped metadata and access tickets, then restarts ACP and checks the SQLite-backed
+  replay without persisting inline audio. Report the actual exit status and returned scope. The audio was
   generated in an earlier native TTS probe; this is not new synthesis or file-action acceptance.
   Preserve inherited D:/E: caches and do not download, copy or modify model weights.
   {% elif test_phases == "runtime-assets" %}
@@ -191,7 +193,7 @@ prompt: |
   MCP requests, ACP streams, replay notifications and a factual result.json.
   A nonzero exit, timeout, missing output or tool error is FAIL. Do not retry after failure.
   Summarize only the returned status, actual MCP call count, audio duration, evidence path and
-  scope. Browser playback, MediaResultRef, file actions and fresh TTS generation require separate evidence.
+  scope. HTTP/browser playback, native file actions and fresh TTS generation require separate evidence.
   {% elif test_phases == "runtime-assets" %}
   Execute the runtime asset, launch binding, vector resource admission and serialized vector protocol tests with your developer shell tool.
   Your first action must be the shell call below. Work only in D:/Project/goose, preserve

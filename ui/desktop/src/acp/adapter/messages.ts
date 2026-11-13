@@ -11,7 +11,10 @@ import {
   messagesChange,
 } from './shared';
 
-type StreamedContentBlock = Extract<ContentBlock, { type: 'text' | 'image' | 'audio' }>;
+type StreamedContentBlock = Extract<
+  ContentBlock,
+  { type: 'text' | 'image' | 'audio' | 'resource_link' }
+>;
 
 export function applyContentChunk(
   state: AdapterState,
@@ -39,7 +42,7 @@ export function applyContentChunk(
     if (lastContent?.type === 'text' && content.type === 'text') {
       lastContent.text += content.text;
     } else if (
-      (content.type === 'image' || content.type === 'audio') &&
+      (content.type === 'image' || content.type === 'audio' || content.type === 'resource_link') &&
       hasMediaContent(existing, content)
     ) {
       return messagesChangeWithLocalSteerConfirmation(state, existing, luminaMeta.steer);
@@ -116,6 +119,18 @@ function messageContentFromAcpContentBlock(
         ...(content._meta ? { _meta: content._meta } : {}),
         ...(content.annotations ? { annotations: content.annotations } : {}),
       };
+    case 'resource_link':
+      return {
+        type: 'resource_link',
+        uri: content.uri,
+        name: content.name,
+        ...(content.title != null ? { title: content.title } : {}),
+        ...(content.description != null ? { description: content.description } : {}),
+        ...(content.mimeType != null ? { mimeType: content.mimeType } : {}),
+        ...(content.size != null ? { size: content.size } : {}),
+        ...(content._meta ? { _meta: content._meta } : {}),
+        ...(content.annotations ? { annotations: content.annotations } : {}),
+      };
     default:
       return undefined;
   }
@@ -161,8 +176,13 @@ function lastMergeableMessageWithRole(
 
 function hasMediaContent(
   message: Message,
-  media: Extract<StreamedContentBlock, { type: 'image' | 'audio' }>
+  media: Extract<StreamedContentBlock, { type: 'image' | 'audio' | 'resource_link' }>
 ) {
+  if (media.type === 'resource_link') {
+    return message.content.some(
+      (content) => content.type === 'resource_link' && content.uri === media.uri
+    );
+  }
   return message.content.some(
     (content) =>
       (content.type === 'image' || content.type === 'audio') &&

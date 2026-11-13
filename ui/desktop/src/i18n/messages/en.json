@@ -3725,6 +3725,72 @@
   "mcpCenter.yes": {
     "defaultMessage": "Yes"
   },
+  "mediaResult.accessDenied": {
+    "defaultMessage": "Access to the result file was denied."
+  },
+  "mediaResult.actionBusy": {
+    "defaultMessage": "{action}…"
+  },
+  "mediaResult.actionCancelled": {
+    "defaultMessage": "{action}: cancelled."
+  },
+  "mediaResult.actionCompleted": {
+    "defaultMessage": "{action}: completed."
+  },
+  "mediaResult.actionFailed": {
+    "defaultMessage": "{action}: failed."
+  },
+  "mediaResult.channels": {
+    "defaultMessage": "{count,plural,one{# channel} other{# channels}}"
+  },
+  "mediaResult.copyPath": {
+    "defaultMessage": "Copy path"
+  },
+  "mediaResult.ioUnavailable": {
+    "defaultMessage": "The result file is temporarily unavailable."
+  },
+  "mediaResult.loading": {
+    "defaultMessage": "Loading preview…"
+  },
+  "mediaResult.missing": {
+    "defaultMessage": "The result file is missing."
+  },
+  "mediaResult.notFound": {
+    "defaultMessage": "This media result is no longer registered."
+  },
+  "mediaResult.open": {
+    "defaultMessage": "Open file"
+  },
+  "mediaResult.previewError": {
+    "defaultMessage": "Unable to preview this file. Its format may be unsupported or damaged."
+  },
+  "mediaResult.previewUnavailable": {
+    "defaultMessage": "A preview is not available for this result."
+  },
+  "mediaResult.publishing": {
+    "defaultMessage": "The file is still being published."
+  },
+  "mediaResult.readError": {
+    "defaultMessage": "Unable to load this media result."
+  },
+  "mediaResult.retry": {
+    "defaultMessage": "Retry"
+  },
+  "mediaResult.reveal": {
+    "defaultMessage": "Show in folder"
+  },
+  "mediaResult.saveAs": {
+    "defaultMessage": "Save as"
+  },
+  "mediaResult.tampered": {
+    "defaultMessage": "The result file has changed or is damaged."
+  },
+  "mediaResult.unsafePath": {
+    "defaultMessage": "The result location could not be verified."
+  },
+  "mediaResult.unsupportedFormat": {
+    "defaultMessage": "This media format is not supported."
+  },
   "mentionPopover.itemsFound": {
     "defaultMessage": "{count,plural,one{# item found} other{# items found}}"
   },

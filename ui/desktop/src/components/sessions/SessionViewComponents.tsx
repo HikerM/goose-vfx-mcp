@@ -8,9 +8,11 @@ import MarkdownContent from '../MarkdownContent';
 import ToolCallWithResponse from '../ToolCallWithResponse';
 import ImagePreview from '../ImagePreview';
 import AudioPreview from '../AudioPreview';
+import MediaResourceLink from '../media/MediaResourceLink';
 import {
   getTextAndImageContent,
   getAudioContent,
+  getResourceLinks,
   getThinkingContent,
   ToolRequestMessageContent,
   ToolResponseMessageContent,
@@ -74,6 +76,7 @@ export const getToolResponsesMap = (
 };
 
 interface SessionMessagesProps {
+  sessionId?: string;
   messages: Message[];
   isLoading: boolean;
   error: string | null;
@@ -84,6 +87,7 @@ interface SessionMessagesProps {
  * Common component for displaying session messages
  */
 export const SessionMessages: React.FC<SessionMessagesProps> = ({
+  sessionId,
   messages,
   isLoading,
   error,
@@ -115,6 +119,7 @@ export const SessionMessages: React.FC<SessionMessagesProps> = ({
                 .map((message, index) => {
                   const { textContent, imagePaths } = getTextAndImageContent(message);
                   const audioContent = getAudioContent(message);
+                  const resourceLinks = getResourceLinks(message);
                   const thinkingContent = getThinkingContent(message);
 
                   // Get tool requests from the message
@@ -186,12 +191,20 @@ export const SessionMessages: React.FC<SessionMessagesProps> = ({
                             mimeType={audio.mimeType}
                           />
                         ))}
+                        {resourceLinks.map((resource) => (
+                          <MediaResourceLink
+                            key={resource.uri}
+                            resource={resource}
+                            sessionId={sessionId}
+                          />
+                        ))}
 
                         {/* Tool requests and responses */}
                         {toolRequests.length > 0 && (
                           <div className="lumina-message-tool bg-background-primary border border-border-primary dark:border-gray-700 rounded-b-2xl px-4 pt-4 pb-2 mt-1">
                             {toolRequests.map((toolRequest) => (
                               <ToolCallWithResponse
+                                sessionId={sessionId}
                                 // In the session history page, if no tool response found for given request, it means the tool call
                                 // is broken or cancelled.
                                 isCancelledMessage={

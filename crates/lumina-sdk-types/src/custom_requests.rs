@@ -14,6 +14,8 @@ mod project_workspace;
 pub use project_workspace::*;
 mod model_lifecycle;
 pub use model_lifecycle::*;
+mod media;
+pub use media::*;
 
 /// Schema descriptor for a single custom method, produced by the
 /// `#[custom_methods]` macro's generated `custom_method_schemas()` function.

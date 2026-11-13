@@ -1,0 +1,77 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-11-13T02:55:34.260758+00:00",
+  "scope": "Actual local-model MCP call, durable media reference, verified output bytes and metadata, scoped ACP read/access/release, and process-restart SQLite replay. Existing native TTS WAV; not new synthesis, HTTP playback, native file actions or packaged Electron acceptance.",
+  "inputSha256": {
+    "D:\\Project\\goose\\target\\debug\\lumina.exe": "a87c50ce9c47319ef45ca43bd11233333f981caafdd73bd28ecb0184e9dc3e49",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\audio-runtime-results\\pocket-tts-english.wav": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\moe-cuda-source.json": "01fe7201f4fdd3b199a941851b41539c86e6a25a5005b924ec55ba8338b5501e",
+    "D:\\Project\\goose\\target\\lifecycle-validation\\selftest-clean-entry-app\\data\\models\\registry.json": "71b1f8e60e4ebb815047e6e5896d3749b3ca529b508af38dbb1b721bb73c74db",
+    "D:\\Project\\goose\\bin\\test-lumina-media-forwarding.py": "ce753d9dc170a39c4c7b502b736e0fbc0f46a52cbcda307145e8a56128b28250",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server.rs": "5352459a7c01d0f6cc6370b9ddd4b81a29b8136279044fa558aa0014746484dc",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server\\load_session.rs": "d41081f76ceaadaa45536ed6aaf498a885ab65f224cdef1b66d0ceafdde74173",
+    "D:\\Project\\goose\\crates\\lumina\\src\\acp\\server\\media.rs": "c94b1bd2d95912b6d9a08acdfba4fd696b6f2030f72f1068d3262625dd851699",
+    "D:\\Project\\goose\\crates\\lumina\\src\\agents\\agent.rs": "729db268c8b77a87d910dec1b273e59df7ca7b2b9d3815024c49608092d549f8",
+    "D:\\Project\\goose\\crates\\lumina\\src\\session\\session_manager.rs": "50aeb9861fa9358376a88eaad4b821244ebe49bb7cc7281d3e39c70ce8a20026",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\access.rs": "7454b1c1286faa09fe6164e0d98856eb6f70f24d97a9c2bbc8571dd289808400",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\access_tests.rs": "5a8b2a42fb96866a5038320ec4c0ba5b9b9cd776b965175b864168907f7e2232",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\domain.rs": "24c4ed709d7eab8a3d1b2f3a661569013395ae51c77a8ecd4c47f66546320add",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\files.rs": "3aba448f747b4b30b2449386a4aa730fc271c49a8d07eadcb7978fc04b943734",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\formats.rs": "e389f2d48051fc7151f923431edff4c84256dfd2d199df794954b80a43cbfcae",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\ingest.rs": "e5ece813e679a8f966f19e8916b534190c8e649320097b9af68adc0ee263c9a3",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\ingest_tests.rs": "9bac7f601376a7e21e1c80c5c0ebb6b05cb5c286baa3d5e70a1452ee81ae5961",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\mod.rs": "0e1774961406496a5a90301da6760554bf81e1079c6b92e5ac63843076fd3bac",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\store.rs": "ba43bc8032de528873b484866a80f48e8daf09f09a94347aff79123cb3fbe728",
+    "D:\\Project\\goose\\crates\\lumina\\src\\media\\tests.rs": "5dcf1dcdd5e7ffd83fb1fc57454adbeb8ed31b61989d56c52b277f5e2cef21a8"
+  },
+  "model": {
+    "path": "D:\\Lumina\\data\\models\\modelscope\\Abiray__Qwen3.6-35B-A3B-Q4_K_M-GGUF\\Qwen3.6-35B-A3B-Q4_K_M.gguf",
+    "sha256": "04c1756f604eaee089556f1604dbb3a16a4ec991b02a1512dfb389793b488b3f"
+  },
+  "availableTools": [
+    "mediaforwarding__emit_media",
+    "platform__manage_schedule"
+  ],
+  "sessionId": "20261113_1",
+  "toolCallId": "xDtfP7oLdQ4rZQrM55gUdo1TcYaDkzPu",
+  "actualMcpCalls": 1,
+  "audioSha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+  "audioDurationSeconds": 2.4,
+  "liveUpdatesSha256": "93efb095f8221f6e48630f010cc050a86756fb95fc8933c047cbaff85d643029",
+  "replayUpdatesSha256": "3944488c72aa121c66d1e6de2a730b8022c6a2d000898ae009565875f36ee199",
+  "persistedMessageRows": 4,
+  "databaseIntegrity": "ok",
+  "resultId": "a95e9512-5bd6-8432-ac5c-3cfca9357af5",
+  "outputPath": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\app\\data\\outputs\\id-32303236313131335f31\\id-746f6f6c3a31653438663134303861373937323535376233656136613164346438343539363731313037323165333935346335623564323034346438633461386662633366\\a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+  "mediaReferenceStableAcrossRestart": true,
+  "inlineAudioAbsentFromHistory": true,
+  "scopedMetadataRead": true,
+  "inactiveSessionRejected": true,
+  "accessPurposesVerified": [
+    "preview",
+    "save_as",
+    "open",
+    "reveal",
+    "copy_path"
+  ],
+  "finishedAt": "2026-11-13T02:59:56.443633+00:00",
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\result.json",
+    "sha256": "58156a8e29a500ef5162986a51334ad8a71360b9f867689f8b167aa88194acd7"
+  },
+  "priorFailure": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r1\\result.json",
+    "cause": "The validator expected private media_session_not_active data. The actual ACP transport intentionally redacts it; r2 checks the exact public -32002 / ACP protocol error / acp_protocol_error response. No product behavior or negative-case acceptance was weakened.",
+    "mappingSource": "vendor/agent-client-protocol/src/util.rs:53"
+  },
+  "readbackEvidence": {
+    "live-media.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\live-media.json",
+      "sha256": "1bcecfb6409a57f84e49059022ff0b149cbce7abcf286ecada597ecd3b02d177"
+    },
+    "replay-media.json": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\replay-media.json",
+      "sha256": "1bcecfb6409a57f84e49059022ff0b149cbce7abcf286ecada597ecd3b02d177"
+    }
+  }
+}

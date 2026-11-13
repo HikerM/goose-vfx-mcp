@@ -2074,12 +2074,18 @@ impl Agent {
                     break;
                 }
 
-                let conversation_with_moim = super::moim::inject_moim(
+                let mut conversation_with_moim = super::moim::inject_moim(
                     &session_config.id,
                     conversation.clone(),
                     &self.extension_manager,
                     turns_taken,
                     max_turns,
+                ).await;
+
+                crate::media::hydrate_tool_media(
+                    session_manager.storage(),
+                    &session_config.id,
+                    &mut conversation_with_moim,
                 ).await;
 
                 let mut stream = Self::stream_response_from_provider(
@@ -2516,7 +2522,7 @@ impl Agent {
                                             request.tool_meta.clone(),
                                         );
 
-                                    let final_response = match &request.tool_call {
+                                    let mut final_response = match &request.tool_call {
                                         Ok(_) => request_to_response_map
                                             .remove(&request.id)
                                             .unwrap_or_else(|| Message::user().with_generated_id()),
@@ -2543,6 +2549,13 @@ impl Agent {
                                             response
                                         }
                                     };
+
+                                    crate::media::persist_tool_media(
+                                        session_manager.storage(),
+                                        &session_config.id,
+                                        request,
+                                        &mut final_response,
+                                    ).await;
 
                                     // Response placeholder is created before tools run, so clamp request to avoid inverted ordering.
                                     if request_msg.created > final_response.created {
@@ -3346,7 +3359,7 @@ impl Agent {
 
         messages.push(Message::user().with_text(recipe_prompt));
 
-        let (messages, issues) = fix_conversation(messages);
+        let (mut messages, issues) = fix_conversation(messages);
         if !issues.is_empty() {
             issues
                 .iter()
@@ -3357,6 +3370,13 @@ impl Agent {
             "Added recipe prompt to messages, total messages: {}",
             messages.len()
         );
+
+        crate::media::hydrate_tool_media(
+            self.config.session_manager.storage(),
+            session_id,
+            &mut messages,
+        )
+        .await;
 
         tracing::info!("Calling provider to generate recipe content");
         let provider = self.provider.lock().await;

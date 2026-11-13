@@ -41,6 +41,7 @@ describe('LuminaServeLeaseRegistry', () => {
 
     expect(store.getAcpUrl(1)).toBe('ws://127.0.0.1:1234/acp?token=test');
     expect(store.getSecretKey(1)).toBe('local-secret');
+    expect(store.get(1)?.kind).toBe('managed-local');
   });
 
   it('throws a recovery message after the process exits', () => {
@@ -55,7 +56,7 @@ describe('LuminaServeLeaseRegistry', () => {
     expect(() => store.getAcpUrl(1)).toThrow(LUMINA_SERVE_EXITED_USER_MESSAGE);
     expect(() => store.getSecretKey(1)).toThrow(LUMINA_SERVE_EXITED_USER_MESSAGE);
     expect(logger.error).toHaveBeenCalledWith(
-      'Lumina ACP server exited unexpectedly',
+      'Lumina backend exited unexpectedly',
       expect.objectContaining({ code: 1, signal: null, windowIds: [1] })
     );
   });
@@ -95,12 +96,16 @@ describe('LuminaServeLeaseRegistry', () => {
 
   it('creates an external ACP lease without process cleanup', async () => {
     const store = new LuminaServeLeaseRegistry(createLogger());
-    const lease = store.createExternal('wss://example.com/lumina/acp?token=test', 'external-secret');
+    const lease = store.createExternal(
+      'wss://example.com/lumina/acp?token=test',
+      'external-secret'
+    );
 
     store.attachWindow(1, lease);
 
     expect(store.getAcpUrl(1)).toBe('wss://example.com/lumina/acp?token=test');
     expect(store.getSecretKey(1)).toBe('external-secret');
+    expect(store.get(1)?.kind).toBe('external');
 
     await store.releaseWindow(1);
     expect(store.getAcpUrl(1)).toBeNull();
@@ -123,5 +128,12 @@ describe('LuminaServeLeaseRegistry', () => {
 
     await store.releaseWindow(2);
     expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it('never treats an externally configured loopback backend as a managed local process', () => {
+    const store = new LuminaServeLeaseRegistry(createLogger());
+    const lease = store.createExternal('ws://127.0.0.1:1234/acp?token=test', 'external-secret');
+    store.attachWindow(1, lease);
+    expect(store.get(1)?.kind).toBe('external');
   });
 });

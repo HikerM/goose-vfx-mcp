@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import ImagePreview from './ImagePreview';
 import AudioPreview from './AudioPreview';
+import MediaResourceLink from './media/MediaResourceLink';
 import { formatMessageTimestamp } from '../utils/timeUtils';
 import MarkdownContent from './MarkdownContent';
 import ThinkingContent from './ThinkingContent';
@@ -8,6 +9,7 @@ import ToolCallWithResponse from './ToolCallWithResponse';
 import {
   getTextAndImageContent,
   getAudioContent,
+  getResourceLinks,
   getThinkingContent,
   getToolRequests,
   getToolResponses,
@@ -53,6 +55,7 @@ export default function LuminaMessage({
 
   const { textContent: displayText, imagePaths } = getTextAndImageContent(message);
   const audioContent = getAudioContent(message);
+  const resourceLinks = getResourceLinks(message);
   const thinkingContent = getThinkingContent(message);
 
   const timestamp = useMemo(() => formatMessageTimestamp(message.created), [message.created]);
@@ -133,12 +136,16 @@ export default function LuminaMessage({
               !displayText.trim() &&
               imagePaths.length === 0 &&
               audioContent.length === 0 &&
+              resourceLinks.length === 0 &&
               toolRequests.length === 0
             }
           />
         )}
 
-        {(displayText.trim() || imagePaths.length > 0 || audioContent.length > 0) && (
+        {(displayText.trim() ||
+          imagePaths.length > 0 ||
+          audioContent.length > 0 ||
+          resourceLinks.length > 0) && (
           <div className="flex flex-col group">
             {displayText.trim() && (
               <div ref={contentRef} className="w-full">
@@ -156,6 +163,9 @@ export default function LuminaMessage({
 
             {audioContent.map((audio, index) => (
               <AudioPreview key={index} data={audio.data} mimeType={audio.mimeType} />
+            ))}
+            {resourceLinks.map((resource) => (
+              <MediaResourceLink key={resource.uri} resource={resource} sessionId={sessionId} />
             ))}
 
             {toolRequests.length === 0 && (

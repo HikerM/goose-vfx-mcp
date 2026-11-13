@@ -72,6 +72,7 @@ type RawEmbeddedResource = {
 
 type RawResource = {
   _meta?: JsonObject;
+  annotations?: ContentAnnotations;
   description?: string;
   icons?: ContentIcon[];
   mimeType?: string;
@@ -205,6 +206,7 @@ export type MessageContent =
   | (TextContent & { type: 'text' })
   | (ImageContent & { type: 'image' })
   | (AudioContent & { type: 'audio' })
+  | Extract<ContentBlock, { type: 'resource_link' }>
   | (ToolRequest & { type: 'toolRequest' })
   | (ToolResponse & { type: 'toolResponse' })
   | (ToolConfirmationRequest & { type: 'toolConfirmationRequest' })
@@ -333,6 +335,12 @@ export function getTextAndImageContent(message: Message): {
 
 export function getAudioContent(message: Message): (AudioContent & { type: 'audio' })[] {
   return message.content.filter((content) => content.type === 'audio');
+}
+
+export function getResourceLinks(
+  message: Message
+): Extract<ContentBlock, { type: 'resource_link' }>[] {
+  return message.content.filter((content) => content.type === 'resource_link');
 }
 
 function stripToolCallMarkers(text: string): string {

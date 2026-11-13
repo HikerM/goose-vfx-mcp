@@ -1,0 +1,72 @@
+{
+  "status": "PASS_PARAMETER_MODULE_SCOPE",
+  "recordedAt": "2026-11-13T03:15:51.631936+00:00",
+  "scope": "Typed per-model parameter selection, validation, effective request snapshots and same-model result patches; no managed task execution, resource admission or Agent conversation entrypoint.",
+  "profiles": [
+    "SD1.5 CPU text-to-image",
+    "MiniMax H3 CUDA text-to-video-audio",
+    "MiniMax H3 CUDA first-frame-to-video-audio"
+  ],
+  "sourceSha256": {
+    "crates/lumina-local-inference/src/lifecycle/mod.rs": "d41f29741e3b561bd4e82044d7d46bc9fb19a61e969fac5fb0dedb83ecc2b895",
+    "crates/lumina-local-inference/src/lifecycle/task_parameters.rs": "6dc98469817ebe3fc17825d1f4388b96fe17fa2713a7f32be8daeb1bc0f70130",
+    "crates/lumina-local-inference/src/lifecycle/task_parameters/compile.rs": "7e94f4a7eb05de616e2c3f7a53b306fe7b91e998c28a9b9c1dbc7c350e057a2e",
+    "crates/lumina-local-inference/src/lifecycle/task_parameters/profiles.rs": "ed6161074d4896a1399477f3381dc2ff3aa6992c49b6856bdddc2175cf3cc43a",
+    "crates/lumina-local-inference/src/lifecycle/task_parameters/registry.rs": "3dadee6c99205c0c38ba44264076afe040fc15fa3c29cbea01b846f118425723",
+    "crates/lumina-local-inference/tests/lifecycle_task_parameters.rs": "c783fedab4541688bab5f6515824284bdd0011613c2c5b897038a166ab993d86"
+  },
+  "checks": {
+    "m4-task-parameters-r2.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-task-parameters-r2.log",
+      "sha256": "3455582ebd8281a645dcd164b1a129d5df35d34923844e8b944e0a18aaeb0d1a",
+      "exitCode": 0
+    },
+    "m4-task-parameters-clippy-r1.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-task-parameters-clippy-r1.log",
+      "sha256": "7fd141f57d7c0892a2d6c7800ef219863b93d16bcff7b7792d2950ac9a0d42ab",
+      "exitCode": 0
+    },
+    "m4-format-r1.log": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-format-r1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0
+    }
+  },
+  "testCount": 15,
+  "testNames": [
+    "a_different_task_adapter_does_not_inherit_diffusion_request_or_descriptor_types",
+    "invalid_geometry_nonfinite_cfg_and_implicit_asset_loading_fail_at_named_fields",
+    "unknown_options_and_unsupported_model_controls_are_not_silently_ignored",
+    "model_switch_selects_a_new_schema_and_defaults_instead_of_reusing_image_options",
+    "native_plan_has_symbolic_paths_and_never_interprets_prompt_as_shell",
+    "h3_native_fps_frame_alignment_and_duration_conflicts_are_rejected_without_clamping",
+    "defaults_and_advanced_values_reach_native_arguments_without_resource_promotion",
+    "profiles_match_independent_published_engine_and_weight_evidence",
+    "duration_only_patch_updates_frames_but_keeps_seed_and_resolution",
+    "cross_session_model_change_unknown_target_and_tampered_snapshot_cannot_be_reused",
+    "variant_and_component_runtime_binding_cannot_be_swapped",
+    "explicit_new_seed_is_recorded_once_and_inherited_on_later_regeneration",
+    "snapshot_roundtrip_and_single_field_regeneration_preserve_inputs_seed_and_other_values",
+    "reuse_rejects_nonfinite_duration_patches_instead_of_inheriting_parent_frames",
+    "reuse_rejects_nonfinite_cfg_patches_for_both_models_instead_of_inheriting"
+  ],
+  "commands": [
+    "bin/cargo.cmd test -p lumina-local-inference --test lifecycle_task_parameters --offline --locked",
+    "bin/cargo.cmd clippy -p lumina-local-inference --all-targets --offline --locked -- -D warnings",
+    "bin/cargo.cmd fmt --all -- --check"
+  ],
+  "crossReviewFix": "Reject non-finite cfgScale and durationSeconds before typed request or patch is projected to JSON; explicit invalid patch values must not turn into null and inherit parent values.",
+  "priorFailure": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-task-parameters-r1.log",
+    "sha256": "ba447b45734e831b8ffea0e29ca86dff19c291ceb850dbdd285417b3ea9bf74d",
+    "passed": 13,
+    "failed": 2,
+    "reason": "Implementation and added tests changed during the first compile; two new regressions observed the earlier library behavior. This run was not accepted as frozen-source verification. The corrected sources were frozen and rebuilt for r2."
+  },
+  "limitations": [
+    "All prepared tasks remain NeedsResourceAdmission, including recorded smoke parameters.",
+    "Model/service-owned manifest and media input resolution, process execution, output publication, Agent/MCP entrypoints and cancellation remain unconnected.",
+    "ASR/TTS use independent adapters under development and are not covered by these 15 tests.",
+    "Strict Clippy applies to lumina-local-inference all targets; existing dependency warnings remain. This does not claim full workspace strict Clippy."
+  ]
+}

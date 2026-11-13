@@ -1,0 +1,362 @@
+{
+  "status": "PARTIAL",
+  "interruption": {
+    "code": "USER_STOPPED",
+    "source": "Computer Use reported a physical Escape-key interruption during the source-overwrite dialog check.",
+    "response": "Stopped all Computer Use and Playwright window/IPC operations. No subsequent process or clipboard cleanup. Parent explicitly authorized only file/terminal evidence and source checks."
+  },
+  "frozenAt": "2026-11-13T03:13:20.922449+00:00",
+  "scope": "Actual development Electron runtime using current production main/preload/renderer, actual local TLS CLI backend, actual SQLite replay and registered MCP WAV. Not a packaged installer acceptance.",
+  "identity": {
+    "sessionId": "20261113_1",
+    "resultId": "a95e9512-5bd6-8432-ac5c-3cfca9357af5",
+    "mime": "audio/wav",
+    "bytes": 115244,
+    "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+    "cliSha256AtHandoff": "a87c50ce9c47319ef45ca43bd11233333f981caafdd73bd28ecb0184e9dc3e49",
+    "appDirectory": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\app"
+  },
+  "setup": {
+    "electronExecutable": "D:\\Project\\goose\\ui\\node_modules\\electron\\dist\\electron.exe",
+    "productionSourceHashesAtBuild": {
+      "ui/desktop/src/main.ts": "37b08498f4bd88b17454743eded2fbcb7d109f691f374945b4797eee010beced",
+      "ui/desktop/src/preload.ts": "1e3c1c16207eea23d17de33753e5ff64852e0de7cbf1281b416231e451a12a56",
+      "ui/desktop/src/desktopMediaBridge.ts": "2f2e77eca07964c6860a98c930b9cd8046dcbf40368dc1de3a89b92cd57bf23a",
+      "ui/desktop/src/luminaServeLeaseRegistry.ts": "510bcf8c6a493e1c4d37eb3090d82e851e04c218b899ee2cda368d35dedd2ad5",
+      "ui/desktop/src/components/media/ConnectedMediaResultCard.tsx": "de5dbe703ccab467451af631b53436e4ded07c0f50dbd53a11730b048e022869",
+      "ui/desktop/src/components/media/MediaResultCard.tsx": "a89885fdca15bbb28b0557a6e84348a757eefa9f6a79c9ab526a4eeaec760e70",
+      "ui/desktop/src/components/media/MediaResourceLink.tsx": "24bd9923af254c2d71a878bc4440ed01c5f90bc2969c1753b57acdf570d048aa"
+    },
+    "productionSourceHashesAtFreeze": {
+      "ui/desktop/src/main.ts": "37b08498f4bd88b17454743eded2fbcb7d109f691f374945b4797eee010beced",
+      "ui/desktop/src/preload.ts": "1e3c1c16207eea23d17de33753e5ff64852e0de7cbf1281b416231e451a12a56",
+      "ui/desktop/src/desktopMediaBridge.ts": "2f2e77eca07964c6860a98c930b9cd8046dcbf40368dc1de3a89b92cd57bf23a",
+      "ui/desktop/src/luminaServeLeaseRegistry.ts": "510bcf8c6a493e1c4d37eb3090d82e851e04c218b899ee2cda368d35dedd2ad5",
+      "ui/desktop/src/components/media/ConnectedMediaResultCard.tsx": "de5dbe703ccab467451af631b53436e4ded07c0f50dbd53a11730b048e022869",
+      "ui/desktop/src/components/media/MediaResultCard.tsx": "a89885fdca15bbb28b0557a6e84348a757eefa9f6a79c9ab526a4eeaec760e70",
+      "ui/desktop/src/components/media/MediaResourceLink.tsx": "24bd9923af254c2d71a878bc4440ed01c5f90bc2969c1753b57acdf570d048aa"
+    },
+    "testedSourcesUnchanged": true,
+    "buildOutput": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\build",
+    "existingViteOutputUntouched": true,
+    "bootstrapAdaptations": [
+      "Set userData/sessionData/logs/crashDumps/temp and disk cache to this D-drive validation directory before production imports; production userData then selects the supplied D-drive app root.",
+      "Resolve existing workspace dependencies via NODE_PATH plus Module._initPaths; use existing ui/desktop/src as development resourcesPath for required Windows shims.",
+      "Suppress only Windows default lumina:// application registration in validation bootstrap; production lumina-media protocol and native IPC are unchanged.",
+      "ENABLE_PLAYWRIGHT=true skips React DevTools automatic installation via the single production startup adjustment."
+    ],
+    "noNewModelInference": true,
+    "noNewDependenciesOrWeightsDownloaded": true,
+    "sessionAutoNamingDisabled": true,
+    "failedPreflightAttemptsPreserved": [
+      "r1: validation external-dependency lookup lacked workspace path",
+      "r2: validation lookup additionally needed existing desktop workspace SDK link",
+      "r3: development executable resources/bin lacked required npx shims"
+    ],
+    "preflightFinal": {
+      "status": "PASS",
+      "paths": {
+        "userData": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\preflight-app\\desktop",
+        "sessionData": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\preflight-electron-state\\sessionData",
+        "logs": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\preflight-electron-state\\logs",
+        "crashDumps": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\preflight-electron-state\\crashDumps",
+        "temp": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\preflight-electron-state\\temp"
+      },
+      "mediaProtocolRegistered": true,
+      "actualWindowTitle": "Lumina",
+      "ipcSurface": true,
+      "pageErrors": [],
+      "screenshot": "preflight-window.png",
+      "notes": [
+        "Empty app configuration; no model inference/download performed",
+        "Actual production main/preload/renderer; native local TLS backend started",
+        "Existing workspace dependencies and development resources reused; no installer claim"
+      ]
+    }
+  },
+  "completedNativeChecks": [
+    "Restored the actual persisted session through the production resume route, expanded its real MCP tool output and registered media card.",
+    "Native audio control decoded 2.4-second WAV with readyState 4, no autoplay, no decoder error.",
+    "Keyboard controls performed play, pause and seek. The actual opaque protocol response was 206 with matching length, ETag and Content-Range.",
+    "Real Copy path action wrote a registered source path to the OS clipboard; file bytes and SHA matched the registered result.",
+    "Real native Save As dialog wrote saved-native.wav under the validation directory; complete bytes/SHA matched and source remained unchanged at that check.",
+    "A second real Save As dialog was cancelled; UI reported cancelled and source remained unchanged at that check.",
+    "Real Show in folder action opened Explorer and visibly selected the registered WAV. Only this newly created Explorer window was closed."
+  ],
+  "openFileBoundary": {
+    "realShellOpenPathInvoked": true,
+    "uiReportedCompleted": true,
+    "windowsApplicationChooserObserved": true,
+    "observationSource": "Subsequent Computer Use screenshot showed the Windows existing-application chooser for .wav overlaying the save dialog. This observation occurred after native-checks-progress.json was saved.",
+    "defaultAssociationChanged": false,
+    "externalPlayerDecodeVerified": false,
+    "interpretation": "OS open handoff is observed; shell acceptance does not prove external playback or selection of an application."
+  },
+  "nativeChecksRecordedBeforeInterruption": {
+    "checks": [
+      {
+        "name": "native_audio_play",
+        "at": "2026-11-13T03:03:32.692Z",
+        "state": [
+          {
+            "tag": "AUDIO",
+            "src": "lumina-media://content/61255c4d0c3db5185d660c36713a9e9a91ade44282663652b6a702d42090d13c",
+            "duration": 2.4,
+            "readyState": 4,
+            "currentTime": 0.169084,
+            "paused": false,
+            "autoplay": false,
+            "error": null
+          }
+        ]
+      },
+      {
+        "name": "native_audio_pause",
+        "at": "2026-11-13T03:03:32.712Z",
+        "state": [
+          {
+            "tag": "AUDIO",
+            "src": "lumina-media://content/61255c4d0c3db5185d660c36713a9e9a91ade44282663652b6a702d42090d13c",
+            "duration": 2.4,
+            "readyState": 4,
+            "currentTime": 0.182958,
+            "paused": true,
+            "autoplay": false,
+            "error": null
+          }
+        ]
+      },
+      {
+        "name": "native_audio_seek",
+        "at": "2026-11-13T03:03:32.734Z",
+        "state": [
+          {
+            "tag": "AUDIO",
+            "src": "lumina-media://content/61255c4d0c3db5185d660c36713a9e9a91ade44282663652b6a702d42090d13c",
+            "duration": 2.4,
+            "readyState": 1,
+            "currentTime": 0.206958,
+            "paused": true,
+            "autoplay": false,
+            "error": null
+          }
+        ]
+      },
+      {
+        "name": "native_clipboard_copy",
+        "at": "2026-11-13T03:03:44.428Z",
+        "sourcePath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-media-durable-flow-r2\\app\\data\\outputs\\id-32303236313131335f31\\id-746f6f6c3a31653438663134303861373937323535376233656136613164346438343539363731313037323165333935346335623564323034346438633461386662633366\\a95e9512-5bd6-8432-ac5c-3cfca9357af5.wav",
+        "sourceBytes": 115244,
+        "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+        "matchesRegisteredResult": true
+      },
+      {
+        "name": "native_save_as",
+        "at": "2026-11-13T03:05:45.975Z",
+        "destination": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\saved-native.wav",
+        "bytes": 115244,
+        "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870",
+        "sourceUnchanged": true
+      },
+      {
+        "name": "native_save_cancel",
+        "at": "2026-11-13T03:05:58.055Z",
+        "status": "cancelled",
+        "sourceUnchanged": true
+      },
+      {
+        "name": "native_reveal",
+        "at": "2026-11-13T03:06:10.719Z",
+        "windowTitle": "id-746f6f6c3a31653438663134303861373937323535376233656136613164346438343539363731313037323165333935346335623564323034346438633461386662633366 - 文件资源管理器",
+        "visualSelectionConfirmed": true,
+        "screenshot": "native-reveal.png"
+      },
+      {
+        "name": "reveal_window_closed",
+        "at": "2026-11-13T03:06:23.358Z",
+        "closed": true
+      },
+      {
+        "name": "native_open_request",
+        "at": "2026-11-13T03:06:46.924Z",
+        "uiReported": "completed",
+        "osPlayerWindowObserved": false
+      }
+    ],
+    "network": [
+      {
+        "url": "lumina-media://content/61255c4d0c3db5185d660c36713a9e9a91ade44282663652b6a702d42090d13c",
+        "status": 206,
+        "headers": {
+          "content-security-policy": "default-src 'none'; sandbox",
+          "cache-control": "no-store",
+          "etag": "\"88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870\"",
+          "content-range": "bytes 0-115243/115244",
+          "x-content-type-options": "nosniff",
+          "accept-ranges": "bytes",
+          "content-length": "115244",
+          "content-type": "audio/wav"
+        }
+      }
+    ],
+    "pageErrors": [],
+    "consoleErrors": []
+  },
+  "unverifiedNativeChecks": [
+    "Source-overwrite rejection through the actual native dialog; no overwrite was submitted.",
+    "Cross-window and subframe rejection through actual Electron IPC/protocol.",
+    "Session-switch/window-close cancellation, opaque mapping revocation and guard release in the actual desktop runtime.",
+    "External player decoding after OS application selection.",
+    "Packaged Electron installer/deployment, remote backend and TLS/proxy variants."
+  ],
+  "sceneAtStopNotRechecked": {
+    "electronPid": 7416,
+    "managedBackend": "Still owned by the validation Electron app at the stop; do not concurrently start another process against the same app database.",
+    "nativeDialog": "Save As open; filename field last observed empty; no pending overwrite was submitted.",
+    "clipboard": "Original clipboard formats were retained in main-process globalThis.mediaQaClipboard. They were not restored after the stop.",
+    "subsequentUiOrProcessOperations": false,
+    "databaseAccessAfterStop": false,
+    "workingDirectoryObservation": "The initial resume deep-link backend startup logged the Windows home directory; restored session UI showed D:/Project/goose. Managed app/cache/log/temp paths remained on D/E."
+  },
+  "sourceValidation": {
+    "checks": [
+      {
+        "log": "typecheck-final.log",
+        "exitCode": 0,
+        "name": "typecheck-final",
+        "command": "pnpm run typecheck",
+        "startedAt": "2026-11-13T03:10:27.6992962Z",
+        "finishedAt": "2026-11-13T03:10:59.4676181Z"
+      },
+      {
+        "log": "vitest-final.log",
+        "exitCode": 0,
+        "name": "vitest-final",
+        "command": "pnpm exec vitest run src/desktopMediaBridge.test.ts src/components/media/ConnectedMediaResultCard.test.tsx src/components/media/MediaResultCard.test.tsx src/components/media/MediaResourceLink.test.tsx src/luminaServeLeaseRegistry.test.ts src/utils/__tests__/csp.test.ts src/acp/__tests__/messageResources.test.ts src/components/ToolCallWithResponse.audio.test.tsx src/components/ToolCallWithResponse.resource.test.tsx --pool threads --maxWorkers 1 --no-file-parallelism --reporter=default --reporter=json --outputFile=D:/Project/goose/target/lifecycle-validation/m4-electron-media-r1/vitest-final.json",
+        "startedAt": "2026-11-13T03:10:59.4771372Z",
+        "finishedAt": "2026-11-13T03:11:20.9386361Z"
+      },
+      {
+        "log": "eslint-final.log",
+        "exitCode": 0,
+        "name": "eslint-final",
+        "command": "pnpm exec eslint src/main.ts src/preload.ts src/desktopMediaBridge.ts src/desktopMediaBridge.test.ts src/types/desktopMedia.ts src/luminaServeLeaseRegistry.ts src/luminaServeLeaseRegistry.test.ts src/utils/csp.ts src/utils/__tests__/csp.test.ts src/components/media/ConnectedMediaResultCard.tsx src/components/media/ConnectedMediaResultCard.test.tsx src/components/media/MediaResultCard.tsx src/components/media/MediaResultCard.test.tsx src/components/media/MediaResourceLink.tsx src/components/media/MediaResourceLink.test.tsx src/components/media/mediaResultPresentation.ts src/components/media/types.ts --max-warnings 0",
+        "startedAt": "2026-11-13T03:11:20.9391802Z",
+        "finishedAt": "2026-11-13T03:12:51.4610906Z"
+      },
+      {
+        "log": "prettier-final.log",
+        "exitCode": 0,
+        "name": "prettier-final",
+        "command": "pnpm exec prettier --check src/main.ts src/preload.ts src/desktopMediaBridge.ts src/desktopMediaBridge.test.ts src/types/desktopMedia.ts src/luminaServeLeaseRegistry.ts src/luminaServeLeaseRegistry.test.ts src/utils/csp.ts src/utils/__tests__/csp.test.ts src/components/media/ConnectedMediaResultCard.tsx src/components/media/ConnectedMediaResultCard.test.tsx src/components/media/MediaResultCard.tsx src/components/media/MediaResultCard.test.tsx src/components/media/MediaResourceLink.tsx src/components/media/MediaResourceLink.test.tsx src/components/media/mediaResultPresentation.ts src/components/media/types.ts index.html",
+        "startedAt": "2026-11-13T03:12:51.4617987Z",
+        "finishedAt": "2026-11-13T03:12:54.6278056Z"
+      },
+      {
+        "log": "i18n-final.log",
+        "exitCode": 0,
+        "name": "i18n-final",
+        "command": "pnpm run i18n:check",
+        "startedAt": "2026-11-13T03:12:54.6287158Z",
+        "finishedAt": "2026-11-13T03:13:01.3368281Z"
+      }
+    ],
+    "status": "PASS",
+    "scope": "Pure terminal validation after user stopped Computer Use. No browser, IPC, process cleanup, clipboard or active app database access."
+  },
+  "artifacts": {
+    "build-result.json": {
+      "bytes": 1156,
+      "sha256": "d57f85c9cbe100a5a5dbcfdbf88903a33492d0fb171084afe18537dc97c95dba"
+    },
+    "build-r2.log": {
+      "bytes": 35216,
+      "sha256": "76197f55576d042c002bca918c57b40c6aed18fc313c930857c6f5903a71b53e"
+    },
+    "bootstrap.cjs": {
+      "bytes": 788,
+      "sha256": "bbc49a3591e92726db55817bd365a494f3005cf2b9ab65e5234aede26957d68b"
+    },
+    "build-desktop.cjs": {
+      "bytes": 2521,
+      "sha256": "2a317d6c90899a4cc5e9cfde16656a8c47131aff8db70fa671f8fd07c74fd854"
+    },
+    "preflight-startup-r1.json": {
+      "bytes": 176,
+      "sha256": "618533ca4edcc6dc35ba491ffb38ad3391ecc896e7cbdadd2b69e5416f3d0feb"
+    },
+    "preflight-startup-r2.json": {
+      "bytes": 153,
+      "sha256": "4eca272d39ba5fe9b4093ac607ee26c41b6898c38f0aaefe036cce48ea9a14cb"
+    },
+    "preflight-startup-r3.json": {
+      "bytes": 1050,
+      "sha256": "c43beacf9ec8bb24fc2b112beab6233ce658c20e215ecd28ea91520b516c06ae"
+    },
+    "preflight-startup-r4.json": {
+      "bytes": 1061,
+      "sha256": "eed3b4886e0d1c2291fdb92bd34290e9b184a8edd3b6bcd0b02e35beaaad6c7c"
+    },
+    "preflight-r4.log": {
+      "bytes": 627,
+      "sha256": "ab52127796b88e495e4e7d6c8f316838a1c6e914925acbf5deb0a2d1f33e1341"
+    },
+    "preflight-window.png": {
+      "bytes": 26293,
+      "sha256": "40f01aca9e0bd6190f75c553ba5ed85ced6f74474bd7d73752869c0449a7ab4a"
+    },
+    "native-checks-progress.json": {
+      "bytes": 3627,
+      "sha256": "2df20def44c52d190598c5ff8e1ec9499a116eb485e0cad84c82994075d45aa2"
+    },
+    "actual-audio-card.png": {
+      "bytes": 51099,
+      "sha256": "f05ee43c9c3c8cf8523a91c11fb66b9515a93120d95ced58c1476a579809c057"
+    },
+    "native-reveal.png": {
+      "bytes": 74121,
+      "sha256": "7f289321d86bd2cd197b5d069a0fbc55649c7cfe3891d13168f19566ca422a37"
+    },
+    "saved-native.wav": {
+      "bytes": 115244,
+      "sha256": "88145752b6c42863def8c4ffe5310462e9178b69571cfd2365e008a1cac73870"
+    },
+    "qa-inventory.json": {
+      "bytes": 1581,
+      "sha256": "0d0f52fcf44678f829c69141cc20ca53aac1ac5a5dd38d6b33e36832df2dd0e9"
+    },
+    "source-validation-final.json": {
+      "bytes": 3226,
+      "sha256": "36e8d76a70dca71135b465293cfcd8f60817cdfc6ee390f793da06737946e7ca"
+    },
+    "vitest-final.json": {
+      "bytes": 45833,
+      "sha256": "ee74b9f6a2b2e58a3fe52a79787a423731803f456d006c88c3e203744a6ed7a7"
+    },
+    "typecheck-final.log": {
+      "bytes": 16,
+      "sha256": "5a3973f79ed9becd5f23c4feff467513814de7ea381d75a4d2e339aa8b8edca9"
+    },
+    "vitest-final.log": {
+      "bytes": 1194,
+      "sha256": "cebdce3afabc7b5d62786f9e9db9d2165cc4900a9b6c9c0649f73ad40dc6f8fe"
+    },
+    "eslint-final.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prettier-final.log": {
+      "bytes": 68,
+      "sha256": "f20510a9da4717c51c4cffee6d0dd88d6c9a723d0a83711d01216f5b48961283"
+    },
+    "i18n-final.log": {
+      "bytes": 1451,
+      "sha256": "a00ee70af071e97c9cbba6c3158b8b73fbed52bbc2bf2ca7c02f6c5fb573e1b1"
+    }
+  },
+  "rawEvidence": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-electron-media-r1\\result-partial-user-stopped.json",
+    "sha256": "3c861eac1566c112a9956a5b8c41cf263934ad30dacbe4ea349e8cab8f9d00e1"
+  },
+  "userFollowup": "User explicitly chose to keep desktop automation paused and continue code development; no desktop resume is authorized."
+}

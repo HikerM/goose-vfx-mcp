@@ -112,7 +112,19 @@ describe('buildCSP', () => {
     const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
     for (const policy of [buildCSP(), html]) {
       const mediaDirective = policy.match(/media-src\s+([^;]+);/)?.[1];
-      expect(mediaDirective?.split(/\s+/)).toEqual(["'self'", 'mediastream:', 'blob:']);
+      expect(mediaDirective?.split(/\s+/)).toEqual([
+        "'self'",
+        'mediastream:',
+        'blob:',
+        'lumina-media:',
+      ]);
+      const imageDirective = policy.match(/img-src\s+([^;]+);/)?.[1];
+      expect(imageDirective?.split(/\s+/)).toEqual(["'self'", 'data:', 'https:', 'lumina-media:']);
+      for (const directive of ['script-src', 'frame-src', 'connect-src', 'object-src']) {
+        expect(policy.match(new RegExp(`${directive}\\s+([^;]+);`))?.[1]).not.toContain(
+          'lumina-media:'
+        );
+      }
     }
   });
 

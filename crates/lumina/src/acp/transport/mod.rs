@@ -4,6 +4,7 @@ pub mod auth;
 /// This transport capability is a prerequisite for future custom request registration; it does
 /// not register, authorize, or dispatch any custom handler itself.
 pub(crate) mod json_safety;
+mod media;
 #[cfg(any(feature = "rustls-tls", feature = "native-tls"))]
 pub mod tls;
 
@@ -253,7 +254,7 @@ pub fn create_router(
         AcpOriginPolicy::loopback()
     };
     let acp_routes = create_acp_router_with_policy(
-        server,
+        server.clone(),
         policy,
         require_token.then_some(secret_key.clone()),
         require_token,
@@ -262,8 +263,10 @@ pub fn create_router(
     let aux_routes = Router::new()
         .route("/health", get(health))
         .route("/status", get(health))
-        .merge(super::mcp_app_proxy::routes(secret_key))
+        .merge(super::mcp_app_proxy::routes(secret_key.clone()))
         .layer(aux_cors_layer());
 
-    acp_routes.merge(aux_routes)
+    acp_routes
+        .merge(aux_routes)
+        .merge(media::routes(server.media_access_store(), secret_key))
 }

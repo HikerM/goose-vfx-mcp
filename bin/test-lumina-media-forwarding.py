@@ -115,7 +115,7 @@ class AcpProcess:
             self.events.append(event)
             self.queue.put(event)
 
-    def request(self, method, params, timeout=420):
+    def request(self, method, params, timeout=420, expected_error=None):
         identity = len(self.requests) + 1
         request = {"jsonrpc": "2.0", "id": identity, "method": method, "params": params}
         self.requests.append(request)
@@ -130,6 +130,9 @@ class AcpProcess:
                 continue
             assert not ("method" in event and "id" in event), "Unexpected ACP client request"
             if event.get("id") == identity:
+                if expected_error is not None:
+                    assert event.get("error") == expected_error, event
+                    return event["error"]
                 assert "error" not in event, event
                 return event["result"]
         raise TimeoutError("ACP request timed out: " + method)
@@ -164,12 +167,44 @@ def completed_media(updates, session, expected):
         if update.get("sessionUpdate") != "tool_call_update" or "content" not in update:
             continue
         content = [block["content"] for block in update["content"] if block.get("type") == "content"]
-        if any(block.get("type") == "audio" for block in content):
+        if any(block.get("_meta", {}).get("lumina.mediaResult") for block in content):
             assert update["status"] == "completed", update["status"]
-            assert content == expected, "Media content, metadata or order changed"
-            matches.append(update["toolCallId"])
-    assert len(matches) == 1, "Expected one actual completed audio tool result"
+            assert len(content) == len(expected), "Media block count changed"
+            assert content[0] == expected[0] and content[2:] == expected[2:], "Non-media content or order changed"
+            audio = content[1]
+            assert audio["type"] == "resource_link" and "data" not in audio
+            marker = audio["_meta"]["lumina.mediaResult"]
+            assert marker == {"schemaVersion": 1, "sessionId": session, "resultId": marker["resultId"]}
+            assert audio["uri"] == "lumina-media://result/" + marker["resultId"]
+            assert audio["mimeType"] == expected[1]["mimeType"]
+            assert audio["size"] == len(base64.b64decode(expected[1]["data"], validate=True))
+            assert audio["annotations"] == expected[1]["annotations"]
+            matches.append((update["toolCallId"], audio))
+    assert len(matches) == 1, "Expected one actual completed durable audio tool result"
     return matches[0]
+
+
+def read_media(process, session, tool_id, resource, wav):
+    identity = {"sessionId": session, "resultId": resource["_meta"]["lumina.mediaResult"]["resultId"]}
+    response = process.request("_lumina/unstable/media/read", identity)
+    assert response["status"] == "found" and response["availability"] == "available", response
+    result = response["result"]
+    assert result["schemaVersion"] == 1 and result["sessionId"] == session
+    assert result["resultId"] == identity["resultId"] and result["fileName"] == resource["name"]
+    assert result["kind"] == "audio" and result["mime"] == "audio/wav"
+    assert result["bytes"] == wav.stat().st_size and result["sha256"] == digest(wav)
+    assert result["association"] == {"associationKind": "tool_call", "toolCallId": tool_id}
+    assert result["spec"] == {"kind": "audio", "durationMicros": 2400000,
+                              "sampleRate": 24000, "channels": 1, "sampleFrames": 57600}
+    assert result["source"] == {"kind": "mcp", "serverId": "mediaforwarding", "toolName": TOOL,
+                                "toolCallId": tool_id, "inputRefs": [
+                                    {"kind": "content_digest", "sha256": hashlib.sha256(b"{}").hexdigest()},
+                                    {"kind": "content_digest", "sha256": digest(wav)}]}
+    for purpose in ["preview", "save_as", "open", "reveal", "copy_path"]:
+        access = process.request("_lumina/unstable/media/access", {**identity, "purpose": purpose})
+        assert isinstance(access["ticket"], str) and 0 < access["expiresInMs"] <= 300000
+        assert process.request("_lumina/unstable/media/release", {"ticket": access["ticket"]}) == {}
+    return response
 
 
 def run(args):
@@ -179,7 +214,7 @@ def run(args):
     assert run_dir.is_relative_to(BASE), "Evidence must stay in this checkout's validation directory"
     run_dir.mkdir()
     record = {"status": "RUNNING", "startedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              "scope": "Actual local-model MCP call, live ACP delivery and process-restart SQLite replay. Existing native TTS WAV; no new synthesis, MediaResultRef, file actions or packaged Electron acceptance."}
+              "scope": "Actual local-model MCP call, durable media reference, verified output bytes and metadata, scoped ACP read/access/release, and process-restart SQLite replay. Existing native TTS WAV; not new synthesis, HTTP playback, native file actions or packaged Electron acceptance."}
     process = None
     try:
         source = json.loads(args.model_source.read_text(encoding="utf-8"))
@@ -189,7 +224,10 @@ def run(args):
         with wave.open(str(args.wav), "rb") as sound:
             assert (sound.getnchannels(), sound.getframerate(), sound.getnframes()) == (1, 24000, 57600)
         inputs = [args.cli, args.wav, args.model_source, args.reference_registry, Path(__file__),
-                  ROOT / "crates/lumina/src/acp/server.rs", ROOT / "crates/lumina/src/acp/server/load_session.rs"]
+                  ROOT / "crates/lumina/src/acp/server.rs", ROOT / "crates/lumina/src/acp/server/load_session.rs",
+                  ROOT / "crates/lumina/src/acp/server/media.rs", ROOT / "crates/lumina/src/agents/agent.rs",
+                  ROOT / "crates/lumina/src/session/session_manager.rs"]
+        inputs.extend(sorted((ROOT / "crates/lumina/src/media").glob("*.rs")))
         frozen = {str(path.resolve()): digest(path) for path in inputs}
         assert model_path.stat().st_size == source["sizeBytes"] and digest(model_path) == source["sha256"]
         record.update(inputSha256=frozen, model={"path": str(model_path), "sha256": source["sha256"]})
@@ -220,15 +258,26 @@ def run(args):
                         "Call the emit_media tool exactly once with {} to return its audio and resource fixture. Then reply only MEDIA_DELIVERED. Do not reproduce or describe binary data."}]})
         expected = media_blocks(args.wav)
         live = notifications(process.events)
-        tool_id = completed_media(live, session, expected)
+        tool_id, resource = completed_media(live, session, expected)
+        media = read_media(process, session, tool_id, resource, args.wav)
+        save(run_dir / "live-media.json", media)
+        other_session = process.request("session/new", {"cwd": str(ROOT), "mcpServers": []})["sessionId"]
+        assert process.request("_lumina/unstable/media/read", {
+            "sessionId": other_session, "resultId": media["result"]["resultId"]}) == {"status": "notFound"}
         process.close()
         process = None
         save(run_dir / "live-updates.json", live)
         process = AcpProcess(args.cli, app, run_dir, "replay", model)
         process.request("initialize", {"protocolVersion": 1, "clientCapabilities": {}})
+        process.request("_lumina/unstable/media/read", {
+            "sessionId": session, "resultId": media["result"]["resultId"]},
+            expected_error={"code": -32002, "message": "ACP protocol error", "data": "acp_protocol_error"})
         process.request("session/load", {"sessionId": session, "cwd": str(ROOT), "mcpServers": []})
         replay = notifications(process.events)
-        assert completed_media(replay, session, expected) == tool_id
+        assert completed_media(replay, session, expected) == (tool_id, resource)
+        restored = read_media(process, session, tool_id, resource, args.wav)
+        assert restored == media, "Restored media metadata changed"
+        save(run_dir / "replay-media.json", restored)
         process.close()
         process = None
         save(run_dir / "replay-updates.json", replay)
@@ -239,14 +288,27 @@ def run(args):
         with sqlite3.connect(database.as_uri() + "?mode=ro", uri=True) as connection:
             assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
             persisted = connection.execute("SELECT content_json FROM messages WHERE session_id=?", (session,)).fetchall()
-        assert any(expected[1]["data"] in row[0] and expected[2]["uri"] in row[0] for row in persisted)
+            rows = connection.execute("SELECT state,payload FROM media_results_v1 WHERE session_id=?", (session,)).fetchall()
+            assert len(rows) == 1 and rows[0][0] == "ready" and json.loads(rows[0][1]) == media["result"]
+            root = connection.execute("SELECT path FROM media_output_roots_v1 WHERE root_id=?", (media["result"]["rootId"],)).fetchone()
+        assert all(expected[1]["data"] not in row[0] for row in persisted), "Inline media was persisted instead of its reference"
+        assert any(resource["uri"] in row[0] and expected[2]["uri"] in row[0] for row in persisted)
+        output_root = Path(root[0]).resolve()
+        assert output_root.samefile(app / "data/outputs")
+        output = (output_root / media["result"]["relativePath"]).resolve()
+        assert output.is_relative_to(output_root)
+        assert output.stat().st_size == args.wav.stat().st_size and digest(output) == tts["sha256"]
         assert frozen == {str(path.resolve()): digest(path) for path in inputs}
         assert digest(model_path) == source["sha256"]
         record.update(status="PASS", sessionId=session, toolCallId=tool_id, actualMcpCalls=len(calls),
                       audioSha256=tts["sha256"], audioDurationSeconds=2.4,
                       liveUpdatesSha256=digest(run_dir / "live-updates.json"),
                       replayUpdatesSha256=digest(run_dir / "replay-updates.json"),
-                      persistedMessageRows=len(persisted), databaseIntegrity="ok")
+                      persistedMessageRows=len(persisted), databaseIntegrity="ok",
+                      resultId=media["result"]["resultId"], outputPath=str(output),
+                      mediaReferenceStableAcrossRestart=True, inlineAudioAbsentFromHistory=True,
+                      scopedMetadataRead=True, inactiveSessionRejected=True,
+                      accessPurposesVerified=["preview", "save_as", "open", "reveal", "copy_path"])
     except Exception as error:
         record.update(status="FAIL", failure=repr(error))
         raise

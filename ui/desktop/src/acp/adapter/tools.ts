@@ -87,7 +87,12 @@ function getOrCreateAssistantMessageForUpdate(
   state: AdapterState,
   luminaMeta: LuminaMessageMeta
 ): Message {
-  const existing = findMessageForChunk(state, 'assistant', luminaMeta.messageId, luminaMeta.created);
+  const existing = findMessageForChunk(
+    state,
+    'assistant',
+    luminaMeta.messageId,
+    luminaMeta.created
+  );
   if (existing) {
     return existing;
   }
@@ -244,6 +249,8 @@ function apiContentBlockFromAcpContentBlock(
         type: 'audio',
         data: content.data,
         mimeType: content.mimeType,
+        ...(content._meta ? { _meta: content._meta } : {}),
+        ...(content.annotations ? { annotations: content.annotations } : {}),
       };
     case 'resource_link':
       return {
@@ -255,6 +262,7 @@ function apiContentBlockFromAcpContentBlock(
         ...(content.size !== undefined && content.size !== null ? { size: content.size } : {}),
         ...(content.title ? { title: content.title } : {}),
         ...(content._meta ? { _meta: content._meta } : {}),
+        ...(content.annotations ? { annotations: content.annotations } : {}),
       };
     case 'resource':
       return {

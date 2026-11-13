@@ -1562,6 +1562,13 @@ impl SessionStorage {
         }
     }
 
+    pub(crate) fn media_output_directory(&self) -> PathBuf {
+        self.session_dir
+            .parent()
+            .expect("SessionStorage is constructed from a data directory")
+            .join("outputs")
+    }
+
     pub(crate) async fn pool(&self) -> Result<&Pool<Sqlite>> {
         self.initialized
             .get_or_try_init(|| async {
@@ -1579,6 +1586,24 @@ impl SessionStorage {
                     if let Err(e) = Self::import_legacy(&self.pool, &self.session_dir).await {
                         warn!("Failed to import some legacy sessions: {}", e);
                     }
+                }
+                let media = crate::media::MediaResultStore::new(self.pool.clone());
+                media.initialize().await?;
+                // File verification runs after schema transactions commit. Recovery
+                // failures must not make unrelated conversations unavailable.
+                match media.recover().await {
+                    Ok(outcomes) => {
+                        let unavailable = outcomes.iter().filter(|outcome| !matches!(
+                            outcome.availability,
+                            crate::media::MediaAvailability::Available
+                                | crate::media::MediaAvailability::Publishing
+                                | crate::media::MediaAvailability::AccessDenied
+                        )).count();
+                        if unavailable > 0 {
+                            warn!(unavailable, "Some media publications could not be recovered");
+                        }
+                    }
+                    Err(_) => warn!("Media publication startup recovery is unavailable"),
                 }
                 Ok::<(), anyhow::Error>(())
             })

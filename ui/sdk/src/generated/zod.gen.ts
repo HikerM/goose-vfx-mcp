@@ -1178,6 +1178,159 @@ export const zGetConfigExtensionsResponse_unstable = z.object({
     warnings: z.array(z.string()).optional().default([])
 });
 
+export const zMediaAccessPurposeDto = z.enum([
+    'preview',
+    'open',
+    'reveal',
+    'copy_path',
+    'save_as'
+]);
+
+export const zMediaAccessRequest_unstable = z.object({
+    sessionId: z.string(),
+    resultId: z.string(),
+    purpose: zMediaAccessPurposeDto
+});
+
+export const zMediaAccessResponse_unstable = z.object({
+    ticket: z.string(),
+    expiresInMs: z.number().int().gte(0)
+});
+
+export const zMediaAssociationDto = z.union([
+    z.object({
+        messageId: z.string(),
+        associationKind: z.literal('message')
+    }),
+    z.object({
+        toolCallId: z.string(),
+        associationKind: z.literal('tool_call')
+    })
+]);
+
+export const zMediaAvailabilityDto = z.enum([
+    'available',
+    'publishing',
+    'missing',
+    'access_denied',
+    'tampered',
+    'unsafe_path',
+    'unsupported_format',
+    'io_unavailable'
+]);
+
+export const zMediaInputRefDto = z.union([
+    z.object({
+        messageId: z.string(),
+        kind: z.literal('message')
+    }),
+    z.object({
+        resultId: z.string(),
+        kind: z.literal('media_result')
+    }),
+    z.object({
+        sha256: z.string(),
+        kind: z.literal('content_digest')
+    })
+]);
+
+export const zMediaKindDto = z.enum([
+    'image',
+    'audio',
+    'video'
+]);
+
+export const zMediaOwnershipDto = z.enum(['application_generated', 'application_imported']);
+
+export const zMediaReadRequest_unstable = z.object({
+    sessionId: z.string(),
+    resultId: z.string()
+});
+
+export const zMediaReleaseRequest_unstable = z.object({
+    ticket: z.string()
+});
+
+export const zMediaReleaseResponse_unstable = z.record(z.never());
+
+export const zMediaRuntimeBuildDto = z.object({
+    adapterId: z.string(),
+    engineRevision: z.string(),
+    binarySha256: z.string()
+});
+
+export const zMediaSourceDto = z.union([
+    z.object({
+        installationId: z.string(),
+        versionId: z.string(),
+        runtime: zMediaRuntimeBuildDto,
+        generationConfigSha256: z.string(),
+        inputRefs: z.array(zMediaInputRefDto),
+        kind: z.literal('local_model')
+    }),
+    z.object({
+        serverId: z.string(),
+        toolName: z.string(),
+        toolCallId: z.string(),
+        inputRefs: z.array(zMediaInputRefDto),
+        kind: z.literal('mcp')
+    })
+]);
+
+export const zMediaSpecDto = z.union([
+    z.object({
+        width: z.number().int().gte(0),
+        height: z.number().int().gte(0),
+        kind: z.literal('image')
+    }),
+    z.object({
+        durationMicros: z.number().int().gte(0),
+        sampleRate: z.number().int().gte(0),
+        channels: z.number().int().gte(0).lte(65535),
+        sampleFrames: z.number().int().gte(0),
+        kind: z.literal('audio')
+    }),
+    z.object({
+        width: z.number().int().gte(0),
+        height: z.number().int().gte(0),
+        durationMicros: z.number().int().gte(0),
+        frameCount: z.number().int().gte(0),
+        fpsNumerator: z.number().int().gte(0),
+        fpsDenominator: z.number().int().gte(0),
+        kind: z.literal('video')
+    })
+]);
+
+export const zMediaResultDto = z.object({
+    schemaVersion: z.number().int().gte(0),
+    resultId: z.string(),
+    sessionId: z.string(),
+    association: zMediaAssociationDto,
+    jobId: z.string(),
+    kind: zMediaKindDto,
+    mime: z.string(),
+    fileName: z.string(),
+    bytes: z.number().int().gte(0),
+    sha256: z.string(),
+    createdAt: z.number().int(),
+    rootId: z.string(),
+    relativePath: z.string(),
+    spec: zMediaSpecDto,
+    ownership: zMediaOwnershipDto,
+    source: zMediaSourceDto
+});
+
+export const zMediaReadResponse_unstable = z.union([
+    z.object({
+        result: zMediaResultDto,
+        availability: zMediaAvailabilityDto,
+        status: z.literal('found')
+    }),
+    z.object({
+        status: z.literal('notFound')
+    })
+]);
+
 /**
  * Wire mirror of the conversation `MessageUsage` (this crate cannot depend on
  * lumina-provider-types); field names and serde casing MUST stay in parity.
@@ -1232,6 +1385,286 @@ export const zMessageUsageUpdate = z.object({
         z.null()
     ]).optional(),
     usage: zMessageUsageData
+});
+
+export const zModelInstallationFailureCode = z.enum([
+    'SOURCE_NOT_FOUND',
+    'SOURCE_AUTH_REQUIRED',
+    'SOURCE_FORBIDDEN',
+    'SOURCE_TIMEOUT',
+    'SOURCE_RATE_LIMITED',
+    'SOURCE_UNAVAILABLE',
+    'SOURCE_PARTIAL_FAILURE',
+    'REVISION_UNRESOLVED',
+    'REVISION_CHANGED',
+    'NO_GGUF',
+    'GGUF_INVALID',
+    'FORMAT_FORBIDDEN',
+    'SHARD_INCOMPLETE',
+    'DEPENDENCY_MISSING',
+    'DEPENDENCY_INCOMPATIBLE',
+    'DEPENDENCY_UNVERIFIED',
+    'RUNTIME_UNSUPPORTED',
+    'HARDWARE_INSUFFICIENT',
+    'DISK_INSUFFICIENT',
+    'HASH_MISMATCH',
+    'DESTINATION_LOCKED',
+    'PLAN_STALE',
+    'STATE_CONFLICT',
+    'DOWNLOAD_FAILED',
+    'INSTALL_FAILED',
+    'START_FAILED',
+    'VALIDATION_FAILED',
+    'CANCELLED'
+]);
+
+export const zModelInstallationFailureOrigin = z.enum([
+    'credentials',
+    'admission',
+    'transfer',
+    'verification',
+    'commit'
+]);
+
+export const zModelInstallationFileRestartReason = z.enum([
+    'range_unavailable',
+    'validator_changed',
+    'partial_content_mismatch',
+    'hash_mismatch'
+]);
+
+export const zModelInstallationFileRetryState = z.enum([
+    'ready',
+    'active',
+    'waiting',
+    'exhausted',
+    'needs_action',
+    'verified'
+]);
+
+export const zModelInstallationFileStatus = z.enum([
+    'pending',
+    'downloading',
+    'downloaded',
+    'verified',
+    'failed'
+]);
+
+export const zModelInstallationFileEventDto = z.object({
+    sequence: z.number().int().gte(0),
+    artifactId: z.string(),
+    version: z.number().int().gte(0),
+    generation: z.number().int().gte(0),
+    completedBytes: z.number().int().gte(0),
+    expectedBytes: z.number().int().gte(0),
+    status: zModelInstallationFileStatus,
+    failureCode: z.union([
+        zModelInstallationFailureCode,
+        z.null()
+    ]).optional(),
+    restartReason: z.union([
+        zModelInstallationFileRestartReason,
+        z.null()
+    ]).optional(),
+    updatedAt: z.number().int()
+});
+
+export const zModelInstallationJobAction = z.enum([
+    'pause',
+    'resume',
+    'cancel',
+    'retry'
+]);
+
+export const zModelInstallationJobControlRequest_unstable = z.object({
+    jobId: z.string(),
+    expectedVersion: z.number().int().gte(0),
+    action: zModelInstallationJobAction,
+    idempotencyKey: z.string()
+});
+
+export const zModelInstallationJobEventsRequest_unstable = z.object({
+    jobId: z.string(),
+    afterJobSequence: z.number().int().gte(0).optional().default(0),
+    afterFileSequence: z.number().int().gte(0).optional().default(0),
+    limit: z.number().int().gte(0).optional().default(64)
+});
+
+export const zModelInstallationJobStatus = z.enum([
+    'queued',
+    'running',
+    'paused',
+    'cancelling',
+    'cancelled',
+    'completed',
+    'blocked',
+    'failed'
+]);
+
+export const zModelInstallationJobsListRequest_unstable = z.object({
+    afterId: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    limit: z.number().int().gte(0).optional().default(64)
+});
+
+export const zModelInstallationRetryHistoryOrigin = z.enum(['from_enqueue', 'legacy_untracked']);
+
+export const zModelInstallationServiceState = z.enum([
+    'dormant',
+    'recovering',
+    'ready',
+    'stopped',
+    'failed'
+]);
+
+export const zModelInstallationStage = z.enum([
+    'discovered',
+    'repository_verified',
+    'files_discovered',
+    'model_classified',
+    'dependencies_resolved',
+    'compatibility_checked',
+    'ready_to_install',
+    'downloading',
+    'verifying',
+    'installing',
+    'installed',
+    'starting',
+    'validating'
+]);
+
+export const zModelInstallationFailureDto = z.object({
+    jobId: z.string(),
+    jobVersion: z.number().int().gte(0),
+    code: zModelInstallationFailureCode,
+    stage: zModelInstallationStage,
+    origin: zModelInstallationFailureOrigin,
+    artifactId: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    messageKey: z.string(),
+    messageArgs: z.record(z.string()),
+    retryable: z.boolean(),
+    recoverable: z.boolean(),
+    causeId: z.string(),
+    automaticRetryAt: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    isCurrent: z.boolean(),
+    occurredAt: z.number().int()
+});
+
+export const zModelInstallationFileFailureDto = z.object({
+    code: zModelInstallationFailureCode,
+    stage: zModelInstallationStage,
+    failedAt: z.number().int(),
+    retryAfterSeconds: z.union([
+        z.number().int().gte(0),
+        z.null()
+    ]).optional()
+});
+
+export const zModelInstallationFileRetryDto = z.object({
+    jobId: z.string(),
+    artifactId: z.string(),
+    policyVersion: z.string(),
+    maxAttempts: z.number().int().gte(0),
+    cycle: z.number().int().gte(0),
+    cycleAttempts: z.number().int().gte(0),
+    recordedAttempts: z.number().int().gte(0),
+    historyOrigin: zModelInstallationRetryHistoryOrigin,
+    trackingStartedAt: z.number().int(),
+    state: zModelInstallationFileRetryState,
+    nextRetryAt: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    lastFailure: z.union([
+        zModelInstallationFileFailureDto,
+        z.null()
+    ]).optional(),
+    version: z.number().int().gte(0),
+    updatedAt: z.number().int()
+});
+
+export const zModelInstallationJobDto = z.object({
+    id: z.string(),
+    planId: z.string(),
+    planDigest: z.string(),
+    stage: zModelInstallationStage,
+    status: zModelInstallationJobStatus,
+    version: z.number().int().gte(0),
+    generation: z.number().int().gte(0),
+    acceptedAt: z.number().int(),
+    updatedAt: z.number().int()
+});
+
+export const zModelInstallationJobControlResponse_unstable = z.object({
+    job: zModelInstallationJobDto,
+    replayed: z.boolean()
+});
+
+export const zModelInstallationJobEventDto = z.object({
+    sequence: z.number().int().gte(0),
+    job: zModelInstallationJobDto
+});
+
+export const zModelInstallationJobEventsResponse_unstable = z.object({
+    jobEvents: z.array(zModelInstallationJobEventDto),
+    fileEvents: z.array(zModelInstallationFileEventDto),
+    nextJobSequence: z.number().int().gte(0),
+    nextFileSequence: z.number().int().gte(0),
+    hasMoreJobEvents: z.boolean(),
+    hasMoreFileEvents: z.boolean()
+});
+
+export const zModelInstallationStorageState = z.enum([
+    'needs_admission',
+    'held',
+    'released'
+]);
+
+export const zModelInstallationStorageDto = z.object({
+    jobId: z.string(),
+    planDigest: z.string(),
+    volumeId: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    peakBytes: z.number().int().gte(0),
+    reservedBytes: z.number().int().gte(0),
+    state: zModelInstallationStorageState,
+    version: z.number().int().gte(0),
+    createdAt: z.number().int(),
+    updatedAt: z.number().int()
+});
+
+export const zModelInstallationJobsListResponse_unstable = z.object({
+    jobs: z.array(zModelInstallationJobDto),
+    fileRetries: z.array(zModelInstallationFileRetryDto).optional().default([]),
+    failures: z.array(zModelInstallationFailureDto).optional().default([]),
+    storageReservations: z.array(zModelInstallationStorageDto).optional().default([]),
+    nextAfterId: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    serviceState: zModelInstallationServiceState
+});
+
+export const zModelInstallationSubmitRequest_unstable = z.object({
+    planId: z.string(),
+    planDigest: z.string(),
+    installationId: z.string(),
+    idempotencyKey: z.string()
+});
+
+export const zModelInstallationSubmitResponse_unstable = z.object({
+    job: zModelInstallationJobDto,
+    versionId: z.string()
 });
 
 /**
