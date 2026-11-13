@@ -1,0 +1,77 @@
+{
+  "scope": "MP4 exports from the two previously generated native AVI samples; full audiovisual decode in FFmpeg",
+  "sources": [
+    {
+      "variant": "t2va",
+      "original_sha256": "53ba7cf790ce0e052129c33ec6f84a9b22b0b0b430726c89dac92e7beb67c4e3",
+      "mp4": "target/lifecycle-validation/h3-gpu-native-20261112-r1/t2va/t2va.mp4",
+      "mp4_bytes": 67981,
+      "mp4_sha256": "3dfe03b88ceabe17f67827c0e8e253d3402dbfa22a813bf0afd942af226002f0",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 256,
+            "height": 256,
+            "avg_frame_rate": "24/1",
+            "nb_read_frames": "22"
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "sample_rate": "32000",
+            "channels": 2,
+            "avg_frame_rate": "0/0",
+            "nb_read_frames": "29"
+          }
+        ],
+        "format": {
+          "duration": "0.925000"
+        }
+      }
+    },
+    {
+      "variant": "first_frame_plus_text",
+      "original_sha256": "4e5587bc3c2010f277c791ca307568e3f7fab81a10096f55cf23b9aff741aa16",
+      "mp4": "target/lifecycle-validation/h3-gpu-native-20261112-r1/first_frame_plus_text/first_frame_plus_text.mp4",
+      "mp4_bytes": 66416,
+      "mp4_sha256": "31aa452ce9cfc0e1622851ff7bae954847c02f0c69680dfb3766a9601bb6c367",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 256,
+            "height": 256,
+            "avg_frame_rate": "24/1",
+            "nb_read_frames": "22"
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "sample_rate": "32000",
+            "channels": 2,
+            "avg_frame_rate": "0/0",
+            "nb_read_frames": "29"
+          }
+        ],
+        "format": {
+          "duration": "0.925000"
+        }
+      }
+    }
+  ],
+  "native_avi_checks": {
+    "suite": "media::formats::avi_audio::tests",
+    "passed": 11,
+    "failed": 0,
+    "ignored": 0,
+    "included_originals": true,
+    "log_sha256": "ee06417e4b459b80dba5a4b26e77c30c6b58a6f5b0dcb18c24784d7a324df17c"
+  }
+}

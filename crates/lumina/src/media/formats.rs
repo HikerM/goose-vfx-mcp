@@ -6,6 +6,9 @@ use image::{GenericImageView, ImageFormat};
 
 use super::{MediaAccessError, MediaAvailability, MediaKind, MediaSpec, MAX_MEDIA_BYTES};
 
+#[path = "avi_audio.rs"]
+mod avi_audio;
+
 const MAX_IMAGE_BYTES: u64 = 32 * 1024 * 1024;
 const MAX_PIXELS: u64 = 32 * 1024 * 1024;
 
@@ -103,6 +106,11 @@ fn decode_image(bytes: &[u8], format: ImageFormat) -> Result<image::DynamicImage
     let decoded = decoder.decode()?;
     dimensions(decoded.width(), decoded.height())?;
     Ok(decoded)
+}
+
+pub(crate) fn inspect_video_audio(file: &mut File) -> Result<ValidatedMedia> {
+    let size = file.metadata()?.len();
+    avi_audio::inspect(file, size)
 }
 
 pub(crate) fn inspect(file: &mut File) -> Result<ValidatedMedia> {
@@ -285,6 +293,9 @@ fn avi(file: &mut File, size: u64) -> Result<ValidatedMedia> {
     let avih = singleton(&headers, b"avih")?;
     ensure!(avih.bytes == 56, "Unsupported AVI main header");
     let main = read_at(file, avih.data, 56)?;
+    if u32_at(&main, 24)? == 2 {
+        return inspect_video_audio(file);
+    }
     let width = u32_at(&main, 32)?;
     let height = u32_at(&main, 36)?;
     dimensions(width, height)?;
