@@ -2,6 +2,439 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "LuminaExtensions",
   "$defs": {
+    "NativeTaskListRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "intent": {
+          "$ref": "#/$defs/NativeTaskIntentDto"
+        }
+      },
+      "required": [
+        "sessionId",
+        "intent"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/tasks/list"
+    },
+    "NativeTaskIntentDto": {
+      "type": "string",
+      "enum": [
+        "text_to_image",
+        "text_to_video",
+        "text_to_video_with_audio",
+        "first_frame_to_video_with_audio",
+        "speech_synthesis",
+        "transcription"
+      ]
+    },
+    "NativeTaskListResponse_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeTaskDescriptionDto"
+          }
+        }
+      },
+      "required": [
+        "tasks"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/tasks/list"
+    },
+    "NativeTaskDescriptionDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/NativeTaskIdentityDto"
+        },
+        "intent": {
+          "$ref": "#/$defs/NativeTaskIntentDto"
+        },
+        "descriptor": {
+          "$ref": "#/$defs/NativeTaskParameterContractDto"
+        }
+      },
+      "required": [
+        "identity",
+        "intent",
+        "descriptor"
+      ]
+    },
+    "NativeTaskIdentityDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "installationId": {
+          "type": "string"
+        },
+        "versionId": {
+          "type": "string"
+        },
+        "manifestDigest": {
+          "type": "string"
+        },
+        "runtimeDigest": {
+          "type": "string"
+        },
+        "componentBindingDigest": {
+          "type": "string"
+        },
+        "taskVariant": {
+          "type": "string"
+        },
+        "parameterSchemaId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "installationId",
+        "versionId",
+        "manifestDigest",
+        "runtimeDigest",
+        "componentBindingDigest",
+        "taskVariant",
+        "parameterSchemaId"
+      ]
+    },
+    "NativeTaskParameterContractDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "const": "generation"
+            },
+            "parameters": {
+              "$ref": "#/$defs/NativeGenerationDescriptorDto"
+            }
+          },
+          "required": [
+            "family",
+            "parameters"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "const": "pocket_tts"
+            },
+            "parameters": {
+              "$ref": "#/$defs/NativePocketTtsDescriptorDto"
+            }
+          },
+          "required": [
+            "family",
+            "parameters"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "const": "qwen3_asr"
+            },
+            "parameters": {
+              "$ref": "#/$defs/NativeQwen3AsrDescriptorDto"
+            }
+          },
+          "required": [
+            "family",
+            "parameters"
+          ]
+        }
+      ]
+    },
+    "NativeGenerationDescriptorDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "profile": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/NativeGenerationFieldDto"
+          }
+        },
+        "executionStatus": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "profile",
+        "fields",
+        "executionStatus",
+        "evidence",
+        "limitations"
+      ]
+    },
+    "NativeGenerationFieldDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "valueType": {
+          "type": "string"
+        },
+        "support": {
+          "$ref": "#/$defs/NativeParameterSupportDto"
+        },
+        "default": {},
+        "defaultSource": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "minimum": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "maximum": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "step": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "enumValues": {
+          "type": "array",
+          "items": {}
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "valueType",
+        "support",
+        "enumValues",
+        "constraints"
+      ]
+    },
+    "NativeParameterSupportDto": {
+      "type": "string",
+      "enum": [
+        "native_supported",
+        "unsupported",
+        "unknown"
+      ]
+    },
+    "NativePocketTtsDescriptorDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/NativeAudioFieldDto"
+          }
+        },
+        "unsupported": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "modelLanguage": {
+          "type": "string"
+        },
+        "outputSampleRate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "fields",
+        "unsupported",
+        "modelLanguage",
+        "outputSampleRate",
+        "evidence",
+        "limitations"
+      ]
+    },
+    "NativeAudioFieldDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "valueType": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {},
+        "nativeOption": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "valueType",
+        "required",
+        "constraints",
+        "source"
+      ]
+    },
+    "NativeQwen3AsrDescriptorDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/NativeAudioFieldDto"
+          }
+        },
+        "unsupported": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "recognitionLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "fields",
+        "unsupported",
+        "recognitionLanguages",
+        "evidence",
+        "limitations"
+      ]
+    },
+    "NativeTaskDescribeRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/NativeTaskIdentityDto"
+        }
+      },
+      "required": [
+        "sessionId",
+        "identity"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/tasks/describe"
+    },
+    "NativeTaskDescribeResponse_unstable": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "task": {
+              "$ref": "#/$defs/NativeTaskDescriptionDto"
+            },
+            "status": {
+              "type": "string",
+              "const": "found"
+            }
+          },
+          "required": [
+            "status",
+            "task"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "const": "not_found"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/local-inference/tasks/describe"
+    },
     "MediaReadRequest_unstable": {
       "type": "object",
       "additionalProperties": false,
@@ -15621,6 +16054,24 @@
                 {
                   "allOf": [
                     {
+                      "$ref": "#/$defs/NativeTaskListRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/local-inference/tasks/list",
+                  "title": "NativeTaskListRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/NativeTaskDescribeRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/local-inference/tasks/describe",
+                  "title": "NativeTaskDescribeRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
                       "$ref": "#/$defs/MediaReadRequest_unstable"
                     }
                   ],
@@ -17124,6 +17575,22 @@
               "anyOf": [
                 {
                   "anyOf": [
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/NativeTaskListResponse_unstable"
+                        }
+                      ],
+                      "title": "NativeTaskListResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/NativeTaskDescribeResponse_unstable"
+                        }
+                      ],
+                      "title": "NativeTaskDescribeResponse_unstable"
+                    },
                     {
                       "allOf": [
                         {

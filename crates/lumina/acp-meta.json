@@ -1,6 +1,16 @@
 {
   "methods": [
     {
+      "method": "_lumina/unstable/local-inference/tasks/list",
+      "requestType": "NativeTaskListRequest_unstable",
+      "responseType": "NativeTaskListResponse_unstable"
+    },
+    {
+      "method": "_lumina/unstable/local-inference/tasks/describe",
+      "requestType": "NativeTaskDescribeRequest_unstable",
+      "responseType": "NativeTaskDescribeResponse_unstable"
+    },
+    {
       "method": "_lumina/unstable/media/read",
       "requestType": "MediaReadRequest_unstable",
       "responseType": "MediaReadResponse_unstable"

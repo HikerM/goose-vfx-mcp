@@ -16,6 +16,8 @@ mod model_lifecycle;
 pub use model_lifecycle::*;
 mod media;
 pub use media::*;
+mod native_tasks;
+pub use native_tasks::*;
 
 /// Schema descriptor for a single custom method, produced by the
 /// `#[custom_methods]` macro's generated `custom_method_schemas()` function.

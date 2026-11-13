@@ -144,6 +144,10 @@ import type {
   ModelInstallationJobsListResponse_unstable,
   ModelInstallationSubmitRequest_unstable,
   ModelInstallationSubmitResponse_unstable,
+  NativeTaskDescribeRequest_unstable,
+  NativeTaskDescribeResponse_unstable,
+  NativeTaskListRequest_unstable,
+  NativeTaskListResponse_unstable,
   OnboardingImportApplyRequest_unstable,
   OnboardingImportApplyResponse_unstable,
   OnboardingImportScanRequest_unstable,
@@ -288,6 +292,8 @@ import {
   zModelInstallationJobEventsResponse_unstable,
   zModelInstallationJobsListResponse_unstable,
   zModelInstallationSubmitResponse_unstable,
+  zNativeTaskDescribeResponse_unstable,
+  zNativeTaskListResponse_unstable,
   zOnboardingImportApplyResponse_unstable,
   zOnboardingImportScanResponse_unstable,
   zParseRecipeResponse_unstable,
@@ -323,6 +329,30 @@ import {
 
 export class LuminaExtClient {
   constructor(private conn: ExtMethodProvider) {}
+
+  async localInferenceTasksList_unstable(
+    params: NativeTaskListRequest_unstable,
+  ): Promise<NativeTaskListResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/local-inference/tasks/list",
+      params,
+    );
+    return zNativeTaskListResponse_unstable.parse(
+      raw,
+    ) as NativeTaskListResponse_unstable;
+  }
+
+  async localInferenceTasksDescribe_unstable(
+    params: NativeTaskDescribeRequest_unstable,
+  ): Promise<NativeTaskDescribeResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/local-inference/tasks/describe",
+      params,
+    );
+    return zNativeTaskDescribeResponse_unstable.parse(
+      raw,
+    ) as NativeTaskDescribeResponse_unstable;
+  }
 
   async mediaRead_unstable(
     params: MediaReadRequest_unstable,

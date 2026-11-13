@@ -1667,6 +1667,142 @@ export const zModelInstallationSubmitResponse_unstable = z.object({
     versionId: z.string()
 });
 
+export const zNativeAudioFieldDto = z.object({
+    valueType: z.string(),
+    required: z.boolean(),
+    default: z.unknown().optional(),
+    nativeOption: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    constraints: z.array(z.string()),
+    source: z.string()
+});
+
+export const zNativeParameterSupportDto = z.enum([
+    'native_supported',
+    'unsupported',
+    'unknown'
+]);
+
+export const zNativeGenerationFieldDto = z.object({
+    valueType: z.string(),
+    support: zNativeParameterSupportDto,
+    default: z.unknown().optional(),
+    defaultSource: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    unit: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    minimum: z.union([
+        z.number(),
+        z.null()
+    ]).optional(),
+    maximum: z.union([
+        z.number(),
+        z.null()
+    ]).optional(),
+    step: z.union([
+        z.number(),
+        z.null()
+    ]).optional(),
+    enumValues: z.array(z.unknown()),
+    constraints: z.array(z.string())
+});
+
+export const zNativeGenerationDescriptorDto = z.object({
+    schemaVersion: z.number().int().gte(0),
+    profile: z.string(),
+    fields: z.record(zNativeGenerationFieldDto),
+    executionStatus: z.string(),
+    evidence: z.string(),
+    limitations: z.array(z.string())
+});
+
+export const zNativePocketTtsDescriptorDto = z.object({
+    fields: z.record(zNativeAudioFieldDto),
+    unsupported: z.record(z.string()),
+    modelLanguage: z.string(),
+    outputSampleRate: z.number().int().gte(0),
+    evidence: z.string(),
+    limitations: z.array(z.string())
+});
+
+export const zNativeQwen3AsrDescriptorDto = z.object({
+    fields: z.record(zNativeAudioFieldDto),
+    unsupported: z.record(z.string()),
+    recognitionLanguages: z.array(z.string()),
+    evidence: z.string(),
+    limitations: z.array(z.string())
+});
+
+export const zNativeTaskIdentityDto = z.object({
+    installationId: z.string(),
+    versionId: z.string(),
+    manifestDigest: z.string(),
+    runtimeDigest: z.string(),
+    componentBindingDigest: z.string(),
+    taskVariant: z.string(),
+    parameterSchemaId: z.string()
+});
+
+export const zNativeTaskDescribeRequest_unstable = z.object({
+    sessionId: z.string(),
+    identity: zNativeTaskIdentityDto
+});
+
+export const zNativeTaskIntentDto = z.enum([
+    'text_to_image',
+    'text_to_video',
+    'text_to_video_with_audio',
+    'first_frame_to_video_with_audio',
+    'speech_synthesis',
+    'transcription'
+]);
+
+export const zNativeTaskListRequest_unstable = z.object({
+    sessionId: z.string(),
+    intent: zNativeTaskIntentDto
+});
+
+export const zNativeTaskParameterContractDto = z.union([
+    z.object({
+        family: z.literal('generation'),
+        parameters: zNativeGenerationDescriptorDto
+    }),
+    z.object({
+        family: z.literal('pocket_tts'),
+        parameters: zNativePocketTtsDescriptorDto
+    }),
+    z.object({
+        family: z.literal('qwen3_asr'),
+        parameters: zNativeQwen3AsrDescriptorDto
+    })
+]);
+
+export const zNativeTaskDescriptionDto = z.object({
+    identity: zNativeTaskIdentityDto,
+    intent: zNativeTaskIntentDto,
+    descriptor: zNativeTaskParameterContractDto
+});
+
+export const zNativeTaskDescribeResponse_unstable = z.union([
+    z.object({
+        task: zNativeTaskDescriptionDto,
+        status: z.literal('found')
+    }),
+    z.object({
+        status: z.literal('not_found')
+    })
+]);
+
+export const zNativeTaskListResponse_unstable = z.object({
+    tasks: z.array(zNativeTaskDescriptionDto)
+});
+
 /**
  * Import selected onboarding candidates.
  */

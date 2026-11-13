@@ -1758,6 +1758,116 @@ export type ModelInstallationSubmitResponse_unstable = {
     versionId: string;
 };
 
+export type NativeAudioFieldDto = {
+    valueType: string;
+    required: boolean;
+    default?: unknown;
+    nativeOption?: string | null;
+    constraints: Array<string>;
+    source: string;
+};
+
+export type NativeGenerationDescriptorDto = {
+    schemaVersion: number;
+    profile: string;
+    fields: {
+        [key: string]: NativeGenerationFieldDto;
+    };
+    executionStatus: string;
+    evidence: string;
+    limitations: Array<string>;
+};
+
+export type NativeGenerationFieldDto = {
+    valueType: string;
+    support: NativeParameterSupportDto;
+    default?: unknown;
+    defaultSource?: string | null;
+    unit?: string | null;
+    minimum?: number | null;
+    maximum?: number | null;
+    step?: number | null;
+    enumValues: Array<unknown>;
+    constraints: Array<string>;
+};
+
+export type NativeParameterSupportDto = 'native_supported' | 'unsupported' | 'unknown';
+
+export type NativePocketTtsDescriptorDto = {
+    fields: {
+        [key: string]: NativeAudioFieldDto;
+    };
+    unsupported: {
+        [key: string]: string;
+    };
+    modelLanguage: string;
+    outputSampleRate: number;
+    evidence: string;
+    limitations: Array<string>;
+};
+
+export type NativeQwen3AsrDescriptorDto = {
+    fields: {
+        [key: string]: NativeAudioFieldDto;
+    };
+    unsupported: {
+        [key: string]: string;
+    };
+    recognitionLanguages: Array<string>;
+    evidence: string;
+    limitations: Array<string>;
+};
+
+export type NativeTaskDescribeRequest_unstable = {
+    sessionId: string;
+    identity: NativeTaskIdentityDto;
+};
+
+export type NativeTaskDescribeResponse_unstable = {
+    task: NativeTaskDescriptionDto;
+    status: 'found';
+} | {
+    status: 'not_found';
+};
+
+export type NativeTaskDescriptionDto = {
+    identity: NativeTaskIdentityDto;
+    intent: NativeTaskIntentDto;
+    descriptor: NativeTaskParameterContractDto;
+};
+
+export type NativeTaskIdentityDto = {
+    installationId: string;
+    versionId: string;
+    manifestDigest: string;
+    runtimeDigest: string;
+    componentBindingDigest: string;
+    taskVariant: string;
+    parameterSchemaId: string;
+};
+
+export type NativeTaskIntentDto = 'text_to_image' | 'text_to_video' | 'text_to_video_with_audio' | 'first_frame_to_video_with_audio' | 'speech_synthesis' | 'transcription';
+
+export type NativeTaskListRequest_unstable = {
+    sessionId: string;
+    intent: NativeTaskIntentDto;
+};
+
+export type NativeTaskListResponse_unstable = {
+    tasks: Array<NativeTaskDescriptionDto>;
+};
+
+export type NativeTaskParameterContractDto = {
+    family: 'generation';
+    parameters: NativeGenerationDescriptorDto;
+} | {
+    family: 'pocket_tts';
+    parameters: NativePocketTtsDescriptorDto;
+} | {
+    family: 'qwen3_asr';
+    parameters: NativeQwen3AsrDescriptorDto;
+};
+
 /**
  * Import selected onboarding candidates.
  */
