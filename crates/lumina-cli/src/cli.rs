@@ -1199,6 +1199,56 @@ fn generation_install_profile() -> impl clap::builder::TypedValueParser<
 #[cfg(feature = "local-inference")]
 #[derive(Subcommand)]
 enum LocalModelsCommand {
+    #[command(about = "Validate image recognition, replacement controls and visual conversations")]
+    ValidateVision {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+        #[arg(long, default_value_t = 180)]
+        timeout_secs: u64,
+    },
+    #[command(about = "Read the vision capability status of a registered installation")]
+    VisionValidationStatus {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+    },
+    #[command(about = "Validate text generation and multi-turn recall on an installed chat model")]
+    ValidateChat {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+        #[arg(long, default_value_t = 180)]
+        timeout_secs: u64,
+    },
+    #[command(about = "Read the text validation status for the selected installation and engine")]
+    ChatValidationStatus {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+    },
+    #[command(
+        about = "Validate the installed vector model against the fixed retrieval or ranking suite"
+    )]
+    ValidateVector {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+        #[arg(long, default_value_t = 180)]
+        timeout_secs: u64,
+    },
+    #[command(about = "Read the validation status for an installed vector model")]
+    VectorValidationStatus {
+        #[arg(long)]
+        version_id: String,
+        #[arg(long)]
+        engine: PathBuf,
+    },
     #[command(
         about = "Prepare a pinned audio model and its matching engine configuration for installation"
     )]
@@ -1210,6 +1260,15 @@ enum LocalModelsCommand {
     PlanGeneration {
         #[arg(long, value_parser = generation_install_profile())]
         profile: lumina::providers::local_inference::lifecycle::GenerationProfile,
+    },
+    #[command(about = "Prepare a measured CPU text model from a pinned ModelScope source")]
+    PlanText {
+        #[arg(long)]
+        repository: String,
+        #[arg(long)]
+        revision: String,
+        #[arg(long)]
+        file: String,
     },
     #[command(
         about = "Prepare a measured vector model installation from a pinned ModelScope source"
@@ -2190,6 +2249,25 @@ fn print_download_progress(manager: &lumina::download_manager::DownloadManager) 
 }
 
 #[cfg(feature = "local-inference")]
+fn print_installation_assessment(
+    assessment: lumina::providers::local_inference::lifecycle::ObservedPlanAssessment,
+) -> anyhow::Result<()> {
+    let plan_digest = assessment
+        .plan
+        .as_ref()
+        .map(|plan| plan.digest())
+        .transpose()?;
+    let mut output = serde_json::to_value(&assessment)?;
+    output["plan_digest"] = serde_json::to_value(plan_digest)?;
+    println!("{}", serde_json::to_string(&output)?);
+    anyhow::ensure!(
+        assessment.plan.is_some(),
+        "Installation plan was blocked; inspect blocking_reasons"
+    );
+    Ok(())
+}
+
+#[cfg(feature = "local-inference")]
 async fn handle_local_models_command(
     command: LocalModelsCommand,
     installations: std::sync::Arc<
@@ -2202,6 +2280,69 @@ async fn handle_local_models_command(
     lumina::providers::local_inference::configure_huggingface_auth();
 
     match command {
+        LocalModelsCommand::ValidateVision {
+            version_id,
+            engine,
+            timeout_secs,
+        } => {
+            crate::local_models_runtime::validate_vision_installed(
+                &installations,
+                &version_id,
+                &engine,
+                timeout_secs,
+            )
+            .await?;
+        }
+        LocalModelsCommand::VisionValidationStatus { version_id, engine } => {
+            crate::local_models_runtime::vision_validation_status(
+                &installations,
+                &version_id,
+                &engine,
+            )
+            .await?;
+        }
+        LocalModelsCommand::ValidateChat {
+            version_id,
+            engine,
+            timeout_secs,
+        } => {
+            crate::local_models_runtime::validate_chat_installed(
+                &installations,
+                &version_id,
+                &engine,
+                timeout_secs,
+            )
+            .await?;
+        }
+        LocalModelsCommand::ChatValidationStatus { version_id, engine } => {
+            crate::local_models_runtime::chat_validation_status(
+                &installations,
+                &version_id,
+                &engine,
+            )
+            .await?;
+        }
+        LocalModelsCommand::ValidateVector {
+            version_id,
+            engine,
+            timeout_secs,
+        } => {
+            crate::local_models_runtime::validate_vector_installed(
+                &installations,
+                &version_id,
+                &engine,
+                timeout_secs,
+            )
+            .await?;
+        }
+        LocalModelsCommand::VectorValidationStatus { version_id, engine } => {
+            crate::local_models_runtime::vector_validation_status(
+                &installations,
+                &version_id,
+                &engine,
+            )
+            .await?;
+        }
         LocalModelsCommand::PlanAudio { profile } => {
             let plan = installations.prepare_audio_install_plan(profile).await?;
             let output = serde_json::json!({"plan_digest": plan.digest()?, "plan": plan});
@@ -2213,6 +2354,23 @@ async fn handle_local_models_command(
                 .await?;
             let output = serde_json::json!({"plan_digest": plan.digest()?, "plan": plan});
             println!("{}", serde_json::to_string(&output)?);
+        }
+        LocalModelsCommand::PlanText {
+            repository,
+            revision,
+            file,
+        } => {
+            use lumina::providers::local_inference::lifecycle::{
+                ModelScopeRepository, RepositoryPath,
+            };
+            let assessment = installations
+                .prepare_text_plan(
+                    ModelScopeRepository::parse(repository)?,
+                    &revision,
+                    RepositoryPath::parse(file)?,
+                )
+                .await?;
+            print_installation_assessment(assessment)?;
         }
         LocalModelsCommand::PlanVector {
             repository,
@@ -2229,18 +2387,7 @@ async fn handle_local_models_command(
                     RepositoryPath::parse(file)?,
                 )
                 .await?;
-            let plan_digest = assessment
-                .plan
-                .as_ref()
-                .map(|plan| plan.digest())
-                .transpose()?;
-            let mut output = serde_json::to_value(&assessment)?;
-            output["plan_digest"] = serde_json::to_value(plan_digest)?;
-            println!("{}", serde_json::to_string(&output)?);
-            anyhow::ensure!(
-                assessment.plan.is_some(),
-                "Vector installation plan was blocked; inspect blocking_reasons"
-            );
+            print_installation_assessment(assessment)?;
         }
         LocalModelsCommand::InstallPlan {
             plan_id,

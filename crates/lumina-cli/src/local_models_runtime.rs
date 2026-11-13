@@ -1,12 +1,14 @@
 use anyhow::{ensure, Context, Result};
 use lumina::providers::local_inference::lifecycle::{
-    validate_vector_admission, validate_vector_inputs, InstallationApplication, LaunchConfig,
-    ModelCapability, NativeChatAdapter, NativeChatRequest, NativeEmbeddingAdapter,
-    NativeHelperRuntime, NativeRerankAdapter,
+    managed_chat_status, managed_vector_status, run_managed_chat_validation,
+    run_managed_vector_validation, validate_vector_admission, validate_vector_inputs,
+    CapabilityStatus, InstallationApplication, InstallationStore, LaunchConfig,
+    LifecycleRepository, ManagedCapabilityStatus, ModelCapability, NativeChatAdapter,
+    NativeChatRequest, NativeEmbeddingAdapter, NativeHelperRuntime, NativeRerankAdapter,
 };
 use serde::Deserialize;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 pub(crate) struct InstalledGeneration {
@@ -37,6 +39,119 @@ struct EmbeddingRequest {
 struct RerankRequest {
     query: String,
     documents: Vec<String>,
+}
+
+pub(crate) async fn validate_vector_installed(
+    application: &InstallationApplication,
+    version_id: &str,
+    engine: &Path,
+    timeout_secs: u64,
+) -> Result<()> {
+    let service = application.service().await?;
+    let result = tokio::select! {
+        result = run_managed_vector_validation(service.repository(), service.store(), version_id, engine, Duration::from_secs(timeout_secs)) => result?,
+        signal = tokio::signal::ctrl_c() => {
+            signal?;
+            anyhow::bail!("Installed vector validation was cancelled")
+        }
+    };
+    println!("{}", serde_json::to_string(&result)?);
+    ensure!(
+        result.evidence.status == CapabilityStatus::Ready,
+        "Installed vector capability validation failed; inspect the saved report"
+    );
+    Ok(())
+}
+
+pub(crate) async fn validate_chat_installed(
+    application: &InstallationApplication,
+    version_id: &str,
+    engine: &Path,
+    timeout_secs: u64,
+) -> Result<()> {
+    let service = application.service().await?;
+    let result = tokio::select! {
+        result = run_managed_chat_validation(service.repository(), service.store(), version_id, engine, Duration::from_secs(timeout_secs)) => result?,
+        signal = tokio::signal::ctrl_c() => {
+            signal?;
+            anyhow::bail!("Installed chat validation was cancelled")
+        }
+    };
+    println!("{}", serde_json::to_string(&result)?);
+    ensure!(
+        result.evidence.status == CapabilityStatus::Ready,
+        "Installed text capability validation failed; inspect the saved report"
+    );
+    Ok(())
+}
+
+type StatusQuery =
+    fn(&LifecycleRepository, &InstallationStore, &str, &Path) -> Result<ManagedCapabilityStatus>;
+
+pub(crate) async fn validate_vision_installed(
+    application: &InstallationApplication,
+    version_id: &str,
+    engine: &Path,
+    timeout_secs: u64,
+) -> Result<()> {
+    let service = application.service().await?;
+    let result = tokio::select! {
+        result=lumina::providers::local_inference::lifecycle::run_managed_vision_validation(service.repository(),service.store(),version_id,engine,Duration::from_secs(timeout_secs))=>result?,
+        signal=tokio::signal::ctrl_c()=>{signal?;anyhow::bail!("Installed vision validation was cancelled")}
+    };
+    println!("{}", serde_json::to_string(&result)?);
+    ensure!(
+        result.evidence.status == CapabilityStatus::Ready,
+        "Installed vision validation failed; inspect the saved report"
+    );
+    Ok(())
+}
+
+pub(crate) async fn vision_validation_status(
+    application: &InstallationApplication,
+    version_id: &str,
+    engine: &Path,
+) -> Result<()> {
+    validation_status(
+        application,
+        version_id,
+        engine,
+        lumina::providers::local_inference::lifecycle::managed_vision_status,
+    )
+    .await
+}
+
+async fn validation_status(
+    application: &InstallationApplication,
+    version_id: &str,
+    engine: &Path,
+    query: StatusQuery,
+) -> Result<()> {
+    let service = application.service().await?;
+    let version_id = version_id.to_owned();
+    let engine = engine.to_owned();
+    let status = tokio::task::spawn_blocking(move || {
+        query(service.repository(), service.store(), &version_id, &engine)
+    })
+    .await??;
+    println!("{}", serde_json::to_string(&status)?);
+    Ok(())
+}
+
+pub(crate) async fn vector_validation_status(
+    application: &InstallationApplication,
+    version_id: &str,
+    engine: &Path,
+) -> Result<()> {
+    validation_status(application, version_id, engine, managed_vector_status).await
+}
+
+pub(crate) async fn chat_validation_status(
+    application: &InstallationApplication,
+    version_id: &str,
+    engine: &Path,
+) -> Result<()> {
+    validation_status(application, version_id, engine, managed_chat_status).await
 }
 
 pub(crate) async fn vector_installed(
@@ -123,6 +238,7 @@ pub(crate) async fn vector_installed(
         serde_json::to_string(&serde_json::json!({
             "response": response,
             "launch": runtime.actual_config(),
+            "memory_admission": runtime.memory_admission(),
             "helper_stopped": true,
             "helper_exit_code": status.code(),
             "stdout_log": runtime.stdout_path(),
@@ -213,6 +329,7 @@ pub(crate) async fn generate_installed(
         serde_json::to_string(&serde_json::json!({
             "response": response,
             "launch": runtime.actual_config(),
+            "memory_admission": runtime.memory_admission(),
             "helper_stopped": true,
             "helper_exit_code": status.code(),
             "stdout_log": runtime.stdout_path(),
