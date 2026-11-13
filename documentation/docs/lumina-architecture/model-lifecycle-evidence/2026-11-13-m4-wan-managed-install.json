@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "status": "PASS",
+  "scope": "Managed installation of Wan 2.1 1.3B CPU from source-verified local cache, durable transfer resume, active task catalog discovery and service reopen.",
+  "job": {
+    "id": "job:acceptance-wan21-13b-cpu",
+    "stage": "installed",
+    "status": "completed",
+    "plan_digest": "09ee6bb4f67fbbd96304e22c20d09e2c6c99146527bd66c0476019c0dca74f74",
+    "generation": 7,
+    "lease_owner": null,
+    "accepted_at": 1794559532,
+    "updated_at": 1794561341
+  },
+  "installationRules": "modelscope-diffusion-install-only-v2",
+  "plannedPeakBytes": 11008986624,
+  "assets": [
+    {
+      "repository": "calcuis/wan-1.3b-gguf",
+      "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+      "file": "wan2.1_t2v_1.3b-q8_0.gguf",
+      "bytes": 1587083488,
+      "sha256": "e6db35de304f0b5b4b4689d41b95fa853fff747581bea75adac25939a73dbead"
+    },
+    {
+      "repository": "calcuis/wan-1.3b-gguf",
+      "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+      "file": "pig_wan_vae_fp32-f16.gguf",
+      "bytes": 253875904,
+      "sha256": "290e463b9d6680146cfd06e5740adb918b239ac8aef1f64f9d4d35fa11747bcd"
+    },
+    {
+      "repository": "calcuis/wan-1.3b-gguf",
+      "revision": "e31361f52972a8341cfc4a8deb295e4f1028f3b7",
+      "file": "umt5-xxl-encoder-q4_k_m.gguf",
+      "bytes": 3655145312,
+      "sha256": "17cf97a5bbbc60a646d6105b832b6f657ce904a8a1ad970e4b59df0c67584a40"
+    }
+  ],
+  "componentBytes": 5496104704,
+  "interruption": {
+    "stoppedJob": {
+      "id": "job:acceptance-wan21-13b-cpu",
+      "idempotency_key": "acceptance-wan21-13b-cpu",
+      "plan_id": "generation-plan:3ebb5eaf-25fb-456e-8e64-38550e49c570",
+      "plan_digest": "09ee6bb4f67fbbd96304e22c20d09e2c6c99146527bd66c0476019c0dca74f74",
+      "stage": "downloading",
+      "status": "queued",
+      "version": 5,
+      "generation": 3,
+      "lease_owner": null,
+      "lease_until": null,
+      "accepted_at": 1794559532,
+      "updated_at": 1794559540
+    },
+    "partialTransfer": {
+      "job_id": "job:acceptance-wan21-13b-cpu",
+      "artifact_id": "356c6c8a040a9f049f6a6a477c3dabb43edea0f7fe2a0f6017a79c2a7aab1742",
+      "relative_path": "586e3044d7779f975c5c6af47ebaa3296fc2f6f673f92a23193bfe4bb7bf8315.part",
+      "expected_bytes": 1587083488,
+      "checkpoint": {
+        "completed_bytes": 67108864,
+        "prefix_sha256": "d01d1717d8876c77d62dafbcf466c2573af71e0a92e0a8b5cf5e96a9909a5c30",
+        "resume_validator": {
+          "kind": "unknown"
+        }
+      },
+      "state": {
+        "state": "downloading"
+      },
+      "restart_reason": null,
+      "version": 1,
+      "generation": 1,
+      "updated_at": 1794559539
+    }
+  },
+  "completedFiles": 3,
+  "reopenedIdentity": {
+    "installationId": "acceptance-wan21-13b-cpu",
+    "versionId": "version:acceptance-wan21-13b-cpu",
+    "manifestDigest": "c6b757d29c37afd100988aaa55c8812791a3af8789574311d27826b1ba087f65",
+    "runtimeDigest": "baf115b972d06aea6497a11cc8b441353f701b6a7d84d163d7dc7944c3b09947",
+    "componentBindingDigest": "f1a54d555ed8f7b10ca7321915db9427c6091c8ec01b8fa59210c2a0bff8f222",
+    "taskVariant": "wan2.1/text_to_video",
+    "parameterSchemaId": "wan21-t2v-parameters-v1"
+  },
+  "test": "install_from_observed_generation_assets_and_reopen_task_catalog",
+  "elapsedSeconds": 1894.44,
+  "coverage": "Installation and catalog only. No video generation or runtime/quality admission in this test."
+}
