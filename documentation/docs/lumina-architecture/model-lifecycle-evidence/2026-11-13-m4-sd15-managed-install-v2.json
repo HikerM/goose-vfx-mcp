@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "status": "PASS",
+  "scope": "SD1.5 managed installation from source-observed cached GGUF and task catalog resolution after reopening the installation service.",
+  "job": {
+    "id": "job:acceptance-sd15",
+    "stage": "installed",
+    "status": "completed",
+    "plan_id": "generation-plan:dea9afef-a4f6-4236-9d99-52e09edee43e",
+    "plan_digest": "8b255f345af1a8cffa17e3bcf4f225bc82b736fd684a753a15365103ee70ca48",
+    "generation": 6,
+    "accepted_at": 1794554655,
+    "updated_at": 1794555379,
+    "lease_owner": null
+  },
+  "installationRules": "modelscope-diffusion-install-only-v2",
+  "plannedPeakBytes": 4281946944,
+  "model": {
+    "repository": "gpustack/stable-diffusion-v1-5-GGUF",
+    "revision": "fb1a638177b8e4ae384ac9fe972c4643492f590f",
+    "file": "stable-diffusion-v1-5-FP16.gguf",
+    "localCachePath": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__stable-diffusion-v1-5-GGUF\\stable-diffusion-v1-5-FP16.gguf",
+    "bytes": 2132584864,
+    "sourceSha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+    "installedSha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+    "installedFile": "target\\lifecycle-validation\\m4-managed-generation-20261113-v2-r1\\model-lifecycle\\installations\\d81b12ca7b155caa49f433f11e201a8f1cfd684b4392db0582e8c2b1720395c3\\af8175f9128f456597d81e4a20196780aa600e6ee10813053f483bd95d386444\\files\\f0de5b5cd34f7e83fb6ca3dab203df85d83a54314d084d1963a600abe5d548d9.gguf",
+    "verificationEvidence": "f40b8c3daf1d332fff023b6ebde2ac56dbd3b2146cb9b6c0a868eb072bdfe718"
+  },
+  "reopenedTask": {
+    "installationId": "acceptance-sd15",
+    "versionId": "version:acceptance-sd15",
+    "manifestDigest": "d98d66eced5b91efa52839b0b5f019256d2d3d34ba2d937f62d5f31201f0bb7c",
+    "runtimeDigest": "acdf7fae528058af5ce6b608969ae4973b29989ea1fe1d5ff66be1cc88fa255d",
+    "componentBindingDigest": "af39531beae867ffdff3d1aef70a7c40ab8b8cf5d3315f9b8d0a952858de8dd6",
+    "taskVariant": "sd15/text_to_image",
+    "parameterSchemaId": "sd15-image-parameters-v1"
+  },
+  "databaseIntegrity": "ok",
+  "capabilityEvidenceRows": 0,
+  "finalLogicalManagedPayloadBytes": {
+    "transfers": 0,
+    "blobs": 2132584864,
+    "staging": 0,
+    "installations": 2132584864
+  },
+  "manifestFile": {
+    "path": "target/lifecycle-validation/m4-managed-generation-20261113-v2-r1/model-lifecycle/installations/d81b12ca7b155caa49f433f11e201a8f1cfd684b4392db0582e8c2b1720395c3/af8175f9128f456597d81e4a20196780aa600e6ee10813053f483bd95d386444/manifest.json",
+    "sha256": "d98d66eced5b91efa52839b0b5f019256d2d3d34ba2d937f62d5f31201f0bb7c"
+  },
+  "testCommand": "cargo test --offline -j 1 -p lumina-local-inference --test lifecycle_managed_generation -- --exact install_from_observed_generation_assets_and_reopen_task_catalog --ignored --nocapture",
+  "acceptanceLog": {
+    "path": "target/lifecycle-validation/m4-managed-generation-20261113-v2-r1/sd15-v2-r1.log",
+    "sha256": "7c18c1dfae77ab3e3a55792db0c629408bc95a2f134061a1822ce04b0e6311ab"
+  },
+  "testResult": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 763.23s",
+  "storageMeasurement": {
+    "scope": "Logical file lengths observed in transfers, blobs, staging and installations. Samples are sequential directory observations; physical allocation, SQLite, and the external source are outside the measurement.",
+    "samplePeriodSeconds": 0.5,
+    "samples": 2267,
+    "manifestInclusiveTemporaryPeakBytes": 4265172632,
+    "temporaryMetadataAtPeak": [
+      {
+        "path": "staging\\commits\\d81b12ca7b155caa49f433f11e201a8f1cfd684b4392db0582e8c2b1720395c3\\af8175f9128f456597d81e4a20196780aa600e6ee10813053f483bd95d386444\\.tmp27jh6h",
+        "bytes": 2904
+      }
+    ],
+    "modelFilesOnlyPeakBytes": 4265169728,
+    "modelFilesOnlyPeakCalculation": "Sum distinct file IDs under transfers, blobs and the model files subdirectory of staging/installations for each observation.",
+    "sourceBefore": {
+      "file": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__stable-diffusion-v1-5-GGUF\\stable-diffusion-v1-5-FP16.gguf",
+      "bytes": 2132584864,
+      "sha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+      "device": 3298713917,
+      "fileId": "562949960701082",
+      "mtimeNs": 1793532240394873400
+    },
+    "sourceAfter": {
+      "file": "D:\\Project\\goose\\target\\lifecycle-validation\\assets\\gpustack__stable-diffusion-v1-5-GGUF\\stable-diffusion-v1-5-FP16.gguf",
+      "bytes": 2132584864,
+      "sha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+      "device": 3298713917,
+      "fileId": "562949960701082",
+      "mtimeNs": 1793532240394873400
+    },
+    "sameSource": true,
+    "verifiedTransferRenamedToBlob": true,
+    "fileIdsAtTransfer": [
+      "10414574140392136"
+    ],
+    "fileIdsAtBlob": [
+      "10414574140392136"
+    ],
+    "report": {
+      "path": "target/lifecycle-validation/m4-managed-generation-20261113-v2-r1/sd15-disk-result.json",
+      "sha256": "5f79afe78745b318c16026a2df64ad412ec4e05fb20a2d19d3dbcfc10218ade7"
+    },
+    "samplesLog": {
+      "path": "target/lifecycle-validation/m4-managed-generation-20261113-v2-r1/disk-samples.jsonl",
+      "sha256": "811008b3273bbb7803338463f2835462ac4c21bac971fc937514cae921f32587"
+    },
+    "monitorCheck": "The original monitor counted the temporary manifest as payload and asserted an exact two-GGUF limit. The table reports that raw peak and the GGUF-only peak separately."
+  },
+  "installWorkerGenerations": {
+    "4": {
+      "firstEventVersion": 41,
+      "firstEventUnixSeconds": 1794554852,
+      "leaseOwner": "installation-service:c698fe24-9b20-42fb-b8db-13a511bc6db6"
+    },
+    "5": {
+      "firstEventVersion": 44,
+      "firstEventUnixSeconds": 1794554993,
+      "leaseOwner": "installation-service:c698fe24-9b20-42fb-b8db-13a511bc6db6"
+    }
+  },
+  "sourceObservation": {
+    "path": "target/lifecycle-validation/m4-managed-generation-20261113-r1/sd15-source-observation.json",
+    "sha256": "e7e98a4de45a5dc250890d3466dde380905c78c7ce2559e052c2aff6a04b3122"
+  },
+  "shutdownCheckpoint": {
+    "stoppedJob": {
+      "id": "job:acceptance-sd15",
+      "idempotency_key": "acceptance-sd15",
+      "plan_id": "generation-plan:dea9afef-a4f6-4236-9d99-52e09edee43e",
+      "plan_digest": "8b255f345af1a8cffa17e3bcf4f225bc82b736fd684a753a15365103ee70ca48",
+      "stage": "downloading",
+      "status": "queued",
+      "version": 5,
+      "generation": 3,
+      "lease_owner": null,
+      "lease_until": null,
+      "accepted_at": 1794554655,
+      "updated_at": 1794554703
+    },
+    "partialTransfer": {
+      "job_id": "job:acceptance-sd15",
+      "artifact_id": "779ca6d275eb6bcd4d7cd811e24dc071e7c545ab33b755eed1a316633227ace5",
+      "relative_path": "f0de5b5cd34f7e83fb6ca3dab203df85d83a54314d084d1963a600abe5d548d9.part",
+      "expected_bytes": 2132584864,
+      "checkpoint": {
+        "completed_bytes": 67108864,
+        "prefix_sha256": "d9d242b3a4c8556a599f3497a1a72dddb5d476df0353f9fb1f2e07bf45c7e02e",
+        "resume_validator": {
+          "kind": "unknown"
+        }
+      },
+      "state": {
+        "state": "downloading"
+      },
+      "restart_reason": null,
+      "version": 1,
+      "generation": 1,
+      "updated_at": 1794554702
+    }
+  },
+  "verificationLimits": "Restart recovery is a controlled service shutdown and reopen at a persisted transfer checkpoint. Output decoding, generation quality and abrupt process termination were not exercised."
+}
