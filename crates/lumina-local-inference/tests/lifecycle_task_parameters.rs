@@ -91,6 +91,20 @@ fn literal_after<'a>(prepared: &'a PreparedGenerationTask, flag: &str) -> &'a st
 }
 
 #[test]
+fn disabled_diffusion_cache_uses_the_native_default_for_images_and_video() {
+    for (profile, params) in [
+        (GenerationProfile::Sd15CpuTextToImage, image()),
+        (GenerationProfile::H3CudaTextToVideoAudio, video()),
+    ] {
+        let prepared = service(profile).compile(request(params)).unwrap();
+        assert_eq!(prepared.snapshot().engine.cache_mode, "disabled");
+        assert!(!prepared
+            .arguments()
+            .contains(&NativeGenerationArgument::Literal("--cache-mode".into())));
+    }
+}
+
+#[test]
 fn profiles_match_independent_published_engine_and_weight_evidence() {
     let sd:Value=serde_json::from_str(include_str!("../../../documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-01-native-image-feasibility.json")).unwrap();
     let h3:Value=serde_json::from_str(include_str!("../../../documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-12-h3-native-video-smoke.json")).unwrap();

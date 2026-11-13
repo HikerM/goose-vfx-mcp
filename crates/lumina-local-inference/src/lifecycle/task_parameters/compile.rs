@@ -755,9 +755,12 @@ fn arguments(snapshot: &GenerationParameterSnapshot) -> Vec<NativeGenerationArgu
         ("--rng", snapshot.engine.rng.clone()),
         ("--sampler-rng", snapshot.engine.sampler_rng.clone()),
         ("--flash-attn", snapshot.engine.flash_attention.clone()),
-        ("--cache-mode", snapshot.engine.cache_mode.clone()),
     ] {
         pair(flag, value);
+    }
+    // sd-cli disables caching by default. Its flag accepts only enabled algorithms.
+    if snapshot.engine.cache_mode != "disabled" {
+        pair("--cache-mode", snapshot.engine.cache_mode.clone());
     }
     if let Some(shift) = snapshot.engine.flow_shift {
         pair("--flow-shift", shift.to_string());

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "scope": "Pinned SD1.5 CPU CLI argument and extended-path diagnostic using the previously installed v2 weights. Managed session publication is evaluated separately.",
+  "installation": "acceptance-sd15",
+  "version": "version:acceptance-sd15",
+  "manifestSha256": "d98d66eced5b91efa52839b0b5f019256d2d3d34ba2d937f62d5f31201f0bb7c",
+  "cpuHelperSha256": "4f0090622e57c198c9fb6470f0981d5d5434830770c1aa0cf50d9ab8c8e2f043",
+  "weightsSha256": "30a85c4cd39aaac08e5ddc51edc22a1ba923f2f8ba131e898cf15ae415ee5524",
+  "initialManagedOwnerExit": 101,
+  "initialNativeExit": 1,
+  "parserError": "invalid cache mode 'disabled'",
+  "frozenCacheMode": "disabled",
+  "correctedCliSetting": "Omit the optional --cache-mode flag in the native argument compiler. The pinned engine initializes image and video cache to SD_CACHE_DISABLED.",
+  "cliExit": 0,
+  "commandRecord": "target/lifecycle-validation/m4-sd15-pinned-cli-diagnostic-r3/result.json",
+  "commandRecordSha256": "bdf20105bd969be9be40cacad54fc2665f59649f3e88ea7924c30c7ce29d3198",
+  "nativeStdoutSha256": "39561a4297571bf40e1b5a4fb1bcc55ca3747ed2888c306ad742f40435367360",
+  "output": {
+    "path": "target/lifecycle-validation/m4-sd15-pinned-cli-diagnostic-r3/output.png",
+    "mimeType": "image/png",
+    "width": 512,
+    "height": 512,
+    "bytes": 467679,
+    "sha256": "bf81e68d0129b2b1cc7534abf5a1b10ba2b45ab3dc0e4f4313d0306a6a0245b7",
+    "nativeGenerationSeconds": 397.76,
+    "manualObservation": "One red apple standing on a wooden surface, against a wooden background; subject and surface match the prompt."
+  }
+}
