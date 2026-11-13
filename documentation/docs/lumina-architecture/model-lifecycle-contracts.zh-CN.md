@@ -363,3 +363,31 @@ Validator 使用真实模型和真实 Runtime，生成结果必须实际可读�
 产品 CLI 入口为 `local-models generate --version-id <id> --engine <path>`，输入使用 `--prompt`，或 `--request` 的类型化 JSON；有已验证视觉资源档案时可随 prompt 添加 `--image`。成功结果回传实际 LaunchConfig、token 使用、输入摘要和 helper 退出确认。该调用不会自动登记能力 READY；正式文本、工具、多轮与视觉 Validator 仍须独立完成。
 
 Embedding/Reranker 当前实现类型化协议和精确模型内容绑定；固定 helper 的 Rerank 分数是原始 classifier logit，允许正常负数，拒绝缺失 rank embedding 的精确失败哨兵 `-1000000`。现有裸 endpoint/token 构造不等于受管运行接入；正式使用还须连接资源档案、正常安装和同一 owner 的进程、请求与占用生命周期。
+
+## 扩散模型运行时档案
+
+启动 Lumina 前，将 `LUMINA_GENERATION_CATALOG` 设为本地 JSON 文件的绝对路径。CLI 和桌面后端各自在首次读取模型目录时加载一次。修改档案后需重启相应进程。`lumina local-models plan-generation --help` 列出可选安装名，`lumina local-models plan-generation --profile <name>` 为选中的模型生成安装计划。
+
+文件顶层包含 `schemaVersion`（当前为 1）和 `models` 数组。每个模型提供以下字段。
+
+| 字段 | 用途 |
+| --- | --- |
+| `name` | 唯一安装名，以小写字母开头，可包含小写字母、数字和连字符 |
+| `adapterProtocol` | 选择引擎支持的任务协议。现有协议见源码 `task_parameters/protocols.json` |
+| `intents` | 该模型支持的协议任务子集，第一项为默认安装变体 |
+| `assets` | 以角色为键的对象。每个角色提供 ModelScope 的 `repository`、40 位提交 `revision`、仓库内 GGUF 文件 `file`、`sha256` 和 `sizeBytes` |
+| `defaults` | 模型自己的 `width`、`height`、`dimensionMultiple`、`negativePrompt`、`steps`、`cfgScale`、`seed`、`samplers` 和 `schedulers`。两组选项的第一项为默认值。需要流偏移的模型可指定 `flowShift` |
+| `defaults.video` | 视频模型另配 `frames`、`minimumFrames`、`frameStep`、`fps`、`fpsConstraint`、`audioMode`。可用 `supportedFps` 指定递增的帧率选项，其中应包含默认帧率。省略时只接受默认帧率 |
+
+目录加载会检查全部条目。任一条目无效时，错误写入日志，本次外部目录不生效，内置档案仍可用。新档案只适用于现有协议能够表达的模型。安装流程核对仓库版本、组件角色、文件摘要与大小；任务目录据实际安装生成对话可用参数。档案内容和协议的变更产生新的参数身份。资源准入、质量和发布结果需要对实际权重及请求另行验证。
+
+## 音频模型的语言和默认参数
+
+将 `LUMINA_AUDIO_CATALOG` 指向本地 JSON 的绝对路径，重启读取该目录的 Lumina 进程。`lumina local-models plan-audio --profile <name>` 按目录中的安装名选择权重。每个条目提供 `name`、`repository`、40 位提交 `revision`、`file`、`sha256`、`sizeBytes` 和 `parameters`。文件顶层为 `{"schemaVersion":1,"models":[...]}`。
+
+| 协议 | 模型档案中的参数 | 实际执行 |
+| --- | --- | --- |
+| `pocket_tts_offline` | 例如 `{"protocol":"pocket_tts_offline","language":"french","temperature":0.7}` | 加载该权重时指定法语。合成请求可覆盖温度，聊天参数说明使用该权重的默认值。 |
+| `qwen3_asr_offline` | 例如 `{"protocol":"qwen3_asr_offline","languages":["auto","chinese"],"defaultLanguage":"chinese","maxTokens":128}` | 对话可从该模型声明的语言中选择。省略语言和输出 token 数时使用该条目的默认值。 |
+
+模型注册、资源测量和输出质量分别验证。外部档案的内容决定参数身份。改变权重或档案之后，历史有效配置必须匹配原身份才能复用。当前目录接受这两个引擎协议；新引擎、新输入结构或新输出结构需要相应的执行适配和测试。

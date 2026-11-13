@@ -1170,8 +1170,47 @@ enum Command {
 }
 
 #[cfg(feature = "local-inference")]
+fn audio_install_profile() -> impl clap::builder::TypedValueParser<
+    Value = lumina::providers::local_inference::lifecycle::AudioTaskProfile,
+> {
+    use clap::builder::{PossibleValuesParser, TypedValueParser};
+    use lumina::providers::local_inference::lifecycle::AudioTaskProfile;
+    PossibleValuesParser::new(
+        AudioTaskProfile::registered().map(AudioTaskProfile::installation_name),
+    )
+    .map(|name| {
+        AudioTaskProfile::registered()
+            .find(|profile| profile.installation_name() == name)
+            .expect("validated audio profile name")
+    })
+}
+
+#[cfg(feature = "local-inference")]
+fn generation_install_profile() -> impl clap::builder::TypedValueParser<
+    Value = lumina::providers::local_inference::lifecycle::GenerationProfile,
+> {
+    use clap::builder::{PossibleValuesParser, TypedValueParser};
+    use lumina::providers::local_inference::lifecycle::GenerationProfile;
+    PossibleValuesParser::new(GenerationProfile::installation_names()).map(|name| {
+        GenerationProfile::installation_profile(&name).expect("validated generation profile name")
+    })
+}
+
+#[cfg(feature = "local-inference")]
 #[derive(Subcommand)]
 enum LocalModelsCommand {
+    #[command(
+        about = "Prepare a pinned audio model and its matching engine configuration for installation"
+    )]
+    PlanAudio {
+        #[arg(long, value_parser = audio_install_profile())]
+        profile: lumina::providers::local_inference::lifecycle::AudioTaskProfile,
+    },
+    #[command(about = "Prepare a generation installation from its registered model profile")]
+    PlanGeneration {
+        #[arg(long, value_parser = generation_install_profile())]
+        profile: lumina::providers::local_inference::lifecycle::GenerationProfile,
+    },
     #[command(
         about = "Prepare a measured vector model installation from a pinned ModelScope source"
     )]
@@ -2163,6 +2202,18 @@ async fn handle_local_models_command(
     lumina::providers::local_inference::configure_huggingface_auth();
 
     match command {
+        LocalModelsCommand::PlanAudio { profile } => {
+            let plan = installations.prepare_audio_install_plan(profile).await?;
+            let output = serde_json::json!({"plan_digest": plan.digest()?, "plan": plan});
+            println!("{}", serde_json::to_string(&output)?);
+        }
+        LocalModelsCommand::PlanGeneration { profile } => {
+            let plan = installations
+                .prepare_generation_install_plan(profile)
+                .await?;
+            let output = serde_json::json!({"plan_digest": plan.digest()?, "plan": plan});
+            println!("{}", serde_json::to_string(&output)?);
+        }
         LocalModelsCommand::PlanVector {
             repository,
             revision,
@@ -2766,6 +2817,39 @@ mod tests {
     #[cfg(feature = "local-inference")]
     #[test]
     fn installation_commands_require_frozen_plan_identity_and_control_version() {
+        use lumina::providers::local_inference::lifecycle::{AudioTaskProfile, GenerationProfile};
+
+        for (command, profiles) in [
+            (
+                "plan-audio",
+                AudioTaskProfile::registered()
+                    .map(AudioTaskProfile::installation_name)
+                    .collect::<Vec<_>>(),
+            ),
+            (
+                "plan-generation",
+                GenerationProfile::installation_names().collect(),
+            ),
+        ] {
+            for profile in profiles {
+                assert!(Cli::try_parse_from([
+                    "lumina",
+                    "local-models",
+                    command,
+                    "--profile",
+                    profile
+                ])
+                .is_ok());
+            }
+            assert!(Cli::try_parse_from([
+                "lumina",
+                "local-models",
+                command,
+                "--profile",
+                "unknown"
+            ])
+            .is_err());
+        }
         assert!(Cli::try_parse_from([
             "lumina",
             "local-models",
