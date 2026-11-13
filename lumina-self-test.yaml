@@ -32,7 +32,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, model-cache-install, model-assets, runtime-assets, media-forwarding"
+    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, managed-capabilities, model-cache-install, model-assets, runtime-assets, media-forwarding"
 
   - key: test_depth
     input_type: string
@@ -59,7 +59,11 @@ parameters:
     description: "Clean up test artifacts after completion"
 
 instructions: |
-  {% if test_phases == "media-forwarding" %}
+  {% if test_phases == "managed-capabilities" %}
+  Exercise the exact registered model versions supplied by the caller. Use the real
+  developer shell and retain the per-model scores and database reopen verdicts.
+  Report a missing store, engine or version as UNVERIFIED for the affected suite.
+  {% elif test_phases == "media-forwarding" %}
   Validate real MCP audio/resource-link delivery and durable media publication through the product
   ACP backend and persisted session replay. Call the fixed validation entry exactly once. It starts
   an isolated local-model session with one controlled MCP fixture, checks live references, verified
@@ -185,7 +189,16 @@ extensions:
     name: extensionmanager
 
 prompt: |
-  {% if test_phases == "media-forwarding" %}
+  {% if test_phases == "managed-capabilities" %}
+  In the Windows developer shell, run these commands separately from D:/Project/goose.
+  The caller supplies LUMINA_VISION_STORE, LUMINA_VISION_ENGINE, LUMINA_VISION_VERSION,
+  LUMINA_VECTOR_STORE, LUMINA_VECTOR_ENGINE, LUMINA_EMBEDDING_VERSION and LUMINA_RERANK_VERSION.
+  1. Run `bin\cargo.cmd test --offline -p lumina-local-inference --test lifecycle_managed_vision -- --ignored --nocapture`.
+  2. Run `bin\cargo.cmd test --offline -p lumina-local-inference --test lifecycle_managed_vectors managed_validator_registers_verified_results_for_both_installed_models -- --ignored --nocapture`.
+  Allow at least 900 seconds for each command. Report the observed vision image, replacement
+  and dialog counts, each vector model's score, and each test's exit status. The tests reopen
+  the managed database and require the persisted verdict to match the observed result.
+  {% elif test_phases == "media-forwarding" %}
   Your first action must be one developer shell call, working in D:/Project/goose:
   `C:/Python310/python.exe -B bin/test-lumina-media-forwarding.py --execute --run-dir "{{ workspace_dir }}"`.
   Set timeout_secs to 600. Invoke it exactly once; do not add shell inspection, pipes,
@@ -542,6 +555,7 @@ prompt: |
   Record the actual generated answer and token count. A skipped model test is UNVERIFIED.
   This text smoke test does not prove complete model installation, visual, audio, or tool support.
   Record findings at {{ workspace_dir }}/model_lifecycle_foundation.md.
+  Use the managed-capabilities phase for installed vision, embedding and reranking models.
   {% endif %}
 
   ## 📊 PHASE 5: Final Report Generation

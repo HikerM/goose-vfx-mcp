@@ -210,7 +210,7 @@ impl InstallationStore {
         Ok(path)
     }
 
-    fn lock(&self, namespace: &str, id: &str) -> Result<File> {
+    pub(super) fn lock(&self, namespace: &str, id: &str) -> Result<File> {
         let file = self.open_lock_file(namespace, id)?;
         file.try_lock_exclusive()
             .context("Installation content is locked by another worker")?;

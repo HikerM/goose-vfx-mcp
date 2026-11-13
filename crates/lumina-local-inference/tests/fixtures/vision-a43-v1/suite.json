@@ -1,0 +1,130 @@
+{
+  "schema": "lumina-vision-a43-v1",
+  "minimum_correct": 8,
+  "cases": [
+    {
+      "id": "solid-red",
+      "sha256": "8cd751ba4b95bc2b9b958717cd3dd27e89e6709057787196a19c61f63ebf9374",
+      "prompt": "What color fills the picture? Reply only with the English color word.",
+      "answers": [
+        "red"
+      ]
+    },
+    {
+      "id": "solid-blue",
+      "sha256": "d6d17ffe11deac7022bc4af854e50c019a0ab47f9ea4c5de6e8527a86f11fe9d",
+      "prompt": "What color fills the picture? Reply only with the English color word.",
+      "answers": [
+        "blue"
+      ]
+    },
+    {
+      "id": "dots-2",
+      "sha256": "4f23ca5fcffacc201152c4650f735e3c71561ae11bc100684a805f925fe0c859",
+      "prompt": "How many black dots do you see? Reply only with a number.",
+      "answers": [
+        "2",
+        "two"
+      ]
+    },
+    {
+      "id": "dots-3",
+      "sha256": "48ff58605021ec300a88c5f4b0b32ebe4ed6547500f22b6d75585c1d627bd236",
+      "prompt": "How many black dots do you see? Reply only with a number.",
+      "answers": [
+        "3",
+        "three"
+      ]
+    },
+    {
+      "id": "triangle",
+      "sha256": "01a6ed1027b5e9e7e4e4381fb5ccec6979e2fa9193d92df6c6f9982d0f113c25",
+      "prompt": "Name the black geometric shape. Reply with one English word.",
+      "answers": [
+        "triangle"
+      ]
+    },
+    {
+      "id": "square",
+      "sha256": "f7cbf8cdfe942932478eab0f3ed537fa4cb0992eb6165575606ef126e0cda87e",
+      "prompt": "Name the black geometric shape. Reply with one English word.",
+      "answers": [
+        "square"
+      ]
+    },
+    {
+      "id": "red-left",
+      "sha256": "944ad5c06587fac780a278c5f5d5ccadfb8fde4220428812ee6afc1d982a9552",
+      "prompt": "On which side is the red square? Reply only left or right.",
+      "answers": [
+        "left"
+      ]
+    },
+    {
+      "id": "red-right",
+      "sha256": "ee678497fb3920dbf026b4cf2bd007f150a7f66bae98168f1c0239e2e0030980",
+      "prompt": "On which side is the red square? Reply only left or right.",
+      "answers": [
+        "right"
+      ]
+    },
+    {
+      "id": "word-cat",
+      "sha256": "db1df1d7a3bb06348075760350dfbb1d10a68e3852733c2d768f9e7c481577de",
+      "prompt": "Read the printed word. Reply only with that word.",
+      "answers": [
+        "CAT"
+      ]
+    },
+    {
+      "id": "word-dog",
+      "sha256": "3efe12bfa33358554ab8b66b01f1d1c4dbeabf8eefaa13850210e81f210de4f8",
+      "prompt": "Read the printed word. Reply only with that word.",
+      "answers": [
+        "DOG"
+      ]
+    }
+  ],
+  "replacements": [
+    [
+      "solid-red",
+      "solid-blue"
+    ],
+    [
+      "dots-2",
+      "dots-3"
+    ],
+    [
+      "red-left",
+      "red-right"
+    ],
+    [
+      "word-cat",
+      "word-dog"
+    ]
+  ],
+  "dialogs": [
+    {
+      "image": "solid-blue",
+      "followup": "Recall the picture from the previous turn. Was it blue or yellow? Reply with one word.",
+      "answers": [
+        "blue"
+      ]
+    },
+    {
+      "image": "dots-3",
+      "followup": "If one of the dots from that image disappeared, how many would remain? Reply with just a number.",
+      "answers": [
+        "2",
+        "two"
+      ]
+    },
+    {
+      "image": "red-left",
+      "followup": "Where was the blue square in the same picture? Reply only left or right.",
+      "answers": [
+        "right"
+      ]
+    }
+  ]
+}

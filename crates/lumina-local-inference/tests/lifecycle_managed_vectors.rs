@@ -105,6 +105,44 @@ async fn exercise(
 }
 
 #[tokio::test]
+#[ignore = "Runs two installed models, writes managed capability evidence and reopens the registry"]
+async fn managed_validator_registers_verified_results_for_both_installed_models() -> Result<()> {
+    let root = required_path("LUMINA_VECTOR_STORE")?;
+    let engine = required_path("LUMINA_VECTOR_ENGINE")?;
+    let store = InstallationStore::open(&root)?;
+    let db = root.join("models.db");
+    for key in ["LUMINA_EMBEDDING_VERSION", "LUMINA_RERANK_VERSION"] {
+        let version = std::env::var(key)?;
+        let checked = {
+            let repository = LifecycleRepository::open(&db)?;
+            run_managed_vector_validation(
+                &repository,
+                &store,
+                &version,
+                &engine,
+                std::time::Duration::from_secs(180),
+            )
+            .await?
+        };
+        ensure!(
+            checked.completed == 20
+                && checked.correct >= 18
+                && checked.evidence.status == CapabilityStatus::Ready,
+            "Managed validation failed: {checked:?}"
+        );
+        let reopened =
+            managed_vector_status(&LifecycleRepository::open(&db)?, &store, &version, &engine)?;
+        ensure!(
+            reopened.status == CapabilityStatus::Ready
+                && reopened.evidence.as_ref() == Some(&checked.evidence),
+            "Reopened registry lost the verified result"
+        );
+        println!("{}", serde_json::to_string(&checked)?);
+    }
+    Ok(())
+}
+
+#[tokio::test]
 #[ignore = "Requires two real registered installations, the pinned native helper and explicit output path"]
 async fn installed_vectors_pass_fixed_bilingual_relevance_through_owned_runtime() -> Result<()> {
     let suite: RelevanceSuite = serde_json::from_str(CASES)?;

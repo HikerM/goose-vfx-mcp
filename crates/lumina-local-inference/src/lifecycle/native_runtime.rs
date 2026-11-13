@@ -624,7 +624,7 @@ fn acquire_runtime_permit(root: &Path) -> Result<File> {
     Ok(file)
 }
 
-fn verify_binary(path: &Path, expected: &Sha256Digest) -> Result<()> {
+pub(super) fn verify_binary(path: &Path, expected: &Sha256Digest) -> Result<()> {
     let mut file = open_for_verification(path)?;
     let mut hash = Sha256::new();
     let mut buffer = [0u8; 64 * 1024];
