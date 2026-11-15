@@ -4,7 +4,8 @@ use lumina_providers::local_inference::lifecycle::{
     GenerationParameterSnapshot, GenerationProfile, GenerationTaskRequest,
     ModelTaskParameterAdapter, PocketTtsParameterService, PocketTtsPreparedTask, PocketTtsSnapshot,
     PreparedGenerationTask, Qwen3AsrParameterService, Qwen3AsrPreparedTask, Qwen3AsrSnapshot,
-    RuntimeBuild, Sha256Digest, TaskParameterIdentity,
+    RuntimeBuild, Sha256Digest, StableAudioMusicParameterService, StableAudioMusicPreparedTask,
+    StableAudioMusicSnapshot, TaskParameterIdentity,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -21,6 +22,7 @@ pub enum TaskConfigurationSnapshot {
     Generation(Box<GenerationParameterSnapshot>),
     PocketTts(Box<PocketTtsSnapshot>),
     Qwen3Asr(Box<Qwen3AsrSnapshot>),
+    StableAudioMusic(Box<StableAudioMusicSnapshot>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -63,6 +65,7 @@ impl TaskConfigurationRecord {
             TaskConfigurationSnapshot::Generation(value) => &value.binding.runtime,
             TaskConfigurationSnapshot::PocketTts(value) => &value.metadata.binding.runtime,
             TaskConfigurationSnapshot::Qwen3Asr(value) => &value.metadata.binding.runtime,
+            TaskConfigurationSnapshot::StableAudioMusic(value) => &value.metadata.binding.runtime,
         }
     }
 
@@ -259,6 +262,18 @@ impl TaskConfigurationStore {
         .await
     }
 
+    pub async fn save_music(
+        &self,
+        task: &StableAudioMusicPreparedTask,
+    ) -> Result<TaskConfigurationRecord> {
+        let snapshot = task.snapshot();
+        self.save(parse_snapshot(
+            &snapshot.metadata.identity.parameter_schema_id,
+            &bounded_json(snapshot)?,
+        )?)
+        .await
+    }
+
     async fn save(&self, record: TaskConfigurationRecord) -> Result<TaskConfigurationRecord> {
         self.validate_audio_parent(&record).await?;
         let identity_json = serde_json::to_string(&record.identity)?;
@@ -290,6 +305,7 @@ impl TaskConfigurationStore {
         let parent = match child.snapshot() {
             TaskConfigurationSnapshot::PocketTts(s) => &s.metadata.derivation,
             TaskConfigurationSnapshot::Qwen3Asr(s) => &s.metadata.derivation,
+            TaskConfigurationSnapshot::StableAudioMusic(s) => &s.metadata.derivation,
             TaskConfigurationSnapshot::Generation(_) => return Ok(()),
         };
         let Some(parent) = parent else { return Ok(()) };
@@ -304,6 +320,11 @@ impl TaskConfigurationStore {
             (TaskConfigurationSnapshot::Qwen3Asr(c), TaskConfigurationSnapshot::Qwen3Asr(p)) => {
                 Qwen3AsrParameterService::new(c.metadata.binding.clone())?.validate_parent(c, p)?
             }
+            (
+                TaskConfigurationSnapshot::StableAudioMusic(c),
+                TaskConfigurationSnapshot::StableAudioMusic(p),
+            ) => StableAudioMusicParameterService::new(c.metadata.binding.clone())?
+                .validate_parent(c, p)?,
             _ => bail!("Parent task uses a different audio adapter"),
         }
         Ok(())
@@ -575,6 +596,21 @@ fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord
                 service.identity()?,
                 bounded_json(&value)?,
                 TaskConfigurationSnapshot::Qwen3Asr(Box::new(value)),
+            )
+        }
+        Some((AudioTaskProtocol::StableAudioMusicOffline, profile)) => {
+            let value: StableAudioMusicSnapshot = serde_json::from_str(payload)?;
+            let service = StableAudioMusicParameterService::for_profile(
+                profile,
+                value.metadata.binding.clone(),
+            )?;
+            service.validate_snapshot(&value)?;
+            (
+                value.metadata.session_id.clone(),
+                value.metadata.job_id.clone(),
+                service.identity()?,
+                bounded_json(&value)?,
+                TaskConfigurationSnapshot::StableAudioMusic(Box::new(value)),
             )
         }
         None => bail!("Unsupported persisted task parameter schema: {schema}"),

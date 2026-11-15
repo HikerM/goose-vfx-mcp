@@ -8,6 +8,7 @@ use super::{
     LifecycleRepository, ModelTaskParameterAdapter, NativeTaskPlan, PocketTtsDescriptor,
     PocketTtsParameterService, Qwen3AsrDescriptor, Qwen3AsrParameterService, TaskParameterIdentity,
 };
+use super::{StableAudioMusicDescriptor, StableAudioMusicParameterService};
 use anyhow::{ensure, Context, Result};
 use serde::Serialize;
 use serde_json::Value;
@@ -21,6 +22,7 @@ pub use media_fields::SessionMediaParameterKind;
 pub enum NativeTaskParameterContract {
     Generation(Box<GenerationParameterDescriptor>),
     PocketTts(Box<PocketTtsDescriptor>),
+    StableAudioMusic(Box<StableAudioMusicDescriptor>),
     Qwen3Asr(Box<Qwen3AsrDescriptor>),
 }
 
@@ -35,6 +37,7 @@ pub struct InstalledTaskDescription {
 enum Adapter {
     Generation(Box<GenerationParameterService>),
     PocketTts(Box<PocketTtsParameterService>),
+    StableAudioMusic(Box<StableAudioMusicParameterService>),
     Qwen3Asr(Box<Qwen3AsrParameterService>),
 }
 
@@ -43,6 +46,7 @@ impl Adapter {
         Ok(match self {
             Self::Generation(service) => service.identity()?,
             Self::PocketTts(service) => service.identity()?,
+            Self::StableAudioMusic(service) => service.identity()?,
             Self::Qwen3Asr(service) => service.identity()?,
         })
     }
@@ -51,6 +55,9 @@ impl Adapter {
         match self {
             Self::Generation(service) => {
                 NativeTaskParameterContract::Generation(Box::new(service.describe().clone()))
+            }
+            Self::StableAudioMusic(service) => {
+                NativeTaskParameterContract::StableAudioMusic(Box::new(service.describe().clone()))
             }
             Self::PocketTts(service) => {
                 NativeTaskParameterContract::PocketTts(Box::new(service.describe().clone()))
@@ -65,6 +72,7 @@ impl Adapter {
         Ok(match self {
             Self::Generation(service) => service.compile_json(request)?.into(),
             Self::PocketTts(service) => service.compile_json(request)?.into(),
+            Self::StableAudioMusic(service) => service.compile_json(request)?.into(),
             Self::Qwen3Asr(service) => service.compile_json(request)?.into(),
         })
     }
@@ -176,6 +184,16 @@ impl NativeTaskCatalog {
         if let Ok(profile) = AudioTaskProfile::for_installation_assets(&manifest.plan) {
             let binding = AudioTaskModelBinding::from_manifest(manifest)?;
             match profile.protocol() {
+                AudioTaskProtocol::StableAudioMusicOffline => {
+                    if let Ok(service) =
+                        StableAudioMusicParameterService::for_profile(profile, binding)
+                    {
+                        self.register(
+                            NativeTaskIntent::TextToMusic,
+                            Adapter::StableAudioMusic(Box::new(service)),
+                        )?;
+                    }
+                }
                 AudioTaskProtocol::PocketTtsOffline => {
                     if let Ok(service) = PocketTtsParameterService::for_profile(profile, binding) {
                         self.register(

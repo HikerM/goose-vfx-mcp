@@ -1,16 +1,23 @@
 use super::*;
+use crate::lifecycle::StableAudioMusicPreparedTask;
 
 /// Prepared values come only from the model-specific compilers, never raw argv JSON.
 #[derive(Debug, Clone)]
 pub enum NativeTaskPlan {
     Generation(Box<PreparedGenerationTask>),
     PocketTts(Box<PocketTtsPreparedTask>),
+    StableAudioMusic(Box<StableAudioMusicPreparedTask>),
     Qwen3Asr(Box<Qwen3AsrPreparedTask>),
 }
 
 impl From<PreparedGenerationTask> for NativeTaskPlan {
     fn from(value: PreparedGenerationTask) -> Self {
         Self::Generation(Box::new(value))
+    }
+}
+impl From<StableAudioMusicPreparedTask> for NativeTaskPlan {
+    fn from(value: StableAudioMusicPreparedTask) -> Self {
+        Self::StableAudioMusic(Box::new(value))
     }
 }
 impl From<PocketTtsPreparedTask> for NativeTaskPlan {
@@ -61,6 +68,7 @@ impl NativeTaskPlan {
     pub fn snapshot_digest(&self) -> Result<Sha256Digest> {
         match self {
             Self::Generation(v) => v.snapshot().digest(),
+            Self::StableAudioMusic(v) => Ok(v.snapshot().digest()?),
             Self::PocketTts(v) => Ok(v.snapshot().digest()?),
             Self::Qwen3Asr(v) => Ok(v.snapshot().digest()?),
         }
@@ -68,6 +76,7 @@ impl NativeTaskPlan {
     pub fn installation_id(&self) -> &str {
         match self {
             Self::Generation(v) => &v.snapshot().binding.installation_id,
+            Self::StableAudioMusic(v) => &v.snapshot().metadata.binding.installation_id,
             Self::PocketTts(v) => &v.snapshot().metadata.binding.installation_id,
             Self::Qwen3Asr(v) => &v.snapshot().metadata.binding.installation_id,
         }
@@ -75,6 +84,7 @@ impl NativeTaskPlan {
     pub fn version_id(&self) -> &str {
         match self {
             Self::Generation(v) => &v.snapshot().binding.version_id,
+            Self::StableAudioMusic(v) => &v.snapshot().metadata.binding.version_id,
             Self::PocketTts(v) => &v.snapshot().metadata.binding.version_id,
             Self::Qwen3Asr(v) => &v.snapshot().metadata.binding.version_id,
         }
@@ -82,6 +92,7 @@ impl NativeTaskPlan {
     pub fn manifest_digest(&self) -> &Sha256Digest {
         match self {
             Self::Generation(v) => &v.snapshot().binding.manifest_digest,
+            Self::StableAudioMusic(v) => &v.snapshot().metadata.binding.manifest_digest,
             Self::PocketTts(v) => &v.snapshot().metadata.binding.manifest_digest,
             Self::Qwen3Asr(v) => &v.snapshot().metadata.binding.manifest_digest,
         }
@@ -89,6 +100,7 @@ impl NativeTaskPlan {
     pub fn runtime(&self) -> &RuntimeBuild {
         match self {
             Self::Generation(v) => &v.snapshot().binding.runtime,
+            Self::StableAudioMusic(v) => &v.snapshot().metadata.binding.runtime,
             Self::PocketTts(v) => &v.snapshot().metadata.binding.runtime,
             Self::Qwen3Asr(v) => &v.snapshot().metadata.binding.runtime,
         }
@@ -96,6 +108,7 @@ impl NativeTaskPlan {
     pub fn session_id(&self) -> &str {
         match self {
             Self::Generation(v) => &v.snapshot().session_id,
+            Self::StableAudioMusic(v) => &v.snapshot().metadata.session_id,
             Self::PocketTts(v) => &v.snapshot().metadata.session_id,
             Self::Qwen3Asr(v) => &v.snapshot().metadata.session_id,
         }
@@ -103,6 +116,7 @@ impl NativeTaskPlan {
     pub fn job_id(&self) -> &str {
         match self {
             Self::Generation(v) => &v.snapshot().job_id,
+            Self::StableAudioMusic(v) => &v.snapshot().metadata.job_id,
             Self::PocketTts(v) => &v.snapshot().metadata.job_id,
             Self::Qwen3Asr(v) => &v.snapshot().metadata.job_id,
         }
@@ -119,6 +133,7 @@ impl NativeTaskPlan {
                     .map(NativeTaskInputReference::Image)
                     .collect(),
             },
+            Self::StableAudioMusic(_) => Vec::new(),
             Self::PocketTts(v) => vec![NativeTaskInputReference::Audio(
                 v.snapshot().parameters.voice_reference.clone(),
             )],
@@ -139,6 +154,11 @@ impl NativeTaskPlan {
                 GenerationModelBinding::from_manifest(&installed.manifest)? == v.snapshot().binding,
                 "Task generation binding differs from registered manifest"
             ),
+            Self::StableAudioMusic(v) => ensure!(
+                AudioTaskModelBinding::from_manifest(&installed.manifest)?
+                    == v.snapshot().metadata.binding,
+                "Task music binding differs from registered manifest"
+            ),
             Self::PocketTts(v) => ensure!(
                 AudioTaskModelBinding::from_manifest(&installed.manifest)?
                     == v.snapshot().metadata.binding,
@@ -156,7 +176,7 @@ impl NativeTaskPlan {
     fn output_extension(&self) -> &'static str {
         match self {
             Self::Generation(v) => v.snapshot().engine.output_format.extension(),
-            Self::PocketTts(_) => "wav",
+            Self::PocketTts(_) | Self::StableAudioMusic(_) => "wav",
             Self::Qwen3Asr(_) => "txt",
         }
     }
@@ -226,6 +246,13 @@ impl NativeTaskPlan {
                     NativeGenerationArgument::Output => Ok(output.as_os_str().to_owned()),
                 })
                 .collect(),
+            Self::StableAudioMusic(v) => audio_arguments(
+                v.arguments(),
+                &v.snapshot().metadata.binding,
+                artifact,
+                input,
+                output,
+            ),
             Self::PocketTts(v) => audio_arguments(
                 v.arguments(),
                 &v.snapshot().metadata.binding,

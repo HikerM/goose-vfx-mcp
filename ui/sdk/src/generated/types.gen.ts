@@ -1818,6 +1818,19 @@ export type NativeQwen3AsrDescriptorDto = {
     limitations: Array<string>;
 };
 
+export type NativeStableAudioMusicDescriptorDto = {
+    fields: {
+        [key: string]: NativeAudioFieldDto;
+    };
+    unsupported: {
+        [key: string]: string;
+    };
+    outputSampleRate: number;
+    outputChannels: number;
+    evidence: string;
+    limitations: Array<string>;
+};
+
 export type NativeTaskDescribeRequest_unstable = {
     sessionId: string;
     identity: NativeTaskIdentityDto;
@@ -1846,7 +1859,7 @@ export type NativeTaskIdentityDto = {
     parameterSchemaId: string;
 };
 
-export type NativeTaskIntentDto = 'text_to_image' | 'text_to_video' | 'text_to_video_with_audio' | 'first_frame_to_video_with_audio' | 'speech_synthesis' | 'transcription';
+export type NativeTaskIntentDto = 'text_to_image' | 'text_to_video' | 'text_to_video_with_audio' | 'first_frame_to_video_with_audio' | 'speech_synthesis' | 'transcription' | 'text_to_music';
 
 export type NativeTaskListRequest_unstable = {
     sessionId: string;
@@ -1866,6 +1879,9 @@ export type NativeTaskParameterContractDto = {
 } | {
     family: 'qwen3_asr';
     parameters: NativeQwen3AsrDescriptorDto;
+} | {
+    family: 'stable_audio_music';
+    parameters: NativeStableAudioMusicDescriptorDto;
 };
 
 /**

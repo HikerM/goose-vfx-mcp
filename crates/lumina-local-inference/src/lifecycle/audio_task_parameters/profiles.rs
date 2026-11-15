@@ -2,8 +2,6 @@ use super::*;
 use serde_json::json;
 
 const REVISION: &str = "c0cd77fa80285f8113883e0de06ffc781cf502f6";
-const LEGACY_BINARY: &str = "da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787";
-const LONG_PATH_BINARY: &str = "b319916421e54024ba4229462e1a577f368627176fc538d3be6d4a8a5398394f";
 
 impl AudioTaskProfile {
     pub fn for_parameter_schema(schema: &str) -> Option<Self> {
@@ -12,7 +10,8 @@ impl AudioTaskProfile {
 
     pub fn runtime_build(self) -> RuntimeBuild {
         let mut build = self.legacy_runtime_build();
-        build.binary_sha256 = Sha256Digest::parse(LONG_PATH_BINARY).expect("pinned digest");
+        build.binary_sha256 =
+            Sha256Digest::parse(self.record().runtime.long_path_sha).expect("pinned digest");
         build.features.insert("windows-long-path-aware".into());
         build
     }
@@ -24,7 +23,8 @@ impl AudioTaskProfile {
             binding_version: self.schema_id().into(),
             platform: "windows-x86_64".into(),
             features: BTreeSet::from(["cpu".into()]),
-            binary_sha256: Sha256Digest::parse(LEGACY_BINARY).expect("pinned digest"),
+            binary_sha256: Sha256Digest::parse(self.record().runtime.legacy_sha)
+                .expect("pinned digest"),
         }
     }
 
@@ -171,7 +171,7 @@ impl Qwen3AsrLanguage {
     }
 }
 
-fn field(
+pub(super) fn field(
     kind: &str,
     required: bool,
     default: Option<Value>,

@@ -24,13 +24,14 @@ use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 pub const EXTENSION_NAME: &str = "native_tasks";
-const INTENTS: [NativeTaskIntent; 6] = [
+const INTENTS: [NativeTaskIntent; 7] = [
     NativeTaskIntent::TextToImage,
     NativeTaskIntent::TextToVideo,
     NativeTaskIntent::TextToVideoWithAudio,
     NativeTaskIntent::FirstFrameToVideoWithAudio,
     NativeTaskIntent::SpeechSynthesis,
     NativeTaskIntent::Transcription,
+    NativeTaskIntent::TextToMusic,
 ];
 
 #[derive(Deserialize)]
@@ -280,7 +281,9 @@ async fn prepare_first(
             };
             json!({"sessionId":session,"jobId":job,"parameters":{"task":task,"parameters":parameters}})
         }
-        NativeTaskParameterContract::PocketTts(_) | NativeTaskParameterContract::Qwen3Asr(_) => {
+        NativeTaskParameterContract::PocketTts(_)
+        | NativeTaskParameterContract::Qwen3Asr(_)
+        | NativeTaskParameterContract::StableAudioMusic(_) => {
             parameters.insert("sessionId".into(), json!(session));
             parameters.insert("jobId".into(), json!(job));
             Value::Object(parameters)

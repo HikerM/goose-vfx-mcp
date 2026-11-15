@@ -28,7 +28,8 @@
         "text_to_video_with_audio",
         "first_frame_to_video_with_audio",
         "speech_synthesis",
-        "transcription"
+        "transcription",
+        "text_to_music"
       ]
     },
     "NativeTaskListResponse_unstable": {
@@ -147,6 +148,22 @@
             },
             "parameters": {
               "$ref": "#/$defs/NativeQwen3AsrDescriptorDto"
+            }
+          },
+          "required": [
+            "family",
+            "parameters"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "family": {
+              "type": "string",
+              "const": "stable_audio_music"
+            },
+            "parameters": {
+              "$ref": "#/$defs/NativeStableAudioMusicDescriptorDto"
             }
           },
           "required": [
@@ -377,6 +394,50 @@
         "fields",
         "unsupported",
         "recognitionLanguages",
+        "evidence",
+        "limitations"
+      ]
+    },
+    "NativeStableAudioMusicDescriptorDto": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/NativeAudioFieldDto"
+          }
+        },
+        "unsupported": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "outputSampleRate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputChannels": {
+          "type": "integer",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "fields",
+        "unsupported",
+        "outputSampleRate",
+        "outputChannels",
         "evidence",
         "limitations"
       ]

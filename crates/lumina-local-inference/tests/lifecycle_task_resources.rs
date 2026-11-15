@@ -2,7 +2,10 @@ use lumina_local_inference::lifecycle::*;
 use std::collections::BTreeSet;
 
 fn pocket_binding() -> AudioTaskModelBinding {
-    let profile = AudioTaskProfile::PocketTtsEnglishCpu;
+    audio_binding(AudioTaskProfile::PocketTtsEnglishCpu)
+}
+
+fn audio_binding(profile: AudioTaskProfile) -> AudioTaskModelBinding {
     let (sha256, size_bytes) = profile.recorded_model();
     let (spec_sha256, spec_bytes) = profile.recorded_model_spec();
     AudioTaskModelBinding {
@@ -104,6 +107,40 @@ fn audio_smoke_and_arbitrarily_large_free_memory_cannot_issue_receipt() {
 }
 
 #[test]
+fn music_requires_its_own_measured_runtime_components_and_effective_workload() {
+    let service = StableAudioMusicParameterService::new(audio_binding(
+        AudioTaskProfile::StableAudioSmallMusicCpu,
+    ))
+    .unwrap();
+    let input = serde_json::json!({"sessionId":"music-session","jobId":"music-job","prompt":"instrumental piano","seed":42});
+    let prepare = |input| NativeTaskPlan::from(service.compile_json(input).unwrap());
+    let original = prepare(input.clone());
+    let key = TaskResourceKey::from_plan(&original).unwrap();
+    assert_eq!(key.kind, TaskResourceKind::Music);
+    for (field, value) in [
+        ("prompt", serde_json::json!("percussion")),
+        ("seed", serde_json::json!(43)),
+    ] {
+        let mut request = input.clone();
+        request[field] = value;
+        let other = prepare(request);
+        let changed = TaskResourceKey::from_plan(&other).unwrap();
+        assert_eq!(changed.runtime_digest, key.runtime_digest);
+        assert_eq!(changed.components_digest, key.components_digest);
+        assert_ne!(changed.workload_digest, key.workload_digest);
+        let TaskResourceAssessment::NeedsProfiling(requirement) =
+            assess_task_resources(&other, &hardware(), 1000).unwrap()
+        else {
+            panic!("Unmeasured music must request its own resource profile")
+        };
+        assert_eq!(
+            requirement.evidence,
+            "2026-11-01-audio-generation-feasibility.json"
+        );
+    }
+}
+
+#[test]
 fn stale_future_and_impossible_observations_are_rejected_before_profile_lookup() {
     for (time, free) in [(939, 1), (1_001, 1), (1_000, u64::MAX)] {
         let mut hardware = hardware();
@@ -111,6 +148,86 @@ fn stale_future_and_impossible_observations_are_rejected_before_profile_lookup()
         hardware.devices[0].free_bytes = free;
         assert!(matches!(
             assess_task_resources(&pocket(), &hardware, 1_000).unwrap(),
+            TaskResourceAssessment::Unavailable(_)
+        ));
+    }
+}
+
+#[test]
+fn reviewed_music_record_admits_only_its_measured_request_and_capacity() {
+    let source = include_str!("../src/lifecycle/task_resources/stable-audio-music-cpu-case-1.json");
+    let record: TaskResourceMeasurementRecord = serde_json::from_str(source).unwrap();
+    record.validate_for_registration().unwrap();
+    let service = StableAudioMusicParameterService::new(audio_binding(
+        AudioTaskProfile::StableAudioSmallMusicCpu,
+    ))
+    .unwrap();
+    let request = serde_json::json!({
+        "sessionId": "music-resource-regression",
+        "jobId": "measured-request",
+        "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+        "steps": 8,
+        "seed": 42
+    });
+    let prepare = |input| NativeTaskPlan::from(service.compile_json(input).unwrap());
+    let original = prepare(request.clone());
+    assert_eq!(TaskResourceKey::from_plan(&original).unwrap(), record.key);
+    let now = record.hardware.observed_at;
+    let TaskResourceAssessment::Admitted(admission) =
+        assess_task_resources(&original, &record.hardware, now).unwrap()
+    else {
+        panic!("The reviewed exact music workload must be admitted")
+    };
+    let budget = record.reviewed_budget.as_ref().unwrap();
+    assert_eq!(admission.budget(), budget);
+    assert_eq!(
+        admission.evidence_sha256(),
+        &Sha256Digest::of_bytes(source.as_bytes())
+    );
+    let measured_peak = record.measured_host_peak_bytes().unwrap();
+    assert_eq!(measured_peak, 7_033_057_280);
+    let quantum = 128 * 1024 * 1024;
+    assert_eq!(
+        budget.host_ram_bytes,
+        (measured_peak * 5).div_ceil(4 * quantum) * quantum
+    );
+    // The pinned execution evidence includes GGUF sidecars and simultaneous WAV copies.
+    let native_directory_high_water_bytes = 41_587_688;
+    assert!(budget.temporary_output_bytes >= native_directory_high_water_bytes);
+    assert_eq!(budget.temporary_output_bytes, 64 * 1024 * 1024);
+    assert_eq!(budget.output_byte_limit, 2 * 1024 * 1024);
+    assert_eq!(budget.publication_copy_bytes, 2 * 1024 * 1024);
+    assert_eq!(budget.publication_scratch_bytes, 4 * 1024 * 1024);
+    assert_eq!(budget.timeout_seconds, 120);
+    for (field, value) in [
+        (
+            "prompt",
+            serde_json::json!("Gentle flute music without vocals."),
+        ),
+        ("seed", serde_json::json!(43)),
+        ("steps", serde_json::json!(9)),
+    ] {
+        let mut changed = request.clone();
+        changed[field] = value;
+        let plan = prepare(changed);
+        assert_ne!(TaskResourceKey::from_plan(&plan).unwrap(), record.key);
+        assert!(
+            matches!(
+                assess_task_resources(&plan, &record.hardware, now).unwrap(),
+                TaskResourceAssessment::NeedsProfiling(_)
+            ),
+            "Unmeasured {field} must not inherit the exact music budget"
+        );
+    }
+    let mut insufficient_ram = record.hardware.clone();
+    insufficient_ram.devices[0].free_bytes = budget.host_ram_bytes - 1;
+    let mut insufficient_disk = record.hardware.clone();
+    insufficient_disk.disk_free_bytes = budget.peak_disk_bytes().unwrap() - 1;
+    let mut other_device = record.hardware.clone();
+    other_device.devices[0].description = "Unmeasured CPU".into();
+    for hardware in [insufficient_ram, insufficient_disk, other_device] {
+        assert!(matches!(
+            assess_task_resources(&original, &hardware, now).unwrap(),
             TaskResourceAssessment::Unavailable(_)
         ));
     }

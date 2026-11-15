@@ -1739,6 +1739,15 @@ export const zNativeQwen3AsrDescriptorDto = z.object({
     limitations: z.array(z.string())
 });
 
+export const zNativeStableAudioMusicDescriptorDto = z.object({
+    fields: z.record(zNativeAudioFieldDto),
+    unsupported: z.record(z.string()),
+    outputSampleRate: z.number().int().gte(0),
+    outputChannels: z.number().int().gte(0).lte(65535),
+    evidence: z.string(),
+    limitations: z.array(z.string())
+});
+
 export const zNativeTaskIdentityDto = z.object({
     installationId: z.string(),
     versionId: z.string(),
@@ -1760,7 +1769,8 @@ export const zNativeTaskIntentDto = z.enum([
     'text_to_video_with_audio',
     'first_frame_to_video_with_audio',
     'speech_synthesis',
-    'transcription'
+    'transcription',
+    'text_to_music'
 ]);
 
 export const zNativeTaskListRequest_unstable = z.object({
@@ -1780,6 +1790,10 @@ export const zNativeTaskParameterContractDto = z.union([
     z.object({
         family: z.literal('qwen3_asr'),
         parameters: zNativeQwen3AsrDescriptorDto
+    }),
+    z.object({
+        family: z.literal('stable_audio_music'),
+        parameters: zNativeStableAudioMusicDescriptorDto
     })
 ]);
 

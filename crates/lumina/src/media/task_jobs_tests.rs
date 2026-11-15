@@ -273,6 +273,126 @@ async fn restart_replays_only_a_complete_published_batch_and_preserves_the_gener
 }
 
 #[tokio::test]
+async fn music_replays_published_audio_after_restart_without_accepting_a_changed_request() {
+    let tmp = temp();
+    let root = tmp.path().join("outputs");
+    let jobs = open(tmp.path()).await;
+    let call = "music-call";
+    let job = NativeTaskJobs::job_id(SESSION, call).unwrap();
+    let profile = AudioTaskProfile::StableAudioSmallMusicCpu;
+    let (sha256, size_bytes) = profile.recorded_model();
+    let (spec_sha, spec_size) = profile.recorded_model_spec();
+    let adapter = StableAudioMusicParameterService::new(AudioTaskModelBinding {
+        installation_id: "synthetic-music".into(),
+        version_id: "v1".into(),
+        manifest_digest: Sha256Digest::of_bytes(b"synthetic music manifest; no model execution"),
+        runtime: profile.runtime_build(),
+        target_capabilities: [profile.capability()].into(),
+        model: AudioTaskAssetBinding {
+            artifact_id: "main".into(),
+            sha256,
+            size_bytes,
+        },
+        model_spec: AudioTaskAssetBinding {
+            artifact_id: "spec".into(),
+            sha256: spec_sha,
+            size_bytes: spec_size,
+        },
+    })
+    .unwrap();
+    let identity = adapter.identity().unwrap();
+    let args = json!({"identity":identity,"parameters":{"prompt":"A piano melody.","seed":42}});
+    let owner = take(&jobs, &root, call, &args, &identity).await;
+    let mut request = args["parameters"].clone();
+    request["sessionId"] = json!(SESSION);
+    request["jobId"] = json!(job);
+    let plan = adapter
+        .compile(serde_json::from_value(request).unwrap())
+        .unwrap();
+    let saved = TaskConfigurationStore::new(jobs.pool.clone())
+        .save_music(&plan)
+        .await
+        .unwrap();
+    drop(owner);
+    assert!(matches!(
+        jobs.claim(&root, SESSION, call, "run", &args, &identity)
+            .await
+            .unwrap(),
+        NativeTaskClaim::Stopped(NativeTaskTerminal::Interrupted)
+    ));
+
+    let spec = plan.snapshot().output_spec().unwrap();
+    let block = spec.channels * 2;
+    let size = u32::try_from(spec.sample_frames * u64::from(block)).unwrap();
+    let mut bytes = b"RIFF".to_vec();
+    bytes.extend((36 + size).to_le_bytes());
+    bytes.extend(b"WAVEfmt ");
+    bytes.extend(16u32.to_le_bytes());
+    bytes.extend(1u16.to_le_bytes());
+    bytes.extend(spec.channels.to_le_bytes());
+    bytes.extend(spec.sample_rate.to_le_bytes());
+    bytes.extend((spec.sample_rate * u32::from(block)).to_le_bytes());
+    bytes.extend(block.to_le_bytes());
+    bytes.extend(16u16.to_le_bytes());
+    bytes.extend(b"data");
+    bytes.extend(size.to_le_bytes());
+    bytes.resize(bytes.len() + size as usize, 0);
+    let media = MediaResultStore::new(jobs.pool.clone());
+    let output = media.register_output_root(&root).await.unwrap();
+    let digest = Sha256Digest::parse(saved.generation_config_sha256()).unwrap();
+    let id = native_job_result_id(SESSION, &job, &digest, 0);
+    let runtime = &plan.snapshot().metadata.binding.runtime;
+    let BeginMediaPublish::Staging(mut staged) = media
+        .begin_publish(PublishMediaRequest {
+            session_id: SESSION.into(),
+            job_id: job.clone(),
+            result_id: id.clone(),
+            root_id: output.root_id,
+            kind: MediaKind::Audio,
+            association: MediaAssociation::ToolCall {
+                tool_call_id: call.into(),
+            },
+            source: MediaSource::LocalModel {
+                installation_id: identity.installation_id.clone(),
+                version_id: identity.version_id.clone(),
+                runtime: MediaRuntimeBuild {
+                    adapter_id: runtime.adapter_id.clone(),
+                    engine_revision: runtime.engine_revision.clone(),
+                    binary_sha256: runtime.binary_sha256.as_str().into(),
+                },
+                generation_config_sha256: digest.as_str().into(),
+                input_refs: vec![],
+            },
+        })
+        .await
+        .unwrap()
+    else {
+        panic!("new audio result expected")
+    };
+    staged.write_all(&bytes).unwrap();
+    media.publish(staged).await.unwrap();
+    jobs.pool.close().await;
+    let reopened = open(tmp.path()).await;
+    let NativeTaskClaim::Replay(ImportedTaskOutput::Media(results)) = reopened
+        .claim(&root, SESSION, call, "run", &args, &identity)
+        .await
+        .unwrap()
+    else {
+        panic!("expected persisted music replay")
+    };
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].result_id, id);
+    assert_eq!(results[0].kind, MediaKind::Audio);
+    assert_eq!(results[0].mime, "audio/wav");
+    let mut changed = args.clone();
+    changed["parameters"]["seed"] = json!(43);
+    assert!(reopened
+        .claim(&root, SESSION, call, "run", &changed, &identity)
+        .await
+        .is_err());
+}
+
+#[tokio::test]
 async fn transcript_replay_authenticates_original_bytes_and_the_tool_call() {
     let tmp = temp();
     let root = tmp.path().join("outputs");

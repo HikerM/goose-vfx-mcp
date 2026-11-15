@@ -9,6 +9,10 @@ async fn stores() -> (MediaResultStore, TaskConfigurationStore) {
         .connect("sqlite::memory:")
         .await
         .unwrap();
+    stores_on(pool).await
+}
+
+async fn stores_on(pool: sqlx::SqlitePool) -> (MediaResultStore, TaskConfigurationStore) {
     sqlx::query("CREATE TABLE sessions(id TEXT PRIMARY KEY)")
         .execute(&pool)
         .await
@@ -168,13 +172,175 @@ async fn speech_reuses_the_bound_database_row_and_rejects_inline_media_or_result
     )
     .await
     .is_err());
-    for patch in [
-        json!({}),
-        json!({"text":null}),
-        json!({"text":"New","seed":1}),
-    ] {
+    let null_text = request(&row, json!({"text": null}), None);
+    null_text.validate().unwrap();
+    assert!(
+        prepare_registered(&media, &configs, "local", &row, null_text, contract())
+            .await
+            .is_err()
+    );
+    for patch in [json!({}), json!({"text":"New","seed":1})] {
         assert!(request(&row, patch, None).validate().is_err());
     }
+}
+
+#[tokio::test]
+async fn music_reuses_one_parameter_from_the_bound_session_configuration() {
+    use sqlx::sqlite::SqliteConnectOptions;
+    let base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../target/lifecycle-validation/task-reuse-tests");
+    std::fs::create_dir_all(&base).unwrap();
+    let directory = tempfile::tempdir_in(base).unwrap();
+    let options = SqliteConnectOptions::new()
+        .filename(directory.path().join("music.db"))
+        .create_if_missing(true);
+    let pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect_with(options.clone())
+        .await
+        .unwrap();
+    let (media, configs) = stores_on(pool.clone()).await;
+    let profile = AudioTaskProfile::StableAudioSmallMusicCpu;
+    let asset = |id: &str, (sha256, size_bytes)| AudioTaskAssetBinding {
+        artifact_id: id.into(),
+        sha256,
+        size_bytes,
+    };
+    let adapter = StableAudioMusicParameterService::new(AudioTaskModelBinding {
+        installation_id: "music-install".into(),
+        version_id: "v1".into(),
+        manifest_digest: Sha256Digest::of_bytes(b"music reuse fixture"),
+        runtime: profile.runtime_build(),
+        target_capabilities: [profile.capability()].into(),
+        model: asset("weight", profile.recorded_model()),
+        model_spec: asset("spec", profile.recorded_model_spec()),
+    })
+    .unwrap();
+    let first = adapter
+        .compile_json(json!({
+            "sessionId": "local", "jobId": "parent", "prompt": "Solo piano",
+            "seed": 918, "durationSeconds": 4, "steps": 8, "negativePrompt": "Vocals"
+        }))
+        .unwrap();
+    let row = configs.save_music(&first).await.unwrap();
+    let contract =
+        || NativeTaskParameterContract::StableAudioMusic(Box::new(adapter.descriptor().clone()));
+    let patch = request(&row, json!({"prompt": "Gentle guitar"}), None);
+    patch.validate().unwrap();
+    let prepared = prepare_registered(&media, &configs, "local", &row, patch, contract())
+        .await
+        .unwrap();
+    let NativeTaskPlan::StableAudioMusic(second) = prepared else {
+        panic!("expected music task");
+    };
+    let mut expected = first.snapshot().parameters.clone();
+    expected.prompt = "Gentle guitar".into();
+    assert_eq!(second.snapshot().parameters, expected);
+    assert_eq!(second.snapshot().metadata.job_id, "child");
+    adapter
+        .validate_parent(second.snapshot(), first.snapshot())
+        .unwrap();
+    configs.save_music(&second).await.unwrap();
+    assert_eq!(configs.read("local", "parent").await.unwrap().unwrap(), row);
+    assert!(configs.read("other", "parent").await.unwrap().is_none());
+    for (session, mut invalid) in [
+        ("other", request(&row, json!({"steps": 10}), None)),
+        (
+            "local",
+            request(
+                &row,
+                json!({"steps": 10}),
+                Some(uuid::Uuid::new_v4().to_string()),
+            ),
+        ),
+        (
+            "local",
+            request(
+                &row,
+                json!({"voiceReference": uuid::Uuid::new_v4().to_string()}),
+                None,
+            ),
+        ),
+    ] {
+        invalid.new_job_id = "rejected".into();
+        assert!(
+            prepare_registered(&media, &configs, session, &row, invalid, contract())
+                .await
+                .is_err()
+        );
+    }
+    let mut wrong_identity = request(&row, json!({"steps": 10}), None);
+    wrong_identity.identity.version_id = "substituted".into();
+    assert!(
+        prepare_registered(&media, &configs, "local", &row, wrong_identity, contract())
+            .await
+            .is_err()
+    );
+    let mut wrong_binding = adapter.descriptor().binding.clone();
+    wrong_binding.version_id = "another-version".into();
+    let other_adapter = StableAudioMusicParameterService::new(wrong_binding).unwrap();
+    assert!(prepare_registered(
+        &media,
+        &configs,
+        "local",
+        &row,
+        request(&row, json!({"steps": 10}), None),
+        NativeTaskParameterContract::StableAudioMusic(Box::new(other_adapter.descriptor().clone())),
+    )
+    .await
+    .is_err());
+    for patch in [
+        json!({"steps": null}),
+        json!({"prompt": null}),
+        json!({"seed": null}),
+    ] {
+        let invalid = request(&row, patch, None);
+        invalid.validate().unwrap();
+        assert!(
+            prepare_registered(&media, &configs, "local", &row, invalid, contract())
+                .await
+                .is_err()
+        );
+    }
+    for patch in [json!({}), json!({"steps": 10, "seed": 1})] {
+        assert!(request(&row, patch, None).validate().is_err());
+    }
+    assert!(configs.read("local", "rejected").await.unwrap().is_none());
+    let mut clear = request(&row, json!({"negativePrompt": null}), None);
+    clear.new_job_id = "cleared".into();
+    let NativeTaskPlan::StableAudioMusic(cleared) =
+        prepare_registered(&media, &configs, "local", &row, clear, contract())
+            .await
+            .unwrap()
+    else {
+        panic!("expected music task");
+    };
+    let mut expected = first.snapshot().parameters.clone();
+    expected.negative_prompt = None;
+    assert_eq!(cleared.snapshot().parameters, expected);
+    adapter
+        .validate_parent(cleared.snapshot(), first.snapshot())
+        .unwrap();
+    let saved = configs.save_music(&cleared).await.unwrap();
+    pool.close().await;
+    let reopened_pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect_with(options)
+        .await
+        .unwrap();
+    let reopened = TaskConfigurationStore::new(reopened_pool.clone());
+    reopened.initialize().await.unwrap();
+    assert_eq!(
+        reopened.read("local", "cleared").await.unwrap().unwrap(),
+        saved
+    );
+    assert_eq!(reopened.save_music(&cleared).await.unwrap(), saved);
+    assert_eq!(
+        reopened.read("local", "parent").await.unwrap().unwrap(),
+        row
+    );
+    assert!(reopened.read("other", "cleared").await.unwrap().is_none());
+    reopened_pool.close().await;
 }
 
 #[cfg(windows)]

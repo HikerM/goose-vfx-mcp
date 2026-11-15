@@ -3,11 +3,13 @@
 
 mod install;
 mod models;
+mod music_task_parameters;
 mod profiles;
 mod reuse;
 mod services;
 
 pub use install::{AUDIO_INSTALL_RULES_VERSION, LEGACY_AUDIO_INSTALL_RULES_VERSION};
+pub use music_task_parameters::*;
 pub use reuse::*;
 pub use services::*;
 
@@ -29,6 +31,7 @@ pub use models::AudioTaskProfile;
 pub enum AudioTaskProtocol {
     PocketTtsOffline,
     Qwen3AsrOffline,
+    StableAudioMusicOffline,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

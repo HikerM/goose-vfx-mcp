@@ -10,6 +10,7 @@ pub(super) fn core_intent(intent: NativeTaskIntentDto) -> domain::NativeTaskInte
         NativeTaskIntentDto::FirstFrameToVideoWithAudio => Core::FirstFrameToVideoWithAudio,
         NativeTaskIntentDto::SpeechSynthesis => Core::SpeechSynthesis,
         NativeTaskIntentDto::Transcription => Core::Transcription,
+        NativeTaskIntentDto::TextToMusic => Core::TextToMusic,
     }
 }
 
@@ -23,6 +24,7 @@ fn sdk_intent(intent: domain::NativeTaskIntent) -> NativeTaskIntentDto {
         }
         domain::NativeTaskIntent::SpeechSynthesis => NativeTaskIntentDto::SpeechSynthesis,
         domain::NativeTaskIntent::Transcription => NativeTaskIntentDto::Transcription,
+        domain::NativeTaskIntent::TextToMusic => NativeTaskIntentDto::TextToMusic,
     }
 }
 
@@ -81,6 +83,18 @@ pub(super) fn description(
                 evidence: v.evidence,
                 limitations: v.limitations,
             }))
+        }
+        domain::NativeTaskParameterContract::StableAudioMusic(v) => {
+            NativeTaskParameterContractDto::StableAudioMusic(Box::new(
+                NativeStableAudioMusicDescriptorDto {
+                    fields: audio_fields(v.fields)?,
+                    unsupported: v.unsupported,
+                    output_sample_rate: v.output_sample_rate,
+                    output_channels: v.output_channels,
+                    evidence: v.evidence,
+                    limitations: v.limitations,
+                },
+            ))
         }
         domain::NativeTaskParameterContract::Qwen3Asr(v) => {
             NativeTaskParameterContractDto::Qwen3Asr(Box::new(NativeQwen3AsrDescriptorDto {

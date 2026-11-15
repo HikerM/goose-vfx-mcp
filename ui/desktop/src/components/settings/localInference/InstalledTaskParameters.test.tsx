@@ -53,6 +53,45 @@ function checkpoint(name: string, maximum: number): NativeTaskDescriptionDto {
 describe('InstalledTaskParameters', () => {
   beforeEach(() => vi.resetAllMocks());
 
+  it('shows the installed music format and model-specific choices from its descriptor', async () => {
+    const task: NativeTaskDescriptionDto = {
+      identity: checkpoint('piano', 8).identity,
+      intent: 'text_to_music',
+      descriptor: {
+        family: 'stable_audio_music',
+        parameters: {
+          fields: {
+            durationSeconds: {
+              valueType: 'number',
+              required: false,
+              default: 4,
+              constraints: [],
+              source: 'model',
+            },
+          },
+          unsupported: { voiceReference: 'Music takes a text prompt' },
+          evidence: 'fixture',
+          limitations: [],
+          outputChannels: 2,
+          outputSampleRate: 44100,
+        },
+      },
+    };
+    vi.mocked(listInstalledTasks).mockImplementation(async (_, intent) =>
+      intent === task.intent ? [task] : []
+    );
+    vi.mocked(describeInstalledTask).mockResolvedValue({ status: 'found', task });
+    render(<InstalledTaskParameters sessionIds={['chat']} />, { wrapper: IntlTestWrapper });
+    await userEvent.selectOptions(screen.getByLabelText('Task'), 'text_to_music');
+    expect(
+      await screen.findByText(/Output channels: 2.*Output sample rate: 44100 Hz/)
+    ).toBeDefined();
+    expect(screen.getByText('durationSeconds')).toBeDefined();
+    expect(screen.getByText(/Default: 4/)).toBeDefined();
+    await userEvent.click(screen.getByText('Unsupported parameters'));
+    expect(screen.getByText('Music takes a text prompt')).toBeVisible();
+  });
+
   it('describes the selected installation and ignores a late response for another weight', async () => {
     const first = checkpoint('A', 8),
       second = checkpoint('B', 30);

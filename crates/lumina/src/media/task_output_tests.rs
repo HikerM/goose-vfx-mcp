@@ -14,6 +14,10 @@ mod resource_probe;
 #[path = "../../tests/support/sd15_publication_probe.rs"]
 mod sd15_probe;
 
+#[cfg(windows)]
+#[path = "../../tests/support/music_publication_probe.rs"]
+mod music_probe;
+
 fn base() -> PathBuf {
     let p = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../target/lifecycle-validation/task-output-unit-tests");
@@ -90,8 +94,13 @@ fn preflight_checks_decoded_geometry_format_names_and_collected_digest() {
 #[test]
 fn pocket_output_requires_the_frozen_pcm_format_beyond_general_wav_validation() {
     let names = vec!["output.wav".into()];
+    let speech = ExpectedOutput::Audio {
+        sample_rate: 24_000,
+        channels: 1,
+        sample_frames: None,
+    };
     assert!(prepare_readers(
-        ExpectedOutput::Speech,
+        speech,
         &names,
         vec![reader("output.wav", &wav(24_000, 1, 16))]
     )
@@ -99,8 +108,39 @@ fn pocket_output_requires_the_frozen_pcm_format_beyond_general_wav_validation() 
     for bytes in [wav(16_000, 1, 16), wav(24_000, 2, 16), wav(24_000, 1, 24)] {
         let mut file = reader("output.wav", &bytes);
         assert!(formats::inspect(&mut file.file).is_ok());
-        assert!(prepare_readers(ExpectedOutput::Speech, &names, vec![file]).is_err());
+        assert!(prepare_readers(speech, &names, vec![file]).is_err());
     }
+}
+
+#[test]
+fn music_output_checks_channel_count_sample_format_and_exact_rendered_frames() {
+    let music = ExpectedOutput::Audio {
+        sample_rate: 44_100,
+        channels: 2,
+        sample_frames: Some(2),
+    };
+    let names = vec!["output.wav".into()];
+    let check = |expected, rate, channels, bits| {
+        prepare_readers(
+            expected,
+            &names,
+            vec![reader("output.wav", &wav(rate, channels, bits))],
+        )
+    };
+    assert!(check(music, 44_100, 2, 16).is_ok());
+    assert!(check(music, 44_100, 1, 16).is_err());
+    assert!(check(music, 44_100, 2, 24).is_err());
+    assert!(check(
+        ExpectedOutput::Audio {
+            sample_rate: 44_100,
+            channels: 2,
+            sample_frames: Some(3)
+        },
+        44_100,
+        2,
+        16
+    )
+    .is_err());
 }
 
 #[test]

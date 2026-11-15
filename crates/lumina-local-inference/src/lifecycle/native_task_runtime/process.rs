@@ -177,7 +177,7 @@ pub(super) fn run_process(
         .join()
         .map_err(|_| anyhow::anyhow!("Task stderr reader failed"))??;
     let reason = match outcome {
-        Err(error) => Some(error.to_string()),
+        Err(error) => Some(format!("{error:#}")),
         Ok(_) if exceeded.load(Ordering::Acquire) => {
             Some("Native task log exceeded its 1MiB per-stream limit".into())
         }

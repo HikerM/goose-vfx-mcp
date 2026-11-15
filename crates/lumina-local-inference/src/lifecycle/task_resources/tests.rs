@@ -9,6 +9,10 @@ mod pocket_probe;
 #[path = "sd15_probe.rs"]
 mod sd15_probe;
 
+#[cfg(windows)]
+#[path = "music_probe.rs"]
+mod music_probe;
+
 fn plan(video: bool, version: &str, seed: u32) -> NativeTaskPlan {
     plan_with_prompt(video, version, seed, "test prompt")
 }

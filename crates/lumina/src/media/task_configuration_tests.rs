@@ -214,6 +214,105 @@ async fn derived_speech_requires_the_actual_parent_and_survives_reopen() {
         .unwrap();
 }
 
+#[tokio::test]
+async fn derived_music_requires_the_persisted_parent_and_survives_reopen() {
+    let mut fixture = Fixture::new().await;
+    let service = StableAudioMusicParameterService::new(audio_binding(
+        AudioTaskProfile::StableAudioSmallMusicCpu,
+    ))
+    .unwrap();
+    let parent = service
+        .compile_json(json!({
+            "sessionId": "session-a", "jobId": "music-parent", "prompt": "Solo piano",
+            "seed": 42, "steps": 8
+        }))
+        .unwrap();
+    let patch = || serde_json::from_value::<StableAudioMusicPatch>(json!({"steps": 10})).unwrap();
+    let child = service
+        .reuse_configuration(
+            "session-a",
+            parent.snapshot(),
+            &parent.snapshot().digest().unwrap(),
+            "music-child",
+            patch(),
+        )
+        .unwrap();
+    assert!(fixture.store.save_music(&child).await.is_err());
+    let saved_parent = fixture.store.save_music(&parent).await.unwrap();
+    let forged_parent = service
+        .compile_json(json!({
+            "sessionId": "session-a", "jobId": "music-parent", "prompt": "Different parent",
+            "seed": 42, "steps": 8
+        }))
+        .unwrap();
+    let forged_child = service
+        .reuse_configuration(
+            "session-a",
+            forged_parent.snapshot(),
+            &forged_parent.snapshot().digest().unwrap(),
+            "forged-child",
+            patch(),
+        )
+        .unwrap();
+    service.validate_snapshot(forged_child.snapshot()).unwrap();
+    assert!(fixture.store.save_music(&forged_child).await.is_err());
+    assert!(fixture
+        .store
+        .read("session-a", "forged-child")
+        .await
+        .unwrap()
+        .is_none());
+    let other_parent = service
+        .compile_json(json!({
+            "sessionId": "session-b", "jobId": "music-parent", "prompt": "Solo piano",
+            "seed": 42, "steps": 8
+        }))
+        .unwrap();
+    let other_child = service
+        .reuse_configuration(
+            "session-b",
+            other_parent.snapshot(),
+            &other_parent.snapshot().digest().unwrap(),
+            "other-child",
+            patch(),
+        )
+        .unwrap();
+    assert!(fixture.store.save_music(&other_child).await.is_err());
+    let saved_child = fixture.store.save_music(&child).await.unwrap();
+    assert_eq!(child.snapshot().parameters.steps, 10);
+    assert_eq!(
+        child.snapshot().parameters.seed,
+        parent.snapshot().parameters.seed
+    );
+    fixture.reopen().await;
+    let restored_parent = fixture
+        .store
+        .read("session-a", "music-parent")
+        .await
+        .unwrap()
+        .unwrap();
+    let restored_child = fixture
+        .store
+        .read("session-a", "music-child")
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(restored_parent, saved_parent);
+    assert_eq!(restored_child, saved_child);
+    assert!(fixture
+        .store
+        .read("session-b", "music-child")
+        .await
+        .unwrap()
+        .is_none());
+    fixture
+        .store
+        .validate_audio_parent(&restored_child)
+        .await
+        .unwrap();
+    assert_eq!(fixture.store.save_music(&child).await.unwrap(), saved_child);
+}
+
 fn publication(record: &TaskConfigurationRecord) -> PublishMediaRequest {
     PublishMediaRequest {
         session_id: record.session_id().into(),
@@ -245,17 +344,25 @@ async fn reopens_all_snapshot_families_without_changing_native_digests_or_schema
     let video = generation("session-a", "video", "An apple rolls", true);
     let pocket = pocket();
     let asr = asr();
+    let music = StableAudioMusicParameterService::new(audio_binding(
+        AudioTaskProfile::StableAudioSmallMusicCpu,
+    ))
+    .unwrap()
+    .compile_json(json!({"sessionId":"session-a","jobId":"music","prompt":"Solo piano","seed":42}))
+    .unwrap();
     let records = [
         fixture.store.save_generation(&image).await.unwrap(),
         fixture.store.save_generation(&video).await.unwrap(),
         fixture.store.save_pocket_tts(&pocket).await.unwrap(),
         fixture.store.save_qwen3_asr(&asr).await.unwrap(),
+        fixture.store.save_music(&music).await.unwrap(),
     ];
     let expected = [
         image.snapshot().digest().unwrap(),
         video.snapshot().digest().unwrap(),
         pocket.snapshot().digest().unwrap(),
         asr.snapshot().digest().unwrap(),
+        music.snapshot().digest().unwrap(),
     ];
     for (record, digest) in records.iter().zip(expected) {
         assert_eq!(record.generation_config_sha256(), digest.as_str());
@@ -278,8 +385,10 @@ async fn reopens_all_snapshot_families_without_changing_native_digests_or_schema
             .list("session-a", None, 100)
             .await
             .unwrap()
-            .len(),
-        4
+            .iter()
+            .map(|record| record.job_id())
+            .collect::<Vec<_>>(),
+        ["asr", "image", "music", "tts", "video"]
     );
     assert_eq!(
         fixture
@@ -288,7 +397,7 @@ async fn reopens_all_snapshot_families_without_changing_native_digests_or_schema
             .await
             .unwrap()[0]
             .job_id(),
-        "tts"
+        "music"
     );
     assert!(image.ensure_execution_admitted().is_err());
     assert!(pocket.ensure_execution_admitted().is_err());

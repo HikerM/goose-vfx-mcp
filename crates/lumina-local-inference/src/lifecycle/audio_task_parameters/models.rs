@@ -14,7 +14,9 @@ pub(super) struct AudioArtifactRecord {
 }
 
 pub(super) struct AudioModelRecord {
+    pub runtime: &'static AudioEngineDistribution,
     pub install_name: &'static str,
+    pub evidence: &'static str,
     pub protocol: AudioTaskProtocol,
     pub family: &'static str,
     pub task_variant: &'static str,
@@ -25,7 +27,29 @@ pub(super) struct AudioModelRecord {
     pub spec_bytes: &'static [u8],
 }
 
+pub(super) struct AudioEngineDistribution {
+    pub legacy_sha: &'static str,
+    pub long_path_sha: &'static str,
+    pub configuration_key: &'static str,
+    pub legacy_configuration_key: &'static str,
+}
+
+const SPEECH_ENGINE: AudioEngineDistribution = AudioEngineDistribution {
+    legacy_sha: "da25e095e147751e8c4db6634ef2fd7875ffe4883c8a70b2b01826cdb39ae787",
+    long_path_sha: "b319916421e54024ba4229462e1a577f368627176fc538d3be6d4a8a5398394f",
+    configuration_key: "LUMINA_AUDIO_CPU_CLI",
+    legacy_configuration_key: "LUMINA_AUDIO_LEGACY_CPU_CLI",
+};
+const GENERATIVE_ENGINE: AudioEngineDistribution = AudioEngineDistribution {
+    legacy_sha: "350f7d1e03e7ea01592796a8989c8c60bd07a442bff2648ea0218e587b8fec7b",
+    long_path_sha: "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b",
+    configuration_key: "LUMINA_AUDIO_MUSIC_CPU_CLI",
+    legacy_configuration_key: "LUMINA_AUDIO_MUSIC_LEGACY_CPU_CLI",
+};
+
 const POCKET_TTS: AudioModelRecord = AudioModelRecord {
+    runtime: &SPEECH_ENGINE,
+    evidence: AUDIO_TASK_PARAMETER_EVIDENCE,
     install_name: "pocket-tts-english-cpu",
     protocol: AudioTaskProtocol::PocketTtsOffline,
     family: "pocket_tts",
@@ -45,7 +69,31 @@ const POCKET_TTS: AudioModelRecord = AudioModelRecord {
     spec_bytes: include_bytes!("pocket_tts.json"),
 };
 
+const STABLE_MUSIC: AudioModelRecord = AudioModelRecord {
+    runtime: &GENERATIVE_ENGINE,
+    evidence: "2026-11-01-audio-generation-feasibility.json",
+    install_name: "stable-audio-small-music-cpu",
+    protocol: AudioTaskProtocol::StableAudioMusicOffline,
+    family: "stable_audio",
+    task_variant: "stable_audio/offline/text_to_music",
+    schema_id: "stable-audio-small-music-parameters-v1",
+    capability: ModelCapability::AudioGeneration,
+    weights: AudioArtifactRecord {
+        path: "Stable-Audio-3-Small-Music-GGUF/stable-audio-3-small-music-q8_0.gguf",
+        sha256: "a6d9176e11b857409b28cf5a69f4fefd8f3e61907b3b10d867f1f4c0a7eb9418",
+        size: 1_683_576_608,
+    },
+    spec: AudioArtifactRecord {
+        path: "model_specs/stable_audio.json",
+        sha256: "433dec2415fdd85f6685e6d982b801935b4cc5389232deb51949ccc978af9bf2",
+        size: 9_981,
+    },
+    spec_bytes: include_bytes!("stable_audio.json"),
+};
+
 const QWEN3_ASR: AudioModelRecord = AudioModelRecord {
+    runtime: &SPEECH_ENGINE,
+    evidence: AUDIO_TASK_PARAMETER_EVIDENCE,
     install_name: "qwen3-asr06b-cpu",
     protocol: AudioTaskProtocol::Qwen3AsrOffline,
     family: "qwen3_asr",
@@ -82,6 +130,7 @@ impl<'de> Deserialize<'de> for AudioTaskProfile {
 impl AudioTaskProfile {
     pub const PocketTtsEnglishCpu: Self = Self("pocket_tts_english_cpu");
     pub const Qwen3Asr06bCpu: Self = Self("qwen3_asr06b_cpu");
+    pub const StableAudioSmallMusicCpu: Self = Self("stable_audio_small_music_cpu");
 
     fn external(self) -> Option<&'static Definition> {
         ADDITIONS.get(self.0)
@@ -106,7 +155,7 @@ impl AudioTaskProfile {
     }
     pub(in crate::lifecycle) fn evidence(self) -> &'static str {
         self.external()
-            .map_or(AUDIO_TASK_PARAMETER_EVIDENCE, |_| self.0)
+            .map_or_else(|| self.record().evidence, |_| self.0)
     }
     pub(super) fn pocket_settings(self) -> (&'static str, f32) {
         match self.external().map(|d| &d.parameters) {
@@ -135,17 +184,43 @@ impl AudioTaskProfile {
     pub fn protocol(self) -> AudioTaskProtocol {
         self.record().protocol
     }
+    pub(in crate::lifecycle) fn engine_configuration_key(self) -> &'static str {
+        self.record().runtime.configuration_key
+    }
+
+    pub(in crate::lifecycle) fn legacy_engine_configuration_key(self) -> &'static str {
+        self.record().runtime.legacy_configuration_key
+    }
+
+    pub(super) fn music_settings(self) -> super::StableAudioMusicDefaults {
+        match self.external().map(|d| &d.parameters) {
+            Some(Parameters::StableAudioMusicOffline { defaults, .. }) => defaults.clone(),
+            _ => super::StableAudioMusicDefaults::default(),
+        }
+    }
+
+    pub(super) fn music_output(self) -> super::StableAudioModelOutput {
+        match self.external().map(|d| &d.parameters) {
+            Some(Parameters::StableAudioMusicOffline { output, .. }) => *output,
+            _ => super::StableAudioModelOutput::SMALL_MUSIC,
+        }
+    }
 
     pub fn registered() -> impl Iterator<Item = Self> {
-        [Self::PocketTtsEnglishCpu, Self::Qwen3Asr06bCpu]
-            .into_iter()
-            .chain(ADDITIONS.keys().map(|id| Self(id)))
+        [
+            Self::PocketTtsEnglishCpu,
+            Self::Qwen3Asr06bCpu,
+            Self::StableAudioSmallMusicCpu,
+        ]
+        .into_iter()
+        .chain(ADDITIONS.keys().map(|id| Self(id)))
     }
 
     pub(super) fn record(self) -> &'static AudioModelRecord {
         match self {
             Self::PocketTtsEnglishCpu => &POCKET_TTS,
             Self::Qwen3Asr06bCpu => &QWEN3_ASR,
+            Self::StableAudioSmallMusicCpu => &STABLE_MUSIC,
             _ => self
                 .external()
                 .expect("registered audio profile")
@@ -182,6 +257,10 @@ struct Definition {
     deny_unknown_fields
 )]
 enum Parameters {
+    StableAudioMusicOffline {
+        defaults: super::StableAudioMusicDefaults,
+        output: super::StableAudioModelOutput,
+    },
     PocketTtsOffline {
         language: String,
         temperature: f32,
@@ -198,6 +277,7 @@ impl Parameters {
         match self {
             Self::PocketTtsOffline { .. } => &POCKET_TTS,
             Self::Qwen3AsrOffline { .. } => &QWEN3_ASR,
+            Self::StableAudioMusicOffline { .. } => &STABLE_MUSIC,
         }
     }
 }
@@ -231,11 +311,11 @@ fn load(path: &std::path::Path) -> Result<BTreeMap<String, Definition>> {
         catalog.schema_version == 1 && catalog.models.len() <= 256,
         "Invalid audio catalog version or model count"
     );
-    let mut names: BTreeSet<String> = [&POCKET_TTS, &QWEN3_ASR]
+    let mut names: BTreeSet<String> = [&POCKET_TTS, &QWEN3_ASR, &STABLE_MUSIC]
         .iter()
         .map(|p| p.install_name.to_owned())
         .collect();
-    let mut hashes: BTreeSet<String> = [&POCKET_TTS, &QWEN3_ASR]
+    let mut hashes: BTreeSet<String> = [&POCKET_TTS, &QWEN3_ASR, &STABLE_MUSIC]
         .iter()
         .map(|p| p.weights.sha256.to_owned())
         .collect();
@@ -266,6 +346,10 @@ fn load(path: &std::path::Path) -> Result<BTreeMap<String, Definition>> {
             "Audio installation size overflow"
         );
         match &d.parameters {
+            Parameters::StableAudioMusicOffline { defaults, output } => {
+                output.validate()?;
+                output.spec(defaults)?;
+            }
             Parameters::PocketTtsOffline {
                 language,
                 temperature,

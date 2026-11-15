@@ -47,8 +47,15 @@ impl GuardedTaskDirectory {
     ) -> Result<BTreeSet<String>> {
         let mut total = 0u64;
         let mut names = BTreeSet::new();
-        for entry in std::fs::read_dir(self.path())? {
-            let entry = entry?;
+        for entry in std::fs::read_dir(self.path())
+            .with_context(|| format!("Enumerating native task output {}", self.path().display()))?
+        {
+            let entry = entry.with_context(|| {
+                format!(
+                    "Reading a native task output entry in {}",
+                    self.path().display()
+                )
+            })?;
             if entry.file_name() == SCRATCH {
                 continue;
             }
@@ -61,8 +68,9 @@ impl GuardedTaskDirectory {
                 !relative.as_str().contains('/'),
                 "Native task output must be a direct child"
             );
-            let path = checked_local_path(self.path(), &relative)?;
-            let metadata = std::fs::symlink_metadata(path)?;
+            let Some(metadata) = inspect_output_entry(self.path(), &relative)? else {
+                continue;
+            };
             ensure!(
                 metadata.is_file(),
                 "Native task output contains a directory or redirect"
@@ -86,6 +94,31 @@ impl GuardedTaskDirectory {
     }
 }
 
+pub(super) fn inspect_output_entry(
+    root: &Path,
+    relative: &RepositoryPath,
+) -> Result<Option<std::fs::Metadata>> {
+    let inspect = || -> Result<std::fs::Metadata> {
+        let path = checked_local_path(root, relative)
+            .with_context(|| format!("Resolving native task output {}", relative.as_str()))?;
+        std::fs::symlink_metadata(&path)
+            .with_context(|| format!("Inspecting native task output {}", path.display()))
+    };
+    match inspect() {
+        Ok(metadata) => Ok(Some(metadata)),
+        // Native encoders atomically rename a completed temporary output. Final
+        // collection still requires every expected file after the process exits.
+        Err(error)
+            if error
+                .downcast_ref::<std::io::Error>()
+                .is_some_and(|error| error.kind() == std::io::ErrorKind::NotFound) =>
+        {
+            Ok(None)
+        }
+        Err(error) => Err(error),
+    }
+}
+
 fn inspect_scratch(
     path: &Path,
     remaining: &mut u64,
@@ -96,8 +129,12 @@ fn inspect_scratch(
         depth <= 16,
         "Native task temporary directory nesting exceeds the limit"
     );
-    for entry in std::fs::read_dir(path)? {
-        let entry = entry?;
+    for entry in std::fs::read_dir(path)
+        .with_context(|| format!("Enumerating native task scratch {}", path.display()))?
+    {
+        let entry = entry.with_context(|| {
+            format!("Reading a native task scratch entry in {}", path.display())
+        })?;
         *entries += 1;
         ensure!(
             *entries <= 1024,
@@ -106,7 +143,11 @@ fn inspect_scratch(
         let metadata = match std::fs::symlink_metadata(entry.path()) {
             Ok(metadata) => metadata,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
-            Err(e) => return Err(e.into()),
+            Err(e) => {
+                return Err(e).with_context(|| {
+                    format!("Inspecting native task scratch {}", entry.path().display())
+                })
+            }
         };
         ensure!(
             !super::super::files::is_redirect(&metadata),
@@ -122,7 +163,14 @@ fn inspect_scratch(
                 {
                     continue
                 }
-                Err(e) => return Err(e),
+                Err(e) => {
+                    return Err(e).with_context(|| {
+                        format!(
+                            "Holding native task scratch directory {}",
+                            entry.path().display()
+                        )
+                    })
+                }
             };
             inspect_scratch(&entry.path(), remaining, entries, depth + 1)?;
         } else {

@@ -207,3 +207,44 @@ async fn both_catalog_routes_reject_when_local_inference_is_disabled() {
     }
     server.shutdown().await;
 }
+
+#[cfg(feature = "local-inference")]
+#[test]
+fn music_contract_projects_the_selected_model_fields_and_output_format() {
+    use domain::ModelTaskParameterAdapter;
+    let profile = domain::AudioTaskProfile::StableAudioSmallMusicCpu;
+    let asset = |id: &str, (sha256, size_bytes)| domain::AudioTaskAssetBinding {
+        artifact_id: id.to_owned(),
+        sha256,
+        size_bytes,
+    };
+    let service = domain::StableAudioMusicParameterService::new(domain::AudioTaskModelBinding {
+        installation_id: "fixture-installation".into(),
+        version_id: "fixture-version".into(),
+        manifest_digest: domain::Sha256Digest::of_bytes(b"music parameter projection fixture"),
+        runtime: profile.runtime_build(),
+        target_capabilities: [profile.capability()].into(),
+        model: asset("music-weight", profile.recorded_model()),
+        model_spec: asset("music-spec", profile.recorded_model_spec()),
+    })
+    .unwrap();
+    let identity = service.identity().unwrap();
+    let descriptor = service.describe();
+    let projected = mapping::description(domain::InstalledTaskDescription {
+        identity: identity.clone(),
+        intent: mapping::core_intent(NativeTaskIntentDto::TextToMusic),
+        descriptor: domain::NativeTaskParameterContract::StableAudioMusic(Box::new(
+            descriptor.clone(),
+        )),
+    })
+    .unwrap();
+    assert_eq!(projected.intent, NativeTaskIntentDto::TextToMusic);
+    assert_eq!(mapping::core_identity(projected.identity), identity);
+    let wire = serde_json::to_value(projected.descriptor).unwrap();
+    assert_eq!(wire["family"], "stable_audio_music");
+    let mut expected = serde_json::to_value(descriptor).unwrap();
+    let public = expected.as_object_mut().unwrap();
+    public.remove("identity");
+    public.remove("binding");
+    assert_eq!(wire["parameters"], expected);
+}

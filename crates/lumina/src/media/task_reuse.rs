@@ -4,7 +4,7 @@ use lumina_providers::local_inference::lifecycle::{
     GenerationOutputReference, GenerationParameterService, GenerationParameters,
     GenerationResultRecord, InstallationService, NativeTaskCatalog, NativeTaskParameterContract,
     NativeTaskPlan, PocketTtsParameterService, Qwen3AsrParameterService, SessionMediaParameterKind,
-    Sha256Digest, TaskParameterIdentity,
+    Sha256Digest, StableAudioMusicParameterService, TaskParameterIdentity,
 };
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -35,10 +35,7 @@ impl TaskReuseRequest {
             self.parent_job_id != self.new_job_id,
             "Task reuse requires a new job"
         );
-        ensure!(
-            self.patch.len() == 1 && self.patch.values().all(|v| !v.is_null()),
-            "Provide exactly one non-null task parameter"
-        );
+        ensure!(self.patch.len() == 1, "Provide exactly one task parameter");
         if let Some(id) = &self.parent_result_id {
             canonical_uuid(id)?;
         }
@@ -184,6 +181,16 @@ async fn prepare_registered(
     mut request: TaskReuseRequest,
     registered: NativeTaskParameterContract,
 ) -> Result<NativeTaskPlan> {
+    request.validate()?;
+    if !matches!(
+        &registered,
+        NativeTaskParameterContract::StableAudioMusic(_)
+    ) {
+        ensure!(
+            request.patch.values().all(|value| !value.is_null()),
+            "Provide a non-null task parameter for this adapter"
+        );
+    }
     ensure!(
         parent.session_id() == session
             && parent.job_id() == request.parent_job_id
@@ -243,6 +250,24 @@ async fn prepare_registered(
                 "Speech reuse selects its parent configuration by job"
             );
             Ok(PocketTtsParameterService::new(desc.binding)?
+                .reuse_configuration(
+                    session,
+                    snapshot,
+                    &digest,
+                    &request.new_job_id,
+                    serde_json::from_value(Value::Object(request.patch))?,
+                )?
+                .into())
+        }
+        (
+            TaskConfigurationSnapshot::StableAudioMusic(snapshot),
+            NativeTaskParameterContract::StableAudioMusic(desc),
+        ) => {
+            ensure!(
+                request.parent_result_id.is_none(),
+                "Music reuse selects its parent configuration by job"
+            );
+            Ok(StableAudioMusicParameterService::new(desc.binding)?
                 .reuse_configuration(
                     session,
                     snapshot,

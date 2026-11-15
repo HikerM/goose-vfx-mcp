@@ -20,6 +20,7 @@ pub(crate) enum TaskIntent {
     FirstFrameToVideoWithAudio,
     SpeechSynthesis,
     Transcription,
+    TextToMusic,
 }
 
 pub(crate) async fn list_tasks(app: &InstallationApplication, intent: TaskIntent) -> Result<()> {
@@ -32,6 +33,7 @@ pub(crate) async fn list_tasks(app: &InstallationApplication, intent: TaskIntent
         TaskIntent::FirstFrameToVideoWithAudio => NativeTaskIntent::FirstFrameToVideoWithAudio,
         TaskIntent::SpeechSynthesis => NativeTaskIntent::SpeechSynthesis,
         TaskIntent::Transcription => NativeTaskIntent::Transcription,
+        TaskIntent::TextToMusic => NativeTaskIntent::TextToMusic,
     };
     println!(
         "{}",

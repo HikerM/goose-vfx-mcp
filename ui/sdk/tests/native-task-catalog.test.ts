@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { LuminaExtClient } from "../src/generated/client.gen.ts";
 import type { NativeTaskDescriptionDto } from "../src/generated/types.gen.ts";
+import { zNativeStableAudioMusicDescriptorDto } from "../src/generated/zod.gen.ts";
 
 function videoTask(
   profile: string,
@@ -51,6 +52,27 @@ function videoTask(
 
 test("task discovery preserves each model's contract and sends its complete identity on lookup", async () => {
   const tasks = [videoTask("wan", 8, false), videoTask("h3", 24, true)];
+  tasks.push({
+    identity: {
+      installationId: "music", versionId: "music-v1", manifestDigest: "music-manifest",
+      runtimeDigest: "music-runtime", componentBindingDigest: "music-components",
+      taskVariant: "stable_audio/offline/text_to_music", parameterSchemaId: "music-options",
+    },
+    intent: "text_to_music",
+    descriptor: {
+      family: "stable_audio_music",
+      parameters: {
+        fields: {
+          durationSeconds: {
+            valueType: "f32", required: false, default: 3,
+            constraints: [], source: "fixture catalog",
+          },
+        },
+        unsupported: {}, outputSampleRate: 44100, outputChannels: 2,
+        evidence: "music-fixture", limitations: [],
+      },
+    },
+  });
   for (const [language, temperature] of [["french", 0.7], ["spanish", 0.5]] as const) {
     tasks.push({
       identity: {
@@ -106,5 +128,15 @@ test("task discovery preserves each model's contract and sends its complete iden
       identity: list.tasks[0].identity,
     });
     assert.deepEqual(selected, { status: "found", task });
+  }
+});
+
+test("music output channels must fit the native unsigned 16-bit field", () => {
+  const descriptor = {
+    fields: {}, unsupported: {}, outputSampleRate: 44100,
+    evidence: "music-fixture", limitations: [],
+  };
+  for (const [outputChannels, valid] of [[2, true], [65535, true], [65536, false], [-1, false]] as const) {
+    assert.equal(zNativeStableAudioMusicDescriptorDto.safeParse({ ...descriptor, outputChannels }).success, valid);
   }
 });

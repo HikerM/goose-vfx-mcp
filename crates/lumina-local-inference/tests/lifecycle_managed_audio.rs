@@ -44,6 +44,7 @@ async fn install_and_discover_managed_audio() -> Result<()> {
     let intent = match profile.protocol() {
         AudioTaskProtocol::PocketTtsOffline => NativeTaskIntent::SpeechSynthesis,
         AudioTaskProtocol::Qwen3AsrOffline => NativeTaskIntent::Transcription,
+        AudioTaskProtocol::StableAudioMusicOffline => NativeTaskIntent::TextToMusic,
     };
     let id = format!("acceptance-{name}");
     let id = id.as_str();
@@ -66,16 +67,107 @@ async fn install_and_discover_managed_audio() -> Result<()> {
             );
             job
         } else {
-            let plan = application.prepare_audio_install_plan(profile).await?;
+            let plan = if let Some(weight) =
+                std::env::var_os("LUMINA_AUDIO_ACCEPTANCE_CACHED_WEIGHT")
+            {
+                use lumina_local_inference::lifecycle::{
+                    inspect_gguf, ComponentObservation, ComponentRole, FilePurpose, GgufReadLimits,
+                    RepositoryInventory, RepositoryPath, SourceGgufObservation,
+                };
+                // The fixture is the public provider's original inventory at the pinned revision.
+                let recorded: serde_json::Value = serde_json::from_reader(std::fs::File::open(
+                    base.join("small-fixture-sources/audio-cpp__audio.cpp-gguf-production.json"),
+                )?)?;
+                let inventory: RepositoryInventory =
+                    serde_json::from_value(recorded["inspection"]["inventory"].clone())?;
+                let artifact = inventory.artifact(
+                    &RepositoryPath::parse(profile.weight_repository_path())?,
+                    FilePurpose::GgufWeight,
+                )?;
+                let file = std::fs::File::open(weight)?;
+                let bytes = file.metadata()?.len();
+                ensure!(
+                    artifact.size_bytes == Some(bytes),
+                    "Local weight size differs from observed inventory"
+                );
+                let header = inspect_gguf(
+                    std::io::BufReader::new(file),
+                    bytes,
+                    GgufReadLimits::default(),
+                )?;
+                service.repository().prepare_audio_install_plan(
+                    &ComponentObservation {
+                        role: ComponentRole::Main,
+                        files: vec![SourceGgufObservation {
+                            artifact,
+                            snapshot: inventory.snapshot,
+                            header,
+                        }],
+                    },
+                    fs2::available_space(service.store().root())?,
+                    chrono::Utc::now().timestamp(),
+                )?
+            } else {
+                application.prepare_audio_install_plan(profile).await?
+            };
             let digest = plan.digest()?;
-            service
-                .submit(&InstallationSubmission {
-                    idempotency_key: format!("{id}-{}", digest.as_str()),
-                    plan_id: plan.id.clone(),
-                    plan_digest: digest,
+            if let Some(path) = std::env::var_os("LUMINA_AUDIO_ACCEPTANCE_CACHED_WEIGHT") {
+                use lumina_local_inference::lifecycle::{
+                    install_from_local_cache, CacheInstallRequest, FilePurpose, InstallationInput,
+                    InstallationSource, JobAcceptance,
+                };
+                let weight = plan
+                    .artifacts
+                    .values()
+                    .find(|a| a.purpose == FilePurpose::GgufWeight)
+                    .context("Missing observed source weight")?;
+                let request = CacheInstallRequest {
                     installation_id: id.into(),
-                })
-                .await?
+                    version_id: format!("{id}-v2"),
+                    job_id: format!("{id}-cache-{}", digest.as_str()),
+                    source_files: std::collections::BTreeMap::from([(
+                        weight.id.clone(),
+                        PathBuf::from(path).canonicalize()?,
+                    )]),
+                };
+                let now = || chrono::Utc::now().timestamp();
+                let input = InstallationInput::new(
+                    service.store(),
+                    request.installation_id.clone(),
+                    request.version_id.clone(),
+                    InstallationSource::LocalCache {
+                        files: request.source_files.clone(),
+                    },
+                )?;
+                let job = service.repository().enqueue_installation(
+                    &JobAcceptance {
+                        id: request.job_id.clone(),
+                        idempotency_key: request.job_id.clone(),
+                        plan_id: plan.id.clone(),
+                        plan_digest: digest,
+                    },
+                    &input,
+                    now(),
+                    fs2::available_space(service.store().root())?,
+                )?;
+                install_from_local_cache(
+                    service.repository(),
+                    service.store(),
+                    &request,
+                    "audio-local-cache-acceptance",
+                    now,
+                )?;
+                job
+            } else {
+                service
+                    .submit(&InstallationSubmission {
+                        idempotency_key: format!("{id}-{}", digest.as_str()),
+                        plan_id: plan.id.clone(),
+                        plan_digest: digest,
+                        installation_id: id.into(),
+                    })
+                    .await?
+            }
         };
         tokio::time::timeout(Duration::from_secs(3600), async {
             loop {

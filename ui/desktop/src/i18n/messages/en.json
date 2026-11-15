@@ -6355,5 +6355,11 @@
   },
   "installedTasks.transcription": {
     "defaultMessage": "Transcription"
+  },
+  "installedTasks.music": {
+    "defaultMessage": "Text to music"
+  },
+  "installedTasks.channels": {
+    "defaultMessage": "Output channels: {count}"
   }
 }

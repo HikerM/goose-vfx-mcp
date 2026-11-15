@@ -267,7 +267,8 @@ impl NativeTaskJobs {
                 );
                 return Ok(Some(ImportedTaskOutput::Transcript(text)));
             }
-            TaskConfigurationSnapshot::PocketTts(_) => (MediaKind::Audio, 1),
+            TaskConfigurationSnapshot::PocketTts(_)
+            | TaskConfigurationSnapshot::StableAudioMusic(_) => (MediaKind::Audio, 1),
             TaskConfigurationSnapshot::Generation(snapshot) => match &snapshot.parameters {
                 EffectiveGenerationParameters::Image(p) => (MediaKind::Image, p.batch_count),
                 EffectiveGenerationParameters::Video(_) => (MediaKind::Video, 1),

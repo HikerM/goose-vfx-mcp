@@ -23,6 +23,9 @@ impl NativeTaskParameterContract {
                 );
                 field.value_type.as_str()
             }
+            Self::StableAudioMusic(desc) => {
+                audio_field_type(&desc.fields, &desc.unsupported, name)?
+            }
             Self::PocketTts(desc) => audio_field_type(&desc.fields, &desc.unsupported, name)?,
             Self::Qwen3Asr(desc) => audio_field_type(&desc.fields, &desc.unsupported, name)?,
         };

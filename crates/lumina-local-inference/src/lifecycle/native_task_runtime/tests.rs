@@ -238,6 +238,29 @@ fn only_fixed_finite_jobs_prevent_a_descendant_from_running() {
 }
 
 #[test]
+fn output_scan_accepts_an_atomic_rename_after_directory_enumeration() {
+    let temp = fixture();
+    let directory = output::GuardedTaskDirectory::create(temp.path()).unwrap();
+    let temporary = directory.path().join("output.wav.tmp");
+    std::fs::write(&temporary, b"temporary audio bytes").unwrap();
+    let entry = std::fs::read_dir(directory.path())
+        .unwrap()
+        .map(Result::unwrap)
+        .find(|entry| entry.file_name() == "output.wav.tmp")
+        .unwrap();
+    let relative = RepositoryPath::parse(entry.file_name().to_str().unwrap()).unwrap();
+    std::fs::rename(&temporary, directory.path().join("output.wav")).unwrap();
+    assert!(output::inspect_output_entry(directory.path(), &relative)
+        .unwrap()
+        .is_none());
+    assert_eq!(
+        directory.inspect_bytes(1024, 1024).unwrap(),
+        std::collections::BTreeSet::from(["output.wav".into()])
+    );
+    assert!(directory.inspect_bytes(1, 1024).is_err());
+}
+
+#[test]
 fn finite_success_captures_logs_and_holds_original_output_handle() {
     let temp = fixture();
     let (command, ownership, directory) = setup(temp.path(), "success", Vec::new());

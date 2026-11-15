@@ -5242,5 +5242,11 @@
   },
   "installedTasks.transcription": {
     "defaultMessage": "语音转文字"
+  },
+  "installedTasks.music": {
+    "defaultMessage": "文生音乐"
+  },
+  "installedTasks.channels": {
+    "defaultMessage": "输出声道数：{count}"
   }
 }

@@ -25,6 +25,7 @@ pub enum TaskResourceKind {
     Video,
     Asr,
     Tts,
+    Music,
 }
 
 /// Binds the effective workload and any model-specific equivalence established by measurement.
@@ -75,6 +76,26 @@ impl TaskResourceKey {
             NativeTaskPlan::PocketTts(task) => {
                 let (runtime, components, workload) = conditions::pocket_key(task.snapshot())?;
                 (TaskResourceKind::Tts, runtime, components, workload)
+            }
+            NativeTaskPlan::StableAudioMusic(task) => {
+                let snapshot = task.snapshot();
+                let binding = &snapshot.metadata.binding;
+                (
+                    TaskResourceKind::Music,
+                    Sha256Digest::of_serializable(&binding.runtime)?,
+                    Sha256Digest::of_serializable(&(
+                        &binding.model.sha256,
+                        binding.model.size_bytes,
+                        &binding.model_spec.sha256,
+                        binding.model_spec.size_bytes,
+                    ))?,
+                    Sha256Digest::of_serializable(&(
+                        &snapshot.parameters,
+                        &snapshot.metadata.backend,
+                        snapshot.metadata.cpu_threads,
+                        snapshot.metadata.requires_new_native_preparation,
+                    ))?,
+                )
             }
             NativeTaskPlan::Qwen3Asr(task) => {
                 let s = task.snapshot();
@@ -282,6 +303,10 @@ struct TaskResourceProfile {
 // pinned SHA. User configuration and measurement output paths are never loaded.
 const TRUSTED_PROFILE_RECORDS: &[(&str, &str)] = &[
     (
+        include_str!("task_resources/stable-audio-music-cpu-case-1.json"),
+        "e3c6c21cf663e65006450d49b88e151848f72bc12f9f2a24232ed922789d4a1d",
+    ),
+    (
         include_str!("task_resources/sd15-cpu-512-euler-a.json"),
         "aac4362892ac3c7bd151a9f7cec264a8c0217eec84f18b791ae6e96085154f29",
     ),
@@ -485,7 +510,9 @@ fn profiling_requirement(plan: &NativeTaskPlan, key: TaskResourceKey) -> TaskPro
             }
             (task.snapshot().profile.evidence(), missing)
         }
-        NativeTaskPlan::PocketTts(_) | NativeTaskPlan::Qwen3Asr(_) => (
+        NativeTaskPlan::PocketTts(_)
+        | NativeTaskPlan::Qwen3Asr(_)
+        | NativeTaskPlan::StableAudioMusic(_) => (
             super::AudioTaskProfile::for_parameter_schema(&plan.runtime().binding_version)
                 .map_or("unregistered audio parameter schema", |profile| {
                     profile.evidence()

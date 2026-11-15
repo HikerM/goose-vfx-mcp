@@ -17,6 +17,7 @@ pub enum NativeTaskIntentDto {
     FirstFrameToVideoWithAudio,
     SpeechSynthesis,
     Transcription,
+    TextToMusic,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -74,6 +75,7 @@ pub enum NativeTaskParameterContractDto {
     Generation(Box<NativeGenerationDescriptorDto>),
     PocketTts(Box<NativePocketTtsDescriptorDto>),
     Qwen3Asr(Box<NativeQwen3AsrDescriptorDto>),
+    StableAudioMusic(Box<NativeStableAudioMusicDescriptorDto>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -142,6 +144,17 @@ pub struct NativeQwen3AsrDescriptorDto {
     pub limitations: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NativeStableAudioMusicDescriptorDto {
+    pub fields: BTreeMap<String, NativeAudioFieldDto>,
+    pub unsupported: BTreeMap<String, String>,
+    pub output_sample_rate: u32,
+    pub output_channels: u16,
+    pub evidence: String,
+    pub limitations: Vec<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -173,5 +186,33 @@ mod tests {
             serde_json::to_value(NativeTaskIntentDto::TextToVideoWithAudio).unwrap(),
             serde_json::to_value(NativeTaskIntentDto::FirstFrameToVideoWithAudio).unwrap()
         );
+    }
+
+    #[test]
+    fn published_music_schema_matches_the_rust_wire_contract() {
+        let mut generator = schemars::SchemaGenerator::default();
+        generator.subschema_for::<NativeTaskIntentDto>();
+        generator.subschema_for::<NativeTaskParameterContractDto>();
+        let mut definitions = generator.take_definitions(true);
+        let published_path =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../lumina/acp-schema.json");
+        let published: Value =
+            serde_json::from_slice(&std::fs::read(published_path).unwrap()).unwrap();
+        for name in [
+            "NativeTaskIntentDto",
+            "NativeTaskParameterContractDto",
+            "NativeStableAudioMusicDescriptorDto",
+        ] {
+            let mut schema = definitions.remove(name).unwrap();
+            if name == "NativeStableAudioMusicDescriptorDto" {
+                for field in ["outputSampleRate", "outputChannels"] {
+                    schema["properties"][field]
+                        .as_object_mut()
+                        .unwrap()
+                        .remove("format");
+                }
+            }
+            assert_eq!(schema, published["$defs"][name], "{name}");
+        }
     }
 }

@@ -1,0 +1,331 @@
+{
+  "date": "2026-11-13",
+  "scope": "Pinned CPU Stable Audio 3 Small Music GGUF native replay, distribution packaging and separate AST validation",
+  "source": {
+    "repository": "audio-cpp/audio.cpp-gguf",
+    "revision": "459bd958d533fc2530e985e6bdf8cdfa2a5df3a6",
+    "weight": "Stable-Audio-3-Small-Music-GGUF/stable-audio-3-small-music-q8_0.gguf",
+    "weightBytes": 1683576608,
+    "weightSha256": "a6d9176e11b857409b28cf5a69f4fefd8f3e61907b3b10d867f1f4c0a7eb9418",
+    "explicitSpecBytes": 9981,
+    "explicitSpecSha256": "433dec2415fdd85f6685e6d982b801935b4cc5389232deb51949ccc978af9bf2",
+    "nativeRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+    "modelOutputConfigSha256": "100776f25af5aa83f70e0c6b384de6690cb4e5ad01c24f7cfbb6524d18765f06",
+    "sampleRate": 44100,
+    "channels": 2,
+    "maxSampleFrames": 5292032,
+    "downsamplingRatio": 4096,
+    "encoderChunkSize": 32,
+    "encoderStride": 16,
+    "outputCalculations": {
+      "sampler.cpp": "16023f8e77869094821d15475e8b2959fb812349863a1b1dca582c5c859f8761",
+      "session.cpp": "880bb875b0cdb860a7d0322218fcd1d9c706081e79271b7be5a5f39a085226c9",
+      "assets.cpp": "6a16f2cc3c0aa135b5ef56d731c03347532a4a22f40e9e6df9d1eda0bc957b82",
+      "request.cpp": "9f08ef59434ca7687c74304000e54b55fb22d4433568f415db2d509306cc00b5"
+    }
+  },
+  "packaging": {
+    "sha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b",
+    "m0Sha256": "350f7d1e03e7ea01592796a8989c8c60bd07a442bff2648ea0218e587b8fec7b",
+    "manifestSha256": "4841717d5f2e52211ea37ff9397d5a47c89a82d9a1fe0c0c732de61682f48df2",
+    "mtSha256": "1b8a272d586a9ab53ac2ccd457a88bd0210d7d7ac3daea5b34743cc2afe73b26",
+    "bytes": 6491648
+  },
+  "nativeReplay": {
+    "evidenceDirectory": "target/lifecycle-validation/m4-stable-music-offline-r3",
+    "generationLogSha256": "b4cca06c6d466a1fe1509ea13897bef1ab566177b0a4579a36e025da9ab769de",
+    "generationMilliseconds": 13135.6,
+    "engineReportedPeakResidentMiB": 1898,
+    "engineReportedPeakCommitMiB": 6671,
+    "generationSidecarBytes": 40176400,
+    "classificationSidecarBytes": 29702,
+    "resolvedOptions": [
+      "batch_size=1",
+      "duration_sec=4",
+      "num_inference_steps=8",
+      "guidance_scale=1",
+      "apg_scale=1",
+      "sampler_mode=pingpong",
+      "seed=42",
+      "duration_padding_sec=6",
+      "truncate_output_to_duration=true",
+      "chunked_decode=true"
+    ],
+    "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+    "output": {
+      "file": "music.wav",
+      "sha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+      "sameBytesAsIndependentM0": true,
+      "pcmBits": 16,
+      "frames": 176400,
+      "channels": 2,
+      "sampleRate": 44100,
+      "bytes": 705644
+    }
+  },
+  "independentAudioClassification": {
+    "family": "ast_audioset",
+    "weightSha256": "b1ad5f36591f9e38d16cb3544d6b3b27a0c61cbcb00de171df78ed179c789b56",
+    "explicitSpecSha256": "932666255efbd38263c3d0eaa5e46486bee22d0ee338425ee72c1669bd21bbb8",
+    "logSha256": "41c50aface3c976be6f66fb0645028df91875a6211b945552496a99e55e9316a",
+    "topThree": [
+      {
+        "index": 137,
+        "label": "Music",
+        "score": 0.630849540233612,
+        "logit": 0.5358631014823914
+      },
+      {
+        "index": 138,
+        "label": "Musical instrument",
+        "score": 0.22755953669548035,
+        "logit": -1.2221430540084839
+      },
+      {
+        "index": 153,
+        "label": "Piano",
+        "score": 0.14558713138103485,
+        "logit": -1.7696397304534912
+      }
+    ]
+  },
+  "coverage": "This native replay describes one exact music request. Other music prompts, models, sound effects, audio editing and production AST classification require separate evidence.",
+  "untrimmedNativeReplay": {
+    "prompt": "Distant drums with a soft piano chord.",
+    "negativePrompt": "talking",
+    "seed": 137,
+    "sampler": "euler",
+    "truncateToDuration": false,
+    "durationSeconds": 4,
+    "paddingSeconds": 6,
+    "steps": 8,
+    "sampleSpec": {
+      "frames": 442368,
+      "rate": 44100,
+      "channels": 2,
+      "pcmBits": 16
+    },
+    "outputBytes": 1769516,
+    "waveSha256": "ddf70397ec1bbdb4f9beabfe2aa05bac86be65708912399eebe9f6f513921f95",
+    "nativeLogSha256": "8aebdd5a4df41fc2b9811df7c7833ac293f842108f6edc62bb5f37c2fe6de2a7",
+    "evidenceDirectory": "target/lifecycle-validation/m4-stable-music-untrimmed-r1",
+    "scope": "Separate native output geometry regression"
+  },
+  "productIntegrationVerification": {
+    "date": "2026-11-15",
+    "status": "AUTOMATED_AND_EXACT_TOOL_PASS_RECIPE_REPORT_PARTIAL",
+    "scope": "Music parameters, one-field reuse and lineage, integer schedule boundary, resource admission, and shared installation invariants. Synthetic metadata tests are not additional real model runs.",
+    "checks": [
+      {
+        "log": "target/lifecycle-validation/m4-music-audio-parameters-r2.log",
+        "sha256": "8d645523a747a3ea09d7dc61804d2da06768db3544da08ff2beafbe2a706cf53",
+        "passed": 22,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "log": "target/lifecycle-validation/m4-music-resources-r2.log",
+        "sha256": "6e35e69096bc4c05259e8260799bc09f588270c105333f1ebf2fe4a95039f849",
+        "passed": 8,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "log": "target/lifecycle-validation/m4-music-core-regression-r2.log",
+        "sha256": "c4683c01b5c71bb9e6ffb5aa8b13238ad850c5ff3439e03198012ef5b76ff955",
+        "passed": 16,
+        "failed": 0,
+        "ignored": 3
+      }
+    ],
+    "pending": [
+      "Complete bounded self-test final report; actual test tool execution passed all five suites",
+      "Prompt and seed resource-domain expansion; current resource key still matches exact parameters",
+      "Natural-language multi-turn music parameter workflow and output quality acceptance",
+      "Project asset versions and true range-preserving local edits",
+      "Desktop acceptance remains paused"
+    ],
+    "managedPublicationAttempt": {
+      "directory": "target/lifecycle-validation/m4-stable-music-publication-20261115-r1",
+      "status": "FAIL",
+      "reason": "NativeTaskFailure: OS file not found while the guarded task was running; no successful publication measurement.",
+      "hostSha256": "809e9ad318ceec5116a88f79b732ab8ab5d458989649faf8a7f71f57931eb071",
+      "ownerSha256": "d22a0786970b8b167ad7f01200937cfc922beec825c196ea6ec65aca27095c2d"
+    },
+    "isolatedOwnerDiagnostic": {
+      "directory": "target/lifecycle-validation/m4-stable-music-owner-diagnostic-20261115-r1",
+      "status": "PASS",
+      "scope": "Installed native owner with provisional test-only resource limits; no publication or reviewed resource profile. The transient failure did not reproduce in this run.",
+      "outputSha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+      "outputBytes": 705644
+    },
+    "atomicOutputRenameRegression": {
+      "nativeSource": "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/app/workflow/file_sink.cpp:198-204",
+      "redLog": "target/lifecycle-validation/m4-music-output-rename-red-exact-r1.log",
+      "greenLog": "target/lifecycle-validation/m4-music-output-rename-green-r1.log",
+      "passed": 9,
+      "failed": 0,
+      "ignored": 1,
+      "scope": "A deterministic stale-directory-entry regression reproduces NotFound when output.wav.tmp is renamed. Original failed real run has no path detail, so its exact failing operation is not independently proven. Only vanished enumerated outputs are tolerated; final required-file, hardlink, disk, cancellation and deadline checks remain enforced.",
+      "redLogSha256": "39ae870315a9f97e7d3f5e54ad7e0b120bcbe9958260927f11d4057f20d8807a",
+      "greenLogSha256": "5f0c7aac96acae08f42c6060d944aa87a8b00ec12f32aa49c1716b7edda3ebd0"
+    },
+    "hostRegressionHistory": [
+      {
+        "log": "target/lifecycle-validation/m4-music-host-regression-r14.log",
+        "passed": 104,
+        "failed": 1,
+        "ignored": 5,
+        "failure": "Existing snapshot-family fixture expected four records after adding a fifth music family; corrected to assert all five job IDs and the correct pagination cursor. Subsequent r15 regression passed.",
+        "logSha256": "f28c7c9eb533821510d9a5323afcda7e3c20c017d20e1ca73b101efe5301cdb5"
+      },
+      {
+        "log": "target/lifecycle-validation/m4-music-host-regression-r15.log",
+        "passed": 105,
+        "failed": 0,
+        "ignored": 5,
+        "logSha256": "6d6d80ea8982eda3d03324e395ee301d2ea6241c297f0f37a80c4a90da6afc83",
+        "scope": "Media and native task platform tool tests; five opt-in real model probes are excluded and reported separately."
+      }
+    ],
+    "hostRegression": {
+      "log": "target/lifecycle-validation/m4-music-host-regression-r16.log",
+      "passed": 105,
+      "failed": 0,
+      "ignored": 5,
+      "logSha256": "5b812146adfd625fde250d31516d89cbfd385797fb1d4a4060e700780eb45fa9",
+      "scope": "Current source media and native task platform tool tests; ignored real model probes are reported separately."
+    },
+    "managedPublicationMeasurement": {
+      "directory": "target/lifecycle-validation/m4-stable-music-publication-20261115-r2",
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "measurementSha256": "99e43851c908c5a2015463ff78bf73fcd1033866df022e03d928a6006715cafd",
+      "nativeDirectoryHighWaterBytes": 41587688,
+      "scope": "Real installed native execution, import_readers publication, WAV verification and database reopen; normal tool admission is verified separately."
+    },
+    "resourceReview": {
+      "record": "crates/lumina-local-inference/src/lifecycle/task_resources/stable-audio-music-cpu-case-1.json",
+      "recordSha256": "e3c6c21cf663e65006450d49b88e151848f72bc12f9f2a24232ed922789d4a1d",
+      "measuredHostPeakBytes": 7033057280,
+      "hostBudgetPolicy": "Controller plus max(process tree peak commit, sum of process peak working sets), add 25%, round up to 128 MiB. This is scheduler accounting, not an OS-enforced RAM limit.",
+      "temporaryBudgetPolicy": "64 MiB covers observed native directory high water including GGUF sidecars and simultaneous output copies.",
+      "budget": {
+        "hostRamBytes": 8858370048,
+        "gpuMemory": [],
+        "temporaryOutputBytes": 67108864,
+        "publicationCopyBytes": 2097152,
+        "publicationScratchBytes": 4194304,
+        "outputByteLimit": 2097152,
+        "timeoutSeconds": 120
+      },
+      "scope": "Exact measured model components, runtime, CPU and effective request only. New prompts, seeds and settings remain unmeasured."
+    },
+    "catalogDriver": {
+      "log": "target/lifecycle-validation/m4-native-catalog-driver-20261115-r2.json",
+      "sha256": "f2f48f3d32904afcdd9b001ecf57a957d6b115dc250b00e17288b6e0f3a1a915",
+      "status": "PASS",
+      "suites": 5,
+      "passed": 53,
+      "failed": 0,
+      "ignored": 0,
+      "scope": "20 generation parameter tests, 22 audio parameter tests, 9 resource tests, shared distribution metadata, and actual English/French weight installations in both orders."
+    },
+    "normalToolExecution": {
+      "directory": "target/lifecycle-validation/m4-stable-music-production-20261115-r1",
+      "status": "PASS",
+      "testLogSha256": "0dea65249b7fc792510be86df55eb4f66224bca8a3b776eb41d66268d5b98166",
+      "reportSha256": "8ad5ce5077da805b8e25a6b0ed612e32fb8281db23baf1ae9e73efda114d7d56",
+      "toolResponseSha256": "ae9f02697ba9470af6faeb75dedb70e84476c9621ca9c10ef43c7067eeeedbf5",
+      "hostBinarySha256": "4dd2a11c2ee542f8f0c0ca868589e4d10076c86ac2150cf998b67a8e857b3ad0",
+      "result": {
+        "schemaVersion": 1,
+        "resultId": "271622d8-de9e-883a-9114-e9e4a463c8e3",
+        "sessionId": "20261115_1",
+        "association": {
+          "associationKind": "tool_call",
+          "toolCallId": "stable-music-request"
+        },
+        "jobId": "native:4bc6e9526ba621ed0b76a714a11446726dc54c76f32ce0725b8a55fa2514fccc",
+        "kind": "audio",
+        "mime": "audio/wav",
+        "fileName": "271622d8-de9e-883a-9114-e9e4a463c8e3.wav",
+        "bytes": 705644,
+        "sha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+        "createdAt": 1794728614121,
+        "rootId": "4b912cff-d18a-4ce3-b969-4ab1f3e068f0",
+        "relativePath": "id-32303236313131355f31/id-6e61746976653a34626336653935323662613632316564306237366137313461313134343637323664633534633736663332636530373235623861353566613235313466636363/271622d8-de9e-883a-9114-e9e4a463c8e3.wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 4000000,
+          "sampleRate": 44100,
+          "channels": 2,
+          "sampleFrames": 176400
+        },
+        "ownership": "application_generated",
+        "source": {
+          "kind": "local_model",
+          "installationId": "acceptance-stable-audio-small-music-cpu",
+          "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+          "runtime": {
+            "adapterId": "audio-cpp-offline-parameters-v1",
+            "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+            "binarySha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b"
+          },
+          "generationConfigSha256": "a77065ac468a7c60096acaea69bd7b91e81965727dc576f7e33d6ad6c0ff450a",
+          "inputRefs": []
+        }
+      },
+      "reopenedVerified": true,
+      "sameCallReplayed": true,
+      "scope": "Actual native_tasks run tool via managed installation and reviewed budget; same-call replay and database reopen. Direct platform tool test, not natural-language dialog or desktop acceptance."
+    },
+    "unmeasuredToolExecution": {
+      "directory": "target/lifecycle-validation/m4-stable-music-unmeasured-20261115-r1",
+      "status": "PASS",
+      "testLogSha256": "678a3da514a9868ddad768fa4620cce52b865efd08037300c7d32680aee8e90f",
+      "reportSha256": "4df27b2c3d1660a8c2cbcb5b2bdd45c11449117f4127e16539fbdc7d0d99013d",
+      "scope": "Changing steps from 8 to 9 returns needs_profiling through the normal tool entry."
+    },
+    "sdkAndParameterUi": {
+      "checks": [
+        {
+          "log": "target/lifecycle-validation/m5-music-sdk-rust-r2.log",
+          "sha256": "db3484fb23261c4103996cfa132add7c384c0c9e42dadd3205c2dd10439cd946",
+          "passed": 2,
+          "failed": 0
+        },
+        {
+          "log": "target/lifecycle-validation/m5-music-sdk-ts-r3.log",
+          "sha256": "94602b87308532c39e1ec66b73342ed38af1d6b39d50798fa405e46eae1c54a4",
+          "passed": 33,
+          "failed": 0
+        },
+        {
+          "log": "target/lifecycle-validation/m5-music-installed-parameters-ui-r1.log",
+          "sha256": "ef007385045f762ee8ef0ff7eebbc619226b7bb48b39cbbdce9bbd8f1a6e9c2e",
+          "passed": 3,
+          "failed": 0
+        }
+      ],
+      "scope": "Existing music wire schema and read-only installed parameter presentation tests; not native desktop acceptance or a full parameter editor."
+    },
+    "cliBuild": {
+      "status": "PASS",
+      "log": "target/lifecycle-validation/m4-music-project-cli-build-r4.log",
+      "logSha256": "95a76fed1d99ca07b82ff1b2b2cbe3a8a5eca9b5e7bfb542dcd6cae65dc6dc73",
+      "binarySha256": "425856eb7377b989f4c41fe76a4497e953959e0a30be9d54b28de34c34d1f650"
+    },
+    "selfTestRecipe": {
+      "directory": "target/lifecycle-validation/m4-native-catalog-recipe-20261115-r3",
+      "status": "TOOL_EXECUTION_PASS_FINAL_REPORT_PARTIAL",
+      "originalCheckerStatus": "FAIL",
+      "originalEvidenceSha256": "5a6c6235c98c3417930ca665f9621ae069afabb97effc8142124893dd1ee1038",
+      "functionalAuditSha256": "07be179269561a6fa7984a77e0805d18e06fc795be57e45b5dee0bb11b6fee12",
+      "cliSha256": "425856eb7377b989f4c41fe76a4497e953959e0a30be9d54b28de34c34d1f650",
+      "toolSuites": 5,
+      "toolTestsPassed": 53,
+      "toolTestsFailed": 0,
+      "finalReport": "Correct table and total; optional ending truncated. Original checker also rejects passed instead of exact uppercase PASS. Full recipe/report acceptance remains pending."
+    }
+  }
+}

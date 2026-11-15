@@ -121,6 +121,7 @@ pub(crate) async fn execute_prepared_task_controlled(
         NativeTaskPlan::Generation(task) => configurations.save_generation(task).await?,
         NativeTaskPlan::PocketTts(task) => configurations.save_pocket_tts(task).await?,
         NativeTaskPlan::Qwen3Asr(task) => configurations.save_qwen3_asr(task).await?,
+        NativeTaskPlan::StableAudioMusic(task) => configurations.save_music(task).await?,
     };
     let output = NativeTaskRuntime::execute_cancellable(
         installation.repository(),

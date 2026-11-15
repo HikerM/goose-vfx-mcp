@@ -34,6 +34,7 @@ const messages = defineMessages({
   options: { id: 'installedTasks.options', defaultMessage: 'Choices: {values}' },
   language: { id: 'installedTasks.language', defaultMessage: 'Model language: {language}' },
   rate: { id: 'installedTasks.rate', defaultMessage: 'Output sample rate: {rate} Hz' },
+  channels: { id: 'installedTasks.channels', defaultMessage: 'Output channels: {count}' },
   unsupported: { id: 'installedTasks.unsupported', defaultMessage: 'Unsupported parameters' },
   unknown: { id: 'installedTasks.unknown', defaultMessage: 'Support unverified' },
 });
@@ -51,6 +52,7 @@ const intents = defineMessages({
   },
   speech_synthesis: { id: 'installedTasks.speech', defaultMessage: 'Speech synthesis' },
   transcription: { id: 'installedTasks.transcription', defaultMessage: 'Transcription' },
+  text_to_music: { id: 'installedTasks.music', defaultMessage: 'Text to music' },
 } satisfies Record<NativeTaskIntentDto, { id: string; defaultMessage: string }>);
 
 const selectClass =
@@ -106,10 +108,12 @@ function TaskFields({ task }: { task: NativeTaskDescriptionDto }) {
   });
   return (
     <>
-      {descriptor.family === 'pocket_tts' && (
+      {(descriptor.family === 'pocket_tts' || descriptor.family === 'stable_audio_music') && (
         <p>
-          {t(messages.language, { language: descriptor.parameters.modelLanguage })} ·{' '}
-          {t(messages.rate, { rate: descriptor.parameters.outputSampleRate })}
+          {descriptor.family === 'pocket_tts'
+            ? t(messages.language, { language: descriptor.parameters.modelLanguage })
+            : t(messages.channels, { count: descriptor.parameters.outputChannels })}{' '}
+          · {t(messages.rate, { rate: descriptor.parameters.outputSampleRate })}
         </p>
       )}
       <dl>{rows}</dl>

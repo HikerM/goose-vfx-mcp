@@ -28,6 +28,7 @@ pub enum NativeTaskIntent {
     TextToVideo,
     TextToVideoWithAudio,
     FirstFrameToVideoWithAudio,
+    TextToMusic,
     SpeechSynthesis,
     Transcription,
 }

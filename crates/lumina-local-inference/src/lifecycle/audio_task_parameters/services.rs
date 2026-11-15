@@ -317,7 +317,7 @@ impl ModelTaskParameterAdapter for Qwen3AsrParameterService {
     }
 }
 
-fn profile_for_binding(
+pub(super) fn profile_for_binding(
     protocol: AudioTaskProtocol,
     binding: &AudioTaskModelBinding,
 ) -> GenerationParameterResult<AudioTaskProfile> {
@@ -332,7 +332,7 @@ fn profile_for_binding(
         })
 }
 
-fn validate_protocol(
+pub(super) fn validate_protocol(
     profile: AudioTaskProfile,
     expected: AudioTaskProtocol,
     binding: &AudioTaskModelBinding,
@@ -347,7 +347,7 @@ fn validate_protocol(
     profile.validate(binding)
 }
 
-fn parse_request<T: DeserializeOwned>(
+pub(super) fn parse_request<T: DeserializeOwned>(
     value: Value,
     unsupported: &BTreeMap<String, String>,
 ) -> GenerationParameterResult<T> {
@@ -362,7 +362,7 @@ fn parse_request<T: DeserializeOwned>(
         .map_err(|error| invalid("request", "invalid_schema", &error.to_string()))
 }
 
-fn metadata(
+pub(super) fn metadata(
     descriptor: &impl Serialize,
     identity: &TaskParameterIdentity,
     binding: &AudioTaskModelBinding,
@@ -395,7 +395,11 @@ pub(super) fn identity(field: &str, value: &str) -> GenerationParameterResult<()
     Ok(())
 }
 
-fn native_text(field: &str, value: &str, required: bool) -> GenerationParameterResult<()> {
+pub(super) fn native_text(
+    field: &str,
+    value: &str,
+    required: bool,
+) -> GenerationParameterResult<()> {
     if (required && value.trim().is_empty()) || value.len() > 16_384 || value.contains('\0') {
         return Err(invalid(
             field,
@@ -414,7 +418,7 @@ fn native_text(field: &str, value: &str, required: bool) -> GenerationParameterR
     Ok(())
 }
 
-fn bounded_int(field: &str, value: u32, minimum: u32) -> GenerationParameterResult<()> {
+pub(super) fn bounded_int(field: &str, value: u32, minimum: u32) -> GenerationParameterResult<()> {
     if value < minimum || value > i32::MAX as u32 {
         return Err(invalid(
             field,
@@ -461,14 +465,14 @@ fn media(
     Ok(())
 }
 
-fn literal(args: &mut Vec<NativeAudioArgument>, flag: &str, value: impl Into<String>) {
+pub(super) fn literal(args: &mut Vec<NativeAudioArgument>, flag: &str, value: impl Into<String>) {
     args.extend([
         NativeAudioArgument::Literal(flag.into()),
         NativeAudioArgument::Literal(value.into()),
     ]);
 }
 
-fn common_arguments(profile: AudioTaskProfile, task: &str) -> Vec<NativeAudioArgument> {
+pub(super) fn common_arguments(profile: AudioTaskProfile, task: &str) -> Vec<NativeAudioArgument> {
     let mut args = Vec::new();
     literal(&mut args, "--task", task);
     literal(&mut args, "--family", profile.family());

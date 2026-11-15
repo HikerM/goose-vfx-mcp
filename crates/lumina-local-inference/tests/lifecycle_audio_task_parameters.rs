@@ -96,6 +96,10 @@ fn external_audio_models_select_their_own_language_options_and_defaults() {
         let dir = tempfile::tempdir().unwrap();
         let catalog = dir.path().join("catalog.json");
         let models = [
+            ("music-low-rate", json!({"protocol":"stable_audio_music_offline",
+                "defaults":{"durationSeconds":2.5,"steps":16,"guidanceScale":2.0,"apgScale":0.5,"sampler":"euler",
+                    "durationPaddingSeconds":0.25,"truncateToDuration":true,"chunkedDecode":false},
+                "output":{"sampleRate":24000,"channels":1,"maxSampleFrames":240640,"alignmentFrames":512}})),
             ("speech-fr", json!({"protocol":"pocket_tts_offline","language":"french","temperature":0.7})),
             ("speech-es", json!({"protocol":"pocket_tts_offline","language":"spanish","temperature":0.5})),
             ("asr-zh", json!({"protocol":"qwen3_asr_offline","languages":["chinese"],"defaultLanguage":"chinese","maxTokens":128})),
@@ -151,6 +155,26 @@ fn external_audio_models_select_their_own_language_options_and_defaults() {
             selected
         );
     }
+    let music = StableAudioMusicParameterService::new(binding(profile("music-low-rate"))).unwrap();
+    let prepared = music
+        .compile_json(json!({"sessionId":"m","jobId":"j","prompt":"drums"}))
+        .unwrap();
+    assert_eq!(prepared.snapshot().parameters.steps, 16);
+    assert_eq!(
+        prepared.snapshot().parameters.sampler,
+        StableAudioSampler::Euler
+    );
+    assert_eq!(
+        prepared.snapshot().output_spec().unwrap(),
+        StableAudioMusicOutputSpec {
+            sample_rate: 24000,
+            channels: 1,
+            sample_frames: 60000
+        }
+    );
+    assert!(music
+        .compile_json(json!({"sessionId":"m","jobId":"j","prompt":"drums","durationSeconds":11}))
+        .is_err());
     let service = Qwen3AsrParameterService::new(binding(profile("asr-zh"))).unwrap();
     assert_eq!(
         service.descriptor().recognition_languages,
@@ -669,4 +693,321 @@ fn native_option_like_text_is_rejected_but_shell_text_remains_one_literal() {
     let mut negative_number = tts();
     negative_number.text = "-5".into();
     assert!(tts_service().compile(negative_number).is_ok());
+}
+
+#[test]
+fn music_parameters_bind_the_full_engine_and_reject_forged_snapshots() {
+    let profile = AudioTaskProfile::StableAudioSmallMusicCpu;
+    let service = StableAudioMusicParameterService::new(binding(profile)).unwrap();
+    assert!(
+        StableAudioMusicParameterService::new(binding(AudioTaskProfile::PocketTtsEnglishCpu))
+            .is_err()
+    );
+    assert_eq!(
+        NativeTaskEngineRegistry::configuration_key(&profile.runtime_build()).unwrap(),
+        "LUMINA_AUDIO_MUSIC_CPU_CLI"
+    );
+    assert_eq!(
+        NativeTaskEngineRegistry::configuration_key(&profile.legacy_runtime_build()).unwrap(),
+        "LUMINA_AUDIO_MUSIC_LEGACY_CPU_CLI"
+    );
+    let request =
+        json!({"sessionId":"music-session","jobId":"music-job","prompt":"A solo piano","seed":42});
+    let t = service.compile_json(request.clone()).unwrap();
+    let s = t.snapshot();
+    assert_eq!(
+        s.output_spec().unwrap(),
+        StableAudioMusicOutputSpec {
+            sample_rate: 44100,
+            channels: 2,
+            sample_frames: 176400
+        }
+    );
+    assert_eq!(
+        s.digest().unwrap(),
+        service
+            .compile_json(request.clone())
+            .unwrap()
+            .snapshot()
+            .digest()
+            .unwrap()
+    );
+    let args = t.arguments();
+    assert_eq!(flag(args, "--text"), &string("A solo piano"));
+    for value in [
+        "duration_sec=4",
+        "num_inference_steps=8",
+        "guidance_scale=1",
+        "apg_scale=1",
+        "sampler_mode=pingpong",
+        "seed=42",
+        "duration_padding_sec=6",
+        "batch_size=1",
+        "chunked_decode=true",
+        "truncate_output_to_duration=true",
+    ] {
+        assert!(
+            args.windows(2)
+                .any(|pair| pair == [string("--request-option"), string(value)]),
+            "{value}"
+        );
+    }
+    let mut altered = s.clone();
+    altered.metadata.cpu_threads += 1;
+    assert!(service.validate_snapshot(&altered).is_err());
+    altered = s.clone();
+    altered.metadata.derivation = Some(AudioTaskDerivation {
+        parent_job_id: "invented".into(),
+        parent_snapshot_digest: s.digest().unwrap(),
+        change: None,
+    });
+    assert!(service.validate_parent(&altered, s).is_err());
+    for (name, value) in [
+        ("prompt", json!("a|b")),
+        ("negativePrompt", json!("x|y")),
+        ("durationSeconds", json!(121)),
+        ("durationSeconds", json!(0)),
+        ("durationPaddingSeconds", json!(-1)),
+        ("steps", json!(0)),
+        ("steps", json!(i32::MAX)),
+        ("sampler", json!("unknown")),
+        ("voiceReference", json!("voice")),
+        ("batchSize", json!(2)),
+    ] {
+        let mut r = request.clone();
+        r[name] = value;
+        assert!(service.compile_json(r).is_err(), "{name}");
+    }
+    let mut largest_representable = request.clone();
+    largest_representable["steps"] = json!(i32::MAX - 1);
+    assert!(service.compile_json(largest_representable).is_ok());
+    let mut r = request;
+    r["truncateToDuration"] = json!(false);
+    r["negativePrompt"] = json!("siren");
+    r["sampler"] = json!("euler");
+    let t = service.compile_json(r).unwrap();
+    assert_eq!(t.snapshot().output_spec().unwrap().sample_frames, 442368);
+    assert!(t.arguments().contains(&string("negative_prompt=siren")));
+    assert!(t.arguments().contains(&string("sampler_mode=euler")));
+}
+
+#[test]
+fn music_reuse_preserves_effective_options_for_every_single_parameter_patch() {
+    let service =
+        StableAudioMusicParameterService::new(binding(AudioTaskProfile::StableAudioSmallMusicCpu))
+            .unwrap();
+    let first = service
+        .compile_json(json!({"sessionId":"music-session","jobId":"first",
+        "prompt":"Piano with rain","negativePrompt":"voices"}))
+        .unwrap();
+    let parent = first.snapshot();
+    let patches = [
+        json!({"prompt":"Soft drums"}),
+        json!({"negativePrompt":"siren"}),
+        json!({"negativePrompt":null}),
+        json!({"durationSeconds":3.5}),
+        json!({"steps":12}),
+        json!({"guidanceScale":2.0}),
+        json!({"apgScale":0.5}),
+        json!({"sampler":"euler"}),
+        json!({"seed":u32::MAX}),
+        json!({"durationPaddingSeconds":2.0}),
+        json!({"truncateToDuration":false}),
+        json!({"chunkedDecode":false}),
+    ];
+    for (index, value) in patches.iter().enumerate() {
+        let (field, after) = value.as_object().unwrap().iter().next().unwrap();
+        let child = service
+            .reuse_configuration(
+                "music-session",
+                parent,
+                &parent.digest().unwrap(),
+                &format!("child-{index}"),
+                serde_json::from_value(value.clone()).unwrap(),
+            )
+            .unwrap();
+        let snapshot = child.snapshot();
+        let mut expected = serde_json::to_value(&parent.parameters).unwrap();
+        let before = expected[field].clone();
+        expected[field] = after.clone();
+        assert_eq!(
+            serde_json::to_value(&snapshot.parameters).unwrap(),
+            expected
+        );
+        let lineage = snapshot.metadata.derivation.as_ref().unwrap();
+        assert_eq!(lineage.parent_job_id, "first");
+        assert_eq!(lineage.parent_snapshot_digest, parent.digest().unwrap());
+        assert_eq!(
+            lineage.change,
+            Some(AudioTaskParameterChange {
+                field: field.clone(),
+                before,
+                after: after.clone(),
+            })
+        );
+        let restored: StableAudioMusicSnapshot =
+            serde_json::from_str(&serde_json::to_string(snapshot).unwrap()).unwrap();
+        service.validate_snapshot(&restored).unwrap();
+        service.validate_parent(&restored, parent).unwrap();
+        let spec = restored.output_spec().unwrap();
+        assert_eq!(spec.sample_rate, 44100);
+        assert_eq!(spec.channels, 2);
+    }
+    let unchanged = service
+        .reuse_configuration(
+            "music-session",
+            parent,
+            &parent.digest().unwrap(),
+            "same",
+            StableAudioMusicPatch::Steps(8),
+        )
+        .unwrap();
+    assert!(unchanged
+        .snapshot()
+        .metadata
+        .derivation
+        .as_ref()
+        .unwrap()
+        .change
+        .is_none());
+    service
+        .validate_parent(unchanged.snapshot(), parent)
+        .unwrap();
+    let clear = service
+        .reuse_configuration(
+            "music-session",
+            parent,
+            &parent.digest().unwrap(),
+            "clear",
+            StableAudioMusicPatch::NegativePrompt(None),
+        )
+        .unwrap();
+    assert!(!clear
+        .arguments()
+        .iter()
+        .any(|a| matches!(a,NativeAudioArgument::Literal(v) if v.starts_with("negative_prompt="))));
+    let grandchild = service
+        .reuse_configuration(
+            "music-session",
+            clear.snapshot(),
+            &clear.snapshot().digest().unwrap(),
+            "third",
+            StableAudioMusicPatch::Prompt("A violin solo".into()),
+        )
+        .unwrap();
+    service
+        .validate_parent(grandchild.snapshot(), clear.snapshot())
+        .unwrap();
+    assert!(service
+        .validate_parent(grandchild.snapshot(), parent)
+        .is_err());
+    assert_eq!(
+        grandchild.snapshot().parameters.seed,
+        parent.parameters.seed
+    );
+}
+
+#[test]
+fn music_reuse_rejects_foreign_identity_unknown_patches_and_forged_lineage() {
+    let service =
+        StableAudioMusicParameterService::new(binding(AudioTaskProfile::StableAudioSmallMusicCpu))
+            .unwrap();
+    let first = service
+        .compile_json(
+            json!({"sessionId":"music-session","jobId":"first","prompt":"Piano","seed":42}),
+        )
+        .unwrap();
+    let parent = first.snapshot();
+    let digest = parent.digest().unwrap();
+    let other = Sha256Digest::of_bytes(b"unrelated");
+    for (session, job, expected) in [
+        ("foreign", "second", &digest),
+        ("music-session", "first", &digest),
+        ("music-session", "second", &other),
+    ] {
+        assert!(service
+            .reuse_configuration(
+                session,
+                parent,
+                expected,
+                job,
+                StableAudioMusicPatch::Seed(7)
+            )
+            .is_err());
+    }
+    for value in [
+        json!({}),
+        json!({"unknown":1}),
+        json!({"prompt":null}),
+        json!({"steps":null}),
+        json!({"seed":1,"prompt":"drum"}),
+        json!({"sampler":"unsupported"}),
+    ] {
+        assert!(serde_json::from_value::<StableAudioMusicPatch>(value).is_err());
+    }
+    for patch in [
+        StableAudioMusicPatch::Steps(i32::MAX as u32),
+        StableAudioMusicPatch::DurationSeconds(f32::INFINITY),
+        StableAudioMusicPatch::NegativePrompt(Some(String::new())),
+    ] {
+        assert!(service
+            .reuse_configuration("music-session", parent, &digest, "second", patch)
+            .is_err());
+    }
+    let child = service
+        .reuse_configuration(
+            "music-session",
+            parent,
+            &digest,
+            "second",
+            StableAudioMusicPatch::Prompt("Drums".into()),
+        )
+        .unwrap();
+    let mut corrupted = child.snapshot().clone();
+    corrupted
+        .metadata
+        .derivation
+        .as_mut()
+        .unwrap()
+        .change
+        .as_mut()
+        .unwrap()
+        .after = json!("unexecuted");
+    assert!(service.validate_snapshot(&corrupted).is_err());
+    corrupted = child.snapshot().clone();
+    corrupted
+        .metadata
+        .derivation
+        .as_mut()
+        .unwrap()
+        .change
+        .as_mut()
+        .unwrap()
+        .before = json!("invented previous prompt");
+    assert!(service.validate_parent(&corrupted, parent).is_err());
+    corrupted = child.snapshot().clone();
+    corrupted.parameters.seed = 8;
+    assert!(service.validate_parent(&corrupted, parent).is_err());
+    corrupted = child.snapshot().clone();
+    corrupted
+        .metadata
+        .derivation
+        .as_mut()
+        .unwrap()
+        .parent_snapshot_digest = other;
+    assert!(service.validate_parent(&corrupted, parent).is_err());
+    corrupted = child.snapshot().clone();
+    corrupted
+        .metadata
+        .derivation
+        .as_mut()
+        .unwrap()
+        .parent_job_id = "missing-parent".into();
+    assert!(service.validate_parent(&corrupted, parent).is_err());
+    corrupted = child.snapshot().clone();
+    corrupted.metadata.derivation = None;
+    assert!(service.validate_parent(&corrupted, parent).is_err());
+    corrupted = child.snapshot().clone();
+    corrupted.metadata.cpu_threads += 1;
+    assert!(service.validate_snapshot(&corrupted).is_err());
 }

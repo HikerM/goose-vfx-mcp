@@ -98,7 +98,7 @@ impl Qwen3AsrPatch {
     }
 }
 
-fn invalid_parent() -> GenerationParameterError {
+pub(super) fn invalid_parent() -> GenerationParameterError {
     invalid(
         "parent",
         "invalid_snapshot",
@@ -106,7 +106,7 @@ fn invalid_parent() -> GenerationParameterError {
     )
 }
 
-fn change_between<T: Serialize>(
+pub(super) fn change_between<T: Serialize>(
     before: &T,
     after: &T,
 ) -> GenerationParameterResult<Option<AudioTaskParameterChange>> {
@@ -133,14 +133,14 @@ fn change_between<T: Serialize>(
     Ok(change)
 }
 
-fn old_value<P: DeserializeOwned>(
+pub(super) fn old_value<P: DeserializeOwned>(
     change: &AudioTaskParameterChange,
 ) -> GenerationParameterResult<P> {
     let object = serde_json::Map::from_iter([(change.field.clone(), change.before.clone())]);
     serde_json::from_value(Value::Object(object)).map_err(|_| invalid_parent())
 }
 
-fn validate_metadata(
+pub(super) fn validate_metadata(
     stored: &AudioTaskSnapshotMetadata,
     mut canonical: AudioTaskSnapshotMetadata,
 ) -> GenerationParameterResult<()> {
@@ -157,7 +157,7 @@ fn validate_metadata(
     Ok(())
 }
 
-fn child_metadata(
+pub(super) fn child_metadata(
     parent: &AudioTaskSnapshotMetadata,
     session_id: &str,
     job_id: &str,
@@ -192,7 +192,7 @@ fn child_metadata(
     })
 }
 
-fn compare_parent<T: Serialize>(
+pub(super) fn compare_parent<T: Serialize>(
     child: &AudioTaskSnapshotMetadata,
     child_parameters: &T,
     parent: &AudioTaskSnapshotMetadata,

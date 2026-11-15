@@ -48,13 +48,17 @@ enum ExpectedOutput {
         with_audio: bool,
         fps: u32,
     },
-    Speech,
+    Audio {
+        sample_rate: u32,
+        channels: u16,
+        sample_frames: Option<u64>,
+    },
     Transcript,
 }
 
 impl ExpectedOutput {
-    fn from_plan(plan: &NativeTaskPlan) -> Self {
-        match plan {
+    fn from_plan(plan: &NativeTaskPlan) -> Result<Self> {
+        Ok(match plan {
             NativeTaskPlan::Generation(task) => match &task.snapshot().parameters {
                 EffectiveGenerationParameters::Image(p) => Self::Image {
                     format: task.snapshot().engine.output_format,
@@ -70,9 +74,21 @@ impl ExpectedOutput {
                     fps: p.fps,
                 },
             },
-            NativeTaskPlan::PocketTts(_) => Self::Speech,
+            NativeTaskPlan::PocketTts(_) => Self::Audio {
+                sample_rate: 24_000,
+                channels: 1,
+                sample_frames: None,
+            },
+            NativeTaskPlan::StableAudioMusic(task) => {
+                let output = task.snapshot().output_spec()?;
+                Self::Audio {
+                    sample_rate: output.sample_rate,
+                    channels: output.channels,
+                    sample_frames: Some(output.sample_frames),
+                }
+            }
             NativeTaskPlan::Qwen3Asr(_) => Self::Transcript,
-        }
+        })
     }
 
     fn inspect(self, file: &mut File) -> Result<formats::ValidatedMedia> {
@@ -122,13 +138,24 @@ impl ExpectedOutput {
                     && u64::from(fps) * u64::from(*fps_denominator) == u64::from(*fps_numerator)
             }
             (
-                Self::Speech,
+                Self::Audio {
+                    sample_rate,
+                    channels,
+                    sample_frames,
+                },
                 MediaSpec::Audio {
-                    sample_rate: 24_000,
-                    channels: 1,
+                    sample_rate: rate,
+                    channels: count,
+                    sample_frames: frames,
                     ..
                 },
-            ) => media.mime == "audio/wav" && is_pcm16_wav(file)?,
+            ) => {
+                media.mime == "audio/wav"
+                    && sample_rate == *rate
+                    && channels == *count
+                    && sample_frames.is_none_or(|expected| expected == *frames)
+                    && is_pcm16_wav(file)?
+            }
             _ => false,
         };
         ensure!(
@@ -140,7 +167,7 @@ impl ExpectedOutput {
 }
 
 // The shared WAV validator checks complete samples and accepts multiple encodings.
-// The frozen PocketTTS CLI specifically requested PCM16, which MediaSpec omits.
+// The native audio protocols request PCM16, which MediaSpec omits.
 fn is_pcm16_wav(file: &mut File) -> Result<bool> {
     file.seek(SeekFrom::Start(12))?;
     let end = file.metadata()?.len();
@@ -414,7 +441,7 @@ async fn import_readers(
             && config.identity().manifest_digest == plan.manifest_digest().as_str(),
         "Native task plan differs from its persisted configuration"
     );
-    let expected = ExpectedOutput::from_plan(plan);
+    let expected = ExpectedOutput::from_plan(plan)?;
     let total = readers.iter().try_fold(0_u64, |sum, file| {
         sum.checked_add(file.bytes)
             .context("Native task output length overflow")

@@ -80,6 +80,7 @@ impl AudioTaskProfile {
         match self.protocol() {
             AudioTaskProtocol::PocketTtsOffline => Self::PocketTtsEnglishCpu,
             AudioTaskProtocol::Qwen3AsrOffline => Self::Qwen3Asr06bCpu,
+            AudioTaskProtocol::StableAudioMusicOffline => Self::StableAudioSmallMusicCpu,
         }
     }
 

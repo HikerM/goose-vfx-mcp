@@ -61,10 +61,10 @@ impl NativeTaskEngineRegistry {
         }
         for profile in AudioTaskProfile::registered() {
             if profile.runtime_build() == *runtime {
-                return Ok("LUMINA_AUDIO_CPU_CLI");
+                return Ok(profile.engine_configuration_key());
             }
             if profile.legacy_runtime_build() == *runtime {
-                return Ok("LUMINA_AUDIO_LEGACY_CPU_CLI");
+                return Ok(profile.legacy_engine_configuration_key());
             }
         }
         anyhow::bail!("Native task runtime is not a pinned supported build")
