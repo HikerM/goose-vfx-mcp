@@ -1,0 +1,1352 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-15T11:12:03.588101+00:00",
+  "status": "CODE_AND_SYNTHETIC_REGRESSIONS_PASS_REAL_PROJECT_REUSE_NOT_RUN",
+  "scope": "Project-scoped cross-session parameter regeneration; not region or temporal editing, arbitrary-model support, desktop acceptance or complete M3/M4",
+  "sourceBaseCommit": "0a6a52135dd059d53e0edf6c247e313e70b886b0",
+  "sourceFilesSha256": {
+    "bin/test-lumina-music-domain.py": "200933487c0d36334f02954d02a02adffa0caea0dad2af19bbfbcbf12f0acb4c",
+    "bin/test-lumina-project-assets.py": "ab815b4419c16d69ec32b2c531f2397314dafc83d7728d6f56e73cbae6839de3",
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters.rs": "7546904d5f13a999ccb079afd5fd8c938a01fba8328d8a70c94e831e521566f2",
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/music_task_parameters.rs": "3a74fb305d6135bb3a035a8665004b660518f9ebae4d3cf73726569b50c75f6b",
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/reuse.rs": "bf362214cb4d34872f07dc569f335d995d8d741b9656eba0e9a080db1cb64760",
+    "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/services.rs": "481ab67cfb6838271d9c79658b4bb837b7ece17bd4c9c429101dff525e0868a6",
+    "crates/lumina-local-inference/src/lifecycle/mod.rs": "2ab25d3ae79f5504cfa9d961ba9250362f90f26d0393feb564b22e5f8223f745",
+    "crates/lumina-local-inference/src/lifecycle/project_task_scope.rs": "d1d870bf601b5ae5ce9173098c6a793db076b8b8fdc355cfac5e47a1b0e76561",
+    "crates/lumina-local-inference/src/lifecycle/task_parameters.rs": "df477f8a4f885de1f4473c3e0f87be07a04f7f725429b93a590fa46915a50493",
+    "crates/lumina-local-inference/src/lifecycle/task_parameters/compile.rs": "72cbb2928a7feca14fdc6a92c531da9c08beebf54f7114e1b184772551803256",
+    "crates/lumina-local-inference/src/lifecycle/task_resources.rs": "13815eca1d1fc22a140ba33b0ae4a658ddb2cce182735571cdff064e42177043",
+    "crates/lumina-local-inference/src/lifecycle/task_resources/music_probe.rs": "fa664effd74ada4b1383e0536442823522083f66217ec1bf62d6e6f58f38ca0c",
+    "crates/lumina-local-inference/src/lifecycle/task_resources/music_tokenizer_probe.cpp": "fd5f6885da48518b3f1ab9cc395a84a54e967b6aa04a0dd5dca945048531f654",
+    "crates/lumina-local-inference/src/lifecycle/task_resources/tests.rs": "0f4dccefcd14c6d43b49436621624eef41dbddb0924280470eeb96b29488dac7",
+    "crates/lumina-local-inference/tests/lifecycle_audio_task_parameters.rs": "0449c6f94f35f054f67adefae7c5319b4ebe2d11e288a405e5cb67189f245bf4",
+    "crates/lumina-local-inference/tests/lifecycle_task_parameters.rs": "435415c799eb9c4c1ad0739d6c4e6dc0346b453cdc62969bec166f486bd85564",
+    "crates/lumina-local-inference/tests/support/project_audio_task_scope.rs": "419499063962673b56dd4043a8a603395da0c7c41d6e7fab2e87cd4402917cd2",
+    "crates/lumina-local-inference/tests/support/project_generation_task_scope.rs": "5a91aad1499f6f0457b86798f2e1ae838642646fc8c15cfa840a1ed3aae72332",
+    "crates/lumina/src/agents/platform_extensions/native_tasks.rs": "51a1aa8a912c709dc8a8bbcbd45bc3756ef08a12a92c3d1ea4f81151d1ec335b",
+    "crates/lumina/src/agents/platform_extensions/native_tasks_project_assets_tests.rs": "7486d45ac09bcbeac6ec305a3fe483fae7fb1dfec0b34022b22d8f82ab40e802",
+    "crates/lumina/src/agents/platform_extensions/native_tasks_tests.rs": "aa575066bb4daa70878ac8e0d69fbb51f368edda4e75d64f90fd566f84ffeb81",
+    "crates/lumina/src/media/mod.rs": "1521d82b275dd9c3c03a7a79abd27a75770624ddac03102160bcb3dbd82b9e04",
+    "crates/lumina/src/media/project_assets.rs": "0f9463b02b70eb6998bf247b6fd9b3c7ef76c2ebe368909a76d872f8437a8a53",
+    "crates/lumina/src/media/project_task_reuse.rs": "350fd559b6d1e845961ddf10b158d99272de4f3ba07326b2641c9603f5821f3a",
+    "crates/lumina/src/media/project_task_reuse_generation_tests.rs": "a2919a30396bcf794dbfa21c8028b557af204cc6a84b6243840c95e89cd9f27f",
+    "crates/lumina/src/media/project_task_reuse_tests.rs": "bd0c33c0253f46828ee2a5e968163caebc834a70ee264e6683de273c064fde4b",
+    "crates/lumina/src/media/task_configuration.rs": "eb244f9b81cf30a8ff59feb282bca7efd10b95dffc7330e446235b8d1d4e677a",
+    "crates/lumina/src/media/task_inputs.rs": "fd17d263b4973acc3410ae0f63df39b66717ca48c2fecbaba65e328d8f986002",
+    "crates/lumina/src/media/task_publication.rs": "3d533309026d7768b11f2b32ec3e5b7bfc8791c632a7dec028b2de61710515bf",
+    "crates/lumina/src/media/task_service.rs": "1f0c3604bef72173dea2236a2748e840c750d1e1f8c408e70b427d62ae74b4ac",
+    "crates/lumina/src/media/task_service_tests.rs": "9b21bafb709737f4f09c6e4d7f04a78f2d838141ad3cefe9bbe4b75dcb5dd3f5",
+    "crates/lumina/src/project/assets.rs": "fe3c490c2fbf8d0f2d8708284f2d2bc2578fdd3863565859d940f08a644cbd78",
+    "crates/lumina/src/session/session_ids.rs": "fe778b03fcd43b5485f008409757a2a909df035169b5acc3201632311735c13f",
+    "crates/lumina/tests/support/music_publication_probe.rs": "8a93223a10df09495ef20d232426858a404f07fef21db2b5fde4ca1be92adb5e",
+    "lumina-self-test.yaml": "e112eb7fa1e7e9794350ef34826f10bbf9261670aa96b1f5cb35c9ce86fc13ba"
+  },
+  "implementation": [
+    "Project asset ID resolves parent configuration and inputs on the host; no caller-supplied parent snapshot or authorization",
+    "Existing Generation, PocketTTS, Qwen3ASR and StableAudioMusic compilation paths accept a validated project scope while old APIs retain session scope",
+    "Authorization, child configuration and project configuration archive persist in one transaction; original versions remain immutable",
+    "Lineage records parent asset identity and the single resolved parameter patch; multi-generation reuse has bounded one-parent authorization",
+    "Final inherited or replacement input files are verified; historical replaced inputs need not remain on disk",
+    "Dialogue project_reuse uses the existing task claims, cancellation and publication flow",
+    "Project resource context is separate from session execution and binds host implementation plus dependency identity; no project resource profile is registered"
+  ],
+  "hostBuild": {
+    "status": "PASS",
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-host-build-20261115-r2.log",
+    "sha256": "d183b98987fd5b0f5e60c86eba2e30bda125fc78d03302d8bc7c769b1e70bb05",
+    "binarySha256": "f165508575b343681f9beb9043c4833af18965f94612a7bd7d21611389bf8098",
+    "existingWarnings": 156
+  },
+  "focusedRegressions": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-focused-20261115-r2.json",
+    "sha256": "e474d855baf818bbb2e10ecd48b0954d3dd06becdcb82cc9e6f17d99304d033c",
+    "scope": "Synthetic project-asset storage, publication, scoped discovery and cross-session parameter reuse regressions; not real model inference, natural-language editing or desktop acceptance",
+    "totals": {
+      "passed": 35,
+      "failed": 0,
+      "ignored": 0,
+      "total": 35
+    }
+  },
+  "parameterRegressions": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-domain-20261115-r1.log",
+    "sha256": "c693e421d0b3d27eb9982803865b2b6ca0cefea7f3cf61a5bd1284abefb13145",
+    "counts": [
+      {
+        "status": "ok",
+        "passed": 27,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "status": "ok",
+        "passed": 24,
+        "failed": 0,
+        "ignored": 0
+      }
+    ]
+  },
+  "mediaRegressions": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-related-20261115-r2-0.log",
+    "sha256": "95e8969cb736b61346e5ad6c3d69c20ab379eb76e44c6b4cf3e4a2aa31bd39fd",
+    "counts": [
+      {
+        "status": "ok",
+        "passed": 108,
+        "failed": 0,
+        "ignored": 5
+      }
+    ]
+  },
+  "toolRegressions": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-related-20261115-r2-1.log",
+    "sha256": "d7aae30fc6e6c322fed510ef40deea3e118771f6f45258ca98ff605e6ea394ec",
+    "counts": [
+      {
+        "status": "ok",
+        "passed": 10,
+        "failed": 0,
+        "ignored": 1
+      }
+    ]
+  },
+  "resourceRegressions": {
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-resources-20261115-r2.log",
+    "sha256": "62b8779fde34cfd1798b86f48ab4f02c6d8368a3ade69df7e3f05122bc40c5e5",
+    "counts": [
+      {
+        "status": "ok",
+        "passed": 16,
+        "failed": 0,
+        "ignored": 3
+      }
+    ]
+  },
+  "countNote": "Suites overlap; ignored real-model probes are not passes. Earlier unrelated hook/session fixture failures remain recorded in project-assets evidence.",
+  "freshMusicDomain": {
+    "scope": "Fresh-task native execution, WAV publication and project archive only; test-only measurement admission",
+    "status": "BOUNDARIES_AND_INDEPENDENT_HOLDOUTS_MEASURED_STABILITY_UNRESOLVED",
+    "boundaryBatch": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-domain-boundaries-20261115-r2.json",
+      "sha256": "3116552f823dfa5983b29391f60e90bab71e298b5be0d09331a599e0edfbcd17"
+    },
+    "boundaryCount": 16,
+    "frozenCandidate": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-domain-frozen-budget-20261115-r1.json",
+      "sha256": "62f6da4801a162da766e98036081388746ae87d5d2cd23a06cecef3e3a709a40"
+    },
+    "candidateBudget": {
+      "hostRamBytes": 8858370048,
+      "temporaryOutputBytes": 67108864,
+      "publicationStorageBytes": 16777216,
+      "lifecycleTimeoutSeconds": 120
+    },
+    "holdouts": [
+      {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-holdout-english-20261115-r1\\result.json",
+        "sha256": "165ddc2e14a6fb8dc82c55f132423f05385da91f511027e0ea630ed8ade649f6",
+        "caseId": "holdout-english",
+        "status": "HOLDOUT_WITHIN_FROZEN_ENVELOPE",
+        "outputSha256": "927f8a50f152eb4554dde16be67cb355969ddd20dcfc5f5366014af1240ac879"
+      },
+      {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-holdout-unicode-20261115-r1\\result.json",
+        "sha256": "4f4c2029b5dc09b29cd6e260b5cf0c2a1a5b92a8fc7c62b60976760a70079d82",
+        "caseId": "holdout-unicode",
+        "status": "HOLDOUT_WITHIN_FROZEN_ENVELOPE",
+        "outputSha256": "0f197eaab1b72e96cf47d25eef46b55f8f6ed6d7bcf87ca229ea5c090794615b"
+      }
+    ],
+    "retainedFailures": [
+      {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-utf8-1023-20261115-r1\\result.json",
+        "sha256": "6089999411e976cdb0cbe4e914d78d6026fbf0d4a024559dac73ea51d41697b7",
+        "assessment": "Intermittent publication verification failure; root cause unresolved. Same binaries and input succeeded on diagnostic rerun; this is not a stability pass."
+      }
+    ],
+    "stabilityAccepted": false,
+    "productionBudgetRegistered": false,
+    "limitations": [
+      "Sampled disk peaks are lower bounds, not exhaustive maxima",
+      "Does not measure project reuse parent parsing, authorization persistence or version publication",
+      "No music quality or performance improvement claim",
+      "utf8-1023 first attempt failed after generation/archive with os error 2; same-binary rerun has identical WAV, exact failing path unknown"
+    ],
+    "manifestEvidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-domain-20261115-cases-r3.json",
+      "sha256": "63b98dfcb8459d8bb46048c6ba5d2d9d1195e0b898cc565e4fcab8b88b5da75d"
+    },
+    "manifest": {
+      "schemaVersion": 1,
+      "protocol": "project-music-domain-measurement-v1",
+      "preparationTool": {
+        "path": "bin/test-lumina-music-domain.py",
+        "sha256": "200933487c0d36334f02954d02a02adffa0caea0dad2af19bbfbcbf12f0acb4c",
+        "versionedOracleSource": "crates/lumina-local-inference/src/lifecycle/task_resources/music_tokenizer_probe.cpp",
+        "oracleSourceSha256": "fd5f6885da48518b3f1ab9cc395a84a54e967b6aa04a0dd5dca945048531f654",
+        "historicalReceiptPreservesOriginalCompilationSource": true
+      },
+      "status": "TOKEN_EVIDENCE_COMPLETE_PROBES_REQUIRED",
+      "scope": "Unapproved candidate prompt/seed resource domain; no quality or production-admission claim",
+      "proposedDomain": {
+        "promptUtf8Bytes": {
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "seed": {
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "fixedParameters": {
+          "negativePrompt": null,
+          "durationSeconds": 4.0,
+          "steps": 8,
+          "guidanceScale": 1.0,
+          "apgScale": 1.0,
+          "sampler": "pingpong",
+          "durationPaddingSeconds": 6.0,
+          "truncateToDuration": true,
+          "chunkedDecode": true
+        },
+        "compilerRulesRemainRequired": true,
+        "rawTokenCountsAreNotWordCounts": true
+      },
+      "engineSha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b",
+      "modelWeightsSha256": "a6d9176e11b857409b28cf5a69f4fefd8f3e61907b3b10d867f1f4c0a7eb9418",
+      "tokenizerModelSha256": "61a7b147390c64585d6c3543dd6fc636906c9af3865a5548f27f31aee1d4c8e2",
+      "modelConfigSha256": "100776f25af5aa83f70e0c6b384de6690cb4e5ad01c24f7cfbb6524d18765f06",
+      "nativeSources": {
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/framework/tokenizers/sentencepiece.cpp": "cc86ca90adcd8b61d3f579eccf075c68220ef6ac73b5344519e098a40fe75196",
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/framework/assets/tensor_source.cpp": "b58e4261c8a90e7e90aa852a71a71e46d8a5a6a56fb5879a9c80654dc1c131b9",
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/models/stable_audio/conditioner.cpp": "01289195e0ca7916f92ecea8dca9cf18d2fcad6e2e8648b718dba820d0e359fe",
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/models/stable_audio/t5gemma.cpp": "f674bb9d3f6192cad0ede970e95ae9d1a193c16f87f601a87219017bf3156e15",
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/models/stable_audio/request.cpp": "9f08ef59434ca7687c74304000e54b55fb22d4433568f415db2d509306cc00b5",
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/models/stable_audio/session.cpp": "880bb875b0cdb860a7d0322218fcd1d9c706081e79271b7be5a5f39a085226c9",
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/models/stable_audio/rf_dit.cpp": "d66d6c73a1403d762241b609230cb0403cf086f1a262251663bbed7df2a1ded0",
+        "target/runtime-engines/audio-cpp/c0cd77fa80285f8113883e0de06ffc781cf502f6/source/src/models/stable_audio/sampler.cpp": "16023f8e77869094821d15475e8b2959fb812349863a1b1dca582c5c859f8761"
+      },
+      "tokenEvidence": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-tokenizer-20261115-r2.json",
+        "sha256": "80b2df3e4e8ccfb72e4a8dd16668c3641bd855bb7f26bc58cabf347465afe858",
+        "oracleSha256": "e2189bf000a34603df92dbb91b88139645b1f3efc3da82d398dbed5f0e5c8c26"
+      },
+      "unresolvedCases": [],
+      "cases": [
+        {
+          "caseId": "seed-0",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+            "seed": 0
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 76,
+          "tokenEvidence": {
+            "rawCount": 16,
+            "effectiveCount": 16,
+            "rawIdsSha256": "3d51954e08d2b2b3ad1721460ed988cf182df10dcb408b354180433fb30cbe1f",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "seed-1",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+            "seed": 1
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 76,
+          "tokenEvidence": {
+            "rawCount": 16,
+            "effectiveCount": 16,
+            "rawIdsSha256": "3d51954e08d2b2b3ad1721460ed988cf182df10dcb408b354180433fb30cbe1f",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "seed-42",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+            "seed": 42
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 76,
+          "tokenEvidence": {
+            "rawCount": 16,
+            "effectiveCount": 16,
+            "rawIdsSha256": "3d51954e08d2b2b3ad1721460ed988cf182df10dcb408b354180433fb30cbe1f",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "seed-2147483647",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+            "seed": 2147483647
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 76,
+          "tokenEvidence": {
+            "rawCount": 16,
+            "effectiveCount": 16,
+            "rawIdsSha256": "3d51954e08d2b2b3ad1721460ed988cf182df10dcb408b354180433fb30cbe1f",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "seed-2147483648",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+            "seed": 2147483648
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 76,
+          "tokenEvidence": {
+            "rawCount": 16,
+            "effectiveCount": 16,
+            "rawIdsSha256": "3d51954e08d2b2b3ad1721460ed988cf182df10dcb408b354180433fb30cbe1f",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "seed-4294967295",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+            "seed": 4294967295
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 76,
+          "tokenEvidence": {
+            "rawCount": 16,
+            "effectiveCount": 16,
+            "rawIdsSha256": "3d51954e08d2b2b3ad1721460ed988cf182df10dcb408b354180433fb30cbe1f",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "short-one-byte",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "a",
+            "seed": 7
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 1,
+          "tokenEvidence": {
+            "rawCount": 1,
+            "effectiveCount": 1,
+            "rawIdsSha256": "1217e2dbe3d467284f244ab7e942bc1da52fe416aead3e30a7799bd293521d14",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "unicode-cjk",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "清澈钢琴与柔和弦乐，缓慢节奏，纯器乐，没有人声。",
+            "seed": 123
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 72,
+          "tokenEvidence": {
+            "rawCount": 18,
+            "effectiveCount": 18,
+            "rawIdsSha256": "16ffe5d36b1b06c61c089ea83c03cbfb10b6e46254cb5ec38eb3599574623e61",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "unicode-combining",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "Café, naïve strings; 雨音 🎹, gentle rhythm.",
+            "seed": 456
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 51,
+          "tokenEvidence": {
+            "rawCount": 14,
+            "effectiveCount": 14,
+            "rawIdsSha256": "4fb08dd5878e68d913f3a453cecd9b20fee1059aed513cc08e82e67df8da2f53",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "utf8-1023",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 aaa",
+            "seed": 9001
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 1023,
+          "tokenEvidence": {
+            "rawCount": 256,
+            "effectiveCount": 256,
+            "rawIdsSha256": "c913a8861e6ef25da7fd8b375ed4c7e22b3e23a23816ebc193e37f70bef10633",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "utf8-1024",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 aaaa",
+            "seed": 9002
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 1024,
+          "tokenEvidence": {
+            "rawCount": 257,
+            "effectiveCount": 256,
+            "rawIdsSha256": "53295e3ad50193d2022ccd4250dd981f7198a97dd653c737bc2019bc3f8bf5b6",
+            "truncated": true
+          }
+        },
+        {
+          "caseId": "ascii-1024",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano aaaa",
+            "seed": 9003
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 1024,
+          "tokenEvidence": {
+            "rawCount": 172,
+            "effectiveCount": 172,
+            "rawIdsSha256": "23dfd8327772b07f07a530afeedc26478b48601d534bc0b43b97bacdac1d45d5",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "combining-1024",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééa",
+            "seed": 9004
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 1024,
+          "tokenEvidence": {
+            "rawCount": 683,
+            "effectiveCount": 256,
+            "rawIdsSha256": "36040e35882214a58df8ad638b4fb78ceee2104c224b2a9fe1924723a55067e9",
+            "truncated": true
+          }
+        },
+        {
+          "caseId": "tokens-255",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+            "seed": 1255
+          },
+          "expectedRawTokenCount": 255,
+          "promptUtf8Bytes": 509,
+          "tokenEvidence": {
+            "rawCount": 255,
+            "effectiveCount": 255,
+            "rawIdsSha256": "0900f6d84089284520c89a60c86836aa66cab0f5dc964befe9d0ee76a74bdda1",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "tokens-256",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+            "seed": 1256
+          },
+          "expectedRawTokenCount": 256,
+          "promptUtf8Bytes": 511,
+          "tokenEvidence": {
+            "rawCount": 256,
+            "effectiveCount": 256,
+            "rawIdsSha256": "3ce38086be0dd7c44d83c043c1f6aeb6651a6ce0290fe33838e38e01c7cb4be4",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "tokens-257",
+          "stage": "boundary",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+            "seed": 1257
+          },
+          "expectedRawTokenCount": 257,
+          "promptUtf8Bytes": 513,
+          "tokenEvidence": {
+            "rawCount": 257,
+            "effectiveCount": 256,
+            "rawIdsSha256": "3533c7b9fd282dffe9f4e2a02c79146a25d685f1e5622a4d1338be13b183ce0d",
+            "truncated": true
+          }
+        },
+        {
+          "caseId": "holdout-english",
+          "stage": "holdout",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "A dry marimba plays a syncopated ostinato beside soft brushed drums.",
+            "seed": 17
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 68,
+          "tokenEvidence": {
+            "rawCount": 17,
+            "effectiveCount": 17,
+            "rawIdsSha256": "83c63df8529b228c292c5c9b58a8527ac2fc17e46c4b9be1b4fe6a92d92a34b5",
+            "truncated": false
+          }
+        },
+        {
+          "caseId": "holdout-unicode",
+          "stage": "holdout",
+          "parameters": {
+            "negativePrompt": null,
+            "durationSeconds": 4.0,
+            "steps": 8,
+            "guidanceScale": 1.0,
+            "apgScale": 1.0,
+            "sampler": "pingpong",
+            "durationPaddingSeconds": 6.0,
+            "truncateToDuration": true,
+            "chunkedDecode": true,
+            "prompt": "古筝与低音提琴对答，留白、轻微回响；sans voix, rythme paisible.",
+            "seed": 3500000123
+          },
+          "expectedRawTokenCount": null,
+          "promptUtf8Bytes": 81,
+          "tokenEvidence": {
+            "rawCount": 25,
+            "effectiveCount": 25,
+            "rawIdsSha256": "c94be978628c39a3ac697b501bd4e0b20a7a0dacd25709eedbf515231ebefedc",
+            "truncated": false
+          }
+        }
+      ],
+      "tokenizerRequests": [
+        {
+          "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+          "promptSha256": "e5c2485403c51a3e5359487e8b61a20e73b401a299e1404b4652d8bc8efb5fd3"
+        },
+        {
+          "prompt": "a",
+          "promptSha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+        },
+        {
+          "prompt": "清澈钢琴与柔和弦乐，缓慢节奏，纯器乐，没有人声。",
+          "promptSha256": "08279a161f4a1f26ba748f0c501776f40bd2a64a94e9b2b6adea550356963ced"
+        },
+        {
+          "prompt": "Café, naïve strings; 雨音 🎹, gentle rhythm.",
+          "promptSha256": "859a08130c63b6c9ef801d5b6d7d895c40beb3a6caa85aee27496a19c86ee289"
+        },
+        {
+          "prompt": "钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 aaa",
+          "promptSha256": "83042d911f799e289cd9b46cdb8249adb0778ae83daec87230a62d85913c924a"
+        },
+        {
+          "prompt": "钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 钢琴 🎹 aaaa",
+          "promptSha256": "f8088e797fc982d2dcd82755d8559f811ee5d78bdf70e3bb02d8fe119c39fbd5"
+        },
+        {
+          "prompt": "piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano piano aaaa",
+          "promptSha256": "511994ee9d8c617724d72b0b8752b1d99366886ed7442cca8043b6e7f40ff1ab"
+        },
+        {
+          "prompt": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééa",
+          "promptSha256": "ed44078df66f6150015b7eed8cd9f46dcc82fffd7a460841e3cbec822a7c8a01"
+        },
+        {
+          "prompt": "A dry marimba plays a syncopated ostinato beside soft brushed drums.",
+          "promptSha256": "d0e3cd20ea07f4f7f79b7d8fc89411628334b89fff690ec3587a56413e80a83a"
+        },
+        {
+          "prompt": "古筝与低音提琴对答，留白、轻微回响；sans voix, rythme paisible.",
+          "promptSha256": "e338e69b9755830a15820631a761fdfff78e95c67798014d80fad223c0b7fb3a"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "ef01f8181fa611c0d98d550bb4c6fb54888aedb53afb5be44653c48afc106668"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "c4385f837d1c0638256f0476186087f86bc5084cfc81444f24690c71316da4c8"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "0fb3c64a466ab427ae45f6aa0fbbb296058078512282fb0cd1074bdac1b12b3c"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "95fa5f642171d7dff6a8647be9044c9ffc201cbdb629e92a6df0b742deb50a4d"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "de386a54cafd47c32c4ba0dbd93a7bc0ecbc986a313d95faf3f65d3759b7f5dc"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "2bfc060aebf89039f04f276fc1d087dd7e376fbaf47263205da54c12e10c1a09"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "54715f6751291a8dd404a9020cd0ca40a1dad1b10fa6ed1e010657703b7ed9e5"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "54b1d157fe862ed2a2f7dbb6574d5298552d3cefd770878f43760e5a75fcbf7e"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "9fc3bb75ee5686e14c4d0ca667ec339043a75fe81bc4fb9066937dc24e8f95c0"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "b305178739c8f8d98420ac70e53a58afa71fb6d48e2fe640c07b112312b2c9d9"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "7cfe647d370ef22750f36e264457e5e0d75eb081823d4c3a85a135073a9178ba"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "e281ff3d75382d6d2a156b49a42a697c7f03e6a8f7343d9a2e9a9626a5cae8cc"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "f25f56ab131705654ab33d7e9c928ff089611bf2f5fd70c116e51988ab535191"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "c3e0aeef47bb217d0b0d9999ccf02506b330bea7584f4f8b51670b833a74f296"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "dc418b1ce7ffd2b82de0abba45c68e3b0ef0fc8ed3de4114360e790331605051"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "16946c32c69e6e6b637acd0f69fc6f53c6a9a6b41495462e26ce7a13aeecde79"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "67a3d7ef989a301b395c505729422e706e29ad6dffa292eadf3037b934a09615"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "ff7f018a48b9483b8bb56e73d2319bc7bc63b95037f39691745620adf4eb7e75"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "6b6ecbe532d9deec69da3e72b075540cc20abbbc1a8a6c5b80b2ba8b3cdf1efd"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "152cafba953ad52e0e3eb617c081567a781431ef8425caf86dcd75fdfa37426f"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "ca622f63cc2dcb08e30b8713cba64b3ffd20c60b038a423f02891d40b5d42af3"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "7e78d96d7f12ee9700667d7703fb2bfdc7d4992e951f88dd37de8b1ea5e4a79b"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "e9d3d3f05129c44b20c3a8a6e548cfd533741970b4db9b71a084ae0b02197066"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "e58793a05dc3d00acfcf24f4240a28420455a523efe2da00083b4ce0309953ba"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "952e82e8fd5eb827a1feb70f861137bc588655e4186967db95a5e3f6879691e6"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "3920223e31fa1ad6ff7f0b8215c40f2f2a306684d13343e0bd8d8ee7c73dbb4b"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "bd50edd23b85839f37701ad985e84360bf7eb1cfcfdaac00a0e3821aa6006605"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "e6189f1ab74ed7a029c176c15f1de693750c5c5d396b1b1cfb0c075b67d1dc17"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "ba7f3ffdc9ddf5313b02679132bc50c15bd1e68dd6004ba025ad12da2977b7ff"
+        },
+        {
+          "prompt": "a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a",
+          "promptSha256": "dbb4c28ee3e4b91fea3d7677d12d5cc3dd304561dd3e456e48b5ebe4dd9b4bbc"
+        }
+      ],
+      "outsideDomain": [
+        {
+          "reason": "byte-bound",
+          "promptUtf8Bytes": 1025
+        },
+        {
+          "reason": "fixed-field",
+          "steps": 9
+        },
+        {
+          "reason": "fixed-field",
+          "guidanceScale": 2.0
+        },
+        {
+          "reason": "fixed-field",
+          "negativePrompt": "vocals"
+        }
+      ],
+      "executionContract": {
+        "hostTest": "media::task_output::tests::music_probe::measure_installed_music_publication",
+        "env": "LUMINA_MUSIC_DOMAIN_CASE_FILE",
+        "requiredReports": [
+          "fixture.json",
+          "driver.json",
+          "owner.json",
+          "publication.json"
+        ],
+        "requiredCaseReceipt": "domainCaseSha256",
+        "requiredProjectReceipt": "projectArchive.verified/reopenedVerified",
+        "oldFixedFixtureProbesAreRejected": true,
+        "noAutomaticBudgetRegistration": true
+      }
+    },
+    "caseResults": [
+      {
+        "caseId": "seed-0",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-0-20261115-r1\\measurement.json",
+          "sha256": "06041544e39fb2006fee168bb287ddfe85bac7a5aaef17a608448998469764a7"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "71e2157457bf1a24d9f0357e01ad349d08ee9e44b300bd9542efcccf39769b60",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "77a43109b705dc535bc6abe1c6839abe86b42e23369deab1c001df39a83fc4aa",
+        "outputSha256": "92324b94d385d28b5b2bd01751ecc7d73ce49dd1665b4232c9fb88a5441ec12b",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7011409920
+      },
+      {
+        "caseId": "seed-1",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-1-20261115-r1\\measurement.json",
+          "sha256": "8f8b3a0fdb2c818c4f2b40008ce20529334269ab2c40a8b77bab657e6c045bad"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "e23367728bd1d0143717d547a4b53f99ed727eab6ea81f1338d796f5222bcb31",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "2ca28f4eb18a70930cfe4ab3d57cd1bc426bbe582347a0d2940674194c94c687",
+        "outputSha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010828288
+      },
+      {
+        "caseId": "seed-42",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-42-20261115-r1\\measurement.json",
+          "sha256": "db011587879f0663b1166e9ba4437b00c824e77d51e10abeee98d4c35461941a"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "84eebd344c2a745eb3162d85f0a63f216fafdd7001a75aacfb0a354183bf3f5f",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "a77065ac468a7c60096acaea69bd7b91e81965727dc576f7e33d6ad6c0ff450a",
+        "outputSha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010648064
+      },
+      {
+        "caseId": "seed-2147483647",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-2147483647-20261115-r1\\measurement.json",
+          "sha256": "b0d99e3d2cdd7d8d29346d4b4a0e385b8f1a78d54e46f88d6ef6c884352e1c1f"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "7a5a81da76c7ce9af52eae96ccbc23d7fec1f34d053693320aa3c174342b1694",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "0284c7a7a55d20440c6cea8bf242af883297293240f574bbe2f13b6f07ed7c20",
+        "outputSha256": "655017ac5519e4cfbb481670b91eb9b39f07987697ef72af3791654350a3c5d7",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7011319808
+      },
+      {
+        "caseId": "seed-2147483648",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-2147483648-20261115-r1\\measurement.json",
+          "sha256": "30222816da90bbc8bbf1bbe3293078247de9e2590a33a86f71287f3f2c0ac9ff"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "710c9512be13fc740ccfa48e986a95c11219ff932015474ea1a1f25e64824176",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "90e82671fa5bcdaa17863b14d78d413278d3249afedc60078438a71bdc38e28a",
+        "outputSha256": "a807830cf53d05744f86e2054081e9523c2fb8c461309cc695913f0aeb4f2986",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7011450880
+      },
+      {
+        "caseId": "seed-4294967295",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-4294967295-20261115-r1\\measurement.json",
+          "sha256": "030a4238f4551cb5a2dd45d4bb7d2636a6f9b794aa1869249647d3addb68e787"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "38b383928bf28c54e26c3e32571b4aecb57454c18a3382e30a328b30ba078c0e",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "922eae0a0c975235961c1d50d2a5601c7853cc0f716d21d403e1469f1a45c469",
+        "outputSha256": "34d6d17cbb9b9c86bfb0615d47ca8c4eab69388025dc17c62a025cc59a2d473a",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010889728
+      },
+      {
+        "caseId": "short-one-byte",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-short-one-byte-20261115-r1\\measurement.json",
+          "sha256": "153b50ceb963a35348e0615e6e30c4e1d4a4fd43920a6ac5d6d00c72bf82fbc2"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "21f9f4521a92d5d55d450ccd9df911d641164a874206f8fcd283459460ca0d90",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "6034316307c36858d59f2380267a242afb1e43009850ebb5ab6f1c215f893187",
+        "outputSha256": "13acb628f1e3dd605711e97c52460a8810a01468dc88a55cdff25c7a8c712f89",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010816000
+      },
+      {
+        "caseId": "unicode-cjk",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-unicode-cjk-20261115-r1\\measurement.json",
+          "sha256": "2a5f1c884089f0af742d49d184a4e1fae8313ffac381f74a9621c1abd55802d4"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "4c0177f1b452ac0ec11ffd45fdbd80a35de64068b5382b4914e58c22990589d0",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "157828d5e22555cf66b0cefef5ffbeb856aa3656c12fc804b23609701ff508e2",
+        "outputSha256": "511f771feba2789a7af00425d4a7c97baea8ce7eaf8a17c1865f9dc2d9b48b62",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010803712
+      },
+      {
+        "caseId": "unicode-combining",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-unicode-combining-20261115-r1\\measurement.json",
+          "sha256": "99330daa3b9debde6965756dbe362de06a588fb73554d981d13c9fd128debfab"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "88e1155e47d9934e47553ccc0b0514135d0467c6b2fb6d0eca0bdb166eac93bb",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "16b8ca519784239bc2c22168eb0db2eee4d09609a9362880252458024f671bfd",
+        "outputSha256": "935cf1d959431f372ff383f53773d9ea8858028f4ca28176dd9dd59ce32ae868",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010820096
+      },
+      {
+        "caseId": "utf8-1023",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-utf8-1023-20261115-r2\\measurement.json",
+          "sha256": "70384564361a39a356af6a1c69366a2d28e72bf824e4f3c49a36f117b1f4e3ef"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "175c83012426a8ca767f91a54cc0b5b3049550b14a7bbb01b363b27651bed5cf",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "3eac2afdd1a3aea45422f7bad6e11559fe29b6c40249c09a043029146448bd73",
+        "outputSha256": "6edcaf34744f45bdb2fed212b2dc73a012ce4767234096d3a13f0901221ce685",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010836480
+      },
+      {
+        "caseId": "utf8-1024",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-utf8-1024-20261115-r1\\measurement.json",
+          "sha256": "8921e5fe723a629954a4c58373d847a46d352d926361fb02a51ae52963492f59"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "53f4c1f80520868999914afbabf94dc6151f943b8f55543ec29c379b2a131b61",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "47eae1ebf21968971bcd297a650cd785f68c12831d3e366276b873ce56de4990",
+        "outputSha256": "88c9a17030b38c5c415fb1a1f7102d0289f2e5dd2ba6a0b5c177b2aed254b323",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010873344
+      },
+      {
+        "caseId": "ascii-1024",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-ascii-1024-20261115-r1\\measurement.json",
+          "sha256": "dbc9abcc036b65a600d762f379c4604e28d9b875676812f6f5578b371c294451"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "1366b4dee05a78d4fb24fd97e8e5e305f9d67e80f456b518cb80bdc09dee5db1",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "673749b2998b545a58cbbdc137f52a32897bf2d940ea19e1ef45c3bd2f9d79d0",
+        "outputSha256": "dd939cf42ac24f0cb4c5ae957a48eabfc302f05979ec20bd497c221fa0010b08",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010897920
+      },
+      {
+        "caseId": "combining-1024",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-combining-1024-20261115-r1\\measurement.json",
+          "sha256": "9a3390c3e084a8fead91739e0c784d260a77664f0fe45c10e904c07ee999b646"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "d542f58efb5c1ffe3809673c5ee4b42a3a4edc53e3c57a43f22f2a092686d5db",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "c4773d630fb0074faf7a362da10384bd1b1bcdf449364fb34c6a0b4f4f938aea",
+        "outputSha256": "67f81b37c9d5a23f688f3a5e7c991ba1c5ee9ea94d9c4cfbab43abd430fedc53",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010680832
+      },
+      {
+        "caseId": "tokens-255",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-tokens-255-20261115-r1\\measurement.json",
+          "sha256": "e467f715a08d2da41f9a9be503e374464defff67817f983cf1f574325bd3dcd4"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "5fbf3c9e03d1bf3a28ed0fec524a33e5007e98d68f571cfbdf8a10fd862449a7",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "02bedfd2f103263ba0c1440c9119bd540aa6ab87c524c8862c20af1b17a87f7f",
+        "outputSha256": "a4ef99b0c3ab9fdecc5ab78b94316164f8de6023e171ec5266a1d6ba490cb2b9",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010766848
+      },
+      {
+        "caseId": "tokens-256",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-tokens-256-20261115-r1\\measurement.json",
+          "sha256": "bd895fbecad235191fd4c75589c172c395dca35144a8231391db7e2c32c06319"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "0d43fd365814716bc8a85ec2b3480e4b1e90e0739a7dba114eb9cff731a45e6c",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "c29fa1363238027dd61edb44449f06eb993da0d9501b7df36fa303a0ca39ab30",
+        "outputSha256": "7eafaabf82a6c023a830d1a068b1913f6044c7bbcc5e0acbd755b405cafd7b4b",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7011000320
+      },
+      {
+        "caseId": "tokens-257",
+        "status": "MEASURED_REVIEW_REQUIRED",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-tokens-257-20261115-r1\\measurement.json",
+          "sha256": "747ab6005292bfeaeb61c78a49466f20cc79acdecd6f06e8b378e11246f329c6"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "5b6ee8bd9bf25771eddae83b6500c228416521f66c72db9a2c16f761d7b85d55",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "9df4e65941826920c6fe415917330a759e60aed5d4d34e8cf06792ba2bb11a44",
+        "outputSha256": "5398fde9b110edbb8840201c02480b6d91c6c94f223c50434681a32dc392b806",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7011008512
+      },
+      {
+        "caseId": "holdout-english",
+        "status": "HOLDOUT_WITHIN_FROZEN_ENVELOPE",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-holdout-english-20261115-r1\\measurement.json",
+          "sha256": "5897c68f8ad52dd9ad3584b7aeed8873806ac093e78aa0f3b2a0bbffb4894f3e"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "f4074cc763e5be37e04b9ae2eb3f197f9fabfe5d26bd55dd4b4deeedcd4ec752",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "50826bf004a35799e912a43fca057a4a8c336f55b9bd04ce47da54ad943da1c4",
+        "outputSha256": "927f8a50f152eb4554dde16be67cb355969ddd20dcfc5f5366014af1240ac879",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010758656
+      },
+      {
+        "caseId": "holdout-unicode",
+        "status": "HOLDOUT_WITHIN_FROZEN_ENVELOPE",
+        "measurement": {
+          "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-holdout-unicode-20261115-r1\\measurement.json",
+          "sha256": "50f5b2bfb3a4ca8247d9e56bff92a35279a4a612a73dd58b358ca57d1b421fbd"
+        },
+        "key": {
+          "kind": "music",
+          "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+          "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+          "workloadDigest": "7ce446ee5858c8d2424212ffaa6774d4f6ee0cd383975a9552a34f88354b4726",
+          "requiresGpu": false
+        },
+        "snapshotDigest": "fb8a7c1e35381e85ae280de9707ffe9a43e19240992fe3961d0f2f5bd32777d7",
+        "outputSha256": "0f197eaab1b72e96cf47d25eef46b55f8f6ed6d7bcf87ca229ea5c090794615b",
+        "publishedBytes": 705644,
+        "reopenedVerified": true,
+        "observedPeakJobCommitBytes": 7010861056
+      }
+    ],
+    "modelBinding": {
+      "installationId": "acceptance-stable-audio-small-music-cpu",
+      "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+      "manifestDigest": "4e6db0493c1d8b0f9f5cac50d2b090a0046e85136d8f2a268ab3daa037503ce2",
+      "runtime": {
+        "adapter_id": "audio-cpp-offline-parameters-v1",
+        "engine_revision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+        "binding_version": "stable-audio-small-music-parameters-v1",
+        "platform": "windows-x86_64",
+        "features": [
+          "cpu",
+          "windows-long-path-aware"
+        ],
+        "binary_sha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b"
+      },
+      "targetCapabilities": [
+        "audio_generation"
+      ],
+      "model": {
+        "artifactId": "94e1669d1450463ccb1b2335a05947398a3eefa802ba8169ff84ce061c0c2f3b",
+        "sha256": "a6d9176e11b857409b28cf5a69f4fefd8f3e61907b3b10d867f1f4c0a7eb9418",
+        "sizeBytes": 1683576608
+      },
+      "modelSpec": {
+        "artifactId": "audio-cpp-spec:b0458e6ebcb59c43e292b1cb2e0bc936b440d21951a5d9fe7e2c23ea2afc9927",
+        "sha256": "433dec2415fdd85f6685e6d982b801935b4cc5389232deb51949ccc978af9bf2",
+        "sizeBytes": 9981
+      }
+    },
+    "hardwareExample": {
+      "observed_at": 1794740447,
+      "devices": [
+        {
+          "index": 0,
+          "backend": "CPU",
+          "name": "CPU",
+          "description": "Intel(R) Core(TM) i7-14700F",
+          "kind": "cpu",
+          "total_bytes": 102904569856,
+          "free_bytes": 53509054464
+        }
+      ],
+      "storage_volume": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-42-20261115-r1\\output-root\\native",
+      "disk_free_bytes": 140236570624
+    }
+  },
+  "realProjectReuse": {
+    "status": "NOT_RUN",
+    "reason": "No independently measured ProjectParameterReuseV1 resource profile; normal admission returns NeedsProfiling"
+  },
+  "productClosure": {
+    "status": "NOT_RUN",
+    "remaining": [
+      "Cross-session playback",
+      "Normal-entry real project regeneration",
+      "Natural-language reference and patch workflow",
+      "Typed spatial/temporal edits and unchanged-region verification"
+    ]
+  },
+  "qualityAndStability": {
+    "status": "NOT_ACCEPTED",
+    "reason": "One unresolved intermittent measurement/publication failure and no cross-model quality/stability campaign"
+  },
+  "cliRecipe": {
+    "status": "PASS_NORMALIZED_WINDOWS_PATH",
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-reuse-recipe-20261115-r1\\contract-review.json",
+    "sha256": "8f20c0d8b91cad122cdbc6ba7ba67f3c59745af00a4589039f30d11a025daf2a",
+    "scope": "Local model invokes the actual self-test recipe; verifies tool execution, actual suite results and final factual report. Synthetic regressions only; not music generation, natural-language editing or desktop acceptance.",
+    "originalCheckerStatus": "FAIL",
+    "originalCheckerFailure": "AssertionError({'name': 'shell', 'arguments': {'command': 'python -B \"D:/Project/goose/bin/test-lumina-project-assets.py\" --report-path \"D:\\\\Project\\\\goose\\\\target\\\\lifecycle-validation\\\\m4-project-reuse-recipe-20261115-r1\\\\reports/project_assets.json\"', 'timeout_secs': 600}})",
+    "originalEvidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-reuse-recipe-20261115-r1\\evidence.json",
+      "sha256": "28402152553379f37b069964f13f2b873d3bfdbf15ac90f546275e7a6a4f8fde"
+    },
+    "reviewReason": "Original checker compared raw slash spelling. Exact requested driver and report path resolve to the intended existing files; all original tool, count, completion and frozen-input requirements pass.",
+    "actualTotals": {
+      "passed": 35,
+      "failed": 0,
+      "ignored": 0,
+      "total": 35
+    }
+  },
+  "desktop": {
+    "status": "NOT_RUN",
+    "reason": "Desktop automation remains paused by user"
+  },
+  "privateModelScope": {
+    "status": "NOT_RUN",
+    "reason": "User has no private/gated repository for authentication acceptance"
+  },
+  "delivery": {
+    "status": "READY_FOR_SCOPED_COMMIT",
+    "branch": "testing",
+    "note": "Commit and remote push must be verified separately after this evidence is recorded."
+  },
+  "remainingStages": "M3/M4 remain incomplete; M5/M6 remain in the seven-stage master plan",
+  "cliBuild": {
+    "status": "PASS",
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-cli-build-20261115-r1.log",
+    "sha256": "1973f63c45e70e89709f9bdf04bf3bc1e312bf4f260abd1b754a71617e20b4c3",
+    "binarySha256": "4c09f61139bf99f325434513057d2a4210a0f07e88bf9051e6e94ef59681cf41"
+  },
+  "formatCheck": {
+    "status": "PASS",
+    "command": "bin/cargo.cmd fmt -p lumina-agent -p lumina-local-inference -- --check",
+    "exitCode": 0,
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\project-reuse-format-20261115-r3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

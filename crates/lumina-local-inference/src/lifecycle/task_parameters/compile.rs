@@ -40,6 +40,26 @@ impl GenerationParameterService {
         &self,
         request: GenerationTaskRequest,
     ) -> GenerationParameterResult<PreparedGenerationTask> {
+        self.compile_scoped(request, None)
+    }
+
+    pub fn compile_with_project_scope(
+        &self,
+        request: GenerationTaskRequest,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<PreparedGenerationTask> {
+        scope.validate_child(&request.session_id, &request.job_id)?;
+        self.compile_scoped(request, Some(scope))
+    }
+
+    pub(super) fn compile_scoped(
+        &self,
+        request: GenerationTaskRequest,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<PreparedGenerationTask> {
+        if let Some(scope) = scope {
+            scope.validate_identity(&request.session_id, &request.job_id)?;
+        }
         identity("sessionId", &request.session_id)?;
         identity("jobId", &request.job_id)?;
         validate_float_fields(&request.parameters)?;
@@ -53,6 +73,7 @@ impl GenerationParameterService {
                     self.profile,
                     &request.session_id,
                     value,
+                    scope,
                 )?)
             }
             _ => {
@@ -123,11 +144,57 @@ impl GenerationParameterService {
         new_job_id: &str,
         patch: GenerationParameters,
     ) -> GenerationParameterResult<PreparedGenerationTask> {
+        self.reuse_result_scoped(
+            session_id,
+            record,
+            selected_result_id,
+            new_job_id,
+            patch,
+            None,
+        )
+    }
+
+    pub fn reuse_result_with_project_scope(
+        &self,
+        session_id: &str,
+        record: &GenerationResultRecord,
+        selected_result_id: &str,
+        new_job_id: &str,
+        patch: GenerationParameters,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<PreparedGenerationTask> {
+        self.reuse_result_scoped(
+            session_id,
+            record,
+            selected_result_id,
+            new_job_id,
+            patch,
+            Some(scope),
+        )
+    }
+
+    fn reuse_result_scoped(
+        &self,
+        session_id: &str,
+        record: &GenerationResultRecord,
+        selected_result_id: &str,
+        new_job_id: &str,
+        patch: GenerationParameters,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<PreparedGenerationTask> {
         canonical_result_id(selected_result_id)?;
         let previous = &record.snapshot;
-        if previous.session_id != session_id
+        if let Some(scope) = scope {
+            scope.validate_child(session_id, new_job_id)?;
+            scope.validate_parent(
+                &previous.session_id,
+                &previous.job_id,
+                &record.snapshot_digest,
+            )?;
+        }
+        if (scope.is_none() && previous.session_id != session_id)
             || !record.outputs.iter().any(|output| {
-                output.session_id == session_id && output.result_id == selected_result_id
+                output.session_id == previous.session_id && output.result_id == selected_result_id
             })
         {
             return Err(issue(
@@ -137,7 +204,8 @@ impl GenerationParameterService {
             ));
         }
         if record.outputs.iter().any(|output| {
-            output.session_id != session_id || canonical_result_id(&output.result_id).is_err()
+            output.session_id != previous.session_id
+                || canonical_result_id(&output.result_id).is_err()
         }) {
             return Err(issue(
                 "parentResultId",
@@ -185,11 +253,14 @@ impl GenerationParameterService {
                         "Stored parameters do not match the bound schema",
                     )
                 })?;
-        let canonical = self.compile(GenerationTaskRequest {
-            session_id: session_id.into(),
-            job_id: previous.job_id.clone(),
-            parameters: stored_request,
-        })?;
+        let canonical = self.compile_scoped(
+            GenerationTaskRequest {
+                session_id: previous.session_id.clone(),
+                job_id: previous.job_id.clone(),
+                parameters: stored_request,
+            },
+            scope,
+        )?;
         if canonical.snapshot.parameters != previous.parameters
             || canonical.snapshot.engine != previous.engine
             || canonical.snapshot.observation != previous.observation
@@ -250,11 +321,14 @@ impl GenerationParameterService {
         };
         let parameters = serde_json::from_value(json!({"task":task,"parameters":merged}))
             .map_err(|error| issue("parentResultId", "invalid_snapshot", &error.to_string()))?;
-        let mut prepared = self.compile(GenerationTaskRequest {
-            session_id: session_id.into(),
-            job_id: new_job_id.into(),
-            parameters,
-        })?;
+        let mut prepared = self.compile_scoped(
+            GenerationTaskRequest {
+                session_id: session_id.into(),
+                job_id: new_job_id.into(),
+                parameters,
+            },
+            scope,
+        )?;
         // A new seed is chosen once before persistence, never left to the native -1 sentinel.
         if explicit
             .get("seed")
@@ -567,6 +641,7 @@ fn video(
     profile: GenerationProfile,
     session_id: &str,
     value: DiffusionVideoParameters,
+    scope: Option<&ProjectTaskCompilationScope>,
 ) -> GenerationParameterResult<EffectiveVideoParameters> {
     let prompt = value.prompt.unwrap_or_default();
     let defaults = profile.defaults();
@@ -636,7 +711,9 @@ fn video(
     match &value.first_frame {
         Some(input) if profile.requires_first_frame() => {
             canonical_result_id(&input.result_id)?;
-            if input.session_id != session_id {
+            if let Some(scope) = scope {
+                scope.validate_input(&NativeTaskInputReference::Image(input.clone()))?;
+            } else if input.session_id != session_id {
                 return Err(issue(
                     "firstFrame",
                     "result_unavailable",

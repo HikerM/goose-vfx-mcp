@@ -4,6 +4,8 @@ mod files;
 mod formats;
 mod ingest;
 mod project_assets;
+#[cfg(feature = "local-inference")]
+mod project_task_reuse;
 mod store;
 #[cfg(feature = "local-inference")]
 mod task_configuration;
@@ -13,6 +15,8 @@ mod task_inputs;
 mod task_jobs;
 #[cfg(feature = "local-inference")]
 mod task_output;
+#[cfg(feature = "local-inference")]
+mod task_publication;
 #[cfg(feature = "local-inference")]
 mod task_reuse;
 #[cfg(feature = "local-inference")]
@@ -27,6 +31,10 @@ pub use domain::*;
 #[cfg(feature = "local-inference")]
 pub(crate) use ingest::native_result_link;
 pub(crate) use ingest::{hydrate_tool_media, persist_tool_media};
+#[cfg(feature = "local-inference")]
+pub(crate) use project_task_reuse::{
+    prepare_project_reused_task, PreparedProjectTask, ProjectTaskReuseRequest,
+};
 pub use store::{BeginMediaPublish, MediaResultStore, StagedMedia, VerifiedMediaContent};
 #[cfg(feature = "local-inference")]
 pub use task_configuration::{
@@ -46,6 +54,8 @@ pub use task_reuse::{prepare_reused_task, TaskReuseRequest};
 #[cfg(feature = "local-inference")]
 pub(crate) use task_service::configured_task_engines;
 #[cfg(feature = "local-inference")]
-pub(crate) use task_service::execute_prepared_task_controlled;
-#[cfg(feature = "local-inference")]
 pub use task_service::{execute_prepared_task, PreparedTaskExecution};
+#[cfg(feature = "local-inference")]
+pub(crate) use task_service::{
+    execute_prepared_task_controlled, execute_project_prepared_task_controlled,
+};

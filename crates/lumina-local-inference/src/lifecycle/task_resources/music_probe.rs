@@ -27,6 +27,8 @@ fn native_sources() -> std::collections::BTreeMap<&'static str, Sha256Digest> {
         "src/lifecycle/files.rs",
         "src/lifecycle/task_resources/music_probe.rs",
         "src/lifecycle/audio_task_parameters/music_task_parameters.rs",
+        "src/lifecycle/audio_task_parameters/reuse.rs",
+        "src/lifecycle/project_task_scope.rs",
         "src/lifecycle/audio_task_parameters/stable_audio.json",
         "src/lifecycle/audio_task_parameters/models.rs",
         "src/lifecycle/native_task_runtime.rs",
@@ -77,9 +79,25 @@ async fn measure_installed_music_owner() -> Result<()> {
     };
     let snapshot = task.snapshot();
     let p = &snapshot.parameters;
+    let domain_case = std::env::var_os("LUMINA_MUSIC_DOMAIN_CASE_FILE")
+        .map(|path| -> Result<_> {
+            let path = PathBuf::from(path).canonicalize()?;
+            ensure!(
+                path == run.join("domain-case.json"),
+                "Unexpected music case path"
+            );
+            let bytes = std::fs::read(path)?;
+            ensure!(bytes.len() <= 65536, "Music case exceeds byte limit");
+            let value: serde_json::Value = serde_json::from_slice(&bytes)?;
+            ensure!(
+                value["parameters"] == serde_json::to_value(p)? && p.prompt.len() <= 1024,
+                "Music case differs from compiled parameters or candidate byte bound"
+            );
+            Ok(Sha256Digest::of_bytes(&bytes))
+        })
+        .transpose()?;
     ensure!(
-        p.prompt == PROMPT
-            && p.seed == 42
+        (domain_case.is_some() || (p.prompt == PROMPT && p.seed == 42))
             && p.negative_prompt.is_none()
             && p.duration_seconds == 4.
             && p.steps == 8
@@ -132,7 +150,7 @@ async fn measure_installed_music_owner() -> Result<()> {
     let digest = plan.snapshot_digest()?;
     write_report(
         &run.join("fixture.json"),
-        json!({"key":key,"hardware":hardware,"snapshot":snapshot,"snapshotDigest":digest}),
+        json!({"key":key,"hardware":hardware,"snapshot":snapshot,"snapshotDigest":digest,"domainCaseSha256":domain_case}),
     )?;
     let native =
         NativeTaskRuntime::execute(&repo, &store, &engines, plan, vec![], receipt, &detached).await;
@@ -164,7 +182,7 @@ async fn measure_installed_music_owner() -> Result<()> {
     held.sync_all()?;
     write_report(
         &run.join("owner.json"),
-        json!({"snapshotDigest":digest,"outputSha256":file.sha256(),"outputBytes":file.size_bytes(),"sources":native_sources(),
+        json!({"snapshotDigest":digest,"outputSha256":file.sha256(),"outputBytes":file.size_bytes(),"sources":native_sources(),"domainCaseSha256":domain_case,
         "stdoutSha256":Sha256Digest::of_bytes(&output.stdout),"stderrSha256":Sha256Digest::of_bytes(&output.stderr)}),
     )?;
     Ok(())

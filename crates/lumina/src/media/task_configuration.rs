@@ -2,16 +2,20 @@ use anyhow::{bail, ensure, Context, Result};
 use lumina_providers::local_inference::lifecycle::{
     AudioTaskProfile, AudioTaskProtocol, GenerationParameterOrigin, GenerationParameterService,
     GenerationParameterSnapshot, GenerationProfile, GenerationTaskRequest,
-    ModelTaskParameterAdapter, PocketTtsParameterService, PocketTtsPreparedTask, PocketTtsSnapshot,
-    PreparedGenerationTask, Qwen3AsrParameterService, Qwen3AsrPreparedTask, Qwen3AsrSnapshot,
-    RuntimeBuild, Sha256Digest, StableAudioMusicParameterService, StableAudioMusicPreparedTask,
-    StableAudioMusicSnapshot, TaskParameterIdentity,
+    ModelTaskParameterAdapter, NativeTaskPlan, PocketTtsParameterService, PocketTtsPreparedTask,
+    PocketTtsSnapshot, PreparedGenerationTask, ProjectTaskCompilationScope,
+    Qwen3AsrParameterService, Qwen3AsrPreparedTask, Qwen3AsrSnapshot, RuntimeBuild, Sha256Digest,
+    StableAudioMusicParameterService, StableAudioMusicPreparedTask, StableAudioMusicSnapshot,
+    TaskParameterIdentity,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::{Pool, Row, Sqlite, SqliteConnection, Transaction};
 
 use super::domain::{validate_digest, validate_id};
+use super::project_task_reuse::{
+    PreparedProjectTask, ProjectCompilationBinding, VerifiedProjectTaskAuthorization,
+};
 use super::{MediaResultRef, MediaSource, PublishMediaRequest};
 
 pub const MAX_TASK_CONFIGURATION_BYTES: usize = 256 * 1024;
@@ -33,6 +37,7 @@ pub struct TaskConfigurationRecord {
     snapshot_json: String,
     snapshot_sha256: String,
     snapshot: TaskConfigurationSnapshot,
+    project_scope: Option<ProjectCompilationBinding>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -42,15 +47,18 @@ pub(super) struct ArchivedTaskConfiguration {
     identity_json: String,
     snapshot_json: String,
     snapshot_sha256: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    project_scope: Option<ProjectCompilationBinding>,
 }
 
 impl ArchivedTaskConfiguration {
-    fn from_record(record: &TaskConfigurationRecord) -> Result<Self> {
+    pub(super) fn from_record(record: &TaskConfigurationRecord) -> Result<Self> {
         Ok(Self {
             parameter_schema_id: record.identity.parameter_schema_id.clone(),
             identity_json: serde_json::to_string(&record.identity)?,
             snapshot_json: record.snapshot_json.clone(),
             snapshot_sha256: record.snapshot_sha256.clone(),
+            project_scope: record.project_scope.clone(),
         })
     }
 
@@ -59,7 +67,11 @@ impl ArchivedTaskConfiguration {
             self.identity_json.len() <= MAX_IDENTITY_BYTES,
             "Archived task identity exceeds its byte limit"
         );
-        let record = parse_snapshot(&self.parameter_schema_id, &self.snapshot_json)?;
+        let record = parse_snapshot_with_project_scope(
+            &self.parameter_schema_id,
+            &self.snapshot_json,
+            self.project_scope.as_ref(),
+        )?;
         ensure!(
             record.session_id == session
                 && record.job_id == job
@@ -91,6 +103,10 @@ impl ArchivedTaskConfiguration {
 }
 
 impl TaskConfigurationRecord {
+    pub(super) fn project_scope(&self) -> Option<&ProjectCompilationBinding> {
+        self.project_scope.as_ref()
+    }
+
     pub fn session_id(&self) -> &str {
         &self.session_id
     }
@@ -222,6 +238,14 @@ impl TaskConfigurationStore {
         )
         .execute(&mut *tx)
         .await?;
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS project_task_authorizations_v1 (
+            session_id TEXT NOT NULL, job_id TEXT NOT NULL,
+            payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB)) BETWEEN 1 AND 1048576),
+            sha256 TEXT NOT NULL CHECK(length(sha256)=64), PRIMARY KEY(session_id,job_id))",
+        )
+        .execute(&mut *tx)
+        .await?;
         tx.commit().await?;
         crate::project::ProjectAssetStore::new(self.pool.clone())
             .initialize()
@@ -310,6 +334,65 @@ impl TaskConfigurationStore {
         .await
     }
 
+    pub(crate) async fn save_project_task(
+        &self,
+        prepared: &PreparedProjectTask,
+    ) -> Result<TaskConfigurationRecord> {
+        let authorization = prepared.authorization();
+        let plan = prepared.plan();
+        let payload = match plan {
+            NativeTaskPlan::Generation(task) => bounded_json(task.snapshot())?,
+            NativeTaskPlan::PocketTts(task) => bounded_json(task.snapshot())?,
+            NativeTaskPlan::Qwen3Asr(task) => bounded_json(task.snapshot())?,
+            NativeTaskPlan::StableAudioMusic(task) => bounded_json(task.snapshot())?,
+        };
+        let schema = match plan {
+            NativeTaskPlan::Generation(task) => task.snapshot().profile.parameter_schema_id(),
+            NativeTaskPlan::PocketTts(task) => {
+                &task.snapshot().metadata.identity.parameter_schema_id
+            }
+            NativeTaskPlan::Qwen3Asr(task) => {
+                &task.snapshot().metadata.identity.parameter_schema_id
+            }
+            NativeTaskPlan::StableAudioMusic(task) => {
+                &task.snapshot().metadata.identity.parameter_schema_id
+            }
+        };
+        let record =
+            parse_snapshot_with_project_scope(schema, &payload, Some(authorization.compilation()))?;
+        authorization.validate_child(&record)?;
+        super::project_task_reuse::verify_final_inputs(
+            &super::MediaResultStore::new(self.pool.clone()),
+            &plan.input_references(),
+        )
+        .await?;
+        let authorization_payload = authorization.encode()?;
+        let identity_json = serde_json::to_string(&record.identity)?;
+        ensure!(
+            identity_json.len() <= MAX_IDENTITY_BYTES,
+            "Task identity exceeds its byte limit"
+        );
+        let mut tx = self.pool.begin_with("BEGIN IMMEDIATE").await?;
+        authorization.validate_in_tx(&mut tx).await?;
+        sqlx::query("INSERT INTO project_task_authorizations_v1(session_id,job_id,payload,sha256) VALUES(?,?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
+            .bind(record.session_id()).bind(record.job_id()).bind(&authorization_payload)
+            .bind(Sha256Digest::of_bytes(authorization_payload.as_bytes()).as_str())
+            .execute(&mut *tx).await?;
+        let stored_authorization = VerifiedProjectTaskAuthorization::read_from(
+            &mut tx,
+            record.session_id(),
+            record.job_id(),
+        )
+        .await?;
+        ensure!(
+            stored_authorization.as_ref() == Some(authorization),
+            "Project job conflicts with an immutable authorization"
+        );
+        let stored = save_configuration_in_tx(&mut tx, &record, identity_json).await?;
+        tx.commit().await?;
+        Ok(stored)
+    }
+
     async fn save(&self, record: TaskConfigurationRecord) -> Result<TaskConfigurationRecord> {
         self.validate_audio_parent(&record).await?;
         let identity_json = serde_json::to_string(&record.identity)?;
@@ -318,41 +401,7 @@ impl TaskConfigurationStore {
             "Task identity exceeds its byte limit"
         );
         let mut tx = self.pool.begin().await?;
-        sqlx::query("INSERT INTO media_task_configurations_v1(session_id,job_id,parameter_schema_id,identity_json,snapshot_json,snapshot_sha256) VALUES(?,?,?,?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
-            .bind(&record.session_id)
-            .bind(&record.job_id)
-            .bind(&record.identity.parameter_schema_id)
-            .bind(identity_json)
-            .bind(&record.snapshot_json)
-            .bind(&record.snapshot_sha256)
-            .execute(&mut *tx)
-            .await?;
-        let stored = read_configuration(&mut tx, &record.session_id, &record.job_id)
-            .await?
-            .context("Task configuration disappeared during persistence")?;
-        ensure!(
-            stored == record,
-            "Task job ID conflicts with a different immutable configuration"
-        );
-        if crate::project::ProjectAssetStore::has_project_scope_in_tx(
-            &mut tx,
-            &record.session_id,
-            &record.job_id,
-            None,
-        )
-        .await?
-        {
-            let payload = serde_json::to_string(&ArchivedTaskConfiguration::from_record(&record)?)?;
-            sqlx::query("INSERT INTO project_task_configurations_v1(session_id,job_id,payload) VALUES(?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
-                .bind(&record.session_id).bind(&record.job_id).bind(&payload)
-                .execute(&mut *tx).await?;
-            let existing: String = sqlx::query_scalar("SELECT payload FROM project_task_configurations_v1 WHERE session_id=? AND job_id=?")
-                .bind(&record.session_id).bind(&record.job_id).fetch_one(&mut *tx).await?;
-            ensure!(
-                existing == payload,
-                "Project task configuration archive conflicts with this job"
-            );
-        }
+        let stored = save_configuration_in_tx(&mut tx, &record, identity_json).await?;
         tx.commit().await?;
         Ok(stored)
     }
@@ -446,6 +495,58 @@ impl TaskConfigurationStore {
     }
 }
 
+async fn save_configuration_in_tx(
+    tx: &mut Transaction<'_, Sqlite>,
+    record: &TaskConfigurationRecord,
+    identity_json: String,
+) -> Result<TaskConfigurationRecord> {
+    sqlx::query("INSERT INTO media_task_configurations_v1(session_id,job_id,parameter_schema_id,identity_json,snapshot_json,snapshot_sha256) VALUES(?,?,?,?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
+            .bind(&record.session_id)
+            .bind(&record.job_id)
+            .bind(&record.identity.parameter_schema_id)
+            .bind(identity_json)
+            .bind(&record.snapshot_json)
+            .bind(&record.snapshot_sha256)
+            .execute(&mut **tx)
+            .await?;
+    let stored = read_configuration(tx, &record.session_id, &record.job_id)
+        .await?
+        .context("Task configuration disappeared during persistence")?;
+    ensure!(
+        &stored == record,
+        "Task job ID conflicts with a different immutable configuration"
+    );
+    if crate::project::ProjectAssetStore::has_project_scope_in_tx(
+        tx,
+        &record.session_id,
+        &record.job_id,
+        None,
+    )
+    .await?
+    {
+        let payload = serde_json::to_string(&ArchivedTaskConfiguration::from_record(record)?)?;
+        ensure!(
+            payload.len() <= 1048576,
+            "Project task archive exceeds its byte limit"
+        );
+        sqlx::query("INSERT INTO project_task_configurations_v1(session_id,job_id,payload) VALUES(?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
+                .bind(&record.session_id).bind(&record.job_id).bind(&payload)
+                .execute(&mut **tx).await?;
+        let existing: String = sqlx::query_scalar(
+            "SELECT payload FROM project_task_configurations_v1 WHERE session_id=? AND job_id=?",
+        )
+        .bind(&record.session_id)
+        .bind(&record.job_id)
+        .fetch_one(&mut **tx)
+        .await?;
+        ensure!(
+            existing == payload,
+            "Project task configuration archive conflicts with this job"
+        );
+    }
+    Ok(stored)
+}
+
 async fn read_transcript_from(
     connection: &mut SqliteConnection,
     session_id: &str,
@@ -510,6 +611,11 @@ async fn read_configuration(
     .bind(job_id)
     .fetch_optional(&mut *connection)
     .await?;
+    let authorization = if row.is_some() {
+        VerifiedProjectTaskAuthorization::read_from(connection, session_id, job_id).await?
+    } else {
+        None
+    };
     row.map(|row| {
         let schema: Option<String> = row.try_get("parameter_schema_id")?;
         let payload: Option<String> = row.try_get("snapshot_json")?;
@@ -521,7 +627,13 @@ async fn read_configuration(
         let payload = payload.context("Stored configuration exceeds its byte limit")?;
         let identity_json = identity_json.context("Stored task identity exceeds its byte limit")?;
         let identity: TaskParameterIdentity = serde_json::from_str(&identity_json)?;
-        let record = parse_snapshot(&schema, &payload)?;
+        let record = parse_snapshot_with_project_scope(
+            &schema,
+            &payload,
+            authorization
+                .as_ref()
+                .map(VerifiedProjectTaskAuthorization::compilation),
+        )?;
         ensure!(
             record.session_id == session_id
                 && record.job_id == job_id
@@ -530,6 +642,9 @@ async fn read_configuration(
                 && serde_json::to_string(&identity)? == identity_json,
             "Stored task configuration identity or digest is inconsistent"
         );
+        if let Some(authorization) = &authorization {
+            authorization.validate_child(&record)?;
+        }
         Ok(record)
     })
     .transpose()
@@ -563,6 +678,7 @@ fn canonical_generation(
     session_id: &str,
     job_id: &str,
     mut parameters: Value,
+    scope: Option<&ProjectTaskCompilationScope>,
 ) -> Result<PreparedGenerationTask> {
     let fields = parameters
         .get_mut("parameters")
@@ -574,14 +690,21 @@ fn canonical_generation(
         .context("Missing effective generation seed")?
         .clone();
     fields.insert("seed".into(), json!({"kind":"value","value":seed}));
-    Ok(service.compile(GenerationTaskRequest {
+    let request = GenerationTaskRequest {
         session_id: session_id.into(),
         job_id: job_id.into(),
         parameters: serde_json::from_value(parameters)?,
-    })?)
+    };
+    Ok(match scope {
+        Some(scope) => service.compile_with_project_scope(request, scope)?,
+        None => service.compile(request)?,
+    })
 }
 
-fn validate_generation(snapshot: &GenerationParameterSnapshot) -> Result<TaskParameterIdentity> {
+fn validate_generation(
+    snapshot: &GenerationParameterSnapshot,
+    scope: Option<&ProjectTaskCompilationScope>,
+) -> Result<TaskParameterIdentity> {
     let service = GenerationParameterService::new(snapshot.profile, snapshot.binding.clone())?;
     let identity = service.identity()?;
     let effective = serde_json::to_value(&snapshot.parameters)?;
@@ -590,6 +713,7 @@ fn validate_generation(snapshot: &GenerationParameterSnapshot) -> Result<TaskPar
         &snapshot.session_id,
         &snapshot.job_id,
         effective.clone(),
+        scope,
     )?;
     let fresh = canonical.snapshot();
     ensure!(
@@ -650,6 +774,7 @@ fn validate_generation(snapshot: &GenerationParameterSnapshot) -> Result<TaskPar
             &snapshot.session_id,
             &snapshot.job_id,
             before.clone(),
+            scope,
         )?;
         ensure!(
             serde_json::to_value(&previous.snapshot().parameters)? == before,
@@ -660,6 +785,17 @@ fn validate_generation(snapshot: &GenerationParameterSnapshot) -> Result<TaskPar
 }
 
 fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord> {
+    parse_snapshot_with_project_scope(schema, payload, None)
+}
+
+fn parse_snapshot_with_project_scope(
+    schema: &str,
+    payload: &str,
+    binding: Option<&ProjectCompilationBinding>,
+) -> Result<TaskConfigurationRecord> {
+    let scope = binding
+        .map(ProjectCompilationBinding::domain_scope)
+        .transpose()?;
     ensure!(
         !payload.is_empty() && payload.len() <= MAX_TASK_CONFIGURATION_BYTES,
         "Task configuration exceeds its byte limit"
@@ -672,7 +808,7 @@ fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord
             .any(|profile| profile.parameter_schema_id() == schema) =>
         {
             let value: GenerationParameterSnapshot = serde_json::from_str(payload)?;
-            let identity = validate_generation(&value)?;
+            let identity = validate_generation(&value, scope.as_ref())?;
             (
                 value.session_id.clone(),
                 value.job_id.clone(),
@@ -685,7 +821,10 @@ fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord
             let value: PocketTtsSnapshot = serde_json::from_str(payload)?;
             let service =
                 PocketTtsParameterService::for_profile(profile, value.metadata.binding.clone())?;
-            service.validate_snapshot(&value)?;
+            match scope.as_ref() {
+                Some(scope) => service.validate_snapshot_with_project_scope(&value, scope)?,
+                None => service.validate_snapshot(&value)?,
+            };
             (
                 value.metadata.session_id.clone(),
                 value.metadata.job_id.clone(),
@@ -698,7 +837,10 @@ fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord
             let value: Qwen3AsrSnapshot = serde_json::from_str(payload)?;
             let service =
                 Qwen3AsrParameterService::for_profile(profile, value.metadata.binding.clone())?;
-            service.validate_snapshot(&value)?;
+            match scope.as_ref() {
+                Some(scope) => service.validate_snapshot_with_project_scope(&value, scope)?,
+                None => service.validate_snapshot(&value)?,
+            };
             (
                 value.metadata.session_id.clone(),
                 value.metadata.job_id.clone(),
@@ -713,7 +855,10 @@ fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord
                 profile,
                 value.metadata.binding.clone(),
             )?;
-            service.validate_snapshot(&value)?;
+            match scope.as_ref() {
+                Some(scope) => service.validate_snapshot_with_project_scope(&value, scope)?,
+                None => service.validate_snapshot(&value)?,
+            };
             (
                 value.metadata.session_id.clone(),
                 value.metadata.job_id.clone(),
@@ -726,6 +871,12 @@ fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord
     };
     validate_id(&session_id)?;
     validate_id(&job_id)?;
+    if let Some(scope) = &scope {
+        ensure!(
+            scope.child_session_id() == session_id && scope.child_job_id() == job_id,
+            "Project compile scope belongs to another task"
+        );
+    }
     ensure!(
         identity.parameter_schema_id == schema,
         "Stored parameter schema differs from model identity"
@@ -744,6 +895,7 @@ fn parse_snapshot(schema: &str, payload: &str) -> Result<TaskConfigurationRecord
         snapshot_json: canonical,
         snapshot_sha256,
         snapshot,
+        project_scope: binding.cloned(),
     })
 }
 

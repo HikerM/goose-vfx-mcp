@@ -901,3 +901,6 @@ fn a_different_task_adapter_does_not_inherit_diffusion_request_or_descriptor_typ
         2
     );
 }
+
+#[path = "support/project_generation_task_scope.rs"]
+mod project_generation_task_scope;

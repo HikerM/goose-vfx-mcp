@@ -28,6 +28,21 @@ pub enum TaskResourceKind {
     Music,
 }
 
+/// Describes the server-selected publication path; it does not authorize a project task.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
+pub enum TaskPublicationContext {
+    #[default]
+    Session,
+    ProjectParameterReuseV1 {
+        implementation_sources_digest: Sha256Digest,
+    },
+}
+
 /// Binds the effective workload and any model-specific equivalence established by measurement.
 /// Installation/session IDs do not affect measured costs; the receipt separately
 /// binds the full snapshot, including those IDs, its manifest and component IDs.
@@ -42,6 +57,21 @@ pub struct TaskResourceKey {
 }
 
 impl TaskResourceKey {
+    pub fn from_plan_with_publication(
+        plan: &NativeTaskPlan,
+        publication: &TaskPublicationContext,
+    ) -> Result<Self> {
+        let mut key = Self::from_plan(plan)?;
+        if !matches!(publication, TaskPublicationContext::Session) {
+            key.workload_digest = Sha256Digest::of_serializable(&(
+                "task-publication-context-v1",
+                &key.workload_digest,
+                publication,
+            ))?;
+        }
+        Ok(key)
+    }
+
     pub fn from_plan(plan: &NativeTaskPlan) -> Result<Self> {
         let (kind, runtime_digest, components_digest, workload_digest) = match plan {
             NativeTaskPlan::Generation(task) => {
@@ -247,6 +277,7 @@ pub enum TaskResourceAssessment {
 pub struct TaskResourceAdmission {
     snapshot_digest: Sha256Digest,
     key: TaskResourceKey,
+    publication: TaskPublicationContext,
     observed: Box<HardwareResourceSnapshot>,
     observed_digest: Sha256Digest,
     profile: Box<TaskResourceProfile>,
@@ -273,7 +304,8 @@ impl TaskResourceAdmission {
     ) -> Result<()> {
         ensure!(
             plan.snapshot_digest()? == self.snapshot_digest
-                && TaskResourceKey::from_plan(plan)? == self.key,
+                && TaskResourceKey::from_plan_with_publication(plan, &self.publication)?
+                    == self.key,
             "Task resource receipt binding changed"
         );
         ensure!(
@@ -374,7 +406,16 @@ pub fn assess_task_resources(
     hardware: &HardwareResourceSnapshot,
     now: i64,
 ) -> Result<TaskResourceAssessment> {
-    assess_with_profiles(plan, hardware, now, &trusted_profiles()?)
+    assess_task_resources_with_publication(plan, hardware, now, &TaskPublicationContext::Session)
+}
+
+pub fn assess_task_resources_with_publication(
+    plan: &NativeTaskPlan,
+    hardware: &HardwareResourceSnapshot,
+    now: i64,
+    publication: &TaskPublicationContext,
+) -> Result<TaskResourceAssessment> {
+    assess_with_profiles_and_publication(plan, hardware, now, &trusted_profiles()?, publication)
 }
 
 /// Samples the active runtime's devices and the configured task output root.
@@ -382,19 +423,49 @@ pub fn assess_current_task_resources(
     plan: &NativeTaskPlan,
     storage: &std::path::Path,
 ) -> Result<TaskResourceAssessment> {
+    assess_current_task_resources_with_publication(plan, storage, &TaskPublicationContext::Session)
+}
+
+pub fn assess_current_task_resources_with_publication(
+    plan: &NativeTaskPlan,
+    storage: &std::path::Path,
+    publication: &TaskPublicationContext,
+) -> Result<TaskResourceAssessment> {
     let _runtime = crate::InferenceRuntime::get_or_init()?;
     let now = chrono::Utc::now().timestamp();
     let observed = super::resources::probe_initialized_hardware_resources(storage, now)?;
-    assess_task_resources(plan, &observed, chrono::Utc::now().timestamp())
+    assess_task_resources_with_publication(
+        plan,
+        &observed,
+        chrono::Utc::now().timestamp(),
+        publication,
+    )
 }
 
+#[cfg(test)]
 fn assess_with_profiles(
     plan: &NativeTaskPlan,
     hardware: &HardwareResourceSnapshot,
     now: i64,
     profiles: &[TaskResourceProfile],
 ) -> Result<TaskResourceAssessment> {
-    let key = TaskResourceKey::from_plan(plan)?;
+    assess_with_profiles_and_publication(
+        plan,
+        hardware,
+        now,
+        profiles,
+        &TaskPublicationContext::Session,
+    )
+}
+
+fn assess_with_profiles_and_publication(
+    plan: &NativeTaskPlan,
+    hardware: &HardwareResourceSnapshot,
+    now: i64,
+    profiles: &[TaskResourceProfile],
+    publication: &TaskPublicationContext,
+) -> Result<TaskResourceAssessment> {
+    let key = TaskResourceKey::from_plan_with_publication(plan, publication)?;
     if let Err(error) = check_observation(hardware, now) {
         return Ok(TaskResourceAssessment::Unavailable(TaskResourceRejection {
             code: "invalid_or_expired_observation",
@@ -410,15 +481,23 @@ fn assess_with_profiles(
         return Ok(TaskResourceAssessment::Admitted(TaskResourceAdmission {
             snapshot_digest: plan.snapshot_digest()?,
             key,
+            publication: publication.clone(),
             observed: Box::new(hardware.clone()),
             observed_digest: Sha256Digest::of_serializable(hardware)?,
             profile: Box::new(profile.clone()),
         }));
     }
     if reasons.is_empty() {
-        Ok(TaskResourceAssessment::NeedsProfiling(
-            profiling_requirement(plan, key),
-        ))
+        let mut requirement = profiling_requirement(plan, key);
+        if matches!(
+            publication,
+            TaskPublicationContext::ProjectParameterReuseV1 { .. }
+        ) {
+            requirement
+                .missing
+                .push("measured project parameter reuse publication path");
+        }
+        Ok(TaskResourceAssessment::NeedsProfiling(requirement))
     } else {
         Ok(TaskResourceAssessment::Unavailable(TaskResourceRejection {
             code: "resource_capacity_or_device_mismatch",

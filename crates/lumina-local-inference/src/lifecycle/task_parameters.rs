@@ -15,6 +15,7 @@ pub use install::{GENERATION_INSTALL_RULES_VERSION, LEGACY_GENERATION_INSTALL_RU
 pub use registry::*;
 
 use super::{ComponentRole, ModelCapability, ModelManifest, RuntimeBuild, Sha256Digest};
+use super::{NativeTaskInputReference, ProjectTaskCompilationScope};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};

@@ -89,6 +89,26 @@ impl PocketTtsParameterService {
         &self,
         request: PocketTtsRequest,
     ) -> GenerationParameterResult<PocketTtsPreparedTask> {
+        self.compile_scoped(request, None)
+    }
+
+    pub fn compile_with_project_scope(
+        &self,
+        request: PocketTtsRequest,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<PocketTtsPreparedTask> {
+        scope.validate_child(&request.session_id, &request.job_id)?;
+        self.compile_scoped(request, Some(scope))
+    }
+
+    pub(super) fn compile_scoped(
+        &self,
+        request: PocketTtsRequest,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<PocketTtsPreparedTask> {
+        if let Some(scope) = scope {
+            scope.validate_identity(&request.session_id, &request.job_id)?;
+        }
         identity("sessionId", &request.session_id)?;
         identity("jobId", &request.job_id)?;
         native_text("text", &request.text, true)?;
@@ -96,6 +116,7 @@ impl PocketTtsParameterService {
             "voiceReference",
             &request.session_id,
             &request.voice_reference,
+            scope,
         )?;
         if request.voice_reference.sample_frames
             > u64::from(request.voice_reference.sample_rate) * 30
@@ -216,9 +237,29 @@ impl Qwen3AsrParameterService {
         &self,
         request: Qwen3AsrRequest,
     ) -> GenerationParameterResult<Qwen3AsrPreparedTask> {
+        self.compile_scoped(request, None)
+    }
+
+    pub fn compile_with_project_scope(
+        &self,
+        request: Qwen3AsrRequest,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<Qwen3AsrPreparedTask> {
+        scope.validate_child(&request.session_id, &request.job_id)?;
+        self.compile_scoped(request, Some(scope))
+    }
+
+    pub(super) fn compile_scoped(
+        &self,
+        request: Qwen3AsrRequest,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<Qwen3AsrPreparedTask> {
+        if let Some(scope) = scope {
+            scope.validate_identity(&request.session_id, &request.job_id)?;
+        }
         identity("sessionId", &request.session_id)?;
         identity("jobId", &request.job_id)?;
-        media("audio", &request.session_id, &request.audio)?;
+        media("audio", &request.session_id, &request.audio, scope)?;
         let context = request.context.unwrap_or_default();
         native_text("context", &context, false)?;
         let (_, default_language, default_max_tokens) = self.profile.asr_settings();
@@ -433,8 +474,11 @@ fn media(
     field: &str,
     session_id: &str,
     input: &AudioTaskMediaReference,
+    scope: Option<&ProjectTaskCompilationScope>,
 ) -> GenerationParameterResult<()> {
-    if input.session_id != session_id {
+    if let Some(scope) = scope {
+        scope.validate_input(&NativeTaskInputReference::Audio(input.clone()))?;
+    } else if input.session_id != session_id {
         return Err(invalid(
             field,
             "result_unavailable",

@@ -564,6 +564,41 @@ impl ProjectAssetStore {
         tx.commit().await?;
         Ok(result)
     }
+    pub(crate) async fn project_for_frozen_job_in_tx(
+        tx: &mut Transaction<'_, Sqlite>,
+        session: &str,
+        job: &str,
+    ) -> Result<String> {
+        identifier(job, 96)?;
+        let current = Self::current_scope(tx, session).await?;
+        let frozen = Self::scope(tx, session, "job", job)
+            .await?
+            .context("Project task has no frozen execution scope")?;
+        let project = frozen
+            .project_id
+            .context("Task was not accepted in a project")?;
+        ensure!(
+            current.project_id.as_deref() == Some(project.as_str()),
+            "Task project differs from the current session project"
+        );
+        Ok(project)
+    }
+
+    pub(crate) async fn read_for_frozen_job_in_tx(
+        tx: &mut Transaction<'_, Sqlite>,
+        session: &str,
+        job: &str,
+        asset_id: &str,
+    ) -> Result<Option<ProjectAssetRecord>> {
+        asset_identifier(asset_id)?;
+        let project = Self::project_for_frozen_job_in_tx(tx, session, job).await?;
+        let row = sqlx::query("SELECT * FROM project_assets_v1 WHERE project_id=? AND asset_id=?")
+            .bind(project)
+            .bind(asset_id)
+            .fetch_optional(&mut **tx)
+            .await?;
+        row.as_ref().map(asset_from_row).transpose()
+    }
 }
 
 #[cfg(test)]

@@ -39,7 +39,13 @@ The read-only `native_tasks__project_assets` and `native_tasks__project_asset` t
 
 Session IDs retain the existing date-and-sequence format but use a persistent high-water mark. An upgrade seeds it from known retained session references, and subsequent imports advance it transactionally. Deleting a conversation never lowers the mark. Historical IDs whose records and every known reference were already removed before the upgrade cannot be reconstructed.
 
-Project assets are a persistence foundation. Parent/child asset versions, typed text/image/time selections, capability-aware edits, preserved-region verification and the complete natural-language workflow still require implementation and acceptance.
+`native_tasks__project_reuse` creates a new task from a project asset by changing one parameter from its installed model descriptor. It accepts the exact model identity, parent asset ID and patch; replacement media fields accept project asset IDs. The server checks the current and frozen project, original configuration and complete input metadata. Generation, speech synthesis, transcription and music retain their own parameter compilers. Existing session-only APIs keep their original restrictions; use the project entry for descendants that retain inputs from other sessions.
+
+`project_task_authorizations_v1` stores the verified parent relationship, resolved patch and final input references atomically with the child configuration and configuration archive after resource admission. A prepared request alone does not persist authorization or a randomly chosen seed. Published assets retain `projectLineage`; the detail tool projects its parent asset ID, parent archive digest and parameter patch. Each authorization includes one parent configuration with a flat compilation scope, rather than recursively copying every ancestor. Missing or changed final input files prevent execution; a replaced historical input is retained as configuration evidence and need not remain an execution input.
+
+Project reuse has a distinct resource-publication context bound to the host production sources and dependency lockfile. Its resource receipt cannot reuse a session-task profile, even for identical effective model parameters. No measured project-reuse profile is registered yet, so the normal execution path currently returns `needs_profiling` before saving authorization or configuration. Synthetic storage tests and fresh-task music measurements do not close this remaining execution requirement.
+
+Project parameter reuse preserves the original result and records a new version relationship. It does not implement text/image selections, time-range editing, preserved-region verification or the complete natural-language workflow. Resource admission and real per-model execution/quality acceptance still apply independently. Cross-session playback through the desktop media interface remains pending.
 
 ## ACP extension boundary
 

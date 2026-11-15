@@ -31,7 +31,10 @@ fn sources() -> BTreeMap<&'static str, String> {
         "crates/lumina/src/media/files.rs",
         "crates/lumina/src/media/formats.rs",
         "crates/lumina/src/media/store.rs",
+        "crates/lumina/src/media/project_assets.rs",
+        "crates/lumina/src/project/assets.rs",
         "crates/lumina/src/media/task_configuration.rs",
+        "crates/lumina/src/media/project_task_reuse.rs",
         "crates/lumina/src/media/task_output.rs",
         "crates/lumina/src/media/task_service.rs",
         "crates/lumina/src/session/session_manager.rs",
@@ -39,6 +42,8 @@ fn sources() -> BTreeMap<&'static str, String> {
         "crates/lumina-local-inference/src/lifecycle/files.rs",
         "crates/lumina-local-inference/src/lifecycle/task_parameters.rs",
         "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/music_task_parameters.rs",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/reuse.rs",
+        "crates/lumina-local-inference/src/lifecycle/project_task_scope.rs",
         "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/models.rs",
         "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/services.rs",
         "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/profiles.rs",
@@ -89,6 +94,20 @@ async fn measure_installed_music_publication() -> Result<()> {
     );
     let directory = run.join("output-root/publication");
     std::fs::create_dir(&directory)?;
+    let domain_case = std::env::var_os("LUMINA_MUSIC_DOMAIN_CASE_FILE")
+        .map(|path| -> Result<_> {
+            let path = PathBuf::from(path).canonicalize()?;
+            ensure!(
+                path == run.join("domain-case.json"),
+                "Unexpected music case path"
+            );
+            let bytes = std::fs::read(path)?;
+            ensure!(bytes.len() <= 65536, "Music case exceeds byte limit");
+            let value: Value = serde_json::from_slice(&bytes)?;
+            Ok((value, Sha256Digest::of_bytes(&bytes)))
+        })
+        .transpose()?;
+    let domain_case_sha = domain_case.as_ref().map(|(_, digest)| digest.clone());
     use crate::agents::platform_extensions::{PlatformExtensionContext, PLATFORM_EXTENSIONS};
     use crate::agents::ToolCallContext;
     use crate::config::LuminaMode;
@@ -110,6 +129,20 @@ async fn measure_installed_music_publication() -> Result<()> {
     let call_id = "stable-music-request";
     let storage = manager.storage();
     let pool = storage.pool().await?;
+    let project = if domain_case.is_some() {
+        let projects = crate::project::ProjectService::new(Arc::clone(storage));
+        let project = projects
+            .open_project(&directory, Some("Music resource domain"))
+            .await?;
+        manager
+            .update(session)
+            .project_id(Some(project.id.clone()))
+            .apply()
+            .await?;
+        Some(project)
+    } else {
+        None
+    };
     let media = MediaResultStore::new(pool.clone());
     let config = TaskConfigurationStore::new(pool.clone());
     let root = media
@@ -132,8 +165,14 @@ async fn measure_installed_music_publication() -> Result<()> {
         })
         .context("Missing active managed music")?;
     let mode = std::env::var("LUMINA_TASK_RESOURCE_VERIFY").unwrap_or_default();
-    let parameters =
-        json!({"prompt":PROMPT,"seed":42,"steps": if mode=="needs_profiling" {9} else {8}});
+    ensure!(
+        domain_case.is_none() || mode == "measurement",
+        "Domain cases require isolated measurement mode"
+    );
+    let parameters = domain_case.as_ref().map_or_else(
+        || json!({"prompt":PROMPT,"seed":42,"steps": if mode=="needs_profiling" {9} else {8}}),
+        |(value, _)| value["parameters"].clone(),
+    );
     let mut request_json = parameters.clone();
     request_json["sessionId"] = json!(session);
     request_json["jobId"] = json!(crate::media::NativeTaskJobs::job_id(session, call_id)?);
@@ -143,6 +182,26 @@ async fn measure_installed_music_publication() -> Result<()> {
         anyhow::bail!("Expected music")
     };
     let digest = plan.snapshot_digest()?;
+    if domain_case.is_some() {
+        let p = &task.snapshot().parameters;
+        ensure!(
+            serde_json::to_value(p)? == parameters
+                && p.prompt.len() <= 1024
+                && p.negative_prompt.is_none()
+                && p.duration_seconds == 4.
+                && p.steps == 8
+                && p.guidance_scale == 1.
+                && p.apg_scale == 1.
+                && p.sampler == StableAudioSampler::Pingpong
+                && p.duration_padding_seconds == 6.
+                && p.truncate_to_duration
+                && p.chunked_decode,
+            "Music domain changes an unmeasured effective parameter"
+        );
+        crate::project::ProjectAssetStore::new(pool.clone())
+            .freeze_job(session, &request.job_id, None)
+            .await?;
+    }
     let association = MediaAssociation::ToolCall {
         tool_call_id: call_id.into(),
     };
@@ -256,7 +315,7 @@ async fn measure_installed_music_publication() -> Result<()> {
         );
         write_report(
             &run.join("driver.json"),
-            json!({"implementation":IMPLEMENTATION,"ownerTest":OWNER,"sources":sources()}),
+            json!({"implementation":IMPLEMENTATION,"ownerTest":OWNER,"sources":sources(),"domainCaseSha256":domain_case_sha}),
         )?;
         let path = run.join("output-root/native/output.wav");
         let mut file = File::options().read(true).share_mode(1).open(path)?;
@@ -304,6 +363,44 @@ async fn measure_installed_music_publication() -> Result<()> {
         "Published audio or tool association differs"
     );
     let published = logical_bytes(&directory)?;
+    let project_archive = if let Some(project) = &project {
+        let reader = manager
+            .create_session(
+                directory.clone(),
+                "Music archive reader".into(),
+                SessionType::User,
+                LuminaMode::Auto,
+            )
+            .await?;
+        manager
+            .update(&reader.id)
+            .project_id(Some(project.id.clone()))
+            .apply()
+            .await?;
+        let assets = crate::project::ProjectAssetStore::new(pool.clone());
+        let archived = assets
+            .read(&reader.id, &result.result_id)
+            .await?
+            .context("Missing project music archive")?;
+        let archived_configuration: crate::media::task_configuration::ArchivedTaskConfiguration =
+            serde_json::from_value(archived.content["configuration"].clone())?;
+        let original = config
+            .read(session, &request.job_id)
+            .await?
+            .context("Missing music configuration")?;
+        ensure!(
+            archived.project_id == project.id
+                && archived.source_session_id == session
+                && archived.job_id == request.job_id
+                && archived.content["result"] == serde_json::to_value(result)?
+                && archived_configuration.validate(session, &request.job_id)? == original
+                && media.read(&reader.id, &result.result_id).await?.is_none(),
+            "Project music archive scope or configuration differs"
+        );
+        Some((reader.id, archived))
+    } else {
+        None
+    };
     pool.close().await;
     let reopened_storage = SessionStorage::new(directory.clone());
     let reopened_pool = reopened_storage.pool().await?;
@@ -321,10 +418,28 @@ async fn measure_installed_music_publication() -> Result<()> {
     let hash = files::digest(&mut File::open(&wav)?)?;
     ensure!(
         result.sha256 == hash
-            && hash == "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+            && (domain_case.is_some()
+                || hash == "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5"),
         "Published WAV hash differs after reopen"
     );
     drop(held);
+    if let Some((reader, archived)) = &project_archive {
+        ensure!(
+            crate::project::ProjectAssetStore::new(reopened_pool.clone())
+                .read(reader, &result.result_id)
+                .await?
+                .as_ref()
+                == Some(archived),
+            "Reopened project archive changed"
+        );
+        let native_hash =
+            files::digest(&mut File::open(run.join("output-root/native/output.wav"))?)?;
+        let owner: Value = serde_json::from_reader(File::open(run.join("owner.json"))?)?;
+        ensure!(
+            native_hash == hash && owner["outputSha256"] == hash,
+            "Native and published music bytes differ"
+        );
+    }
     reopened_pool.close().await;
     app.shutdown().await?;
     write_report(
@@ -337,6 +452,8 @@ async fn measure_installed_music_publication() -> Result<()> {
             "schemaVersion":2,"implementation":IMPLEMENTATION,"implementationSourcesSha256":Sha256Digest::of_serializable(&sources())?,
             "snapshotDigest":digest,"publishedPath":wav,"result":result,"reopenedVerified":true,
             "inputSha256":hash,"publishedSha256":result.sha256,"publishedBytes":result.bytes,
+            "domainCaseSha256":domain_case_sha,
+            "projectArchive":{"verified":project_archive.is_some(),"reopenedVerified":project_archive.is_some()},
             "checkpoints":[{"directoryLogicalBytes":before},{"directoryLogicalBytes":published},{"directoryLogicalBytes":logical_bytes(&directory)?}]
         }),
     )

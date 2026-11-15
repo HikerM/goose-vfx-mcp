@@ -157,14 +157,33 @@ pub(super) fn validate_metadata(
     Ok(())
 }
 
+pub(super) fn validate_project_derivation(
+    metadata: &AudioTaskSnapshotMetadata,
+    scope: &ProjectTaskCompilationScope,
+) -> GenerationParameterResult<()> {
+    scope.validate_child(&metadata.session_id, &metadata.job_id)?;
+    if let Some(parent) = &metadata.derivation {
+        scope.validate_parent(
+            scope.parent_session_id(),
+            &parent.parent_job_id,
+            &parent.parent_snapshot_digest,
+        )?;
+    }
+    Ok(())
+}
+
 pub(super) fn child_metadata(
     parent: &AudioTaskSnapshotMetadata,
     session_id: &str,
     job_id: &str,
     expected: &Sha256Digest,
     actual: Sha256Digest,
+    scope: Option<&ProjectTaskCompilationScope>,
 ) -> GenerationParameterResult<AudioTaskDerivation> {
-    if parent.session_id != session_id {
+    if let Some(scope) = scope {
+        scope.validate_child(session_id, job_id)?;
+        scope.validate_parent(&parent.session_id, &parent.job_id, &actual)?;
+    } else if parent.session_id != session_id {
         return Err(invalid(
             "parent",
             "result_unavailable",
@@ -198,6 +217,7 @@ pub(super) fn compare_parent<T: Serialize>(
     parent: &AudioTaskSnapshotMetadata,
     parent_parameters: &T,
     digest: Sha256Digest,
+    scope: Option<&ProjectTaskCompilationScope>,
 ) -> GenerationParameterResult<()> {
     let stored = child.derivation.as_ref().ok_or_else(invalid_parent)?;
     let mut expected = child_metadata(
@@ -206,6 +226,7 @@ pub(super) fn compare_parent<T: Serialize>(
         &child.job_id,
         &stored.parent_snapshot_digest,
         digest,
+        scope,
     )?;
     expected.change = change_between(parent_parameters, child_parameters)?;
     if &expected != stored {
@@ -216,8 +237,25 @@ pub(super) fn compare_parent<T: Serialize>(
 
 impl PocketTtsParameterService {
     pub fn validate_snapshot(&self, snapshot: &PocketTtsSnapshot) -> GenerationParameterResult<()> {
+        self.validate_snapshot_scoped(snapshot, None)
+    }
+
+    pub fn validate_snapshot_with_project_scope(
+        &self,
+        snapshot: &PocketTtsSnapshot,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<()> {
+        validate_project_derivation(&snapshot.metadata, scope)?;
+        self.validate_snapshot_scoped(snapshot, Some(scope))
+    }
+
+    fn validate_snapshot_scoped(
+        &self,
+        snapshot: &PocketTtsSnapshot,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<()> {
         let request = snapshot.request(&snapshot.metadata.job_id);
-        let canonical = self.compile(request.clone())?.snapshot;
+        let canonical = self.compile_scoped(request.clone(), scope)?.snapshot;
         validate_metadata(&snapshot.metadata, canonical.metadata)?;
         if canonical.parameters != snapshot.parameters {
             return Err(invalid_parent());
@@ -231,7 +269,7 @@ impl PocketTtsParameterService {
             let mut previous = request;
             old_value::<PocketTtsPatch>(change)?.apply(&mut previous);
             if change_between(
-                &self.compile(previous)?.snapshot.parameters,
+                &self.compile_scoped(previous, scope)?.snapshot.parameters,
                 &snapshot.parameters,
             )?
             .as_ref()
@@ -248,14 +286,39 @@ impl PocketTtsParameterService {
         child: &PocketTtsSnapshot,
         parent: &PocketTtsSnapshot,
     ) -> GenerationParameterResult<()> {
-        self.validate_snapshot(parent)?;
-        self.validate_snapshot(child)?;
+        self.validate_parent_scoped(child, parent, None)
+    }
+
+    pub fn validate_parent_with_project_scope(
+        &self,
+        child: &PocketTtsSnapshot,
+        parent: &PocketTtsSnapshot,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<()> {
+        scope.validate_child(&child.metadata.session_id, &child.metadata.job_id)?;
+        scope.validate_parent(
+            &parent.metadata.session_id,
+            &parent.metadata.job_id,
+            &parent.digest()?,
+        )?;
+        self.validate_parent_scoped(child, parent, Some(scope))
+    }
+
+    fn validate_parent_scoped(
+        &self,
+        child: &PocketTtsSnapshot,
+        parent: &PocketTtsSnapshot,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<()> {
+        self.validate_snapshot_scoped(parent, scope)?;
+        self.validate_snapshot_scoped(child, scope)?;
         compare_parent(
             &child.metadata,
             &child.parameters,
             &parent.metadata,
             &parent.parameters,
             parent.digest()?,
+            scope,
         )
     }
 
@@ -268,17 +331,57 @@ impl PocketTtsParameterService {
         new_job_id: &str,
         patch: PocketTtsPatch,
     ) -> GenerationParameterResult<PocketTtsPreparedTask> {
+        self.reuse_configuration_scoped(
+            session_id,
+            parent,
+            expected_parent_digest,
+            new_job_id,
+            patch,
+            None,
+        )
+    }
+
+    pub fn reuse_configuration_with_project_scope(
+        &self,
+        session_id: &str,
+        parent: &PocketTtsSnapshot,
+        expected_parent_digest: &Sha256Digest,
+        new_job_id: &str,
+        patch: PocketTtsPatch,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<PocketTtsPreparedTask> {
+        self.reuse_configuration_scoped(
+            session_id,
+            parent,
+            expected_parent_digest,
+            new_job_id,
+            patch,
+            Some(scope),
+        )
+    }
+
+    fn reuse_configuration_scoped(
+        &self,
+        session_id: &str,
+        parent: &PocketTtsSnapshot,
+        expected_parent_digest: &Sha256Digest,
+        new_job_id: &str,
+        patch: PocketTtsPatch,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<PocketTtsPreparedTask> {
         let mut lineage = child_metadata(
             &parent.metadata,
             session_id,
             new_job_id,
             expected_parent_digest,
             parent.digest()?,
+            scope,
         )?;
-        self.validate_snapshot(parent)?;
+        self.validate_snapshot_scoped(parent, scope)?;
         let mut request = parent.request(new_job_id);
+        request.session_id = session_id.into();
         patch.apply(&mut request);
-        let mut prepared = self.compile(request)?;
+        let mut prepared = self.compile_scoped(request, scope)?;
         lineage.change = change_between(&parent.parameters, &prepared.snapshot.parameters)?;
         prepared.snapshot.metadata.derivation = Some(lineage);
         Ok(prepared)
@@ -287,8 +390,25 @@ impl PocketTtsParameterService {
 
 impl Qwen3AsrParameterService {
     pub fn validate_snapshot(&self, snapshot: &Qwen3AsrSnapshot) -> GenerationParameterResult<()> {
+        self.validate_snapshot_scoped(snapshot, None)
+    }
+
+    pub fn validate_snapshot_with_project_scope(
+        &self,
+        snapshot: &Qwen3AsrSnapshot,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<()> {
+        validate_project_derivation(&snapshot.metadata, scope)?;
+        self.validate_snapshot_scoped(snapshot, Some(scope))
+    }
+
+    fn validate_snapshot_scoped(
+        &self,
+        snapshot: &Qwen3AsrSnapshot,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<()> {
         let request = snapshot.request(&snapshot.metadata.job_id);
-        let canonical = self.compile(request.clone())?.snapshot;
+        let canonical = self.compile_scoped(request.clone(), scope)?.snapshot;
         validate_metadata(&snapshot.metadata, canonical.metadata)?;
         if canonical.parameters != snapshot.parameters {
             return Err(invalid_parent());
@@ -302,7 +422,7 @@ impl Qwen3AsrParameterService {
             let mut previous = request;
             old_value::<Qwen3AsrPatch>(change)?.apply(&mut previous);
             if change_between(
-                &self.compile(previous)?.snapshot.parameters,
+                &self.compile_scoped(previous, scope)?.snapshot.parameters,
                 &snapshot.parameters,
             )?
             .as_ref()
@@ -319,14 +439,39 @@ impl Qwen3AsrParameterService {
         child: &Qwen3AsrSnapshot,
         parent: &Qwen3AsrSnapshot,
     ) -> GenerationParameterResult<()> {
-        self.validate_snapshot(parent)?;
-        self.validate_snapshot(child)?;
+        self.validate_parent_scoped(child, parent, None)
+    }
+
+    pub fn validate_parent_with_project_scope(
+        &self,
+        child: &Qwen3AsrSnapshot,
+        parent: &Qwen3AsrSnapshot,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<()> {
+        scope.validate_child(&child.metadata.session_id, &child.metadata.job_id)?;
+        scope.validate_parent(
+            &parent.metadata.session_id,
+            &parent.metadata.job_id,
+            &parent.digest()?,
+        )?;
+        self.validate_parent_scoped(child, parent, Some(scope))
+    }
+
+    fn validate_parent_scoped(
+        &self,
+        child: &Qwen3AsrSnapshot,
+        parent: &Qwen3AsrSnapshot,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<()> {
+        self.validate_snapshot_scoped(parent, scope)?;
+        self.validate_snapshot_scoped(child, scope)?;
         compare_parent(
             &child.metadata,
             &child.parameters,
             &parent.metadata,
             &parent.parameters,
             parent.digest()?,
+            scope,
         )
     }
 
@@ -338,17 +483,57 @@ impl Qwen3AsrParameterService {
         new_job_id: &str,
         patch: Qwen3AsrPatch,
     ) -> GenerationParameterResult<Qwen3AsrPreparedTask> {
+        self.reuse_configuration_scoped(
+            session_id,
+            parent,
+            expected_parent_digest,
+            new_job_id,
+            patch,
+            None,
+        )
+    }
+
+    pub fn reuse_configuration_with_project_scope(
+        &self,
+        session_id: &str,
+        parent: &Qwen3AsrSnapshot,
+        expected_parent_digest: &Sha256Digest,
+        new_job_id: &str,
+        patch: Qwen3AsrPatch,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<Qwen3AsrPreparedTask> {
+        self.reuse_configuration_scoped(
+            session_id,
+            parent,
+            expected_parent_digest,
+            new_job_id,
+            patch,
+            Some(scope),
+        )
+    }
+
+    fn reuse_configuration_scoped(
+        &self,
+        session_id: &str,
+        parent: &Qwen3AsrSnapshot,
+        expected_parent_digest: &Sha256Digest,
+        new_job_id: &str,
+        patch: Qwen3AsrPatch,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<Qwen3AsrPreparedTask> {
         let mut lineage = child_metadata(
             &parent.metadata,
             session_id,
             new_job_id,
             expected_parent_digest,
             parent.digest()?,
+            scope,
         )?;
-        self.validate_snapshot(parent)?;
+        self.validate_snapshot_scoped(parent, scope)?;
         let mut request = parent.request(new_job_id);
+        request.session_id = session_id.into();
         patch.apply(&mut request);
-        let mut prepared = self.compile(request)?;
+        let mut prepared = self.compile_scoped(request, scope)?;
         lineage.change = change_between(&parent.parameters, &prepared.snapshot.parameters)?;
         prepared.snapshot.metadata.derivation = Some(lineage);
         Ok(prepared)

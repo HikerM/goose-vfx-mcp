@@ -123,6 +123,177 @@ fn profile(plan: &NativeTaskPlan) -> TaskResourceProfile {
     }
 }
 
+fn publication_plans() -> Vec<NativeTaskPlan> {
+    let binding = |profile: AudioTaskProfile| {
+        let (sha256, size_bytes) = profile.recorded_model();
+        let (spec_sha256, spec_bytes) = profile.recorded_model_spec();
+        AudioTaskModelBinding {
+            installation_id: "synthetic-publication-installation".into(),
+            version_id: "synthetic-publication-version".into(),
+            manifest_digest: Sha256Digest::of_bytes(b"synthetic publication manifest"),
+            runtime: profile.runtime_build(),
+            target_capabilities: BTreeSet::from([profile.capability()]),
+            model: AudioTaskAssetBinding {
+                artifact_id: "model".into(),
+                sha256,
+                size_bytes,
+            },
+            model_spec: AudioTaskAssetBinding {
+                artifact_id: "spec".into(),
+                sha256: spec_sha256,
+                size_bytes: spec_bytes,
+            },
+        }
+    };
+    let media = serde_json::json!({
+        "sessionId":"synthetic-session", "resultId":"019a1111-2222-8333-8444-555555555555",
+        "sha256":Sha256Digest::of_bytes(b"synthetic audio"), "mimeType":"audio/wav",
+        "sizeBytes":165006, "sampleRate":16000, "channels":1, "sampleFrames":82480
+    });
+    vec![
+        plan(false, "v1", 42),
+        plan(true, "v1", 42),
+        PocketTtsParameterService::new(binding(AudioTaskProfile::PocketTtsEnglishCpu))
+            .unwrap()
+            .compile_json(
+                serde_json::json!({"sessionId":"synthetic-session", "jobId":"synthetic-tts",
+                "text":"The red apple is on the wooden table.", "voiceReference":media, "seed":42}),
+            )
+            .unwrap()
+            .into(),
+        Qwen3AsrParameterService::new(binding(AudioTaskProfile::Qwen3Asr06bCpu))
+            .unwrap()
+            .compile_json(
+                serde_json::json!({"sessionId":"synthetic-session", "jobId":"synthetic-asr",
+                "audio":media}),
+            )
+            .unwrap()
+            .into(),
+        StableAudioMusicParameterService::new(binding(AudioTaskProfile::StableAudioSmallMusicCpu))
+            .unwrap()
+            .compile_json(
+                serde_json::json!({"sessionId":"synthetic-session", "jobId":"synthetic-music",
+                "prompt":"instrumental piano", "seed":42}),
+            )
+            .unwrap()
+            .into(),
+    ]
+}
+
+fn project_publication(source: &[u8]) -> TaskPublicationContext {
+    TaskPublicationContext::ProjectParameterReuseV1 {
+        implementation_sources_digest: Sha256Digest::of_bytes(source),
+    }
+}
+
+#[test]
+fn explicit_session_publication_preserves_every_task_kind_legacy_key_and_profile() {
+    for plan in publication_plans() {
+        let legacy = TaskResourceKey::from_plan(&plan).unwrap();
+        let explicit =
+            TaskResourceKey::from_plan_with_publication(&plan, &TaskPublicationContext::Session)
+                .unwrap();
+        assert_eq!(
+            serde_json::to_vec(&legacy).unwrap(),
+            serde_json::to_vec(&explicit).unwrap()
+        );
+        let profiles = [profile(&plan)];
+        assert!(matches!(
+            assess_with_profiles(&plan, &hardware(), 1000, &profiles).unwrap(),
+            TaskResourceAssessment::Admitted(_)
+        ));
+        assert!(matches!(
+            assess_with_profiles_and_publication(
+                &plan,
+                &hardware(),
+                1000,
+                &profiles,
+                &TaskPublicationContext::Session
+            )
+            .unwrap(),
+            TaskResourceAssessment::Admitted(_)
+        ));
+    }
+}
+
+#[test]
+fn project_publication_cannot_borrow_a_session_profile_for_any_task_kind() {
+    let publication = project_publication(b"project publication implementation A");
+    for plan in publication_plans() {
+        let session = TaskResourceKey::from_plan(&plan).unwrap();
+        let project = TaskResourceKey::from_plan_with_publication(&plan, &publication).unwrap();
+        assert_eq!(session.kind, project.kind);
+        assert_eq!(session.runtime_digest, project.runtime_digest);
+        assert_eq!(session.components_digest, project.components_digest);
+        assert_eq!(session.requires_gpu, project.requires_gpu);
+        assert_ne!(session.workload_digest, project.workload_digest);
+        let outcome = assess_with_profiles_and_publication(
+            &plan,
+            &hardware(),
+            1000,
+            &[profile(&plan)],
+            &publication,
+        )
+        .unwrap();
+        let TaskResourceAssessment::NeedsProfiling(requirement) = outcome else {
+            panic!("Project task reused a session profile")
+        };
+        assert_eq!(requirement.key, project);
+    }
+}
+
+#[test]
+fn matching_project_profile_receipt_retains_publication_context_during_owner_recheck() {
+    let publication = project_publication(b"project publication implementation A");
+    for plan in publication_plans() {
+        let mut measured = profile(&plan);
+        measured.key = TaskResourceKey::from_plan_with_publication(&plan, &publication).unwrap();
+        let TaskResourceAssessment::Admitted(mut receipt) = assess_with_profiles_and_publication(
+            &plan,
+            &hardware(),
+            1000,
+            &[measured.clone()],
+            &publication,
+        )
+        .unwrap() else {
+            panic!("Synthetic matching project profile was rejected")
+        };
+        receipt.verify_now(&plan, &hardware(), 1000).unwrap();
+        assert!(matches!(
+            assess_with_profiles(&plan, &hardware(), 1000, &[measured]).unwrap(),
+            TaskResourceAssessment::NeedsProfiling(_)
+        ));
+        receipt.publication = TaskPublicationContext::Session;
+        assert!(receipt.verify_now(&plan, &hardware(), 1000).is_err());
+    }
+}
+
+#[test]
+fn changed_project_publication_sources_invalidate_profiles_and_existing_receipts() {
+    let publication = project_publication(b"project publication implementation A");
+    let changed = project_publication(b"project publication implementation B");
+    let plan = plan(false, "v1", 42);
+    let mut measured = profile(&plan);
+    measured.key = TaskResourceKey::from_plan_with_publication(&plan, &publication).unwrap();
+    let TaskResourceAssessment::Admitted(mut receipt) = assess_with_profiles_and_publication(
+        &plan,
+        &hardware(),
+        1000,
+        std::slice::from_ref(&measured),
+        &publication,
+    )
+    .unwrap() else {
+        panic!("Synthetic matching project profile was rejected")
+    };
+    assert!(matches!(
+        assess_with_profiles_and_publication(&plan, &hardware(), 1000, &[measured], &changed)
+            .unwrap(),
+        TaskResourceAssessment::NeedsProfiling(_)
+    ));
+    receipt.publication = changed;
+    assert!(receipt.verify_now(&plan, &hardware(), 1000).is_err());
+}
+
 #[cfg(windows)]
 pub(crate) fn controlled_test_admission() -> (TaskResourceAdmission, Sha256Digest) {
     let plan = plan(false, "controlled-child", 42);

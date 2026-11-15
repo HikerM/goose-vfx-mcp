@@ -47,7 +47,14 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
             .iter()
             .map(|t| t.name.as_ref())
             .collect::<Vec<_>>(),
-        ["list", "run", "reuse", "project_assets", "project_asset"]
+        [
+            "list",
+            "run",
+            "reuse",
+            "project_reuse",
+            "project_assets",
+            "project_asset"
+        ]
     );
     let listed = client
         .call_tool(&ctx, "list", None, CancellationToken::new())
@@ -65,6 +72,10 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
             json!({"identity":{},"parameters":{},"jobId":"attacker"}),
         ),
         ("reuse", json!({"snapshot":{"text":"untrusted"}})),
+        (
+            "project_reuse",
+            json!({"snapshot":{"text":"untrusted"},"sourceSessionId":"injected"}),
+        ),
     ] {
         let error = client
             .call_tool(

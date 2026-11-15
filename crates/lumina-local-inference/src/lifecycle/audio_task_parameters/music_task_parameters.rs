@@ -1,5 +1,6 @@
 use super::reuse::{
     change_between, child_metadata, compare_parent, invalid_parent, old_value, validate_metadata,
+    validate_project_derivation,
 };
 use super::services::{
     bounded_int, common_arguments, identity, literal, metadata, native_text, parse_request,
@@ -448,8 +449,25 @@ impl StableAudioMusicParameterService {
         &self,
         snapshot: &StableAudioMusicSnapshot,
     ) -> GenerationParameterResult<()> {
+        self.validate_snapshot_scoped(snapshot, None)
+    }
+
+    pub fn validate_snapshot_with_project_scope(
+        &self,
+        snapshot: &StableAudioMusicSnapshot,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<()> {
+        validate_project_derivation(&snapshot.metadata, scope)?;
+        self.validate_snapshot_scoped(snapshot, Some(scope))
+    }
+
+    fn validate_snapshot_scoped(
+        &self,
+        snapshot: &StableAudioMusicSnapshot,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<()> {
         let request = snapshot.request();
-        let canonical = self.compile(request.clone())?.snapshot;
+        let canonical = self.compile_scoped(request.clone(), scope)?.snapshot;
         validate_metadata(&snapshot.metadata, canonical.metadata)?;
         if canonical.parameters != snapshot.parameters {
             return Err(invalid_parent());
@@ -463,7 +481,7 @@ impl StableAudioMusicParameterService {
             let mut previous = request;
             old_value::<StableAudioMusicPatch>(change)?.apply(&mut previous);
             if change_between(
-                &self.compile(previous)?.snapshot.parameters,
+                &self.compile_scoped(previous, scope)?.snapshot.parameters,
                 &snapshot.parameters,
             )?
             .as_ref()
@@ -480,14 +498,39 @@ impl StableAudioMusicParameterService {
         child: &StableAudioMusicSnapshot,
         parent: &StableAudioMusicSnapshot,
     ) -> GenerationParameterResult<()> {
-        self.validate_snapshot(parent)?;
-        self.validate_snapshot(child)?;
+        self.validate_parent_scoped(child, parent, None)
+    }
+
+    pub fn validate_parent_with_project_scope(
+        &self,
+        child: &StableAudioMusicSnapshot,
+        parent: &StableAudioMusicSnapshot,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<()> {
+        scope.validate_child(&child.metadata.session_id, &child.metadata.job_id)?;
+        scope.validate_parent(
+            &parent.metadata.session_id,
+            &parent.metadata.job_id,
+            &parent.digest()?,
+        )?;
+        self.validate_parent_scoped(child, parent, Some(scope))
+    }
+
+    fn validate_parent_scoped(
+        &self,
+        child: &StableAudioMusicSnapshot,
+        parent: &StableAudioMusicSnapshot,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<()> {
+        self.validate_snapshot_scoped(parent, scope)?;
+        self.validate_snapshot_scoped(child, scope)?;
         compare_parent(
             &child.metadata,
             &child.parameters,
             &parent.metadata,
             &parent.parameters,
             parent.digest()?,
+            scope,
         )
     }
 
@@ -500,18 +543,58 @@ impl StableAudioMusicParameterService {
         new_job_id: &str,
         patch: StableAudioMusicPatch,
     ) -> GenerationParameterResult<StableAudioMusicPreparedTask> {
+        self.reuse_configuration_scoped(
+            session_id,
+            parent,
+            expected_parent_digest,
+            new_job_id,
+            patch,
+            None,
+        )
+    }
+
+    pub fn reuse_configuration_with_project_scope(
+        &self,
+        session_id: &str,
+        parent: &StableAudioMusicSnapshot,
+        expected_parent_digest: &Sha256Digest,
+        new_job_id: &str,
+        patch: StableAudioMusicPatch,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<StableAudioMusicPreparedTask> {
+        self.reuse_configuration_scoped(
+            session_id,
+            parent,
+            expected_parent_digest,
+            new_job_id,
+            patch,
+            Some(scope),
+        )
+    }
+
+    fn reuse_configuration_scoped(
+        &self,
+        session_id: &str,
+        parent: &StableAudioMusicSnapshot,
+        expected_parent_digest: &Sha256Digest,
+        new_job_id: &str,
+        patch: StableAudioMusicPatch,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<StableAudioMusicPreparedTask> {
         let mut lineage = child_metadata(
             &parent.metadata,
             session_id,
             new_job_id,
             expected_parent_digest,
             parent.digest()?,
+            scope,
         )?;
-        self.validate_snapshot(parent)?;
+        self.validate_snapshot_scoped(parent, scope)?;
         let mut request = parent.request();
         request.job_id = new_job_id.into();
+        request.session_id = session_id.into();
         patch.apply(&mut request);
-        let mut prepared = self.compile(request)?;
+        let mut prepared = self.compile_scoped(request, scope)?;
         lineage.change = change_between(&parent.parameters, &prepared.snapshot.parameters)?;
         prepared.snapshot.metadata.derivation = Some(lineage);
         Ok(prepared)
@@ -527,6 +610,26 @@ impl StableAudioMusicParameterService {
         &self,
         r: StableAudioMusicRequest,
     ) -> GenerationParameterResult<StableAudioMusicPreparedTask> {
+        self.compile_scoped(r, None)
+    }
+
+    pub fn compile_with_project_scope(
+        &self,
+        r: StableAudioMusicRequest,
+        scope: &ProjectTaskCompilationScope,
+    ) -> GenerationParameterResult<StableAudioMusicPreparedTask> {
+        scope.validate_child(&r.session_id, &r.job_id)?;
+        self.compile_scoped(r, Some(scope))
+    }
+
+    pub(super) fn compile_scoped(
+        &self,
+        r: StableAudioMusicRequest,
+        scope: Option<&ProjectTaskCompilationScope>,
+    ) -> GenerationParameterResult<StableAudioMusicPreparedTask> {
+        if let Some(scope) = scope {
+            scope.validate_identity(&r.session_id, &r.job_id)?;
+        }
         identity("sessionId", &r.session_id)?;
         identity("jobId", &r.job_id)?;
         for (name, text) in [

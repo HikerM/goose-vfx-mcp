@@ -1011,3 +1011,6 @@ fn music_reuse_rejects_foreign_identity_unknown_patches_and_forged_lineage() {
     corrupted.metadata.cpu_threads += 1;
     assert!(service.validate_snapshot(&corrupted).is_err());
 }
+
+#[path = "support/project_audio_task_scope.rs"]
+mod project_audio_task_scope;

@@ -18,6 +18,7 @@ use super::{
     ModelCapability, ModelManifest, ModelTaskParameterAdapter, RuntimeBuild, Sha256Digest,
     TaskParameterIdentity,
 };
+use super::{NativeTaskInputReference, ProjectTaskCompilationScope};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};

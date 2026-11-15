@@ -18,8 +18,8 @@ pub(super) async fn record_media(
     {
         return Ok(());
     }
-    let configuration = match &result.source {
-        MediaSource::Mcp { .. } => serde_json::Value::Null,
+    let (configuration, lineage) = match &result.source {
+        MediaSource::Mcp { .. } => (serde_json::Value::Null, serde_json::Value::Null),
         MediaSource::LocalModel { .. } => {
             #[cfg(feature = "local-inference")]
             {
@@ -29,22 +29,28 @@ pub(super) async fn record_media(
                     &result.job_id,
                 )
                 .await?;
-                archive
-                    .validate(&result.session_id, &result.job_id)?
-                    .verify_source(&result.session_id, &result.job_id, &result.source)?;
-                serde_json::to_value(archive)?
+                let record = archive.validate(&result.session_id, &result.job_id)?;
+                record.verify_source(&result.session_id, &result.job_id, &result.source)?;
+                let lineage = serde_json::to_value(
+                    super::project_task_reuse::project_lineage(tx, &record).await?,
+                )?;
+                (serde_json::to_value(archive)?, lineage)
             }
             #[cfg(not(feature = "local-inference"))]
             anyhow::bail!("Local task configuration verification is unavailable in this build")
         }
     };
+    let mut content = json!({"kind":"media", "result":result, "configuration":configuration});
+    if !lineage.is_null() {
+        content["projectLineage"] = lineage;
+    }
     ProjectAssetStore::record_in_tx(
         tx,
         &result.session_id,
         &result.job_id,
         call,
         &result.result_id,
-        &json!({"kind":"media", "result":result, "configuration":configuration}),
+        &content,
     )
     .await
 }
@@ -95,13 +101,18 @@ pub(super) async fn record_transcript(
     let mut bytes = [0; 16];
     bytes.copy_from_slice(&digest[..16]);
     let asset_id = uuid::Uuid::from_bytes(bytes).to_string();
+    let mut content =
+        json!({"kind":"transcript", "transcript":transcript, "configuration":archive});
+    if let Some(lineage) = super::project_task_reuse::project_lineage(tx, &record).await? {
+        content["projectLineage"] = serde_json::to_value(lineage)?;
+    }
     ProjectAssetStore::record_in_tx(
         tx,
         &transcript.session_id,
         &transcript.job_id,
         None,
         &asset_id,
-        &json!({"kind":"transcript", "transcript":transcript, "configuration":archive}),
+        &content,
     )
     .await
 }

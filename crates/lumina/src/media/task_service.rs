@@ -1,14 +1,15 @@
 use anyhow::{ensure, Context, Result};
 use lumina_providers::local_inference::lifecycle::{
-    assess_current_task_resources, InstallationService, NativeTaskEngineRegistry, NativeTaskPlan,
-    NativeTaskRuntime, TaskProfilingRequirement, TaskResourceAssessment, TaskResourceRejection,
+    assess_current_task_resources_with_publication, InstallationService, NativeTaskEngineRegistry,
+    NativeTaskPlan, NativeTaskRuntime, TaskProfilingRequirement, TaskPublicationContext,
+    TaskResourceAssessment, TaskResourceRejection,
 };
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 use super::{
     import_native_task_output, ImportedTaskOutput, MediaAssociation, MediaResultStore,
-    TaskConfigurationStore,
+    PreparedProjectTask, TaskConfigurationStore,
 };
 use crate::session::session_manager::SessionStorage;
 
@@ -71,6 +72,57 @@ pub(crate) async fn execute_prepared_task_controlled(
     association: MediaAssociation,
     cancel: CancellationToken,
 ) -> Result<PreparedTaskExecution> {
+    execute_task_controlled(
+        installation,
+        engines,
+        storage,
+        authenticated_session_id,
+        TaskExecutionPlan::Session(plan),
+        association,
+        cancel,
+    )
+    .await
+}
+
+pub(crate) async fn execute_project_prepared_task_controlled(
+    installation: &InstallationService,
+    engines: &NativeTaskEngineRegistry,
+    storage: &SessionStorage,
+    authenticated_session_id: &str,
+    task: PreparedProjectTask,
+    association: MediaAssociation,
+    cancel: CancellationToken,
+) -> Result<PreparedTaskExecution> {
+    execute_task_controlled(
+        installation,
+        engines,
+        storage,
+        authenticated_session_id,
+        TaskExecutionPlan::Project(task),
+        association,
+        cancel,
+    )
+    .await
+}
+
+enum TaskExecutionPlan {
+    Session(NativeTaskPlan),
+    Project(PreparedProjectTask),
+}
+
+async fn execute_task_controlled(
+    installation: &InstallationService,
+    engines: &NativeTaskEngineRegistry,
+    storage: &SessionStorage,
+    authenticated_session_id: &str,
+    execution: TaskExecutionPlan,
+    association: MediaAssociation,
+    cancel: CancellationToken,
+) -> Result<PreparedTaskExecution> {
+    let (plan, project_task) = match execution {
+        TaskExecutionPlan::Session(plan) => (plan, None),
+        TaskExecutionPlan::Project(task) => (task.plan().clone(), Some(task)),
+    };
     ensure!(
         authenticated_session_id == plan.session_id(),
         "Task belongs to a different session"
@@ -113,8 +165,14 @@ pub(crate) async fn execute_prepared_task_controlled(
         .register_output_root(&storage.media_output_directory())
         .await?;
     let root_path = root.path.clone();
+    let publication = if project_task.is_some() {
+        super::task_publication::project_reuse_context()?
+    } else {
+        TaskPublicationContext::Session
+    };
     let (plan, assessment) = tokio::task::spawn_blocking(move || -> Result<_> {
-        let assessment = assess_current_task_resources(&plan, &root_path)?;
+        let assessment =
+            assess_current_task_resources_with_publication(&plan, &root_path, &publication)?;
         Ok((plan, assessment))
     })
     .await
@@ -129,16 +187,29 @@ pub(crate) async fn execute_prepared_task_controlled(
         }
         TaskResourceAssessment::Admitted(admission) => admission,
     };
-    let inputs = media
-        .open_native_task_inputs(authenticated_session_id, &plan)
-        .await?;
-    let configurations = TaskConfigurationStore::new(pool.clone());
-    match &plan {
-        NativeTaskPlan::Generation(task) => configurations.save_generation(task).await?,
-        NativeTaskPlan::PocketTts(task) => configurations.save_pocket_tts(task).await?,
-        NativeTaskPlan::Qwen3Asr(task) => configurations.save_qwen3_asr(task).await?,
-        NativeTaskPlan::StableAudioMusic(task) => configurations.save_music(task).await?,
+    let inputs = match &project_task {
+        Some(task) => {
+            media
+                .open_project_task_inputs(storage, authenticated_session_id, task)
+                .await?
+        }
+        None => {
+            media
+                .open_native_task_inputs(authenticated_session_id, &plan)
+                .await?
+        }
     };
+    let configurations = TaskConfigurationStore::new(pool.clone());
+    if let Some(task) = &project_task {
+        configurations.save_project_task(task).await?;
+    } else {
+        match &plan {
+            NativeTaskPlan::Generation(task) => configurations.save_generation(task).await?,
+            NativeTaskPlan::PocketTts(task) => configurations.save_pocket_tts(task).await?,
+            NativeTaskPlan::Qwen3Asr(task) => configurations.save_qwen3_asr(task).await?,
+            NativeTaskPlan::StableAudioMusic(task) => configurations.save_music(task).await?,
+        };
+    }
     let output = NativeTaskRuntime::execute_cancellable(
         installation.repository(),
         installation.store(),
@@ -164,94 +235,5 @@ pub(crate) async fn execute_prepared_task_controlled(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use lumina_providers::local_inference::lifecycle::*;
-    use std::{path::PathBuf, time::Duration};
-
-    fn prepared() -> NativeTaskPlan {
-        let profile = GenerationProfile::Sd15CpuTextToImage;
-        let binding = GenerationModelBinding {
-            installation_id: "unregistered-installation".into(),
-            version_id: "unregistered-version".into(),
-            manifest_digest: Sha256Digest::of_bytes(b"fixture"),
-            runtime: profile.runtime_build(),
-            target_capabilities: profile.required_capabilities(),
-            assets: profile
-                .recorded_assets()
-                .into_iter()
-                .map(|(role, (sha256, size_bytes))| {
-                    (
-                        role,
-                        GenerationAssetBinding {
-                            artifact_id: "model".into(),
-                            sha256,
-                            size_bytes,
-                        },
-                    )
-                })
-                .collect(),
-        };
-        GenerationParameterService::new(profile, binding)
-            .unwrap()
-            .compile(GenerationTaskRequest {
-                session_id: "session-a".into(),
-                job_id: "job-a".into(),
-                parameters: GenerationParameters::Image(Sd15ImageParameters {
-                    prompt: Some("an apple".into()),
-                    ..Default::default()
-                }),
-            })
-            .unwrap()
-            .into()
-    }
-
-    #[tokio::test]
-    async fn rejects_foreign_session_and_absent_install_before_persisting_configuration() {
-        let directory = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../target/lifecycle-validation/task-service-unit");
-        std::fs::create_dir_all(&directory).unwrap();
-        let tmp = tempfile::tempdir_in(directory.canonicalize().unwrap()).unwrap();
-        let service = InstallationService::start(
-            Arc::new(LifecycleRepository::open(&tmp.path().join("models.db")).unwrap()),
-            Arc::new(InstallationStore::open(&tmp.path().join("models")).unwrap()),
-            Arc::new(|| Ok(None)),
-            Arc::new(|| 1000),
-            Duration::from_millis(50),
-        )
-        .unwrap();
-        let storage = SessionStorage::new(tmp.path().to_owned());
-        let engines = NativeTaskEngineRegistry::default();
-        let association = MediaAssociation::Message {
-            message_id: "test".into(),
-        };
-        for (session, expected) in [
-            ("session-b", "different session"),
-            ("session-a", "registered installation version"),
-        ] {
-            // The ACP command may spawn this future on its multithreaded runtime.
-            fn is_send<T: Send>(value: T) -> T {
-                value
-            }
-            let error = is_send(execute_prepared_task(
-                &service,
-                &engines,
-                &storage,
-                session,
-                prepared(),
-                association.clone(),
-            ))
-            .await
-            .unwrap_err();
-            assert!(error.to_string().contains(expected), "{error:#}");
-        }
-        assert!(!storage.media_output_directory().exists());
-        let configurations = TaskConfigurationStore::new(storage.pool().await.unwrap().clone());
-        assert!(configurations
-            .read("session-a", "job-a")
-            .await
-            .unwrap()
-            .is_none());
-        service.shutdown().await.unwrap();
-    }
-}
+#[path = "task_service_tests.rs"]
+mod tests;

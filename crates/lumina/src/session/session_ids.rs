@@ -16,6 +16,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("project_execution_scopes_v1", "source_session_id"),
     ("project_assets_v1", "source_session_id"),
     ("project_task_configurations_v1", "session_id"),
+    ("project_task_authorizations_v1", "session_id"),
 ];
 
 fn numeric_session_id(value: &str) -> String {

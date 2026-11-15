@@ -8,6 +8,49 @@ const FIRST: &str = "12345678-1234-4234-8234-123456789abc";
 const SECOND: &str = "22345678-1234-4234-8234-123456789abc";
 const MISSING: &str = "32345678-1234-4234-8234-123456789abc";
 
+#[test]
+fn project_reuse_accepts_only_an_asset_and_model_patch_not_caller_authorization() {
+    let valid = json!({
+        "identity": {
+            "installationId":"model", "versionId":"version", "manifestDigest":"manifest",
+            "runtimeDigest":"runtime", "componentBindingDigest":"components",
+            "taskVariant":"variant", "parameterSchemaId":"schema"
+        },
+        "parentAssetId":FIRST,
+        "patch":{"prompt":"Retain the instrumentation, change the mood"}
+    });
+    let parsed: ProjectReuse = serde_json::from_value(valid.clone()).unwrap();
+    assert_eq!(parsed.parent_asset_id, FIRST);
+    assert_eq!(parsed.patch["prompt"], valid["patch"]["prompt"]);
+    for field in [
+        "sessionId",
+        "sourceSessionId",
+        "projectId",
+        "jobId",
+        "snapshot",
+        "authorization",
+        "path",
+        "parentJobId",
+    ] {
+        let mut injected = valid.clone();
+        injected[field] = json!("untrusted");
+        assert!(
+            serde_json::from_value::<ProjectReuse>(injected).is_err(),
+            "{field}"
+        );
+    }
+    let tool = tools()
+        .into_iter()
+        .find(|tool| tool.name == "project_reuse")
+        .unwrap();
+    assert_eq!(tool.input_schema["additionalProperties"], false);
+    assert_eq!(tool.input_schema["properties"]["patch"]["minProperties"], 1);
+    assert_eq!(tool.input_schema["properties"]["patch"]["maxProperties"], 1);
+    let wire = serde_json::to_value(tool).unwrap();
+    assert_eq!(wire["annotations"]["readOnlyHint"], false);
+    assert_eq!(wire["annotations"]["destructiveHint"], false);
+}
+
 fn response(result: &CallToolResult) -> Value {
     assert_ne!(result.is_error, Some(true), "{result:?}");
     let RawContent::Text(text) = &result.content[0].raw else {
@@ -102,7 +145,8 @@ impl Fixture {
             ProjectAssetStore::record_in_tx(&mut tx, &sessions[0], &job, None, id, &json!({
                 "kind":"media",
                 "result":{"resultId":id,"sessionId":sessions[0],"kind":"audio","mime":"audio/wav","fileName":"music.wav","bytes":705644,"sha256":"a".repeat(64),"spec":{"kind":"audio","sampleRate":44100,"channels":2,"sampleFrames":176400}},
-                "configuration":{"canonicalSnapshot":"private full parameter snapshot"}
+                "configuration":{"canonicalSnapshot":"private full parameter snapshot"},
+                "projectLineage":{"parentAssetId":MISSING,"parentAssetContentSha256":"b".repeat(64),"patch":{"prompt":"new mood"},"parentConfiguration":"unprojected parent configuration"}
             })).await.unwrap();
             tx.commit().await.unwrap();
         }
@@ -134,6 +178,57 @@ impl Fixture {
             .await
             .unwrap()
     }
+}
+
+#[tokio::test]
+async fn project_reuse_tool_rejects_other_project_parent_without_saving_authorization() {
+    let f = Fixture::new().await;
+    let arguments = json!({
+        "identity": {
+            "installationId":"model", "versionId":"version", "manifestDigest":"manifest",
+            "runtimeDigest":"runtime", "componentBindingDigest":"components",
+            "taskVariant":"variant", "parameterSchemaId":"schema"
+        },
+        "parentAssetId":FIRST,
+        "patch":{"prompt":"new mood"}
+    });
+    let result = f.call(&f.other_project, "project_reuse", arguments).await;
+    assert_eq!(result.is_error, Some(true));
+    let RawContent::Text(text) = &result.content[0].raw else {
+        panic!("Expected error text")
+    };
+    assert!(
+        text.text
+            .contains("Parent asset is unavailable in this project"),
+        "{}",
+        text.text
+    );
+    let pool = f.manager.storage().pool().await.unwrap();
+    for table in [
+        "media_task_configurations_v1",
+        "project_task_authorizations_v1",
+    ] {
+        let count: i64 =
+            sqlx::query_scalar(&format!("SELECT COUNT(*) FROM {table} WHERE session_id=?"))
+                .bind(&f.other_project)
+                .fetch_one(pool)
+                .await
+                .unwrap();
+        assert_eq!(count, 0);
+    }
+    let state: String =
+        sqlx::query_scalar("SELECT state FROM native_task_calls_v1 WHERE session_id=?")
+            .bind(&f.other_project)
+            .fetch_one(pool)
+            .await
+            .unwrap();
+    assert_eq!(state, "failed");
+    f.manager
+        .storage()
+        .native_installations()
+        .shutdown()
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -177,6 +272,15 @@ async fn project_assets_are_discoverable_from_a_new_session_without_leaking_full
     );
     assert!(found["asset"].get("contentSha256").is_none());
     assert!(found["asset"]["archiveContentSha256"].is_string());
+    assert_eq!(found["asset"]["projectLineage"]["parentAssetId"], MISSING);
+    assert_eq!(found["asset"]["projectLineage"]["reuseKind"], "parameters");
+    assert_eq!(
+        found["asset"]["projectLineage"]["patch"],
+        json!({"prompt":"new mood"})
+    );
+    assert!(!found
+        .to_string()
+        .contains("unprojected parent configuration"));
     let cross = response(
         &f.call(&f.other_project, "project_asset", json!({"assetId":FIRST}))
             .await,

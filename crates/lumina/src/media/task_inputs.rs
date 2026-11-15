@@ -6,6 +6,34 @@ use lumina_providers::local_inference::lifecycle::{
 use super::{MediaKind, MediaResultRef, MediaResultStore, MediaSpec};
 
 impl MediaResultStore {
+    pub(crate) async fn open_project_task_inputs(
+        &self,
+        storage: &crate::session::session_manager::SessionStorage,
+        session_id: &str,
+        task: &super::PreparedProjectTask,
+    ) -> Result<Vec<NativeTaskInput>> {
+        let plan = task.plan();
+        super::project_task_reuse::authorize_project_inputs(
+            storage,
+            session_id,
+            plan,
+            task.authorization(),
+        )
+        .await?;
+        let mut inputs = Vec::new();
+        for reference in plan.input_references() {
+            let content = self
+                .open_content(reference.session_id(), reference.result_id())
+                .await?;
+            verify_input_metadata(&reference, content.result())?;
+            let path = content.path().to_path_buf();
+            inputs.push(NativeTaskInput::from_verified_media(
+                reference, path, content,
+            ));
+        }
+        Ok(inputs)
+    }
+
     /// The service has already authenticated `session_id` on the active connection.
     /// Each returned input owns the store's verified content lease through execution.
     pub async fn open_native_task_inputs(

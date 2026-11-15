@@ -2,10 +2,11 @@ use super::PlatformExtensionContext;
 use crate::agents::mcp_client::{Error, McpClientTrait};
 use crate::agents::tool_execution::ToolCallContext;
 use crate::media::{
-    configured_task_engines, execute_prepared_task_controlled, native_result_link,
+    configured_task_engines, execute_prepared_task_controlled,
+    execute_project_prepared_task_controlled, native_result_link, prepare_project_reused_task,
     prepare_reused_task, resolve_media_patch, ImportedTaskOutput, MediaAssociation,
-    MediaResultStore, NativeTaskClaim, NativeTaskJobs, NativeTaskTerminal, PreparedTaskExecution,
-    TaskReuseRequest,
+    MediaResultStore, NativeTaskClaim, NativeTaskJobs, NativeTaskTerminal, PreparedProjectTask,
+    PreparedTaskExecution, ProjectTaskReuseRequest, TaskReuseRequest,
 };
 use crate::project::{ProjectAssetRecord, ProjectAssetStore, ProjectAssetSummary};
 use crate::session::session_manager::SessionStorage;
@@ -137,12 +138,25 @@ fn project_asset_projection(record: ProjectAssetRecord, query: &ProjectAsset) ->
         }
         _ => bail!("Unsupported project asset content"),
     };
+    let lineage = record
+        .content
+        .get("projectLineage")
+        .filter(|value| !value.is_null())
+        .map(|value| {
+            json!({
+                "reuseKind":"parameters",
+                "parentAssetId":value.get("parentAssetId"),
+                "parentAssetContentSha256":value.get("parentAssetContentSha256"),
+                "patch":value.get("patch"),
+            })
+        });
     Ok(json!({"status":"found", "projection":true, "asset":{
         "assetId":record.asset_id, "projectId":record.project_id,
         "sourceSessionId":record.source_session_id, "jobId":record.job_id,
         "workItemId":record.work_item_id, "runId":record.run_id,
         "createdAtMs":record.created_at_ms, "archiveContentSha256":record.content_sha256,
-        "kind":kind, "output":output, "configuration":record.content.get("configuration")
+        "kind":kind, "output":output, "configuration":record.content.get("configuration"),
+        "projectLineage":lineage
     }}))
 }
 #[derive(Deserialize)]
@@ -160,9 +174,32 @@ struct Reuse {
     patch: JsonObject,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct ProjectReuse {
+    identity: TaskParameterIdentity,
+    parent_asset_id: String,
+    patch: JsonObject,
+}
+
 enum Request {
     Run(Run),
     Reuse(Reuse),
+    ProjectReuse(ProjectReuse),
+}
+
+enum PreparedNativeTask {
+    Session(NativeTaskPlan),
+    Project(PreparedProjectTask),
+}
+
+impl PreparedNativeTask {
+    fn plan(&self) -> &NativeTaskPlan {
+        match self {
+            Self::Session(plan) => plan,
+            Self::Project(task) => task.plan(),
+        }
+    }
 }
 
 impl Request {
@@ -170,6 +207,7 @@ impl Request {
         match self {
             Self::Run(v) => &v.identity,
             Self::Reuse(v) => &v.identity,
+            Self::ProjectReuse(v) => &v.identity,
         }
     }
 
@@ -178,13 +216,15 @@ impl Request {
         storage: &SessionStorage,
         session: &str,
         job: &str,
-    ) -> Result<(NativeTaskPlan, Arc<InstallationService>)> {
+    ) -> Result<(PreparedNativeTask, Arc<InstallationService>)> {
         let installation = storage.native_installations().service().await?;
         installation.wait_ready().await?;
         let plan = match self {
             Self::Run(run) => {
                 let media = MediaResultStore::new(storage.pool().await?.clone());
-                prepare_first(&installation, &media, session, job, run).await?
+                PreparedNativeTask::Session(
+                    prepare_first(&installation, &media, session, job, run).await?,
+                )
             }
             Self::Reuse(reuse) => {
                 let request = TaskReuseRequest {
@@ -194,7 +234,20 @@ impl Request {
                     new_job_id: job.into(),
                     patch: reuse.patch,
                 };
-                prepare_reused_task(&installation, storage, session, request).await?
+                PreparedNativeTask::Session(
+                    prepare_reused_task(&installation, storage, session, request).await?,
+                )
+            }
+            Self::ProjectReuse(reuse) => {
+                let request = ProjectTaskReuseRequest {
+                    identity: reuse.identity,
+                    parent_asset_id: reuse.parent_asset_id,
+                    new_job_id: job.into(),
+                    patch: reuse.patch,
+                };
+                PreparedNativeTask::Project(
+                    prepare_project_reused_task(&installation, storage, session, request).await?,
+                )
             }
         };
         Ok((plan, installation))
@@ -210,7 +263,7 @@ impl NativeTasksClient {
     pub fn new(context: PlatformExtensionContext) -> Self {
         let info=InitializeResult::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new(EXTENSION_NAME,"1.0.0").with_title("Local Model Tasks"))
-            .with_instructions("Use list to discover an installed task's exact identity and parameter contract. Keep references to run results for subsequent reuse. Speech references, ASR audio and first frames are session media result UUIDs.".to_string());
+            .with_instructions("Use list to discover an installed task's exact identity and parameter contract. Keep references to run results for subsequent reuse. Run/reuse media inputs are session result UUIDs. Use project_assets/project_asset to find archived assets in this project, then project_reuse to regenerate with one changed parameter; replacement media inputs are project asset UUIDs. Parameter reuse does not imply region or time-range editing.".to_string());
         Self { info, context }
     }
 
@@ -294,6 +347,7 @@ impl NativeTasksClient {
         let request = match name {
             "run" => Request::Run(serde_json::from_value(arguments.clone())?),
             "reuse" => Request::Reuse(serde_json::from_value(arguments.clone())?),
+            "project_reuse" => Request::ProjectReuse(serde_json::from_value(arguments.clone())?),
             _ => bail!("Unknown native task tool"),
         };
         let job = NativeTaskJobs::job_id(session, call)?;
@@ -324,23 +378,39 @@ impl NativeTasksClient {
                 NativeTaskClaim::Stopped(terminal) => return call_status(&job, terminal.as_str()),
             };
             let result = async {
-                let (plan, installation) = tokio::select! {
+                let (prepared, installation) = tokio::select! {
                     biased;
                     _ = cancel.cancelled() => bail!("Native task cancelled"),
                     prepared = request.prepare(&storage, &session, &job) => prepared?,
                 };
-                let engines = configured_task_engines(plan.runtime())?;
+                let engines = configured_task_engines(prepared.plan().runtime())?;
                 let association = MediaAssociation::ToolCall { tool_call_id: call };
-                execute_prepared_task_controlled(
-                    &installation,
-                    &engines,
-                    &storage,
-                    &session,
-                    plan,
-                    association,
-                    cancel.clone(),
-                )
-                .await
+                match prepared {
+                    PreparedNativeTask::Session(plan) => {
+                        execute_prepared_task_controlled(
+                            &installation,
+                            &engines,
+                            &storage,
+                            &session,
+                            plan,
+                            association,
+                            cancel.clone(),
+                        )
+                        .await
+                    }
+                    PreparedNativeTask::Project(task) => {
+                        execute_project_prepared_task_controlled(
+                            &installation,
+                            &engines,
+                            &storage,
+                            &session,
+                            task,
+                            association,
+                            cancel.clone(),
+                        )
+                        .await
+                    }
+                }
             }
             .await;
             let terminal = match &result {
@@ -509,6 +579,8 @@ fn tools() -> Vec<Tool> {
             schema(json!({"identity":identity,"parameters":run_parameters}), &["identity","parameters"]), false),
         ("reuse", "Create a new task from an earlier job in this session, changing one field. Image and video require a parent result. Speech and transcription use the parent job.",
             schema(reuse_fields,&["identity","parentJobId","patch"]), false),
+        ("project_reuse", "Regenerate from an archived asset in the current project, changing exactly one model-specific parameter and retaining the original. Use the parent's exact installed identity. Replacement media fields accept project asset UUIDs. This is parameter reuse, not image-region or time-range editing; execution still requires a measured resource profile.",
+            schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."}}), &["identity","parentAssetId","patch"]), false),
         ("project_assets", "List archived asset metadata in the current session's project. Use project_asset to read one immutable result/version. This does not grant cross-session generation or file access.",
             schema(json!({"afterAssetId":{"type":"string","format":"uuid"},"limit":{"type":"integer","minimum":1,"maximum":100,"default":20}}), &[]), true),
         ("project_asset", "Read a projection of one archived result/version with its original configuration in the current session's project. Transcript text is paged in Unicode scalar characters; follow nextTextOffset. archiveContentSha256 identifies the full archive, not the projection. Media rejects nondefault text pagination. Unknown and other-project assets are not found. Reading does not edit, regenerate or grant file access.",

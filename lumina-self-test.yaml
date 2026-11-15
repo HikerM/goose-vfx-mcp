@@ -26,7 +26,7 @@ activities:
   - Validate legacy registry preservation and bounded vision installation admission
   - Validate inline ACP audio in live, restored, history and tool-result messages
   - Validate durable MCP media references, verified output bytes and scoped access across session restart
-  - Validate project asset archives, atomic publication and scoped conversational discovery through synthetic regressions
+  - Validate project asset archives, atomic publication, scoped conversational discovery and cross-session parameter reuse through synthetic regressions
   - Generate comprehensive test report
 
 parameters:
@@ -65,6 +65,7 @@ instructions: |
   Run only the fixed project-assets driver once through the developer shell, using the caller's
   LUMINA_PROJECT_ASSET_TEST_BINARY. Do not build, find a substitute binary, or run another shell.
   Preserve its JSON report. Report actual status, per-suite counts and scope in at most 80 words.
+  Include the project reuse suite: parent retention, authorization and immutable configuration checks.
   These are synthetic regressions, not real model inference, natural-language editing or desktop acceptance.
   {% elif test_phases == "managed-chat" %}
   Use the developer shell to assess the caller's installed model and engine with the fixed A41 suite.

@@ -26,6 +26,8 @@ mod network_ranges;
 pub mod network_worker;
 pub mod planning;
 pub mod policy;
+mod project_task_scope;
+pub use project_task_scope::ProjectTaskCompilationScope;
 pub mod recovery;
 pub mod repository;
 pub mod resources;
