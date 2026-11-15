@@ -36,6 +36,7 @@ fn sources() -> BTreeMap<&'static str, String> {
         "crates/lumina/tests/support/project_music_reuse_probe.rs",
         "crates/lumina/src/media/task_publication.rs",
         "crates/lumina/src/media/task_inputs.rs",
+        "crates/lumina/src/media/project_payload.rs",
         "Cargo.lock",
     );
     sources
@@ -212,16 +213,17 @@ async fn measure_project_music_reuse() -> Result<()> {
     configuration.save_project_task(&prepared).await?;
     let authorization_bytes = prepared.authorization().encode()?.len();
     let preparation_millis = preparation_started.elapsed().as_millis();
-    let publication = crate::media::task_publication::project_reuse_context()?;
-    let TaskPublicationContext::ProjectParameterReuseV1 {
+    let publication = crate::media::task_publication::project_reuse_context(&prepared)?;
+    let TaskPublicationContext::ProjectParameterReuseV2 {
         implementation_sources_digest,
+        payload_tier,
     } = &publication
     else {
         anyhow::bail!("Expected project publication context")
     };
     let owner_request = json!({"parentSnapshot":parent_snapshot,"parentSnapshotDigest":parent_record.generation_config_sha256(),
         "childSessionId":child.id,"childJobId":job,"patch":case["patch"],"expectedChildSnapshotDigest":digest,
-        "implementationSourcesDigest":implementation_sources_digest,"parentAssetId":PARENT_ASSET,"parentAssetContentSha256":PARENT_CONTENT});
+        "implementationSourcesDigest":implementation_sources_digest,"payloadTier":payload_tier,"parentAssetId":PARENT_ASSET,"parentAssetContentSha256":PARENT_CONTENT});
     let request_path = run.join("project-reuse-owner.json");
     write_report(&request_path, owner_request)?;
     let request_sha = Sha256Digest::of_bytes(&std::fs::read(&request_path)?);
@@ -307,6 +309,12 @@ async fn measure_project_music_reuse() -> Result<()> {
         .read(&child.id, &result.result_id)
         .await?
         .context("Child project asset missing")?;
+    let output_archive_bytes: i64 = sqlx::query_scalar(
+        "SELECT length(CAST(content_json AS BLOB)) FROM project_assets_v1 WHERE asset_id=?",
+    )
+    .bind(&result.result_id)
+    .fetch_one(&pool)
+    .await?;
     ensure!(
         child_archive.content["projectLineage"]["parentAssetId"] == PARENT_ASSET
             && child_archive.content["projectLineage"]["parentAssetContentSha256"]
@@ -360,7 +368,7 @@ async fn measure_project_music_reuse() -> Result<()> {
         "sources":sources(),"projectReuseRequestSha256":request_sha,"publicationContext":publication,"caseSha256":case_sha,
         "snapshotDigest":digest,"publishedPath":published_path,"result":result,"reopenedVerified":true,
         "inputSha256":native_sha,"publishedSha256":result.sha256,"publishedBytes":result.bytes,
-        "parentAssetBytes":parent_asset_bytes,"authorizationBytes":authorization_bytes,"preparationMillis":preparation_millis,
+        "parentAssetBytes":parent_asset_bytes,"authorizationBytes":authorization_bytes,"preparationMillis":preparation_millis,"outputArchiveBytes":output_archive_bytes,
         "projectArchive":{"verified":true,"reopenedVerified":true,"parentUnchanged":true,"lineageVerified":true,"sourceSessionAbsent":true},
         "checkpoints":[{"directoryLogicalBytes":before},{"directoryLogicalBytes":published},{"directoryLogicalBytes":after}]}),
     )

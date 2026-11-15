@@ -5,6 +5,38 @@ use sqlx::{Sqlite, Transaction};
 use super::{MediaResultRef, MediaSource};
 use crate::project::ProjectAssetStore;
 
+#[cfg(feature = "local-inference")]
+#[derive(serde::Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+enum ProjectOutput<'a> {
+    Media {
+        result: &'a MediaResultRef,
+    },
+    Transcript {
+        transcript: &'a super::NativeTaskTranscript,
+    },
+}
+
+#[cfg(feature = "local-inference")]
+#[derive(serde::Serialize)]
+struct ProjectArchive<'a> {
+    #[serde(flatten)]
+    output: ProjectOutput<'a>,
+    configuration: &'a super::task_configuration::ArchivedTaskConfiguration,
+    #[serde(rename = "projectLineage", skip_serializing_if = "Option::is_none")]
+    lineage: Option<&'a super::project_task_reuse::VerifiedProjectTaskAuthorization>,
+}
+
+#[cfg(feature = "local-inference")]
+fn archive_value(archive: &ProjectArchive<'_>) -> Result<serde_json::Value> {
+    let limit = archive
+        .lineage
+        .and_then(|authorization| authorization.payload_tier())
+        .map_or(32 * 1024 * 1024, |tier| tier.output_archive_limit());
+    super::project_payload::serialized_len(archive, limit)?;
+    Ok(serde_json::to_value(archive)?)
+}
+
 pub(super) async fn record_media(
     tx: &mut Transaction<'_, Sqlite>,
     result: &MediaResultRef,
@@ -18,8 +50,10 @@ pub(super) async fn record_media(
     {
         return Ok(());
     }
-    let (configuration, lineage) = match &result.source {
-        MediaSource::Mcp { .. } => (serde_json::Value::Null, serde_json::Value::Null),
+    let content = match &result.source {
+        MediaSource::Mcp { .. } => {
+            json!({"kind":"media", "result":result, "configuration":serde_json::Value::Null})
+        }
         MediaSource::LocalModel { .. } => {
             #[cfg(feature = "local-inference")]
             {
@@ -31,19 +65,17 @@ pub(super) async fn record_media(
                 .await?;
                 let record = archive.validate(&result.session_id, &result.job_id)?;
                 record.verify_source(&result.session_id, &result.job_id, &result.source)?;
-                let lineage = serde_json::to_value(
-                    super::project_task_reuse::project_lineage(tx, &record).await?,
-                )?;
-                (serde_json::to_value(archive)?, lineage)
+                let lineage = super::project_task_reuse::project_lineage(tx, &record).await?;
+                archive_value(&ProjectArchive {
+                    output: ProjectOutput::Media { result },
+                    configuration: &archive,
+                    lineage: lineage.as_ref(),
+                })?
             }
             #[cfg(not(feature = "local-inference"))]
             anyhow::bail!("Local task configuration verification is unavailable in this build")
         }
     };
-    let mut content = json!({"kind":"media", "result":result, "configuration":configuration});
-    if !lineage.is_null() {
-        content["projectLineage"] = lineage;
-    }
     ProjectAssetStore::record_in_tx(
         tx,
         &result.session_id,
@@ -101,11 +133,12 @@ pub(super) async fn record_transcript(
     let mut bytes = [0; 16];
     bytes.copy_from_slice(&digest[..16]);
     let asset_id = uuid::Uuid::from_bytes(bytes).to_string();
-    let mut content =
-        json!({"kind":"transcript", "transcript":transcript, "configuration":archive});
-    if let Some(lineage) = super::project_task_reuse::project_lineage(tx, &record).await? {
-        content["projectLineage"] = serde_json::to_value(lineage)?;
-    }
+    let lineage = super::project_task_reuse::project_lineage(tx, &record).await?;
+    let content = archive_value(&ProjectArchive {
+        output: ProjectOutput::Transcript { transcript },
+        configuration: &archive,
+        lineage: lineage.as_ref(),
+    })?;
     ProjectAssetStore::record_in_tx(
         tx,
         &transcript.session_id,

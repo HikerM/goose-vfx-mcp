@@ -12,13 +12,15 @@ import time
 
 
 ROOT = Path(__file__).resolve().parent.parent
-SCOPE = "Synthetic project-asset storage, publication, scoped discovery and cross-session parameter reuse regressions; not real model inference, natural-language editing or desktop acceptance"
+SCOPE = "Synthetic project-asset storage, publication, scoped discovery, cross-session parameter reuse and payload-bound regressions; not real model inference, natural-language editing or desktop acceptance"
 SUITES = (
     "session::session_ids::tests::",
     "project::assets::tests::",
     "media::project_assets::tests::",
     "media::project_task_reuse::tests::",
     "agents::platform_extensions::native_tasks::project_assets_tests::",
+    "project::assets::bounded_tests::",
+    "media::project_payload::tests::",
 )
 SUMMARY = re.compile(
     r"^test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored; "

@@ -186,6 +186,158 @@ fn project_publication(source: &[u8]) -> TaskPublicationContext {
     }
 }
 
+fn project_publication_v2(tier: ProjectReusePayloadTier) -> TaskPublicationContext {
+    TaskPublicationContext::ProjectParameterReuseV2 {
+        implementation_sources_digest: Sha256Digest::of_bytes(
+            b"project publication implementation A",
+        ),
+        payload_tier: tier,
+    }
+}
+
+#[test]
+fn project_payload_tiers_serialize_and_define_candidate_host_ceilings() {
+    for (tier, name, source, record, output) in [
+        (
+            ProjectReusePayloadTier::Small,
+            "small",
+            256 * 1024,
+            256 * 1024,
+            1024 * 1024,
+        ),
+        (
+            ProjectReusePayloadTier::Standard,
+            "standard",
+            64 * 1024 * 1024,
+            1024 * 1024,
+            32 * 1024 * 1024,
+        ),
+    ] {
+        assert_eq!(serde_json::to_value(tier).unwrap(), serde_json::json!(name));
+        assert_eq!(
+            serde_json::from_value::<ProjectReusePayloadTier>(serde_json::json!(name)).unwrap(),
+            tier
+        );
+        assert_eq!(tier.source_assets_limit(), source);
+        assert_eq!(tier.record_limit(), record);
+        assert_eq!(tier.output_archive_limit(), output);
+    }
+    assert!(
+        serde_json::from_value::<ProjectReusePayloadTier>(serde_json::json!("unbounded")).is_err()
+    );
+}
+
+#[test]
+fn project_v2_versions_and_payload_tiers_have_distinct_keys_for_every_task_kind() {
+    let v1 = project_publication(b"project publication implementation A");
+    let small = project_publication_v2(ProjectReusePayloadTier::Small);
+    let standard = project_publication_v2(ProjectReusePayloadTier::Standard);
+    for plan in publication_plans() {
+        let session = TaskResourceKey::from_plan(&plan).unwrap();
+        let old = TaskResourceKey::from_plan_with_publication(&plan, &v1).unwrap();
+        let small_key = TaskResourceKey::from_plan_with_publication(&plan, &small).unwrap();
+        let standard_key = TaskResourceKey::from_plan_with_publication(&plan, &standard).unwrap();
+        assert_ne!(old, small_key);
+        assert_ne!(old, standard_key);
+        assert_ne!(small_key, standard_key);
+        assert_ne!(session, small_key);
+        assert_ne!(session, standard_key);
+        assert_eq!(small_key.runtime_digest, standard_key.runtime_digest);
+        assert_eq!(small_key.components_digest, standard_key.components_digest);
+        assert_eq!(small_key.kind, standard_key.kind);
+        assert_eq!(small_key.requires_gpu, standard_key.requires_gpu);
+    }
+}
+
+#[test]
+fn project_v2_identity_is_workload_tier_and_implementation_without_parent_identifiers() {
+    for tier in [
+        ProjectReusePayloadTier::Small,
+        ProjectReusePayloadTier::Standard,
+    ] {
+        let context = project_publication_v2(tier);
+        assert_eq!(
+            serde_json::to_value(&context).unwrap(),
+            serde_json::json!({
+                "kind":"project_parameter_reuse_v2",
+                "implementationSourcesDigest":Sha256Digest::of_bytes(b"project publication implementation A"),
+                "payloadTier":tier,
+            })
+        );
+        for (first, independently_prepared) in
+            publication_plans().iter().zip(publication_plans().iter())
+        {
+            assert_eq!(
+                TaskResourceKey::from_plan_with_publication(first, &context).unwrap(),
+                TaskResourceKey::from_plan_with_publication(
+                    independently_prepared,
+                    &project_publication_v2(tier)
+                )
+                .unwrap()
+            );
+        }
+    }
+}
+
+#[test]
+fn project_v2_cannot_borrow_session_v1_or_existing_production_profiles() {
+    let v1 = project_publication(b"project publication implementation A");
+    let production = trusted_profiles().unwrap();
+    for plan in publication_plans() {
+        let session = profile(&plan);
+        let mut prior_project = session.clone();
+        prior_project.key = TaskResourceKey::from_plan_with_publication(&plan, &v1).unwrap();
+        let mut profiles = production.clone();
+        profiles.extend([session, prior_project]);
+        for tier in [
+            ProjectReusePayloadTier::Small,
+            ProjectReusePayloadTier::Standard,
+        ] {
+            let context = project_publication_v2(tier);
+            let assessment =
+                assess_with_profiles_and_publication(&plan, &hardware(), 1000, &profiles, &context)
+                    .unwrap();
+            let TaskResourceAssessment::NeedsProfiling(requirement) = assessment else {
+                panic!("Unmeasured V2 payload tier borrowed an existing resource profile")
+            };
+            assert_eq!(
+                requirement.key,
+                TaskResourceKey::from_plan_with_publication(&plan, &context).unwrap()
+            );
+            assert!(requirement
+                .missing
+                .contains(&"measured project parameter reuse publication path"));
+        }
+    }
+}
+
+#[test]
+fn project_v2_receipt_recheck_rejects_a_different_payload_tier() {
+    let small = project_publication_v2(ProjectReusePayloadTier::Small);
+    let standard = project_publication_v2(ProjectReusePayloadTier::Standard);
+    let plan = plan(false, "v1", 42);
+    let mut measured = profile(&plan);
+    measured.key = TaskResourceKey::from_plan_with_publication(&plan, &small).unwrap();
+    let TaskResourceAssessment::Admitted(mut receipt) = assess_with_profiles_and_publication(
+        &plan,
+        &hardware(),
+        1000,
+        std::slice::from_ref(&measured),
+        &small,
+    )
+    .unwrap() else {
+        panic!("Synthetic matching V2 profile was rejected")
+    };
+    receipt.verify_now(&plan, &hardware(), 1000).unwrap();
+    assert!(matches!(
+        assess_with_profiles_and_publication(&plan, &hardware(), 1000, &[measured], &standard)
+            .unwrap(),
+        TaskResourceAssessment::NeedsProfiling(_)
+    ));
+    receipt.publication = standard;
+    assert!(receipt.verify_now(&plan, &hardware(), 1000).is_err());
+}
+
 #[test]
 fn explicit_session_publication_preserves_every_task_kind_legacy_key_and_profile() {
     for plan in publication_plans() {

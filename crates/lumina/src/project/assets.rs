@@ -599,8 +599,56 @@ impl ProjectAssetStore {
             .await?;
         row.as_ref().map(asset_from_row).transpose()
     }
+
+    /// Applies the caller's remaining raw UTF-8 byte budget before returning JSON
+    /// from SQLite. The returned count includes the original encoded archive.
+    pub(crate) async fn read_for_frozen_job_bounded_in_tx(
+        tx: &mut Transaction<'_, Sqlite>,
+        session: &str,
+        job: &str,
+        asset_id: &str,
+        max_bytes: usize,
+    ) -> Result<Option<(ProjectAssetRecord, usize)>> {
+        asset_identifier(asset_id)?;
+        let project = Self::project_for_frozen_job_in_tx(tx, session, job).await?;
+        let limit = max_bytes.min(MAX_CONTENT_BYTES);
+        ensure!(
+            limit > 0,
+            "Project reuse payload has no remaining project payload byte budget"
+        );
+        let row = sqlx::query(
+            "SELECT asset_id,project_id,source_session_id,job_id,work_item_id,run_id,created_at_ms,
+                length(CAST(content_json AS BLOB)) AS content_bytes,
+                CASE WHEN length(CAST(content_json AS BLOB))<=? THEN content_json END AS content_json,
+                content_sha256,
+                length(CAST(summary_json AS BLOB)) AS summary_bytes,
+                CASE WHEN length(CAST(summary_json AS BLOB))<=? THEN summary_json END AS summary_json,
+                summary_sha256
+             FROM project_assets_v1 WHERE project_id=? AND asset_id=?",
+        )
+        .bind(i64::try_from(limit)?)
+        .bind(i64::try_from(MAX_SUMMARY_BYTES)?)
+        .bind(project)
+        .bind(asset_id)
+        .fetch_optional(&mut **tx)
+        .await?;
+        let Some(row) = row else { return Ok(None) };
+        let bytes = usize::try_from(row.try_get::<i64, _>("content_bytes")?)?;
+        ensure!(bytes <= limit,
+            "Project reuse payload exceeds its byte bound: {bytes} bytes requested, {limit} bytes remaining");
+        let summary_bytes = usize::try_from(row.try_get::<i64, _>("summary_bytes")?)?;
+        ensure!(
+            summary_bytes <= MAX_SUMMARY_BYTES,
+            "Project reuse payload summary exceeds its {MAX_SUMMARY_BYTES}-byte bound"
+        );
+        Ok(Some((asset_from_row(&row)?, bytes)))
+    }
 }
 
 #[cfg(test)]
 #[path = "assets_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "assets_bounded_tests.rs"]
+mod bounded_tests;

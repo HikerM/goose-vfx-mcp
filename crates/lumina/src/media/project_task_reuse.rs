@@ -63,9 +63,15 @@ pub(super) struct ProjectCompilationBinding {
     parent_job_id: String,
     parent_snapshot_digest: Sha256Digest,
     allowed_inputs: Vec<ProjectInputReference>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    payload_tier: Option<ProjectReusePayloadTier>,
 }
 
 impl ProjectCompilationBinding {
+    pub(super) fn payload_tier(&self) -> Option<ProjectReusePayloadTier> {
+        self.payload_tier
+    }
+
     pub(super) fn domain_scope(&self) -> Result<ProjectTaskCompilationScope> {
         ensure!(
             self.allowed_inputs.len() <= 16,
@@ -141,9 +147,19 @@ impl PreparedProjectTask {
     pub(crate) fn authorization(&self) -> &VerifiedProjectTaskAuthorization {
         &self.authorization
     }
+
+    pub(super) fn payload_tier(&self) -> Result<ProjectReusePayloadTier> {
+        self.authorization
+            .payload_tier()
+            .context("Project task has no prepared payload tier")
+    }
 }
 
 impl VerifiedProjectTaskAuthorization {
+    pub(super) fn payload_tier(&self) -> Option<ProjectReusePayloadTier> {
+        self.compilation.payload_tier()
+    }
+
     pub(crate) fn project_id(&self) -> &str {
         &self.project_id
     }
@@ -167,14 +183,13 @@ impl VerifiedProjectTaskAuthorization {
     }
 
     pub(super) fn encode(&self) -> Result<String> {
-        let mut value = serde_json::to_value(self)?;
-        value.sort_all_objects();
-        let payload = serde_json::to_string(&value)?;
-        ensure!(
-            payload.len() <= MAX_AUTHORIZATION_BYTES,
-            "Project task authorization exceeds its byte limit"
-        );
-        Ok(payload)
+        super::project_payload::canonical_json(
+            self,
+            self.payload_tier().map_or(
+                MAX_AUTHORIZATION_BYTES,
+                ProjectReusePayloadTier::record_limit,
+            ),
+        )
     }
 
     pub(super) async fn read_from(
@@ -204,6 +219,18 @@ impl VerifiedProjectTaskAuthorization {
     }
 
     pub(super) fn validate_child(&self, child: &TaskConfigurationRecord) -> Result<()> {
+        if let Some(tier) = self.payload_tier() {
+            super::project_payload::serialized_len(self, tier.record_limit())?;
+            super::project_payload::serialized_len(
+                &ArchivedTaskConfiguration::from_record(child)?,
+                tier.record_limit(),
+            )?;
+            ensure!(
+                !matches!(child.snapshot(), TaskConfigurationSnapshot::Qwen3Asr(_))
+                    || tier == ProjectReusePayloadTier::Standard,
+                "Transcript publication requires the standard payload tier"
+            );
+        }
         ensure!(
             child.session_id() == self.child_session_id()
                 && child.job_id() == self.child_job_id()
@@ -307,11 +334,15 @@ impl VerifiedProjectTaskAuthorization {
     }
 
     pub(super) async fn validate_in_tx(&self, tx: &mut Transaction<'_, Sqlite>) -> Result<()> {
-        let parent = ProjectAssetStore::read_for_frozen_job_in_tx(
+        let tier = self
+            .payload_tier()
+            .unwrap_or(ProjectReusePayloadTier::Standard);
+        let (parent, mut source_bytes) = ProjectAssetStore::read_for_frozen_job_bounded_in_tx(
             tx,
             self.child_session_id(),
             self.child_job_id(),
             &self.parent_asset_id,
+            tier.source_assets_limit(),
         )
         .await?
         .context("Parent asset is unavailable in the task project")?;
@@ -334,14 +365,22 @@ impl VerifiedProjectTaskAuthorization {
             "Replacement asset binding count differs from the parameter"
         );
         for replacement in &self.replacements {
-            let asset = ProjectAssetStore::read_for_frozen_job_in_tx(
+            let remaining = tier
+                .source_assets_limit()
+                .checked_sub(source_bytes)
+                .context("Project source assets exceed the payload tier")?;
+            let (asset, bytes) = ProjectAssetStore::read_for_frozen_job_bounded_in_tx(
                 tx,
                 self.child_session_id(),
                 self.child_job_id(),
                 &replacement.asset_id,
+                remaining,
             )
             .await?
             .context("Replacement asset is unavailable in the task project")?;
+            source_bytes = source_bytes
+                .checked_add(bytes)
+                .context("Project source size overflow")?;
             ensure!(
                 asset.content_sha256 == replacement.content_sha256,
                 "Replacement project asset changed"
@@ -416,16 +455,18 @@ pub(crate) async fn prepare_project_reused_task(
         request.patch.len() == 1,
         "Provide exactly one task parameter"
     );
+    super::project_payload::serialized_len(&request.patch, MAX_AUTHORIZATION_BYTES)?;
     let pool = storage.pool().await?;
     ProjectAssetStore::new(pool.clone())
         .freeze_job(session, &request.new_job_id, None)
         .await?;
     let mut tx = pool.begin().await?;
-    let asset = ProjectAssetStore::read_for_frozen_job_in_tx(
+    let (asset, _) = ProjectAssetStore::read_for_frozen_job_bounded_in_tx(
         &mut tx,
         session,
         &request.new_job_id,
         &request.parent_asset_id,
+        ProjectReusePayloadTier::Standard.source_assets_limit(),
     )
     .await?
     .context("Parent asset is unavailable in this project")?;
@@ -484,6 +525,11 @@ async fn prepare_registered(
         request.patch.len() == 1 && parent.identity() == &request.identity,
         "Invalid project reuse identity or patch"
     );
+    super::project_payload::serialized_len(&request.patch, MAX_AUTHORIZATION_BYTES)?;
+    let mut source_bytes = super::project_payload::serialized_len(
+        &asset.content,
+        ProjectReusePayloadTier::Standard.source_assets_limit(),
+    )?;
     validate_patch(&contract, &request.patch)?;
     let pool = storage.pool().await?;
     let mut allowed = validation_inputs(&parent, &contract)?;
@@ -496,10 +542,22 @@ async fn prepare_registered(
             .as_str()
             .context("Replacement media must be a project asset ID")?;
         let mut tx = pool.begin().await?;
-        let replacement =
-            ProjectAssetStore::read_for_frozen_job_in_tx(&mut tx, session, &request.new_job_id, id)
-                .await?
-                .context("Replacement asset is unavailable in this project")?;
+        let remaining = ProjectReusePayloadTier::Standard
+            .source_assets_limit()
+            .checked_sub(source_bytes)
+            .context("Project source size overflow")?;
+        let (replacement, bytes) = ProjectAssetStore::read_for_frozen_job_bounded_in_tx(
+            &mut tx,
+            session,
+            &request.new_job_id,
+            id,
+            remaining,
+        )
+        .await?
+        .context("Replacement asset is unavailable in this project")?;
+        source_bytes = source_bytes
+            .checked_add(bytes)
+            .context("Project source size overflow")?;
         tx.commit().await?;
         let result = media_asset(&replacement)?;
         let reference = input_from_result(&result, kind)?;
@@ -517,6 +575,7 @@ async fn prepare_registered(
         parent_job_id: parent.job_id().into(),
         parent_snapshot_digest: Sha256Digest::parse(parent.generation_config_sha256())?,
         allowed_inputs: allowed,
+        payload_tier: Some(ProjectReusePayloadTier::Standard),
     };
     let scope = compilation.domain_scope()?;
     let plan = reuse_plan(
@@ -528,7 +587,7 @@ async fn prepare_registered(
         request.patch.clone(),
         &scope,
     )?;
-    let authorization = VerifiedProjectTaskAuthorization {
+    let mut authorization = VerifiedProjectTaskAuthorization {
         project_id: asset.project_id,
         parent_asset_id: asset.asset_id,
         parent_asset_content_sha256: asset.content_sha256,
@@ -544,6 +603,19 @@ async fn prepare_registered(
         replacements,
         patch: request.patch,
     };
+    let record = TaskConfigurationRecord::from_project_plan(&plan, &authorization.compilation)?;
+    let archive = ArchivedTaskConfiguration::from_record(&record)?;
+    let archive_bytes = super::project_payload::serialized_len(&archive, MAX_AUTHORIZATION_BYTES)?;
+    let authorization_bytes =
+        super::project_payload::serialized_len(&authorization, MAX_AUTHORIZATION_BYTES)?;
+    let small = ProjectReusePayloadTier::Small;
+    if source_bytes <= small.source_assets_limit()
+        && archive_bytes <= small.record_limit()
+        && authorization_bytes <= small.record_limit()
+        && !matches!(plan, NativeTaskPlan::Qwen3Asr(_))
+    {
+        authorization.compilation.payload_tier = Some(small);
+    }
     authorization.encode()?;
     authorize_project_inputs(storage, session, &plan, &authorization).await?;
     Ok(PreparedProjectTask {
@@ -555,11 +627,19 @@ async fn prepare_registered(
 fn parent_configuration(
     asset: &ProjectAssetRecord,
 ) -> Result<(ArchivedTaskConfiguration, ParentOutput)> {
+    super::project_payload::serialized_len(
+        &asset.content["configuration"],
+        MAX_AUTHORIZATION_BYTES,
+    )?;
     let archive: ArchivedTaskConfiguration =
         serde_json::from_value(asset.content["configuration"].clone())
             .context("Parent project asset has no valid local task configuration")?;
     let parent = archive.validate(&asset.source_session_id, &asset.job_id)?;
     if parent.project_scope().is_some() {
+        super::project_payload::serialized_len(
+            &asset.content["projectLineage"],
+            MAX_AUTHORIZATION_BYTES,
+        )?;
         let lineage: VerifiedProjectTaskAuthorization =
             serde_json::from_value(asset.content["projectLineage"].clone())
                 .context("Project parent has no authenticated lineage")?;
@@ -578,6 +658,13 @@ fn parent_configuration(
             result: media_asset(asset)?,
         },
         Some("transcript") => {
+            let text = asset.content["transcript"]["text"]
+                .as_str()
+                .context("Parent transcript has no text")?;
+            ensure!(
+                text.len() as u64 <= super::MAX_TASK_TRANSCRIPT_BYTES,
+                "Parent transcript exceeds its byte limit"
+            );
             let value: NativeTaskTranscript =
                 serde_json::from_value(asset.content["transcript"].clone())?;
             ensure!(
@@ -645,6 +732,7 @@ fn media_asset(asset: &ProjectAssetRecord) -> Result<MediaResultRef> {
         asset.content["kind"] == "media",
         "Project asset is not media"
     );
+    super::project_payload::serialized_len(&asset.content["result"], MAX_AUTHORIZATION_BYTES)?;
     let result: MediaResultRef = serde_json::from_value(asset.content["result"].clone())?;
     ensure!(
         result.result_id == asset.asset_id

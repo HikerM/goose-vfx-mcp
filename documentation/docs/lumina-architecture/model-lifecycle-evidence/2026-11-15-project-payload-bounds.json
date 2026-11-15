@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-15T12:38:34.568413+00:00",
+  "status": "PAYLOAD_BOUNDS_VERIFIED_REAL_SMALL_SAMPLE_MEASURED_ADMISSION_PENDING",
+  "scope": "Generic project reuse payload ceilings and V2 resource identity; synthetic bounds/compatibility regressions and one real Small music reuse. Not tier-boundary measurement, normal tool admission, natural-language editing, desktop or quality acceptance.",
+  "sourceBaseCommit": "ee3b0f31f01122577ce776e6653e3fee4ef803d7",
+  "sourceHashEncoding": "SHA-256 of current file bytes; V2 implementationSourcesDigest separately normalizes source newlines and binds selected tier limits.",
+  "sourceFilesSha256": {
+    "bin/test-lumina-project-assets.py": "0e61c8efc07220ed95ad7c523dea9dd6a85fa5c75f05a1120e070eec90206d31",
+    "bin/test-lumina-project-music-reuse.py": "395be0dc2ce9938af38493ff198201452beaee888e0b571eefa0db14ded20374",
+    "crates/lumina-local-inference/src/lifecycle/task_resources.rs": "617c42332d33d344629fae815d13dd8462a0e9888d9c23c77ca3d386efb1732a",
+    "crates/lumina-local-inference/src/lifecycle/task_resources/music_probe.rs": "1fcde0de51da02e9ae7652ed9ec016214d9bd6280a3f184500864479bec8c767",
+    "crates/lumina-local-inference/src/lifecycle/task_resources/tests.rs": "80063f411f459f9cdebb276f5c71a2c5be5dfe277cf3592d7b0da4b7b53527e6",
+    "crates/lumina/src/media/mod.rs": "d3dce0b1b7db5d93baed93629420d63fddf973f956482f81301f16bd3e337401",
+    "crates/lumina/src/media/project_assets.rs": "f729ff666adb88ccb5390db159b90888d8e545f3e46de21a518c10dc61283904",
+    "crates/lumina/src/media/project_payload.rs": "88cde24baf0334c64c6bbee05bd6ab8d54cd8823aab0aadd3a7da345092502ec",
+    "crates/lumina/src/media/project_task_reuse.rs": "f03a1703442043d27feec241c61c897a69709e9b5d2f267c4b0e28d4953932c7",
+    "crates/lumina/src/media/project_task_reuse_tests.rs": "037c4c0dd02abc6d8adfae4cb0be854c423286f3fae86080d4130838a43d9644",
+    "crates/lumina/src/media/project_task_reuse_payload_tests.rs": "18ed81152e3f43096d670e651412e096291f2bc6d6080cbee08e23ef64a5e8e4",
+    "crates/lumina/src/media/task_configuration.rs": "de0add93be91e7670ae8a1860ab5b134401e5886facb775805d2cec5d81333fb",
+    "crates/lumina/src/media/task_publication.rs": "cff9a0a830994853b604941732879e4850187f7dd8a652c6291d1691642c10b8",
+    "crates/lumina/src/media/task_service.rs": "8c961529262fcdeb87d6bd81ac76b7f91906ab6c204164e4e5c1669d31b38e4e",
+    "crates/lumina/src/project/assets.rs": "b11a7cb277f0e8b034cc057a1ffe5bf66ea09564ff0af46cbaf7518f20fb0904",
+    "crates/lumina/src/project/assets_bounded_tests.rs": "fa06d6d4ee54d92195d15ee775c292351c13ba6a9dcd480a7b192a3aea75337b",
+    "crates/lumina/tests/support/project_music_reuse_probe.rs": "371e313ce044fe300d18cf09d40076e974854216de568a1fd20ffe8c87c6f257",
+    "lumina-self-test.yaml": "7c9464f4d78c825732b6598bec2a1924bf26cd171a1f4f4b9a716f1177b6b249"
+  },
+  "implementation": {
+    "status": "CODE_COMPLETE_FOR_CURRENT_WORK_PACKAGE",
+    "items": [
+      "SQL CASE byte checks bound source content and summaries before JSON parsing; parent plus replacement source payloads share one cumulative budget.",
+      "Counting and bounded writers enforce encoded UTF-8 JSON size before large Value clones or unbounded output buffers; canonical legacy encoding remains unchanged.",
+      "Server selects Small or Standard from actual source/configuration/authorization sizes; transcript output uses Standard. The client cannot choose the tier.",
+      "ProjectParameterReuseV2 binds host source/dependency digest plus the exact source/record/output limit values; Session, V1 and V2 tiers remain isolated.",
+      "Legacy records lacking payloadTier retain canonical encoding and can be read, archived and reused; this does not register or authorize an old resource profile."
+    ]
+  },
+  "candidatePayloadCeilings": {
+    "status": "ENFORCED_CANDIDATE_CEILINGS_NOT_MEASURED_BUDGETS",
+    "unit": "encoded JSON bytes",
+    "small": {
+      "sourceAssetsTotal": 262144,
+      "record": 262144,
+      "outputArchive": 1048576
+    },
+    "standard": {
+      "sourceAssetsTotal": 67108864,
+      "record": 1048576,
+      "outputArchive": 33554432
+    },
+    "sourceAssetIndividualLimit": 33554432,
+    "preparationScope": "Preparation initially uses Standard hard ceilings before choosing the actual tier. Small measurement/registration must account for this preparation behavior; tier selection is not prior resource admission.",
+    "unmeasured": [
+      "Small source/record/output upper boundaries",
+      "Standard upper boundaries and large ASR publication",
+      "Worst simultaneous parsing, clone, authorization and archive allocations",
+      "Normal project_reuse admission and competing task resources"
+    ]
+  },
+  "hostBuild": {
+    "status": "PASS",
+    "elapsed": "9m38s",
+    "warnings": 156,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-payload-host-build-20261115-r1.log",
+      "sha256": "eb9b5eed8e91fa6590a352a8ca144f85c18fb22c25546c9a732608e69920148a"
+    },
+    "binarySha256": "d76d52239485973a4b6379678427f74b1230190e1a415271565f6a18e27cb93b"
+  },
+  "resourceRegressions": {
+    "status": "PASS",
+    "passed": 21,
+    "failed": 0,
+    "ignored": 3,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-payload-resources-20261115-r1.log",
+      "sha256": "03c2ca1b3fb741201624502eab354e29c2ac3392580fe009a24b7cd1cc7688b5"
+    },
+    "scope": "Core resource identity, limits, isolation and receipt validation; ignored real probes are not counted as executed."
+  },
+  "focusedRegressions": {
+    "status": "PASS",
+    "totals": {
+      "passed": 47,
+      "failed": 0,
+      "ignored": 0,
+      "total": 47
+    },
+    "suitePassedCounts": [
+      7,
+      11,
+      4,
+      11,
+      6,
+      4,
+      4
+    ],
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-payload-focused-20261115-r1.json",
+      "sha256": "da2375ee081ac1cdbfc60f1d20da9cba1da50947834d5a01d9069fe115850b90"
+    },
+    "binarySha256": "d76d52239485973a4b6379678427f74b1230190e1a415271565f6a18e27cb93b"
+  },
+  "mediaRegressions": {
+    "status": "PASS",
+    "passed": 116,
+    "failed": 0,
+    "ignored": 6,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-payload-media-20261115-r1.log",
+      "sha256": "29a504c77a17324376b9ab4261c510dcf5b187a39c0937d363ac70d182e4845d"
+    },
+    "scope": "Media storage, configuration, authorization, publication and service regression; real probes run separately."
+  },
+  "countNote": "Focused and media suites overlap. Do not add these counts as independent coverage. Synthetic tests do not prove model execution or product closure.",
+  "realExecution": {
+    "status": "PASS_TEST_ADMISSION",
+    "publicationContext": {
+      "kind": "project_parameter_reuse_v2",
+      "implementationSourcesDigest": "1e3ef4cb1e10415c8389b9d7203a1da23b9bcbb0bc5e854dcac174c7cb32ef67",
+      "payloadTier": "small"
+    },
+    "parentAssetBytes": 4263,
+    "authorizationBytes": 4984,
+    "outputArchiveBytes": 9877,
+    "request": "Real archived music from a deleted source session; inherit parameters and change seed 42 to 1 in a new session.",
+    "output": {
+      "format": "WAV",
+      "durationSeconds": 4,
+      "sampleRate": 44100,
+      "channels": 2,
+      "bytes": 705644,
+      "sha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+      "matchesPreviousV1Output": true
+    },
+    "projectArchive": {
+      "verified": true,
+      "reopenedVerified": true,
+      "parentUnchanged": true,
+      "lineageVerified": true,
+      "sourceSessionAbsent": true
+    },
+    "reopenedVerified": true,
+    "originalEvidenceUnchanged": true,
+    "hostBinarySha256": "d76d52239485973a4b6379678427f74b1230190e1a415271565f6a18e27cb93b",
+    "ownerBinarySha256": "4af9f9fe5f13aae9c279380b5783b03ef9b4525631db7e667cfcb8a9d2e04afc",
+    "observed": {
+      "preparationMillis": 97,
+      "nativeElapsedMillis": 8472,
+      "controllerElapsedMillis": 13140,
+      "peakJobCommitBytes": 7011495936,
+      "controllerPeakCommitBytes": 25206784,
+      "memoryQueryFailures": 0,
+      "processTreeExited": true
+    },
+    "evidence": {
+      "result.json": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-reuse-v2-20261115-r1\\result.json",
+        "sha256": "a34e5b9eea9864076e8daf8606f2a5afc081ffebd4f79628b8e5695f8c4a705e"
+      },
+      "publication.json": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-reuse-v2-20261115-r1\\publication.json",
+        "sha256": "bf7bc9c24f6e877662ac638f25128a26ebc0f6c3c14141eea35b2b314ce7b425"
+      },
+      "measurement.json": {
+        "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-reuse-v2-20261115-r1\\measurement.json",
+        "sha256": "57e52a08b8474e0267445f66f679626e76c9150147175e6fe0fb705cb70958e3"
+      }
+    },
+    "limitations": [
+      "Job assignment follows spawn; no atomic spawn/assignment claim",
+      "OS per-process peak working sets are summed conservatively, not sampled simultaneous physical RAM",
+      "Directory high-water samples may miss files created and removed between samples",
+      "Source database backup is outside measured host work; actual authorization/preparation/save/reopen is inside",
+      "One 4263-byte parent and 4984-byte authorization do not establish the Small 256 KiB ceiling, Standard tier or all model combinations.",
+      "Elapsed times are observations, not a same-condition performance comparison or an acceleration claim."
+    ]
+  },
+  "productionAdmission": {
+    "status": "NOT_REGISTERED",
+    "reviewedBudget": null,
+    "normalToolEntry": "NOT_RUN_NEEDS_PROFILING"
+  },
+  "cliBuild": {
+    "status": "PASS",
+    "elapsed": "13m36s",
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-payload-cli-build-20261115-r1.log",
+    "sha256": "1d0d73c0fa402bd5e9633337a57ac7a53e39152db0a32424174b03ee5c6557ea",
+    "binarySha256": "fa762da926e5cee697442663f37844e6c004557cf5eac73d592be83b385e3fef"
+  },
+  "cliRecipe": {
+    "status": "PASS_CORRECTED_STREAM_ASSEMBLY",
+    "scope": "Local model invokes the actual self-test recipe and reports seven suites / 47 synthetic regressions. Not music generation, natural-language editing or desktop acceptance.",
+    "originalCheckerStatus": "FAIL",
+    "originalFailure": "RuntimeError('Final report omitted observed PASS and total or ordered per-suite counts')",
+    "originalEvidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-payload-recipe-20261115-r1\\evidence.json",
+      "sha256": "09fbc542380b964039f596bd39ab64ff7dfbcb8211bfb7d782556c7aa86b7a9b"
+    },
+    "originalRunnerSnapshot": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-payload-recipe-20261115-r1\\runner-at-execution.py",
+      "sha256": "ccd4ae658f50efba93b673558e48cd59dc45514ee2f7a27bddd46d2015452bb9"
+    },
+    "correctedRunner": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\run-project-payload-recipe-20261115.py",
+      "sha256": "2578b93c8888e52c8cd1e4d63e13df75fbf69a3caa727f275cd80ea21d83b127"
+    },
+    "reviewReason": "The original checker inserted newlines between delta chunks, splitting 47 into 4 and 7. Exact concatenation preserves the emitted text. No execution, outcome, path, binary, count or frozen-input check was weakened.",
+    "actualTotals": {
+      "passed": 47,
+      "failed": 0,
+      "ignored": 0,
+      "total": 47
+    },
+    "frozenExecutionInputsUnchanged": true,
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-payload-recipe-20261115-r1\\contract-review.json",
+      "sha256": "a3475c7a469aa62a2b1622c8c6ce404c374a8393ead055df68b9c265adedbc06"
+    }
+  },
+  "productClosure": {
+    "status": "INCOMPLETE",
+    "remaining": [
+      "Normal-entry project regeneration",
+      "Cross-session playback and file location product acceptance",
+      "Natural-language reference and parameter patch workflow",
+      "Typed spatial/temporal local edits and unchanged-region verification"
+    ]
+  },
+  "qualityAndStability": {
+    "status": "NOT_ACCEPTED",
+    "reason": "No cross-model quality/stability campaign; earlier music-domain utf8-1023 intermittent os error 2 failure remains unresolved and retained.",
+    "followupDiagnostic": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\music-wal-enumeration-diagnostic-20261115-r1\\result.json",
+      "sha256": "3f94446eaec4b3ea6fe453c8f36edc48dced16b64aa7f9c7b9655ea27966d521",
+      "conclusion": "A controlled enumerate-close-lstat interleaving reproduces missing WAL/SHM files, but does not prove the original failure cause. sqlx graceful close awaits worker shutdown; original failure occurred after successful publication and creation of the second archive reader. Original failure remains unresolved."
+    }
+  },
+  "desktop": {
+    "status": "NOT_RUN",
+    "reason": "User requested desktop automation remain paused."
+  },
+  "privateModelScope": {
+    "status": "DEFERRED",
+    "reason": "No private/gated repository available for authentication acceptance."
+  },
+  "delivery": {
+    "status": "READY_FOR_SCOPED_COMMIT",
+    "branch": "testing",
+    "note": "Commit and remote push are verified separately after this evidence is recorded."
+  },
+  "remainingStages": "M3/M4 incomplete. M5/M6 remain in the full seven-stage plan; this work package does not close a stage.",
+  "formatCheck": {
+    "status": "PASS",
+    "command": "bin/cargo.cmd fmt -p lumina-agent -p lumina-local-inference -- --check",
+    "exitCode": 0,
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-payload-format-20261115-r2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

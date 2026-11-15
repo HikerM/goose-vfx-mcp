@@ -28,6 +28,37 @@ pub enum TaskResourceKind {
     Music,
 }
 
+/// Candidate payload ceilings enforced by the host, not measured resource budgets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProjectReusePayloadTier {
+    Small,
+    Standard,
+}
+
+impl ProjectReusePayloadTier {
+    pub const fn source_assets_limit(self) -> usize {
+        match self {
+            Self::Small => 256 * 1024,
+            Self::Standard => 64 * 1024 * 1024,
+        }
+    }
+
+    pub const fn record_limit(self) -> usize {
+        match self {
+            Self::Small => 256 * 1024,
+            Self::Standard => 1024 * 1024,
+        }
+    }
+
+    pub const fn output_archive_limit(self) -> usize {
+        match self {
+            Self::Small => 1024 * 1024,
+            Self::Standard => 32 * 1024 * 1024,
+        }
+    }
+}
+
 /// Describes the server-selected publication path; it does not authorize a project task.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[serde(
@@ -40,6 +71,10 @@ pub enum TaskPublicationContext {
     Session,
     ProjectParameterReuseV1 {
         implementation_sources_digest: Sha256Digest,
+    },
+    ProjectParameterReuseV2 {
+        implementation_sources_digest: Sha256Digest,
+        payload_tier: ProjectReusePayloadTier,
     },
 }
 
@@ -492,6 +527,7 @@ fn assess_with_profiles_and_publication(
         if matches!(
             publication,
             TaskPublicationContext::ProjectParameterReuseV1 { .. }
+                | TaskPublicationContext::ProjectParameterReuseV2 { .. }
         ) {
             requirement
                 .missing

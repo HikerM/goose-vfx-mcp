@@ -26,7 +26,7 @@ activities:
   - Validate legacy registry preservation and bounded vision installation admission
   - Validate inline ACP audio in live, restored, history and tool-result messages
   - Validate durable MCP media references, verified output bytes and scoped access across session restart
-  - Validate project asset archives, atomic publication, scoped conversational discovery and cross-session parameter reuse through synthetic regressions
+  - Validate project asset archives, atomic publication, scoped conversational discovery, cross-session parameter reuse and payload bounds through synthetic regressions
   - Generate comprehensive test report
 
 parameters:

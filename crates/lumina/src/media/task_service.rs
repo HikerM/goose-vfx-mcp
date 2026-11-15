@@ -165,8 +165,8 @@ async fn execute_task_controlled(
         .register_output_root(&storage.media_output_directory())
         .await?;
     let root_path = root.path.clone();
-    let publication = if project_task.is_some() {
-        super::task_publication::project_reuse_context()?
+    let publication = if let Some(task) = &project_task {
+        super::task_publication::project_reuse_context(task)?
     } else {
         TaskPublicationContext::Session
     };

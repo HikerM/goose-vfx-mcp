@@ -16,6 +16,7 @@ struct ProjectMusicReuseRequest {
     patch: serde_json::Value,
     expected_child_snapshot_digest: Sha256Digest,
     implementation_sources_digest: Sha256Digest,
+    payload_tier: ProjectReusePayloadTier,
     parent_asset_id: String,
     parent_asset_content_sha256: Sha256Digest,
 }
@@ -37,7 +38,8 @@ fn prepare_project_music(
     );
     let request: ProjectMusicReuseRequest = serde_json::from_slice(&bytes)?;
     ensure!(
-        request.patch == json!({"seed":1})
+        request.payload_tier == ProjectReusePayloadTier::Small
+            && request.patch == json!({"seed":1})
             && request.parent_snapshot.parameters.prompt == PROMPT
             && request.parent_snapshot.parameters.seed == 42
             && request.parent_snapshot.metadata.identity == entry.identity
@@ -74,8 +76,9 @@ fn prepare_project_music(
     );
     Ok((
         plan,
-        TaskPublicationContext::ProjectParameterReuseV1 {
+        TaskPublicationContext::ProjectParameterReuseV2 {
             implementation_sources_digest: request.implementation_sources_digest,
+            payload_tier: request.payload_tier,
         },
         Sha256Digest::of_bytes(&bytes),
     ))

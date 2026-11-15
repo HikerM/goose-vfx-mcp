@@ -25,6 +25,10 @@ PROJECT = "project_c2c2019b-c741-4db8-9e5f-10e3d91b039b"
 CONTENT = "f69a343dfa9a14a69b2063d5100bb566d52cd6acfbf78741cc582f14c3d1c9ec"
 PARENT_WAV = "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5"
 HOST_TEST = "media::task_output::tests::project_music_reuse_probe::measure_project_music_reuse"
+# These are enforced candidate payload ceilings, not measured resource budgets.
+SMALL_SOURCE_ASSETS_LIMIT = 256 * 1024
+SMALL_RECORD_LIMIT = 256 * 1024
+SMALL_OUTPUT_ARCHIVE_LIMIT = 1024 * 1024
 REQUIRED_HOST_SOURCES = {
     "crates/lumina/tests/support/project_music_reuse_probe.rs",
     "crates/lumina/src/media/task_publication.rs",
@@ -105,6 +109,7 @@ def parent_row(connection, report):
     require(row is not None, "Parent project asset is missing")
     project, session, job, content, digest = row
     raw = content.encode("utf-8")
+    require(0 < len(raw) <= SMALL_SOURCE_ASSETS_LIMIT, "Parent archive exceeds candidate Small payload ceiling")
     require(project == PROJECT and session == report["sourceSessionId"] and job == report["jobId"]
             and digest == CONTENT == hashlib.sha256(raw).hexdigest(), "Parent archive identity changed")
     require(connection.execute("SELECT 1 FROM sessions WHERE id=?", (session,)).fetchone() is None,
@@ -180,7 +185,9 @@ def publication_context():
         require(target.is_relative_to(ROOT), "Publication source leaves repository")
         normalized = target.read_bytes().decode("utf-8").replace("\r\n", "\n").encode("utf-8")
         sources.append([name, hashlib.sha256(normalized).hexdigest()])
-    return {"kind": "project_parameter_reuse_v1", "implementationSourcesDigest": json_digest(sources)}
+    limits = [SMALL_SOURCE_ASSETS_LIMIT, SMALL_RECORD_LIMIT, SMALL_OUTPUT_ARCHIVE_LIMIT]
+    return {"kind": "project_parameter_reuse_v2", "implementationSourcesDigest": json_digest([sources, limits]),
+            "payloadTier": "small"}
 
 
 def validate_sources(document, label):
@@ -198,7 +205,7 @@ def validate_reports(run, expected_context, case_sha, archive_bytes):
     request_path = run / "project-reuse-owner.json"
     require(0 < request_path.stat().st_size <= 1 << 20, "Owner request exceeds bound")
     request, request_sha = read(request_path), sha(request_path)
-    require(request["patch"] == {"seed": 1} and request["parentAssetId"] == ASSET
+    require(request["payloadTier"] == "small" and request["patch"] == {"seed": 1} and request["parentAssetId"] == ASSET
             and request["parentAssetContentSha256"] == CONTENT
             and request["implementationSourcesDigest"] == expected_context["implementationSourcesDigest"],
             "Owner request changes parent, patch or publication identity")
@@ -207,9 +214,12 @@ def validate_reports(run, expected_context, case_sha, archive_bytes):
                 and document.get("publicationContext") == expected_context, "Probe request/context mismatch")
     for document in (driver, pub):
         require(document["caseSha256"] == case_sha and document["parentAssetBytes"] == archive_bytes
-                and type(document["authorizationBytes"]) is int and 0 < document["authorizationBytes"] <= 1 << 20
+                and type(document["parentAssetBytes"]) is int and 0 < document["parentAssetBytes"] <= SMALL_SOURCE_ASSETS_LIMIT
+                and type(document["authorizationBytes"]) is int and 0 < document["authorizationBytes"] <= SMALL_RECORD_LIMIT
                 and type(document["preparationMillis"]) is int and document["preparationMillis"] >= 0,
                 "Host case or authorization footprint mismatch")
+    require(type(pub["outputArchiveBytes"]) is int and 0 < pub["outputArchiveBytes"] <= SMALL_OUTPUT_ARCHIVE_LIMIT,
+            "Output archive exceeds candidate Small payload ceiling")
     require(driver["authorizationBytes"] == pub["authorizationBytes"]
             and driver["preparationMillis"] == pub["preparationMillis"], "Host preparation reports disagree")
     host_sources = validate_sources(driver, "host")

@@ -103,6 +103,31 @@ impl ArchivedTaskConfiguration {
 }
 
 impl TaskConfigurationRecord {
+    pub(super) fn from_project_plan(
+        plan: &NativeTaskPlan,
+        scope: &ProjectCompilationBinding,
+    ) -> Result<Self> {
+        let payload = match plan {
+            NativeTaskPlan::Generation(task) => bounded_json(task.snapshot())?,
+            NativeTaskPlan::PocketTts(task) => bounded_json(task.snapshot())?,
+            NativeTaskPlan::Qwen3Asr(task) => bounded_json(task.snapshot())?,
+            NativeTaskPlan::StableAudioMusic(task) => bounded_json(task.snapshot())?,
+        };
+        let schema = match plan {
+            NativeTaskPlan::Generation(task) => task.snapshot().profile.parameter_schema_id(),
+            NativeTaskPlan::PocketTts(task) => {
+                &task.snapshot().metadata.identity.parameter_schema_id
+            }
+            NativeTaskPlan::Qwen3Asr(task) => {
+                &task.snapshot().metadata.identity.parameter_schema_id
+            }
+            NativeTaskPlan::StableAudioMusic(task) => {
+                &task.snapshot().metadata.identity.parameter_schema_id
+            }
+        };
+        parse_snapshot_with_project_scope(schema, &payload, Some(scope))
+    }
+
     pub(super) fn project_scope(&self) -> Option<&ProjectCompilationBinding> {
         self.project_scope.as_ref()
     }
@@ -340,26 +365,7 @@ impl TaskConfigurationStore {
     ) -> Result<TaskConfigurationRecord> {
         let authorization = prepared.authorization();
         let plan = prepared.plan();
-        let payload = match plan {
-            NativeTaskPlan::Generation(task) => bounded_json(task.snapshot())?,
-            NativeTaskPlan::PocketTts(task) => bounded_json(task.snapshot())?,
-            NativeTaskPlan::Qwen3Asr(task) => bounded_json(task.snapshot())?,
-            NativeTaskPlan::StableAudioMusic(task) => bounded_json(task.snapshot())?,
-        };
-        let schema = match plan {
-            NativeTaskPlan::Generation(task) => task.snapshot().profile.parameter_schema_id(),
-            NativeTaskPlan::PocketTts(task) => {
-                &task.snapshot().metadata.identity.parameter_schema_id
-            }
-            NativeTaskPlan::Qwen3Asr(task) => {
-                &task.snapshot().metadata.identity.parameter_schema_id
-            }
-            NativeTaskPlan::StableAudioMusic(task) => {
-                &task.snapshot().metadata.identity.parameter_schema_id
-            }
-        };
-        let record =
-            parse_snapshot_with_project_scope(schema, &payload, Some(authorization.compilation()))?;
+        let record = TaskConfigurationRecord::from_project_plan(plan, authorization.compilation())?;
         authorization.validate_child(&record)?;
         super::project_task_reuse::verify_final_inputs(
             &super::MediaResultStore::new(self.pool.clone()),
@@ -524,11 +530,15 @@ async fn save_configuration_in_tx(
     )
     .await?
     {
-        let payload = serde_json::to_string(&ArchivedTaskConfiguration::from_record(record)?)?;
-        ensure!(
-            payload.len() <= 1048576,
-            "Project task archive exceeds its byte limit"
-        );
+        let archive_limit = record
+            .project_scope()
+            .and_then(ProjectCompilationBinding::payload_tier)
+            .map_or(1024 * 1024, |tier| tier.record_limit());
+        let payload = super::project_payload::bounded_json(
+            &ArchivedTaskConfiguration::from_record(record)?,
+            archive_limit,
+        )
+        .context("Project task archive exceeds its byte limit or is invalid")?;
         sqlx::query("INSERT INTO project_task_configurations_v1(session_id,job_id,payload) VALUES(?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
                 .bind(&record.session_id).bind(&record.job_id).bind(&payload)
                 .execute(&mut **tx).await?;
@@ -651,26 +661,8 @@ async fn read_configuration(
 }
 
 fn bounded_json(value: &impl Serialize) -> Result<String> {
-    struct Writer(Vec<u8>);
-    impl std::io::Write for Writer {
-        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-            if bytes.len() > MAX_TASK_CONFIGURATION_BYTES.saturating_sub(self.0.len()) {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "Task configuration exceeds its byte limit",
-                ));
-            }
-            self.0.extend_from_slice(bytes);
-            Ok(bytes.len())
-        }
-
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
-    let mut writer = Writer(Vec::new());
-    serde_json::to_writer(&mut writer, value)?;
-    Ok(String::from_utf8(writer.0)?)
+    super::project_payload::bounded_json(value, MAX_TASK_CONFIGURATION_BYTES)
+        .context("Task configuration exceeds its byte limit or is invalid")
 }
 
 fn canonical_generation(

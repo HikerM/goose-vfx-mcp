@@ -7,6 +7,9 @@ use serde_json::json;
 use std::collections::BTreeSet;
 use std::io::Write;
 
+#[path = "project_task_reuse_payload_tests.rs"]
+mod payload_tests;
+
 struct Fixture {
     _directory: tempfile::TempDir,
     manager: Arc<SessionManager>,

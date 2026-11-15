@@ -5,6 +5,8 @@ mod formats;
 mod ingest;
 mod project_assets;
 #[cfg(feature = "local-inference")]
+mod project_payload;
+#[cfg(feature = "local-inference")]
 mod project_task_reuse;
 mod store;
 #[cfg(feature = "local-inference")]
