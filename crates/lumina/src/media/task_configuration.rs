@@ -7,9 +7,9 @@ use lumina_providers::local_inference::lifecycle::{
     RuntimeBuild, Sha256Digest, StableAudioMusicParameterService, StableAudioMusicPreparedTask,
     StableAudioMusicSnapshot, TaskParameterIdentity,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use sqlx::{Pool, Row, Sqlite};
+use sqlx::{Pool, Row, Sqlite, SqliteConnection, Transaction};
 
 use super::domain::{validate_digest, validate_id};
 use super::{MediaResultRef, MediaSource, PublishMediaRequest};
@@ -33,6 +33,61 @@ pub struct TaskConfigurationRecord {
     snapshot_json: String,
     snapshot_sha256: String,
     snapshot: TaskConfigurationSnapshot,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct ArchivedTaskConfiguration {
+    parameter_schema_id: String,
+    identity_json: String,
+    snapshot_json: String,
+    snapshot_sha256: String,
+}
+
+impl ArchivedTaskConfiguration {
+    fn from_record(record: &TaskConfigurationRecord) -> Result<Self> {
+        Ok(Self {
+            parameter_schema_id: record.identity.parameter_schema_id.clone(),
+            identity_json: serde_json::to_string(&record.identity)?,
+            snapshot_json: record.snapshot_json.clone(),
+            snapshot_sha256: record.snapshot_sha256.clone(),
+        })
+    }
+
+    pub(super) fn validate(&self, session: &str, job: &str) -> Result<TaskConfigurationRecord> {
+        ensure!(
+            self.identity_json.len() <= MAX_IDENTITY_BYTES,
+            "Archived task identity exceeds its byte limit"
+        );
+        let record = parse_snapshot(&self.parameter_schema_id, &self.snapshot_json)?;
+        ensure!(
+            record.session_id == session
+                && record.job_id == job
+                && record.snapshot_sha256 == self.snapshot_sha256
+                && serde_json::to_string(&record.identity)? == self.identity_json,
+            "Archived task configuration identity or digest is inconsistent"
+        );
+        Ok(record)
+    }
+
+    pub(super) async fn read(
+        tx: &mut Transaction<'_, Sqlite>,
+        session: &str,
+        job: &str,
+    ) -> Result<Self> {
+        let payload: String = sqlx::query_scalar(
+            "SELECT CASE WHEN length(CAST(payload AS BLOB))<=1048576 THEN payload END
+             FROM project_task_configurations_v1 WHERE session_id=? AND job_id=?",
+        )
+        .bind(session)
+        .bind(job)
+        .fetch_optional(&mut **tx)
+        .await?
+        .context("Project result has no archived task configuration")?;
+        let archive: Self = serde_json::from_str(&payload)?;
+        archive.validate(session, job)?;
+        Ok(archive)
+    }
 }
 
 impl TaskConfigurationRecord {
@@ -69,7 +124,12 @@ impl TaskConfigurationRecord {
         }
     }
 
-    fn verify_source(&self, session_id: &str, job_id: &str, source: &MediaSource) -> Result<()> {
+    pub(super) fn verify_source(
+        &self,
+        session_id: &str,
+        job_id: &str,
+        source: &MediaSource,
+    ) -> Result<()> {
         ensure!(
             session_id == self.session_id && job_id == self.job_id,
             "Media output belongs to a different task configuration"
@@ -154,7 +214,18 @@ impl TaskConfigurationStore {
         )
         .execute(&mut *tx)
         .await?;
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS project_task_configurations_v1 (
+                session_id TEXT NOT NULL, job_id TEXT NOT NULL,
+                payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB)) BETWEEN 1 AND 1048576),
+                PRIMARY KEY(session_id,job_id))",
+        )
+        .execute(&mut *tx)
+        .await?;
         tx.commit().await?;
+        crate::project::ProjectAssetStore::new(self.pool.clone())
+            .initialize()
+            .await?;
         Ok(())
     }
 
@@ -162,6 +233,7 @@ impl TaskConfigurationStore {
         &self,
         transcript: &super::NativeTaskTranscript,
     ) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
         sqlx::query("INSERT INTO media_task_transcripts_v1(session_id,job_id,association_json,snapshot_sha256,content_sha256,text) VALUES(?,?,?,?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
             .bind(&transcript.session_id)
             .bind(&transcript.job_id)
@@ -169,14 +241,15 @@ impl TaskConfigurationStore {
             .bind(&transcript.generation_config_sha256)
             .bind(&transcript.sha256)
             .bind(&transcript.text)
-            .execute(&self.pool).await?;
-        let stored = self
-            .read_transcript(&transcript.session_id, &transcript.job_id)
-            .await?;
+            .execute(&mut *tx).await?;
+        let stored =
+            read_transcript_from(&mut tx, &transcript.session_id, &transcript.job_id).await?;
         ensure!(
             stored.as_ref() == Some(transcript),
             "Transcript conflicts with the stored task result"
         );
+        super::project_assets::record_transcript(&mut tx, transcript).await?;
+        tx.commit().await?;
         Ok(())
     }
 
@@ -185,45 +258,8 @@ impl TaskConfigurationStore {
         session_id: &str,
         job_id: &str,
     ) -> Result<Option<super::NativeTaskTranscript>> {
-        validate_id(session_id)?;
-        validate_id(job_id)?;
-        let row = sqlx::query(
-            "SELECT association_json,snapshot_sha256,content_sha256,
-                CASE WHEN length(CAST(text AS BLOB))<=4194304 THEN text END AS text
-             FROM media_task_transcripts_v1 WHERE session_id=? AND job_id=?",
-        )
-        .bind(session_id)
-        .bind(job_id)
-        .fetch_optional(&self.pool)
-        .await?;
-        let Some(row) = row else { return Ok(None) };
-        let config = self
-            .read(session_id, job_id)
-            .await?
-            .context("Missing transcript task configuration")?;
-        let snapshot_sha256: String = row.try_get("snapshot_sha256")?;
-        ensure!(
-            matches!(config.snapshot(), TaskConfigurationSnapshot::Qwen3Asr(_))
-                && config.generation_config_sha256() == snapshot_sha256,
-            "Transcript configuration mismatch"
-        );
-        let text: String = row
-            .try_get::<Option<String>, _>("text")?
-            .context("Stored transcript exceeds its byte limit")?;
-        let sha256: String = row.try_get("content_sha256")?;
-        ensure!(
-            Sha256Digest::of_bytes(text.as_bytes()).as_str() == sha256,
-            "Stored transcript content mismatch"
-        );
-        Ok(Some(super::NativeTaskTranscript {
-            session_id: session_id.into(),
-            job_id: job_id.into(),
-            association: serde_json::from_str(row.try_get("association_json")?)?,
-            generation_config_sha256: snapshot_sha256,
-            bytes: text.len() as u64,
-            sha256,
-            text,
-        }))
+        let mut connection = self.pool.acquire().await?;
+        read_transcript_from(&mut connection, session_id, job_id).await
     }
 
     pub async fn save_generation(
@@ -281,6 +317,7 @@ impl TaskConfigurationStore {
             identity_json.len() <= MAX_IDENTITY_BYTES,
             "Task identity exceeds its byte limit"
         );
+        let mut tx = self.pool.begin().await?;
         sqlx::query("INSERT INTO media_task_configurations_v1(session_id,job_id,parameter_schema_id,identity_json,snapshot_json,snapshot_sha256) VALUES(?,?,?,?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
             .bind(&record.session_id)
             .bind(&record.job_id)
@@ -288,16 +325,35 @@ impl TaskConfigurationStore {
             .bind(identity_json)
             .bind(&record.snapshot_json)
             .bind(&record.snapshot_sha256)
-            .execute(&self.pool)
+            .execute(&mut *tx)
             .await?;
-        let stored = self
-            .read(&record.session_id, &record.job_id)
+        let stored = read_configuration(&mut tx, &record.session_id, &record.job_id)
             .await?
             .context("Task configuration disappeared during persistence")?;
         ensure!(
             stored == record,
             "Task job ID conflicts with a different immutable configuration"
         );
+        if crate::project::ProjectAssetStore::has_project_scope_in_tx(
+            &mut tx,
+            &record.session_id,
+            &record.job_id,
+            None,
+        )
+        .await?
+        {
+            let payload = serde_json::to_string(&ArchivedTaskConfiguration::from_record(&record)?)?;
+            sqlx::query("INSERT INTO project_task_configurations_v1(session_id,job_id,payload) VALUES(?,?,?) ON CONFLICT(session_id,job_id) DO NOTHING")
+                .bind(&record.session_id).bind(&record.job_id).bind(&payload)
+                .execute(&mut *tx).await?;
+            let existing: String = sqlx::query_scalar("SELECT payload FROM project_task_configurations_v1 WHERE session_id=? AND job_id=?")
+                .bind(&record.session_id).bind(&record.job_id).fetch_one(&mut *tx).await?;
+            ensure!(
+                existing == payload,
+                "Project task configuration archive conflicts with this job"
+            );
+        }
+        tx.commit().await?;
         Ok(stored)
     }
 
@@ -335,44 +391,8 @@ impl TaskConfigurationStore {
         session_id: &str,
         job_id: &str,
     ) -> Result<Option<TaskConfigurationRecord>> {
-        validate_id(session_id)?;
-        validate_id(job_id)?;
-        let row = sqlx::query(
-            "SELECT
-                CASE WHEN length(CAST(parameter_schema_id AS BLOB)) BETWEEN 1 AND 128 THEN parameter_schema_id END AS parameter_schema_id,
-                CASE WHEN length(CAST(snapshot_sha256 AS BLOB))=64 THEN snapshot_sha256 END AS snapshot_sha256,
-                CASE WHEN length(CAST(identity_json AS BLOB)) BETWEEN 1 AND 16384 THEN identity_json END AS identity_json,
-                CASE WHEN length(CAST(snapshot_json AS BLOB)) BETWEEN 1 AND 262144 THEN snapshot_json END AS snapshot_json
-             FROM media_task_configurations_v1 WHERE session_id=? AND job_id=?",
-        )
-        .bind(session_id)
-        .bind(job_id)
-        .fetch_optional(&self.pool)
-        .await?;
-        row.map(|row| {
-            let schema: Option<String> = row.try_get("parameter_schema_id")?;
-            let payload: Option<String> = row.try_get("snapshot_json")?;
-            let identity_json: Option<String> = row.try_get("identity_json")?;
-            let sha: Option<String> = row.try_get("snapshot_sha256")?;
-            let schema = schema.context("Stored task schema identifier exceeds its byte limit")?;
-            let sha = sha.context("Stored task digest has an invalid byte length")?;
-            validate_digest(&sha)?;
-            let payload = payload.context("Stored configuration exceeds its byte limit")?;
-            let identity_json =
-                identity_json.context("Stored task identity exceeds its byte limit")?;
-            let identity: TaskParameterIdentity = serde_json::from_str(&identity_json)?;
-            let record = parse_snapshot(&schema, &payload)?;
-            ensure!(
-                record.session_id == session_id
-                    && record.job_id == job_id
-                    && record.identity == identity
-                    && record.snapshot_sha256 == sha
-                    && serde_json::to_string(&identity)? == identity_json,
-                "Stored task configuration identity or digest is inconsistent"
-            );
-            Ok(record)
-        })
-        .transpose()
+        let mut connection = self.pool.acquire().await?;
+        read_configuration(&mut connection, session_id, job_id).await
     }
 
     pub async fn list(
@@ -424,6 +444,95 @@ impl TaskConfigurationStore {
         record.verify_source(&result.session_id, &result.job_id, &result.source)?;
         Ok(record)
     }
+}
+
+async fn read_transcript_from(
+    connection: &mut SqliteConnection,
+    session_id: &str,
+    job_id: &str,
+) -> Result<Option<super::NativeTaskTranscript>> {
+    validate_id(session_id)?;
+    validate_id(job_id)?;
+    let row = sqlx::query(
+        "SELECT association_json,snapshot_sha256,content_sha256,
+            CASE WHEN length(CAST(text AS BLOB))<=4194304 THEN text END AS text
+         FROM media_task_transcripts_v1 WHERE session_id=? AND job_id=?",
+    )
+    .bind(session_id)
+    .bind(job_id)
+    .fetch_optional(&mut *connection)
+    .await?;
+    let Some(row) = row else { return Ok(None) };
+    let config = read_configuration(connection, session_id, job_id)
+        .await?
+        .context("Missing transcript task configuration")?;
+    let snapshot_sha256: String = row.try_get("snapshot_sha256")?;
+    ensure!(
+        matches!(config.snapshot(), TaskConfigurationSnapshot::Qwen3Asr(_))
+            && config.generation_config_sha256() == snapshot_sha256,
+        "Transcript configuration mismatch"
+    );
+    let text: String = row
+        .try_get::<Option<String>, _>("text")?
+        .context("Stored transcript exceeds its byte limit")?;
+    let sha256: String = row.try_get("content_sha256")?;
+    ensure!(
+        Sha256Digest::of_bytes(text.as_bytes()).as_str() == sha256,
+        "Stored transcript content mismatch"
+    );
+    Ok(Some(super::NativeTaskTranscript {
+        session_id: session_id.into(),
+        job_id: job_id.into(),
+        association: serde_json::from_str(row.try_get("association_json")?)?,
+        generation_config_sha256: snapshot_sha256,
+        bytes: text.len() as u64,
+        sha256,
+        text,
+    }))
+}
+
+async fn read_configuration(
+    connection: &mut SqliteConnection,
+    session_id: &str,
+    job_id: &str,
+) -> Result<Option<TaskConfigurationRecord>> {
+    validate_id(session_id)?;
+    validate_id(job_id)?;
+    let row = sqlx::query(
+        "SELECT
+            CASE WHEN length(CAST(parameter_schema_id AS BLOB)) BETWEEN 1 AND 128 THEN parameter_schema_id END AS parameter_schema_id,
+            CASE WHEN length(CAST(snapshot_sha256 AS BLOB))=64 THEN snapshot_sha256 END AS snapshot_sha256,
+            CASE WHEN length(CAST(identity_json AS BLOB)) BETWEEN 1 AND 16384 THEN identity_json END AS identity_json,
+            CASE WHEN length(CAST(snapshot_json AS BLOB)) BETWEEN 1 AND 262144 THEN snapshot_json END AS snapshot_json
+         FROM media_task_configurations_v1 WHERE session_id=? AND job_id=?",
+    )
+    .bind(session_id)
+    .bind(job_id)
+    .fetch_optional(&mut *connection)
+    .await?;
+    row.map(|row| {
+        let schema: Option<String> = row.try_get("parameter_schema_id")?;
+        let payload: Option<String> = row.try_get("snapshot_json")?;
+        let identity_json: Option<String> = row.try_get("identity_json")?;
+        let sha: Option<String> = row.try_get("snapshot_sha256")?;
+        let schema = schema.context("Stored task schema identifier exceeds its byte limit")?;
+        let sha = sha.context("Stored task digest has an invalid byte length")?;
+        validate_digest(&sha)?;
+        let payload = payload.context("Stored configuration exceeds its byte limit")?;
+        let identity_json = identity_json.context("Stored task identity exceeds its byte limit")?;
+        let identity: TaskParameterIdentity = serde_json::from_str(&identity_json)?;
+        let record = parse_snapshot(&schema, &payload)?;
+        ensure!(
+            record.session_id == session_id
+                && record.job_id == job_id
+                && record.identity == identity
+                && record.snapshot_sha256 == sha
+                && serde_json::to_string(&identity)? == identity_json,
+            "Stored task configuration identity or digest is inconsistent"
+        );
+        Ok(record)
+    })
+    .transpose()
 }
 
 fn bounded_json(value: &impl Serialize) -> Result<String> {

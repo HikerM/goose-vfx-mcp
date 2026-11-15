@@ -1,7 +1,9 @@
+mod assets;
 mod model;
 mod schema;
 mod service;
 
+pub use assets::{ProjectAssetRecord, ProjectAssetStore, ProjectAssetSummary};
 pub use model::{
     ChangeFile, ChangeSet, ChangeSetStatus, Project, ProjectProfile, ProjectSnapshot, Run,
     RunPhase, RunStatus, RunStep, RunStepStatus, WorkItem, WorkItemStatus, WorkspaceCheckpoint,

@@ -26,6 +26,7 @@ activities:
   - Validate legacy registry preservation and bounded vision installation admission
   - Validate inline ACP audio in live, restored, history and tool-result messages
   - Validate durable MCP media references, verified output bytes and scoped access across session restart
+  - Validate project asset archives, atomic publication and scoped conversational discovery through synthetic regressions
   - Generate comprehensive test report
 
 parameters:
@@ -33,7 +34,7 @@ parameters:
     input_type: string
     requirement: optional
     default: "all"
-    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, native-model-catalog, managed-capabilities, managed-chat, model-cache-install, model-assets, runtime-assets, media-forwarding"
+    description: "Which test phases to run: all, basic, extensions, delegation, vision, advanced, model-lifecycle, native-model-catalog, managed-capabilities, managed-chat, model-cache-install, model-assets, runtime-assets, media-forwarding, project-assets"
 
   - key: test_depth
     input_type: string
@@ -60,7 +61,12 @@ parameters:
     description: "Clean up test artifacts after completion"
 
 instructions: |
-  {% if test_phases == "managed-chat" %}
+  {% if test_phases == "project-assets" %}
+  Run only the fixed project-assets driver once through the developer shell, using the caller's
+  LUMINA_PROJECT_ASSET_TEST_BINARY. Do not build, find a substitute binary, or run another shell.
+  Preserve its JSON report. Report actual status, per-suite counts and scope in at most 80 words.
+  These are synthetic regressions, not real model inference, natural-language editing or desktop acceptance.
+  {% elif test_phases == "managed-chat" %}
   Use the developer shell to assess the caller's installed model and engine with the fixed A41 suite.
   Preserve the actual model responses, per-model verdict and persisted evidence.
   {% elif test_phases == "native-model-catalog" %}
@@ -196,7 +202,14 @@ extensions:
     name: extensionmanager
 
 prompt: |
-  {% if test_phases == "managed-chat" %}
+  {% if test_phases == "project-assets" %}
+  Your first and only shell action must run exactly
+  `python -B "D:/Project/goose/bin/test-lumina-project-assets.py" --report-path "{{ workspace_dir }}/project_assets.json"`
+  from D:/Project/goose with timeout_secs 600. Preserve LUMINA_PROJECT_ASSET_TEST_BINARY.
+  Do not run any other shell command or substitute a binary. Use the returned JSON for a factual
+  final report of at most 80 words covering status, each suite's actual counts, report path and scope.
+  State that these synthetic regressions do not prove natural-language editing or desktop acceptance.
+  {% elif test_phases == "managed-chat" %}
   From D:/Project/goose, run `bin\cargo.cmd test --offline -p lumina-local-inference --test lifecycle_managed_chat -- --ignored --nocapture`.
   Use the caller's LUMINA_CHAT_VALIDATION_STORE, LUMINA_CHAT_VALIDATION_VERSION,
   LUMINA_CHAT_VALIDATION_ENGINE, LUMINA_CHAT_VALIDATION_STRUCTURE and LUMINA_CHAT_VALIDATION_REPORT.

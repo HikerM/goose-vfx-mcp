@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-15T09:49:58.580639+00:00",
+  "status": "PARTIAL_PRODUCT_CLOSURE",
+  "scope": "Project media/transcript retention and scoped discovery; not the complete natural-language partial-edit workflow",
+  "sourceBaseCommit": "c0c870c04953e0893383dd1a8aa210798b5c51b8",
+  "sourceFilesSha256": {
+    "crates/lumina/src/agents/agent.rs": "6faa3cf4da6a6696702f3574a40f6255f89cb3ec4abdf20963e310d966112597",
+    "crates/lumina/src/agents/platform_extensions/native_tasks.rs": "f459df143cf93f1365f9f12fa5755ad1a24b68de1130b10eeecf6331cf5cfd17",
+    "crates/lumina/src/agents/platform_extensions/native_tasks_tests.rs": "2cec7667ce90d75e7917e5c24cf9a2ad0b04f1d7087161071dbcc717f590efbf",
+    "crates/lumina/src/agents/platform_extensions/native_tasks_project_assets_tests.rs": "d3bcaf7a3e285879ccc981b2b7bf2673941e7b18128cc847fb40476edfa5dcc6",
+    "crates/lumina/src/media/mod.rs": "0d0e42d6faaa0e03877094dca5b1c87cf72bb5269cde5cf5c5400da7ec7e5f4c",
+    "crates/lumina/src/media/store.rs": "41ea885deb68a494f34141f64f2e61469bf3ebdddc0d16c3bfbba3eff9ebca37",
+    "crates/lumina/src/media/task_configuration.rs": "9f0b8b707dae06010196812e298588d7c289617305699911607e081dded90407",
+    "crates/lumina/src/media/task_jobs.rs": "21e89f03d61cf36b99869563eeed94f001d2df6126f60cd1cfc9dd0be915f695",
+    "crates/lumina/src/media/task_jobs_tests.rs": "5ae78bbbb98d09df93a63271a47bf9cb017b363b9872a2133d59371bce074c61",
+    "crates/lumina/src/media/task_output.rs": "b07360f1d291f798bc3dae18598a980d5800ce5ca7cfe8fb2fe661ec9af737de",
+    "crates/lumina/src/media/task_service.rs": "973969d81c211e118ca93c58caec4316daaa3eb82f6c33d224f48fdad6e9608a",
+    "crates/lumina/src/media/project_assets.rs": "f8ce4ac6bd1b81a356c5a470bf175e594826ce7ce7f9e4b3129c84969e077722",
+    "crates/lumina/src/media/project_assets_tests.rs": "f89e2274e3984895371dccd20bc3a91945e7ca7712c81739de668ade28de0e72",
+    "crates/lumina/src/project/mod.rs": "db920ef4d8c31f721db350a09dcd3017ba29cf4305af23e41caa3aa6216fffcf",
+    "crates/lumina/src/project/assets.rs": "87c767db5f6a7b6c90524502283ae3a3489f1cb64c46c67f4bd031fc3e93fb07",
+    "crates/lumina/src/project/assets_tests.rs": "090f85ea13d7003e960d3636ea7fb9d8833b4a12b016b1a591a1e45769c028c5",
+    "crates/lumina/src/session/mod.rs": "cdf1f34ab997a897ed3bc033ca577b6aa8625a635f010f08b1edab365d871319",
+    "crates/lumina/src/session/session_manager.rs": "6453e7b11d1ba13c18a288610cab7d1bed2bc1dec837ed3ff0edcc52bb83890f",
+    "crates/lumina/src/session/session_ids.rs": "e887d4c0c9aedee44daf73b7411783a126480209625251489f9a76e283e302ee",
+    "crates/lumina/src/session/session_ids_tests.rs": "7c58ec4a3697072f7d44873d8239328c4af77299bb99561c5140a1149ee61876",
+    "crates/lumina/tests/support/project_assets_probe.rs": "aeb17a4f949a41aef82fd7208b351ed3b7d73807cac9b1b9c4752b015710e80d",
+    "bin/test-lumina-project-assets.py": "1569f4b333ac1fb5e4507c9a1b2970f0cbf5f646dc3136a4722a1bce723cfc57",
+    "lumina-self-test.yaml": "850e8f6ccfb5b39395991edb30bb280ca4174405c006af34cd4c72895a84b7f4"
+  },
+  "implementation": [
+    "Freeze project/work-item/run before tool execution and inherit it in native jobs",
+    "Archive validated native configurations independently of source session deletion",
+    "Publish media readiness and immutable project asset atomically, including prepared recovery",
+    "Archive full ASR text atomically with bounded paged query projection",
+    "Read-only project discovery resolves current authenticated session project; existing media access stays session-scoped",
+    "Persistent session ID high-water seeded from retained references prevents deletion-based ID reuse"
+  ],
+  "hostBuild": {
+    "status": "PASS",
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\project-assets-host-build-20261115-r3.log",
+    "binarySha256": "55c0478f6cd73bf1c3454954ac2eba31b8861a6fc0cd24c9bcc1a75605e62abf"
+  },
+  "focusedRegressions": {
+    "status": "PASS",
+    "scope": "Synthetic project-asset storage, publication and query regressions; not real model inference, natural-language editing or desktop acceptance",
+    "suites": [
+      {
+        "suite": "session::session_ids::tests::",
+        "binarySha256": "55c0478f6cd73bf1c3454954ac2eba31b8861a6fc0cd24c9bcc1a75605e62abf",
+        "scope": "Synthetic project-asset storage, publication and query regressions; not real model inference, natural-language editing or desktop acceptance",
+        "status": "PASS",
+        "testCounts": {
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0,
+          "measured": 0,
+          "filteredOut": 2388,
+          "total": 7
+        },
+        "command": [
+          "D:\\Project\\goose\\target\\debug\\deps\\lumina-fa9a50c6719b581d.exe",
+          "session::session_ids::tests::",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 8.297
+      },
+      {
+        "suite": "project::assets::tests::",
+        "binarySha256": "55c0478f6cd73bf1c3454954ac2eba31b8861a6fc0cd24c9bcc1a75605e62abf",
+        "scope": "Synthetic project-asset storage, publication and query regressions; not real model inference, natural-language editing or desktop acceptance",
+        "status": "PASS",
+        "testCounts": {
+          "passed": 11,
+          "failed": 0,
+          "ignored": 0,
+          "measured": 0,
+          "filteredOut": 2384,
+          "total": 11
+        },
+        "command": [
+          "D:\\Project\\goose\\target\\debug\\deps\\lumina-fa9a50c6719b581d.exe",
+          "project::assets::tests::",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 3.953
+      },
+      {
+        "suite": "media::project_assets::tests::",
+        "binarySha256": "55c0478f6cd73bf1c3454954ac2eba31b8861a6fc0cd24c9bcc1a75605e62abf",
+        "scope": "Synthetic project-asset storage, publication and query regressions; not real model inference, natural-language editing or desktop acceptance",
+        "status": "PASS",
+        "testCounts": {
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "measured": 0,
+          "filteredOut": 2391,
+          "total": 4
+        },
+        "command": [
+          "D:\\Project\\goose\\target\\debug\\deps\\lumina-fa9a50c6719b581d.exe",
+          "media::project_assets::tests::",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 17.829
+      },
+      {
+        "suite": "agents::platform_extensions::native_tasks::project_assets_tests::",
+        "binarySha256": "55c0478f6cd73bf1c3454954ac2eba31b8861a6fc0cd24c9bcc1a75605e62abf",
+        "scope": "Synthetic project-asset storage, publication and query regressions; not real model inference, natural-language editing or desktop acceptance",
+        "status": "PASS",
+        "testCounts": {
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0,
+          "measured": 0,
+          "filteredOut": 2391,
+          "total": 4
+        },
+        "command": [
+          "D:\\Project\\goose\\target\\debug\\deps\\lumina-fa9a50c6719b581d.exe",
+          "agents::platform_extensions::native_tasks::project_assets_tests::",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "exitCode": 0,
+        "elapsedSeconds": 7.14
+      }
+    ],
+    "binary": "D:\\Project\\goose\\target\\debug\\deps\\lumina-fa9a50c6719b581d.exe",
+    "binarySha256": "55c0478f6cd73bf1c3454954ac2eba31b8861a6fc0cd24c9bcc1a75605e62abf",
+    "countsComplete": true,
+    "totals": {
+      "passed": 26,
+      "failed": 0,
+      "ignored": 0,
+      "total": 26
+    },
+    "elapsedSeconds": 38.156,
+    "reportPath": "D:\\Project\\goose\\target\\lifecycle-validation\\project-assets-focused-20261115-r3.json"
+  },
+  "relatedRegressions": [
+    {
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\project-assets-media-20261115-r3.log",
+      "sha256": "e9c3b9953d1ed11d875ecace55c5c24fbce543b177de6fb99b2decc273d45b40",
+      "status": "ok",
+      "passed": 101,
+      "failed": 0,
+      "ignored": 5,
+      "failedTests": []
+    },
+    {
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\project-assets-agents-platform_extensions-native_tasks-20261115-r3.log",
+      "sha256": "6afb7695ff0725e5f679bacb45648c29bc6147af70759c86824c5d6010e5012a",
+      "status": "ok",
+      "passed": 8,
+      "failed": 0,
+      "ignored": 1,
+      "failedTests": []
+    },
+    {
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\project-assets-agents-agent-20261115-r3.log",
+      "sha256": "8ffad624f1a344c8d06c80a200cead18d00352f6e082bad0e07f17a1c4bf2fac",
+      "status": "FAILED",
+      "passed": 18,
+      "failed": 4,
+      "ignored": 0,
+      "failedTests": [
+        "agents::agent::tests::session_start_hook_emits_once_for_first_reply_turn",
+        "agents::agent::tests::stop_hook_block_cap_allows_configured_consecutive_blocks_then_overrides",
+        "agents::agent::tests::stop_hook_block_cap_counts_only_consecutive_blocks",
+        "agents::agent::tests::stop_hook_payload_includes_streamed_assistant_reply_text"
+      ]
+    },
+    {
+      "log": "D:\\Project\\goose\\target\\lifecycle-validation\\project-assets-session-session_manager-tests-20261115-r3.log",
+      "sha256": "84ef44384abdc5025fa317e9eb9b2f19d0ef1d3cb95fea2e8964fbf7672c55ac",
+      "status": "FAILED",
+      "passed": 58,
+      "failed": 1,
+      "ignored": 0,
+      "failedTests": [
+        "session::session_manager::tests::activation_guard_allows_authenticated_profile_marker_for_safe_hydration"
+      ]
+    }
+  ],
+  "regressionLimitations": [
+    "Four existing hook fixtures failed to create expected hook effects/files on Windows; fixture and hook implementation are unchanged relative to sourceBaseCommit; text-only mock providers do not reach new dispatch freezing. Exact shell-vs-path failure remains unverified.",
+    "Existing activation_guard_allows_authenticated_profile_marker_for_safe_hydration fixture supplies no profile bindings to a path that requires them; unchanged fixture and validation code. This is a failed test, not a pass.",
+    "Suite totals overlap; ignored real probes are not counted as passed."
+  ],
+  "realMusic": {
+    "status": "PASS",
+    "result": {
+      "status": "PASS",
+      "scope": "Production service real music generation and project persistence; not natural-language or desktop acceptance",
+      "actualResult": {
+        "schemaVersion": 1,
+        "resultId": "0024354d-3a4a-83a4-9900-0ab7c1f96d1c",
+        "sessionId": "20261115_1",
+        "association": {
+          "associationKind": "message",
+          "messageId": "real-project-music-probe"
+        },
+        "jobId": "project-music-dc809ffc-84cf-4124-b36f-f6ec663ce6b0",
+        "kind": "audio",
+        "mime": "audio/wav",
+        "fileName": "0024354d-3a4a-83a4-9900-0ab7c1f96d1c.wav",
+        "bytes": 705644,
+        "sha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+        "createdAt": 1794733928861,
+        "rootId": "00945900-17ad-4eaa-9437-e702b87c8bb0",
+        "relativePath": "id-32303236313131355f31/id-70726f6a6563742d6d757369632d64633830396666632d383463662d343132342d623336662d663665633636336365366230/0024354d-3a4a-83a4-9900-0ab7c1f96d1c.wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 4000000,
+          "sampleRate": 44100,
+          "channels": 2,
+          "sampleFrames": 176400
+        },
+        "ownership": "application_generated",
+        "source": {
+          "kind": "local_model",
+          "installationId": "acceptance-stable-audio-small-music-cpu",
+          "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+          "runtime": {
+            "adapterId": "audio-cpp-offline-parameters-v1",
+            "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+            "binarySha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b"
+          },
+          "generationConfigSha256": "04f12c686cd5ec32eee2c2c38a6e09c4fdbfc3d2403f5005d4fab7b7ab135e8e",
+          "inputRefs": []
+        }
+      },
+      "publishedPath": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1\\session-storage\\outputs\\id-32303236313131355f31\\id-70726f6a6563742d6d757369632d64633830396666632d383463662d343132342d623336662d663665633636336365366230\\0024354d-3a4a-83a4-9900-0ab7c1f96d1c.wav",
+      "verifiedWavSha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+      "projectId": "project_c2c2019b-c741-4db8-9e5f-10e3d91b039b",
+      "sourceSessionId": "20261115_1",
+      "readerSessionId": "20261115_2",
+      "jobId": "project-music-dc809ffc-84cf-4124-b36f-f6ec663ce6b0",
+      "workItemId": "work_73d1b4c0-1ab6-47d4-a3fe-195723a17af3",
+      "runId": "run_378c0ee4-e205-46a9-a786-47ce1bf8741d",
+      "snapshotSha256": "04f12c686cd5ec32eee2c2c38a6e09c4fdbfc3d2403f5005d4fab7b7ab135e8e",
+      "archiveContentSha256": "f69a343dfa9a14a69b2063d5100bb566d52cd6acfbf78741cc582f14c3d1c9ec",
+      "generationElapsedMillis": 70535,
+      "sameProjectDiscovery": true,
+      "sourceSessionDeleted": true,
+      "sessionConfigurationRemoved": true,
+      "archiveConfigurationVerified": true,
+      "sqliteReopened": true,
+      "crossProjectReadDenied": true,
+      "originalMediaSessionIsolationPreserved": true,
+      "realBudgetAdmission": true,
+      "testElapsedMillis": 74126
+    },
+    "report": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1\\result.json",
+    "reportSha256": "0611ab20a6a93e3393b5421aeec9c0f2c5cbd8c7cd3092d17747f99e04c3d611",
+    "binarySha256": "55c0478f6cd73bf1c3454954ac2eba31b8861a6fc0cd24c9bcc1a75605e62abf"
+  },
+  "resourceObservation": {
+    "status": "OBSERVED_CURRENT_PROJECT_PUBLICATION",
+    "report": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1-observation.json",
+    "sha256": "08f733ad0040f7fd47225563085a04c58c69e1a5023c22ca44ed88e5ef1c8067",
+    "sampleIntervalSeconds": 0.04,
+    "sampledTreeWorkingSetPeakBytes": 2038513664,
+    "sampledTreePrivatePeakBytes": 7003885568,
+    "sumObservedProcessPrivateHighWaterBytes": 7010213888,
+    "reviewedHostRamBudgetBytes": 8858370048,
+    "limitations": "One exact music prompt/seed/configuration. Memory observation does not replace complete disk, GPU, parameter-domain, quality or performance acceptance. No performance speedup is claimed. ASR maximum project-archive publication still requires a production resource profile; normal ASR remains NeedsProfiling."
+  },
+  "cliBuild": {
+    "status": "PASS",
+    "log": "D:\\Project\\goose\\target\\lifecycle-validation\\project-assets-cli-build-20261115-r1.log",
+    "elapsed": "27m 06s",
+    "binarySha256": "b19dbb3573cb5c3a944b41d35186589b62bc6f94a72226e1972992e0edf170be"
+  },
+  "selfTestRecipe": {
+    "status": "TOOL_EXECUTION_PASS_REPORT_LOCATION_FAIL",
+    "rawEvidence": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-assets-recipe-20261115-r1\\evidence.json",
+    "audit": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-assets-recipe-20261115-r1\\functional-audit.json",
+    "rawEvidenceSha256": "ef5acf6ba0e55add0fb09b0f731280574455daa7c81e4259e8c429db1d848553",
+    "auditSha256": "e0e5527e6fa36bf32aa478367664496683bcbceaf7c7fb5d3c466d025cce9b71",
+    "actualReportPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-assets-20261115-r1\\reports\\project_assets.json",
+    "expectedReportPath": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-assets-recipe-20261115-r1\\reports\\project_assets.json",
+    "toolTestCounts": {
+      "passed": 26,
+      "failed": 0,
+      "ignored": 0,
+      "total": 26
+    },
+    "frozenInputsUnchanged": true,
+    "assistantReply": "**Project-Asset Synthetic Regression Report**\n\n- **Overall status:** PASS\n- **Report path:** `D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-assets-20261115-r1\\reports\\project_assets.json`\n- **Binary:** `lumina-fa9a50c6719b581d.exe` (SHA256 `55c047…`)\n\n| Suite | Passed | Failed | Total |\n|---|---|---|---|\n| `session::session_ids::tests::` | 7 | 0 | 7 |\n| `project::assets::tests::` | 11 | 0 | 11 |\n| `media::project_assets::tests::` | 4 | 0 | 4 |\n| `agents::platform_extensions::native_tasks::project_assets_tests::` | 4 | 0 | 4 |\n\n**Totals:** 26 passed, 0 failed, 0 ignored (26 total). Elapsed: 34.1s.\n\nThese synthetic regressions do not prove natural-language editing or desktop acceptance.",
+    "limitations": "Actual CLI model-driven tool execution passes all 26 synthetic regressions, but the model omitted recipe from the requested report directory. Keep the recipe contract failure; this is not natural-language editing acceptance."
+  },
+  "remaining": [
+    "Natural-language reference resolution for prior versions, input materials and selected regions",
+    "Project-authorized cross-session media playback and execution reuse",
+    "Parent/child asset versions and typed text/image/time edit scope with preserved-region validation",
+    "Real per-model editing capabilities and output quality/stability acceptance",
+    "Project archive real-model coverage beyond this exact music case",
+    "Desktop interaction acceptance remains paused by user; private ModelScope authentication remains deferred"
+  ],
+  "migrationLimitations": [
+    "Existing results without frozen execution scope are not backfilled into projects",
+    "Session-ID upgrade preserves known remaining references; entirely deleted historical IDs without references cannot be reconstructed"
+  ]
+}

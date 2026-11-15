@@ -92,6 +92,22 @@ pub(crate) async fn execute_prepared_task_controlled(
     .context("Task installation verification worker failed")??;
 
     let pool = storage.pool().await?;
+    let recorded: bool = sqlx::query_scalar(
+        "SELECT EXISTS(SELECT 1 FROM media_task_configurations_v1 WHERE session_id=? AND job_id=?)
+            OR EXISTS(SELECT 1 FROM native_task_calls_v1 WHERE session_id=? AND job_id=?)",
+    )
+    .bind(authenticated_session_id)
+    .bind(plan.job_id())
+    .bind(authenticated_session_id)
+    .bind(plan.job_id())
+    .fetch_one(pool)
+    .await?;
+    if !recorded {
+        crate::project::ProjectAssetStore::new(pool.clone())
+            .freeze_job(authenticated_session_id, plan.job_id(), None)
+            .await?;
+    }
+
     let media = MediaResultStore::new(pool.clone());
     let root = media
         .register_output_root(&storage.media_output_directory())

@@ -29,6 +29,18 @@ The Projects entry opens a directory chooser, then creates or reopens the projec
 
 Starting a work item creates an ACP session with `projectId` and `workItemId` metadata. The session working directory is the project root, so repository search, multi-file edits, commands, validation, and later follow-up prompts all operate in the project context. The run remains visible after navigating away or restarting the desktop app.
 
+## Project media and transcript archives
+
+Tool dispatch freezes the session's project, work item and active run before execution. Native jobs inherit that scope; direct native execution freezes it before resource admission. Publication uses the frozen scope, so moving a session to another project while a task runs cannot move its result. Existing outputs without a frozen scope are not retrospectively assigned to a project.
+
+`project_execution_scopes_v1` retains execution ownership. `project_task_configurations_v1` retains validated native parameter snapshots independently of the source session. `project_assets_v1` stores immutable media metadata or transcript text, configuration, source identity and a bounded summary. Marking media ready and inserting its archive share a transaction; prepared-publication recovery uses the same path. Transcript publication and archiving also share a transaction. Files remain in the managed media output store.
+
+The read-only `native_tasks__project_assets` and `native_tasks__project_asset` tools resolve the current project from the authenticated session. Listing returns paged summaries; detail returns configuration and bounded transcript text. The tools accept no caller-supplied project or session identity. Another session in the same project can discover the archived result after the source conversation is deleted and the database is reopened. Existing session-scoped media access remains unchanged: archive discovery does not itself provide cross-session playback, input reuse, or editing.
+
+Session IDs retain the existing date-and-sequence format but use a persistent high-water mark. An upgrade seeds it from known retained session references, and subsequent imports advance it transactionally. Deleting a conversation never lowers the mark. Historical IDs whose records and every known reference were already removed before the upgrade cannot be reconstructed.
+
+Project assets are a persistence foundation. Parent/child asset versions, typed text/image/time selections, capability-aware edits, preserved-region verification and the complete natural-language workflow still require implementation and acceptance.
+
 ## ACP extension boundary
 
 Desktop clients use the `_lumina/project/*` extension methods defined in `lumina-sdk-types`. The renderer keeps local DTO types and does not depend on generated OpenAPI clients. New capabilities should extend this typed boundary and the persistent domain first; UI-only state must not become the source of truth for run status.

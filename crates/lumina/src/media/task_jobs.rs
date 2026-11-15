@@ -205,6 +205,11 @@ impl NativeTaskJobs {
             }
             Some(_) => bail!("Unknown native task call state"),
         }
+        if previous.is_none() {
+            crate::project::ProjectAssetStore::new(self.pool.clone())
+                .freeze_job(session, &job, Some(call))
+                .await?;
+        }
         self.set_state(session, &job, &request, "running").await?;
         Ok(NativeTaskClaim::Execute(NativeTaskAttempt {
             pool: self.pool.clone(),

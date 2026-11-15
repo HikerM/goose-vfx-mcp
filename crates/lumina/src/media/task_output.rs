@@ -15,7 +15,8 @@ use super::{
 
 pub const MAX_TASK_TRANSCRIPT_BYTES: u64 = 4 * 1024 * 1024;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NativeTaskTranscript {
     pub session_id: String,
     pub job_id: String,

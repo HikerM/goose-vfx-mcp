@@ -3,6 +3,7 @@ mod domain;
 mod files;
 mod formats;
 mod ingest;
+mod project_assets;
 mod store;
 #[cfg(feature = "local-inference")]
 mod task_configuration;

@@ -47,7 +47,7 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
             .iter()
             .map(|t| t.name.as_ref())
             .collect::<Vec<_>>(),
-        ["list", "run", "reuse"]
+        ["list", "run", "reuse", "project_assets", "project_asset"]
     );
     let listed = client
         .call_tool(&ctx, "list", None, CancellationToken::new())

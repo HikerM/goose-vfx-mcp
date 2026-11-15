@@ -1631,6 +1631,7 @@ impl SessionStorage {
                 crate::media::NativeTaskJobs::new(self.pool.clone())
                     .initialize()
                     .await?;
+                super::session_ids::initialize(&self.pool).await?;
                 // File verification runs after schema transactions commit. Recovery
                 // failures must not make unrelated conversations unavailable.
                 match media.recover().await {
@@ -2443,15 +2444,12 @@ impl SessionStorage {
         let mut tx = pool.begin_with("BEGIN IMMEDIATE").await?;
 
         let today = chrono::Utc::now().format("%Y%m%d").to_string();
+        let id = super::session_ids::allocate(&mut tx, &today).await?;
         let session = sqlx::query_as(
             r#"
                 INSERT INTO sessions (id, name, user_set_name, session_type, working_dir, extension_data, lumina_mode)
                 VALUES (
-                    ? || '_' || CAST(COALESCE((
-                        SELECT MAX(CAST(SUBSTR(id, 10) AS INTEGER))
-                        FROM sessions
-                        WHERE id LIKE ? || '_%'
-                    ), 0) + 1 AS TEXT),
+                    ?,
                     ?,
                     FALSE,
                     ?,
@@ -2462,8 +2460,7 @@ impl SessionStorage {
                 RETURNING *
                 "#,
         )
-            .bind(&today)
-            .bind(&today)
+            .bind(&id)
             .bind(&name)
             .bind(session_type.to_string())
             .bind(&*working_dir.to_string_lossy())

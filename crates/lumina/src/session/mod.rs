@@ -4,6 +4,7 @@ pub mod extension_data;
 pub mod import_formats;
 mod last_message_snippet;
 mod legacy;
+mod session_ids;
 pub mod session_manager;
 mod session_naming;
 

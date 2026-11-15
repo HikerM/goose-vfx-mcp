@@ -147,6 +147,9 @@ impl MediaResultStore {
             sqlx::query(statement).execute(&mut *tx).await?;
         }
         tx.commit().await?;
+        crate::project::ProjectAssetStore::new(self.pool.clone())
+            .initialize()
+            .await?;
         Ok(())
     }
 
@@ -344,13 +347,16 @@ impl MediaResultStore {
     }
 
     async fn mark_ready(&self, result: &MediaResultRef, identity: &str) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
         let updated = sqlx::query("UPDATE media_results_v1 SET state='ready' WHERE result_id=? AND session_id=? AND state IN ('prepared','ready') AND identity=? AND payload=?")
             .bind(&result.result_id).bind(&result.session_id).bind(identity).bind(serde_json::to_string(result)?)
-            .execute(&self.pool).await?;
+            .execute(&mut *tx).await?;
         ensure!(
             updated.rows_affected() == 1,
             "Media publication journal no longer matches the verified file"
         );
+        super::project_assets::record_media(&mut tx, result).await?;
+        tx.commit().await?;
         Ok(())
     }
 

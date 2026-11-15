@@ -28,11 +28,11 @@ async fn open(path: &Path) -> NativeTaskJobs {
         )
         .await
         .unwrap();
-    sqlx::query("CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY)")
+    sqlx::query("CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, project_id TEXT)")
         .execute(&pool)
         .await
         .unwrap();
-    sqlx::query("INSERT OR IGNORE INTO sessions VALUES (?)")
+    sqlx::query("INSERT OR IGNORE INTO sessions(id) VALUES (?)")
         .bind(SESSION)
         .execute(&pool)
         .await

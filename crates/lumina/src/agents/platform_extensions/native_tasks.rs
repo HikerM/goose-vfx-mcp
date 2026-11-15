@@ -7,6 +7,7 @@ use crate::media::{
     MediaResultStore, NativeTaskClaim, NativeTaskJobs, NativeTaskTerminal, PreparedTaskExecution,
     TaskReuseRequest,
 };
+use crate::project::{ProjectAssetRecord, ProjectAssetStore, ProjectAssetSummary};
 use crate::session::session_manager::SessionStorage;
 use anyhow::{bail, ensure, Context, Result};
 use async_trait::async_trait;
@@ -38,6 +39,111 @@ const INTENTS: [NativeTaskIntent; 7] = [
 #[serde(deny_unknown_fields)]
 struct List {
     intent: Option<NativeTaskIntent>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct ProjectAssets {
+    after_asset_id: Option<String>,
+    #[serde(default = "default_project_asset_limit")]
+    limit: u32,
+}
+
+fn default_project_asset_limit() -> u32 {
+    20
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct ProjectAsset {
+    asset_id: String,
+    #[serde(default)]
+    text_offset: usize,
+    #[serde(default = "default_project_asset_text_limit")]
+    text_limit: u32,
+}
+
+fn default_project_asset_text_limit() -> u32 {
+    4096
+}
+
+fn project_asset_summary(record: &ProjectAssetSummary) -> Value {
+    json!({
+        "assetId": record.asset_id,
+        "projectId": record.project_id,
+        "sourceSessionId": record.source_session_id,
+        "jobId": record.job_id,
+        "workItemId": record.work_item_id,
+        "runId": record.run_id,
+        "createdAtMs": record.created_at_ms,
+        "archiveContentSha256": record.content_sha256,
+        "kind": record.kind,
+        "output": record.output,
+    })
+}
+
+fn project_asset_projection(record: ProjectAssetRecord, query: &ProjectAsset) -> Result<Value> {
+    ensure!(
+        (1..=16384).contains(&query.text_limit),
+        "Transcript page size must be between 1 and 16384 Unicode scalar characters"
+    );
+    let kind = record.content.get("kind").and_then(Value::as_str);
+    let output = match kind {
+        Some("media") => {
+            ensure!(
+                query.text_offset == 0 && query.text_limit == default_project_asset_text_limit(),
+                "Text pagination applies only to transcript assets"
+            );
+            record
+                .content
+                .get("result")
+                .context("Archived media result is missing")?
+                .clone()
+        }
+        Some("transcript") => {
+            let transcript = record.content["transcript"]
+                .as_object()
+                .context("Archived transcript is missing")?;
+            let text = transcript
+                .get("text")
+                .and_then(Value::as_str)
+                .context("Archived transcript text is missing")?;
+            let total = text.chars().count();
+            ensure!(
+                query.text_offset <= total,
+                "Transcript offset exceeds its Unicode scalar character length"
+            );
+            let page: String = text
+                .chars()
+                .skip(query.text_offset)
+                .take(query.text_limit as usize)
+                .collect();
+            let end = query.text_offset + page.chars().count();
+            let mut output: JsonObject = transcript
+                .iter()
+                .filter(|(key, _)| key.as_str() != "text")
+                .map(|(key, value)| (key.clone(), value.clone()))
+                .collect();
+            output.insert("text".into(), json!(page));
+            output.insert("textOffset".into(), json!(query.text_offset));
+            output.insert("textLimit".into(), json!(query.text_limit));
+            output.insert("textTotalChars".into(), json!(total));
+            output.insert(
+                "textTruncated".into(),
+                json!(query.text_offset != 0 || end < total),
+            );
+            output.insert("nextTextOffset".into(), json!((end < total).then_some(end)));
+            Value::Object(output)
+        }
+        _ => bail!("Unsupported project asset content"),
+    };
+    Ok(json!({"status":"found", "projection":true, "asset":{
+        "assetId":record.asset_id, "projectId":record.project_id,
+        "sourceSessionId":record.source_session_id, "jobId":record.job_id,
+        "workItemId":record.work_item_id, "runId":record.run_id,
+        "createdAtMs":record.created_at_ms, "archiveContentSha256":record.content_sha256,
+        "kind":kind, "output":output, "configuration":record.content.get("configuration")
+    }}))
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -138,6 +244,38 @@ impl NativeTasksClient {
             .context("Native task session is unavailable")?;
         let arguments = Value::Object(arguments.unwrap_or_default());
         let storage = self.context.session_manager.storage();
+        if matches!(name, "project_assets" | "project_asset") {
+            let assets = ProjectAssetStore::new(storage.pool().await?.clone());
+            let response = if name == "project_assets" {
+                let query: ProjectAssets = serde_json::from_value(arguments)?;
+                ensure!(
+                    (1..=100).contains(&query.limit),
+                    "Project asset page size must be between 1 and 100"
+                );
+                let records = assets
+                    .list(session, query.after_asset_id.as_deref(), query.limit)
+                    .await?;
+                let next = (records.len() == query.limit as usize)
+                    .then(|| records.last().map(|record| record.asset_id.clone()))
+                    .flatten();
+                let summaries: Vec<_> = records.iter().map(project_asset_summary).collect();
+                json!({"assets": summaries, "nextAfterAssetId": next})
+            } else {
+                let query: ProjectAsset = serde_json::from_value(arguments)?;
+                ensure!(
+                    (1..=16384).contains(&query.text_limit),
+                    "Transcript page size must be between 1 and 16384 Unicode scalar characters"
+                );
+                match assets.read(session, &query.asset_id).await? {
+                    Some(record) => project_asset_projection(record, &query)?,
+                    None => json!({"status": "not_found"}),
+                }
+            };
+            ensure!(!cancel.is_cancelled(), "Native task call cancelled");
+            return Ok(CallToolResult::success(vec![Content::text(
+                serde_json::to_string(&response)?,
+            )]));
+        }
         if name == "list" {
             let list: List = serde_json::from_value(arguments)?;
             let installation = storage.native_installations().service().await?;
@@ -371,6 +509,10 @@ fn tools() -> Vec<Tool> {
             schema(json!({"identity":identity,"parameters":run_parameters}), &["identity","parameters"]), false),
         ("reuse", "Create a new task from an earlier job in this session, changing one field. Image and video require a parent result. Speech and transcription use the parent job.",
             schema(reuse_fields,&["identity","parentJobId","patch"]), false),
+        ("project_assets", "List archived asset metadata in the current session's project. Use project_asset to read one immutable result/version. This does not grant cross-session generation or file access.",
+            schema(json!({"afterAssetId":{"type":"string","format":"uuid"},"limit":{"type":"integer","minimum":1,"maximum":100,"default":20}}), &[]), true),
+        ("project_asset", "Read a projection of one archived result/version with its original configuration in the current session's project. Transcript text is paged in Unicode scalar characters; follow nextTextOffset. archiveContentSha256 identifies the full archive, not the projection. Media rejects nondefault text pagination. Unknown and other-project assets are not found. Reading does not edit, regenerate or grant file access.",
+            schema(json!({"assetId":{"type":"string","format":"uuid"},"textOffset":{"type":"integer","minimum":0,"default":0},"textLimit":{"type":"integer","minimum":1,"maximum":16384,"default":4096}}), &["assetId"]), true),
     ];
     definitions
         .into_iter()
@@ -414,7 +556,7 @@ impl McpClientTrait for NativeTasksClient {
         let signal = cancel.child_token();
         let _on_disconnect = signal.clone().drop_guard();
         let dispatch = self.dispatch(ctx, name, arguments, signal);
-        let result = if name == "list" {
+        let result = if matches!(name, "list" | "project_assets" | "project_asset") {
             tokio::select! {
                 biased;
                 _ = cancel.cancelled() => Err(anyhow::anyhow!("Native task call cancelled")),
@@ -434,3 +576,7 @@ impl McpClientTrait for NativeTasksClient {
 #[cfg(test)]
 #[path = "native_tasks_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "native_tasks_project_assets_tests.rs"]
+mod project_assets_tests;

@@ -1184,6 +1184,23 @@ impl Agent {
             }
         }
 
+        let project_scope = async {
+            let pool = self.config.session_manager.storage().pool().await?;
+            crate::project::ProjectAssetStore::new(pool.clone())
+                .freeze_call_for_project(&session.id, &request_id, session.project_id.as_deref())
+                .await
+        }
+        .await;
+        if let Err(error) = project_scope {
+            return (
+                request_id,
+                Err(ErrorData::internal_error(
+                    format!("Unable to preserve tool project context: {error}"),
+                    None,
+                )),
+            );
+        }
+
         let tool_input_for_extended = tool_call
             .arguments
             .as_ref()
