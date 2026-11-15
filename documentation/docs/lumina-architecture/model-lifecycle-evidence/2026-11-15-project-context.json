@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-15",
+  "scope": "Workbench project context resolved from the existing session database; legacy Markdown project compatibility.",
+  "status": "AUTOMATED_REGRESSION_PASS",
+  "verification": {
+    "log": "target/lifecycle-validation/project-context-regression-20261115-r1.log",
+    "sha256": "d19686eebc93e8cb2c97283f3356631d8cf1847c7a77ec5dcb41e4fe80cdd8d8",
+    "passed": 6,
+    "failed": 0,
+    "ignored": 0,
+    "hostBuildLog": "target/lifecycle-validation/m4-main-music-project-r16.log",
+    "hostBinarySha256": "4dd2a11c2ee542f8f0c0ca868589e4d10076c86ac2150cf998b67a8e857b3ad0"
+  },
+  "sourceSha256": {
+    "crates/lumina/src/agents/agent.rs": "48b7234805ca108ded94d64f3b53431e60907ee982db57382f1b2c5ea57d4001",
+    "crates/lumina/src/agents/agent_project_context_tests.rs": "02d65585d06c55791a6232746f6499a34749a8cb6573f97e4faca92baec66a31"
+  },
+  "verified": [
+    "Database project ID resolves project name, identity, root and canonical root through the same SessionStorage.",
+    "Only the session-linked work item objective and acceptance criteria and matching active run are included.",
+    "Closing the pool and creating a new SessionManager and Agent preserves the loaded context from the same SQLite database.",
+    "Other-project work items and mismatched prior runs are rejected.",
+    "No project, missing project and database failures are distinct; reply logs lookup failure and continues without invented context.",
+    "Legacy Markdown slug remains readable independently of database availability."
+  ],
+  "notVerified": [
+    "Full model-service observation of the final system prompt.",
+    "Desktop end-to-end project context interaction; desktop automation remains paused.",
+    "Project media associations, cross-session asset references, version lineage and range-preserving local edits.",
+    "Application crash recovery or resumable generation; database reopen is not equivalent to these."
+  ]
+}

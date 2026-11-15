@@ -734,9 +734,65 @@ impl Agent {
             )
             .await
     }
-    async fn load_project_instructions(&self, session: &Session) -> Option<String> {
-        let project_id = session.project_id.as_deref()?;
-        let entry = crate::sources::read_project(project_id).ok()?;
+    async fn load_project_instructions(&self, session: &Session) -> Result<Option<String>> {
+        let Some(project_id) = session.project_id.as_deref() else {
+            return Ok(None);
+        };
+        if project_id.starts_with("project_") {
+            let projects = crate::project::ProjectService::new(Arc::clone(
+                self.config.session_manager.storage(),
+            ));
+            let project = projects.get_project(project_id).await?;
+            let work_item = projects.work_item_for_session(&session.id).await?;
+            let run = projects.running_run_for_session(&session.id).await?;
+            let mut parts = vec![format!(
+                "# Project: {}\nProject ID: {}\nRoot directory: {}\nCanonical root: {}",
+                project.name,
+                project.id,
+                project.root_path.display(),
+                project.canonical_root.display(),
+            )];
+            if let Some(work_item) = work_item.as_ref() {
+                anyhow::ensure!(
+                    work_item.project_id == project.id,
+                    "Session work item belongs to a different project"
+                );
+                parts.push(format!(
+                    "## Current work item: {}\nWork item ID: {}\nStatus: {}\nObjective:\n{}",
+                    work_item.title,
+                    work_item.id,
+                    work_item.status.as_str(),
+                    work_item.objective,
+                ));
+                if !work_item.acceptance_criteria.is_empty() {
+                    parts.push(format!(
+                        "Acceptance criteria:\n{}",
+                        work_item
+                            .acceptance_criteria
+                            .iter()
+                            .map(|criterion| format!("- {criterion}"))
+                            .collect::<Vec<_>>()
+                            .join("\n"),
+                    ));
+                }
+            }
+            if let Some(run) = run {
+                anyhow::ensure!(
+                    work_item
+                        .as_ref()
+                        .is_some_and(|item| item.id == run.work_item_id),
+                    "Session run does not match its current work item"
+                );
+                parts.push(format!(
+                    "Current run ID: {}\nRun phase: {}",
+                    run.id,
+                    run.phase.as_str(),
+                ));
+            }
+            return Ok(Some(parts.join("\n\n")));
+        }
+        let entry = crate::sources::read_project(project_id)
+            .map_err(|error| anyhow!("Unable to read legacy project context: {error}"))?;
         let mut parts = Vec::new();
         parts.push(format!("# Project: {}", entry.name));
         if !entry.description.is_empty() {
@@ -745,7 +801,7 @@ impl Agent {
         if !entry.content.is_empty() {
             parts.push(entry.content.clone());
         }
-        Some(parts.join("\n\n"))
+        Ok(Some(parts.join("\n\n")))
     }
 
     async fn prepare_reply_context(
@@ -1915,8 +1971,14 @@ impl Agent {
             model_config,
         } = context;
 
-        if let Some(project_addendum) = self.load_project_instructions(&session).await {
-            system_prompt = format!("{system_prompt}\n\n{project_addendum}");
+        match self.load_project_instructions(&session).await {
+            Ok(Some(project_addendum)) => {
+                system_prompt = format!("{system_prompt}\n\n{project_addendum}");
+            }
+            Ok(None) => {}
+            Err(error) => {
+                warn!(session_id = %session.id, project_id = ?session.project_id, error = %error, "Project context could not be loaded");
+            }
         }
 
         self.reset_retry_attempts().await;
@@ -3536,6 +3598,10 @@ impl Agent {
         Ok(recipe)
     }
 }
+
+#[cfg(test)]
+#[path = "agent_project_context_tests.rs"]
+mod project_context_tests;
 
 #[cfg(test)]
 mod tests {
