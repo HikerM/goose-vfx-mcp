@@ -1,0 +1,412 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-15T11:57:26.707870+00:00",
+  "status": "REAL_PROJECT_REUSE_MEASURED_PRODUCTION_ADMISSION_PENDING",
+  "scope": "One real archived music asset reused across sessions with seed42 to seed1; bounded test-only resource admission, actual production preparation/configuration/publication functions. Not ordinary project_reuse tool admission, arbitrary payloads, model-type closure or natural-language editing.",
+  "sourceBaseCommit": "2aadd1b8099f386fb51e3b8bd3bcd026cad24d43",
+  "sourceFilesSha256": {
+    "bin/test-lumina-project-music-reuse.py": "a236172032c5e7f3b76554fe351c03079f4e665943e2b7656b2e49563150a545",
+    "crates/lumina/tests/support/project_music_reuse_probe.rs": "396e38403c51d2785f8240f2e542554ea5e320485033b9dfc710c5632584c7b4",
+    "crates/lumina/tests/support/music_publication_probe.rs": "4528497e41398d60231692f1e816aae47f13509ad97ed37e7eab949df57879b5",
+    "crates/lumina/src/media/task_output_tests.rs": "7605b6ff3f4a3b439cf10ab13356adf5815bdce2582dfc87b863cbf36a33e993",
+    "crates/lumina-local-inference/src/lifecycle/task_resources/music_probe.rs": "81c531cb537d0de111fb97788161d911599bea0b4af4316ed7401a05bb554467"
+  },
+  "implementation": {
+    "status": "MEASUREMENT_SUPPORT_COMPLETE",
+    "productionBehaviorChanged": false,
+    "items": [
+      "Read-only SQLite WAL-aware test-data backup preserves real parent provenance",
+      "Authenticated host preparation, input validation, authorization/configuration persistence and project publication occur inside monitored host lifetime",
+      "Owner reconstructs the scoped child plan from actual installed binding and compares full snapshot digest",
+      "Original and child asset/configuration/WAV checked after SQLite reopen; deleted source session stays absent",
+      "Measurement file errors now include path context; earlier intermittent failure root cause remains unresolved"
+    ]
+  },
+  "hostBuild": {
+    "status": "PASS",
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-reuse-host-build-20261115-r1.log",
+    "sha256": "e1b94a616c2d8a5f26b94d8550c484426b7a792fce11bb6082b7df4e6700111c",
+    "binarySha256": "d6d122a101b1235b251d55d161f973e46bf592e4e1d08d6b1596deef358ca556"
+  },
+  "ownerBuild": {
+    "status": "PASS",
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-reuse-owner-build-20261115-r1.log",
+    "sha256": "08714c5469612f48d073201fbe4ddfa4240b0967b518c4ef41534c93581346b1",
+    "binarySha256": "9ef27667093f482bd8706eb2bfe2400d339209f3ed7681060fc43d98f0091501"
+  },
+  "controllerSelfCheck": {
+    "status": "PASS",
+    "checks": 10,
+    "scope": "Pure source, parent rejection, serialization and Windows ancestry checks; no inference",
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-reuse-controller-self-check-20261115-r1.json",
+      "sha256": "1dd91e63d4d2505218ee35dab98ade6825f2756e787a6dfbcdb46f1dd4dac587"
+    },
+    "result": {
+      "status": "PASS",
+      "checks": 10,
+      "scope": "Pure parent rejection, serialization, path ancestry and local publication source checks; no database backup, Job lock or model execution",
+      "publicationContext": {
+        "kind": "project_parameter_reuse_v1",
+        "implementationSourcesDigest": "cde847b4d08c116adef48cb3285bec4824a445a9f9cf2ff14443849a07125b06"
+      }
+    }
+  },
+  "realExecution": {
+    "status": "PASS_TEST_ADMISSION",
+    "request": {
+      "parentSnapshot": {
+        "metadata": {
+          "schemaVersion": 1,
+          "identity": {
+            "installationId": "acceptance-stable-audio-small-music-cpu",
+            "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+            "manifestDigest": "4e6db0493c1d8b0f9f5cac50d2b090a0046e85136d8f2a268ab3daa037503ce2",
+            "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+            "componentBindingDigest": "dbf21315310dd291e79e047b5f05fc090f79aff99aa4c7cec9e2dc2695e3953d",
+            "taskVariant": "stable_audio/offline/text_to_music",
+            "parameterSchemaId": "stable-audio-small-music-parameters-v1"
+          },
+          "binding": {
+            "installationId": "acceptance-stable-audio-small-music-cpu",
+            "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+            "manifestDigest": "4e6db0493c1d8b0f9f5cac50d2b090a0046e85136d8f2a268ab3daa037503ce2",
+            "runtime": {
+              "adapter_id": "audio-cpp-offline-parameters-v1",
+              "engine_revision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+              "binding_version": "stable-audio-small-music-parameters-v1",
+              "platform": "windows-x86_64",
+              "features": [
+                "cpu",
+                "windows-long-path-aware"
+              ],
+              "binary_sha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b"
+            },
+            "targetCapabilities": [
+              "audio_generation"
+            ],
+            "model": {
+              "artifactId": "94e1669d1450463ccb1b2335a05947398a3eefa802ba8169ff84ce061c0c2f3b",
+              "sha256": "a6d9176e11b857409b28cf5a69f4fefd8f3e61907b3b10d867f1f4c0a7eb9418",
+              "sizeBytes": 1683576608
+            },
+            "modelSpec": {
+              "artifactId": "audio-cpp-spec:b0458e6ebcb59c43e292b1cb2e0bc936b440d21951a5d9fe7e2c23ea2afc9927",
+              "sha256": "433dec2415fdd85f6685e6d982b801935b4cc5389232deb51949ccc978af9bf2",
+              "sizeBytes": 9981
+            }
+          },
+          "descriptorDigest": "ea9bf86cb9dfc531678d4fbe0364a5b8dafcbcc9b69cdd463ff64a3779cfa537",
+          "sessionId": "20261115_1",
+          "jobId": "project-music-dc809ffc-84cf-4124-b36f-f6ec663ce6b0",
+          "backend": "cpu",
+          "cpuThreads": 4,
+          "executionStatus": "needs_resource_admission",
+          "requiresNewNativePreparation": true
+        },
+        "parameters": {
+          "prompt": "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+          "negativePrompt": null,
+          "durationSeconds": 4.0,
+          "steps": 8,
+          "guidanceScale": 1.0,
+          "apgScale": 1.0,
+          "sampler": "pingpong",
+          "seed": 42,
+          "durationPaddingSeconds": 6.0,
+          "truncateToDuration": true,
+          "chunkedDecode": true
+        }
+      },
+      "parentSnapshotDigest": "04f12c686cd5ec32eee2c2c38a6e09c4fdbfc3d2403f5005d4fab7b7ab135e8e",
+      "childSessionId": "20261115_4",
+      "childJobId": "project-music-reuse-34a2e4fb-7703-445b-a38c-5e1a83c988ff",
+      "patch": {
+        "seed": 1
+      },
+      "expectedChildSnapshotDigest": "6c13bc6d488c3c18ec57f8aa641c281e4c93bd8bb7d05289f1169e86d46208af",
+      "implementationSourcesDigest": "cde847b4d08c116adef48cb3285bec4824a445a9f9cf2ff14443849a07125b06",
+      "parentAssetId": "0024354d-3a4a-83a4-9900-0ab7c1f96d1c",
+      "parentAssetContentSha256": "f69a343dfa9a14a69b2063d5100bb566d52cd6acfbf78741cc582f14c3d1c9ec"
+    },
+    "publication": {
+      "schemaVersion": 2,
+      "implementation": "media::task_output::import_readers",
+      "implementationSourcesSha256": "1c0a62df189527bed2cd6ca036de2a4d6a3ed832ed1293d6a4bd290bbbe2eea9",
+      "sources": {
+        "Cargo.lock": "48ac4e60b7e591e75ed8ef94538548fa20428901e7a345d6328bf9f5c5339900",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters.rs": "7546904d5f13a999ccb079afd5fd8c938a01fba8328d8a70c94e831e521566f2",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/install.rs": "68c47a3c671477244a9e37e7f6e862c002cda63326132d0f269e7bc120a6b680",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/models.rs": "d584b3876202c4954b2b7465a2c8c193cb058f517c068f111a448faeea286893",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/music_task_parameters.rs": "3a74fb305d6135bb3a035a8665004b660518f9ebae4d3cf73726569b50c75f6b",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/profiles.rs": "c900aedccefedbd17900cea0042c3c7299a783e34f0395104ebd3ff46087e1eb",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/reuse.rs": "bf362214cb4d34872f07dc569f335d995d8d741b9656eba0e9a080db1cb64760",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/services.rs": "481ab67cfb6838271d9c79658b4bb837b7ece17bd4c9c429101dff525e0868a6",
+        "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/stable_audio.json": "433dec2415fdd85f6685e6d982b801935b4cc5389232deb51949ccc978af9bf2",
+        "crates/lumina-local-inference/src/lifecycle/files.rs": "a8c9c61941d9647617c4f190adaf412aa3749d6e55b3632830eb03a65b0124fb",
+        "crates/lumina-local-inference/src/lifecycle/native_task_runtime.rs": "7e38fe274609a152f841cb7dc4072feb876e6a1e0380f6d45b93218912f1c9e7",
+        "crates/lumina-local-inference/src/lifecycle/native_task_runtime/output.rs": "77d1ba035bf5b180cb2321221c39bb96dad4709882937048a1d4b9d754d925ce",
+        "crates/lumina-local-inference/src/lifecycle/native_task_runtime/plan.rs": "cc8175d9201acadcb426f0c4b2c02721f698182b986ebdf9da132ca116014eeb",
+        "crates/lumina-local-inference/src/lifecycle/native_task_runtime/process.rs": "a299ea2a007374ace2e1ac3cc40b099104e1d2a43930f119b56e25b8ce04224c",
+        "crates/lumina-local-inference/src/lifecycle/project_task_scope.rs": "d1d870bf601b5ae5ce9173098c6a793db076b8b8fdc355cfac5e47a1b0e76561",
+        "crates/lumina-local-inference/src/lifecycle/task_parameters.rs": "df477f8a4f885de1f4473c3e0f87be07a04f7f725429b93a590fa46915a50493",
+        "crates/lumina-local-inference/src/lifecycle/task_resources/music_probe.rs": "81c531cb537d0de111fb97788161d911599bea0b4af4316ed7401a05bb554467",
+        "crates/lumina/src/media/domain.rs": "24c4ed709d7eab8a3d1b2f3a661569013395ae51c77a8ecd4c47f66546320add",
+        "crates/lumina/src/media/files.rs": "6557024309ac0204c8d13452f41c4dbfc6a66fb39c7f101845ff1da051a24cbb",
+        "crates/lumina/src/media/formats.rs": "65f9161777747ec075a0e75e50791e58ef2da414f260c07b7373150076fd118b",
+        "crates/lumina/src/media/project_assets.rs": "0f9463b02b70eb6998bf247b6fd9b3c7ef76c2ebe368909a76d872f8437a8a53",
+        "crates/lumina/src/media/project_task_reuse.rs": "350fd559b6d1e845961ddf10b158d99272de4f3ba07326b2641c9603f5821f3a",
+        "crates/lumina/src/media/store.rs": "41ea885deb68a494f34141f64f2e61469bf3ebdddc0d16c3bfbba3eff9ebca37",
+        "crates/lumina/src/media/task_configuration.rs": "eb244f9b81cf30a8ff59feb282bca7efd10b95dffc7330e446235b8d1d4e677a",
+        "crates/lumina/src/media/task_inputs.rs": "fd17d263b4973acc3410ae0f63df39b66717ca48c2fecbaba65e328d8f986002",
+        "crates/lumina/src/media/task_output.rs": "b07360f1d291f798bc3dae18598a980d5800ce5ca7cfe8fb2fe661ec9af737de",
+        "crates/lumina/src/media/task_publication.rs": "3d533309026d7768b11f2b32ec3e5b7bfc8791c632a7dec028b2de61710515bf",
+        "crates/lumina/src/media/task_service.rs": "1f0c3604bef72173dea2236a2748e840c750d1e1f8c408e70b427d62ae74b4ac",
+        "crates/lumina/src/project/assets.rs": "fe3c490c2fbf8d0f2d8708284f2d2bc2578fdd3863565859d940f08a644cbd78",
+        "crates/lumina/src/session/session_manager.rs": "6453e7b11d1ba13c18a288610cab7d1bed2bc1dec837ed3ff0edcc52bb83890f",
+        "crates/lumina/tests/support/music_publication_probe.rs": "4528497e41398d60231692f1e816aae47f13509ad97ed37e7eab949df57879b5",
+        "crates/lumina/tests/support/project_music_reuse_probe.rs": "396e38403c51d2785f8240f2e542554ea5e320485033b9dfc710c5632584c7b4"
+      },
+      "projectReuseRequestSha256": "6b9c4fe40ea2672ea150676d73ede5f3ad5a350941ab9fe5d42c2615b3caeda7",
+      "publicationContext": {
+        "kind": "project_parameter_reuse_v1",
+        "implementationSourcesDigest": "cde847b4d08c116adef48cb3285bec4824a445a9f9cf2ff14443849a07125b06"
+      },
+      "caseSha256": "c70087a5873ac4560d14932d8723de394871eada483f5afd932d620a61b80439",
+      "snapshotDigest": "6c13bc6d488c3c18ec57f8aa641c281e4c93bd8bb7d05289f1169e86d46208af",
+      "publishedPath": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-reuse-20261115-r1\\output-root\\publication\\outputs\\id-32303236313131355f34\\id-70726f6a6563742d6d757369632d72657573652d33346132653466622d373730332d343435622d613338632d356531613833633938386666\\d47048b7-0f4f-8ddb-a5db-a640c7538f45.wav",
+      "result": {
+        "schemaVersion": 1,
+        "resultId": "d47048b7-0f4f-8ddb-a5db-a640c7538f45",
+        "sessionId": "20261115_4",
+        "association": {
+          "associationKind": "message",
+          "messageId": "project-reuse-measurement"
+        },
+        "jobId": "project-music-reuse-34a2e4fb-7703-445b-a38c-5e1a83c988ff",
+        "kind": "audio",
+        "mime": "audio/wav",
+        "fileName": "d47048b7-0f4f-8ddb-a5db-a640c7538f45.wav",
+        "bytes": 705644,
+        "sha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+        "createdAt": 1794743707963,
+        "rootId": "ca2a93aa-e451-432f-9b1e-1951812e0c50",
+        "relativePath": "id-32303236313131355f34/id-70726f6a6563742d6d757369632d72657573652d33346132653466622d373730332d343435622d613338632d356531613833633938386666/d47048b7-0f4f-8ddb-a5db-a640c7538f45.wav",
+        "spec": {
+          "kind": "audio",
+          "durationMicros": 4000000,
+          "sampleRate": 44100,
+          "channels": 2,
+          "sampleFrames": 176400
+        },
+        "ownership": "application_generated",
+        "source": {
+          "kind": "local_model",
+          "installationId": "acceptance-stable-audio-small-music-cpu",
+          "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+          "runtime": {
+            "adapterId": "audio-cpp-offline-parameters-v1",
+            "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+            "binarySha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b"
+          },
+          "generationConfigSha256": "6c13bc6d488c3c18ec57f8aa641c281e4c93bd8bb7d05289f1169e86d46208af",
+          "inputRefs": []
+        }
+      },
+      "reopenedVerified": true,
+      "inputSha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+      "publishedSha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+      "publishedBytes": 705644,
+      "parentAssetBytes": 4263,
+      "authorizationBytes": 4962,
+      "preparationMillis": 67,
+      "projectArchive": {
+        "verified": true,
+        "reopenedVerified": true,
+        "parentUnchanged": true,
+        "lineageVerified": true,
+        "sourceSessionAbsent": true
+      },
+      "checkpoints": [
+        {
+          "directoryLogicalBytes": 327680
+        },
+        {
+          "directoryLogicalBytes": 1239164
+        },
+        {
+          "directoryLogicalBytes": 1102956
+        }
+      ]
+    },
+    "parentReport": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1\\result.json",
+      "sha256": "0611ab20a6a93e3393b5421aeec9c0f2c5cbd8c7cd3092d17747f99e04c3d611"
+    },
+    "resultEvidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-reuse-20261115-r1\\result.json",
+      "sha256": "40201a28f14a6e6f0a99d19c261b9825e272414aaf81bacd9b199574c0bf052f"
+    },
+    "measurementEvidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-reuse-20261115-r1\\measurement.json",
+      "sha256": "39ac02ed9e00d0270fa95dd1f98290d9cffdae0843d66fa57be880637be330a5"
+    },
+    "measurement": {
+      "schemaVersion": 2,
+      "rulesVersion": "native-task-resources-v1",
+      "key": {
+        "kind": "music",
+        "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+        "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+        "workloadDigest": "f3e016a9be9a94f84954823377fb7144b784944d4d943d24e1b0d346430284eb",
+        "requiresGpu": false
+      },
+      "provenance": {
+        "runnerSha256": "a236172032c5e7f3b76554fe351c03079f4e665943e2b7656b2e49563150a545",
+        "fixtureSha256": "d1d291c87183436e183dfb7a9245ec25392ebc1392d644b5dab7684ebb9d8c62",
+        "executionEvidenceSha256": "70c267e9839f9925b1d657a1215e442e61e1f7851c399a5470af7772466047a3"
+      },
+      "snapshotDigest": "6c13bc6d488c3c18ec57f8aa641c281e4c93bd8bb7d05289f1169e86d46208af",
+      "hardware": {
+        "observed_at": 1794743661,
+        "devices": [
+          {
+            "index": 0,
+            "backend": "CPU",
+            "name": "CPU",
+            "description": "Intel(R) Core(TM) i7-14700F",
+            "kind": "cpu",
+            "total_bytes": 102904569856,
+            "free_bytes": 53646811136
+          }
+        ],
+        "storage_volume": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-reuse-20261115-r1\\output-root\\native",
+        "disk_free_bytes": 141314146304
+      },
+      "controllerPeakCommitBytes": 25587712,
+      "lifecycleTree": {
+        "processIds": [
+          10840,
+          15012,
+          37788,
+          44400,
+          59788
+        ],
+        "peakJobCommitBytes": 7011794944,
+        "summedPeakWorkingSetBytes": 2069118976,
+        "samplesSha256": "567ccf9d7201d9383caeb135400256e35963f21ba39aa3639ae164f4bcf62020"
+      },
+      "native": {
+        "pid": 37788,
+        "peakWorkingSetBytes": 1991933952,
+        "peakCommitBytes": 6996533248,
+        "elapsedMillis": 8948,
+        "exitCode": 0,
+        "processTreeExited": true,
+        "memorySamplesSha256": "567ccf9d7201d9383caeb135400256e35963f21ba39aa3639ae164f4bcf62020",
+        "observedOutputPeakBytes": 705644
+      },
+      "publication": {
+        "kind": "media",
+        "process": {
+          "pid": 44400,
+          "peakWorkingSetBytes": 37564416,
+          "peakCommitBytes": 8785920,
+          "elapsedMillis": 47640,
+          "exitCode": 0,
+          "processTreeExited": true,
+          "memorySamplesSha256": "567ccf9d7201d9383caeb135400256e35963f21ba39aa3639ae164f4bcf62020",
+          "observedOutputPeakBytes": 1276028
+        },
+        "implementation": "media::task_output::import_readers",
+        "implementationSourcesSha256": "1c0a62df189527bed2cd6ca036de2a4d6a3ed832ed1293d6a4bd290bbbe2eea9",
+        "helperBinarySha256": "d6d122a101b1235b251d55d161f973e46bf592e4e1d08d6b1596deef358ca556",
+        "inputSha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+        "publishedSha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+        "publishedBytes": 705644,
+        "peakDirectoryBytes": 1276028,
+        "reopenedVerified": true
+      },
+      "gpu": {
+        "status": "cpu_only"
+      },
+      "nativeExitedBeforePublication": true,
+      "reviewedBudget": null
+    },
+    "originalEvidence": {
+      "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1\\result.json": "0611ab20a6a93e3393b5421aeec9c0f2c5cbd8c7cd3092d17747f99e04c3d611",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1\\session-storage\\sessions\\sessions.db": "75d4f1e3f04b1040095b3cd664f5aa1cfb9aa8307f185dbac412272a65d23b7a",
+      "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1\\session-storage\\outputs\\id-32303236313131355f31\\id-70726f6a6563742d6d757369632d64633830396666632d383463662d343132342d623336662d663665633636336365366230\\0024354d-3a4a-83a4-9900-0ab7c1f96d1c.wav": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+      "D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-20261115-r1\\session-storage\\sessions\\sessions.db-wal": "77dbe6e92126636f6838f618923b2626a20a9b019e68b816a527fb66af9885bb"
+    },
+    "originalEvidenceUnchanged": true
+  },
+  "freshRegression": {
+    "status": "PASS",
+    "evidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-42-project-reuse-regression-20261115-r1\\result.json",
+      "sha256": "ee1a0ccb22f8a9625aedd7497d85e6256ebfa12c157aec8d1382cc7e30a27c91"
+    },
+    "originalEvidence": {
+      "path": "D:\\Project\\goose\\target\\lifecycle-validation\\m4-music-domain-seed-42-20261115-r1\\result.json",
+      "sha256": "54aa6ceb01035b981fb61f81acc6c8d90095167b336f2e1c9c26c6ea1b621e79"
+    },
+    "sameOutputSha256": "afa7d6699180ed7c1bd7fdd4524af6b4faf15b9e077f25d4b70dc5787693f2e5",
+    "scope": "Existing fresh-mode probe still generates, publishes and reopens the same seed42 domain WAV"
+  },
+  "payloadBoundary": {
+    "status": "NOT_ACCEPTED",
+    "observedParentAssetBytes": 4263,
+    "observedAuthorizationBytes": 4962,
+    "reason": "Current V1 context has no payload tier. Parent assets permit32MiB and authorization1MiB; this small sample cannot establish their upper-bound RAM. Add bounded preflight reads/serialization and measured generic payload tiers before production profile registration."
+  },
+  "productionEntry": {
+    "status": "NOT_RUN",
+    "reason": "No ProjectParameterReuse resource profile registered; normal entry still returns NeedsProfiling"
+  },
+  "qualityAndStability": {
+    "status": "NOT_ACCEPTED",
+    "reason": "One seed-change sample is not model quality or stability coverage; prior utf8-1023 publication verification failure remains unresolved"
+  },
+  "performance": {
+    "status": "OBSERVATION_ONLY",
+    "preparationMillis": 67,
+    "nativeMillis": 8948,
+    "controllerMillis": 49656,
+    "reason": "Different request and entry path from parent run; no same-condition performance comparison or acceleration claim"
+  },
+  "productClosure": {
+    "status": "INCOMPLETE",
+    "remaining": [
+      "Normal tool admission",
+      "Natural-language reference and patch workflow",
+      "Cross-session playback",
+      "Spatial/temporal editing and unchanged-region verification"
+    ]
+  },
+  "desktop": {
+    "status": "NOT_RUN",
+    "reason": "User requested continued pause"
+  },
+  "privateModelScope": {
+    "status": "NOT_RUN",
+    "reason": "No authorized private/gated model repository available"
+  },
+  "delivery": {
+    "status": "READY_FOR_SCOPED_COMMIT",
+    "branch": "testing",
+    "note": "Commit/push verified separately after evidence recording"
+  },
+  "sevenStageGoal": {
+    "M3": "INCOMPLETE",
+    "M4": "INCOMPLETE",
+    "M5M6": "RETAINED_IN_MASTER_PLAN"
+  },
+  "formatCheck": {
+    "status": "PASS",
+    "command": "bin/cargo.cmd fmt -p lumina-agent -p lumina-local-inference -- --check",
+    "exitCode": 0,
+    "path": "D:\\Project\\goose\\target\\lifecycle-validation\\project-music-reuse-format-20261115-r2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

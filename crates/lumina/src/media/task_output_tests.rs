@@ -18,6 +18,10 @@ mod sd15_probe;
 #[path = "../../tests/support/music_publication_probe.rs"]
 mod music_probe;
 
+#[cfg(windows)]
+#[path = "../../tests/support/project_music_reuse_probe.rs"]
+mod project_music_reuse_probe;
+
 fn base() -> PathBuf {
     let p = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../target/lifecycle-validation/task-output-unit-tests");

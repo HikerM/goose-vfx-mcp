@@ -14,14 +14,14 @@ const OWNER: &str = "lifecycle::task_resources::tests::music_probe::measure_inst
 const IMPLEMENTATION: &str = "media::task_output::import_readers";
 const PROMPT: &str = "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.";
 
-fn write_report(path: &Path, value: Value) -> Result<()> {
+pub(super) fn write_report(path: &Path, value: Value) -> Result<()> {
     let mut file = File::options().write(true).create_new(true).open(path)?;
     file.write_all(&serde_json::to_vec_pretty(&value)?)?;
     file.sync_all()?;
     Ok(())
 }
 
-fn sources() -> BTreeMap<&'static str, String> {
+pub(super) fn sources() -> BTreeMap<&'static str, String> {
     macro_rules! paths {
         ($($path:literal),+ $(,)?) => { BTreeMap::from([$(($path,Sha256Digest::of_bytes(include_bytes!(
             concat!(env!("CARGO_MANIFEST_DIR"), "/../../", $path))).as_str().into())),+]) }
@@ -58,8 +58,9 @@ fn sources() -> BTreeMap<&'static str, String> {
     )
 }
 
-fn logical_bytes(path: &Path) -> Result<u64> {
-    let meta = std::fs::symlink_metadata(path)?;
+pub(super) fn logical_bytes(path: &Path) -> Result<u64> {
+    let meta = std::fs::symlink_metadata(path)
+        .with_context(|| format!("Inspect measurement entry {}", path.display()))?;
     ensure!(
         meta.file_attributes() & 0x400 == 0,
         "Measurement directory contains a reparse point"
@@ -68,7 +69,9 @@ fn logical_bytes(path: &Path) -> Result<u64> {
         return Ok(meta.len());
     }
     let mut total = 0u64;
-    for entry in std::fs::read_dir(path)? {
+    for entry in std::fs::read_dir(path)
+        .with_context(|| format!("Enumerate measurement directory {}", path.display()))?
+    {
         total = total
             .checked_add(logical_bytes(&entry?.path())?)
             .context("Directory size overflow")?;
