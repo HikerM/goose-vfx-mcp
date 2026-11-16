@@ -55,6 +55,7 @@ beforeEach(() => {
       expiresInMs: 300000,
       sourceSessionId: identity.sessionId,
       resultId: identity.resultId,
+      availability: 'available',
     })),
   };
   vi.mocked(getAcpClient).mockResolvedValue({
@@ -256,8 +257,32 @@ describe('archived project media connection', () => {
     });
     expect(api.mediaOpen).toHaveBeenCalledWith(identity);
     expect(api.mediaPreview).toHaveBeenCalledWith(
-      expect.objectContaining({ ticket: 'project-ticket-1', handleId: 'handle-1' })
+      expect.objectContaining({ ticket: 'project-ticket-2', handleId: 'handle-1' })
     );
+  });
+
+  it('renders the archived availability when the source file is missing', async () => {
+    methods.extMethod.mockResolvedValueOnce({
+      ticket: undefined,
+      expiresInMs: 0,
+      sourceSessionId: identity.sessionId,
+      resultId: identity.resultId,
+      availability: 'missing',
+    });
+    const project = {
+      identity,
+      access: { sessionId: 'current-project-session', assetId: identity.resultId },
+      result: audio,
+    };
+    render(
+      <IntlTestWrapper>
+        <ConnectedMediaResultCard {...identity} project={project} isActive />
+      </IntlTestWrapper>
+    );
+    await waitFor(() =>
+      expect(screen.getByText('The result file is missing.')).toBeInTheDocument()
+    );
+    expect(api.mediaOpen).not.toHaveBeenCalled();
   });
 });
 

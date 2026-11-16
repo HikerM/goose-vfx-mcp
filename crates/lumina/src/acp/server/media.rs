@@ -112,11 +112,19 @@ impl LuminaAcpAgent {
         if archived.result_id != asset.asset_id || archived.session_id != asset.source_session_id {
             return Err(unavailable());
         }
-        let content = domain::MediaResultStore::new(pool)
-            .open_content(&archived.session_id, &archived.result_id)
+        let store = domain::MediaResultStore::new(pool);
+        let status = store
+            .read(&archived.session_id, &archived.result_id)
             .await
             .map_err(|_| unavailable())?;
-        if content.result() != &archived {
+        let availability = status
+            .as_ref()
+            .map(|status| status.availability)
+            .unwrap_or(domain::MediaAvailability::Missing);
+        if status
+            .as_ref()
+            .is_some_and(|status| status.result != archived)
+        {
             return Err(unavailable());
         }
 
@@ -131,6 +139,22 @@ impl LuminaAcpAgent {
         {
             return Err(inactive_media_session());
         }
+        if availability != domain::MediaAvailability::Available {
+            return Ok(MediaProjectAccessResponse {
+                ticket: None,
+                expires_in_ms: 0,
+                source_session_id: archived.session_id,
+                result_id: archived.result_id,
+                availability: availability.into(),
+            });
+        }
+        let content = store
+            .open_content(&archived.session_id, &archived.result_id)
+            .await
+            .map_err(|_| unavailable())?;
+        if content.result() != &archived {
+            return Err(unavailable());
+        }
         let ticket = self
             .media_access_owner
             .issue_project(
@@ -142,10 +166,11 @@ impl LuminaAcpAgent {
             )
             .map_err(|_| unavailable())?;
         Ok(MediaProjectAccessResponse {
-            ticket: ticket.ticket,
+            ticket: Some(ticket.ticket),
             expires_in_ms: ticket.expires_in_ms,
             source_session_id: archived.session_id,
             result_id: archived.result_id,
+            availability: domain::MediaAvailability::Available.into(),
         })
     }
 

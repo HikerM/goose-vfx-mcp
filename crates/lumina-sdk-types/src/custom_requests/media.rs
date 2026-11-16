@@ -55,20 +55,23 @@ pub struct MediaProjectAccessRequest {
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MediaProjectAccessResponse {
-    pub ticket: String,
+    /// A capability ticket is issued only when the archived result is available.
+    pub ticket: Option<String>,
     pub expires_in_ms: u64,
     pub source_session_id: String,
     pub result_id: String,
+    pub availability: MediaAvailabilityDto,
 }
 
 impl std::fmt::Debug for MediaProjectAccessResponse {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("MediaProjectAccessResponse")
-            .field("ticket", &"[redacted]")
+            .field("ticket", &self.ticket.as_ref().map(|_| "[redacted]"))
             .field("expires_in_ms", &self.expires_in_ms)
             .field("source_session_id", &self.source_session_id)
             .field("result_id", &self.result_id)
+            .field("availability", &self.availability)
             .finish()
     }
 }
@@ -337,10 +340,11 @@ mod tests {
         }))
         .is_err());
         let response = MediaProjectAccessResponse {
-            ticket: "private-capability".into(),
+            ticket: Some("private-capability".into()),
             expires_in_ms: 300_000,
             source_session_id: "session-source".into(),
             result_id: "12345678-1234-4234-8234-123456789abc".into(),
+            availability: MediaAvailabilityDto::Available,
         };
         assert_eq!(
             serde_json::to_value(&response).unwrap(),
@@ -348,7 +352,8 @@ mod tests {
                 "ticket":"private-capability",
                 "expiresInMs":300000,
                 "sourceSessionId":"session-source",
-                "resultId":"12345678-1234-4234-8234-123456789abc"
+                "resultId":"12345678-1234-4234-8234-123456789abc",
+                "availability":"available"
             })
         );
         assert!(!format!("{response:?}").contains("private-capability"));

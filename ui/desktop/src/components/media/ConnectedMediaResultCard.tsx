@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import MediaResultCard from './MediaResultCard';
 import { readMediaPresentation } from './mediaResultPresentation';
 import type { MediaResultActions, MediaResultIdentity } from './types';
+import type { MediaAvailability } from './types';
 import type { ProjectMediaAssetReference } from './projectMediaAsset';
 import type {
   DesktopMediaGrant,
@@ -27,6 +28,12 @@ type Props = MediaResultIdentity & {
   project?: ProjectMediaAssetReference;
 };
 type LoadedResult = NonNullable<ReturnType<typeof readMediaPresentation>>;
+
+class MediaAvailabilityError extends Error {
+  constructor(readonly availability: MediaAvailability) {
+    super(`Media result is ${availability}.`);
+  }
+}
 
 function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }: Props) {
   const intl = useIntl();
@@ -84,7 +91,16 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }:
         ) {
           throw new Error('Project media access identity mismatch.');
         }
-        access = projectAccess;
+        if (projectAccess.availability !== 'available') {
+          throw new MediaAvailabilityError(projectAccess.availability);
+        }
+        if (!projectAccess.ticket) {
+          throw new Error('Project media access did not issue a ticket.');
+        }
+        access = {
+          ticket: projectAccess.ticket,
+          expiresInMs: projectAccess.expiresInMs,
+        };
       } else {
         access = await client.lumina.mediaAccess_unstable({ ...identity, purpose });
       }
@@ -114,12 +130,19 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }:
             () => void refreshPreview(row),
             Math.max(1, Math.min(next.expiresInMs * 0.8, next.expiresInMs - 1000))
           );
-      } catch {
+      } catch (error) {
         if (next) await release(next.ticket);
         if (previewTicket) await release(previewTicket);
         if (active) {
           setPreviewUrl(null);
-          setPreviewFailed(true);
+          if (error instanceof MediaAvailabilityError) {
+            setLoaded((current) =>
+              current ? { ...current, availability: error.availability } : current
+            );
+            setPreviewFailed(false);
+          } else {
+            setPreviewFailed(true);
+          }
         }
       }
     };
@@ -132,9 +155,35 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }:
         if (!active) return;
         client.signal.addEventListener('abort', disconnected, { once: true });
         if (client.signal.aborted) throw new Error('Media connection closed.');
+        let projectAccess:
+          | (Awaited<ReturnType<typeof mediaProjectAccess>> & { ticket: string })
+          | undefined;
+        let projectAvailability: MediaAvailability | undefined;
+        if (project) {
+          const access = await mediaProjectAccess(client, {
+            ...project.access,
+            purpose: 'preview',
+          });
+          if (
+            access.sourceSessionId !== identity.sessionId ||
+            access.resultId !== identity.resultId
+          ) {
+            throw new Error('Project media access identity mismatch.');
+          }
+          projectAvailability = access.availability;
+          if (access.availability === 'available') {
+            if (!access.ticket) throw new Error('Project media access did not issue a ticket.');
+            projectAccess = access as typeof projectAccess;
+            tickets.add(access.ticket);
+          }
+        }
         const row = readMediaPresentation(
           project
-            ? { status: 'found', result: project.result, availability: 'available' }
+            ? {
+                status: 'found',
+                result: project.result,
+                availability: projectAvailability!,
+              }
             : await client.lumina.mediaRead_unstable(identity),
           identity
         );
@@ -142,6 +191,7 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }:
         setLoaded(row);
         setStatus(row ? 'loaded' : 'notFound');
         if (!row || row.availability !== 'available') return;
+        if (projectAccess) await release(projectAccess.ticket);
         const opened = await api.mediaOpen(identity);
         if (!active) {
           await api.mediaClose(opened.handleId);

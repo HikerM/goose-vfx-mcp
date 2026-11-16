@@ -9,10 +9,19 @@ export interface MediaProjectAccessRequest {
 }
 
 export interface MediaProjectAccessResponse {
-  ticket: string;
+  ticket?: string;
   expiresInMs: number;
   sourceSessionId: string;
   resultId: string;
+  availability:
+    | 'available'
+    | 'publishing'
+    | 'missing'
+    | 'access_denied'
+    | 'tampered'
+    | 'unsafe_path'
+    | 'unsupported_format'
+    | 'io_unavailable';
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -23,22 +32,34 @@ export function parseMediaProjectAccessResponse(value: unknown): MediaProjectAcc
   const expiresInMs = record(value) ? value.expiresInMs : undefined;
   if (
     !record(value) ||
-    typeof value.ticket !== 'string' ||
-    value.ticket.length === 0 ||
     !Number.isSafeInteger(expiresInMs) ||
     (expiresInMs as number) < 0 ||
     typeof value.sourceSessionId !== 'string' ||
     value.sourceSessionId.length === 0 ||
     typeof value.resultId !== 'string' ||
-    value.resultId.length === 0
+    value.resultId.length === 0 ||
+    ![
+      'available',
+      'publishing',
+      'missing',
+      'access_denied',
+      'tampered',
+      'unsafe_path',
+      'unsupported_format',
+      'io_unavailable',
+    ].includes(value.availability as string) ||
+    (value.availability === 'available' &&
+      (typeof value.ticket !== 'string' || value.ticket.length === 0)) ||
+    (value.availability !== 'available' && value.ticket !== undefined)
   ) {
     throw new Error('Invalid project media access response.');
   }
   return {
-    ticket: value.ticket,
+    ...(typeof value.ticket === 'string' ? { ticket: value.ticket } : {}),
     expiresInMs: expiresInMs as number,
     sourceSessionId: value.sourceSessionId,
     resultId: value.resultId,
+    availability: value.availability as MediaProjectAccessResponse['availability'],
   };
 }
 
