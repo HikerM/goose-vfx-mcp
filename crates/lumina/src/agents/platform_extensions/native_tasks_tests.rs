@@ -1,6 +1,7 @@
 use super::*;
 use crate::config::LuminaMode;
 use crate::media::NativeTaskTranscript;
+use crate::project::{ProjectAssetStore, ProjectService};
 use crate::session::{SessionManager, SessionType};
 use lumina_providers::local_inference::lifecycle::{Sha256Digest, TaskResourceRejection};
 use rmcp::model::RawContent;
@@ -84,6 +85,161 @@ fn query_defaults() -> ProjectAssetCandidates {
         file_name_contains: None,
         limit: 20,
     }
+}
+
+#[tokio::test]
+async fn project_asset_candidates_query_real_project_assets() -> Result<()> {
+    let root = tempfile::tempdir()?;
+    let manager = Arc::new(SessionManager::new(root.path().join("data")));
+    let project_path = root.path().join("project");
+    std::fs::create_dir_all(&project_path)?;
+    let project = ProjectService::new(Arc::clone(manager.storage()))
+        .open_project(&project_path, Some("candidate test"))
+        .await?;
+    let workspace = root.path().join("workspace");
+    std::fs::create_dir_all(&workspace)?;
+    let session = manager
+        .create_session(
+            workspace,
+            "candidate test".into(),
+            SessionType::Hidden,
+            LuminaMode::Auto,
+        )
+        .await?;
+    manager
+        .update(&session.id)
+        .project_id(Some(project.id))
+        .apply()
+        .await?;
+    let pool = manager.storage().pool().await?.clone();
+    let assets = ProjectAssetStore::new(pool.clone());
+    assets.initialize().await?;
+    assets
+        .freeze_job(&session.id, "candidate-job", None)
+        .await?;
+
+    let records = [
+        (
+            "00000000-0000-4000-8000-000000000101",
+            json!({
+                "kind":"media",
+                "result":{
+                    "resultId":"00000000-0000-4000-8000-000000000101",
+                    "mime":"image/png",
+                    "fileName":"cat.png",
+                    "bytes":48,
+                    "sha256":"a".repeat(64),
+                    "spec":{"kind":"image","width":1,"height":1}
+                },
+                "configuration":{}
+            }),
+        ),
+        (
+            "00000000-0000-4000-8000-000000000102",
+            json!({
+                "kind":"media",
+                "result":{
+                    "resultId":"00000000-0000-4000-8000-000000000102",
+                    "mime":"audio/wav",
+                    "fileName":"voice-one.wav",
+                    "bytes":48,
+                    "sha256":"b".repeat(64),
+                    "spec":{"kind":"audio","sampleRate":16000,"channels":1,"sampleFrames":2}
+                },
+                "configuration":{}
+            }),
+        ),
+        (
+            "00000000-0000-4000-8000-000000000103",
+            json!({
+                "kind":"media",
+                "result":{
+                    "resultId":"00000000-0000-4000-8000-000000000103",
+                    "mime":"audio/wav",
+                    "fileName":"voice-two.wav",
+                    "bytes":48,
+                    "sha256":"c".repeat(64),
+                    "spec":{"kind":"audio","sampleRate":16000,"channels":1,"sampleFrames":2}
+                },
+                "configuration":{}
+            }),
+        ),
+    ];
+    for (asset_id, content) in &records {
+        let mut tx = pool.begin().await?;
+        ProjectAssetStore::record_in_tx(
+            &mut tx,
+            &session.id,
+            "candidate-job",
+            None,
+            asset_id,
+            content,
+        )
+        .await?;
+        tx.commit().await?;
+    }
+
+    let unique = project_asset_candidates(
+        &assets,
+        &session.id,
+        ProjectAssetCandidates {
+            kind: Some("image".into()),
+            file_name_contains: Some("cat".into()),
+            ..query_defaults()
+        },
+    )
+    .await?;
+    assert_eq!(unique["status"], "unique");
+    assert_eq!(unique["assets"][0]["assetId"], records[0].0);
+    assert_eq!(unique["assets"][0]["output"]["spec"]["kind"], "image");
+
+    let ambiguous = project_asset_candidates(
+        &assets,
+        &session.id,
+        ProjectAssetCandidates {
+            kind: Some("audio".into()),
+            limit: 1,
+            ..query_defaults()
+        },
+    )
+    .await?;
+    assert_eq!(ambiguous["status"], "ambiguous");
+    assert_eq!(ambiguous["truncated"], true);
+    assert_eq!(ambiguous["assets"].as_array().unwrap().len(), 1);
+
+    let missing = project_asset_candidates(
+        &assets,
+        &session.id,
+        ProjectAssetCandidates {
+            kind: Some("video".into()),
+            ..query_defaults()
+        },
+    )
+    .await?;
+    assert_eq!(missing["status"], "not_found");
+
+    let source_session_id = session.id.clone();
+    let client = NativeTasksClient::new(PlatformExtensionContext {
+        extension_manager: None,
+        session_manager: Arc::clone(&manager),
+        session: Some(Arc::new(session)),
+        use_login_shell_path: false,
+    });
+    let context = ToolCallContext::new(source_session_id, None, None);
+    let via_tool = client
+        .call_tool(
+            &context,
+            "project_asset_candidates",
+            Some(json!({"kind":"image"}).as_object().unwrap().clone()),
+            CancellationToken::new(),
+        )
+        .await?;
+    assert_ne!(via_tool.is_error, Some(true));
+    assert_eq!(
+        serde_json::from_str::<Value>(text(&via_tool, 0))?["status"],
+        "unique"
+    );
+    Ok(())
 }
 
 #[tokio::test]
