@@ -62,6 +62,7 @@ fn installation_queries_decode_old_responses_and_expose_typed_retry_state() {
     }))
     .unwrap();
     assert!(old.file_retries.is_empty());
+    assert!(old.installations.is_empty());
     assert!(old.failures.is_empty());
     assert!(old.storage_reservations.is_empty());
     let dto: ModelInstallationFileRetryDto = serde_json::from_value(json!({
@@ -80,6 +81,29 @@ fn installation_queries_decode_old_responses_and_expose_typed_retry_state() {
         ModelInstallationFailureCode::SourceRateLimited
     ));
     assert_eq!(dto.next_retry_at, Some(50));
+}
+
+#[test]
+fn installation_query_exposes_active_installation_summary_without_paths() {
+    let response: ModelInstallationJobsListResponse = serde_json::from_value(json!({
+        "jobs": [],
+        "installations": [{
+            "installationId": "installation:unit",
+            "activeVersionId": "version:unit",
+            "modelId": "model:unit",
+            "variantId": "variant:unit",
+            "manifestDigest": "a".repeat(64)
+        }],
+        "nextAfterId": null,
+        "serviceState": "ready"
+    }))
+    .unwrap();
+    assert_eq!(response.installations.len(), 1);
+    assert_eq!(response.installations[0].model_id, "model:unit");
+    assert!(serde_json::to_value(response)
+        .unwrap()
+        .get("storeRoot")
+        .is_none());
 }
 
 #[test]

@@ -127,6 +127,18 @@ impl From<StorageReservation> for ModelInstallationStorageDto {
         }
     }
 }
+
+impl From<ActiveInstallation> for ModelInstallationSummaryDto {
+    fn from(installation: ActiveInstallation) -> Self {
+        Self {
+            installation_id: installation.installation_id,
+            active_version_id: installation.active_version_id,
+            model_id: installation.model_id,
+            variant_id: installation.variant_id,
+            manifest_digest: installation.manifest_digest.as_str().into(),
+        }
+    }
+}
 map_enum!(
     LifecycleErrorCode,
     ModelInstallationFailureCode,
@@ -246,6 +258,7 @@ impl InstallationApplication {
         let Some(repository) = self.query_repository().await? else {
             return Ok(ModelInstallationJobsListResponse {
                 jobs: Vec::new(),
+                installations: Vec::new(),
                 file_retries: Vec::new(),
                 failures: Vec::new(),
                 storage_reservations: Vec::new(),
@@ -254,6 +267,11 @@ impl InstallationApplication {
             });
         };
         let jobs = repository.list_jobs(request.after_id.as_deref(), request.limit)?;
+        let installations = repository
+            .active_installations()?
+            .into_iter()
+            .map(Into::into)
+            .collect();
         let next_after_id = (jobs.len() == request.limit as usize)
             .then(|| jobs.last().expect("Job page is nonempty").id.clone());
         let mut file_retries = Vec::new();
@@ -293,6 +311,7 @@ impl InstallationApplication {
         }
         Ok(ModelInstallationJobsListResponse {
             jobs: jobs.into_iter().map(Into::into).collect(),
+            installations,
             file_retries,
             failures,
             storage_reservations,

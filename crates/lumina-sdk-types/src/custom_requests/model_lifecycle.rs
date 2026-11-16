@@ -184,6 +184,8 @@ impl Default for ModelInstallationJobsListRequest {
 pub struct ModelInstallationJobsListResponse {
     pub jobs: Vec<ModelInstallationJobDto>,
     #[serde(default)]
+    pub installations: Vec<ModelInstallationSummaryDto>,
+    #[serde(default)]
     pub file_retries: Vec<ModelInstallationFileRetryDto>,
     #[serde(default)]
     pub failures: Vec<ModelInstallationFailureDto>,
@@ -191,6 +193,16 @@ pub struct ModelInstallationJobsListResponse {
     pub storage_reservations: Vec<ModelInstallationStorageDto>,
     pub next_after_id: Option<String>,
     pub service_state: ModelInstallationServiceState,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInstallationSummaryDto {
+    pub installation_id: String,
+    pub active_version_id: String,
+    pub model_id: String,
+    pub variant_id: String,
+    pub manifest_digest: String,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
