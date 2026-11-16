@@ -87,6 +87,8 @@ fn domain_digest(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    type SnapshotChange = (&'static str, fn(&mut StableAudioMusicSnapshot));
     use crate::lifecycle::{
         AudioTaskAssetBinding, AudioTaskModelBinding, AudioTaskProfile, ProjectReusePayloadTier,
         StableAudioMusicParameterService,
@@ -199,7 +201,7 @@ mod tests {
 
     #[test]
     fn every_unmeasured_fixed_parameter_falls_back_to_the_exact_workload() {
-        let changes: &[(&str, fn(&mut StableAudioMusicSnapshot))] = &[
+        let changes: &[SnapshotChange] = &[
             ("negative prompt", |s| {
                 s.parameters.negative_prompt = Some("vocals".into())
             }),
@@ -237,7 +239,7 @@ mod tests {
 
     #[test]
     fn changed_runtime_or_component_identity_cannot_select_the_candidate_domain() {
-        let changes: &[(&str, fn(&mut StableAudioMusicSnapshot))] = &[
+        let changes: &[SnapshotChange] = &[
             ("engine", |s| {
                 s.metadata
                     .binding

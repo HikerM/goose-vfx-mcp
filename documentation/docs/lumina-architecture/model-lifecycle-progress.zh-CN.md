@@ -706,3 +706,5 @@ Qwen3-ASR 已从通用音频资源分支拆出，未注册精确运行时/组件
 随后将生成能力声明继续下沉到协议注册表：每个生成 Runtime 协议在 `protocols.json` 中显式声明 `targetCapabilities`，安装计划、外部模型目录和 NativeTaskCatalog 统一读取该声明；不再通过图像/视频或固定模型名推导能力。该改动的 native task catalog 7 项和 task parameter 6 项回归通过，已推送到 `testing` 分支。它解决的是动态路由边界，仍不等于每个模型已有可执行 Runtime、资源档案或质量验收。
 
 本轮审计又修复了局部编辑授权边界：`editReplacementAssetId` 现在作为冻结的局部编辑资产独立校验，不再伪装成模型参数输入，避免首次授权或归档重读时把“模型输入集合”和“编辑替换资产”混在一起。ASR 转录结果同时返回稳定 `projectAssetId` 以及 `project_asset` 查询提示，生成后的文本可以直接定位到项目资产。相关定向回归通过；视频时间段编辑、MP4/WebM 完整验证和缺少可信资源画像的模型仍保持 fail-closed/NeedsProfiling。
+
+音乐任务接入的质量门也已补齐：`lumina-local-inference --all-targets` 严格 Clippy 通过，音乐资源门禁 2 项和音频参数 27 项回归通过。此次修复只整理音乐资源测试的回调类型与原生 prompt 边界判断，没有放宽资源画像、模型组件或运行时准入条件。

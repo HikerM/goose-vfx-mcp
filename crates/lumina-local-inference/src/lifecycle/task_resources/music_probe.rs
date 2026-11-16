@@ -37,10 +37,10 @@ fn validate_domain_patch(patch: &serde_json::Value) -> Result<()> {
                 .as_str()
                 .context("Project music prompt must be text")?;
             ensure!(
-                !prompt.trim().is_empty()
-                    && prompt.len() <= 16_384
-                    && !prompt.contains(['\0', '|'])
-                    && !(prompt.starts_with("--") && !prompt.chars().any(char::is_whitespace)),
+                !(prompt.trim().is_empty()
+                    || prompt.len() > 16_384
+                    || prompt.contains(['\0', '|'])
+                    || (prompt.starts_with("--") && !prompt.chars().any(char::is_whitespace))),
                 "Project music prompt is outside the native single-prompt contract"
             );
         }
