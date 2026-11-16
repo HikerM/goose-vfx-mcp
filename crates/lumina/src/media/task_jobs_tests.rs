@@ -322,6 +322,10 @@ async fn restart_replays_only_a_complete_published_batch_and_preserves_the_gener
         NativeTaskClaim::Stopped(NativeTaskTerminal::Interrupted)
     ));
     publish(ids[1].clone()).await;
+    assert_eq!(
+        jobs.completed_summary(SESSION, &job).await.unwrap(),
+        Some(json!({"resultIds": ids}))
+    );
     jobs.pool.close().await;
     let reopened = open(tmp.path()).await;
     let NativeTaskClaim::Replay(ImportedTaskOutput::Media(results)) = reopened
