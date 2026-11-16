@@ -2,6 +2,8 @@ mod access;
 mod domain;
 mod files;
 mod formats;
+#[cfg(feature = "local-inference")]
+mod image_editor;
 mod ingest;
 mod project_assets;
 #[cfg(feature = "local-inference")]
@@ -31,11 +33,16 @@ pub use access::{
 };
 pub use domain::*;
 #[cfg(feature = "local-inference")]
+pub(crate) use image_editor::apply_image_rect_overlay;
+#[cfg(feature = "local-inference")]
+pub(crate) use image_editor::image_edit_result_id;
+#[cfg(feature = "local-inference")]
 pub(crate) use ingest::native_result_link;
 pub(crate) use ingest::{hydrate_tool_media, persist_tool_media};
 #[cfg(feature = "local-inference")]
 pub(crate) use project_task_reuse::{
-    prepare_project_reused_task, PreparedProjectTask, ProjectEditScope, ProjectTaskReuseRequest,
+    prepare_project_reused_task, PreparedLocalImageEdit, PreparedProjectTask, ProjectEditScope,
+    ProjectTaskReuseRequest,
 };
 pub use store::{BeginMediaPublish, MediaResultStore, StagedMedia, VerifiedMediaContent};
 #[cfg(feature = "local-inference")]

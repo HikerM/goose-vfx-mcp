@@ -59,6 +59,10 @@ const i18n = defineMessages({
     id: 'toolCallWithResponse.loadingSpinner',
     defaultMessage: 'Loading spinner',
   },
+  nativeTaskStatus: {
+    id: 'toolCallWithResponse.nativeTaskStatus',
+    defaultMessage: 'Task status: {status} ({jobId})',
+  },
 });
 
 interface ToolGraphNode {
@@ -87,6 +91,77 @@ type ToolResultWithMeta = {
     _meta?: UiMeta;
   };
 };
+
+const nativeTaskStates = new Set([
+  'running',
+  'completed',
+  'failed',
+  'cancelled',
+  'interrupted',
+  'deferred',
+  'needs_profiling',
+  'unavailable',
+  'busy',
+]);
+
+type NativeTaskStatus = {
+  jobId: string;
+  status: string;
+};
+
+function parseNativeTaskStatus(value: unknown): NativeTaskStatus | undefined {
+  if (typeof value !== 'string') return undefined;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object') return undefined;
+    const record = parsed as Record<string, unknown>;
+    if (
+      typeof record.jobId !== 'string' ||
+      !record.jobId.startsWith('native:') ||
+      typeof record.status !== 'string' ||
+      !nativeTaskStates.has(record.status)
+    ) {
+      return undefined;
+    }
+    return { jobId: record.jobId, status: record.status };
+  } catch {
+    return undefined;
+  }
+}
+
+function getNativeTaskStatus(
+  toolResponse?: ToolResponseMessageContent
+): NativeTaskStatus | undefined {
+  const result = toolResponse?.toolResult as ToolResultWithMeta | undefined;
+  if (!result) return undefined;
+
+  if (result.status === 'error') {
+    return parseNativeTaskStatus((result as { error?: unknown }).error);
+  }
+
+  const content = result.value?.content;
+  if (!Array.isArray(content)) return undefined;
+  for (const item of content) {
+    if (item.type === 'text') {
+      const status = parseNativeTaskStatus(item.text);
+      if (status) return status;
+    }
+  }
+  return undefined;
+}
+
+function NativeTaskStatusBadge({ status }: { status: NativeTaskStatus }) {
+  const intl = useIntl();
+  return (
+    <div
+      role="status"
+      aria-label={intl.formatMessage(i18n.nativeTaskStatus, status)}
+      className="mb-2 px-3 py-1 text-xs text-text-secondary border border-border-primary rounded-md"
+    >
+      {intl.formatMessage(i18n.nativeTaskStatus, status)}
+    </div>
+  );
+}
 
 type ToolRequestWithMeta = ToolRequestMessageContent & {
   _meta?: UiMeta;
@@ -540,6 +615,7 @@ function ToolCallView({
     loadingStatus === 'success' && toolResponse?.toolResult
       ? getToolResultContent(toolResponse.toolResult)
       : [];
+  const nativeTaskStatus = getNativeTaskStatus(toolResponse);
 
   const logs = notifications
     ?.filter((notification) => {
@@ -787,8 +863,12 @@ function ToolCallView({
       <span className="truncate flex-1 min-w-0">{getToolLabelContent()}</span>
     </span>
   );
-  return (
+  return [
+    nativeTaskStatus && (
+      <NativeTaskStatusBadge key="native-task-status" status={nativeTaskStatus} />
+    ),
     <ToolCallExpandable
+      key="tool-call"
       isStartExpanded={isRenderingProgress || isExpandToolDetails}
       isForceExpand={false}
       label={
@@ -884,8 +964,8 @@ function ToolCallView({
           </div>
         );
       })()}
-    </ToolCallExpandable>
-  );
+    </ToolCallExpandable>,
+  ];
 }
 
 interface ToolDetailsViewProps {

@@ -201,6 +201,7 @@ impl Fixture {
             new_job_id: job.into(),
             patch: patch.as_object().context("Expected patch object")?.clone(),
             edit_scope: None,
+            edit_replacement_asset_id: None,
         };
         prepare_registered(
             self.manager.storage(),
@@ -375,7 +376,7 @@ async fn project_authorization_upgrade_preserves_existing_configuration_and_asse
 }
 
 #[tokio::test]
-async fn project_edit_scope_is_bounds_checked_and_never_falls_back_to_full_regeneration() {
+async fn project_edit_scope_is_bounds_checked_and_requires_image_editor_inputs() {
     let f = Fixture::new().await;
     let parent = f.music_parent().await;
     let total = match parent.spec {
@@ -394,8 +395,7 @@ async fn project_edit_scope_is_bounds_checked_and_never_falls_back_to_full_regen
         start_micros: 0,
         duration_micros: total / 2,
     };
-    let error = reject_edit_scope(&output, &valid).unwrap_err();
-    assert!(error.to_string().contains("no native editor is registered"));
+    validate_edit_scope(&output, &valid).unwrap();
 
     let out_of_bounds = ProjectEditScope::TimeRange {
         start_micros: total,

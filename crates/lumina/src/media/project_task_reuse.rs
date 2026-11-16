@@ -24,6 +24,8 @@ pub(crate) struct ProjectTaskReuseRequest {
     pub patch: Map<String, Value>,
     #[serde(default)]
     pub edit_scope: Option<ProjectEditScope>,
+    #[serde(default)]
+    pub edit_replacement_asset_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -144,7 +146,11 @@ pub(crate) struct VerifiedProjectTaskAuthorization {
     child_snapshot_digest: Sha256Digest,
     final_inputs: Vec<ProjectInputReference>,
     replacements: Vec<ReplacementAsset>,
+    #[serde(default)]
+    edit_replacement: Option<ReplacementAsset>,
     patch: Map<String, Value>,
+    #[serde(default)]
+    edit_scope: Option<ProjectEditScope>,
 }
 
 struct ParentTask {
@@ -157,6 +163,14 @@ struct ParentTask {
 pub(crate) struct PreparedProjectTask {
     plan: NativeTaskPlan,
     authorization: VerifiedProjectTaskAuthorization,
+    local_edit: Option<PreparedLocalImageEdit>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct PreparedLocalImageEdit {
+    parent: MediaResultRef,
+    replacement: MediaResultRef,
+    scope: ProjectEditScope,
 }
 
 impl PreparedProjectTask {
@@ -167,10 +181,28 @@ impl PreparedProjectTask {
         &self.authorization
     }
 
+    pub(crate) fn local_edit(&self) -> Option<&PreparedLocalImageEdit> {
+        self.local_edit.as_ref()
+    }
+
     pub(super) fn payload_tier(&self) -> Result<ProjectReusePayloadTier> {
         self.authorization
             .payload_tier()
             .context("Project task has no prepared payload tier")
+    }
+}
+
+impl PreparedLocalImageEdit {
+    pub(crate) fn parent(&self) -> &MediaResultRef {
+        &self.parent
+    }
+
+    pub(crate) fn replacement(&self) -> &MediaResultRef {
+        &self.replacement
+    }
+
+    pub(crate) fn scope(&self) -> &ProjectEditScope {
+        &self.scope
     }
 }
 
@@ -199,6 +231,10 @@ impl VerifiedProjectTaskAuthorization {
     }
     pub(super) fn compilation(&self) -> &ProjectCompilationBinding {
         &self.compilation
+    }
+
+    pub(super) fn edit_scope(&self) -> Option<&ProjectEditScope> {
+        self.edit_scope.as_ref()
     }
 
     pub(super) fn encode(&self) -> Result<String> {
@@ -268,6 +304,13 @@ impl VerifiedProjectTaskAuthorization {
             "Project parent model or snapshot differs"
         );
         verify_parent_output(&parent, &self.parent_output)?;
+        if let Some(scope) = self.edit_scope() {
+            validate_edit_scope(&self.parent_output, scope)?;
+            ensure!(
+                matches!(scope, ProjectEditScope::ImageRect { .. }),
+                "Only image rectangle local editing is currently supported"
+            );
+        }
         let contract = contract_for_record(&parent)?;
         ensure!(
             self.patch.len() == 1,
@@ -413,6 +456,30 @@ impl VerifiedProjectTaskAuthorization {
                 "Replacement project input differs from the resolved asset"
             );
         }
+        if let Some(replacement) = &self.edit_replacement {
+            let remaining = tier
+                .source_assets_limit()
+                .checked_sub(source_bytes)
+                .context("Project source assets exceed the payload tier")?;
+            let (asset, _) = ProjectAssetStore::read_for_frozen_job_bounded_in_tx(
+                tx,
+                self.child_session_id(),
+                self.child_job_id(),
+                &replacement.asset_id,
+                remaining,
+            )
+            .await?
+            .context("Local edit replacement asset is unavailable in this project")?;
+            ensure!(
+                asset.content_sha256 == replacement.content_sha256,
+                "Local edit replacement project asset changed"
+            );
+            ensure!(
+                self.edit_scope.is_some(),
+                "Local edit replacement requires an authenticated edit scope"
+            );
+            input_from_result(&media_asset(&asset)?, SessionMediaParameterKind::Image)?;
+        }
         Ok(())
     }
 }
@@ -493,7 +560,11 @@ pub(crate) async fn prepare_project_reused_task(
     let (archive, output) = parent_configuration(&asset)?;
     let parent = archive.validate(&asset.source_session_id, &asset.job_id)?;
     if let Some(scope) = request.edit_scope.as_ref() {
-        reject_edit_scope(&output, scope)?;
+        validate_edit_scope(&output, scope)?;
+        ensure!(
+            matches!(scope, ProjectEditScope::ImageRect { .. }),
+            "Only image rectangle local editing is currently supported"
+        );
     }
     ensure!(
         parent.identity() == &request.identity,
@@ -556,6 +627,7 @@ async fn prepare_registered(
     let pool = storage.pool().await?;
     let mut allowed = validation_inputs(&parent, &contract)?;
     let mut replacements = Vec::new();
+    let mut image_replacement = None;
     for (field, value) in &mut request.patch {
         let Some(kind) = contract.session_media_kind(field)? else {
             continue;
@@ -583,6 +655,9 @@ async fn prepare_registered(
         tx.commit().await?;
         let result = media_asset(&replacement)?;
         let reference = input_from_result(&result, kind)?;
+        if matches!(kind, SessionMediaParameterKind::Image) {
+            image_replacement = Some(result.clone());
+        }
         *value = input_value(&reference)?;
         push_unique(&mut allowed, reference);
         replacements.push(ReplacementAsset {
@@ -590,6 +665,42 @@ async fn prepare_registered(
             content_sha256: replacement.content_sha256,
         });
     }
+    let edit_replacement = if let Some(asset_id) = request.edit_replacement_asset_id.as_ref() {
+        ensure!(
+            request.edit_scope.is_some(),
+            "Local edit replacement requires an edit scope"
+        );
+        let mut tx = pool.begin().await?;
+        let remaining = ProjectReusePayloadTier::Standard
+            .source_assets_limit()
+            .checked_sub(source_bytes)
+            .context("Project source size overflow")?;
+        let (replacement, bytes) = ProjectAssetStore::read_for_frozen_job_bounded_in_tx(
+            &mut tx,
+            session,
+            &request.new_job_id,
+            asset_id,
+            remaining,
+        )
+        .await?
+        .context("Local edit replacement asset is unavailable in this project")?;
+        source_bytes = source_bytes
+            .checked_add(bytes)
+            .context("Project source size overflow")?;
+        tx.commit().await?;
+        let result = media_asset(&replacement)?;
+        ensure!(
+            result.kind == MediaKind::Image,
+            "Local edit replacement asset must be an image"
+        );
+        image_replacement = Some(result);
+        Some(ReplacementAsset {
+            asset_id: replacement.asset_id,
+            content_sha256: replacement.content_sha256,
+        })
+    } else {
+        None
+    };
     let compilation = ProjectCompilationBinding {
         child_session_id: session.into(),
         child_job_id: request.new_job_id.clone(),
@@ -609,6 +720,34 @@ async fn prepare_registered(
         request.patch.clone(),
         &scope,
     )?;
+    let local_edit = match request.edit_scope.clone() {
+        None => None,
+        Some(edit_scope) => {
+            ensure!(
+                matches!(edit_scope, ProjectEditScope::ImageRect { .. }),
+                "Only image rectangle local editing is currently supported"
+            );
+            let ParentOutput::Media {
+                result: parent_result,
+            } = &output
+            else {
+                bail!("Local image editing requires an archived media result")
+            };
+            validate_edit_scope(&output, &edit_scope)?;
+            let replacement = image_replacement
+                .clone()
+                .context("Local image editing requires a replacement image project asset")?;
+            ensure!(
+                replacement.kind == MediaKind::Image,
+                "Local image editing requires a replacement image project asset"
+            );
+            Some(PreparedLocalImageEdit {
+                parent: parent_result.clone(),
+                replacement,
+                scope: edit_scope,
+            })
+        }
+    };
     let mut authorization = VerifiedProjectTaskAuthorization {
         project_id: asset.project_id,
         parent_asset_id: asset.asset_id,
@@ -623,7 +762,9 @@ async fn prepare_registered(
             .map(Into::into)
             .collect(),
         replacements,
+        edit_replacement,
         patch: request.patch,
+        edit_scope: request.edit_scope,
     };
     let record = TaskConfigurationRecord::from_project_plan(&plan, &authorization.compilation)?;
     let archive = ArchivedTaskConfiguration::from_record(&record)?;
@@ -643,6 +784,7 @@ async fn prepare_registered(
     Ok(PreparedProjectTask {
         plan,
         authorization,
+        local_edit,
     })
 }
 
@@ -887,13 +1029,6 @@ fn validate_edit_scope(output: &ParentOutput, scope: &ProjectEditScope) -> Resul
         }
     }
     Ok(())
-}
-
-fn reject_edit_scope(output: &ParentOutput, scope: &ProjectEditScope) -> Result<()> {
-    validate_edit_scope(output, scope)?;
-    bail!(
-        "Local media edit scope is valid but no native editor is registered; refusing full regeneration"
-    )
 }
 
 fn input_value(reference: &ProjectInputReference) -> Result<Value> {

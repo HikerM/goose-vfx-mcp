@@ -159,7 +159,7 @@ impl AudioTaskProfile {
     }
     pub(super) fn pocket_settings(self) -> (&'static str, f32) {
         match self.external().map(|d| &d.parameters) {
-            Some(Parameters::PocketTtsOffline {
+            Some(Parameters::PocketTts {
                 language,
                 temperature,
             }) => (language, *temperature),
@@ -168,7 +168,7 @@ impl AudioTaskProfile {
     }
     pub(super) fn asr_settings(self) -> (Vec<Qwen3AsrLanguage>, Qwen3AsrLanguage, u32) {
         match self.external().map(|d| &d.parameters) {
-            Some(Parameters::Qwen3AsrOffline {
+            Some(Parameters::Qwen3Asr {
                 languages,
                 default_language,
                 max_tokens,
@@ -194,14 +194,14 @@ impl AudioTaskProfile {
 
     pub(super) fn music_settings(self) -> super::StableAudioMusicDefaults {
         match self.external().map(|d| &d.parameters) {
-            Some(Parameters::StableAudioMusicOffline { defaults, .. }) => defaults.clone(),
+            Some(Parameters::StableAudioMusic { defaults, .. }) => defaults.clone(),
             _ => super::StableAudioMusicDefaults::default(),
         }
     }
 
     pub(super) fn music_output(self) -> super::StableAudioModelOutput {
         match self.external().map(|d| &d.parameters) {
-            Some(Parameters::StableAudioMusicOffline { output, .. }) => *output,
+            Some(Parameters::StableAudioMusic { output, .. }) => *output,
             _ => super::StableAudioModelOutput::SMALL_MUSIC,
         }
     }
@@ -257,15 +257,15 @@ struct Definition {
     deny_unknown_fields
 )]
 enum Parameters {
-    StableAudioMusicOffline {
+    #[serde(rename = "stable_audio_music_offline")]
+    StableAudioMusic {
         defaults: super::StableAudioMusicDefaults,
         output: super::StableAudioModelOutput,
     },
-    PocketTtsOffline {
-        language: String,
-        temperature: f32,
-    },
-    Qwen3AsrOffline {
+    #[serde(rename = "pocket_tts_offline")]
+    PocketTts { language: String, temperature: f32 },
+    #[serde(rename = "qwen3_asr_offline")]
+    Qwen3Asr {
         languages: Vec<Qwen3AsrLanguage>,
         default_language: Qwen3AsrLanguage,
         max_tokens: u32,
@@ -275,9 +275,9 @@ enum Parameters {
 impl Parameters {
     fn protocol_record(&self) -> &'static AudioModelRecord {
         match self {
-            Self::PocketTtsOffline { .. } => &POCKET_TTS,
-            Self::Qwen3AsrOffline { .. } => &QWEN3_ASR,
-            Self::StableAudioMusicOffline { .. } => &STABLE_MUSIC,
+            Self::PocketTts { .. } => &POCKET_TTS,
+            Self::Qwen3Asr { .. } => &QWEN3_ASR,
+            Self::StableAudioMusic { .. } => &STABLE_MUSIC,
         }
     }
 }
@@ -346,11 +346,11 @@ fn load(path: &std::path::Path) -> Result<BTreeMap<String, Definition>> {
             "Audio installation size overflow"
         );
         match &d.parameters {
-            Parameters::StableAudioMusicOffline { defaults, output } => {
+            Parameters::StableAudioMusic { defaults, output } => {
                 output.validate()?;
                 output.spec(defaults)?;
             }
-            Parameters::PocketTtsOffline {
+            Parameters::PocketTts {
                 language,
                 temperature,
             } => {
@@ -363,7 +363,7 @@ fn load(path: &std::path::Path) -> Result<BTreeMap<String, Definition>> {
                     "Unsupported PocketTTS load language or temperature"
                 );
             }
-            Parameters::Qwen3AsrOffline {
+            Parameters::Qwen3Asr {
                 languages,
                 default_language,
                 max_tokens,

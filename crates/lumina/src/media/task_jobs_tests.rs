@@ -206,6 +206,40 @@ async fn state_reports_running_and_terminal_job_state_without_claiming_execution
 }
 
 #[tokio::test]
+async fn reconcile_running_marks_an_unowned_process_interrupted_but_preserves_a_live_owner() {
+    let tmp = temp();
+    let root = tmp.path().join("outputs");
+    let jobs = open(tmp.path()).await;
+    let identity = image_adapter().identity().unwrap();
+    let args = json!({"identity":identity,"parameters":{"prompt":"apple"}});
+
+    let live_job = NativeTaskJobs::job_id(SESSION, "live").unwrap();
+    let live_owner = take(&jobs, &root, "live", &args, &identity).await;
+    assert_eq!(
+        jobs.reconcile_running(&root, SESSION, &live_job)
+            .await
+            .unwrap()
+            .as_deref(),
+        Some("running")
+    );
+    live_owner
+        .finish(NativeTaskTerminal::Cancelled)
+        .await
+        .unwrap();
+
+    let orphan_job = NativeTaskJobs::job_id(SESSION, "orphan").unwrap();
+    let orphan_owner = take(&jobs, &root, "orphan", &args, &identity).await;
+    drop(orphan_owner);
+    assert_eq!(
+        jobs.reconcile_running(&root, SESSION, &orphan_job)
+            .await
+            .unwrap()
+            .as_deref(),
+        Some("interrupted")
+    );
+}
+
+#[tokio::test]
 async fn restart_replays_only_a_complete_published_batch_and_preserves_the_generated_seed() {
     let tmp = temp();
     let root = tmp.path().join("outputs");

@@ -168,6 +168,59 @@ impl NativeTaskJobs {
         Ok(state)
     }
 
+    #[cfg(windows)]
+    pub(crate) async fn reconcile_running(
+        &self,
+        root: &Path,
+        session: &str,
+        job: &str,
+    ) -> Result<Option<String>> {
+        validate_id(session)?;
+        ensure!(
+            job.starts_with("native:") && job.len() <= 128 && !job.chars().any(char::is_control),
+            "Invalid native task job ID"
+        );
+        let Some(state) = self.state(session, job).await? else {
+            return Ok(None);
+        };
+        if state != "running" {
+            return Ok(Some(state));
+        }
+        let root = root.to_owned();
+        let session_owned = session.to_owned();
+        let job_owned = job.to_owned();
+        let Some(lock) =
+            tokio::task::spawn_blocking(move || lock_job(&root, &session_owned, &job_owned))
+                .await??
+        else {
+            return Ok(Some("running".into()));
+        };
+        let changed = sqlx::query(
+            "UPDATE native_task_calls_v1 SET state='interrupted'
+             WHERE session_id=? AND job_id=? AND state='running'",
+        )
+        .bind(session)
+        .bind(job)
+        .execute(&self.pool)
+        .await?
+        .rows_affected();
+        drop(lock);
+        if changed == 1 {
+            return Ok(Some("interrupted".into()));
+        }
+        self.state(session, job).await
+    }
+
+    #[cfg(not(windows))]
+    pub(crate) async fn reconcile_running(
+        &self,
+        _root: &Path,
+        session: &str,
+        job: &str,
+    ) -> Result<Option<String>> {
+        self.state(session, job).await
+    }
+
     pub(crate) async fn claim(
         &self,
         root: &Path,

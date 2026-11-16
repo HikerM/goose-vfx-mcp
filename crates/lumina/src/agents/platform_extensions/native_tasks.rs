@@ -188,6 +188,8 @@ struct ProjectReuse {
     patch: JsonObject,
     #[serde(default)]
     edit_scope: Option<ProjectEditScope>,
+    #[serde(default)]
+    edit_replacement_asset_id: Option<String>,
 }
 
 enum Request {
@@ -253,6 +255,7 @@ impl Request {
                     new_job_id: job.into(),
                     patch: reuse.patch,
                     edit_scope: reuse.edit_scope,
+                    edit_replacement_asset_id: reuse.edit_replacement_asset_id,
                 };
                 PreparedNativeTask::Project(
                     prepare_project_reused_task(&installation, storage, session, request).await?,
@@ -302,7 +305,7 @@ impl NativeTasksClient {
         if name == "status" {
             let query: Status = serde_json::from_value(arguments)?;
             let state = NativeTaskJobs::new(storage.pool().await?.clone())
-                .state(session, &query.job_id)
+                .reconcile_running(&storage.media_output_directory(), session, &query.job_id)
                 .await?;
             let Some(state) = state else {
                 return Ok(CallToolResult::error(vec![Content::text(
@@ -607,8 +610,8 @@ fn tools() -> Vec<Tool> {
             schema(json!({"identity":identity,"parameters":run_parameters}), &["identity","parameters"]), false),
         ("reuse", "Create a new task from an earlier job in this session, changing one field. Image and video require a parent result. Speech and transcription use the parent job.",
             schema(reuse_fields,&["identity","parentJobId","patch"]), false),
-        ("project_reuse", "Regenerate from an archived asset in the current project, changing exactly one model-specific parameter and retaining the original. Use the parent's exact installed identity. Replacement media fields accept project asset UUIDs. An editScope is bounds-checked and currently rejected until a native editor is registered; it never silently falls back to full regeneration. Execution still requires a measured resource profile.",
-            schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."},"editScope":{"oneOf":[{"type":"object","properties":{"kind":{"const":"image_rect"},"x":{"type":"integer","minimum":0},"y":{"type":"integer","minimum":0},"width":{"type":"integer","minimum":1},"height":{"type":"integer","minimum":1}},"required":["kind","x","y","width","height"],"additionalProperties":false},{"type":"object","properties":{"kind":{"const":"time_range"},"startMicros":{"type":"integer","minimum":0},"durationMicros":{"type":"integer","minimum":1}},"required":["kind","startMicros","durationMicros"],"additionalProperties":false}]}}), &["identity","parentAssetId","patch"]), false),
+        ("project_reuse", "Regenerate from an archived asset in the current project, changing exactly one model-specific parameter and retaining the original. Use the parent's exact installed identity. Replacement media fields accept project asset UUIDs. An image_rect editScope with editReplacementAssetId performs a bounded local image edit and never silently falls back to full regeneration; time_range remains unsupported until a native editor exists. Execution still requires a measured resource profile.",
+            schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."},"editScope":{"oneOf":[{"type":"object","properties":{"kind":{"const":"image_rect"},"x":{"type":"integer","minimum":0},"y":{"type":"integer","minimum":0},"width":{"type":"integer","minimum":1},"height":{"type":"integer","minimum":1}},"required":["kind","x","y","width","height"],"additionalProperties":false},{"type":"object","properties":{"kind":{"const":"time_range"},"startMicros":{"type":"integer","minimum":0},"durationMicros":{"type":"integer","minimum":1}},"required":["kind","startMicros","durationMicros"],"additionalProperties":false}]},"editReplacementAssetId":{"type":"string","format":"uuid"}}), &["identity","parentAssetId","patch"]), false),
         ("project_assets", "List archived asset metadata in the current session's project. Use project_asset to read one immutable result/version. This does not grant cross-session generation or file access.",
             schema(json!({"afterAssetId":{"type":"string","format":"uuid"},"limit":{"type":"integer","minimum":1,"maximum":100,"default":20}}), &[]), true),
         ("project_asset", "Read a projection of one archived result/version with its original configuration in the current session's project. Transcript text is paged in Unicode scalar characters; follow nextTextOffset. archiveContentSha256 identifies the full archive, not the projection. Media rejects nondefault text pagination. Unknown and other-project assets are not found. Reading does not edit, regenerate or grant file access.",

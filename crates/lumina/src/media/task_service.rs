@@ -4,12 +4,15 @@ use lumina_providers::local_inference::lifecycle::{
     NativeTaskPlan, NativeTaskRuntime, TaskProfilingRequirement, TaskPublicationContext,
     TaskResourceAssessment, TaskResourceRejection,
 };
+use std::io::Write;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 use super::{
-    import_native_task_output, ImportedTaskOutput, MediaAssociation, MediaResultStore,
-    PreparedProjectTask, TaskConfigurationStore,
+    apply_image_rect_overlay, image_edit_result_id, import_native_task_output, BeginMediaPublish,
+    ImportedTaskOutput, MediaAssociation, MediaInputRef, MediaKind, MediaResultStore,
+    MediaRuntimeBuild, MediaSource, PreparedLocalImageEdit, PreparedProjectTask,
+    PublishMediaRequest, TaskConfigurationStore,
 };
 use crate::session::session_manager::SessionStorage;
 
@@ -165,6 +168,25 @@ async fn execute_task_controlled(
         .register_output_root(&storage.media_output_directory())
         .await?;
     let root_path = root.path.clone();
+    let local_edit = project_task
+        .as_ref()
+        .and_then(PreparedProjectTask::local_edit)
+        .cloned();
+    if let (Some(task), Some(edit)) = (project_task.as_ref(), local_edit.as_ref()) {
+        let configurations = TaskConfigurationStore::new(pool.clone());
+        configurations.save_project_task(task).await?;
+        let imported = execute_local_image_edit(
+            &media,
+            &configurations,
+            &plan,
+            edit,
+            &root,
+            association,
+            &cancel,
+        )
+        .await?;
+        return Ok(PreparedTaskExecution::Completed(imported));
+    }
     let publication = if let Some(task) = &project_task {
         super::task_publication::project_reuse_context(task)?
     } else {
@@ -232,6 +254,92 @@ async fn execute_task_controlled(
     )
     .await?;
     Ok(PreparedTaskExecution::Completed(imported))
+}
+
+async fn execute_local_image_edit(
+    media: &MediaResultStore,
+    configurations: &TaskConfigurationStore,
+    plan: &NativeTaskPlan,
+    edit: &PreparedLocalImageEdit,
+    root: &super::domain::MediaOutputRoot,
+    association: MediaAssociation,
+    cancel: &CancellationToken,
+) -> Result<ImportedTaskOutput> {
+    ensure!(!cancel.is_cancelled(), "Native task was cancelled");
+    let parent = read_verified_image(media, edit.parent()).await?;
+    let replacement = read_verified_image(media, edit.replacement()).await?;
+    ensure!(!cancel.is_cancelled(), "Native task was cancelled");
+    let bytes = apply_image_rect_overlay(&parent, &replacement, edit.parent(), edit.scope())?;
+    let digest = plan.snapshot_digest()?;
+    let request = PublishMediaRequest {
+        result_id: image_edit_result_id(
+            plan.session_id(),
+            plan.job_id(),
+            &edit.parent().result_id,
+            edit.scope(),
+        ),
+        session_id: plan.session_id().into(),
+        job_id: plan.job_id().into(),
+        root_id: root.root_id.clone(),
+        kind: MediaKind::Image,
+        association,
+        source: MediaSource::LocalModel {
+            installation_id: plan.installation_id().into(),
+            version_id: plan.version_id().into(),
+            runtime: MediaRuntimeBuild {
+                adapter_id: plan.runtime().adapter_id.clone(),
+                engine_revision: plan.runtime().engine_revision.clone(),
+                binary_sha256: plan.runtime().binary_sha256.as_str().into(),
+            },
+            generation_config_sha256: digest.as_str().into(),
+            input_refs: vec![
+                MediaInputRef::MediaResult {
+                    result_id: edit.parent().result_id.clone(),
+                },
+                MediaInputRef::MediaResult {
+                    result_id: edit.replacement().result_id.clone(),
+                },
+            ],
+        },
+    };
+    configurations.verify_publish(&request).await?;
+    ensure!(!cancel.is_cancelled(), "Native task was cancelled");
+    let result = match media.begin_publish(request).await? {
+        BeginMediaPublish::Existing(existing) => existing,
+        BeginMediaPublish::Staging(mut stage) => {
+            stage.write_all(&bytes)?;
+            media.publish(stage).await?
+        }
+    };
+    configurations.verify_result(&result).await?;
+    Ok(ImportedTaskOutput::Media(vec![result]))
+}
+
+async fn read_verified_image(
+    media: &MediaResultStore,
+    result: &super::MediaResultRef,
+) -> Result<Vec<u8>> {
+    ensure!(
+        result.kind == MediaKind::Image,
+        "Local image editing requires image inputs"
+    );
+    let mut content = media
+        .open_content(&result.session_id, &result.result_id)
+        .await?;
+    let mut bytes = Vec::with_capacity(usize::try_from(result.bytes)?);
+    let mut offset = 0_u64;
+    while offset < result.bytes {
+        let length = usize::try_from(
+            (result.bytes - offset).min(super::domain::MAX_MEDIA_READ_BYTES as u64),
+        )?;
+        bytes.extend(content.read_range(offset, length)?);
+        offset += length as u64;
+    }
+    ensure!(
+        bytes.len() as u64 == result.bytes,
+        "Image input length changed while reading"
+    );
+    Ok(bytes)
 }
 
 #[cfg(test)]

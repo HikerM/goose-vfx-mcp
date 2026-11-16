@@ -1,0 +1,28 @@
+{
+  "schema": "m3-m4-control-and-local-image-edit-v1",
+  "status": "implemented_with_targeted_validation",
+  "scope": "Cross-module control-plane increment for durable native task state, desktop task status rendering, and bounded project image edits.",
+  "implemented": [
+    "Windows reconciliation marks an unowned persisted running native task as interrupted while preserving a live lock owner.",
+    "Native project reuse accepts an explicit editReplacementAssetId, reads it from the frozen project, verifies its content hash and image kind, and records it in the authorization inputs.",
+    "ImageRect local edits replace only the selected rectangle, publish a deterministic PNG media result, and retain parent/replacement input references.",
+    "Desktop tool responses render validated native task states with job IDs for current and historical messages."
+  ],
+  "targetedValidation": {
+    "rust": [
+      "media::image_editor::tests: 2 passed",
+      "media::project_task_reuse::tests::project_edit_scope_is_bounds_checked_and_requires_image_editor_inputs: 1 passed",
+      "agents::platform_extensions::native_tasks::tests::registered_extension_lists_real_empty_catalog_and_rejects_injected_scope: 1 passed",
+      "media::task_jobs::tests::reconcile_running_marks_an_unowned_process_interrupted_but_preserves_a_live_owner: passed"
+    ],
+    "desktop": [
+      "ToolCallWithResponse.task-status.test.tsx and ToolCallWithResponse.resource.test.tsx: 15 passed",
+      "pnpm run typecheck: passed",
+      "targeted ESLint: passed"
+    ]
+  },
+  "known_limits": [
+    "time_range editing remains fail-closed until a native audio/video editor exists.",
+    "Full all-targets Clippy remains blocked by the repository's pre-existing warning set on this Windows checkout; the command reached compilation but failed on unrelated existing warnings outside this increment."
+  ]
+}

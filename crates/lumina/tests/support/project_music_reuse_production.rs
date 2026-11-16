@@ -264,6 +264,7 @@ async fn verify_project_music_reuse_production() -> Result<()> {
             new_job_id: job.clone(),
             patch: serde_json::from_value(case["patch"].clone())?,
             edit_scope: None,
+            edit_replacement_asset_id: None,
         },
     )
     .await?;
