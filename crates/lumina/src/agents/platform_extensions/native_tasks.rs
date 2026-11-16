@@ -339,7 +339,87 @@ struct ProjectReuse {
     #[serde(default)]
     edit_scope: Option<ProjectEditScope>,
     #[serde(default)]
+    edit_scope_hint: Option<String>,
+    #[serde(default)]
     edit_replacement_asset_id: Option<String>,
+}
+
+fn parse_edit_scope_hint(value: &str) -> Result<ProjectEditScope> {
+    let value = value.trim();
+    ensure!(!value.is_empty(), "editScopeHint must not be empty");
+    ensure!(value.len() <= 512, "editScopeHint is too long");
+    let mut tokens = value.split(|character: char| {
+        character.is_whitespace() || matches!(character, ',' | ';' | '(' | ')' | ':')
+    });
+    let kind = tokens
+        .next()
+        .filter(|token| !token.is_empty())
+        .context("editScopeHint must start with image_rect or time_range")?;
+    let mut fields = std::collections::BTreeMap::new();
+    for token in tokens.filter(|token| !token.is_empty()) {
+        let (name, value) = token
+            .split_once('=')
+            .context("editScopeHint fields must use name=value")?;
+        ensure!(
+            !name.is_empty() && !value.is_empty(),
+            "editScopeHint has an empty field"
+        );
+        ensure!(
+            fields.insert(name, value).is_none(),
+            "editScopeHint contains a duplicate field"
+        );
+    }
+    let number = |name: &str| -> Result<u64> {
+        fields
+            .get(name)
+            .with_context(|| format!("editScopeHint is missing {name}"))?
+            .parse::<u64>()
+            .with_context(|| format!("editScopeHint field {name} must be an unsigned integer"))
+    };
+    let no_extra = |allowed: &[&str]| -> Result<()> {
+        ensure!(
+            fields.keys().all(|name| allowed.contains(name)),
+            "editScopeHint contains an unsupported field"
+        );
+        Ok(())
+    };
+    match kind {
+        "image_rect" => {
+            no_extra(&["x", "y", "width", "height"])?;
+            Ok(ProjectEditScope::ImageRect {
+                x: u32::try_from(number("x")?).context("image_rect x exceeds u32")?,
+                y: u32::try_from(number("y")?).context("image_rect y exceeds u32")?,
+                width: u32::try_from(number("width")?).context("image_rect width exceeds u32")?,
+                height: u32::try_from(number("height")?)
+                    .context("image_rect height exceeds u32")?,
+            })
+        }
+        "time_range" => {
+            no_extra(&[
+                "startMicros",
+                "durationMicros",
+                "start_micros",
+                "duration_micros",
+            ])?;
+            let start = fields
+                .get("startMicros")
+                .or_else(|| fields.get("start_micros"))
+                .context("editScopeHint is missing startMicros")?
+                .parse::<u64>()
+                .context("editScopeHint field startMicros must be an unsigned integer")?;
+            let duration = fields
+                .get("durationMicros")
+                .or_else(|| fields.get("duration_micros"))
+                .context("editScopeHint is missing durationMicros")?
+                .parse::<u64>()
+                .context("editScopeHint field durationMicros must be an unsigned integer")?;
+            Ok(ProjectEditScope::TimeRange {
+                start_micros: start,
+                duration_micros: duration,
+            })
+        }
+        _ => bail!("editScopeHint must start with image_rect or time_range"),
+    }
 }
 
 enum Request {
@@ -399,12 +479,20 @@ impl Request {
                 )
             }
             Self::ProjectReuse(reuse) => {
+                let edit_scope = match (reuse.edit_scope, reuse.edit_scope_hint.as_deref()) {
+                    (Some(_), Some(_)) => {
+                        bail!("Provide either editScope or editScopeHint, not both")
+                    }
+                    (Some(scope), None) => Some(scope),
+                    (None, Some(hint)) => Some(parse_edit_scope_hint(hint)?),
+                    (None, None) => None,
+                };
                 let request = ProjectTaskReuseRequest {
                     identity: reuse.identity,
                     parent_asset_id: reuse.parent_asset_id,
                     new_job_id: job.into(),
                     patch: reuse.patch,
-                    edit_scope: reuse.edit_scope,
+                    edit_scope,
                     edit_replacement_asset_id: reuse.edit_replacement_asset_id,
                 };
                 PreparedNativeTask::Project(
@@ -793,8 +881,8 @@ fn tools() -> Vec<Tool> {
             schema(json!({"identity":identity,"parameters":run_parameters}), &["identity","parameters"]), false),
         ("reuse", "Create a new task from an earlier job in this session, changing one field. Image and video require a parent result. Speech and transcription use the parent job.",
             schema(reuse_fields,&["identity","parentJobId","patch"]), false),
-        ("project_reuse", "Regenerate from an archived asset in the current project, changing exactly one model-specific parameter and retaining the original. Use the parent's exact installed identity. Replacement media fields accept project asset UUIDs. An image_rect editScope with editReplacementAssetId performs a bounded local image edit. A time_range editScope performs a bounded WAV audio or single-stream AVI video edit when the parent and replacement formats match; MP4/WebM and audio-video dual-stream AVI remain fail-closed. Local edits never silently fall back to full regeneration, and execution still requires a measured resource profile.",
-            schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."},"editScope":{"oneOf":[{"type":"object","properties":{"kind":{"const":"image_rect"},"x":{"type":"integer","minimum":0},"y":{"type":"integer","minimum":0},"width":{"type":"integer","minimum":1},"height":{"type":"integer","minimum":1}},"required":["kind","x","y","width","height"],"additionalProperties":false},{"type":"object","description":"Bounded edit of a matching WAV audio or single-stream AVI video result.","properties":{"kind":{"const":"time_range"},"startMicros":{"type":"integer","minimum":0},"durationMicros":{"type":"integer","minimum":1}},"required":["kind","startMicros","durationMicros"],"additionalProperties":false}]},"editReplacementAssetId":{"type":"string","format":"uuid"}}), &["identity","parentAssetId","patch"]), false),
+        ("project_reuse", "Regenerate from an archived asset in the current project, changing exactly one model-specific parameter and retaining the original. Use the parent's exact installed identity. Replacement media fields accept project asset UUIDs. An image_rect editScope with editReplacementAssetId performs a bounded local image edit. A time_range editScope performs a bounded WAV audio or single-stream AVI video edit when the parent and replacement formats match; MP4/WebM and audio-video dual-stream AVI remain fail-closed. Local edits never silently fall back to full regeneration, and execution still requires a measured resource profile. For conversational requests, editScopeHint accepts only the canonical bounded form `image_rect x=10 y=20 width=30 height=40` or `time_range startMicros=1000 durationMicros=2000`; ambiguous language must use explicit editScope.",
+            schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."},"editScope":{"oneOf":[{"type":"object","properties":{"kind":{"const":"image_rect"},"x":{"type":"integer","minimum":0},"y":{"type":"integer","minimum":0},"width":{"type":"integer","minimum":1},"height":{"type":"integer","minimum":1}},"required":["kind","x","y","width","height"],"additionalProperties":false},{"type":"object","description":"Bounded edit of a matching WAV audio or single-stream AVI video result.","properties":{"kind":{"const":"time_range"},"startMicros":{"type":"integer","minimum":0},"durationMicros":{"type":"integer","minimum":1}},"required":["kind","startMicros","durationMicros"],"additionalProperties":false}]},"editScopeHint":{"type":"string","maxLength":512,"description":"Only canonical bounded syntax: image_rect x=10 y=20 width=30 height=40 or time_range startMicros=1000 durationMicros=2000. Do not use vague language."},"editReplacementAssetId":{"type":"string","format":"uuid"}}), &["identity","parentAssetId","patch"]), false),
         ("project_assets", "List archived asset metadata in the current session's project. Use project_asset to read one immutable result/version. This does not grant cross-session generation or file access.",
             schema(json!({"afterAssetId":{"type":"string","format":"uuid"},"limit":{"type":"integer","minimum":1,"maximum":100,"default":20}}), &[]), true),
         ("project_asset_candidates", "Find archived project assets with bounded metadata filters. Returns unique only when exactly one match is proven; multiple matches, truncated scans, and scan limits return ambiguous so the caller must inspect candidates and choose an explicit assetId.",

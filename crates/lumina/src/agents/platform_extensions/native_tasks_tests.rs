@@ -76,6 +76,47 @@ fn project_asset_candidates_apply_bounded_metadata_filters() {
     }
 }
 
+#[test]
+fn edit_scope_hint_accepts_only_canonical_bounded_ranges() {
+    assert_eq!(
+        parse_edit_scope_hint("image_rect x=10 y=20 width=30 height=40").unwrap(),
+        ProjectEditScope::ImageRect {
+            x: 10,
+            y: 20,
+            width: 30,
+            height: 40,
+        }
+    );
+    assert_eq!(
+        parse_edit_scope_hint("time_range startMicros=1000 durationMicros=2000").unwrap(),
+        ProjectEditScope::TimeRange {
+            start_micros: 1000,
+            duration_micros: 2000,
+        }
+    );
+    assert_eq!(
+        parse_edit_scope_hint("time_range start_micros=1000 duration_micros=2000").unwrap(),
+        ProjectEditScope::TimeRange {
+            start_micros: 1000,
+            duration_micros: 2000,
+        }
+    );
+}
+
+#[test]
+fn edit_scope_hint_rejects_ambiguous_or_unsafe_language() {
+    for hint in [
+        "只修改前面一段",
+        "image_rect x=10 y=20 width=30",
+        "image_rect x=10 y=20 width=30 height=40 x=11",
+        "time_range startMicros=-1 durationMicros=2000",
+        "image_rect x=10 y=20 width=30 height=40 extra=1",
+        "video startMicros=1000 durationMicros=2000",
+    ] {
+        assert!(parse_edit_scope_hint(hint).is_err(), "accepted: {hint}");
+    }
+}
+
 fn query_defaults() -> ProjectAssetCandidates {
     ProjectAssetCandidates {
         after_asset_id: None,
@@ -298,6 +339,7 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
         .expect("project_reuse tool has a description");
     assert!(project_reuse_description.contains("single-stream AVI"));
     assert!(project_reuse_description.contains("MP4/WebM"));
+    assert!(project_reuse_description.contains("editScopeHint"));
     let listed = client
         .call_tool(&ctx, "list", None, CancellationToken::new())
         .await
