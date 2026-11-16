@@ -13,6 +13,79 @@ fn text(result: &CallToolResult, index: usize) -> &str {
     }
 }
 
+fn candidate_summary(
+    asset_id: &str,
+    created_at_ms: i64,
+    kind: &str,
+    file_name: Option<&str>,
+) -> ProjectAssetSummary {
+    ProjectAssetSummary {
+        asset_id: asset_id.into(),
+        project_id: "project-1".into(),
+        source_session_id: "session-1".into(),
+        job_id: "job-1".into(),
+        work_item_id: None,
+        run_id: None,
+        created_at_ms,
+        content_sha256: "a".repeat(64),
+        kind: "media".into(),
+        output: json!({"kind":kind,"fileName":file_name}),
+    }
+}
+
+#[test]
+fn project_asset_candidates_apply_bounded_metadata_filters() {
+    let image = candidate_summary("image", 100, "image", Some("Cat Portrait.PNG"));
+    let audio = candidate_summary("audio", 200, "audio", Some("voice.wav"));
+    let transcript = ProjectAssetSummary {
+        kind: "transcript".into(),
+        output: json!({"text":"cat"}),
+        ..candidate_summary("transcript", 300, "transcript", None)
+    };
+    let query = ProjectAssetCandidates {
+        after_asset_id: None,
+        kind: Some("image".into()),
+        created_before_ms: Some(200),
+        created_after_ms: Some(50),
+        file_name_contains: Some("cat".into()),
+        limit: 10,
+    };
+    let needle = validate_candidate_query(&query).unwrap();
+    assert!(candidate_matches(&image, &query, needle.as_deref()));
+    assert!(!candidate_matches(&audio, &query, needle.as_deref()));
+    assert!(!candidate_matches(&transcript, &query, needle.as_deref()));
+
+    for invalid in [
+        query_defaults(),
+        ProjectAssetCandidates {
+            kind: Some("unknown".into()),
+            ..query_defaults()
+        },
+        ProjectAssetCandidates {
+            created_after_ms: Some(10),
+            created_before_ms: Some(10),
+            ..query_defaults()
+        },
+        ProjectAssetCandidates {
+            file_name_contains: Some("\n".into()),
+            ..query_defaults()
+        },
+    ] {
+        assert!(validate_candidate_query(&invalid).is_err());
+    }
+}
+
+fn query_defaults() -> ProjectAssetCandidates {
+    ProjectAssetCandidates {
+        after_asset_id: None,
+        kind: None,
+        created_before_ms: None,
+        created_after_ms: None,
+        file_name_contains: None,
+        limit: 20,
+    }
+}
+
 #[tokio::test]
 async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scope() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -54,6 +127,7 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
             "reuse",
             "project_reuse",
             "project_assets",
+            "project_asset_candidates",
             "project_asset"
         ]
     );
@@ -112,6 +186,20 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
         .await
         .unwrap();
     assert_eq!(status_without_call.is_error, Some(true));
+    let candidates_without_call = client
+        .call_tool(
+            &missing,
+            "project_asset_candidates",
+            Some(json!({"kind":"image"}).as_object().unwrap().clone()),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+    assert_ne!(candidates_without_call.is_error, Some(true));
+    assert_eq!(
+        serde_json::from_str::<Value>(text(&candidates_without_call, 0)).unwrap()["status"],
+        "not_found"
+    );
     for (name, args) in [
         ("list", json!({"sessionId":"injected"})),
         (

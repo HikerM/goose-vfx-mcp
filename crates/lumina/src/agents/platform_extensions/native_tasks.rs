@@ -50,7 +50,23 @@ struct ProjectAssets {
     limit: u32,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct ProjectAssetCandidates {
+    after_asset_id: Option<String>,
+    kind: Option<String>,
+    created_before_ms: Option<i64>,
+    created_after_ms: Option<i64>,
+    file_name_contains: Option<String>,
+    #[serde(default = "default_project_asset_candidate_limit")]
+    limit: u32,
+}
+
 fn default_project_asset_limit() -> u32 {
+    20
+}
+
+fn default_project_asset_candidate_limit() -> u32 {
     20
 }
 
@@ -164,6 +180,134 @@ fn project_asset_projection(record: ProjectAssetRecord, query: &ProjectAsset) ->
         "kind":kind, "output":output, "configuration":record.content.get("configuration"),
         "projectLineage":lineage
     }}))
+}
+
+const MAX_PROJECT_ASSET_CANDIDATE_PAGES: usize = 10;
+
+fn candidate_kind_matches(summary: &ProjectAssetSummary, requested: Option<&str>) -> bool {
+    let Some(requested) = requested else {
+        return true;
+    };
+    summary.kind == requested
+        || (summary.kind == "media"
+            && summary.output.get("kind").and_then(Value::as_str) == Some(requested))
+}
+
+fn candidate_matches(
+    summary: &ProjectAssetSummary,
+    query: &ProjectAssetCandidates,
+    file_name_needle: Option<&str>,
+) -> bool {
+    candidate_kind_matches(summary, query.kind.as_deref())
+        && query
+            .created_after_ms
+            .is_none_or(|value| summary.created_at_ms >= value)
+        && query
+            .created_before_ms
+            .is_none_or(|value| summary.created_at_ms < value)
+        && file_name_needle.is_none_or(|needle| {
+            summary
+                .output
+                .get("fileName")
+                .and_then(Value::as_str)
+                .is_some_and(|file_name| file_name.to_lowercase().contains(needle))
+        })
+}
+
+fn validate_candidate_query(query: &ProjectAssetCandidates) -> Result<Option<String>> {
+    ensure!(
+        (1..=100).contains(&query.limit),
+        "Project asset candidate limit must be between 1 and 100"
+    );
+    ensure!(
+        query.kind.is_some()
+            || query.created_before_ms.is_some()
+            || query.created_after_ms.is_some()
+            || query.file_name_contains.is_some(),
+        "Project asset candidates require at least one filter"
+    );
+    if let (Some(after), Some(before)) = (query.created_after_ms, query.created_before_ms) {
+        ensure!(
+            after < before,
+            "Project asset candidate time range is empty"
+        );
+    }
+    if let Some(kind) = query.kind.as_deref() {
+        ensure!(
+            matches!(kind, "media" | "transcript" | "image" | "audio" | "video"),
+            "Unsupported project asset candidate kind"
+        );
+    }
+    query
+        .file_name_contains
+        .as_deref()
+        .map(|value| {
+            ensure!(
+                !value.trim().is_empty()
+                    && value.len() <= 128
+                    && !value.chars().any(char::is_control),
+                "Invalid project asset file name filter"
+            );
+            Ok(value.to_lowercase())
+        })
+        .transpose()
+}
+
+async fn project_asset_candidates(
+    assets: &ProjectAssetStore,
+    session: &str,
+    query: ProjectAssetCandidates,
+) -> Result<Value> {
+    let file_name_needle = validate_candidate_query(&query)?;
+    let mut after = query.after_asset_id.clone();
+    let mut matches = Vec::new();
+    let mut scanned_through = None;
+    let mut exhausted = false;
+    for _ in 0..MAX_PROJECT_ASSET_CANDIDATE_PAGES {
+        let page = assets.list(session, after.as_deref(), 100).await?;
+        if page.is_empty() {
+            exhausted = true;
+            break;
+        }
+        let page_len = page.len();
+        for summary in page {
+            scanned_through = Some(summary.asset_id.clone());
+            if candidate_matches(&summary, &query, file_name_needle.as_deref()) {
+                matches.push(summary);
+                if matches.len() > query.limit as usize {
+                    break;
+                }
+            }
+        }
+        if matches.len() > query.limit as usize {
+            break;
+        }
+        if page_len < 100 {
+            exhausted = true;
+            break;
+        }
+        after = scanned_through.clone();
+    }
+    let truncated = matches.len() > query.limit as usize;
+    let ambiguous = matches.len() > 1 || truncated || !exhausted;
+    matches.truncate(query.limit as usize);
+    let status = if !exhausted {
+        "ambiguous"
+    } else if matches.is_empty() {
+        "not_found"
+    } else if ambiguous {
+        "ambiguous"
+    } else {
+        "unique"
+    };
+    let assets: Vec<_> = matches.iter().map(project_asset_summary).collect();
+    Ok(json!({
+        "status": status,
+        "assets": assets,
+        "truncated": truncated,
+        "scannedThroughAssetId": scanned_through.clone(),
+        "nextAfterAssetId": (!exhausted).then_some(scanned_through).flatten(),
+    }))
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -323,6 +467,15 @@ impl NativeTasksClient {
             };
             return Ok(CallToolResult::success(vec![Content::text(
                 serde_json::to_string(&status_payload(&query.job_id, &state, summary))?,
+            )]));
+        }
+        if name == "project_asset_candidates" {
+            let query: ProjectAssetCandidates = serde_json::from_value(arguments)?;
+            let assets = ProjectAssetStore::new(storage.pool().await?.clone());
+            let response = project_asset_candidates(&assets, session, query).await?;
+            ensure!(!cancel.is_cancelled(), "Native task call cancelled");
+            return Ok(CallToolResult::success(vec![Content::text(
+                serde_json::to_string(&response)?,
             )]));
         }
         let call = ctx
@@ -638,6 +791,8 @@ fn tools() -> Vec<Tool> {
             schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."},"editScope":{"oneOf":[{"type":"object","properties":{"kind":{"const":"image_rect"},"x":{"type":"integer","minimum":0},"y":{"type":"integer","minimum":0},"width":{"type":"integer","minimum":1},"height":{"type":"integer","minimum":1}},"required":["kind","x","y","width","height"],"additionalProperties":false},{"type":"object","description":"Bounded edit of a matching WAV audio or single-stream AVI video result.","properties":{"kind":{"const":"time_range"},"startMicros":{"type":"integer","minimum":0},"durationMicros":{"type":"integer","minimum":1}},"required":["kind","startMicros","durationMicros"],"additionalProperties":false}]},"editReplacementAssetId":{"type":"string","format":"uuid"}}), &["identity","parentAssetId","patch"]), false),
         ("project_assets", "List archived asset metadata in the current session's project. Use project_asset to read one immutable result/version. This does not grant cross-session generation or file access.",
             schema(json!({"afterAssetId":{"type":"string","format":"uuid"},"limit":{"type":"integer","minimum":1,"maximum":100,"default":20}}), &[]), true),
+        ("project_asset_candidates", "Find archived project assets with bounded metadata filters. Returns unique only when exactly one match is proven; multiple matches, truncated scans, and scan limits return ambiguous so the caller must inspect candidates and choose an explicit assetId.",
+            schema(json!({"afterAssetId":{"type":"string","format":"uuid"},"kind":{"type":"string","enum":["media","image","audio","video","transcript"]},"createdAfterMs":{"type":"integer"},"createdBeforeMs":{"type":"integer"},"fileNameContains":{"type":"string","maxLength":128},"limit":{"type":"integer","minimum":1,"maximum":100,"default":20}}), &[]), true),
         ("project_asset", "Read a projection of one archived result/version with its original configuration in the current session's project. Transcript text is paged in Unicode scalar characters; follow nextTextOffset. archiveContentSha256 identifies the full archive, not the projection. Media rejects nondefault text pagination. Unknown and other-project assets are not found. Reading does not edit, regenerate or grant file access.",
             schema(json!({"assetId":{"type":"string","format":"uuid"},"textOffset":{"type":"integer","minimum":0,"default":0},"textLimit":{"type":"integer","minimum":1,"maximum":16384,"default":4096}}), &["assetId"]), true),
     ];
@@ -683,7 +838,10 @@ impl McpClientTrait for NativeTasksClient {
         let signal = cancel.child_token();
         let _on_disconnect = signal.clone().drop_guard();
         let dispatch = self.dispatch(ctx, name, arguments, signal);
-        let result = if matches!(name, "list" | "status" | "project_assets" | "project_asset") {
+        let result = if matches!(
+            name,
+            "list" | "status" | "project_assets" | "project_asset_candidates" | "project_asset"
+        ) {
             tokio::select! {
                 biased;
                 _ = cancel.cancelled() => Err(anyhow::anyhow!("Native task call cancelled")),
