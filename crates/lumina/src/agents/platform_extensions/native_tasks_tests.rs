@@ -57,6 +57,17 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
             "project_asset"
         ]
     );
+    let project_reuse = seen
+        .tools
+        .iter()
+        .find(|tool| tool.name == "project_reuse")
+        .expect("project_reuse tool is listed");
+    let project_reuse_description = project_reuse
+        .description
+        .as_deref()
+        .expect("project_reuse tool has a description");
+    assert!(project_reuse_description.contains("single-stream AVI"));
+    assert!(project_reuse_description.contains("MP4/WebM"));
     let listed = client
         .call_tool(&ctx, "list", None, CancellationToken::new())
         .await
