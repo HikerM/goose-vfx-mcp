@@ -243,25 +243,30 @@ async fn cancellation_during_job_claim_waits_for_the_durable_terminal_state() {
 
 #[test]
 fn result_formats_preserve_transcript_and_expose_admission_failure() {
+    let transcript = NativeTaskTranscript {
+        job_id: "asr-job".into(),
+        session_id: "session".into(),
+        association: MediaAssociation::ToolCall {
+            tool_call_id: "call".into(),
+        },
+        generation_config_sha256: "0".repeat(64),
+        bytes: 8,
+        sha256: Sha256Digest::of_bytes(b"Speech.\n").as_str().into(),
+        text: "Speech.\n".into(),
+    };
+    let expected_asset_id = transcript.project_asset_id().unwrap();
     let result = format_result(
         "asr-job",
-        PreparedTaskExecution::Completed(ImportedTaskOutput::Transcript(NativeTaskTranscript {
-            job_id: "asr-job".into(),
-            session_id: "session".into(),
-            association: MediaAssociation::ToolCall {
-                tool_call_id: "call".into(),
-            },
-            generation_config_sha256: "0".repeat(64),
-            bytes: 8,
-            sha256: Sha256Digest::of_bytes(b"Speech.\n").as_str().into(),
-            text: "Speech.\n".into(),
-        })),
+        PreparedTaskExecution::Completed(ImportedTaskOutput::Transcript(transcript)),
     )
     .unwrap();
     assert_eq!(text(&result, 1), "Speech.\n");
+    let status: Value = serde_json::from_str(text(&result, 0)).unwrap();
+    assert_eq!(status["jobId"], "asr-job");
+    assert_eq!(status["projectAssetId"], expected_asset_id);
     assert_eq!(
-        serde_json::from_str::<Value>(text(&result, 0)).unwrap()["jobId"],
-        "asr-job"
+        status["projectAssetLookup"],
+        json!({"tool":"project_asset","assetId":expected_asset_id})
     );
     let result = format_result(
         "other-job",

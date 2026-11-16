@@ -94,7 +94,6 @@ pub(super) async fn record_transcript(
 ) -> Result<()> {
     use anyhow::ensure;
     use lumina_providers::local_inference::lifecycle::Sha256Digest;
-    use sha2::{Digest, Sha256};
     if !ProjectAssetStore::has_project_scope_in_tx(
         tx,
         &transcript.session_id,
@@ -122,17 +121,7 @@ pub(super) async fn record_transcript(
             && Sha256Digest::of_bytes(transcript.text.as_bytes()).as_str() == transcript.sha256,
         "Project transcript differs from its archived task configuration or output"
     );
-    let identity = serde_json::to_vec(&(
-        "project-transcript-v1",
-        &transcript.session_id,
-        &transcript.job_id,
-        &transcript.generation_config_sha256,
-        &transcript.sha256,
-    ))?;
-    let digest = Sha256::digest(identity);
-    let mut bytes = [0; 16];
-    bytes.copy_from_slice(&digest[..16]);
-    let asset_id = uuid::Uuid::from_bytes(bytes).to_string();
+    let asset_id = transcript.project_asset_id()?;
     let lineage = super::project_task_reuse::project_lineage(tx, &record).await?;
     let content = archive_value(&ProjectArchive {
         output: ProjectOutput::Transcript { transcript },

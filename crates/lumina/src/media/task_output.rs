@@ -28,6 +28,22 @@ pub struct NativeTaskTranscript {
     pub text: String,
 }
 
+impl NativeTaskTranscript {
+    pub fn project_asset_id(&self) -> Result<String> {
+        let identity = serde_json::to_vec(&(
+            "project-transcript-v1",
+            &self.session_id,
+            &self.job_id,
+            &self.generation_config_sha256,
+            &self.sha256,
+        ))?;
+        let digest = Sha256::digest(identity);
+        let mut bytes = [0; 16];
+        bytes.copy_from_slice(&digest[..16]);
+        Ok(uuid::Uuid::from_bytes(bytes).to_string())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ImportedTaskOutput {
     Media(Vec<MediaResultRef>),

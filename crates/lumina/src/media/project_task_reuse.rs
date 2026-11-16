@@ -697,14 +697,13 @@ async fn prepare_registered(
             ProjectEditScope::ImageRect { .. } => SessionMediaParameterKind::Image,
             ProjectEditScope::TimeRange { .. } => SessionMediaParameterKind::Audio,
         };
-        let reference = input_from_result(&result, expected_kind)?;
+        input_from_result(&result, expected_kind)?;
         if matches!(edit_scope, ProjectEditScope::TimeRange { .. }) {
             ensure!(
                 result.mime == "audio/wav",
                 "Audio time range editing currently requires audio/wav"
             );
         }
-        push_unique(&mut allowed, reference);
         edit_replacement_result = Some(result);
         Some(ReplacementAsset {
             asset_id: replacement.asset_id,

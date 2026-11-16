@@ -554,10 +554,18 @@ fn format_result(job: &str, result: PreparedTaskExecution) -> Result<CallToolRes
             Ok(CallToolResult::success(content))
         }
         PreparedTaskExecution::Completed(ImportedTaskOutput::Transcript(transcript)) => {
+            let project_asset_id = transcript.project_asset_id()?;
             Ok(CallToolResult::success(vec![
-                Content::text(serde_json::to_string(
-                    &json!({"status":"completed","jobId":job,"transcriptSha256":transcript.sha256}),
-                )?),
+                Content::text(serde_json::to_string(&json!({
+                    "status":"completed",
+                    "jobId":job,
+                    "transcriptSha256":transcript.sha256,
+                    "projectAssetId":project_asset_id.clone(),
+                    "projectAssetLookup": {
+                        "tool":"project_asset",
+                        "assetId":project_asset_id,
+                    },
+                }))?),
                 Content::text(transcript.text),
             ]))
         }
