@@ -190,7 +190,13 @@ fn candidate_kind_matches(summary: &ProjectAssetSummary, requested: Option<&str>
     };
     summary.kind == requested
         || (summary.kind == "media"
-            && summary.output.get("kind").and_then(Value::as_str) == Some(requested))
+            && (summary.output.get("kind").and_then(Value::as_str) == Some(requested)
+                || summary
+                    .output
+                    .get("spec")
+                    .and_then(|spec| spec.get("kind"))
+                    .and_then(Value::as_str)
+                    == Some(requested)))
 }
 
 fn candidate_matches(
@@ -419,7 +425,7 @@ impl NativeTasksClient {
     pub fn new(context: PlatformExtensionContext) -> Self {
         let info=InitializeResult::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new(EXTENSION_NAME,"1.0.0").with_title("Local Model Tasks"))
-        .with_instructions("Use list to discover an installed task's exact identity and parameter contract. Use status with a returned jobId to inspect a durable task state. Keep references to run results for subsequent reuse. Run/reuse media inputs are session result UUIDs. Use project_assets/project_asset to find archived assets in this project, then project_reuse to regenerate with one changed parameter; replacement media inputs are project asset UUIDs. A bounded image_rect edit requires an image replacement; a time_range edit requires a matching WAV audio or single-stream AVI video replacement and never silently falls back to full regeneration.".to_string());
+        .with_instructions("Use list to discover an installed task's exact identity and parameter contract. Use status with a returned jobId to inspect a durable task state. Keep references to run results for subsequent reuse. Run/reuse media inputs are session result UUIDs. Use project_asset_candidates with at least one bounded metadata filter to locate archived assets; ambiguous results must be resolved with project_asset before project_reuse. Use project_assets/project_asset to inspect archived assets in this project, then project_reuse to regenerate with one changed parameter; replacement media inputs are project asset UUIDs. A bounded image_rect edit requires an image replacement; a time_range edit requires a matching WAV audio or single-stream AVI video replacement and never silently falls back to full regeneration.".to_string());
         Self { info, context }
     }
 
