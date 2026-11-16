@@ -6,7 +6,7 @@ use crate::media::{
     execute_project_prepared_task_controlled, native_result_link, prepare_project_reused_task,
     prepare_reused_task, resolve_media_patch, ImportedTaskOutput, MediaAssociation,
     MediaResultStore, NativeTaskClaim, NativeTaskJobs, NativeTaskTerminal, PreparedProjectTask,
-    PreparedTaskExecution, ProjectTaskReuseRequest, TaskReuseRequest,
+    PreparedTaskExecution, ProjectEditScope, ProjectTaskReuseRequest, TaskReuseRequest,
 };
 use crate::project::{ProjectAssetRecord, ProjectAssetStore, ProjectAssetSummary};
 use crate::session::session_manager::SessionStorage;
@@ -62,6 +62,12 @@ struct ProjectAsset {
     text_offset: usize,
     #[serde(default = "default_project_asset_text_limit")]
     text_limit: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct Status {
+    job_id: String,
 }
 
 fn default_project_asset_text_limit() -> u32 {
@@ -180,6 +186,8 @@ struct ProjectReuse {
     identity: TaskParameterIdentity,
     parent_asset_id: String,
     patch: JsonObject,
+    #[serde(default)]
+    edit_scope: Option<ProjectEditScope>,
 }
 
 enum Request {
@@ -244,6 +252,7 @@ impl Request {
                     parent_asset_id: reuse.parent_asset_id,
                     new_job_id: job.into(),
                     patch: reuse.patch,
+                    edit_scope: reuse.edit_scope,
                 };
                 PreparedNativeTask::Project(
                     prepare_project_reused_task(&installation, storage, session, request).await?,
@@ -263,7 +272,7 @@ impl NativeTasksClient {
     pub fn new(context: PlatformExtensionContext) -> Self {
         let info=InitializeResult::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new(EXTENSION_NAME,"1.0.0").with_title("Local Model Tasks"))
-            .with_instructions("Use list to discover an installed task's exact identity and parameter contract. Keep references to run results for subsequent reuse. Run/reuse media inputs are session result UUIDs. Use project_assets/project_asset to find archived assets in this project, then project_reuse to regenerate with one changed parameter; replacement media inputs are project asset UUIDs. Parameter reuse does not imply region or time-range editing.".to_string());
+            .with_instructions("Use list to discover an installed task's exact identity and parameter contract. Use status with a returned jobId to inspect a durable task state. Keep references to run results for subsequent reuse. Run/reuse media inputs are session result UUIDs. Use project_assets/project_asset to find archived assets in this project, then project_reuse to regenerate with one changed parameter; replacement media inputs are project asset UUIDs. Parameter reuse does not imply region or time-range editing.".to_string());
         Self { info, context }
     }
 
@@ -282,13 +291,6 @@ impl NativeTasksClient {
                 .is_none_or(|session| session.id == ctx.session_id),
             "Task belongs to another session"
         );
-        let call = ctx
-            .tool_call_request_id
-            .as_deref()
-            .filter(|id| {
-                !id.trim().is_empty() && id.len() <= 1024 && !id.chars().any(char::is_control)
-            })
-            .context("Native tasks require a valid session tool call ID")?;
         let session = &ctx.session_id;
         self.context
             .session_manager
@@ -297,6 +299,30 @@ impl NativeTasksClient {
             .context("Native task session is unavailable")?;
         let arguments = Value::Object(arguments.unwrap_or_default());
         let storage = self.context.session_manager.storage();
+        if name == "status" {
+            let query: Status = serde_json::from_value(arguments)?;
+            let state = NativeTaskJobs::new(storage.pool().await?.clone())
+                .state(session, &query.job_id)
+                .await?;
+            let Some(state) = state else {
+                return Ok(CallToolResult::error(vec![Content::text(
+                    serde_json::to_string(&json!({
+                        "jobId": query.job_id,
+                        "status": "not_found"
+                    }))?,
+                )]));
+            };
+            return Ok(CallToolResult::success(vec![Content::text(
+                serde_json::to_string(&json!({"jobId": query.job_id, "status": state}))?,
+            )]));
+        }
+        let call = ctx
+            .tool_call_request_id
+            .as_deref()
+            .filter(|id| {
+                !id.trim().is_empty() && id.len() <= 1024 && !id.chars().any(char::is_control)
+            })
+            .context("Native tasks require a valid session tool call ID")?;
         if matches!(name, "project_assets" | "project_asset") {
             let assets = ProjectAssetStore::new(storage.pool().await?.clone());
             let response = if name == "project_assets" {
@@ -575,12 +601,14 @@ fn tools() -> Vec<Tool> {
     let definitions = [
         ("list", "List installed local task models, exact identities and supported parameters.",
             schema(json!({"intent":{"type":"string","enum":names}}), &[]), true),
+        ("status", "Read the durable state of a native task by its returned job ID.",
+            schema(json!({"jobId":{"type":"string","pattern":"^native:"}}), &["jobId"]), true),
         ("run", "Run an installed local task. Supply its identity and model-specific parameters.",
             schema(json!({"identity":identity,"parameters":run_parameters}), &["identity","parameters"]), false),
         ("reuse", "Create a new task from an earlier job in this session, changing one field. Image and video require a parent result. Speech and transcription use the parent job.",
             schema(reuse_fields,&["identity","parentJobId","patch"]), false),
-        ("project_reuse", "Regenerate from an archived asset in the current project, changing exactly one model-specific parameter and retaining the original. Use the parent's exact installed identity. Replacement media fields accept project asset UUIDs. This is parameter reuse, not image-region or time-range editing; execution still requires a measured resource profile.",
-            schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."}}), &["identity","parentAssetId","patch"]), false),
+        ("project_reuse", "Regenerate from an archived asset in the current project, changing exactly one model-specific parameter and retaining the original. Use the parent's exact installed identity. Replacement media fields accept project asset UUIDs. An editScope is bounds-checked and currently rejected until a native editor is registered; it never silently falls back to full regeneration. Execution still requires a measured resource profile.",
+            schema(json!({"identity":identity,"parentAssetId":{"type":"string","format":"uuid"},"patch":{"type":"object","minProperties":1,"maxProperties":1,"description":"One field from the installed model descriptor. Media replacements are project asset UUIDs."},"editScope":{"oneOf":[{"type":"object","properties":{"kind":{"const":"image_rect"},"x":{"type":"integer","minimum":0},"y":{"type":"integer","minimum":0},"width":{"type":"integer","minimum":1},"height":{"type":"integer","minimum":1}},"required":["kind","x","y","width","height"],"additionalProperties":false},{"type":"object","properties":{"kind":{"const":"time_range"},"startMicros":{"type":"integer","minimum":0},"durationMicros":{"type":"integer","minimum":1}},"required":["kind","startMicros","durationMicros"],"additionalProperties":false}]}}), &["identity","parentAssetId","patch"]), false),
         ("project_assets", "List archived asset metadata in the current session's project. Use project_asset to read one immutable result/version. This does not grant cross-session generation or file access.",
             schema(json!({"afterAssetId":{"type":"string","format":"uuid"},"limit":{"type":"integer","minimum":1,"maximum":100,"default":20}}), &[]), true),
         ("project_asset", "Read a projection of one archived result/version with its original configuration in the current session's project. Transcript text is paged in Unicode scalar characters; follow nextTextOffset. archiveContentSha256 identifies the full archive, not the projection. Media rejects nondefault text pagination. Unknown and other-project assets are not found. Reading does not edit, regenerate or grant file access.",
@@ -628,7 +656,7 @@ impl McpClientTrait for NativeTasksClient {
         let signal = cancel.child_token();
         let _on_disconnect = signal.clone().drop_guard();
         let dispatch = self.dispatch(ctx, name, arguments, signal);
-        let result = if matches!(name, "list" | "project_assets" | "project_asset") {
+        let result = if matches!(name, "list" | "status" | "project_assets" | "project_asset") {
             tokio::select! {
                 biased;
                 _ = cancel.cancelled() => Err(anyhow::anyhow!("Native task call cancelled")),

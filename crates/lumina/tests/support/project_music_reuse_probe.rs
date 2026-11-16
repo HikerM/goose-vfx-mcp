@@ -573,6 +573,7 @@ async fn measure_project_music_reuse() -> Result<()> {
             parent_asset_id: parent_asset.into(),
             new_job_id: job.clone(),
             patch: serde_json::from_value(case["patch"].clone())?,
+            edit_scope: None,
         },
     )
     .await?;

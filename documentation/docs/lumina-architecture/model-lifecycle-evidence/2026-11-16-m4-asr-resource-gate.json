@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-16T00:00:00Z",
+  "scope": "M4 Qwen3-ASR resource admission and transcript publication gate",
+  "status": "DEFERRED_NEEDS_PROFILING",
+  "implementation": {
+    "resourceGate": "crates/lumina-local-inference/src/lifecycle/task_resources.rs:637-665",
+    "regression": "lifecycle::task_resources::tests::asr_without_a_reviewed_profile_remains_deferred_with_specific_evidence",
+    "result": "pass"
+  },
+  "missingEvidence": [
+    "No reviewed Qwen3-ASR resource profile is registered for the exact runtime, components and workload",
+    "Real transcript persistence and publication RAM/disk measurement are required"
+  ],
+  "relatedEvidence": {
+    "realAsrExecution": "documentation/docs/lumina-architecture/model-lifecycle-evidence/2026-11-13-m4-audio-windows-longpath.json",
+    "scopeLimit": "The existing real ASR record proves native execution and quality observations, but does not establish resource admission or persisted transcript publication budgets."
+  },
+  "verification": {
+    "command": ".\\bin\\cargo.cmd test --offline -p lumina-local-inference --lib lifecycle::task_resources::tests::asr_without_a_reviewed_profile_remains_deferred_with_specific_evidence -- --exact",
+    "passed": 1,
+    "failed": 0
+  },
+  "nextRequiredWork": "Measure the exact ASR runtime and component set through persisted transcript publication, register the reviewed profile, then add a positive READY regression without weakening the current deferred gate."
+}

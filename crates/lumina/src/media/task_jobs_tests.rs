@@ -184,6 +184,28 @@ async fn finish_accepts_an_already_persisted_matching_terminal_state() {
 }
 
 #[tokio::test]
+async fn state_reports_running_and_terminal_job_state_without_claiming_execution() {
+    let tmp = temp();
+    let root = tmp.path().join("outputs");
+    let jobs = open(tmp.path()).await;
+    let identity = image_adapter().identity().unwrap();
+    let args = json!({"identity":identity,"parameters":{"prompt":"apple"}});
+    let job = NativeTaskJobs::job_id(SESSION, "status").unwrap();
+    let owner = take(&jobs, &root, "status", &args, &identity).await;
+    assert_eq!(
+        jobs.state(SESSION, &job).await.unwrap().as_deref(),
+        Some("running")
+    );
+    owner.finish(NativeTaskTerminal::Cancelled).await.unwrap();
+    assert_eq!(
+        jobs.state(SESSION, &job).await.unwrap().as_deref(),
+        Some("cancelled")
+    );
+    assert_eq!(jobs.state(SESSION, "native:missing").await.unwrap(), None);
+    assert!(jobs.state(SESSION, "invalid").await.is_err());
+}
+
+#[tokio::test]
 async fn restart_replays_only_a_complete_published_batch_and_preserves_the_generated_seed() {
     let tmp = temp();
     let root = tmp.path().join("outputs");

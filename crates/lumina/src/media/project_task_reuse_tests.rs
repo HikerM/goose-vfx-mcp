@@ -200,6 +200,7 @@ impl Fixture {
             parent_asset_id: asset_id.into(),
             new_job_id: job.into(),
             patch: patch.as_object().context("Expected patch object")?.clone(),
+            edit_scope: None,
         };
         prepare_registered(
             self.manager.storage(),
@@ -371,6 +372,50 @@ async fn project_authorization_upgrade_preserves_existing_configuration_and_asse
         .unwrap();
     f.configuration.save_project_task(&task).await.unwrap();
     assert_eq!(f.grant_count(&reader, "upgraded-child").await, 1);
+}
+
+#[tokio::test]
+async fn project_edit_scope_is_bounds_checked_and_never_falls_back_to_full_regeneration() {
+    let f = Fixture::new().await;
+    let parent = f.music_parent().await;
+    let total = match parent.spec {
+        MediaSpec::Audio {
+            duration_micros, ..
+        }
+        | MediaSpec::Video {
+            duration_micros, ..
+        } => duration_micros,
+        MediaSpec::Image { .. } => panic!("Expected an audio parent"),
+    };
+    let output = ParentOutput::Media {
+        result: parent.clone(),
+    };
+    let valid = ProjectEditScope::TimeRange {
+        start_micros: 0,
+        duration_micros: total / 2,
+    };
+    let error = reject_edit_scope(&output, &valid).unwrap_err();
+    assert!(error.to_string().contains("no native editor is registered"));
+
+    let out_of_bounds = ProjectEditScope::TimeRange {
+        start_micros: total,
+        duration_micros: 1,
+    };
+    let error = validate_edit_scope(&output, &out_of_bounds).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("exceeds the archived media duration"));
+
+    let wrong_kind = ProjectEditScope::ImageRect {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+    };
+    let error = validate_edit_scope(&output, &wrong_kind).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("requires an archived image result"));
 }
 
 #[tokio::test]

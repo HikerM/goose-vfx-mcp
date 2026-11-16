@@ -975,6 +975,31 @@ fn asr_resource_key_ignores_session_media_identity_but_keeps_model_workload_boun
     );
 }
 
+#[test]
+fn asr_without_a_reviewed_profile_remains_deferred_with_specific_evidence() {
+    let asr = publication_plans()
+        .into_iter()
+        .find(|plan| matches!(plan, NativeTaskPlan::Qwen3Asr(_)))
+        .expect("publication fixture must include Qwen3-ASR");
+    let TaskResourceAssessment::NeedsProfiling(requirement) =
+        assess_task_resources_with_publication(
+            &asr,
+            &hardware(),
+            1000,
+            &TaskPublicationContext::Session,
+        )
+        .unwrap()
+    else {
+        panic!("Qwen3-ASR must not run without a reviewed resource profile");
+    };
+    assert!(requirement.missing.contains(
+        &"No reviewed Qwen3-ASR resource profile is registered for this exact runtime, components and workload"
+    ));
+    assert!(requirement.missing.contains(
+        &"Real transcript persistence and publication RAM/disk measurement are required"
+    ));
+}
+
 fn record() -> TaskResourceMeasurementRecord {
     let plan = plan(false, "v1", 42);
     let phase = TaskProcessResourceMeasurement {

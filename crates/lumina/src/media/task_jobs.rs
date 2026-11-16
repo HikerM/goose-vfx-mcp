@@ -142,6 +142,32 @@ impl NativeTaskJobs {
         Ok(())
     }
 
+    pub(crate) async fn state(&self, session: &str, job: &str) -> Result<Option<String>> {
+        validate_id(session)?;
+        ensure!(
+            job.starts_with("native:") && job.len() <= 128 && !job.chars().any(char::is_control),
+            "Invalid native task job ID"
+        );
+        let state = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT state FROM native_task_calls_v1 WHERE session_id=? AND job_id=?",
+        )
+        .bind(session)
+        .bind(job)
+        .fetch_optional(&self.pool)
+        .await?
+        .flatten();
+        if let Some(state) = &state {
+            ensure!(
+                matches!(
+                    state.as_str(),
+                    "running" | "completed" | "failed" | "cancelled" | "interrupted" | "deferred"
+                ),
+                "Unknown native task call state"
+            );
+        }
+        Ok(state)
+    }
+
     pub(crate) async fn claim(
         &self,
         root: &Path,

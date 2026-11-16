@@ -49,6 +49,7 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
             .collect::<Vec<_>>(),
         [
             "list",
+            "status",
             "run",
             "reuse",
             "project_reuse",
@@ -65,6 +66,41 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
         serde_json::from_str::<Value>(text(&listed, 0)).unwrap(),
         json!({"tasks":[]})
     );
+    let missing = ToolCallContext::new(ctx.session_id.clone(), None, None);
+    let status = client
+        .call_tool(
+            &ctx,
+            "status",
+            Some(
+                json!({"jobId":"native:missing"})
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(status.is_error, Some(true));
+    assert_eq!(
+        serde_json::from_str::<Value>(text(&status, 0)).unwrap(),
+        json!({"jobId":"native:missing","status":"not_found"})
+    );
+    let status_without_call = client
+        .call_tool(
+            &missing,
+            "status",
+            Some(
+                json!({"jobId":"native:missing"})
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(status_without_call.is_error, Some(true));
     for (name, args) in [
         ("list", json!({"sessionId":"injected"})),
         (
@@ -88,7 +124,6 @@ async fn registered_extension_lists_real_empty_catalog_and_rejects_injected_scop
             .unwrap();
         assert_eq!(error.is_error, Some(true));
     }
-    let missing = ToolCallContext::new(ctx.session_id.clone(), None, None);
     assert_eq!(
         client
             .call_tool(&missing, "list", None, CancellationToken::new())

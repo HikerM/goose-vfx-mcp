@@ -637,9 +637,7 @@ fn profiling_requirement(plan: &NativeTaskPlan, key: TaskResourceKey) -> TaskPro
             }
             (task.snapshot().profile.evidence(), missing)
         }
-        NativeTaskPlan::PocketTts(_)
-        | NativeTaskPlan::Qwen3Asr(_)
-        | NativeTaskPlan::StableAudioMusic(_) => (
+        NativeTaskPlan::PocketTts(_) | NativeTaskPlan::StableAudioMusic(_) => (
             super::AudioTaskProfile::for_parameter_schema(&plan.runtime().binding_version)
                 .map_or("unregistered audio parameter schema", |profile| {
                     profile.evidence()
@@ -647,6 +645,16 @@ fn profiling_requirement(plan: &NativeTaskPlan, key: TaskResourceKey) -> TaskPro
             vec![
                 "Native smoke peaks do not cover this complete effective request and input domain",
                 "Real result persistence and publication RAM/disk measurement are required",
+            ],
+        ),
+        NativeTaskPlan::Qwen3Asr(_) => (
+            super::AudioTaskProfile::for_parameter_schema(&plan.runtime().binding_version)
+                .map_or("unregistered audio parameter schema", |profile| {
+                    profile.evidence()
+                }),
+            vec![
+                "No reviewed Qwen3-ASR resource profile is registered for this exact runtime, components and workload",
+                "Real transcript persistence and publication RAM/disk measurement are required",
             ],
         ),
     };

@@ -22,6 +22,25 @@ pub(crate) struct ProjectTaskReuseRequest {
     pub parent_asset_id: String,
     pub new_job_id: String,
     pub patch: Map<String, Value>,
+    #[serde(default)]
+    pub edit_scope: Option<ProjectEditScope>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub(crate) enum ProjectEditScope {
+    ImageRect {
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    },
+    TimeRange {
+        #[serde(rename = "startMicros")]
+        start_micros: u64,
+        #[serde(rename = "durationMicros")]
+        duration_micros: u64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -473,6 +492,9 @@ pub(crate) async fn prepare_project_reused_task(
     tx.commit().await?;
     let (archive, output) = parent_configuration(&asset)?;
     let parent = archive.validate(&asset.source_session_id, &asset.job_id)?;
+    if let Some(scope) = request.edit_scope.as_ref() {
+        reject_edit_scope(&output, scope)?;
+    }
     ensure!(
         parent.identity() == &request.identity,
         "Parent asset does not match the selected model identity"
@@ -802,6 +824,76 @@ fn validate_patch(
         ensure!(!value.is_null(), "A task parameter patch cannot be null");
     }
     Ok(())
+}
+
+fn validate_edit_scope(output: &ParentOutput, scope: &ProjectEditScope) -> Result<()> {
+    let ParentOutput::Media { result } = output else {
+        bail!("Local media edit scopes require an archived media result")
+    };
+    match (scope, result.kind, &result.spec) {
+        (
+            ProjectEditScope::ImageRect {
+                x,
+                y,
+                width,
+                height,
+            },
+            MediaKind::Image,
+            MediaSpec::Image {
+                width: image_width,
+                height: image_height,
+            },
+        ) => {
+            ensure!(
+                *width > 0 && *height > 0,
+                "Image edit rectangle must be non-empty"
+            );
+            ensure!(
+                x.checked_add(*width).is_some_and(|end| end <= *image_width)
+                    && y.checked_add(*height)
+                        .is_some_and(|end| end <= *image_height),
+                "Image edit rectangle exceeds the archived media bounds"
+            );
+        }
+        (
+            ProjectEditScope::TimeRange {
+                start_micros,
+                duration_micros,
+            },
+            MediaKind::Audio | MediaKind::Video,
+            MediaSpec::Audio {
+                duration_micros: total,
+                ..
+            }
+            | MediaSpec::Video {
+                duration_micros: total,
+                ..
+            },
+        ) => {
+            ensure!(*duration_micros > 0, "Media edit duration must be positive");
+            ensure!(
+                *start_micros < *total
+                    && start_micros
+                        .checked_add(*duration_micros)
+                        .is_some_and(|end| end <= *total),
+                "Media edit time range exceeds the archived media duration"
+            );
+        }
+        (ProjectEditScope::ImageRect { .. }, _, _) => {
+            bail!("Image edit scope requires an archived image result")
+        }
+        (ProjectEditScope::TimeRange { .. }, _, _) => {
+            bail!("Time range edit scope requires archived audio or video")
+        }
+    }
+    Ok(())
+}
+
+fn reject_edit_scope(output: &ParentOutput, scope: &ProjectEditScope) -> Result<()> {
+    validate_edit_scope(output, scope)?;
+    bail!(
+        "Local media edit scope is valid but no native editor is registered; refusing full regeneration"
+    )
 }
 
 fn input_value(reference: &ProjectInputReference) -> Result<Value> {

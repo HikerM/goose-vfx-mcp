@@ -35,7 +35,7 @@ pub(crate) use ingest::native_result_link;
 pub(crate) use ingest::{hydrate_tool_media, persist_tool_media};
 #[cfg(feature = "local-inference")]
 pub(crate) use project_task_reuse::{
-    prepare_project_reused_task, PreparedProjectTask, ProjectTaskReuseRequest,
+    prepare_project_reused_task, PreparedProjectTask, ProjectEditScope, ProjectTaskReuseRequest,
 };
 pub use store::{BeginMediaPublish, MediaResultStore, StagedMedia, VerifiedMediaContent};
 #[cfg(feature = "local-inference")]
