@@ -58,4 +58,6 @@ export interface MediaResultCardProps {
   /** False when its conversation is no longer active, even if the card remains mounted. */
   isActive: boolean;
   actions: MediaResultActions;
+  /** Stable project asset identity when this result is rendered from an archived project asset. */
+  projectAssetId?: string;
 }

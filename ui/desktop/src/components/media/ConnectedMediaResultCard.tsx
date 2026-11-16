@@ -261,6 +261,7 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }:
           previewUrl={previewUrl}
           isActive={isActive}
           actions={actions}
+          projectAssetId={project?.access.assetId}
         />
       )}
       {status === 'loading' && !loaded && (

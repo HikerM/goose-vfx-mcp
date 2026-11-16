@@ -47,6 +47,10 @@ const i18n = defineMessages({
   reveal: { id: 'mediaResult.reveal', defaultMessage: 'Show in folder' },
   copyPath: { id: 'mediaResult.copyPath', defaultMessage: 'Copy path' },
   saveAs: { id: 'mediaResult.saveAs', defaultMessage: 'Save as' },
+  copyReference: {
+    id: 'mediaResult.copyReference',
+    defaultMessage: 'Copy result reference',
+  },
   actionBusy: { id: 'mediaResult.actionBusy', defaultMessage: '{action}…' },
   actionCompleted: { id: 'mediaResult.actionCompleted', defaultMessage: '{action}: completed.' },
   actionCancelled: { id: 'mediaResult.actionCancelled', defaultMessage: '{action}: cancelled.' },
@@ -58,6 +62,10 @@ const i18n = defineMessages({
   resultReference: {
     id: 'mediaResult.resultReference',
     defaultMessage: 'Result reference: {sessionId} / {resultId}',
+  },
+  projectAssetReference: {
+    id: 'mediaResult.projectAssetReference',
+    defaultMessage: 'Project asset: {assetId}',
   },
 });
 
@@ -213,7 +221,7 @@ function ResultPreview({
 }
 
 type ActionFeedback = {
-  action: MediaFileAction;
+  action: MediaFileAction | 'copyReference';
   phase: 'busy' | 'completed' | 'cancelled' | 'failed';
   message?: string;
 };
@@ -231,6 +239,7 @@ function MediaResultCardContent({
   previewUrl,
   isActive,
   actions,
+  projectAssetId,
 }: MediaResultCardProps) {
   const intl = useIntl();
   const titleId = useId();
@@ -260,6 +269,20 @@ function MediaResultCardContent({
       }
     } catch {
       if (mounted.current) setFeedback({ action, phase: 'failed' });
+    } finally {
+      pending.current = false;
+    }
+  };
+
+  const copyReference = async () => {
+    if (pending.current || availability !== 'available' || !isActive) return;
+    pending.current = true;
+    setFeedback({ action: 'copyReference', phase: 'busy' });
+    try {
+      await navigator.clipboard.writeText(`${result.sessionId}/${result.resultId}`);
+      if (mounted.current) setFeedback({ action: 'copyReference', phase: 'completed' });
+    } catch {
+      if (mounted.current) setFeedback({ action: 'copyReference', phase: 'failed' });
     } finally {
       pending.current = false;
     }
@@ -304,6 +327,11 @@ function MediaResultCardContent({
             resultId: result.resultId,
           })}
         </p>
+        {projectAssetId && (
+          <p className="break-all text-xs text-text-secondary">
+            {intl.formatMessage(i18n.projectAssetReference, { assetId: projectAssetId })}
+          </p>
+        )}
         <p className="break-words text-xs text-text-secondary">{specifications.join(' · ')}</p>
       </div>
       {availability !== 'available' ? (
@@ -326,26 +354,37 @@ function MediaResultCardContent({
           {intl.formatMessage(i18n.previewUnavailable)}
         </p>
       )}
-      {availableActions.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {availableActions.map((action) => (
-            <Button
-              key={action}
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-auto min-h-8 max-w-full whitespace-normal break-words py-2"
-              disabled={feedback?.phase === 'busy' || availability !== 'available' || !isActive}
-              aria-busy={feedback?.action === action && feedback.phase === 'busy'}
-              onClick={() => {
-                void runAction(action);
-              }}
-            >
-              {intl.formatMessage(i18n[action])}
-            </Button>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-auto min-h-8 max-w-full whitespace-normal break-words py-2"
+          disabled={pending.current || availability !== 'available' || !isActive}
+          aria-busy={feedback?.action === 'copyReference' && feedback.phase === 'busy'}
+          onClick={() => {
+            void copyReference();
+          }}
+        >
+          {intl.formatMessage(i18n.copyReference)}
+        </Button>
+        {availableActions.map((action) => (
+          <Button
+            key={action}
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-auto min-h-8 max-w-full whitespace-normal break-words py-2"
+            disabled={feedback?.phase === 'busy' || availability !== 'available' || !isActive}
+            aria-busy={feedback?.action === action && feedback.phase === 'busy'}
+            onClick={() => {
+              void runAction(action);
+            }}
+          >
+            {intl.formatMessage(i18n[action])}
+          </Button>
+        ))}
+      </div>
       {feedback && (
         <p
           role={feedback.phase === 'failed' ? 'alert' : 'status'}

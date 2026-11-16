@@ -121,7 +121,7 @@ describe('MediaResultCard', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Loading preview');
     fireEvent.loadedMetadata(player);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copy result reference' })).toBeInTheDocument();
     expect(play).not.toHaveBeenCalled();
   });
 
@@ -161,6 +161,20 @@ describe('MediaResultCard', () => {
     expect(screen.queryByLabelText('native.avi', { selector: 'video' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Copy path' }));
     return screen.findByText('Copy path: completed.');
+  });
+
+  it('copies a stable result reference without exposing a local path', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    renderCard();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy result reference' }));
+    await screen.findByText('Copy result reference: completed.');
+    expect(writeText).toHaveBeenCalledExactlyOnceWith('session-a/result-a');
+  });
+
+  it('shows the project asset identity when rendering an archived asset', () => {
+    renderCard({ projectAssetId: 'asset-a' });
+    expect(screen.getByText('Project asset: asset-a')).toBeInTheDocument();
   });
 
   it.each([
