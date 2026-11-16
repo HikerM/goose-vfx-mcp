@@ -1,7 +1,7 @@
 {
   "schema": "lumina-project-music-domain-evidence-v1",
   "recordedAt": "2026-11-15T14:00:33.003135+00:00",
-  "status": "REGISTERED_SMALL_DOMAIN_NORMAL_TOOL_RECIPE_VERIFIED_READY_TO_PUSH",
+  "status": "REGISTERED_SMALL_DOMAIN_NORMAL_TOOL_RECIPE_VERIFIED_PUSHED",
   "scope": "Pinned stable-audio music runtime/components, CPU four threads, project parameter reuse V2 Small; resource registration only, not all-model or product completion.",
   "implementation": {
     "domainRule": {
@@ -806,9 +806,11 @@
       "streamAssembly": "Exact concatenation of emitted text chunks; no execution inputs or outcomes were changed."
     },
     "deliveryConclusion": {
-      "status": "READY_TO_COMMIT_AND_PUSH",
+      "status": "PUSH_VERIFIED",
       "branch": "testing",
-      "baseCommit": "e42a1c2e45a21af0cbb5620ec493027cb2238863",
+      "commit": "1471fc4450b7b0940786cd57c46b60af26c70ff0",
+      "remote": "https://github.com/HikerM/goose-vfx-mcp.git",
+      "ref": "refs/heads/testing",
       "scope": "Registered V2 Small music domain, normal project_reuse prompt/seed execution and replay, source proof and payload regressions. Does not close M3/M4.",
       "qualityGate": "Targeted local-inference lint passes; workspace and host clippy remain blocked by pre-existing warnings/errors outside this package."
     },
@@ -878,5 +880,13 @@
     "M4": "NOT_COMPLETE",
     "M5": "RETAINED_IN_PLAN_NOT_COMPLETED_BY_THIS_WORK",
     "M6": "RETAINED_IN_PLAN_NOT_COMPLETED_BY_THIS_WORK"
+  },
+  "delivery": {
+    "status": "PUSH_VERIFIED",
+    "branch": "testing",
+    "commit": "1471fc4450b7b0940786cd57c46b60af26c70ff0",
+    "remoteRef": "refs/heads/testing",
+    "remoteSha": "1471fc4450b7b0940786cd57c46b60af26c70ff0",
+    "note": "Only this work package was staged. Existing unrelated modified/untracked diagnostic files remain outside the commit."
   }
 }
