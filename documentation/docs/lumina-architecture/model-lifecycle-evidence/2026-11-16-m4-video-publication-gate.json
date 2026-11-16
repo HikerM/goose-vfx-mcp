@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-16T00:00:00Z",
+  "scope": "M4 native video publication gate: compare the actual H3 native container with the WebM and MP4 derivatives used by browser and export validation.",
+  "nativeOutput": {
+    "variant": "t2va",
+    "path": "target/lifecycle-validation/h3-gpu-native-20261112-r1/t2va/t2va.avi",
+    "mime": "video/x-msvideo",
+    "sha256": "53ba7cf790ce0e052129c33ec6f84a9b22b0b0b430726c89dac92e7beb67c4e3",
+    "probe": {
+      "format": "avi",
+      "size": 366348,
+      "durationSeconds": 0.916667,
+      "streams": [
+        { "codec": "mjpeg", "type": "video", "width": 256, "height": 256, "fps": "24/1", "frames": 22 },
+        { "codec": "pcm_s16le", "type": "audio", "frames": 29600 }
+      ]
+    }
+  },
+  "derivatives": [
+    {
+      "path": "target/lifecycle-validation/h3-gpu-native-20261112-r1/t2va/t2va-preview.webm",
+      "mime": "video/webm",
+      "sha256": "bd9adffc1d888860660e00899c3bc1b555bd004fd5872325a2a6bb22b0abd296",
+      "probe": { "format": "matroska,webm", "size": 65636, "durationSeconds": 0.933, "videoCodec": "vp9", "audioCodec": "opus", "width": 256, "height": 256, "fps": "24/1" }
+    },
+    {
+      "path": "target/lifecycle-validation/h3-gpu-native-20261112-r1/t2va/t2va.mp4",
+      "mime": "video/mp4",
+      "sha256": "3dfe03b88ceabe17f67827c0e8e253d3402dbfa22a813bf0afd942af226002f0",
+      "probe": { "format": "mov,mp4,m4a,3gp,3g2,mj2", "size": 67981, "durationSeconds": 0.925, "videoCodec": "h264", "audioCodec": "aac", "width": 256, "height": 256, "fps": "24/1", "frames": 22 }
+    }
+  ],
+  "sourceContract": {
+    "generationOutputFormat": "crates/lumina-local-inference/src/lifecycle/task_parameters.rs:386-402 defines only Png and Avi; Avi maps to video/x-msvideo.",
+    "publicationValidator": "crates/lumina/src/media/formats.rs:143-169 validates RIFF/WAVE/AVI and explicitly rejects MP4 and WebM/Matroska until a complete demux/decode validator exists.",
+    "resultFileExtension": "crates/lumina/src/media/store.rs:499-508 accepts video/x-msvideo as .avi; other video MIME values are treated as tampered.",
+    "httpMimeAllowlist": "crates/lumina/src/acp/transport/media.rs:86-95 exposes video/x-msvideo only."
+  },
+  "verification": {
+    "newRegression": "media::tests::truncated_nonfinite_wrong_kind_and_unverified_codecs_are_not_ready now asserts explicit MP4 and WebM/Matroska publication errors.",
+    "result": "pass_expected_rejection",
+    "command": ".\\bin\\cargo.cmd test --offline -p lumina-agent media::tests::truncated_nonfinite_wrong_kind_and_unverified_codecs_are_not_ready"
+  },
+  "status": "blocked_for_standard_container_publication",
+  "nextRequiredWork": "Add a full demux/decode validator and dynamic GenerationOutputFormat mapping for WebM/MP4 before allowing those MIME values into the managed store; MIME allowlisting alone would accept unverified bytes."
+}

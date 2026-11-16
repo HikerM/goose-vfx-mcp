@@ -31,6 +31,7 @@ let methods: {
   mediaRead_unstable: ReturnType<typeof vi.fn>;
   mediaAccess_unstable: ReturnType<typeof vi.fn>;
   mediaRelease_unstable: ReturnType<typeof vi.fn>;
+  extMethod: ReturnType<typeof vi.fn>;
 };
 let api: DesktopMediaAPI;
 let sequence: number;
@@ -49,9 +50,16 @@ beforeEach(() => {
       expiresInMs: 300000,
     })),
     mediaRelease_unstable: vi.fn(async () => ({})),
+    extMethod: vi.fn(async () => ({
+      ticket: `project-ticket-${++sequence}`,
+      expiresInMs: 300000,
+      sourceSessionId: identity.sessionId,
+      resultId: identity.resultId,
+    })),
   };
   vi.mocked(getAcpClient).mockResolvedValue({
     lumina: methods,
+    extMethod: methods.extMethod,
     signal: controller.signal,
   } as unknown as Awaited<ReturnType<typeof getAcpClient>>);
   api = {
@@ -224,6 +232,32 @@ describe('registered media connection', () => {
     show(false);
     expect(getAcpClient).not.toHaveBeenCalled();
     expect(api.mediaOpen).not.toHaveBeenCalled();
+  });
+});
+
+describe('archived project media connection', () => {
+  it('uses project access tickets while opening the archived source identity', async () => {
+    const project = {
+      identity,
+      access: { sessionId: 'current-project-session', assetId: identity.resultId },
+      result: audio,
+    };
+    render(
+      <IntlTestWrapper>
+        <ConnectedMediaResultCard {...identity} project={project} isActive />
+      </IntlTestWrapper>
+    );
+    await waitFor(() => expect(api.mediaPreview).toHaveBeenCalledOnce());
+    expect(methods.mediaRead_unstable).not.toHaveBeenCalled();
+    expect(methods.extMethod).toHaveBeenCalledWith('_lumina/unstable/media/project_access', {
+      sessionId: 'current-project-session',
+      assetId: identity.resultId,
+      purpose: 'preview',
+    });
+    expect(api.mediaOpen).toHaveBeenCalledWith(identity);
+    expect(api.mediaPreview).toHaveBeenCalledWith(
+      expect.objectContaining({ ticket: 'project-ticket-1', handleId: 'handle-1' })
+    );
   });
 });
 

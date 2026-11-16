@@ -7,6 +7,8 @@ import { ToolCallArguments, ToolCallArgumentValue } from './ToolCallArguments';
 import MarkdownContent from './MarkdownContent';
 import AudioPreview from './AudioPreview';
 import MediaResourceLink from './media/MediaResourceLink';
+import ConnectedMediaResultCard from './media/ConnectedMediaResultCard';
+import { readProjectMediaAsset } from './media/projectMediaAsset';
 import {
   ToolRequestMessageContent,
   ToolResponseMessageContent,
@@ -985,10 +987,13 @@ function ToolResultView({ result, isStartExpanded, sessionId }: ToolResultViewPr
       isStartExpanded={isStartExpanded}
     >
       <div className="pl-4 pr-4 py-4">
-        {hasText(result) && (
+        {hasText(result) && !sessionIdProjectMedia(result.text, sessionId) && (
           <pre className="font-mono text-xs whitespace-pre-wrap max-w-full overflow-x-auto">
             {result.text.trim()}
           </pre>
+        )}
+        {hasText(result) && sessionIdProjectMedia(result.text, sessionId) && (
+          <ProjectMediaResult resultText={result.text} sessionId={sessionId!} />
         )}
         {result.type === 'audio' && <AudioPreview data={result.data} mimeType={result.mimeType} />}
         {hasImage(result) && (
@@ -1011,6 +1016,16 @@ function ToolResultView({ result, isStartExpanded, sessionId }: ToolResultViewPr
       </div>
     </ToolCallExpandable>
   );
+}
+
+function sessionIdProjectMedia(text: string, sessionId: string | undefined) {
+  return sessionId ? readProjectMediaAsset(text, sessionId) : null;
+}
+
+function ProjectMediaResult({ resultText, sessionId }: { resultText: string; sessionId: string }) {
+  const project = readProjectMediaAsset(resultText, sessionId);
+  if (!project) return null;
+  return <ConnectedMediaResultCard {...project.identity} project={project} isActive />;
 }
 
 function SubagentLogEntry({ log }: { log: string }) {

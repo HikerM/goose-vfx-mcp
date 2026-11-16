@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { getAcpClient } from '../../acp/acpConnection';
+import { mediaProjectAccess } from '../../acp/media';
 import { defineMessages, useIntl } from '../../i18n';
 import { Button } from '../ui/button';
 import MediaResultCard from './MediaResultCard';
 import { readMediaPresentation } from './mediaResultPresentation';
 import type { MediaResultActions, MediaResultIdentity } from './types';
+import type { ProjectMediaAssetReference } from './projectMediaAsset';
 import type {
   DesktopMediaGrant,
   DesktopMediaHandle,
@@ -19,10 +21,14 @@ const messages = defineMessages({
   },
   retry: { id: 'mediaResult.retry', defaultMessage: 'Retry' },
 });
-type Props = MediaResultIdentity & { isActive: boolean };
+type Props = MediaResultIdentity & {
+  isActive: boolean;
+  /** Present when the source result is an archived project asset. */
+  project?: ProjectMediaAssetReference;
+};
 type LoadedResult = NonNullable<ReturnType<typeof readMediaPresentation>>;
 
-function ConnectedMediaResultContent({ sessionId, resultId, isActive }: Props) {
+function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }: Props) {
   const intl = useIntl();
   const [attempt, setAttempt] = useState(0);
   const [loaded, setLoaded] = useState<LoadedResult | null>(null);
@@ -66,7 +72,22 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive }: Props) {
       row: LoadedResult
     ): Promise<DesktopMediaGrant> => {
       if (!active || !client || client.signal.aborted) throw new Error('Media connection closed.');
-      const access = await client.lumina.mediaAccess_unstable({ ...identity, purpose });
+      let access: { ticket: string; expiresInMs: number } & Partial<{
+        sourceSessionId: string;
+        resultId: string;
+      }>;
+      if (project) {
+        const projectAccess = await mediaProjectAccess(client, { ...project.access, purpose });
+        if (
+          projectAccess.sourceSessionId !== identity.sessionId ||
+          projectAccess.resultId !== identity.resultId
+        ) {
+          throw new Error('Project media access identity mismatch.');
+        }
+        access = projectAccess;
+      } else {
+        access = await client.lumina.mediaAccess_unstable({ ...identity, purpose });
+      }
       tickets.add(access.ticket);
       if (!active) {
         await release(access.ticket);
@@ -112,7 +133,9 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive }: Props) {
         client.signal.addEventListener('abort', disconnected, { once: true });
         if (client.signal.aborted) throw new Error('Media connection closed.');
         const row = readMediaPresentation(
-          await client.lumina.mediaRead_unstable(identity),
+          project
+            ? { status: 'found', result: project.result, availability: 'available' }
+            : await client.lumina.mediaRead_unstable(identity),
           identity
         );
         if (!active) return;
@@ -171,7 +194,7 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive }: Props) {
       client?.signal.removeEventListener('abort', disconnected);
       stop();
     };
-  }, [sessionId, resultId, isActive, attempt]);
+  }, [sessionId, resultId, isActive, attempt, project]);
 
   return (
     <div className="min-w-0 space-y-2">

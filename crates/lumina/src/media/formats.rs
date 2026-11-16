@@ -153,8 +153,20 @@ pub(crate) fn inspect(file: &mut File) -> Result<ValidatedMedia> {
             _ => Err(unsupported()),
         };
     }
-    // MP4/H.264 must gain a full demux/decode validator before publication;
-    // a MIME declaration or a successful native exit is not that evidence.
+    if header.len() >= 8 && &header[4..8] == b"ftyp" {
+        return Err(MediaAccessError::new(
+            MediaAvailability::UnsupportedFormat,
+            "MP4/H.264 publication requires a complete demux/decode validator",
+        )
+        .into());
+    }
+    if header.starts_with(&[0x1a, 0x45, 0xdf, 0xa3]) {
+        return Err(MediaAccessError::new(
+            MediaAvailability::UnsupportedFormat,
+            "WebM/Matroska publication requires a complete demux/decode validator",
+        )
+        .into());
+    }
     Err(unsupported())
 }
 

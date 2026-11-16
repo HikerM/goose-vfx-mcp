@@ -69,7 +69,7 @@ use agent_client_protocol::{
 use anyhow::Result;
 use fs_err as fs;
 use futures::future::{BoxFuture, FutureExt};
-use futures::stream::{self, StreamExt};
+use futures::stream::{self, Stream, StreamExt};
 use rmcp::model::{
     AnnotateAble, CallToolResult, RawContent, RawTextContent, ResourceContents, Role,
 };
@@ -3416,7 +3416,15 @@ impl LuminaAcpAgent {
         let mut chain_buffer: Vec<(String, String)> = Vec::new();
         let mut stream_error = None;
 
-        while let Some(event) = stream.next().await {
+        loop {
+            let (cancelled, next_event) = next_prompt_event(&mut stream, &cancel_token).await;
+            if cancelled {
+                was_cancelled = true;
+                break;
+            }
+            let Some(event) = next_event else {
+                break;
+            };
             if cancel_token.is_cancelled() {
                 was_cancelled = true;
                 break;
@@ -3994,6 +4002,20 @@ impl LuminaAcpAgent {
     }
 }
 
+async fn next_prompt_event<S>(
+    event_stream: &mut S,
+    cancel_token: &CancellationToken,
+) -> (bool, Option<S::Item>)
+where
+    S: Stream + Unpin,
+{
+    tokio::select! {
+        biased;
+        _ = cancel_token.cancelled() => (true, None),
+        event = event_stream.next() => (false, event),
+    }
+}
+
 pub struct LuminaAcpHandler {
     pub agent: Arc<LuminaAcpAgent>,
     transport_mcp_platform_write_session: Option<TransportWriteSession>,
@@ -4290,6 +4312,23 @@ mod tests {
     use std::task::{Context, Poll};
     use tempfile::NamedTempFile;
     use test_case::test_case;
+
+    #[tokio::test]
+    async fn prompt_event_wait_returns_when_cancelled_before_stream_progresses() {
+        let mut pending = futures::stream::pending::<Result<crate::agents::AgentEvent>>();
+        let cancel = CancellationToken::new();
+        let signal = cancel.clone();
+        let waiter = tokio::spawn(async move { next_prompt_event(&mut pending, &signal).await });
+
+        cancel.cancel();
+
+        let (cancelled, event) = tokio::time::timeout(std::time::Duration::from_secs(1), waiter)
+            .await
+            .expect("prompt event wait should observe cancellation")
+            .expect("prompt event wait task should complete");
+        assert!(cancelled);
+        assert!(event.is_none());
+    }
 
     #[derive(Clone)]
     struct CapturingAsyncWrite {

@@ -698,10 +698,22 @@ async fn truncated_nonfinite_wrong_kind_and_unverified_codecs_are_not_ready() {
             MediaKind::Video,
             b"\0\0\0\x18ftypmp42declared video only".to_vec(),
         ),
+        (
+            MediaKind::Video,
+            b"\x1a\x45\xdf\xa3\x93\x42\x82\x88webm\x42\x87".to_vec(),
+        ),
     ] {
         let request = fixture.request(kind);
         let staged = fixture.stage(request.clone(), &bytes).await;
-        assert!(fixture.store.publish(staged).await.is_err());
+        let error = fixture.store.publish(staged).await.unwrap_err();
+        if bytes.get(4..8) == Some(b"ftyp") {
+            assert!(error.to_string().contains("MP4/H.264 publication requires"));
+        }
+        if bytes.starts_with(b"\x1a\x45\xdf\xa3") {
+            assert!(error
+                .to_string()
+                .contains("WebM/Matroska publication requires"));
+        }
         assert!(fixture
             .store
             .read(&request.session_id, &request.result_id)
