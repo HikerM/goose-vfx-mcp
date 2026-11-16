@@ -168,6 +168,117 @@ impl NativeTaskJobs {
         Ok(state)
     }
 
+    pub(crate) async fn completed_summary(
+        &self,
+        session: &str,
+        job: &str,
+    ) -> Result<Option<serde_json::Value>> {
+        validate_id(session)?;
+        let configurations = TaskConfigurationStore::new(self.pool.clone());
+        let Some(config) = configurations.read(session, job).await? else {
+            return Ok(None);
+        };
+        match config.snapshot() {
+            TaskConfigurationSnapshot::Qwen3Asr(_) => {
+                let Some(transcript) = configurations.read_transcript(session, job).await? else {
+                    return Ok(None);
+                };
+                ensure!(
+                    transcript.session_id == session && transcript.job_id == job,
+                    "Native task transcript identity differs"
+                );
+                let project_asset_id = transcript.project_asset_id()?;
+                Ok(Some(serde_json::json!({
+                    "projectAssetId": project_asset_id.clone(),
+                    "projectAssetLookup": {
+                        "tool": "project_asset",
+                        "assetId": project_asset_id,
+                    },
+                })))
+            }
+            TaskConfigurationSnapshot::PocketTts(_) => {
+                self.completed_media_summary(session, job, &config, MediaKind::Audio, 1)
+                    .await
+            }
+            TaskConfigurationSnapshot::StableAudioMusic(_) => {
+                self.completed_media_summary(session, job, &config, MediaKind::Audio, 1)
+                    .await
+            }
+            TaskConfigurationSnapshot::Generation(snapshot) => {
+                let (kind, count) = match &snapshot.parameters {
+                    EffectiveGenerationParameters::Image(parameters) => {
+                        (MediaKind::Image, parameters.batch_count)
+                    }
+                    EffectiveGenerationParameters::Video(_) => (MediaKind::Video, 1),
+                };
+                self.completed_media_summary(session, job, &config, kind, count)
+                    .await
+            }
+        }
+    }
+
+    async fn completed_media_summary(
+        &self,
+        session: &str,
+        job: &str,
+        config: &TaskConfigurationRecord,
+        kind: MediaKind,
+        count: u32,
+    ) -> Result<Option<serde_json::Value>> {
+        ensure!(
+            (1..=1024).contains(&count),
+            "Invalid native task output count"
+        );
+        let digest = Sha256Digest::parse(config.generation_config_sha256())?;
+        let media = MediaResultStore::new(self.pool.clone());
+        let mut result_ids = Vec::with_capacity(count as usize);
+        for index in 0..count {
+            let result_id = native_job_result_id(session, job, &digest, index as usize);
+            let Some(status) = media.read(session, &result_id).await? else {
+                return self.discover_media_summary(session, job, kind).await;
+            };
+            ensure!(
+                status.result.session_id == session
+                    && status.result.job_id == job
+                    && status.result.kind == kind,
+                "Native task output identity differs from its configuration"
+            );
+            result_ids.push(result_id);
+        }
+        Ok(Some(serde_json::json!({"resultIds": result_ids})))
+    }
+
+    async fn discover_media_summary(
+        &self,
+        session: &str,
+        job: &str,
+        kind: MediaKind,
+    ) -> Result<Option<serde_json::Value>> {
+        let rows = sqlx::query(
+            "SELECT result_id FROM media_results_v1
+             WHERE session_id=? AND state='ready' ORDER BY result_id",
+        )
+        .bind(session)
+        .fetch_all(&self.pool)
+        .await?;
+        let media = MediaResultStore::new(self.pool.clone());
+        let mut result_ids = Vec::new();
+        for row in rows {
+            let result_id: String = row.try_get("result_id")?;
+            let Some(status) = media.read(session, &result_id).await? else {
+                continue;
+            };
+            if status.result.job_id == job && status.result.kind == kind {
+                result_ids.push(result_id);
+            }
+        }
+        if result_ids.is_empty() {
+            return Ok(None);
+        }
+        ensure!(result_ids.len() <= 1024, "Too many native task outputs");
+        Ok(Some(serde_json::json!({"resultIds": result_ids})))
+    }
+
     #[cfg(windows)]
     pub(crate) async fn reconcile_running(
         &self,

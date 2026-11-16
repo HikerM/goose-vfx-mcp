@@ -294,6 +294,38 @@ fn result_formats_preserve_transcript_and_expose_admission_failure() {
 }
 
 #[test]
+fn status_payload_preserves_state_and_attaches_recoverable_result_identity() {
+    assert_eq!(
+        status_payload(
+            "native:job",
+            "completed",
+            Some(json!({"resultIds":["result-1"]})),
+        ),
+        json!({"jobId":"native:job","status":"completed","resultIds":["result-1"]})
+    );
+    assert_eq!(
+        status_payload(
+            "native:asr",
+            "completed",
+            Some(json!({
+                "projectAssetId":"asset-1",
+                "projectAssetLookup":{"tool":"project_asset","assetId":"asset-1"}
+            })),
+        ),
+        json!({
+            "jobId":"native:asr",
+            "status":"completed",
+            "projectAssetId":"asset-1",
+            "projectAssetLookup":{"tool":"project_asset","assetId":"asset-1"}
+        })
+    );
+    assert_eq!(
+        status_payload("native:running", "running", None),
+        json!({"jobId":"native:running","status":"running"})
+    );
+}
+
+#[test]
 fn initial_parameters_cannot_override_owner_fields() {
     for key in [
         "sessionId",

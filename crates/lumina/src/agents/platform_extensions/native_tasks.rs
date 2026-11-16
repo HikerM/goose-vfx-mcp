@@ -304,7 +304,8 @@ impl NativeTasksClient {
         let storage = self.context.session_manager.storage();
         if name == "status" {
             let query: Status = serde_json::from_value(arguments)?;
-            let state = NativeTaskJobs::new(storage.pool().await?.clone())
+            let jobs = NativeTaskJobs::new(storage.pool().await?.clone());
+            let state = jobs
                 .reconcile_running(&storage.media_output_directory(), session, &query.job_id)
                 .await?;
             let Some(state) = state else {
@@ -315,8 +316,13 @@ impl NativeTasksClient {
                     }))?,
                 )]));
             };
+            let summary = if state == "completed" {
+                jobs.completed_summary(session, &query.job_id).await?
+            } else {
+                None
+            };
             return Ok(CallToolResult::success(vec![Content::text(
-                serde_json::to_string(&json!({"jobId": query.job_id, "status": state}))?,
+                serde_json::to_string(&status_payload(&query.job_id, &state, summary))?,
             )]));
         }
         let call = ctx
@@ -466,6 +472,16 @@ fn call_status(job: &str, state: &str) -> Result<CallToolResult> {
     Ok(CallToolResult::error(vec![Content::text(
         serde_json::to_string(&json!({"jobId":job,"status":state}))?,
     )]))
+}
+
+fn status_payload(job: &str, state: &str, summary: Option<Value>) -> Value {
+    let mut payload = json!({"jobId": job, "status": state});
+    if let Some(Value::Object(extra)) = summary {
+        if let Some(payload) = payload.as_object_mut() {
+            payload.extend(extra);
+        }
+    }
+    payload
 }
 
 fn validate_parameters(parameters: &JsonObject) -> Result<()> {
