@@ -97,6 +97,8 @@ M0 技术基线已完成阶段退出复核，阶段提交和远程 SHA 以实际
 
 2026-11-13，持久媒体和首批四个模型的参数契约已推送到 [testing 提交 17ccb0ed4](https://github.com/HikerM/goose-vfx-mcp/commit/17ccb0ed406baace4e18864788128800edcb741c)。参数回归 28 项和[含启动恢复的媒体后端回归 52 项](./model-lifecycle-evidence/2026-11-13-m4-media-startup-recovery.json)通过。H3 的受管安装、从聊天发起生成及完整音画质量和稳定性仍待验收。
 
+2026-11-17，M4 项目素材闭环新增真实 SQLite 候选查找的 unique/ambiguous/not_found 验证；媒体卡片支持复制稳定的 `sessionId/resultId` 引用并显示项目 `assetId`。局部编辑入口新增受控 `editScopeHint` canonical 语法，仅接受明确的矩形或时间范围，拒绝模糊自然语言且不回退为全量重生成。相关提交为 `12ef23ecd`、`9a0e054c` 和 `228c5d889`。这仍不等于自由自然语言理解、MP4/多流视频编辑或 Electron 全链路验收通过。
+
 受管音频安装计划和任务目录的本地回归已覆盖两种配置文件的固定来源、权重与配置配对、SQLite 重开、错误版本和 H3 两种输入模式。该轮核心库 195 项通过，单独的任务资源集成 3 项通过。真实音频安装、执行资源实测以及从会话发起并复用任务需要单独记录结果。
 
 ## 已实现的基础代码
