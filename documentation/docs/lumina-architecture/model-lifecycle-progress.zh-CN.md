@@ -702,3 +702,5 @@ Qwen3-ASR 已从通用音频资源分支拆出，未注册精确运行时/组件
 ## 2026-11-16 M3/M4 并行收口增量
 
 本轮由运行时、媒体和桌面三个专项会话并行推进后统一收口：原生模型适配器要求模型声明能力集合与具体任务变体精确匹配；`image_rect` 局部图像编辑和 `time_range` WAV 音频编辑均已接入受控本地发布；视频和非 WAV 音频时间范围继续 fail-closed。桌面媒体卡片显示 `sessionId / resultId`，AVI 结果保留真实打开、复制路径和另存为动作，但明确拒绝浏览器预览。定向 Rust、媒体和桌面测试通过，完整 M3/M4 真实模型矩阵、资源 profile、自然语言对话验收和发行包验收仍未完成。[并行收口证据](./model-lifecycle-evidence/2026-11-16-m3-m4-control-local-edit.json)
+
+随后将生成能力声明继续下沉到协议注册表：每个生成 Runtime 协议在 `protocols.json` 中显式声明 `targetCapabilities`，安装计划、外部模型目录和 NativeTaskCatalog 统一读取该声明；不再通过图像/视频或固定模型名推导能力。该改动的 native task catalog 7 项和 task parameter 6 项回归通过，已推送到 `testing` 分支。它解决的是动态路由边界，仍不等于每个模型已有可执行 Runtime、资源档案或质量验收。
