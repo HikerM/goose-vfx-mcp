@@ -32,11 +32,16 @@ describe('project media access', () => {
   it('accepts unavailable archived results without a capability ticket', () => {
     const unavailable = {
       ...response,
-      ticket: undefined,
+      ticket: null,
       expiresInMs: 0,
       availability: 'missing' as const,
     };
-    expect(parseMediaProjectAccessResponse(unavailable)).toEqual(unavailable);
+    expect(parseMediaProjectAccessResponse(unavailable)).toEqual({
+      expiresInMs: 0,
+      sourceSessionId: response.sourceSessionId,
+      resultId: response.resultId,
+      availability: 'missing',
+    });
   });
 
   it('uses the raw ACP extension request without depending on generated SDK methods', async () => {

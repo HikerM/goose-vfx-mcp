@@ -187,10 +187,16 @@ function ConnectedMediaResultContent({ sessionId, resultId, isActive, project }:
             : await client.lumina.mediaRead_unstable(identity),
           identity
         );
-        if (!active) return;
+        if (!active) {
+          if (projectAccess) await release(projectAccess.ticket);
+          return;
+        }
         setLoaded(row);
         setStatus(row ? 'loaded' : 'notFound');
-        if (!row || row.availability !== 'available') return;
+        if (!row || row.availability !== 'available') {
+          if (projectAccess) await release(projectAccess.ticket);
+          return;
+        }
         if (projectAccess) await release(projectAccess.ticket);
         const opened = await api.mediaOpen(identity);
         if (!active) {

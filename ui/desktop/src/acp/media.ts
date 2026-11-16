@@ -50,7 +50,7 @@ export function parseMediaProjectAccessResponse(value: unknown): MediaProjectAcc
     ].includes(value.availability as string) ||
     (value.availability === 'available' &&
       (typeof value.ticket !== 'string' || value.ticket.length === 0)) ||
-    (value.availability !== 'available' && value.ticket !== undefined)
+    (value.availability !== 'available' && value.ticket !== undefined && value.ticket !== null)
   ) {
     throw new Error('Invalid project media access response.');
   }
