@@ -102,6 +102,7 @@ const nativeTaskStates = new Set([
   'needs_profiling',
   'unavailable',
   'busy',
+  'not_found',
 ]);
 
 type NativeTaskStatus = {

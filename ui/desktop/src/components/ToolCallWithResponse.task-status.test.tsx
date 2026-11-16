@@ -11,7 +11,7 @@ vi.mock('./MarkdownContent', () => ({
   default: ({ content }: { content: string }) => <p>{content}</p>,
 }));
 
-function renderNativeTaskResult(text: string) {
+function renderNativeTaskResult(text: string, status: 'completed' | 'failed' = 'completed') {
   const adapter = createAcpSessionNotificationAdapter();
   adapter.apply({
     sessionId: 'native-task-session',
@@ -28,7 +28,7 @@ function renderNativeTaskResult(text: string) {
     update: {
       sessionUpdate: 'tool_call_update',
       toolCallId: 'native-task-call',
-      status: 'completed',
+      status,
       content: [{ type: 'content', content: { type: 'text', text } }],
     },
   });
@@ -57,5 +57,13 @@ describe('native task status display', () => {
     renderNativeTaskResult('{"status":"completed","jobId":"other:session:job"}');
 
     expect(screen.queryByRole('status', { name: /Task status:/ })).not.toBeInTheDocument();
+  });
+
+  it('shows not_found from a failed native status response', () => {
+    renderNativeTaskResult('{"status":"not_found","jobId":"native:missing"}', 'failed');
+
+    expect(
+      screen.getByRole('status', { name: 'Task status: not_found (native:missing)' })
+    ).toBeInTheDocument();
   });
 });
