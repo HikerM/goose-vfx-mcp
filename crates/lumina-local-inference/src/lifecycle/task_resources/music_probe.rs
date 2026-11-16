@@ -19,12 +19,76 @@ struct ProjectMusicReuseRequest {
     payload_tier: ProjectReusePayloadTier,
     parent_asset_id: String,
     parent_asset_content_sha256: Sha256Digest,
+    #[serde(default)]
+    case_sha256: Option<Sha256Digest>,
+}
+
+fn validate_domain_patch(patch: &serde_json::Value) -> Result<()> {
+    let patch = patch
+        .as_object()
+        .context("Project music patch must be an object")?;
+    ensure!(
+        patch.len() == 1,
+        "Project music changes exactly one parameter"
+    );
+    match patch.iter().next().context("Missing project music patch")? {
+        (field, value) if field == "prompt" => {
+            let prompt = value
+                .as_str()
+                .context("Project music prompt must be text")?;
+            ensure!(
+                !prompt.trim().is_empty()
+                    && prompt.len() <= 16_384
+                    && !prompt.contains(['\0', '|'])
+                    && !(prompt.starts_with("--") && !prompt.chars().any(char::is_whitespace)),
+                "Project music prompt is outside the native single-prompt contract"
+            );
+        }
+        (field, value) if field == "seed" => {
+            ensure!(
+                value
+                    .as_u64()
+                    .is_some_and(|seed| u32::try_from(seed).is_ok()),
+                "Project music seed must be a u32"
+            );
+        }
+        _ => anyhow::bail!("Project music domain changes only prompt or seed"),
+    }
+    Ok(())
+}
+
+fn validate_project_case(bytes: &[u8], request: &ProjectMusicReuseRequest) -> Result<Sha256Digest> {
+    ensure!(
+        bytes.len() <= 1024 * 1024,
+        "Project music case exceeds its byte limit"
+    );
+    let digest = Sha256Digest::of_bytes(bytes);
+    ensure!(
+        request.case_sha256.as_ref() == Some(&digest),
+        "Project music case differs from its owner request digest"
+    );
+    let case: serde_json::Value = serde_json::from_slice(bytes)?;
+    ensure!(
+        case["schemaVersion"] == 2
+            && case["patch"] == request.patch
+            && case["parentAssetId"] == request.parent_asset_id
+            && case["parentAssetContentSha256"] == request.parent_asset_content_sha256.as_str(),
+        "Project music case differs from the owner parent or patch"
+    );
+    validate_domain_patch(&request.patch)?;
+    Ok(digest)
 }
 
 fn prepare_project_music(
     run: &Path,
     entry: &InstalledTaskDescription,
-) -> Result<(NativeTaskPlan, TaskPublicationContext, Sha256Digest)> {
+    domain_measurement: bool,
+) -> Result<(
+    NativeTaskPlan,
+    TaskPublicationContext,
+    Sha256Digest,
+    Option<Sha256Digest>,
+)> {
     let file = std::fs::File::open(run.join("project-reuse-owner.json"))?;
     ensure!(
         file.metadata()?.len() <= 1024 * 1024,
@@ -38,16 +102,33 @@ fn prepare_project_music(
     );
     let request: ProjectMusicReuseRequest = serde_json::from_slice(&bytes)?;
     ensure!(
-        request.payload_tier == ProjectReusePayloadTier::Small
-            && request.patch == json!({"seed":1})
-            && request.parent_snapshot.parameters.prompt == PROMPT
-            && request.parent_snapshot.parameters.seed == 42
-            && request.parent_snapshot.metadata.identity == entry.identity
-            && request.parent_asset_id == "0024354d-3a4a-83a4-9900-0ab7c1f96d1c"
-            && request.parent_asset_content_sha256.as_str()
-                == "f69a343dfa9a14a69b2063d5100bb566d52cd6acfbf78741cc582f14c3d1c9ec",
-        "Project music request differs from the retained-parent seed-change diagnostic"
+        request.parent_snapshot.metadata.identity == entry.identity,
+        "Project music parent differs from the installed task identity"
     );
+    let case_sha256 = if domain_measurement {
+        let file = std::fs::File::open(run.join("project-reuse-case.json"))?;
+        ensure!(
+            file.metadata()?.len() <= 1024 * 1024,
+            "Project music case exceeds its byte limit"
+        );
+        let mut case_bytes = Vec::new();
+        file.take(1024 * 1024 + 1).read_to_end(&mut case_bytes)?;
+        Some(validate_project_case(&case_bytes, &request)?)
+    } else {
+        ensure!(
+            request.case_sha256.is_none()
+                && request.payload_tier == ProjectReusePayloadTier::Small
+                && request.patch == json!({"seed":1})
+                && request.parent_snapshot.parameters.prompt == PROMPT
+                && request.parent_snapshot.parameters.seed == 42
+                && request.parent_snapshot.metadata.identity == entry.identity
+                && request.parent_asset_id == "0024354d-3a4a-83a4-9900-0ab7c1f96d1c"
+                && request.parent_asset_content_sha256.as_str()
+                    == "f69a343dfa9a14a69b2063d5100bb566d52cd6acfbf78741cc582f14c3d1c9ec",
+            "Project music request differs from the retained-parent seed-change diagnostic"
+        );
+        None
+    };
     let NativeTaskParameterContract::StableAudioMusic(descriptor) = &entry.descriptor else {
         anyhow::bail!("Installed project music contract is not music")
     };
@@ -81,6 +162,7 @@ fn prepare_project_music(
             payload_tier: request.payload_tier,
         },
         Sha256Digest::of_bytes(&bytes),
+        case_sha256,
     ))
 }
 
@@ -103,6 +185,8 @@ fn native_sources() -> std::collections::BTreeMap<&'static str, Sha256Digest> {
     }
     sources!(
         "src/lifecycle/files.rs",
+        "src/lifecycle/task_resources.rs",
+        "src/lifecycle/task_resources/music_conditions.rs",
         "src/lifecycle/task_resources/music_probe.rs",
         "src/lifecycle/audio_task_parameters/music_task_parameters.rs",
         "src/lifecycle/audio_task_parameters/reuse.rs",
@@ -119,6 +203,93 @@ fn native_sources() -> std::collections::BTreeMap<&'static str, Sha256Digest> {
         "src/lifecycle/audio_task_parameters.rs",
         "src/lifecycle/audio_task_parameters/install.rs",
     )
+}
+
+#[test]
+fn project_domain_patch_accepts_native_text_and_full_seed_range_only() {
+    for patch in [
+        json!({"prompt":"钢琴与弦乐"}),
+        json!({"prompt":"p".repeat(16_384)}),
+        json!({"seed":0}),
+        json!({"seed":u32::MAX}),
+    ] {
+        validate_domain_patch(&patch).unwrap();
+    }
+    for patch in [
+        json!({}),
+        json!({"prompt":"piano", "seed":1}),
+        json!({"steps":8}),
+        json!({"prompt":42}),
+        json!({"prompt":" \t\n"}),
+        json!({"prompt":"p".repeat(16_385)}),
+        json!({"prompt":"猫".repeat(5462)}),
+        json!({"prompt":"piano\0"}),
+        json!({"prompt":"piano|strings"}),
+        json!({"prompt":"--help"}),
+        json!({"seed":-1}),
+        json!({"seed":u64::from(u32::MAX) + 1}),
+        json!({"seed":1.5}),
+        json!({"seed":"1"}),
+    ] {
+        assert!(validate_domain_patch(&patch).is_err(), "{patch}");
+    }
+}
+
+#[test]
+fn project_domain_case_binds_schema_parent_patch_and_exact_file_bytes() {
+    let NativeTaskPlan::StableAudioMusic(plan) = publication_plans().pop().unwrap() else {
+        panic!("Expected synthetic music fixture")
+    };
+    let mut request = ProjectMusicReuseRequest {
+        parent_snapshot: plan.snapshot().clone(),
+        parent_snapshot_digest: plan.snapshot().digest().unwrap(),
+        child_session_id: "synthetic-child".into(),
+        child_job_id: "synthetic-project-domain".into(),
+        patch: json!({"prompt":"Synthetic project melody"}),
+        expected_child_snapshot_digest: Sha256Digest::of_bytes(b"synthetic expected snapshot"),
+        implementation_sources_digest: Sha256Digest::of_bytes(b"synthetic host source"),
+        payload_tier: ProjectReusePayloadTier::Small,
+        parent_asset_id: "0024354d-3a4a-83a4-9900-0ab7c1f96d1c".into(),
+        parent_asset_content_sha256: Sha256Digest::of_bytes(b"synthetic parent content"),
+        case_sha256: None,
+    };
+    let case = json!({"schemaVersion":2,"patch":request.patch,
+        "parentAssetId":request.parent_asset_id,
+        "parentAssetContentSha256":request.parent_asset_content_sha256});
+    let bytes = serde_json::to_vec(&case).unwrap();
+    assert!(validate_project_case(&bytes, &request).is_err());
+    request.case_sha256 = Some(Sha256Digest::of_bytes(&bytes));
+    assert_eq!(
+        validate_project_case(&bytes, &request).unwrap(),
+        request.case_sha256.clone().unwrap()
+    );
+    let mut changed_bytes = bytes.clone();
+    changed_bytes.push(b' ');
+    assert!(validate_project_case(&changed_bytes, &request).is_err());
+    for (field, value) in [
+        ("schemaVersion", json!(1)),
+        ("patch", json!({"seed":1})),
+        ("parentAssetId", json!("another-parent")),
+        (
+            "parentAssetContentSha256",
+            json!(Sha256Digest::of_bytes(b"another parent")),
+        ),
+    ] {
+        let mut changed_case = case.clone();
+        changed_case[field] = value;
+        let changed_bytes = serde_json::to_vec(&changed_case).unwrap();
+        request.case_sha256 = Some(Sha256Digest::of_bytes(&changed_bytes));
+        assert!(
+            validate_project_case(&changed_bytes, &request).is_err(),
+            "{field}"
+        );
+    }
+    let oversized = vec![b' '; 1024 * 1024 + 1];
+    request.case_sha256 = Some(Sha256Digest::of_bytes(&oversized));
+    assert!(validate_project_case(&oversized, &request)
+        .unwrap_err()
+        .to_string()
+        .contains("exceeds its byte limit"));
 }
 
 #[tokio::test]
@@ -149,24 +320,26 @@ async fn measure_installed_music_owner() -> Result<()> {
                 && entry.identity.version_id == "acceptance-stable-audio-small-music-cpu-v2"
         })
         .context("Pinned music version is not active")?;
-    let (plan, publication, project_reuse_request_sha256) = if let Some(mode) =
-        std::env::var_os("LUMINA_PROJECT_MUSIC_REUSE")
-    {
-        ensure!(
-            mode == "measurement" && std::env::var_os("LUMINA_MUSIC_DOMAIN_CASE_FILE").is_none(),
-            "Project music reuse requires its isolated measurement mode"
-        );
-        let (plan, publication, digest) = prepare_project_music(&run, &entry)?;
-        (plan, publication, Some(digest))
-    } else {
-        let request: StableAudioMusicRequest =
-            serde_json::from_reader(std::fs::File::open(run.join("request.json"))?)?;
-        (
-            catalog.prepare(&entry.identity, serde_json::to_value(request)?)?,
-            TaskPublicationContext::Session,
-            None,
-        )
-    };
+    let (plan, publication, project_reuse_request_sha256, project_case_sha256) =
+        if let Some(mode) = std::env::var_os("LUMINA_PROJECT_MUSIC_REUSE") {
+            ensure!(
+                (mode == "measurement" || mode == "domain_measurement")
+                    && std::env::var_os("LUMINA_MUSIC_DOMAIN_CASE_FILE").is_none(),
+                "Project music reuse requires its isolated measurement mode"
+            );
+            let (plan, publication, digest, case_sha256) =
+                prepare_project_music(&run, &entry, mode == "domain_measurement")?;
+            (plan, publication, Some(digest), case_sha256)
+        } else {
+            let request: StableAudioMusicRequest =
+                serde_json::from_reader(std::fs::File::open(run.join("request.json"))?)?;
+            (
+                catalog.prepare(&entry.identity, serde_json::to_value(request)?)?,
+                TaskPublicationContext::Session,
+                None,
+                None,
+            )
+        };
     let NativeTaskPlan::StableAudioMusic(task) = &plan else {
         anyhow::bail!("Expected music generation")
     };
@@ -191,6 +364,7 @@ async fn measure_installed_music_owner() -> Result<()> {
         .transpose()?;
     ensure!(
         (domain_case.is_some()
+            || project_case_sha256.is_some()
             || (p.prompt == PROMPT
                 && p.seed
                     == if project_reuse_request_sha256.is_some() {
@@ -207,10 +381,16 @@ async fn measure_installed_music_owner() -> Result<()> {
             && p.duration_padding_seconds == 6.
             && p.truncate_to_duration
             && p.chunked_decode
+            && snapshot.metadata.backend == "cpu"
+            && snapshot.metadata.cpu_threads == 4
+            && snapshot.metadata.requires_new_native_preparation
             && snapshot.metadata.binding.runtime
                 == AudioTaskProfile::StableAudioSmallMusicCpu.runtime_build(),
         "Music request differs from reviewed diagnostic fixture"
     );
+    if project_case_sha256.is_some() {
+        validate_domain_patch(&json!({"prompt": &p.prompt}))?;
+    }
     let engine = PathBuf::from(
         std::env::var_os("LUMINA_AUDIO_MUSIC_CPU_CLI")
             .context("Pinned music engine is required")?,
@@ -251,7 +431,7 @@ async fn measure_installed_music_owner() -> Result<()> {
     write_report(
         &run.join("fixture.json"),
         json!({"key":key,"hardware":hardware,"snapshot":snapshot,"snapshotDigest":digest,"domainCaseSha256":domain_case,
-            "projectReuseRequestSha256":project_reuse_request_sha256,"publicationContext":publication}),
+            "projectReuseRequestSha256":project_reuse_request_sha256,"caseSha256":project_case_sha256,"publicationContext":publication}),
     )?;
     let native =
         NativeTaskRuntime::execute(&repo, &store, &engines, plan, vec![], receipt, &detached).await;
@@ -284,7 +464,7 @@ async fn measure_installed_music_owner() -> Result<()> {
     write_report(
         &run.join("owner.json"),
         json!({"snapshotDigest":digest,"outputSha256":file.sha256(),"outputBytes":file.size_bytes(),"sources":native_sources(),"domainCaseSha256":domain_case,
-        "projectReuseRequestSha256":project_reuse_request_sha256,"publicationContext":publication,
+        "projectReuseRequestSha256":project_reuse_request_sha256,"caseSha256":project_case_sha256,"publicationContext":publication,
         "stdoutSha256":Sha256Digest::of_bytes(&output.stdout),"stderrSha256":Sha256Digest::of_bytes(&output.stderr)}),
     )?;
     Ok(())

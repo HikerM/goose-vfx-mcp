@@ -12,7 +12,8 @@ import time
 
 
 ROOT = Path(__file__).resolve().parent.parent
-SCOPE = "Synthetic project-asset storage, publication, scoped discovery, cross-session parameter reuse and payload-bound regressions; not real model inference, natural-language editing or desktop acceptance"
+SCOPE = "Synthetic project-asset storage, publication, scoped discovery, cross-session parameter reuse, payload-bound and host source-proof binding regressions; not real model inference, natural-language editing or desktop acceptance"
+SOURCE_BINDING_TEST = "media::task_output::tests::project_music_reuse_probe::source_descriptor_binds_every_exported_field"
 SUITES = (
     "session::session_ids::tests::",
     "project::assets::tests::",
@@ -21,6 +22,7 @@ SUITES = (
     "agents::platform_extensions::native_tasks::project_assets_tests::",
     "project::assets::bounded_tests::",
     "media::project_payload::tests::",
+    SOURCE_BINDING_TEST,
 )
 SUMMARY = re.compile(
     r"^test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored; "
@@ -65,7 +67,7 @@ def report_path(value):
     return path
 
 
-def parse_counts(output, prefix):
+def parse_counts(output, prefix, exact=False):
     summaries = SUMMARY.findall(output)
     running = RUNNING.findall(output)
     cases = TEST.findall(output)
@@ -77,7 +79,7 @@ def parse_counts(output, prefix):
     observed = {"ok": 0, "FAILED": 0, "ignored": 0}
     names = set()
     for name, status in cases:
-        if not name.startswith(prefix) or name in names:
+        if (name != prefix if exact else not name.startswith(prefix)) or name in names:
             raise RuntimeError("Test names do not match the requested suite or are duplicated")
         names.add(name)
         observed[status] += 1
@@ -98,13 +100,16 @@ def run_suite(binary, expected_sha, prefix):
         if digest(binary) != expected_sha:
             raise RuntimeError("Test binary changed before suite execution")
         command = [str(binary), prefix, "--test-threads=1", "--color", "never"]
+        exact = prefix == SOURCE_BINDING_TEST
+        if exact:
+            command.append("--exact")
         result["command"] = command
         process = subprocess.run(command, cwd=ROOT, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, encoding="utf-8", errors="replace",
                                  timeout=180, check=False, creationflags=subprocess.CREATE_NO_WINDOW)
         output = process.stdout
         result["exitCode"] = process.returncode
-        verdict, counts = parse_counts(output, prefix)
+        verdict, counts = parse_counts(output, prefix, exact=exact)
         result["testCounts"] = counts
         if digest(binary) != expected_sha:
             raise RuntimeError("Test binary changed during suite execution")

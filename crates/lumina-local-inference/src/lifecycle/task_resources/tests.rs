@@ -195,6 +195,286 @@ fn project_publication_v2(tier: ProjectReusePayloadTier) -> TaskPublicationConte
     }
 }
 
+fn music_domain_plan(prompt: &str, seed: u32, steps: u32) -> NativeTaskPlan {
+    let NativeTaskPlan::StableAudioMusic(base) = publication_plans().pop().unwrap() else {
+        unreachable!()
+    };
+    StableAudioMusicParameterService::new(base.snapshot().metadata.binding.clone())
+        .unwrap()
+        .compile_json(serde_json::json!({
+            "sessionId":"synthetic-session", "jobId":"synthetic-music-domain",
+            "prompt":prompt, "seed":seed, "steps":steps
+        }))
+        .unwrap()
+        .into()
+}
+
+fn measured_music_project_small() -> (TaskResourceMeasurementRecord, TaskPublicationContext) {
+    let record =
+        serde_json::from_str(include_str!("stable-audio-music-project-small-v1.json")).unwrap();
+    let context = TaskPublicationContext::ProjectParameterReuseV2 {
+        implementation_sources_digest: Sha256Digest::parse(
+            "1e3ef4cb1e10415c8389b9d7203a1da23b9bcbb0bc5e854dcac174c7cb32ef67",
+        )
+        .unwrap(),
+        payload_tier: ProjectReusePayloadTier::Small,
+    };
+    (record, context)
+}
+
+#[test]
+fn registered_music_small_domain_admits_varied_prompts_and_seeds_on_measured_hardware() {
+    let (record, context) = measured_music_project_small();
+    let evidence =
+        Sha256Digest::of_bytes(include_bytes!("stable-audio-music-project-small-v1.json"));
+    let unicode_boundary = format!("{}a", "琴".repeat(341));
+    for (prompt, seed) in [
+        ("a", 0),
+        ("Gentle strings with a piano melody", 2718281828),
+        (unicode_boundary.as_str(), u32::MAX),
+        ("A \"soft\" piano \\ calm strings", 1),
+    ] {
+        let plan = music_domain_plan(prompt, seed, 8);
+        assert_eq!(
+            TaskResourceKey::from_plan_with_publication(&plan, &context).unwrap(),
+            record.key
+        );
+        let TaskResourceAssessment::Admitted(mut receipt) = assess_task_resources_with_publication(
+            &plan,
+            &record.hardware,
+            record.hardware.observed_at,
+            &context,
+        )
+        .unwrap() else {
+            panic!("Registered Small music domain did not admit {prompt:?}, seed {seed}")
+        };
+        assert_eq!(receipt.evidence_sha256(), &evidence);
+        assert_eq!(Some(receipt.budget()), record.reviewed_budget.as_ref());
+        receipt
+            .verify_now(&plan, &record.hardware, record.hardware.observed_at)
+            .unwrap();
+    }
+}
+
+#[test]
+fn registered_music_domain_receipt_remains_bound_to_the_full_execution_snapshot() {
+    let (record, context) = measured_music_project_small();
+    let first = music_domain_plan("Warm strings", 42, 8);
+    let NativeTaskPlan::StableAudioMusic(base) = &first else {
+        unreachable!()
+    };
+    let other_session: NativeTaskPlan =
+        StableAudioMusicParameterService::new(base.snapshot().metadata.binding.clone())
+            .unwrap()
+            .compile_json(serde_json::json!({
+                "sessionId":"another-session", "jobId":"another-job",
+                "prompt":"Warm strings", "seed":42, "steps":8
+            }))
+            .unwrap()
+            .into();
+    let TaskResourceAssessment::Admitted(mut receipt) = assess_task_resources_with_publication(
+        &first,
+        &record.hardware,
+        record.hardware.observed_at,
+        &context,
+    )
+    .unwrap() else {
+        panic!("Registered Small music domain did not admit the original snapshot")
+    };
+    for changed in [
+        music_domain_plan("Different piano melody", 42, 8),
+        music_domain_plan("Warm strings", 43, 8),
+        other_session,
+    ] {
+        assert_eq!(
+            TaskResourceKey::from_plan_with_publication(&changed, &context).unwrap(),
+            record.key
+        );
+        assert_ne!(
+            first.snapshot_digest().unwrap(),
+            changed.snapshot_digest().unwrap()
+        );
+        assert!(receipt
+            .verify_now(&changed, &record.hardware, record.hardware.observed_at)
+            .is_err());
+    }
+    receipt
+        .verify_now(&first, &record.hardware, record.hardware.observed_at)
+        .unwrap();
+}
+
+#[test]
+fn registered_music_small_budget_rejects_unmeasured_parameters_and_publication_contexts() {
+    let (record, context) = measured_music_project_small();
+    for outside in [
+        music_domain_plan(&"a".repeat(1025), 42, 8),
+        music_domain_plan("Warm strings", 42, 9),
+    ] {
+        assert!(matches!(
+            assess_task_resources_with_publication(
+                &outside,
+                &record.hardware,
+                record.hardware.observed_at,
+                &context,
+            )
+            .unwrap(),
+            TaskResourceAssessment::NeedsProfiling(_)
+        ));
+    }
+
+    let evidence =
+        Sha256Digest::of_bytes(include_bytes!("stable-audio-music-project-small-v1.json"));
+    let registered = record.clone().into_profile(evidence.clone()).unwrap();
+    let first = music_domain_plan(
+        "A gentle solo piano melody, clear notes, calm instrumental music, no vocals.",
+        42,
+        8,
+    );
+    let TaskPublicationContext::ProjectParameterReuseV2 {
+        implementation_sources_digest,
+        ..
+    } = context
+    else {
+        unreachable!()
+    };
+    for other in [
+        TaskPublicationContext::Session,
+        TaskPublicationContext::ProjectParameterReuseV1 {
+            implementation_sources_digest: implementation_sources_digest.clone(),
+        },
+        TaskPublicationContext::ProjectParameterReuseV2 {
+            implementation_sources_digest,
+            payload_tier: ProjectReusePayloadTier::Standard,
+        },
+        project_publication_v2(ProjectReusePayloadTier::Small),
+    ] {
+        assert!(matches!(
+            assess_with_profiles_and_publication(
+                &first,
+                &record.hardware,
+                record.hardware.observed_at,
+                std::slice::from_ref(&registered),
+                &other,
+            )
+            .unwrap(),
+            TaskResourceAssessment::NeedsProfiling(_)
+        ));
+        match assess_task_resources_with_publication(
+            &first,
+            &record.hardware,
+            record.hardware.observed_at,
+            &other,
+        )
+        .unwrap()
+        {
+            TaskResourceAssessment::Admitted(receipt) => {
+                assert!(matches!(other, TaskPublicationContext::Session));
+                assert_ne!(receipt.evidence_sha256(), &evidence);
+            }
+            TaskResourceAssessment::NeedsProfiling(_) => {}
+            TaskResourceAssessment::Unavailable(reason) => {
+                panic!("Measured hardware unexpectedly unavailable: {reason:?}")
+            }
+        }
+    }
+}
+
+#[test]
+fn music_v2_domain_reuses_cost_keys_but_not_execution_receipts_or_legacy_keys() {
+    let first = music_domain_plan("Warm strings", 0, 8);
+    let other = music_domain_plan("钢琴与弦乐", u32::MAX, 8);
+    let context = project_publication_v2(ProjectReusePayloadTier::Small);
+    let key = TaskResourceKey::from_plan_with_publication(&first, &context).unwrap();
+    assert_eq!(
+        key,
+        TaskResourceKey::from_plan_with_publication(&other, &context).unwrap()
+    );
+    for legacy in [
+        TaskPublicationContext::Session,
+        project_publication(b"legacy host"),
+    ] {
+        assert_ne!(
+            TaskResourceKey::from_plan_with_publication(&first, &legacy).unwrap(),
+            TaskResourceKey::from_plan_with_publication(&other, &legacy).unwrap()
+        );
+    }
+    let mut measured = profile(&first);
+    measured.key = key;
+    let TaskResourceAssessment::Admitted(mut receipt) = assess_with_profiles_and_publication(
+        &first,
+        &hardware(),
+        1000,
+        std::slice::from_ref(&measured),
+        &context,
+    )
+    .unwrap() else {
+        panic!("Synthetic matching candidate domain profile was rejected")
+    };
+    receipt.verify_now(&first, &hardware(), 1000).unwrap();
+    assert!(receipt.verify_now(&other, &hardware(), 1000).is_err());
+    assert!(matches!(
+        assess_with_profiles_and_publication(&other, &hardware(), 1000, &[measured], &context)
+            .unwrap(),
+        TaskResourceAssessment::Admitted(_)
+    ));
+}
+
+#[test]
+fn music_v2_domain_requires_new_evidence_and_outside_requests_keep_exact_keys() {
+    let first = music_domain_plan("Warm strings", 42, 8);
+    let context = project_publication_v2(ProjectReusePayloadTier::Small);
+    let exact_project_key = |plan: &NativeTaskPlan| {
+        let mut key = TaskResourceKey::from_plan(plan).unwrap();
+        key.workload_digest = Sha256Digest::of_serializable(&(
+            "task-publication-context-v1",
+            &key.workload_digest,
+            &context,
+        ))
+        .unwrap();
+        key
+    };
+    let mut old_exact = profile(&first);
+    old_exact.key = exact_project_key(&first);
+    assert!(matches!(
+        assess_with_profiles_and_publication(&first, &hardware(), 1000, &[old_exact], &context)
+            .unwrap(),
+        TaskResourceAssessment::NeedsProfiling(_)
+    ));
+    let mut domain = profile(&first);
+    domain.key = TaskResourceKey::from_plan_with_publication(&first, &context).unwrap();
+    for outside in [
+        music_domain_plan(&"a".repeat(1025), 42, 8),
+        music_domain_plan("Warm strings", 42, 9),
+    ] {
+        assert_eq!(
+            TaskResourceKey::from_plan_with_publication(&outside, &context).unwrap(),
+            exact_project_key(&outside)
+        );
+        assert!(matches!(
+            assess_with_profiles_and_publication(
+                &outside,
+                &hardware(),
+                1000,
+                std::slice::from_ref(&domain),
+                &context,
+            )
+            .unwrap(),
+            TaskResourceAssessment::NeedsProfiling(_)
+        ));
+    }
+    assert!(matches!(
+        assess_with_profiles_and_publication(
+            &first,
+            &hardware(),
+            1000,
+            &trusted_profiles().unwrap(),
+            &context,
+        )
+        .unwrap(),
+        TaskResourceAssessment::NeedsProfiling(_)
+    ));
+}
+
 #[test]
 fn project_payload_tiers_serialize_and_define_candidate_host_ceilings() {
     for (tier, name, source, record, output) in [

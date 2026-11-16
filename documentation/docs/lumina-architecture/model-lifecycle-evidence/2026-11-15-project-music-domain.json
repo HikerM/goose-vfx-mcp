@@ -1,0 +1,882 @@
+{
+  "schema": "lumina-project-music-domain-evidence-v1",
+  "recordedAt": "2026-11-15T14:00:33.003135+00:00",
+  "status": "REGISTERED_SMALL_DOMAIN_NORMAL_TOOL_RECIPE_VERIFIED_READY_TO_PUSH",
+  "scope": "Pinned stable-audio music runtime/components, CPU four threads, project parameter reuse V2 Small; resource registration only, not all-model or product completion.",
+  "implementation": {
+    "domainRule": {
+      "path": "crates/lumina-local-inference/src/lifecycle/task_resources/music_conditions.rs",
+      "bytes": 12084,
+      "sha256": "f174325c6c3a71f5c52e9a5908ad6d9d23385c4c286750e2772e6e3ae64e5c65"
+    },
+    "ruleVersion": "project-music-prompt-seed-domain-v1",
+    "registry": {
+      "path": "crates/lumina-local-inference/src/lifecycle/task_resources.rs",
+      "bytes": 23652,
+      "sha256": "efffec4159703411b7ec67f2857fe9aa765ef64832b04fa7fe6d6b5e443808eb"
+    },
+    "regressionTests": {
+      "path": "crates/lumina-local-inference/src/lifecycle/task_resources/tests.rs",
+      "bytes": 38146,
+      "sha256": "0ed8734a5e61a8793a6c7aeae863f9d002e0b9fd3fa4a14d1be3a286daad2895"
+    },
+    "registeredProfile": {
+      "path": "crates/lumina-local-inference/src/lifecycle/task_resources/stable-audio-music-project-small-v1.json",
+      "bytes": 3179,
+      "sha256": "251dd662464c2b5526428938e7e0ce1c5c53fc7a4387fa36e232ce532e8996b0"
+    },
+    "registeredRecordOrigin": {
+      "path": "target/lifecycle-validation/m4-project-music-v2-seed-max-20261115-r1/measurement.json",
+      "bytes": 2951,
+      "sha256": "86d2bd1978b73998ed3c85ea73541c7aa625f02b0fd02e0cb737619e0b8e7e59"
+    },
+    "registeredRecordChange": "Only reviewedBudget is filled from the frozen candidate; all original measurement fields are preserved.",
+    "receiptBinding": "Domain-equivalent prompt/seed requests share a resource key; execution receipt still binds the full snapshot, including session/job and actual parameters.",
+    "outOfDomainBehavior": "Keep exact workload keys; this Small profile does not authorize Standard, Session, V1, changed implementation, or changed runtime/components. Existing exact Session profiles remain independent.",
+    "measuredSourceSnapshot": {
+      "path": "target/lifecycle-validation/project-music-v2-measured-sources-20261115-r1.json",
+      "bytes": 1160374,
+      "sha256": "f1ccfbad156cf2c3a0d9ce3ef2151f6b2af78d6203a42842cbf73838b631426c"
+    },
+    "measuredSourceCount": 36,
+    "measuredSourceNote": "The snapshot preserves exact measured source bytes before profile registration and normal-entry probe changes. Its embedded source digests were checked. Current registration/probe hashes must not be substituted for measured ones."
+  },
+  "domain": {
+    "key": {
+      "kind": "music",
+      "runtimeDigest": "08fbaa83832c0ae65547555fa1bfeb6f2307ab3b1ee573b18cc2f68a0fb1712b",
+      "componentsDigest": "e2f65ea1eb78df9d6fe53f50b0dc19cd360a93dd532b48c9b78c6841393f6071",
+      "workloadDigest": "6839f1574bd3480247107a3ecf30a8bff328e9d0078c9227793cc9c86de06e14",
+      "requiresGpu": false
+    },
+    "publicationContext": {
+      "kind": "project_parameter_reuse_v2",
+      "implementationSourcesDigest": "1e3ef4cb1e10415c8389b9d7203a1da23b9bcbb0bc5e854dcac174c7cb32ef67",
+      "payloadTier": "small"
+    },
+    "prompt": {
+      "minUtf8Bytes": 1,
+      "maxUtf8Bytes": 1024,
+      "nonblank": true,
+      "forbidden": [
+        "NUL",
+        "pipe separator",
+        "standalone --option token"
+      ]
+    },
+    "seed": {
+      "min": 0,
+      "max": 4294967295
+    },
+    "fixed": {
+      "durationSeconds": 4,
+      "steps": 8,
+      "guidanceScale": 1,
+      "apgScale": 1,
+      "sampler": "pingpong",
+      "durationPaddingSeconds": 6,
+      "truncateToDuration": true,
+      "chunkedDecode": true,
+      "negativePrompt": null,
+      "backend": "cpu",
+      "cpuThreads": 4,
+      "requiresNewNativePreparation": true
+    },
+    "payloadLimits": {
+      "sourceAssetsBytes": 262144,
+      "configurationBytes": 262144,
+      "authorizationBytes": 262144,
+      "outputArchiveBytes": 1048576
+    }
+  },
+  "budgetReview": {
+    "status": "REVIEWED_FOR_LIMITED_SMALL_DOMAIN_REGISTRATION",
+    "frozenCandidate": {
+      "path": "target/lifecycle-validation/project-music-v2-frozen-budget-20261115-r1.json",
+      "bytes": 3562,
+      "sha256": "8ba9c67c1283437ec16c1757e256a773a66a935d4c697b3c9e69049d76afabf4"
+    },
+    "frozenAt": "2026-11-15T13:50:37.720414+00:00",
+    "holdoutReview": {
+      "path": "target/lifecycle-validation/project-music-v2-holdout-review-20261115-r1.json",
+      "bytes": 1171,
+      "sha256": "144188ece9617220e0416ebbb418d28b797c9b5c6c5786b7ca5f73a60e3a10d2"
+    },
+    "budget": {
+      "hostRamBytes": 8858370048,
+      "gpuMemory": [],
+      "temporaryOutputBytes": 67108864,
+      "publicationCopyBytes": 2097152,
+      "publicationScratchBytes": 16777216,
+      "outputByteLimit": 2097152,
+      "timeoutSeconds": 120
+    },
+    "selection": "The seed-max boundary has the maximum full host peak and near-limit source/authorization metadata. Its original record supplies the registered profile.",
+    "hostPeakFormula": "controllerPeakCommitBytes + max(lifecycleTree.peakJobCommitBytes, lifecycleTree.summedPeakWorkingSetBytes)",
+    "hostBudgetRounding": "1.25 times the maximum boundary full-host peak, rounded upward to a 256 MiB unit.",
+    "maximumBoundaryHostPeakBytes": 7041474560,
+    "nativeTemporaryAccounting": "The reviewed 64 MiB allowance was compared to nativeDirectoryHighWaterBytes (41,587,688 B), not merely the final 705,644-byte WAV.",
+    "deadlineScope": "120 seconds is the native deadline, not an end-to-end latency promise.",
+    "independentHoldouts": "Both named holdouts ran after the frozen budget was written and fit that unchanged budget. They did not set or enlarge it."
+  },
+  "boundaries": [
+    {
+      "case": "seed-one",
+      "role": "boundary",
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-one-20261115-r1/measurement.json",
+        "bytes": 2950,
+        "sha256": "52269582fda0ecfb8e6665344d8c54847926c7596bd99138f22872dd79092b75"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-one-20261115-r1/result.json",
+        "bytes": 9014,
+        "sha256": "fc75cafca5dfd54b2ed01f42bb1b4be1a84d8c4cf573d674c0f2f709491617fb"
+      },
+      "executionEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-one-20261115-r1/execution-evidence.json",
+        "bytes": 8483,
+        "sha256": "dcc532f444405faae4dadc00516317e6cfe6dcd8c093182aa027c7826666e6c9"
+      },
+      "publication": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-one-20261115-r1/publication.json",
+        "bytes": 10863,
+        "sha256": "59711185b031921aa752ca74208b4854aa4299d8227671c26371457e8f3b9400"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-one-20261115-r1/source.json",
+        "bytes": 2968,
+        "sha256": "87b685c00bde375daed3d656ccb68875fe26c248bf8cd04d0a676037320330ba"
+      },
+      "caseEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-one-20261115-r1/project-reuse-case.json",
+        "bytes": 844,
+        "sha256": "6e0a41f1849958c7f3542f36705cdf135316537ae0b2db8cebca81800cde3af4"
+      },
+      "sourceKind": "normal_tool",
+      "parentProof": {
+        "path": "target/lifecycle-validation/m4-project-music-20261115-r1/result.json",
+        "bytes": 2934,
+        "sha256": "0611ab20a6a93e3393b5421aeec9c0f2c5cbd8c7cd3092d17747f99e04c3d611"
+      },
+      "fullHostPeakBytes": 7038205952,
+      "nativeDirectoryPeakBytes": 41587688,
+      "publicationDirectoryPeakBytes": 1276028,
+      "nativeMillis": 8955,
+      "promptUtf8Bytes": 76,
+      "seed": 1,
+      "parentAssetBytes": 4263,
+      "authorizationBytes": 4984,
+      "outputArchiveBytes": 9877,
+      "publishedBytes": 705644,
+      "publishedSha256": "614f5442567a63a0fec61a411d93700a980f224c2ab1e7be1b73240c4d058968",
+      "checks": {
+        "verified": true,
+        "reopenedVerified": true,
+        "parentUnchanged": true,
+        "lineageVerified": true,
+        "sourceSessionAbsent": true
+      },
+      "reopenedVerified": true,
+      "originalEvidenceUnchanged": true,
+      "nativeExitedBeforePublication": true
+    },
+    {
+      "case": "seed-max",
+      "role": "boundary",
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-max-20261115-r1/measurement.json",
+        "bytes": 2951,
+        "sha256": "86d2bd1978b73998ed3c85ea73541c7aa625f02b0fd02e0cb737619e0b8e7e59"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-max-20261115-r1/result.json",
+        "bytes": 9333,
+        "sha256": "e86169598db605f1967bf481e0a6802c59e00501c190586f209f1efb8bff8d6d"
+      },
+      "executionEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-max-20261115-r1/execution-evidence.json",
+        "bytes": 8801,
+        "sha256": "995fe932eb681e6475252953e3bd6b7832579543aba981c03b1a3cb487f5ffae"
+      },
+      "publication": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-max-20261115-r1/publication.json",
+        "bytes": 10870,
+        "sha256": "adeb3bde974301a5a9a09fa019481549ea89f07b7f1d83940a93201364b6bd80"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-max-20261115-r1/source.json",
+        "bytes": 2968,
+        "sha256": "4d877a3db06077cca1f13455411e69bb8b3362aa0eab41bd5dacf19847464534"
+      },
+      "caseEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-max-20261115-r1/project-reuse-case.json",
+        "bytes": 887,
+        "sha256": "192d67626032e99e69295bc5076e0f234e57cae183d72d4025c02f539155e31f"
+      },
+      "sourceKind": "api_metadata_fixture",
+      "parentProof": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-metadata-123-20261115-r1/source.json",
+        "bytes": 263783,
+        "sha256": "d731fb6b1e6d8cf75a2d5d0a32ee601160f6cbe35b03f0d32eec141530afcd7d"
+      },
+      "fullHostPeakBytes": 7041474560,
+      "nativeDirectoryPeakBytes": 41587688,
+      "publicationDirectoryPeakBytes": 3077100,
+      "nativeMillis": 8857,
+      "promptUtf8Bytes": 76,
+      "seed": 4294967295,
+      "parentAssetBytes": 259903,
+      "authorizationBytes": 260642,
+      "outputArchiveBytes": 265571,
+      "publishedBytes": 705644,
+      "publishedSha256": "34d6d17cbb9b9c86bfb0615d47ca8c4eab69388025dc17c62a025cc59a2d473a",
+      "checks": {
+        "verified": true,
+        "reopenedVerified": true,
+        "parentUnchanged": true,
+        "lineageVerified": true,
+        "sourceSessionAbsent": true
+      },
+      "reopenedVerified": true,
+      "originalEvidenceUnchanged": true,
+      "nativeExitedBeforePublication": true
+    },
+    {
+      "case": "prompt-utf8-1024",
+      "role": "boundary",
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-prompt-utf8-1024-20261115-r1/measurement.json",
+        "bytes": 2957,
+        "sha256": "f69d6607f15931401ffb4dc1afc4016ee3626176884fdef520c1f06167b4ae39"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-prompt-utf8-1024-20261115-r1/result.json",
+        "bytes": 10733,
+        "sha256": "cb37b2011b43d1b14c69c73d2b89ee8cf86d0d3e27146fd8001108da4f903db8"
+      },
+      "executionEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-prompt-utf8-1024-20261115-r1/execution-evidence.json",
+        "bytes": 10199,
+        "sha256": "1f6d7a05c1cfad35803670b685dc3a9c0385484ae5c7b98ba4af83c8ea54b7c0"
+      },
+      "publication": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-prompt-utf8-1024-20261115-r1/publication.json",
+        "bytes": 10888,
+        "sha256": "c68b89fdf93303c113fdd6756242bbdc0faa11576050071db8687ae9bb43889b"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-prompt-utf8-1024-20261115-r1/source.json",
+        "bytes": 2992,
+        "sha256": "ecc9677eae6846bb347d5211b72ef90f201cf657d93d8e5ee7f7dbaaf41e5d70"
+      },
+      "caseEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-prompt-utf8-1024-20261115-r1/project-reuse-case.json",
+        "bytes": 1905,
+        "sha256": "eb0ffca18efd7a4597895b8e3f3998dd3000b2f0238ee2f6de36651d63962005"
+      },
+      "sourceKind": "project_measurement",
+      "parentProof": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-seed-one-20261115-r1/source.json",
+        "bytes": 2968,
+        "sha256": "87b685c00bde375daed3d656ccb68875fe26c248bf8cd04d0a676037320330ba"
+      },
+      "fullHostPeakBytes": 7037689856,
+      "nativeDirectoryPeakBytes": 41587688,
+      "publicationDirectoryPeakBytes": 1316988,
+      "nativeMillis": 9101,
+      "promptUtf8Bytes": 1024,
+      "seed": 1,
+      "parentAssetBytes": 9877,
+      "authorizationBytes": 6629,
+      "outputArchiveBytes": 13589,
+      "publishedBytes": 705644,
+      "publishedSha256": "56cf1b3dd549b342be7d577d7ed7c9daac2263b616a64641e28d8c174f5d89e1",
+      "checks": {
+        "verified": true,
+        "reopenedVerified": true,
+        "parentUnchanged": true,
+        "lineageVerified": true,
+        "sourceSessionAbsent": true
+      },
+      "reopenedVerified": true,
+      "originalEvidenceUnchanged": true,
+      "nativeExitedBeforePublication": true
+    },
+    {
+      "case": "child-prompt-escaped-1024",
+      "role": "boundary",
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-child-prompt-escaped-1024-20261115-r1/measurement.json",
+        "bytes": 2967,
+        "sha256": "3ed81d0e9c5a41631e80c5ba8503759de597055d8d8f397de5e86e4837400592"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-child-prompt-escaped-1024-20261115-r1/result.json",
+        "bytes": 11029,
+        "sha256": "659ce6d7924cf3a3a50b31534c32ded30bc01e67bad543c69cf452afcb5c6aef"
+      },
+      "executionEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-child-prompt-escaped-1024-20261115-r1/execution-evidence.json",
+        "bytes": 10495,
+        "sha256": "059c284f52df9c5888e420757fe0c980f82f60b29af56bde40b0450ff263387c"
+      },
+      "publication": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-child-prompt-escaped-1024-20261115-r1/publication.json",
+        "bytes": 10917,
+        "sha256": "0b4d8d299db3ade7a0dbcb496707676417cd9e52aa5af28c82421ac41a2fc777"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-child-prompt-escaped-1024-20261115-r1/source.json",
+        "bytes": 3019,
+        "sha256": "d60bc57a1304b091eab6e23143ab7721d9d610ffb13362d67959f4df17e8bfd6"
+      },
+      "caseEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-child-prompt-escaped-1024-20261115-r1/project-reuse-case.json",
+        "bytes": 2078,
+        "sha256": "604d041bfb7691b006668c2661bf15371c48079823e33994a2f55cf7b103aa6d"
+      },
+      "sourceKind": "project_measurement",
+      "parentProof": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-parent-prompt-16384-20261115-r1/source.json",
+        "bytes": 3001,
+        "sha256": "04fd964902a5cc889cec134b2bdf8617c4ef1c94cf9e159d46d81d855bfd6c51"
+      },
+      "fullHostPeakBytes": 7037874176,
+      "nativeDirectoryPeakBytes": 41587688,
+      "publicationDirectoryPeakBytes": 1645340,
+      "nativeMillis": 8728,
+      "promptUtf8Bytes": 1024,
+      "seed": 42,
+      "parentAssetBytes": 59040,
+      "authorizationBytes": 39558,
+      "outputArchiveBytes": 63745,
+      "publishedBytes": 705644,
+      "publishedSha256": "787892174eb84c32d908d91b8f1cb201e568cba13c24d07bae33c500e72a9e51",
+      "checks": {
+        "verified": true,
+        "reopenedVerified": true,
+        "parentUnchanged": true,
+        "lineageVerified": true,
+        "sourceSessionAbsent": true
+      },
+      "reopenedVerified": true,
+      "originalEvidenceUnchanged": true,
+      "nativeExitedBeforePublication": true
+    }
+  ],
+  "holdouts": [
+    {
+      "case": "holdout-prompt",
+      "role": "independent_holdout_after_budget_freeze",
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-prompt-20261115-r1/measurement.json",
+        "bytes": 2956,
+        "sha256": "dd0107ee4145198186621d409af3ee6cc54c9e1731b340b839bc507eaea17bb8"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-prompt-20261115-r1/result.json",
+        "bytes": 9816,
+        "sha256": "aeadc343001261075ed96e3a88b375c974757e2923a56a18959f8f9f43880892"
+      },
+      "executionEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-prompt-20261115-r1/execution-evidence.json",
+        "bytes": 9282,
+        "sha256": "8cceb16d3055f08ea64547ffbbeb9b63d0f8cbef918a783b2cd26c4641a55ee2"
+      },
+      "publication": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-prompt-20261115-r1/publication.json",
+        "bytes": 10882,
+        "sha256": "d108ced1cf10b2a9d1d7e283c7876a7e44e9821d99b112b202e592e0476574a5"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-prompt-20261115-r1/source.json",
+        "bytes": 2986,
+        "sha256": "ee5c713bb4d51a8160186e3430f85d6f9d5559f064c9cfa86138070ad5d37df1"
+      },
+      "caseEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-prompt-20261115-r1/project-reuse-case.json",
+        "bytes": 951,
+        "sha256": "34b8c09d9789331d2efe2976ee2509b8cbfab2b6aadfdbc123446ebf10a63a9a"
+      },
+      "sourceKind": "project_measurement",
+      "parentProof": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-prompt-utf8-1024-20261115-r1/source.json",
+        "bytes": 2992,
+        "sha256": "ecc9677eae6846bb347d5211b72ef90f201cf657d93d8e5ee7f7dbaaf41e5d70"
+      },
+      "fullHostPeakBytes": 7037272064,
+      "nativeDirectoryPeakBytes": 41587688,
+      "publicationDirectoryPeakBytes": 1345636,
+      "nativeMillis": 7975,
+      "promptUtf8Bytes": 64,
+      "seed": 1,
+      "parentAssetBytes": 13589,
+      "authorizationBytes": 7736,
+      "outputArchiveBytes": 13724,
+      "publishedBytes": 705644,
+      "publishedSha256": "7137b9aa0f12d147f161b3e4025d62ba2bcc90890be3c146802dc945dcaacf81",
+      "checks": {
+        "verified": true,
+        "reopenedVerified": true,
+        "parentUnchanged": true,
+        "lineageVerified": true,
+        "sourceSessionAbsent": true
+      },
+      "reopenedVerified": true,
+      "originalEvidenceUnchanged": true,
+      "nativeExitedBeforePublication": true
+    },
+    {
+      "case": "holdout-seed",
+      "role": "independent_holdout_after_budget_freeze",
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-seed-20261115-r1/measurement.json",
+        "bytes": 2954,
+        "sha256": "161782414fe06f8eaf7ec9f1b1d071fcb7b809497fe4f2632a1c9d47ba283be9"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-seed-20261115-r1/result.json",
+        "bytes": 9795,
+        "sha256": "cc71c0c1501959befa157d4217efb97ea6f65e48bff466c7d2f09dab71960f36"
+      },
+      "executionEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-seed-20261115-r1/execution-evidence.json",
+        "bytes": 9261,
+        "sha256": "6eef6808690a79596a3e412eca203e25e54d57d8c0c2764cfbdf8baed115a4ae"
+      },
+      "publication": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-seed-20261115-r1/publication.json",
+        "bytes": 10878,
+        "sha256": "83abf0848abf000bf3125c3e56a9fcee1ecfa2f89ee2f17a349ba571744c9d48"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-seed-20261115-r1/source.json",
+        "bytes": 2980,
+        "sha256": "ccb48d93cababe0ff7c6243e512ca64453b964851f5672ca763c6647decb67b4"
+      },
+      "caseEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-holdout-seed-20261115-r1/project-reuse-case.json",
+        "bytes": 900,
+        "sha256": "9ecc4ccf9f3fd8d59efcc14327dd1c44fc39e8f1e6c5696ea7e0661ed03274a5"
+      },
+      "sourceKind": "project_measurement",
+      "parentProof": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-child-prompt-escaped-1024-20261115-r1/source.json",
+        "bytes": 3019,
+        "sha256": "d60bc57a1304b091eab6e23143ab7721d9d610ffb13362d67959f4df17e8bfd6"
+      },
+      "fullHostPeakBytes": 7038287872,
+      "nativeDirectoryPeakBytes": 41587688,
+      "publicationDirectoryPeakBytes": 1624404,
+      "nativeMillis": 9101,
+      "promptUtf8Bytes": 1024,
+      "seed": 2718281828,
+      "parentAssetBytes": 63745,
+      "authorizationBytes": 24905,
+      "outputArchiveBytes": 31235,
+      "publishedBytes": 705644,
+      "publishedSha256": "6b9fd3c15415c181523046396a281e309b968ac81cc92beae09641e206873cc0",
+      "checks": {
+        "verified": true,
+        "reopenedVerified": true,
+        "parentUnchanged": true,
+        "lineageVerified": true,
+        "sourceSessionAbsent": true
+      },
+      "reopenedVerified": true,
+      "originalEvidenceUnchanged": true,
+      "nativeExitedBeforePublication": true
+    }
+  ],
+  "sourcePreparation": {
+    "longPromptParent": {
+      "status": "MEASURED_REVIEW_REQUIRED",
+      "countsAsDomainBoundary": false,
+      "promptUtf8Bytes": 16384,
+      "scope": "Real 16,384-byte-prompt parent generation outside the registered child domain, used to test bounded child prompt reuse with retained history.",
+      "measurement": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-parent-prompt-16384-20261115-r1/measurement.json",
+        "bytes": 2961,
+        "sha256": "7100b41533da718bfb81f47139b44ed0cb2e28a3ea34695df60136c31fcafcde"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-parent-prompt-16384-20261115-r1/result.json",
+        "bytes": 25477,
+        "sha256": "fd204f2dc88d79eb47702a1fb8393dfe0f70b5d96f2545a33b0d4f8f7752f375"
+      },
+      "publication": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-parent-prompt-16384-20261115-r1/publication.json",
+        "bytes": 10897,
+        "sha256": "3baf6b15add0dd8baab02c39f76f544c7495169ba42893b7130122d65612a59a"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-parent-prompt-16384-20261115-r1/source.json",
+        "bytes": 3001,
+        "sha256": "04fd964902a5cc889cec134b2bdf8617c4ef1c94cf9e159d46d81d855bfd6c51"
+      },
+      "outputArchiveBytes": 59040
+    },
+    "metadataFixture": {
+      "status": "API_METADATA_FIXTURE_READY",
+      "generatedNewAudio": false,
+      "countsAsModelExecution": false,
+      "scope": "Existing real WAV republished through MediaResultStore with legal metadata pressure; these message references are API fixtures, not music producer output.",
+      "metadataPressure": {
+        "referenceCount": 123,
+        "messageBytes": 1024
+      },
+      "parentAssetBytes": 259903,
+      "fixture": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-metadata-123-20261115-r1/fixture-result.json",
+        "bytes": 270131,
+        "sha256": "b29b5ad4a39b356645e5adf89433bdb03b35aab658108d5b714fd5107f4a0956"
+      },
+      "result": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-metadata-123-20261115-r1/result.json",
+        "bytes": 6207,
+        "sha256": "8d29e0b7f385fcafc2a5a244ec7a2d0b7a588422af0e5a2d37aaf9e2e16026a8"
+      },
+      "sourceExport": {
+        "path": "target/lifecycle-validation/m4-project-music-v2-metadata-123-20261115-r1/source.json",
+        "bytes": 263783,
+        "sha256": "d731fb6b1e6d8cf75a2d5d0a32ee601160f6cbe35b03f0d32eec141530afcd7d"
+      }
+    }
+  },
+  "validation": {
+    "originalMeasuredCore": {
+      "status": "PASS",
+      "passed": 33,
+      "failed": 0,
+      "ignored": 3,
+      "log": {
+        "path": "target/lifecycle-validation/project-music-domain-resources-20261115-r4.log",
+        "bytes": 5982,
+        "sha256": "9664dd53aaaf85548b26f1a2c05e968e670062b6412394e8822b7e0f0bb51776"
+      },
+      "scope": "Pre-registration resource/domain and owner-protocol regressions; ignored real-owner probes are not passes."
+    },
+    "originalMeasuredHost": {
+      "status": "PASS",
+      "counts": {
+        "passed": 48,
+        "failed": 0,
+        "ignored": 0,
+        "total": 48
+      },
+      "report": {
+        "path": "target/lifecycle-validation/project-music-domain-focused-20261115-r1.json",
+        "bytes": 7730,
+        "sha256": "0c79c2f3ff4e97c651dccccc711b231321819de81cd6d949a0d958d85d01800f"
+      },
+      "binarySha256": "04e94cff0fb3090038ab6f0a1b183f1c5333dc4fd54f4478f2cef2c77f83099d",
+      "scope": "Synthetic project-asset storage, publication, scoped discovery, cross-session parameter reuse, payload-bound and host source-proof binding regressions; not real model inference, natural-language editing or desktop acceptance"
+    },
+    "originalHostBuild": {
+      "status": "PASS",
+      "durationSeconds": 635,
+      "durationDisplay": "10m 35s",
+      "log": {
+        "path": "target/lifecycle-validation/project-music-domain-host-build-20261115-r1.log",
+        "bytes": 88581,
+        "sha256": "83b5fd46a3fd59dc344516c6d8d14229e5a6ad18a8dbc33adf5b5ae269cc8228"
+      },
+      "scope": "Build that produced the host binary used by the four boundaries and two holdouts."
+    },
+    "countingRule": "Keep each run/suite result separate. Do not add repeated executions to unique test counts. Resource tests are not model quality tests; the metadata fixture is not an additional inference.",
+    "latestRegisteredCore": {
+      "status": "PASS",
+      "passed": 36,
+      "failed": 0,
+      "ignored": 3,
+      "log": {
+        "path": "target/lifecycle-validation/project-music-domain-normal-resources-20261115-r1.log",
+        "bytes": 6368,
+        "sha256": "5967f15921a9a7f4186e97b4c4143da309fb9fbb4822b1a40d706f67dc735abf"
+      }
+    },
+    "latestHostAndCliBuild": {
+      "status": "PASS",
+      "host": {
+        "status": "PASS",
+        "durationSeconds": 278,
+        "log": {
+          "path": "target/lifecycle-validation/project-music-domain-normal-host-build-20261115-r1.log",
+          "bytes": 88580,
+          "sha256": "44dfd31899316cc8768b514dc10e987490f12866363ee54272e64ab2bb88fa75"
+        },
+        "binarySha256": "4e0558ba79d8ed01fb8498cfdd2c86ab1523e6a43f80ab09ee35daa6819325b9"
+      },
+      "cli": {
+        "status": "PASS",
+        "package": "lumina-agent-cli",
+        "command": "bin/cargo.cmd build --offline -p lumina-agent-cli --bin lumina",
+        "log": {
+          "path": "target/lifecycle-validation/project-music-domain-cli-build-20261115-r2.log",
+          "bytes": 233820,
+          "sha256": "1550eeeaba75c21f7f64e92d1f36078c449488fbcaadfc6ca109c17fe244937a"
+        },
+        "binary": {
+          "path": "target/debug/lumina.exe",
+          "bytes": 326071808,
+          "sha256": "edf1bba8cc28b3a9d3c566eb2fd1ea93af7b0fe75e936688572bf7d49ab1478a"
+        },
+        "warningsNote": "Existing compiler warnings are retained; build exit code was 0."
+      }
+    },
+    "ordinaryProjectReuseTool": {
+      "status": "PASS_TWO_REQUESTS",
+      "scope": "Two normal project_reuse calls with different prompt/seed, actual native engine, registered resource admission, immutable parents, deletion/reopen and same-call replay; no natural-language/desktop acceptance.",
+      "cases": [
+        {
+          "case": "holdout-prompt",
+          "status": "PASS_NORMAL_TOOL_ENTRY",
+          "result": {
+            "path": "target/lifecycle-validation/m4-project-music-v2-normal-holdout-prompt-20261115-r1/result.json",
+            "bytes": 21391,
+            "sha256": "9903a0fcbfcfa484a1a0457657559e45651a10a2c11693bfc7d5f82c125718db"
+          },
+          "production": {
+            "path": "target/lifecycle-validation/m4-project-music-v2-normal-holdout-prompt-20261115-r1/production.json",
+            "bytes": 12851,
+            "sha256": "66a462173060e12e9642c1dbfd565109345c8ad07c67b9011e6e090983009bd9"
+          },
+          "toolResponse": {
+            "path": "target/lifecycle-validation/m4-project-music-v2-normal-holdout-prompt-20261115-r1/tool-response.json",
+            "bytes": 2600,
+            "sha256": "860b5160bbd50de3a418940d3b217b0065b2ccff72dbaea645292ac76d1bb895"
+          },
+          "output": {
+            "schemaVersion": 1,
+            "resultId": "80d19613-17ca-81c5-af91-7e4c1d0c3c49",
+            "sessionId": "20261115_8",
+            "association": {
+              "associationKind": "tool_call",
+              "toolCallId": "project-music-production-reuse"
+            },
+            "jobId": "native:b87e8b86d450696411f2165105f0ff2378ce5454e1d8a2d2ecccb2fe653a12ae",
+            "kind": "audio",
+            "mime": "audio/wav",
+            "fileName": "80d19613-17ca-81c5-af91-7e4c1d0c3c49.wav",
+            "bytes": 705644,
+            "sha256": "7137b9aa0f12d147f161b3e4025d62ba2bcc90890be3c146802dc945dcaacf81",
+            "createdAt": 1794751383027,
+            "rootId": "b1fa3ff5-2fa4-455f-aa88-62ba99d6ea21",
+            "relativePath": "id-32303236313131355f38/id-6e61746976653a62383765386238366434353036393634313166323136353130356630666632333738636535343534653164386132643265636363623266653635336131326165/80d19613-17ca-81c5-af91-7e4c1d0c3c49.wav",
+            "spec": {
+              "kind": "audio",
+              "durationMicros": 4000000,
+              "sampleRate": 44100,
+              "channels": 2,
+              "sampleFrames": 176400
+            },
+            "ownership": "application_generated",
+            "source": {
+              "kind": "local_model",
+              "installationId": "acceptance-stable-audio-small-music-cpu",
+              "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+              "runtime": {
+                "adapterId": "audio-cpp-offline-parameters-v1",
+                "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+                "binarySha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b"
+              },
+              "generationConfigSha256": "0d037e720502d61c6137772241c377ca33287c399b59449362ebfbaca0db1de9",
+              "inputRefs": []
+            }
+          },
+          "publishedPath": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-v2-normal-holdout-prompt-20261115-r1\\output-root\\publication\\outputs\\id-32303236313131355f38\\id-6e61746976653a62383765386238366434353036393634313166323136353130356630666632333738636535343534653164386132643265636363623266653635336131326165\\80d19613-17ca-81c5-af91-7e4c1d0c3c49.wav",
+          "matchesIndependentMeasuredOutput": true,
+          "registeredEvidenceSha256": "251dd662464c2b5526428938e7e0ce1c5c53fc7a4387fa36e232ce532e8996b0",
+          "sameCallResultCounts": {
+            "before": 0,
+            "after": 1,
+            "afterReplay": 1
+          },
+          "engineExecuted": true,
+          "measurementOwnerExecuted": false,
+          "parentUnchanged": true,
+          "lineageVerified": true,
+          "reopenedVerified": true,
+          "sourceSessionAbsent": true
+        },
+        {
+          "case": "holdout-seed",
+          "status": "PASS_NORMAL_TOOL_ENTRY",
+          "result": {
+            "path": "target/lifecycle-validation/m4-project-music-v2-normal-holdout-seed-20261115-r1/result.json",
+            "bytes": 22582,
+            "sha256": "27558dc6a3bbea5bc2ab33335c26b4db6cf6ada1ec7b2462db07bec26571a0bf"
+          },
+          "production": {
+            "path": "target/lifecycle-validation/m4-project-music-v2-normal-holdout-seed-20261115-r1/production.json",
+            "bytes": 14063,
+            "sha256": "b8374265712d51e432ecbb561d61caa629e92a4e45970324c7c2e8eef9b3e21f"
+          },
+          "toolResponse": {
+            "path": "target/lifecycle-validation/m4-project-music-v2-normal-holdout-seed-20261115-r1/tool-response.json",
+            "bytes": 2542,
+            "sha256": "20183bdcaf3036ecf30df470a6b77b81b26cc41d4c1a2fbf9694971f2590797d"
+          },
+          "output": {
+            "schemaVersion": 1,
+            "resultId": "4c145061-f120-889f-9327-e3892eae31df",
+            "sessionId": "20261115_8",
+            "association": {
+              "associationKind": "tool_call",
+              "toolCallId": "project-music-production-reuse"
+            },
+            "jobId": "native:b87e8b86d450696411f2165105f0ff2378ce5454e1d8a2d2ecccb2fe653a12ae",
+            "kind": "audio",
+            "mime": "audio/wav",
+            "fileName": "4c145061-f120-889f-9327-e3892eae31df.wav",
+            "bytes": 705644,
+            "sha256": "6b9fd3c15415c181523046396a281e309b968ac81cc92beae09641e206873cc0",
+            "createdAt": 1794751441670,
+            "rootId": "729aa126-0287-417c-86ac-c0fbaa2e9ecf",
+            "relativePath": "id-32303236313131355f38/id-6e61746976653a62383765386238366434353036393634313166323136353130356630666632333738636535343534653164386132643265636363623266653635336131326165/4c145061-f120-889f-9327-e3892eae31df.wav",
+            "spec": {
+              "kind": "audio",
+              "durationMicros": 4000000,
+              "sampleRate": 44100,
+              "channels": 2,
+              "sampleFrames": 176400
+            },
+            "ownership": "application_generated",
+            "source": {
+              "kind": "local_model",
+              "installationId": "acceptance-stable-audio-small-music-cpu",
+              "versionId": "acceptance-stable-audio-small-music-cpu-v2",
+              "runtime": {
+                "adapterId": "audio-cpp-offline-parameters-v1",
+                "engineRevision": "c0cd77fa80285f8113883e0de06ffc781cf502f6",
+                "binarySha256": "5e53e8441457c990d11955873e513c29030e04c3d19229c62eeb03b0e118ad8b"
+              },
+              "generationConfigSha256": "c530b64a119cc759753839c65772609b13e8c96e200229cf65722716adbc1376",
+              "inputRefs": []
+            }
+          },
+          "publishedPath": "\\\\?\\D:\\Project\\goose\\target\\lifecycle-validation\\m4-project-music-v2-normal-holdout-seed-20261115-r1\\output-root\\publication\\outputs\\id-32303236313131355f38\\id-6e61746976653a62383765386238366434353036393634313166323136353130356630666632333738636535343534653164386132643265636363623266653635336131326165\\4c145061-f120-889f-9327-e3892eae31df.wav",
+          "matchesIndependentMeasuredOutput": true,
+          "registeredEvidenceSha256": "251dd662464c2b5526428938e7e0ce1c5c53fc7a4387fa36e232ce532e8996b0",
+          "sameCallResultCounts": {
+            "before": 0,
+            "after": 1,
+            "afterReplay": 1
+          },
+          "engineExecuted": true,
+          "measurementOwnerExecuted": false,
+          "parentUnchanged": true,
+          "lineageVerified": true,
+          "reopenedVerified": true,
+          "sourceSessionAbsent": true
+        }
+      ]
+    },
+    "cliSelfTestRecipe": {
+      "status": "PASS",
+      "runner": {
+        "path": "target/lifecycle-validation/run-project-music-domain-recipe-20261115.py",
+        "bytes": 12656,
+        "sha256": "d81f199d429b3ccd3de2d8d0529466289379c193ce5702890ddb20bc78a97180"
+      },
+      "runEvidence": {
+        "path": "target/lifecycle-validation/m4-project-music-domain-recipe-20261115-r1/evidence.json",
+        "bytes": 25978,
+        "sha256": "04899a1009d81d4734f5b9b75047cf6200ce2dea758ef93848259168c0ab51c6"
+      },
+      "report": {
+        "path": "target/lifecycle-validation/m4-project-music-domain-recipe-20261115-r1/reports/project_assets.json",
+        "bytes": 7754,
+        "sha256": "8e72a5d65aaa19d163cbf3c4f84982779b470bcea67648fe77522033a564e627"
+      },
+      "counts": {
+        "passed": 48,
+        "failed": 0,
+        "ignored": 0,
+        "total": 48
+      },
+      "scope": "Actual CLI recipe execution through the local model and developer shell; synthetic project regressions only, no model generation or desktop acceptance.",
+      "streamAssembly": "Exact concatenation of emitted text chunks; no execution inputs or outcomes were changed."
+    },
+    "deliveryConclusion": {
+      "status": "READY_TO_COMMIT_AND_PUSH",
+      "branch": "testing",
+      "baseCommit": "e42a1c2e45a21af0cbb5620ec493027cb2238863",
+      "scope": "Registered V2 Small music domain, normal project_reuse prompt/seed execution and replay, source proof and payload regressions. Does not close M3/M4.",
+      "qualityGate": "Targeted local-inference lint passes; workspace and host clippy remain blocked by pre-existing warnings/errors outside this package."
+    },
+    "format": {
+      "status": "PASS",
+      "log": {
+        "path": "target/lifecycle-validation/project-music-domain-normal-format-20261115-r1.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "clippy": {
+      "affectedLocalInference": {
+        "status": "PASS_WITH_EXISTING_LINT_EXCLUDED",
+        "command": "bin/cargo.cmd clippy --offline -p lumina-local-inference --lib --no-deps -- -D warnings -A clippy::enum-variant-names",
+        "log": {
+          "path": "target/lifecycle-validation/project-music-domain-local-clippy-20261116-r1.log",
+          "bytes": 1617,
+          "sha256": "5b0f61da6a69133b5d99cede89055d676d0a241b9a329bb8d02e8f3118b53136"
+        }
+      },
+      "fullWorkspace": {
+        "status": "FAILED_EXISTING_LINT",
+        "command": "bin/cargo.cmd clippy --all-targets --offline -- -D warnings",
+        "log": {
+          "path": "target/lifecycle-validation/project-music-domain-clippy-20261116-r1.log",
+          "bytes": 2383,
+          "sha256": "fdf1e8b1007ff12dc2fd152422c0255be8caca72706c2f3609be96efd2cef030"
+        },
+        "firstError": "crates/lumina-local-inference/src/lifecycle/audio_task_parameters/models.rs:259: enum variants share Offline postfix"
+      },
+      "affectedHost": {
+        "status": "FAILED_EXISTING_LINT",
+        "command": "bin/cargo.cmd clippy --offline -p lumina-agent --lib --no-deps --features aws-providers,code-mode,local-inference,rustls-tls,system-keyring -- -D warnings",
+        "log": {
+          "path": "target/lifecycle-validation/project-music-domain-host-clippy-20261116-r1.log",
+          "bytes": 297054,
+          "sha256": "48c6beda94875bd56df16eff20b31c3403f23718016f51369e62b5e990730bbf"
+        },
+        "firstRelevantExistingErrors": [
+          "crates/lumina/src/mcp_platform/task_runner.rs:1215 unused variable",
+          "crates/lumina/src/acp/server.rs:3028 unused variable",
+          "crates/lumina/src/acp/transport/json_safety.rs:154 short_circuit_statement",
+          "crates/lumina/src/agents/agent.rs:414 unnecessary_literal_unwrap"
+        ],
+        "errorCount": 704
+      }
+    }
+  },
+  "limitations": [
+    "Pre-admission preparation can parse Standard-sized source JSON before resource assessment or the shared runtime permit. Per-call locks do not serialize different calls. This work does not accept global preparation concurrency safety.",
+    "Successful Small tasks count the complete original source JSON toward 256 KiB; large unknown fields cannot be discarded to downgrade a Standard source to Small. The normal music producer and legal API metadata fixture are distinct source paths.",
+    "The current production acceptance controller does not accept a production export as the next production run parent. Production-to-production controller chaining is unverified; this is a harness limitation, not proof that application reuse is impossible.",
+    "A Small task output archive may exceed the Small source limit; such an output is Standard on a later reuse and cannot borrow this profile.",
+    "Source DB backup occurs outside the monitored host run; actual prepare, authorization, save, publication and reopen occur inside it.",
+    "Directory high-water sampling can miss files created and removed between samples. Job assignment follows spawn and is not claimed atomic.",
+    "The first seed-one measurement overlapped synthetic regressions; no timing comparison or acceleration claim is made.",
+    "Four boundary and two holdout resource runs do not establish audio quality, prompt adherence, long-running stability, desktop usability or other-model coverage.",
+    "Earlier fresh-session prompt/seed measurements do not substitute for these V2 publication measurements."
+  ],
+  "acceptanceStatus": {
+    "quality": "NOT_ACCEPTED",
+    "stability": "NOT_ACCEPTED",
+    "desktop": "PAUSED_BY_USER",
+    "privateModelScopeAuthentication": "DEFERRED_NO_PRIVATE_OR_RESTRICTED_REPOSITORY_AVAILABLE",
+    "M3": "NOT_COMPLETE",
+    "M4": "NOT_COMPLETE",
+    "M5": "RETAINED_IN_PLAN_NOT_COMPLETED_BY_THIS_WORK",
+    "M6": "RETAINED_IN_PLAN_NOT_COMPLETED_BY_THIS_WORK"
+  }
+}

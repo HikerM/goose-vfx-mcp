@@ -66,6 +66,7 @@ instructions: |
   LUMINA_PROJECT_ASSET_TEST_BINARY. Do not build, find a substitute binary, or run another shell.
   Preserve its JSON report. Report actual status, per-suite counts and scope in at most 80 words.
   Include the project reuse suite: parent retention, authorization and immutable configuration checks.
+  Include the driver's exact host source-proof binding regression; do not run ignored model probes.
   These are synthetic regressions, not real model inference, natural-language editing or desktop acceptance.
   {% elif test_phases == "managed-chat" %}
   Use the developer shell to assess the caller's installed model and engine with the fixed A41 suite.

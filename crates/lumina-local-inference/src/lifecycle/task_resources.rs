@@ -3,6 +3,7 @@
 
 mod conditions;
 mod measurement;
+mod music_conditions;
 mod sd_conditions;
 pub use measurement::*;
 
@@ -97,6 +98,13 @@ impl TaskResourceKey {
         publication: &TaskPublicationContext,
     ) -> Result<Self> {
         let mut key = Self::from_plan(plan)?;
+        if let NativeTaskPlan::StableAudioMusic(task) = plan {
+            if let Some(workload) =
+                music_conditions::project_workload(task.snapshot(), publication)?
+            {
+                key.workload_digest = workload;
+            }
+        }
         if !matches!(publication, TaskPublicationContext::Session) {
             key.workload_digest = Sha256Digest::of_serializable(&(
                 "task-publication-context-v1",
@@ -372,6 +380,10 @@ const TRUSTED_PROFILE_RECORDS: &[(&str, &str)] = &[
     (
         include_str!("task_resources/stable-audio-music-cpu-case-1.json"),
         "e3c6c21cf663e65006450d49b88e151848f72bc12f9f2a24232ed922789d4a1d",
+    ),
+    (
+        include_str!("task_resources/stable-audio-music-project-small-v1.json"),
+        "251dd662464c2b5526428938e7e0ce1c5c53fc7a4387fa36e232ce532e8996b0",
     ),
     (
         include_str!("task_resources/sd15-cpu-512-euler-a.json"),
