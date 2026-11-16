@@ -35,14 +35,11 @@ impl GenerationParameterService {
                 "This model profile requires its exact recorded Runtime build",
             ));
         }
-        if !profile
-            .required_capabilities()
-            .is_subset(&binding.target_capabilities)
-        {
+        if binding.target_capabilities != profile.required_capabilities() {
             return Err(issue(
                 "binding.targetCapabilities",
                 "capability_mismatch",
-                "Installation does not declare the capabilities required by this task variant",
+                "Installation capabilities must exactly match the selected task variant",
             ));
         }
         let expected = profile.recorded_assets();

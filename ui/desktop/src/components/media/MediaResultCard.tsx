@@ -55,6 +55,10 @@ const i18n = defineMessages({
     id: 'mediaResult.channels',
     defaultMessage: '{count, plural, one {# channel} other {# channels}}',
   },
+  resultReference: {
+    id: 'mediaResult.resultReference',
+    defaultMessage: 'Result reference: {sessionId} / {resultId}',
+  },
 });
 
 const availabilityMessages = {
@@ -293,6 +297,12 @@ function MediaResultCardContent({
         <p className="flex flex-wrap gap-x-3 gap-y-1 break-all text-xs text-text-secondary">
           <span>{result.mime}</span>
           <span>{intl.formatNumber(result.bytes)} B</span>
+        </p>
+        <p className="break-all text-xs text-text-secondary">
+          {intl.formatMessage(i18n.resultReference, {
+            sessionId: result.sessionId,
+            resultId: result.resultId,
+          })}
         </p>
         <p className="break-words text-xs text-text-secondary">{specifications.join(' · ')}</p>
       </div>

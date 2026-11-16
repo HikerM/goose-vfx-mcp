@@ -116,6 +116,7 @@ describe('MediaResultCard', () => {
     expect(screen.getByRole('heading', { name: audio.fileName })).toBeInTheDocument();
     expect(screen.getByText('audio/wav')).toBeInTheDocument();
     expect(screen.getByText('115,244 B')).toBeInTheDocument();
+    expect(screen.getByText('Result reference: session-a / result-a')).toBeInTheDocument();
     expect(screen.getByText('2.4 s · 24,000 Hz · 1 channel')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Loading preview');
     fireEvent.loadedMetadata(player);
@@ -146,6 +147,20 @@ describe('MediaResultCard', () => {
     expect(player).toHaveAttribute('height', '720');
     expect(player).not.toHaveAttribute('autoplay');
     expect(screen.getByText('1,280 × 720 px · 2.002 s · 29.97 FPS')).toBeInTheDocument();
+  });
+
+  it('keeps native AVI metadata and file actions while refusing browser preview', () => {
+    const copyPath = vi.fn().mockResolvedValue({ status: 'completed' });
+    renderCard({
+      result: { ...video, mime: 'video/x-msvideo', fileName: 'native.avi' },
+      actions: { copyPath },
+    });
+    expect(screen.getByRole('heading', { name: 'native.avi' })).toBeInTheDocument();
+    expect(screen.getByText('video/x-msvideo')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('format is not supported');
+    expect(screen.queryByLabelText('native.avi', { selector: 'video' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy path' }));
+    return screen.findByText('Copy path: completed.');
   });
 
   it.each([

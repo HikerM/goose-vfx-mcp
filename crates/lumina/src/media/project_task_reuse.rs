@@ -163,11 +163,11 @@ struct ParentTask {
 pub(crate) struct PreparedProjectTask {
     plan: NativeTaskPlan,
     authorization: VerifiedProjectTaskAuthorization,
-    local_edit: Option<PreparedLocalImageEdit>,
+    local_edit: Option<PreparedLocalEdit>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PreparedLocalImageEdit {
+pub(crate) struct PreparedLocalEdit {
     parent: MediaResultRef,
     replacement: MediaResultRef,
     scope: ProjectEditScope,
@@ -181,7 +181,7 @@ impl PreparedProjectTask {
         &self.authorization
     }
 
-    pub(crate) fn local_edit(&self) -> Option<&PreparedLocalImageEdit> {
+    pub(crate) fn local_edit(&self) -> Option<&PreparedLocalEdit> {
         self.local_edit.as_ref()
     }
 
@@ -192,7 +192,7 @@ impl PreparedProjectTask {
     }
 }
 
-impl PreparedLocalImageEdit {
+impl PreparedLocalEdit {
     pub(crate) fn parent(&self) -> &MediaResultRef {
         &self.parent
     }
@@ -306,10 +306,6 @@ impl VerifiedProjectTaskAuthorization {
         verify_parent_output(&parent, &self.parent_output)?;
         if let Some(scope) = self.edit_scope() {
             validate_edit_scope(&self.parent_output, scope)?;
-            ensure!(
-                matches!(scope, ProjectEditScope::ImageRect { .. }),
-                "Only image rectangle local editing is currently supported"
-            );
         }
         let contract = contract_for_record(&parent)?;
         ensure!(
@@ -474,11 +470,22 @@ impl VerifiedProjectTaskAuthorization {
                 asset.content_sha256 == replacement.content_sha256,
                 "Local edit replacement project asset changed"
             );
-            ensure!(
-                self.edit_scope.is_some(),
-                "Local edit replacement requires an authenticated edit scope"
-            );
-            input_from_result(&media_asset(&asset)?, SessionMediaParameterKind::Image)?;
+            let result = media_asset(&asset)?;
+            let scope = self
+                .edit_scope
+                .as_ref()
+                .context("Local edit replacement requires an authenticated edit scope")?;
+            let expected_kind = match scope {
+                ProjectEditScope::ImageRect { .. } => SessionMediaParameterKind::Image,
+                ProjectEditScope::TimeRange { .. } => SessionMediaParameterKind::Audio,
+            };
+            input_from_result(&result, expected_kind)?;
+            if matches!(scope, ProjectEditScope::TimeRange { .. }) {
+                ensure!(
+                    result.mime == "audio/wav",
+                    "Audio time range editing currently requires audio/wav"
+                );
+            }
         }
         Ok(())
     }
@@ -561,10 +568,6 @@ pub(crate) async fn prepare_project_reused_task(
     let parent = archive.validate(&asset.source_session_id, &asset.job_id)?;
     if let Some(scope) = request.edit_scope.as_ref() {
         validate_edit_scope(&output, scope)?;
-        ensure!(
-            matches!(scope, ProjectEditScope::ImageRect { .. }),
-            "Only image rectangle local editing is currently supported"
-        );
     }
     ensure!(
         parent.identity() == &request.identity,
@@ -627,7 +630,7 @@ async fn prepare_registered(
     let pool = storage.pool().await?;
     let mut allowed = validation_inputs(&parent, &contract)?;
     let mut replacements = Vec::new();
-    let mut image_replacement = None;
+    let mut edit_replacement_result = None;
     for (field, value) in &mut request.patch {
         let Some(kind) = contract.session_media_kind(field)? else {
             continue;
@@ -655,9 +658,6 @@ async fn prepare_registered(
         tx.commit().await?;
         let result = media_asset(&replacement)?;
         let reference = input_from_result(&result, kind)?;
-        if matches!(kind, SessionMediaParameterKind::Image) {
-            image_replacement = Some(result.clone());
-        }
         *value = input_value(&reference)?;
         push_unique(&mut allowed, reference);
         replacements.push(ReplacementAsset {
@@ -689,11 +689,23 @@ async fn prepare_registered(
             .context("Project source size overflow")?;
         tx.commit().await?;
         let result = media_asset(&replacement)?;
-        ensure!(
-            result.kind == MediaKind::Image,
-            "Local edit replacement asset must be an image"
-        );
-        image_replacement = Some(result);
+        let edit_scope = request
+            .edit_scope
+            .as_ref()
+            .context("Local edit replacement requires an edit scope")?;
+        let expected_kind = match edit_scope {
+            ProjectEditScope::ImageRect { .. } => SessionMediaParameterKind::Image,
+            ProjectEditScope::TimeRange { .. } => SessionMediaParameterKind::Audio,
+        };
+        let reference = input_from_result(&result, expected_kind)?;
+        if matches!(edit_scope, ProjectEditScope::TimeRange { .. }) {
+            ensure!(
+                result.mime == "audio/wav",
+                "Audio time range editing currently requires audio/wav"
+            );
+        }
+        push_unique(&mut allowed, reference);
+        edit_replacement_result = Some(result);
         Some(ReplacementAsset {
             asset_id: replacement.asset_id,
             content_sha256: replacement.content_sha256,
@@ -723,25 +735,35 @@ async fn prepare_registered(
     let local_edit = match request.edit_scope.clone() {
         None => None,
         Some(edit_scope) => {
-            ensure!(
-                matches!(edit_scope, ProjectEditScope::ImageRect { .. }),
-                "Only image rectangle local editing is currently supported"
-            );
             let ParentOutput::Media {
                 result: parent_result,
             } = &output
             else {
-                bail!("Local image editing requires an archived media result")
+                bail!("Local media editing requires an archived media result")
             };
             validate_edit_scope(&output, &edit_scope)?;
-            let replacement = image_replacement
+            let replacement = edit_replacement_result
                 .clone()
-                .context("Local image editing requires a replacement image project asset")?;
-            ensure!(
-                replacement.kind == MediaKind::Image,
-                "Local image editing requires a replacement image project asset"
-            );
-            Some(PreparedLocalImageEdit {
+                .context("Local editing requires editReplacementAssetId")?;
+            match edit_scope {
+                ProjectEditScope::ImageRect { .. } => {
+                    ensure!(
+                        parent_result.kind == MediaKind::Image
+                            && replacement.kind == MediaKind::Image,
+                        "Image rectangle editing requires image parent and replacement assets"
+                    );
+                }
+                ProjectEditScope::TimeRange { .. } => {
+                    ensure!(
+                        parent_result.kind == MediaKind::Audio
+                            && replacement.kind == MediaKind::Audio
+                            && parent_result.mime == "audio/wav"
+                            && replacement.mime == "audio/wav",
+                        "Audio time range editing currently requires audio/wav parent and replacement assets"
+                    );
+                }
+            }
+            Some(PreparedLocalEdit {
                 parent: parent_result.clone(),
                 replacement,
                 scope: edit_scope,

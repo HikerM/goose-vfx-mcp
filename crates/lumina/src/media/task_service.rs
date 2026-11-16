@@ -9,10 +9,10 @@ use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 use super::{
-    apply_image_rect_overlay, image_edit_result_id, import_native_task_output, BeginMediaPublish,
-    ImportedTaskOutput, MediaAssociation, MediaInputRef, MediaKind, MediaResultStore,
-    MediaRuntimeBuild, MediaSource, PreparedLocalImageEdit, PreparedProjectTask,
-    PublishMediaRequest, TaskConfigurationStore,
+    apply_image_rect_overlay, apply_wav_time_range, audio_edit_result_id, image_edit_result_id,
+    import_native_task_output, BeginMediaPublish, ImportedTaskOutput, MediaAssociation,
+    MediaInputRef, MediaKind, MediaResultStore, MediaRuntimeBuild, MediaSource, PreparedLocalEdit,
+    PreparedProjectTask, ProjectEditScope, PublishMediaRequest, TaskConfigurationStore,
 };
 use crate::session::session_manager::SessionStorage;
 
@@ -175,7 +175,7 @@ async fn execute_task_controlled(
     if let (Some(task), Some(edit)) = (project_task.as_ref(), local_edit.as_ref()) {
         let configurations = TaskConfigurationStore::new(pool.clone());
         configurations.save_project_task(task).await?;
-        let imported = execute_local_image_edit(
+        let imported = execute_local_media_edit(
             &media,
             &configurations,
             &plan,
@@ -256,32 +256,54 @@ async fn execute_task_controlled(
     Ok(PreparedTaskExecution::Completed(imported))
 }
 
-async fn execute_local_image_edit(
+async fn execute_local_media_edit(
     media: &MediaResultStore,
     configurations: &TaskConfigurationStore,
     plan: &NativeTaskPlan,
-    edit: &PreparedLocalImageEdit,
+    edit: &PreparedLocalEdit,
     root: &super::domain::MediaOutputRoot,
     association: MediaAssociation,
     cancel: &CancellationToken,
 ) -> Result<ImportedTaskOutput> {
     ensure!(!cancel.is_cancelled(), "Native task was cancelled");
-    let parent = read_verified_image(media, edit.parent()).await?;
-    let replacement = read_verified_image(media, edit.replacement()).await?;
+    let parent = read_verified_media(media, edit.parent()).await?;
+    let replacement = read_verified_media(media, edit.replacement()).await?;
     ensure!(!cancel.is_cancelled(), "Native task was cancelled");
-    let bytes = apply_image_rect_overlay(&parent, &replacement, edit.parent(), edit.scope())?;
+    let (bytes, kind, result_id) = match edit.scope() {
+        ProjectEditScope::ImageRect { .. } => (
+            apply_image_rect_overlay(&parent, &replacement, edit.parent(), edit.scope())?,
+            MediaKind::Image,
+            image_edit_result_id(
+                plan.session_id(),
+                plan.job_id(),
+                &edit.parent().result_id,
+                edit.scope(),
+            ),
+        ),
+        ProjectEditScope::TimeRange { .. } => (
+            apply_wav_time_range(
+                &parent,
+                &replacement,
+                edit.parent(),
+                edit.replacement(),
+                edit.scope(),
+            )?,
+            MediaKind::Audio,
+            audio_edit_result_id(
+                plan.session_id(),
+                plan.job_id(),
+                &edit.parent().result_id,
+                edit.scope(),
+            ),
+        ),
+    };
     let digest = plan.snapshot_digest()?;
     let request = PublishMediaRequest {
-        result_id: image_edit_result_id(
-            plan.session_id(),
-            plan.job_id(),
-            &edit.parent().result_id,
-            edit.scope(),
-        ),
+        result_id,
         session_id: plan.session_id().into(),
         job_id: plan.job_id().into(),
         root_id: root.root_id.clone(),
-        kind: MediaKind::Image,
+        kind,
         association,
         source: MediaSource::LocalModel {
             installation_id: plan.installation_id().into(),
@@ -315,13 +337,13 @@ async fn execute_local_image_edit(
     Ok(ImportedTaskOutput::Media(vec![result]))
 }
 
-async fn read_verified_image(
+async fn read_verified_media(
     media: &MediaResultStore,
     result: &super::MediaResultRef,
 ) -> Result<Vec<u8>> {
     ensure!(
-        result.kind == MediaKind::Image,
-        "Local image editing requires image inputs"
+        matches!(result.kind, MediaKind::Image | MediaKind::Audio),
+        "Local editing requires image or audio inputs"
     );
     let mut content = media
         .open_content(&result.session_id, &result.result_id)
@@ -337,7 +359,7 @@ async fn read_verified_image(
     }
     ensure!(
         bytes.len() as u64 == result.bytes,
-        "Image input length changed while reading"
+        "Media input length changed while reading"
     );
     Ok(bytes)
 }

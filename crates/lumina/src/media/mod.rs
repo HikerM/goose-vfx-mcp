@@ -1,4 +1,6 @@
 mod access;
+#[cfg(feature = "local-inference")]
+mod audio_editor;
 mod domain;
 mod files;
 mod formats;
@@ -31,6 +33,8 @@ pub use access::{
     MediaAccessStore, MediaAccessTicket, MediaContentLease, MediaLocalActionLease,
     MediaTicketError, MAX_MEDIA_ACCESS_LIFETIME, MAX_MEDIA_ACCESS_TICKETS,
 };
+#[cfg(feature = "local-inference")]
+pub(crate) use audio_editor::{apply_wav_time_range, audio_edit_result_id};
 pub use domain::*;
 #[cfg(feature = "local-inference")]
 pub(crate) use image_editor::apply_image_rect_overlay;
@@ -41,7 +45,7 @@ pub(crate) use ingest::native_result_link;
 pub(crate) use ingest::{hydrate_tool_media, persist_tool_media};
 #[cfg(feature = "local-inference")]
 pub(crate) use project_task_reuse::{
-    prepare_project_reused_task, PreparedLocalImageEdit, PreparedProjectTask, ProjectEditScope,
+    prepare_project_reused_task, PreparedLocalEdit, PreparedProjectTask, ProjectEditScope,
     ProjectTaskReuseRequest,
 };
 pub use store::{BeginMediaPublish, MediaResultStore, StagedMedia, VerifiedMediaContent};
