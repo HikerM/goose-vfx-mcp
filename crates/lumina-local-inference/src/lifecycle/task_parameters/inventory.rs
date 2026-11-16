@@ -91,6 +91,7 @@ struct Protocol {
     engine: FrozenGenerationEngine,
     arguments: BTreeMap<GenerationAssetRole, String>,
     intents: Vec<NativeTaskIntent>,
+    target_capabilities: BTreeSet<ModelCapability>,
     audio_mode: Option<GenerationAudioMode>,
 }
 
@@ -125,6 +126,7 @@ static MODELS: LazyLock<BTreeMap<String, Model>> = LazyLock::new(|| {
             .variants
             .values()
             .all(|v| protocol.intents.contains(&v.intent)));
+        assert!(!protocol.target_capabilities.is_empty());
         assert!(model.variants.contains_key(&model.install_profile));
         assert_eq!(
             protocol.engine.output_format == GenerationOutputFormat::Avi,
@@ -294,4 +296,12 @@ impl GenerationProfile {
     pub fn recorded_assets(self) -> BTreeMap<GenerationAssetRole, (Sha256Digest, u64)> {
         self.model().asset_identity()
     }
+}
+
+pub(super) fn protocol_target_capabilities(
+    profile: GenerationProfile,
+) -> BTreeSet<ModelCapability> {
+    PROTOCOLS[&profile.model().adapter_protocol]
+        .target_capabilities
+        .clone()
 }

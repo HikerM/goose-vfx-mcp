@@ -28,6 +28,9 @@
     "intents": [
       "text_to_image"
     ],
+    "targetCapabilities": [
+      "image_generation"
+    ],
     "audioMode": null
   },
   "sd-cpp/joint-av-llm-cuda-v1": {
@@ -63,6 +66,10 @@
       "text_to_video_with_audio",
       "first_frame_to_video_with_audio"
     ],
+    "targetCapabilities": [
+      "video_generation",
+      "audio_generation"
+    ],
     "audioMode": "joint_audio_video"
   },
   "sd-cpp/video-t5-cpu-v1": {
@@ -95,6 +102,9 @@
     },
     "intents": [
       "text_to_video"
+    ],
+    "targetCapabilities": [
+      "video_generation"
     ],
     "audioMode": "video_only"
   }

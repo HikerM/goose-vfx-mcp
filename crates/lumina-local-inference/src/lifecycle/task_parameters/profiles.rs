@@ -3,16 +3,7 @@ use serde_json::json;
 
 impl GenerationProfile {
     pub fn required_capabilities(self) -> BTreeSet<ModelCapability> {
-        if self.is_image() {
-            BTreeSet::from([ModelCapability::ImageGeneration])
-        } else if self.intent() == crate::lifecycle::NativeTaskIntent::TextToVideo {
-            BTreeSet::from([ModelCapability::VideoGeneration])
-        } else {
-            BTreeSet::from([
-                ModelCapability::VideoGeneration,
-                ModelCapability::AudioGeneration,
-            ])
-        }
+        super::inventory::protocol_target_capabilities(self)
     }
 }
 
