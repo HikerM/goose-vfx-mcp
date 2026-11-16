@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 pub const MEDIA_READ_METHOD: &str = "_lumina/unstable/media/read";
 pub const MEDIA_ACCESS_METHOD: &str = "_lumina/unstable/media/access";
+pub const MEDIA_PROJECT_ACCESS_METHOD: &str = "_lumina/unstable/media/project_access";
 pub const MEDIA_RELEASE_METHOD: &str = "_lumina/unstable/media/release";
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -33,6 +34,43 @@ pub struct MediaAccessRequest {
 pub struct MediaAccessResponse {
     pub ticket: String,
     pub expires_in_ms: u64,
+}
+
+#[derive(
+    Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, JsonRpcRequest,
+)]
+#[request(
+    method = "_lumina/unstable/media/project_access",
+    response = MediaProjectAccessResponse
+)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MediaProjectAccessRequest {
+    /// The active session that owns the project authorization.
+    pub session_id: String,
+    /// The immutable project asset UUID returned by `project_asset`.
+    pub asset_id: String,
+    pub purpose: MediaAccessPurposeDto,
+}
+
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MediaProjectAccessResponse {
+    pub ticket: String,
+    pub expires_in_ms: u64,
+    pub source_session_id: String,
+    pub result_id: String,
+}
+
+impl std::fmt::Debug for MediaProjectAccessResponse {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("MediaProjectAccessResponse")
+            .field("ticket", &"[redacted]")
+            .field("expires_in_ms", &self.expires_in_ms)
+            .field("source_session_id", &self.source_session_id)
+            .field("result_id", &self.result_id)
+            .finish()
+    }
 }
 
 impl std::fmt::Debug for MediaAccessResponse {
@@ -276,6 +314,42 @@ mod tests {
         assert_eq!(
             serde_json::to_value(&response).unwrap(),
             json!({"ticket":"private-capability","expiresInMs":300000})
+        );
+        assert!(!format!("{response:?}").contains("private-capability"));
+    }
+
+    #[test]
+    fn project_media_access_uses_asset_scope_and_returns_source_identity() {
+        let value = json!({
+            "sessionId": "session-current",
+            "assetId": "12345678-1234-4234-8234-123456789abc",
+            "purpose": "preview"
+        });
+        let request: MediaProjectAccessRequest = serde_json::from_value(value.clone()).unwrap();
+        let message = request.to_untyped_message().unwrap();
+        assert_eq!(message.method(), MEDIA_PROJECT_ACCESS_METHOD);
+        assert_eq!(message.params(), &value);
+        assert!(serde_json::from_value::<MediaProjectAccessRequest>(json!({
+            "sessionId": "session-current",
+            "assetId": "12345678-1234-4234-8234-123456789abc",
+            "purpose": "preview",
+            "resultId": "private-result"
+        }))
+        .is_err());
+        let response = MediaProjectAccessResponse {
+            ticket: "private-capability".into(),
+            expires_in_ms: 300_000,
+            source_session_id: "session-source".into(),
+            result_id: "12345678-1234-4234-8234-123456789abc".into(),
+        };
+        assert_eq!(
+            serde_json::to_value(&response).unwrap(),
+            json!({
+                "ticket":"private-capability",
+                "expiresInMs":300000,
+                "sourceSessionId":"session-source",
+                "resultId":"12345678-1234-4234-8234-123456789abc"
+            })
         );
         assert!(!format!("{response:?}").contains("private-capability"));
     }

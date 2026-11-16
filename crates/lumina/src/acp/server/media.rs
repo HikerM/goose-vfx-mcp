@@ -1,9 +1,10 @@
 use super::{Agent, LuminaAcpAgent};
 use crate::acp::custom_requests::{
     MediaAccessPurposeDto, MediaAccessRequest, MediaAccessResponse, MediaAssociationDto,
-    MediaAvailabilityDto, MediaInputRefDto, MediaKindDto, MediaOwnershipDto, MediaReadRequest,
-    MediaReadResponse, MediaReleaseRequest, MediaReleaseResponse, MediaResultDto,
-    MediaRuntimeBuildDto, MediaSourceDto, MediaSpecDto,
+    MediaAvailabilityDto, MediaInputRefDto, MediaKindDto, MediaOwnershipDto,
+    MediaProjectAccessRequest, MediaProjectAccessResponse, MediaReadRequest, MediaReadResponse,
+    MediaReleaseRequest, MediaReleaseResponse, MediaResultDto, MediaRuntimeBuildDto,
+    MediaSourceDto, MediaSpecDto,
 };
 use crate::media as domain;
 use std::sync::Arc;
@@ -63,6 +64,88 @@ impl LuminaAcpAgent {
         Ok(MediaAccessResponse {
             ticket: ticket.ticket,
             expires_in_ms: ticket.expires_in_ms,
+        })
+    }
+
+    pub(super) async fn on_media_project_access(
+        &self,
+        req: MediaProjectAccessRequest,
+    ) -> Result<MediaProjectAccessResponse, agent_client_protocol::Error> {
+        let expected = self.media_session_agent(&req.session_id).await?;
+        if uuid::Uuid::parse_str(&req.asset_id).is_err() {
+            return Err(
+                agent_client_protocol::Error::invalid_params().data("invalid_project_asset_id")
+            );
+        }
+        let unavailable = || {
+            agent_client_protocol::Error::resource_not_found(None)
+                .data("media_project_access_unavailable")
+        };
+        let pool = self
+            .session_manager
+            .storage()
+            .pool()
+            .await
+            .map_err(|_| unavailable())?
+            .clone();
+        let asset = crate::project::ProjectAssetStore::new(pool.clone())
+            .read(&req.session_id, &req.asset_id)
+            .await
+            .map_err(|_| unavailable())?
+            .ok_or_else(unavailable)?;
+        if asset
+            .content
+            .get("kind")
+            .and_then(serde_json::Value::as_str)
+            != Some("media")
+        {
+            return Err(unavailable());
+        }
+        let archived: domain::MediaResultRef = serde_json::from_value(
+            asset
+                .content
+                .get("result")
+                .cloned()
+                .ok_or_else(unavailable)?,
+        )
+        .map_err(|_| unavailable())?;
+        if archived.result_id != asset.asset_id || archived.session_id != asset.source_session_id {
+            return Err(unavailable());
+        }
+        let content = domain::MediaResultStore::new(pool)
+            .open_content(&archived.session_id, &archived.result_id)
+            .await
+            .map_err(|_| unavailable())?;
+        if content.result() != &archived {
+            return Err(unavailable());
+        }
+
+        // Keep the current project session authoritative through ticket issue;
+        // the source session is intentionally not required to be active.
+        let sessions = self.sessions.lock().await;
+        let closed = self.closed_session_ids.lock().await;
+        if closed.contains(&req.session_id)
+            || !sessions
+                .get(&req.session_id)
+                .is_some_and(|session| Arc::ptr_eq(&session.agent, &expected))
+        {
+            return Err(inactive_media_session());
+        }
+        let ticket = self
+            .media_access_owner
+            .issue_project(
+                content,
+                &req.session_id,
+                &archived.session_id,
+                &archived.result_id,
+                req.purpose.into(),
+            )
+            .map_err(|_| unavailable())?;
+        Ok(MediaProjectAccessResponse {
+            ticket: ticket.ticket,
+            expires_in_ms: ticket.expires_in_ms,
+            source_session_id: archived.session_id,
+            result_id: archived.result_id,
         })
     }
 

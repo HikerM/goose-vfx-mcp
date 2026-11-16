@@ -384,6 +384,26 @@ fn declared_capability_model_name_and_runtime_alone_cannot_supply_missing_conten
 }
 
 #[test]
+fn catalog_discovers_audio_by_verified_binding_when_visible_model_name_changes() {
+    let mut renamed = audio("tts-renamed", AudioTaskProfile::PocketTtsEnglishCpu);
+    renamed.manifest.plan.model_id = "vendor-specific-display-name".into();
+    renamed.manifest_digest = renamed.manifest.digest().unwrap();
+
+    let mut catalog = NativeTaskCatalog::default();
+    catalog.register_version(&renamed).unwrap();
+    let entry = catalog
+        .list(NativeTaskIntent::SpeechSynthesis)
+        .pop()
+        .expect("verified audio binding should be discoverable");
+
+    assert_eq!(entry.identity.version_id, "tts-renamed");
+    assert!(matches!(
+        entry.descriptor,
+        NativeTaskParameterContract::PocketTts(_)
+    ));
+}
+
+#[test]
 fn empty_managed_repository_yields_no_available_models_and_unknown_version_fails() {
     let base = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../target/lifecycle-validation/native-task-catalog");

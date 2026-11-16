@@ -123,6 +123,7 @@ struct Inner {
 struct Entry {
     owner_id: Uuid,
     owner: Weak<AtomicBool>,
+    owner_session_id: String,
     session_id: String,
     result_id: String,
     purpose: MediaAccessPurpose,
@@ -345,6 +346,34 @@ impl MediaAccessOwner {
         result_id: &str,
         purpose: MediaAccessPurpose,
     ) -> Result<MediaAccessTicket> {
+        self.issue_for_session(content, session_id, session_id, result_id, purpose)
+    }
+
+    pub fn issue_project(
+        &self,
+        content: VerifiedMediaContent,
+        owner_session_id: &str,
+        source_session_id: &str,
+        result_id: &str,
+        purpose: MediaAccessPurpose,
+    ) -> Result<MediaAccessTicket> {
+        self.issue_for_session(
+            content,
+            owner_session_id,
+            source_session_id,
+            result_id,
+            purpose,
+        )
+    }
+
+    fn issue_for_session(
+        &self,
+        content: VerifiedMediaContent,
+        owner_session_id: &str,
+        session_id: &str,
+        result_id: &str,
+        purpose: MediaAccessPurpose,
+    ) -> Result<MediaAccessTicket> {
         if content.result().session_id != session_id || content.result().result_id != result_id {
             return Err(MediaTicketError.into());
         }
@@ -373,6 +402,7 @@ impl MediaAccessOwner {
             Arc::new(Entry {
                 owner_id: self.id,
                 owner: Arc::downgrade(&self.alive),
+                owner_session_id: owner_session_id.to_owned(),
                 session_id: session_id.to_owned(),
                 result_id: result_id.to_owned(),
                 purpose,
@@ -398,8 +428,9 @@ impl MediaAccessOwner {
     }
 
     pub fn revoke_session(&self, session_id: &str) {
-        self.store
-            .remove_where(|_, entry| entry.owner_id == self.id && entry.session_id == session_id);
+        self.store.remove_where(|_, entry| {
+            entry.owner_id == self.id && entry.owner_session_id == session_id
+        });
     }
 
     pub fn close(&self) {

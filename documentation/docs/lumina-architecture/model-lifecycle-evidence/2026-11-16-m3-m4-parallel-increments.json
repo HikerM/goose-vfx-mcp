@@ -1,0 +1,79 @@
+{
+  "schema": "lumina-m3-m4-parallel-increments-v1",
+  "recordedAt": "2026-11-16",
+  "status": "PARTIAL_INCREMENT_VERIFIED",
+  "scope": "Three parallel work packages were integrated on testing; this evidence does not close M3 or M4.",
+  "orchestration": {
+    "controller": "root",
+    "workers": [
+      "M3 dynamic catalog discovery",
+      "M3 native task terminal recovery",
+      "M4 ASR resource-key equivalence"
+    ],
+    "singleWorkspace": "D:/Project/goose",
+    "branch": "testing"
+  },
+  "increments": {
+    "m3DynamicCatalog": {
+      "path": "crates/lumina-local-inference/src/lifecycle/native_task_catalog/tests.rs",
+      "test": "catalog_discovers_audio_by_verified_binding_when_visible_model_name_changes",
+      "result": "PASS",
+      "meaning": "Speech synthesis discovery remains bound to verified descriptor/component identity when the visible model name changes; it does not prove runtime generation quality."
+    },
+    "m3TerminalRecovery": {
+      "paths": [
+        "crates/lumina/src/media/task_jobs.rs",
+        "crates/lumina/src/media/task_jobs_tests.rs"
+      ],
+      "tests": [
+        "busy_failed_cancelled_interrupted_and_deferred_remain_distinct_on_reopen",
+        "finish_accepts_an_already_persisted_matching_terminal_state"
+      ],
+      "result": "PASS",
+      "meaning": "A worker finishing after the same terminal state was persisted succeeds idempotently; a different state remains fail-closed. File-lock release semantics are preserved."
+    },
+    "m4AsrResourceKey": {
+      "path": "crates/lumina-local-inference/src/lifecycle/task_resources/tests.rs",
+      "test": "asr_resource_key_ignores_session_media_identity_but_keeps_model_workload_bound",
+      "result": "PASS",
+      "meaning": "Equivalent Qwen3-ASR workloads share a resource key across session/result/version identities while snapshot digests remain distinct; this is a resource-key regression, not real ASR quality or execution acceptance."
+    },
+    "projectMediaAccess": {
+      "paths": [
+        "crates/lumina-sdk-types/src/custom_requests/media.rs",
+        "crates/lumina/src/acp/server/custom_dispatch.rs",
+        "crates/lumina/src/acp/server/media.rs",
+        "crates/lumina/src/media/access.rs",
+        "crates/lumina/src/media/access_tests.rs"
+      ],
+      "tests": [
+        "custom_requests::media::tests::project_media_access_uses_asset_scope_and_returns_source_identity",
+        "media::access::tests::project_tickets_revoke_by_authorizing_session_not_source_session"
+      ],
+      "result": "PASS",
+      "meaning": "An active project session can obtain a short-lived ticket for an archived media asset, served by immutable source session/result identity after the producer session closes; desktop UI consumption remains pending."
+    }
+  },
+  "validation": {
+    "format": "PASS",
+    "sdkTest": "PASS",
+    "localInferenceTests": "PASS",
+    "agentTargetedTests": "PASS",
+    "fullWorkspaceClippy": "NOT_RUN_FOR_THIS_INCREMENT",
+    "desktopAutomation": "PAUSED_BY_USER",
+    "privateModelScopeAuth": "DEFERRED"
+  },
+  "remaining": [
+    "M3 MoE/A42/tool and cross-task contention acceptance",
+    "M4 real ASR/TTS/image/video execution and quality acceptance",
+    "desktop project-media ticket consumption and playback/save/reveal location flow",
+    "natural-language local edits with typed region/time-range scope",
+    "same-condition acceleration benchmark and long-run stability",
+    "MTP/DFlash and full M5/M6 closure"
+  ],
+  "acceptanceStatus": {
+    "M3": "NOT_COMPLETE",
+    "M4": "NOT_COMPLETE",
+    "overall": "PARTIAL_INCREMENT_VERIFIED"
+  }
+}

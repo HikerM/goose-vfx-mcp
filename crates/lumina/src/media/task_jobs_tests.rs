@@ -163,6 +163,27 @@ async fn busy_failed_cancelled_interrupted_and_deferred_remain_distinct_on_reope
 }
 
 #[tokio::test]
+async fn finish_accepts_an_already_persisted_matching_terminal_state() {
+    let tmp = temp();
+    let root = tmp.path().join("outputs");
+    let jobs = open(tmp.path()).await;
+    let identity = image_adapter().identity().unwrap();
+    let args = json!({"identity":identity,"parameters":{"prompt":"apple"}});
+    let owner = take(&jobs, &root, "already-failed", &args, &identity).await;
+    sqlx::query(
+        "UPDATE native_task_calls_v1 SET state='failed'
+         WHERE session_id=? AND job_id=? AND request_sha256=?",
+    )
+    .bind(&owner.session)
+    .bind(&owner.job)
+    .bind(&owner.request)
+    .execute(&jobs.pool)
+    .await
+    .unwrap();
+    owner.finish(NativeTaskTerminal::Failed).await.unwrap();
+}
+
+#[tokio::test]
 async fn restart_replays_only_a_complete_published_batch_and_preserves_the_generated_seed() {
     let tmp = temp();
     let root = tmp.path().join("outputs");

@@ -146,6 +146,14 @@ impl LuminaAcpAgent {
         self.on_media_access(req).await
     }
 
+    #[custom_method(MediaProjectAccessRequest)]
+    async fn dispatch_media_project_access(
+        &self,
+        req: MediaProjectAccessRequest,
+    ) -> Result<MediaProjectAccessResponse, agent_client_protocol::Error> {
+        self.on_media_project_access(req).await
+    }
+
     #[custom_method(MediaReleaseRequest)]
     async fn dispatch_media_release(
         &self,

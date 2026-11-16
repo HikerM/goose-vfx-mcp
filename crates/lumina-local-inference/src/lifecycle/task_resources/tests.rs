@@ -909,6 +909,72 @@ fn a_candidate_clip_condition_cannot_borrow_the_measured_exact_image_budget() {
     }
 }
 
+#[test]
+fn asr_resource_key_ignores_session_media_identity_but_keeps_model_workload_bound() {
+    let profile = AudioTaskProfile::Qwen3Asr06bCpu;
+    let (sha256, size_bytes) = profile.recorded_model();
+    let (spec_sha256, spec_bytes) = profile.recorded_model_spec();
+    let binding = |version: &str| AudioTaskModelBinding {
+        installation_id: "synthetic-asr-installation".into(),
+        version_id: version.into(),
+        manifest_digest: Sha256Digest::of_bytes(version.as_bytes()),
+        runtime: profile.runtime_build(),
+        target_capabilities: BTreeSet::from([profile.capability()]),
+        model: AudioTaskAssetBinding {
+            artifact_id: "model".into(),
+            sha256: sha256.clone(),
+            size_bytes,
+        },
+        model_spec: AudioTaskAssetBinding {
+            artifact_id: "spec".into(),
+            sha256: spec_sha256.clone(),
+            size_bytes: spec_bytes,
+        },
+    };
+    let compile = |version: &str, session: &str, result: &str| {
+        Qwen3AsrParameterService::new(binding(version))
+            .unwrap()
+            .compile(Qwen3AsrRequest {
+                session_id: session.into(),
+                job_id: "asr-resource-key".into(),
+                audio: AudioTaskMediaReference {
+                    session_id: session.into(),
+                    result_id: result.into(),
+                    sha256: Sha256Digest::of_bytes(b"same-audio"),
+                    mime_type: "audio/wav".into(),
+                    size_bytes: 16_044,
+                    sample_rate: 16_000,
+                    channels: 1,
+                    sample_frames: 8_000,
+                },
+                context: Some("same context".into()),
+                language: Some(Qwen3AsrLanguage::English),
+                max_tokens: Some(128),
+                chunking: Some(Qwen3AsrChunking::WholeFile {}),
+            })
+            .unwrap()
+            .into()
+    };
+    let first = compile(
+        "asr-version-a",
+        "session-a",
+        "019a1111-2222-8333-8444-555555555555",
+    );
+    let second = compile(
+        "asr-version-b",
+        "session-b",
+        "019a1111-2222-8333-8444-666666666666",
+    );
+    assert_eq!(
+        TaskResourceKey::from_plan(&first).unwrap(),
+        TaskResourceKey::from_plan(&second).unwrap()
+    );
+    assert_ne!(
+        first.snapshot_digest().unwrap(),
+        second.snapshot_digest().unwrap()
+    );
+}
+
 fn record() -> TaskResourceMeasurementRecord {
     let plan = plan(false, "v1", 42);
     let phase = TaskProcessResourceMeasurement {

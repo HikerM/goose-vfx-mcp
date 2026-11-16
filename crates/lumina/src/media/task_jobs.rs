@@ -108,7 +108,23 @@ impl NativeTaskAttempt {
         .execute(&self.pool)
         .await?
         .rows_affected();
-        ensure!(affected == 1, "Native task call state changed while owned");
+        if affected == 1 {
+            return Ok(());
+        }
+        let state = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT state FROM native_task_calls_v1
+             WHERE session_id=? AND job_id=? AND request_sha256=?",
+        )
+        .bind(&self.session)
+        .bind(&self.job)
+        .bind(&self.request)
+        .fetch_optional(&self.pool)
+        .await?
+        .flatten();
+        ensure!(
+            state.as_deref() == Some(terminal.as_str()),
+            "Native task call state changed while owned"
+        );
         Ok(())
     }
 }

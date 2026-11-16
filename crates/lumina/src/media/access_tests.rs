@@ -119,6 +119,14 @@ fn request<'a>(
     }
 }
 
+fn project_request<'a>(
+    ticket: &'a MediaAccessTicket,
+    result: &'a MediaResultRef,
+    purpose: MediaAccessPurpose,
+) -> MediaAccessRequest<'a> {
+    request(ticket, result, purpose)
+}
+
 fn denied<T>(result: Result<T>) {
     let error = match result {
         Ok(_) => panic!("Expected media access rejection"),
@@ -228,6 +236,31 @@ async fn owner_and_session_revocation_are_isolated_and_release_is_idempotent() {
     assert!(store.read_range(&other_access, 0, 4).is_ok());
     drop(other);
     denied(store.read_range(&other_access, 0, 4));
+    fixture.finish().await;
+}
+
+#[tokio::test]
+async fn project_tickets_revoke_by_authorizing_session_not_source_session() {
+    let fixture = Fixture::new().await;
+    let result = fixture.publish("session:source").await;
+    let store = MediaAccessStore::new(4, Duration::from_secs(30)).unwrap();
+    let owner = store.create_owner();
+    let ticket = owner
+        .issue_project(
+            fixture.content(&result).await,
+            "session:current",
+            &result.session_id,
+            &result.result_id,
+            MediaAccessPurpose::Preview,
+        )
+        .unwrap();
+    let access = project_request(&ticket, &result, MediaAccessPurpose::Preview);
+    assert!(store.read_range(&access, 0, 4).is_ok());
+    owner.revoke_session("session:source");
+    assert!(store.read_range(&access, 0, 4).is_ok());
+    owner.revoke_session("session:current");
+    denied(store.read_range(&access, 0, 4));
+    drop(owner);
     fixture.finish().await;
 }
 
