@@ -27,6 +27,8 @@ mod task_publication;
 mod task_reuse;
 #[cfg(feature = "local-inference")]
 mod task_service;
+#[cfg(feature = "local-inference")]
+mod video_editor;
 
 pub use access::{
     MediaAccessDisconnectGuard, MediaAccessOwner, MediaAccessPurpose, MediaAccessRequest,
@@ -72,3 +74,5 @@ pub use task_service::{execute_prepared_task, PreparedTaskExecution};
 pub(crate) use task_service::{
     execute_prepared_task_controlled, execute_project_prepared_task_controlled,
 };
+#[cfg(feature = "local-inference")]
+pub(crate) use video_editor::{apply_avi_time_range, video_edit_result_id};

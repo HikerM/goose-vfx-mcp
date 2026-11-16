@@ -9,10 +9,11 @@ use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 use super::{
-    apply_image_rect_overlay, apply_wav_time_range, audio_edit_result_id, image_edit_result_id,
-    import_native_task_output, BeginMediaPublish, ImportedTaskOutput, MediaAssociation,
-    MediaInputRef, MediaKind, MediaResultStore, MediaRuntimeBuild, MediaSource, PreparedLocalEdit,
-    PreparedProjectTask, ProjectEditScope, PublishMediaRequest, TaskConfigurationStore,
+    apply_avi_time_range, apply_image_rect_overlay, apply_wav_time_range, audio_edit_result_id,
+    image_edit_result_id, import_native_task_output, video_edit_result_id, BeginMediaPublish,
+    ImportedTaskOutput, MediaAssociation, MediaInputRef, MediaKind, MediaResultStore,
+    MediaRuntimeBuild, MediaSource, PreparedLocalEdit, PreparedProjectTask, ProjectEditScope,
+    PublishMediaRequest, TaskConfigurationStore,
 };
 use crate::session::session_manager::SessionStorage;
 
@@ -280,6 +281,22 @@ async fn execute_local_media_edit(
                 edit.scope(),
             ),
         ),
+        ProjectEditScope::TimeRange { .. } if edit.parent().kind == MediaKind::Video => (
+            apply_avi_time_range(
+                &parent,
+                &replacement,
+                edit.parent(),
+                edit.replacement(),
+                edit.scope(),
+            )?,
+            MediaKind::Video,
+            video_edit_result_id(
+                plan.session_id(),
+                plan.job_id(),
+                &edit.parent().result_id,
+                edit.scope(),
+            ),
+        ),
         ProjectEditScope::TimeRange { .. } => (
             apply_wav_time_range(
                 &parent,
@@ -342,8 +359,11 @@ async fn read_verified_media(
     result: &super::MediaResultRef,
 ) -> Result<Vec<u8>> {
     ensure!(
-        matches!(result.kind, MediaKind::Image | MediaKind::Audio),
-        "Local editing requires image or audio inputs"
+        matches!(
+            result.kind,
+            MediaKind::Image | MediaKind::Audio | MediaKind::Video
+        ),
+        "Local editing requires image, audio, or video inputs"
     );
     let mut content = media
         .open_content(&result.session_id, &result.result_id)

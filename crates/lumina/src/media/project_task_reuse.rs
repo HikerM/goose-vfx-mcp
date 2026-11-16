@@ -475,17 +475,7 @@ impl VerifiedProjectTaskAuthorization {
                 .edit_scope
                 .as_ref()
                 .context("Local edit replacement requires an authenticated edit scope")?;
-            let expected_kind = match scope {
-                ProjectEditScope::ImageRect { .. } => SessionMediaParameterKind::Image,
-                ProjectEditScope::TimeRange { .. } => SessionMediaParameterKind::Audio,
-            };
-            input_from_result(&result, expected_kind)?;
-            if matches!(scope, ProjectEditScope::TimeRange { .. }) {
-                ensure!(
-                    result.mime == "audio/wav",
-                    "Audio time range editing currently requires audio/wav"
-                );
-            }
+            validate_edit_replacement(&self.parent_output, &result, scope)?;
         }
         Ok(())
     }
@@ -693,17 +683,7 @@ async fn prepare_registered(
             .edit_scope
             .as_ref()
             .context("Local edit replacement requires an edit scope")?;
-        let expected_kind = match edit_scope {
-            ProjectEditScope::ImageRect { .. } => SessionMediaParameterKind::Image,
-            ProjectEditScope::TimeRange { .. } => SessionMediaParameterKind::Audio,
-        };
-        input_from_result(&result, expected_kind)?;
-        if matches!(edit_scope, ProjectEditScope::TimeRange { .. }) {
-            ensure!(
-                result.mime == "audio/wav",
-                "Audio time range editing currently requires audio/wav"
-            );
-        }
+        validate_edit_replacement(&output, &result, edit_scope)?;
         edit_replacement_result = Some(result);
         Some(ReplacementAsset {
             asset_id: replacement.asset_id,
@@ -754,11 +734,9 @@ async fn prepare_registered(
                 }
                 ProjectEditScope::TimeRange { .. } => {
                     ensure!(
-                        parent_result.kind == MediaKind::Audio
-                            && replacement.kind == MediaKind::Audio
-                            && parent_result.mime == "audio/wav"
-                            && replacement.mime == "audio/wav",
-                        "Audio time range editing currently requires audio/wav parent and replacement assets"
+                        parent_result.kind == replacement.kind
+                            && matches!(parent_result.kind, MediaKind::Audio | MediaKind::Video),
+                        "Time range editing requires matching audio or video assets"
                     );
                 }
             }
@@ -968,6 +946,53 @@ fn input_from_result(
         }),
         _ => bail!("Project asset media kind differs from the installed parameter contract"),
     })
+}
+
+fn validate_edit_replacement(
+    output: &ParentOutput,
+    replacement: &MediaResultRef,
+    scope: &ProjectEditScope,
+) -> Result<()> {
+    let ParentOutput::Media { result: parent } = output else {
+        bail!("Local media edit scopes require an archived media result")
+    };
+    match scope {
+        ProjectEditScope::ImageRect { .. } => {
+            ensure!(
+                parent.kind == MediaKind::Image && replacement.kind == MediaKind::Image,
+                "Image rectangle editing requires image parent and replacement assets"
+            );
+            input_from_result(replacement, SessionMediaParameterKind::Image)?;
+        }
+        ProjectEditScope::TimeRange { .. } => {
+            ensure!(
+                parent.kind == replacement.kind
+                    && matches!(parent.kind, MediaKind::Audio | MediaKind::Video),
+                "Time range editing requires matching audio or video assets"
+            );
+            match replacement.kind {
+                MediaKind::Audio => {
+                    ensure!(
+                        parent.mime == "audio/wav" && replacement.mime == "audio/wav",
+                        "Audio time range editing currently requires audio/wav parent and replacement assets"
+                    );
+                    input_from_result(replacement, SessionMediaParameterKind::Audio)?;
+                }
+                MediaKind::Video => {
+                    ensure!(
+                        parent.mime == "video/x-msvideo" && replacement.mime == "video/x-msvideo",
+                        "Video time range editing currently requires video/x-msvideo parent and replacement assets"
+                    );
+                    ensure!(
+                        matches!(replacement.spec, MediaSpec::Video { .. }),
+                        "Video time range replacement has no video specification"
+                    );
+                }
+                MediaKind::Image => unreachable!(),
+            }
+        }
+    }
+    Ok(())
 }
 
 fn validate_patch(
