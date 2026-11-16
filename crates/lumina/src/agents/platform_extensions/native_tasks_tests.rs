@@ -29,7 +29,7 @@ fn candidate_summary(
         created_at_ms,
         content_sha256: "a".repeat(64),
         kind: "media".into(),
-        output: json!({"kind":kind,"fileName":file_name}),
+        output: json!({"spec":{"kind":kind},"fileName":file_name}),
     }
 }
 
