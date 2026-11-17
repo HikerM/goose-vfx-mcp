@@ -26,7 +26,7 @@ const requiredRuntimeFiles = [
   path.join('resources', 'MODIFICATIONS.md'),
   path.join('resources', 'THIRD_PARTY_NOTICES.md'),
 ];
-if (process.env.LUMINA_DESKTOP_CUDA === '1') {
+if (process.env.LUMINA_DESKTOP_CUDA === '1' || process.env.LUMINA_DESKTOP_DUAL_BACKEND === '1') {
   requiredRuntimeFiles.push(
     path.join('resources', 'bin', 'cublas64_12.dll'),
     path.join('resources', 'bin', 'cublasLt64_12.dll'),

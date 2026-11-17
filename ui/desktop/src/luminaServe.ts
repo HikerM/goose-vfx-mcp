@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from 'child_process';
+import { execFileSync, spawn, type ChildProcess } from 'child_process';
 import fs from 'node:fs';
 import { createServer } from 'node:net';
 import os from 'node:os';
@@ -22,6 +22,7 @@ export const defaultLogger: Logger = {
 export interface FindLuminaBinaryOptions {
   isPackaged?: boolean;
   resourcesPath?: string;
+  detectGpu?: () => boolean;
 }
 
 type ReadinessFetchInit = Parameters<typeof globalThis.fetch>[1];
@@ -60,8 +61,24 @@ const existingFile = (candidate: string): boolean => {
   }
 };
 
+const cudaBinaryName = 'lumina-cuda.exe';
+
+export const detectNvidiaGpu = (): boolean => {
+  if (process.platform !== 'win32') return false;
+  try {
+    const output = execFileSync(
+      'nvidia-smi.exe',
+      ['--query-gpu=name', '--format=csv,noheader,nounits'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 1500 }
+    );
+    return output.trim().length > 0;
+  } catch {
+    return false;
+  }
+};
+
 export const findLuminaBinaryPath = (options: FindLuminaBinaryOptions = {}): string => {
-  const { isPackaged = false, resourcesPath } = options;
+  const { isPackaged = false, resourcesPath, detectGpu = detectNvidiaGpu } = options;
   const pathFromEnv = process.env.LUMINA_BINARY;
   if (pathFromEnv) {
     if (isPackaged) {
@@ -91,6 +108,10 @@ export const findLuminaBinaryPath = (options: FindLuminaBinaryOptions = {}): str
 
   for (const candidate of possiblePaths) {
     if (existingFile(candidate)) {
+      if (process.platform === 'win32' && detectGpu()) {
+        const cudaPath = path.join(path.dirname(candidate), cudaBinaryName);
+        if (existingFile(cudaPath)) return cudaPath;
+      }
       return candidate;
     }
   }
@@ -180,7 +201,7 @@ const waitForLuminaServeReady = async (
     onEvent?: (name: string, details?: Record<string, unknown>) => void;
   }
 ): Promise<boolean> => {
-  const timeout = 30000;
+  const timeout = 120000;
   const interval = 100;
   const deadline = Date.now() + timeout;
   const probeDetails = {

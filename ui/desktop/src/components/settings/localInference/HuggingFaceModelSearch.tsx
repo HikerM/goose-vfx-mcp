@@ -218,6 +218,16 @@ export const HuggingFaceModelSearch = ({
       setLoadingFiles((prev) => new Set(prev).add(repoId));
       try {
         const response = await getRepoFiles(repoId);
+        if (response.variants.length === 0) {
+          setResults((prev) => prev.filter((model) => model.repoId !== repoId));
+          setRepoData((prev) => {
+            const next = { ...prev };
+            delete next[repoId];
+            return next;
+          });
+          setExpandedRepo((current) => (current === repoId ? null : current));
+          return;
+        }
         setRepoData((prev) => ({
           ...prev,
           [repoId]: {
@@ -343,11 +353,6 @@ export const HuggingFaceModelSearch = ({
                         <Loader2 className="w-3 h-3 animate-spin" />
                         {intl.formatMessage(i18n.loadingVariants)}
                       </div>
-                    )}
-                    {!loadingFiles.has(model.repoId) && data?.hydrated && variants.length === 0 && (
-                      <p className="py-2 text-xs text-text-muted">
-                        {intl.formatMessage(i18n.noVariants)}
-                      </p>
                     )}
                     {variants.map((variant, idx) => {
                       const isStarting = downloading.has(variant.downloadId);

@@ -113,4 +113,27 @@ describe('HuggingFaceModelSearch', () => {
     expect(await screen.findByRole('button', { name: /Qwen\/Qwen3-4B-GGUF/ })).toBeInTheDocument();
     expect(searchHfModels).toHaveBeenCalledTimes(2);
   });
+
+  it('removes a repository after hydration confirms it has no compatible GGUF variants', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getRepoFiles).mockResolvedValueOnce({
+      variants: [],
+      recommendedIndex: null,
+      availableMemoryBytes: 0,
+      downloadedQuants: [],
+      downloadedVariants: [],
+    });
+    render(<HuggingFaceModelSearch onDownloadStarted={vi.fn()} />, {
+      wrapper: IntlTestWrapper,
+    });
+
+    await user.type(screen.getByPlaceholderText('Search for local models...'), 'minimax');
+    const repository = await screen.findByRole('button', { name: /Qwen\/Qwen3-4B-GGUF/ });
+    await user.click(repository);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /Qwen\/Qwen3-4B-GGUF/ })).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText('No compatible GGUF files were found in this repository.')).not.toBeInTheDocument();
+  });
 });

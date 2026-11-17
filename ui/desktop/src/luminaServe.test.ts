@@ -93,6 +93,37 @@ describe('findLuminaBinaryPath', () => {
 
     expect(findLuminaBinaryPath({ isPackaged: true, resourcesPath })).toBe(bundledPath);
   });
+
+  it('selects the bundled CUDA backend when a GPU is detected', () => {
+    const tempDir = makeTempDir();
+    const resourcesPath = path.join(tempDir, 'resources');
+    const cpuPath = makeFile(path.join(resourcesPath, 'bin', binaryName));
+    const cudaPath = makeFile(path.join(resourcesPath, 'bin', 'lumina-cuda.exe'));
+
+    expect(
+      findLuminaBinaryPath({
+        isPackaged: true,
+        resourcesPath,
+        detectGpu: () => true,
+      })
+    ).toBe(cudaPath);
+    expect(cpuPath).not.toBe(cudaPath);
+  });
+
+  it('falls back to the CPU backend when no GPU is detected', () => {
+    const tempDir = makeTempDir();
+    const resourcesPath = path.join(tempDir, 'resources');
+    const cpuPath = makeFile(path.join(resourcesPath, 'bin', binaryName));
+    makeFile(path.join(resourcesPath, 'bin', 'lumina-cuda.exe'));
+
+    expect(
+      findLuminaBinaryPath({
+        isPackaged: true,
+        resourcesPath,
+        detectGpu: () => false,
+      })
+    ).toBe(cpuPath);
+  });
 });
 
 describe('buildLocalServeUrls', () => {

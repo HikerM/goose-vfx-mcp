@@ -10,6 +10,7 @@ const srcBinDir = path.join(__dirname, '..', 'src', 'bin');
 const platformWinDir = path.join(__dirname, '..', 'src', 'platform', 'windows', 'bin');
 const repositoryRoot = path.resolve(__dirname, '..', '..', '..');
 const backendBinaryPath = path.join(srcBinDir, 'lumina.exe');
+const cudaBackendBinaryPath = path.join(srcBinDir, 'lumina-cuda.exe');
 const backendBuildStampPath = path.join(srcBinDir, 'lumina-backend-build.json');
 const acpSchemaPath = path.join(repositoryRoot, 'crates', 'lumina', 'acp-schema.json');
 const uvVersion = '0.11.11';
@@ -24,7 +25,7 @@ const windowsCudaRuntimeFiles = [
   'cudart64_12.dll',
   'curand64_10.dll',
 ];
-const allowedWindowsExecutables = new Set(['lumina.exe', 'uv.exe', 'uvx.exe']);
+const allowedWindowsExecutables = new Set(['lumina.exe', 'lumina-cuda.exe', 'uv.exe', 'uvx.exe']);
 const backendInputExtensions = new Set(['.json', '.rs', '.toml', '.yaml', '.yml']);
 const sourceRevisionPattern = /^[0-9a-f]{40}$/i;
 
@@ -148,6 +149,7 @@ function sourceDirty() {
 }
 
 function buildProfile() {
+  if (process.env.LUMINA_DESKTOP_DUAL_BACKEND === '1') return 'dual';
   return process.env.LUMINA_DESKTOP_CUDA === '1' ? 'cuda' : 'cpu';
 }
 
@@ -160,14 +162,21 @@ function expectedBackendBuildStamp() {
   }
 
   const packageVersion = require('../package.json').version;
+  const profile = buildProfile();
+  if (profile === 'dual' && !fs.existsSync(cudaBackendBinaryPath)) {
+    throw new Error(
+      `Dual backend packaging requires ${path.basename(cudaBackendBinaryPath)} next to ${path.basename(backendBinaryPath)}.`
+    );
+  }
   return {
     schemaVersion: 3,
     product: 'Lumina',
     packageVersion,
     sourceRevision: sourceRevision(),
     sourceDirty: sourceDirty(),
-    buildProfile: buildProfile(),
+    buildProfile: profile,
     binarySha256: sha256(backendBinaryPath),
+    cudaBinarySha256: fs.existsSync(cudaBackendBinaryPath) ? sha256(cudaBackendBinaryPath) : null,
     backendInputsSha256: backendInputsSha256(),
     acpSchemaSha256: sha256(acpSchemaPath),
   };
@@ -290,7 +299,8 @@ async function ensureWindowsUvBinaries() {
 }
 
 function syncWindowsCudaRuntimeBinaries() {
-  const includeCuda = process.env.LUMINA_DESKTOP_CUDA === '1';
+  const includeCuda =
+    process.env.LUMINA_DESKTOP_CUDA === '1' || process.env.LUMINA_DESKTOP_DUAL_BACKEND === '1';
 
   if (!includeCuda) {
     for (const name of windowsCudaRuntimeFiles) {

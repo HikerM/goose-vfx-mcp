@@ -63,14 +63,20 @@ describe('backend build provenance', () => {
 
   it('derives the build profile from the CUDA packaging flag', () => {
     const previous = process.env.LUMINA_DESKTOP_CUDA;
+    const previousDual = process.env.LUMINA_DESKTOP_DUAL_BACKEND;
     try {
       delete process.env.LUMINA_DESKTOP_CUDA;
+      delete process.env.LUMINA_DESKTOP_DUAL_BACKEND;
       expect(stamp.buildProfile()).toBe('cpu');
       process.env.LUMINA_DESKTOP_CUDA = '1';
       expect(stamp.buildProfile()).toBe('cuda');
+      process.env.LUMINA_DESKTOP_DUAL_BACKEND = '1';
+      expect(stamp.buildProfile()).toBe('dual');
     } finally {
       if (previous === undefined) delete process.env.LUMINA_DESKTOP_CUDA;
       else process.env.LUMINA_DESKTOP_CUDA = previous;
+      if (previousDual === undefined) delete process.env.LUMINA_DESKTOP_DUAL_BACKEND;
+      else process.env.LUMINA_DESKTOP_DUAL_BACKEND = previousDual;
     }
   });
 });

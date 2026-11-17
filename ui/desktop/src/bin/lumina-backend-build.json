@@ -1,8 +1,12 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "product": "Lumina",
   "packageVersion": "1.43.0-mcp.14",
-  "binarySha256": "bd474d1b70f74f7241c57ad3e62f179d42ffd4044fb41291471374516b192c85",
-  "backendInputsSha256": "36a065fe19db549374e2a492a54ef3553fc968ef51d49bc68393ae9be61622a8",
-  "acpSchemaSha256": "259a6227d47ae785025e011fc1b72616a1c3578173284f6e299b5b3582e2a4d7"
+  "sourceRevision": "1db9a6cd46679dc259f6a7fa80e4685285dc4e56",
+  "sourceDirty": true,
+  "buildProfile": "dual",
+  "binarySha256": "51ea23706245842c791de050fcef1404aaa3d90acd90967badda23a443db49bd",
+  "cudaBinarySha256": "daa6c994decfb64bf29bb1c5ef72c36a0a8bf5d164e83c819e0b8d3bb080b195",
+  "backendInputsSha256": "fc9a2bfa81ec83049abf4640f806918adfca9194ccfd54047a2a10bad3dee290",
+  "acpSchemaSha256": "8aa385474a3b7c01c1f112720f2b9c43d2324b2280bff977975c6286dde40cb9"
 }
