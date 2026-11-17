@@ -1242,6 +1242,23 @@ export const zMediaKindDto = z.enum([
 
 export const zMediaOwnershipDto = z.enum(['application_generated', 'application_imported']);
 
+export const zMediaProjectAccessRequest_unstable = z.object({
+    sessionId: z.string(),
+    assetId: z.string(),
+    purpose: zMediaAccessPurposeDto
+});
+
+export const zMediaProjectAccessResponse_unstable = z.object({
+    ticket: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    expiresInMs: z.number().int().gte(0),
+    sourceSessionId: z.string(),
+    resultId: z.string(),
+    availability: zMediaAvailabilityDto
+});
+
 export const zMediaReadRequest_unstable = z.object({
     sessionId: z.string(),
     resultId: z.string()
@@ -1643,18 +1660,6 @@ export const zModelInstallationStorageDto = z.object({
     updatedAt: z.number().int()
 });
 
-export const zModelInstallationJobsListResponse_unstable = z.object({
-    jobs: z.array(zModelInstallationJobDto),
-    fileRetries: z.array(zModelInstallationFileRetryDto).optional().default([]),
-    failures: z.array(zModelInstallationFailureDto).optional().default([]),
-    storageReservations: z.array(zModelInstallationStorageDto).optional().default([]),
-    nextAfterId: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    serviceState: zModelInstallationServiceState
-});
-
 export const zModelInstallationSubmitRequest_unstable = z.object({
     planId: z.string(),
     planDigest: z.string(),
@@ -1665,6 +1670,27 @@ export const zModelInstallationSubmitRequest_unstable = z.object({
 export const zModelInstallationSubmitResponse_unstable = z.object({
     job: zModelInstallationJobDto,
     versionId: z.string()
+});
+
+export const zModelInstallationSummaryDto = z.object({
+    installationId: z.string(),
+    activeVersionId: z.string(),
+    modelId: z.string(),
+    variantId: z.string(),
+    manifestDigest: z.string()
+});
+
+export const zModelInstallationJobsListResponse_unstable = z.object({
+    jobs: z.array(zModelInstallationJobDto),
+    installations: z.array(zModelInstallationSummaryDto).optional().default([]),
+    fileRetries: z.array(zModelInstallationFileRetryDto).optional().default([]),
+    failures: z.array(zModelInstallationFailureDto).optional().default([]),
+    storageReservations: z.array(zModelInstallationStorageDto).optional().default([]),
+    nextAfterId: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    serviceState: zModelInstallationServiceState
 });
 
 export const zNativeAudioFieldDto = z.object({

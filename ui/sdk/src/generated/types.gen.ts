@@ -1475,6 +1475,29 @@ export type MediaKindDto = 'image' | 'audio' | 'video';
 
 export type MediaOwnershipDto = 'application_generated' | 'application_imported';
 
+export type MediaProjectAccessRequest_unstable = {
+    /**
+     * The active session that owns the project authorization.
+     */
+    sessionId: string;
+    /**
+     * The immutable project asset UUID returned by `project_asset`.
+     */
+    assetId: string;
+    purpose: MediaAccessPurposeDto;
+};
+
+export type MediaProjectAccessResponse_unstable = {
+    /**
+     * A capability ticket is issued only when the archived result is available.
+     */
+    ticket?: string | null;
+    expiresInMs: number;
+    sourceSessionId: string;
+    resultId: string;
+    availability: MediaAvailabilityDto;
+};
+
 export type MediaReadRequest_unstable = {
     sessionId: string;
     /**
@@ -1719,6 +1742,7 @@ export type ModelInstallationJobsListRequest_unstable = {
 
 export type ModelInstallationJobsListResponse_unstable = {
     jobs: Array<ModelInstallationJobDto>;
+    installations?: Array<ModelInstallationSummaryDto>;
     fileRetries?: Array<ModelInstallationFileRetryDto>;
     failures?: Array<ModelInstallationFailureDto>;
     storageReservations?: Array<ModelInstallationStorageDto>;
@@ -1756,6 +1780,14 @@ export type ModelInstallationSubmitRequest_unstable = {
 export type ModelInstallationSubmitResponse_unstable = {
     job: ModelInstallationJobDto;
     versionId: string;
+};
+
+export type ModelInstallationSummaryDto = {
+    installationId: string;
+    activeVersionId: string;
+    modelId: string;
+    variantId: string;
+    manifestDigest: string;
 };
 
 export type NativeAudioFieldDto = {

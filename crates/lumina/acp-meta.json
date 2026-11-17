@@ -21,6 +21,11 @@
       "responseType": "MediaAccessResponse_unstable"
     },
     {
+      "method": "_lumina/unstable/media/project_access",
+      "requestType": "MediaProjectAccessRequest_unstable",
+      "responseType": "MediaProjectAccessResponse_unstable"
+    },
+    {
       "method": "_lumina/unstable/media/release",
       "requestType": "MediaReleaseRequest_unstable",
       "responseType": "MediaReleaseResponse_unstable"

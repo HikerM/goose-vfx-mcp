@@ -989,6 +989,64 @@
       "x-side": "agent",
       "x-method": "_lumina/unstable/media/access"
     },
+    "MediaProjectAccessRequest_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "description": "The active session that owns the project authorization."
+        },
+        "assetId": {
+          "type": "string",
+          "description": "The immutable project asset UUID returned by `project_asset`."
+        },
+        "purpose": {
+          "$ref": "#/$defs/MediaAccessPurposeDto"
+        }
+      },
+      "required": [
+        "sessionId",
+        "assetId",
+        "purpose"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/project_access"
+    },
+    "MediaProjectAccessResponse_unstable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ticket": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "A capability ticket is issued only when the archived result is available."
+        },
+        "expiresInMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sourceSessionId": {
+          "type": "string"
+        },
+        "resultId": {
+          "type": "string"
+        },
+        "availability": {
+          "$ref": "#/$defs/MediaAvailabilityDto"
+        }
+      },
+      "required": [
+        "expiresInMs",
+        "sourceSessionId",
+        "resultId",
+        "availability"
+      ],
+      "x-side": "agent",
+      "x-method": "_lumina/unstable/media/project_access"
+    },
     "MediaReleaseRequest_unstable": {
       "type": "object",
       "additionalProperties": false,
@@ -14089,6 +14147,13 @@
             "$ref": "#/$defs/ModelInstallationJobDto"
           }
         },
+        "installations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelInstallationSummaryDto"
+          },
+          "default": []
+        },
         "fileRetries": {
           "type": "array",
           "items": {
@@ -14126,6 +14191,33 @@
       ],
       "x-side": "agent",
       "x-method": "_lumina/unstable/local-inference/installations/jobs/list"
+    },
+    "ModelInstallationSummaryDto": {
+      "type": "object",
+      "properties": {
+        "installationId": {
+          "type": "string"
+        },
+        "activeVersionId": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "variantId": {
+          "type": "string"
+        },
+        "manifestDigest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "installationId",
+        "activeVersionId",
+        "modelId",
+        "variantId",
+        "manifestDigest"
+      ]
     },
     "ModelInstallationFileRetryDto": {
       "type": "object",
@@ -16151,6 +16243,15 @@
                 {
                   "allOf": [
                     {
+                      "$ref": "#/$defs/MediaProjectAccessRequest_unstable"
+                    }
+                  ],
+                  "description": "Params for _lumina/unstable/media/project_access",
+                  "title": "MediaProjectAccessRequest_unstable"
+                },
+                {
+                  "allOf": [
+                    {
                       "$ref": "#/$defs/MediaReleaseRequest_unstable"
                     }
                   ],
@@ -17667,6 +17768,14 @@
                         }
                       ],
                       "title": "MediaAccessResponse_unstable"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/MediaProjectAccessResponse_unstable"
+                        }
+                      ],
+                      "title": "MediaProjectAccessResponse_unstable"
                     },
                     {
                       "allOf": [

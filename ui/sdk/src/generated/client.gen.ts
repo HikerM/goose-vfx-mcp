@@ -132,6 +132,8 @@ import type {
   LuminaToolCallResponse_unstable,
   MediaAccessRequest_unstable,
   MediaAccessResponse_unstable,
+  MediaProjectAccessRequest_unstable,
+  MediaProjectAccessResponse_unstable,
   MediaReadRequest_unstable,
   MediaReadResponse_unstable,
   MediaReleaseRequest_unstable,
@@ -286,6 +288,7 @@ import {
   zLuminaSessionNotification_unstable,
   zLuminaToolCallResponse_unstable,
   zMediaAccessResponse_unstable,
+  zMediaProjectAccessResponse_unstable,
   zMediaReadResponse_unstable,
   zMediaReleaseResponse_unstable,
   zModelInstallationJobControlResponse_unstable,
@@ -374,6 +377,18 @@ export class LuminaExtClient {
     return zMediaAccessResponse_unstable.parse(
       raw,
     ) as MediaAccessResponse_unstable;
+  }
+
+  async mediaProjectAccess_unstable(
+    params: MediaProjectAccessRequest_unstable,
+  ): Promise<MediaProjectAccessResponse_unstable> {
+    const raw = await this.conn.extMethod(
+      "_lumina/unstable/media/project_access",
+      params,
+    );
+    return zMediaProjectAccessResponse_unstable.parse(
+      raw,
+    ) as MediaProjectAccessResponse_unstable;
   }
 
   async mediaRelease_unstable(
