@@ -26,6 +26,7 @@ const windowsCudaRuntimeFiles = [
 ];
 const allowedWindowsExecutables = new Set(['lumina.exe', 'uv.exe', 'uvx.exe']);
 const backendInputExtensions = new Set(['.json', '.rs', '.toml', '.yaml', '.yml']);
+const sourceRevisionPattern = /^[0-9a-f]{40}$/i;
 
 // Platform-specific file patterns
 const windowsFiles = ['*.exe', '*.dll', '*.cmd', 'lumina-npm/**/*'];
@@ -98,6 +99,58 @@ function backendInputsSha256() {
   return hash.digest('hex');
 }
 
+function sourceRevision() {
+  const configured = process.env.LUMINA_SOURCE_REVISION?.trim();
+  if (configured) {
+    if (!sourceRevisionPattern.test(configured)) {
+      throw new Error(
+        'LUMINA_SOURCE_REVISION must be a 40-character Git commit SHA when packaging outside a Git checkout.'
+      );
+    }
+    return configured.toLowerCase();
+  }
+
+  try {
+    const revision = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repositoryRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (sourceRevisionPattern.test(revision)) return revision.toLowerCase();
+  } catch {
+    // The error below gives an actionable override for source archives.
+  }
+  throw new Error(
+    'Unable to determine the source Git revision. Run packaging from a Git checkout or set LUMINA_SOURCE_REVISION to a verified 40-character commit SHA.'
+  );
+}
+
+function sourceDirty() {
+  const configured = process.env.LUMINA_SOURCE_DIRTY?.trim().toLowerCase();
+  if (configured) {
+    if (configured === 'true') return true;
+    if (configured === 'false') return false;
+    throw new Error('LUMINA_SOURCE_DIRTY must be either true or false.');
+  }
+
+  try {
+    const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], {
+      cwd: repositoryRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    return status.trim().length > 0;
+  } catch {
+    throw new Error(
+      'Unable to determine whether the source checkout is dirty. Run packaging from a Git checkout or set LUMINA_SOURCE_DIRTY explicitly.'
+    );
+  }
+}
+
+function buildProfile() {
+  return process.env.LUMINA_DESKTOP_CUDA === '1' ? 'cuda' : 'cpu';
+}
+
 function expectedBackendBuildStamp() {
   if (!fs.existsSync(backendBinaryPath)) {
     throw new Error(`Lumina backend binary is missing: ${backendBinaryPath}`);
@@ -108,9 +161,12 @@ function expectedBackendBuildStamp() {
 
   const packageVersion = require('../package.json').version;
   return {
-    schemaVersion: 1,
+    schemaVersion: 3,
     product: 'Lumina',
     packageVersion,
+    sourceRevision: sourceRevision(),
+    sourceDirty: sourceDirty(),
+    buildProfile: buildProfile(),
     binarySha256: sha256(backendBinaryPath),
     backendInputsSha256: backendInputsSha256(),
     acpSchemaSha256: sha256(acpSchemaPath),
@@ -395,4 +451,10 @@ if (require.main === module) {
   });
 }
 
-module.exports = { preparePlatformBinaries };
+module.exports = {
+  preparePlatformBinaries,
+  expectedBackendBuildStamp,
+  sourceRevision,
+  sourceDirty,
+  buildProfile,
+};
