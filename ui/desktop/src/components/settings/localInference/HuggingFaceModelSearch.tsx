@@ -101,6 +101,8 @@ const formatDownloads = (n: number): string => {
   return `${n}`;
 };
 
+const SEARCH_HYDRATION_CONCURRENCY = 4;
+
 interface RepoData {
   variants: HfModelVariant[];
   recommendedIndex: number | null;
@@ -151,19 +153,43 @@ export const HuggingFaceModelSearch = ({
       try {
         const models = await searchHfModels(q, 20);
         if (searchRequestRef.current !== requestId) return;
-        const validResults = models;
+
+        const hydrated: Array<{
+          model: HfModelInfo;
+          response: Awaited<ReturnType<typeof getRepoFiles>> | null;
+        }> = [];
+        for (let index = 0; index < models.length; index += SEARCH_HYDRATION_CONCURRENCY) {
+          const batch = await Promise.all(
+            models.slice(index, index + SEARCH_HYDRATION_CONCURRENCY).map(async (model) => {
+              try {
+                return { model, response: await getRepoFiles(model.repoId) };
+              } catch (error) {
+                console.error(`Failed to inspect repository ${model.repoId}:`, error);
+                return { model, response: null };
+              }
+            })
+          );
+          hydrated.push(...batch);
+          if (searchRequestRef.current !== requestId) return;
+        }
+        if (searchRequestRef.current !== requestId) return;
+
+        const validResults = hydrated
+          .filter(({ response }) => response === null || response.variants.length > 0)
+          .map(({ model }) => model);
 
         setResults(validResults);
         setRepoData(() => {
           const next: Record<string, RepoData> = {};
-          for (const model of validResults) {
+          for (const { model, response } of hydrated) {
+            if (response?.variants.length === 0) continue;
             next[model.repoId] = {
-              variants: model.variants ?? [],
-              recommendedIndex: null,
-              availableMemoryBytes: 0,
-              downloadedQuants: new Set(),
-              downloadedVariants: new Set(),
-              hydrated: false,
+              variants: response?.variants ?? model.variants ?? [],
+              recommendedIndex: response?.recommendedIndex ?? null,
+              availableMemoryBytes: response?.availableMemoryBytes ?? 0,
+              downloadedQuants: new Set(response?.downloadedQuants ?? []),
+              downloadedVariants: new Set(response?.downloadedVariants ?? []),
+              hydrated: response !== null,
             };
           }
           return next;

@@ -95,6 +95,48 @@ describe('HuggingFaceModelSearch', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps same-quantization ModelScope files selectable as separate variants', async () => {
+    const user = userEvent.setup();
+    const fl2va = {
+      ...variant,
+      variantId: 'Q4_K_M@single:MiniMax_H3_FL2VA_Q4_K_M',
+      label: 'Q4_K_M · FL2VA',
+      modelId: 'Qwen/Qwen3-4B-GGUF:Q4_K_M@single:MiniMax_H3_FL2VA_Q4_K_M',
+      downloadId: 'Qwen/Qwen3-4B-GGUF:Q4_K_M@single:MiniMax_H3_FL2VA_Q4_K_M',
+    } as HfModelVariant;
+    const ref2va = {
+      ...variant,
+      variantId: 'Q4_K_M@single:MiniMax_H3_Ref2VA_Q4_K_M',
+      label: 'Q4_K_M · Ref2VA',
+      modelId: 'Qwen/Qwen3-4B-GGUF:Q4_K_M@single:MiniMax_H3_Ref2VA_Q4_K_M',
+      downloadId: 'Qwen/Qwen3-4B-GGUF:Q4_K_M@single:MiniMax_H3_Ref2VA_Q4_K_M',
+    } as HfModelVariant;
+    vi.mocked(getRepoFiles).mockResolvedValueOnce({
+      variants: [fl2va, ref2va],
+      recommendedIndex: 0,
+      availableMemoryBytes: 12_000_000_000,
+      downloadedQuants: [],
+      downloadedVariants: [],
+    });
+    render(<HuggingFaceModelSearch onDownloadStarted={vi.fn()} />, {
+      wrapper: IntlTestWrapper,
+    });
+
+    await user.type(screen.getByPlaceholderText('Search for local models...'), 'qwen');
+    await user.click(await screen.findByRole('button', { name: /Qwen\/Qwen3-4B-GGUF/ }));
+    expect(screen.getByText('Q4_K_M · FL2VA')).toBeInTheDocument();
+    expect(screen.getByText('Q4_K_M · Ref2VA')).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: 'Download' })[1]);
+    await waitFor(() => {
+      expect(downloadHfModel).toHaveBeenCalledWith({
+        spec: model.repoId,
+        backendId: 'llamacpp',
+        variantId: ref2va.variantId,
+      });
+    });
+  });
+
   it('offers a retry when ModelScope search fails', async () => {
     const user = userEvent.setup();
     vi.mocked(searchHfModels)
@@ -114,7 +156,7 @@ describe('HuggingFaceModelSearch', () => {
     expect(searchHfModels).toHaveBeenCalledTimes(2);
   });
 
-  it('removes a repository after hydration confirms it has no compatible GGUF variants', async () => {
+  it('filters repositories without compatible GGUF variants during search', async () => {
     const user = userEvent.setup();
     vi.mocked(getRepoFiles).mockResolvedValueOnce({
       variants: [],
@@ -128,9 +170,6 @@ describe('HuggingFaceModelSearch', () => {
     });
 
     await user.type(screen.getByPlaceholderText('Search for local models...'), 'minimax');
-    const repository = await screen.findByRole('button', { name: /Qwen\/Qwen3-4B-GGUF/ });
-    await user.click(repository);
-
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /Qwen\/Qwen3-4B-GGUF/ })).not.toBeInTheDocument();
     });

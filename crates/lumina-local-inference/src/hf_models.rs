@@ -89,14 +89,24 @@ pub struct HfQuantVariant {
     pub quality_rank: u8,
     #[serde(default)]
     pub sharded: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_id: Option<String>,
 }
 
 impl HfQuantVariant {
     pub fn to_model_variant(&self, repo_id: &str) -> HfModelVariant {
-        let model_id = model_id_from_repo(repo_id, &self.quantization);
+        let variant_id = self
+            .selection_id
+            .clone()
+            .unwrap_or_else(|| self.quantization.clone());
+        let model_id = model_id_from_repo(repo_id, &variant_id);
         HfModelVariant {
-            variant_id: self.quantization.clone(),
-            label: self.quantization.clone(),
+            variant_id: variant_id.clone(),
+            label: variant_label(
+                &self.quantization,
+                &self.filename,
+                self.selection_id.is_some(),
+            ),
             backend_id: LLAMACPP_BACKEND_ID.to_string(),
             format: GGUF_FORMAT.to_string(),
             model_id: model_id.clone(),
@@ -355,21 +365,22 @@ fn parse_quantization(filename: &str) -> String {
         stem
     };
 
-    // The quantization tag is typically the last hyphen-separated component
-    // that looks like a quant identifier (starts with Q, IQ, F, BF, TQ, MXFP, etc.)
-    // e.g. "Qwen3-Coder-Next-Q4_K_M" -> "Q4_K_M"
-    //      "Model-UD-IQ1_M" -> "IQ1_M"
-    if let Some((_, candidate)) = stem.rsplit_once('-') {
+    // Quantization tags can be separated from the model name by `-`, `_`, or `.`.
+    // Scan from the right so underscores inside tags such as Q4_K_M remain part of
+    // the candidate (for example MiniMax_H3_FL2VA_Q4_K_M).
+    let upper_stem = stem.to_uppercase();
+    for (index, character) in upper_stem.char_indices().rev() {
+        if !matches!(character, '-' | '_' | '.') {
+            continue;
+        }
+        let candidate = &upper_stem[index + character.len_utf8()..];
         if looks_like_quant(candidate) {
             return candidate.to_string();
         }
     }
 
-    // Fallback: try dot separator (e.g. "model.Q4_K_M")
-    if let Some((_, candidate)) = stem.rsplit_once('.') {
-        if looks_like_quant(candidate) {
-            return candidate.to_string();
-        }
+    if looks_like_quant(&upper_stem) {
+        return upper_stem;
     }
 
     "unknown".to_string()
@@ -627,6 +638,72 @@ fn model_stem_from_repo(repo_id: &str) -> String {
     stem.to_lowercase()
 }
 
+fn variant_group_key(filename: &str) -> String {
+    let stem = filename
+        .strip_suffix(".gguf")
+        .or_else(|| filename.strip_suffix(".GGUF"))
+        .unwrap_or(filename);
+    let group = if let Some(of_pos) = stem.rfind("-of-") {
+        if let Some(index_separator) = stem[..of_pos].rfind('-') {
+            &stem[..index_separator]
+        } else {
+            stem
+        }
+    } else {
+        stem
+    };
+    group.replace(['/', '\\', '@'], "__")
+}
+
+fn concrete_variant_id(quantization: &str, filename: &str) -> String {
+    let role = if is_shard_file(filename) {
+        "shard"
+    } else {
+        "single"
+    };
+    format!("{}@{}:{}", quantization, role, variant_group_key(filename))
+}
+
+fn concrete_group_selector(filename: &str) -> String {
+    let role = if is_shard_file(filename) {
+        "shard"
+    } else {
+        "single"
+    };
+    format!("{}:{}", role, variant_group_key(filename))
+}
+
+fn split_variant_id(selection: &str) -> (&str, Option<&str>) {
+    selection
+        .split_once('@')
+        .map_or((selection, None), |(quantization, group)| {
+            (quantization, Some(group))
+        })
+}
+
+fn variant_label(quantization: &str, filename: &str, concrete: bool) -> String {
+    if !concrete {
+        return quantization.to_string();
+    }
+
+    let basename = filename.rsplit(['/', '\\']).next().unwrap_or(filename);
+    let group = variant_group_key(basename);
+    let quant_upper = quantization.to_uppercase();
+    let detail = group
+        .to_uppercase()
+        .rfind(&quant_upper)
+        .and_then(|index| group.get(..index))
+        .map(|prefix| prefix.trim_end_matches(['_', '-']))
+        .and_then(|prefix| prefix.rsplit(['_', '-']).next())
+        .filter(|detail| !detail.is_empty())
+        .unwrap_or(group.as_str());
+    format!("{} · {}", quantization, detail)
+}
+
+fn is_gguf_file(filename: &str) -> bool {
+    filename.to_ascii_lowercase().ends_with(".gguf")
+}
+
 /// Check whether a GGUF file belongs to the main model (vs auxiliary files like mmproj).
 /// Matches files whose basename starts with the model stem derived from the repo name.
 fn is_model_file(filename: &str, model_stem_lower: &str) -> bool {
@@ -657,7 +734,7 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
     let gguf_files: Vec<_> = files
         .into_iter()
         .filter(|s| {
-            s.rfilename.ends_with(".gguf")
+            is_gguf_file(&s.rfilename)
                 && is_model_file(&s.rfilename, &stem)
                 && parse_quantization(&s.rfilename) != "unknown"
         })
@@ -665,12 +742,13 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
 
     // Separate single files from shards
     let mut single_files: Vec<&HfApiSibling> = Vec::new();
-    let mut shard_groups: HashMap<String, Vec<&HfApiSibling>> = HashMap::new();
+    let mut shard_groups: HashMap<(String, String), Vec<&HfApiSibling>> = HashMap::new();
 
     for file in &gguf_files {
         if is_shard_file(&file.rfilename) {
             let quant = parse_quantization(&file.rfilename);
-            shard_groups.entry(quant).or_default().push(file);
+            let group = variant_group_key(&file.rfilename);
+            shard_groups.entry((quant, group)).or_default().push(file);
         } else {
             single_files.push(file);
         }
@@ -678,6 +756,16 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
 
     let mut variants: Vec<HfQuantVariant> = Vec::new();
     let mut seen_quants: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut single_counts: HashMap<String, usize> = HashMap::new();
+    for file in &single_files {
+        *single_counts
+            .entry(parse_quantization(&file.rfilename))
+            .or_default() += 1;
+    }
+    let mut shard_counts: HashMap<String, usize> = HashMap::new();
+    for (quant, _) in shard_groups.keys() {
+        *shard_counts.entry(quant.clone()).or_default() += 1;
+    }
 
     // Add single-file variants
     for s in single_files {
@@ -685,6 +773,8 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
         seen_quants.insert(quant.clone());
         let info = quant_info(&quant);
         let download_url = modelscope_download_url(repo_id, &s.rfilename);
+        let selection_id = (single_counts.get(&quant).copied().unwrap_or_default() > 1)
+            .then(|| concrete_variant_id(&quant, &s.rfilename));
         variants.push(HfQuantVariant {
             quantization: quant,
             size_bytes: s.size.unwrap_or(0),
@@ -693,12 +783,13 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
             description: info.description,
             quality_rank: info.quality_rank,
             sharded: false,
+            selection_id,
         });
     }
 
     // Add shard-only variants (quants that only exist as sharded files)
-    for (quant, mut shards) in shard_groups {
-        if seen_quants.contains(&quant) {
+    for ((quant, _group), mut shards) in shard_groups {
+        if seen_quants.contains(&quant) && shard_counts.get(&quant) == Some(&1) {
             continue;
         }
         shards.sort_by(|a, b| a.rfilename.cmp(&b.rfilename));
@@ -706,6 +797,9 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
         let info = quant_info(&quant);
         let first_filename = &shards[0].rfilename;
         let download_url = modelscope_download_url(repo_id, first_filename);
+        let selection_id = (single_counts.contains_key(&quant)
+            || shard_counts.get(&quant).copied().unwrap_or_default() > 1)
+            .then(|| concrete_variant_id(&quant, first_filename));
         variants.push(HfQuantVariant {
             quantization: quant,
             size_bytes: total_size,
@@ -714,6 +808,7 @@ fn group_into_variants(repo_id: &str, files: Vec<HfApiSibling>) -> Vec<HfQuantVa
             description: info.description,
             quality_rank: info.quality_rank,
             sharded: true,
+            selection_id,
         });
     }
 
@@ -901,7 +996,7 @@ pub async fn get_repo_gguf_files(repo_id: &str) -> Result<Vec<HfGgufFile>> {
 
     let files = siblings
         .into_iter()
-        .filter(|s| s.rfilename.ends_with(".gguf"))
+        .filter(|s| is_gguf_file(&s.rfilename))
         .filter(|s| !is_shard_file(&s.rfilename))
         .filter(|s| is_model_file(&s.rfilename, &stem))
         .map(|s| {
@@ -922,7 +1017,7 @@ pub async fn get_repo_gguf_files(repo_id: &str) -> Result<Vec<HfGgufFile>> {
 
 /// Parse a model spec like "bartowski/Llama-3.2-1B-Instruct-GGUF:Q4_K_M" into (repo_id, quantization).
 pub fn parse_model_spec(spec: &str) -> Result<(String, String)> {
-    let (repo_id, quant) = spec.rsplit_once(':').ok_or_else(|| {
+    let (repo_id, quant) = spec.split_once(':').ok_or_else(|| {
         anyhow::anyhow!(
             "Invalid model spec '{}': expected format 'user/repo:quantization'",
             spec
@@ -975,7 +1070,8 @@ fn resolve_model_spec_from_inventory(
     spec: &str,
     inventory: &crate::lifecycle::RepositoryInventory,
 ) -> Result<(String, ResolvedModel)> {
-    let (repo_id, quant) = parse_model_spec(spec)?;
+    let (repo_id, selection) = parse_model_spec(spec)?;
+    let (quant, group_selector) = split_variant_id(&selection);
     inventory.validate()?;
     ensure!(
         inventory.snapshot.repository.as_str() == repo_id,
@@ -993,14 +1089,24 @@ fn resolve_model_spec_from_inventory(
     let stem = model_stem_from_repo(&repo_id);
 
     // Collect all GGUF files matching the quantization
-    let matching: Vec<_> = siblings
+    let mut matching: Vec<_> = siblings
         .iter()
         .filter(|s| {
-            s.rfilename.ends_with(".gguf")
+            is_gguf_file(&s.rfilename)
                 && is_model_file(&s.rfilename, &stem)
                 && parse_quantization(&s.rfilename).eq_ignore_ascii_case(&quant)
         })
         .collect();
+
+    if let Some(group_selector) = group_selector {
+        matching.retain(|file| concrete_group_selector(&file.rfilename) == group_selector);
+        ensure!(
+            !matching.is_empty(),
+            "No GGUF file for variant '{}' found in {}",
+            selection,
+            repo_id
+        );
+    }
 
     if matching.is_empty() {
         bail!(
@@ -1031,7 +1137,7 @@ fn resolve_model_spec_from_inventory(
         let file = HfGgufFile {
             filename: single.rfilename.clone(),
             size_bytes: single.size.unwrap_or(0),
-            quantization: quant,
+            quantization: quant.to_string(),
             download_url: modelscope_download_url(&repo_id, &single.rfilename),
             sha256: single.sha256.clone(),
         };
@@ -1095,7 +1201,7 @@ fn resolve_model_spec_from_inventory(
         .map(|s| HfGgufFile {
             filename: s.rfilename.clone(),
             size_bytes: s.size.unwrap_or(0),
-            quantization: quant.clone(),
+            quantization: quant.to_string(),
             download_url: modelscope_download_url(&repo_id, &s.rfilename),
             sha256: s.sha256.clone(),
         })
@@ -1160,6 +1266,11 @@ mod tests {
         let error =
             resolve_model_spec_from_inventory("unit/demo-GGUF:Q4_K_M", &inventory).unwrap_err();
         assert!(error.to_string().contains("multiple main files"));
+        let selector = concrete_variant_id("Q4_K_M", "other-Q4_K_M.gguf");
+        let (_, resolved) =
+            resolve_model_spec_from_inventory(&format!("unit/demo-GGUF:{}", selector), &inventory)
+                .unwrap();
+        assert_eq!(resolved.files[0].filename, "other-Q4_K_M.gguf");
         assert!(resolve_model_spec_from_inventory("other/demo-GGUF:Q4_K_M", &inventory).is_err());
     }
 
@@ -1269,6 +1380,7 @@ mod tests {
     #[test]
     fn test_parse_quantization() {
         assert_eq!(parse_quantization("Model-Q4_K_M.gguf"), "Q4_K_M");
+        assert_eq!(parse_quantization("MiniMax_H3_FL2VA_Q4_K_M.gguf"), "Q4_K_M");
         assert_eq!(parse_quantization("Model-Q8_0.gguf"), "Q8_0");
         assert_eq!(parse_quantization("Model-IQ4_NL.gguf"), "IQ4_NL");
         assert_eq!(parse_quantization("Model-F16.gguf"), "F16");
@@ -1315,6 +1427,13 @@ mod tests {
             parse_model_spec("bartowski/Llama-3.2-1B-Instruct-GGUF:Q4_K_M").unwrap();
         assert_eq!(repo, "bartowski/Llama-3.2-1B-Instruct-GGUF");
         assert_eq!(quant, "Q4_K_M");
+
+        let (repo, selection) = parse_model_spec(
+            "alibaby1/MinimaxH3-GGUF-Quant:Q4_K_M@single:MiniMax_H3_FL2VA_Q4_K_M",
+        )
+        .unwrap();
+        assert_eq!(repo, "alibaby1/MinimaxH3-GGUF-Quant");
+        assert_eq!(selection, "Q4_K_M@single:MiniMax_H3_FL2VA_Q4_K_M");
     }
 
     #[test]
@@ -1570,6 +1689,7 @@ mod tests {
                 description: "Small",
                 quality_rank: 24,
                 sharded: false,
+                selection_id: None,
             },
             HfQuantVariant {
                 quantization: "Q4_K_M".into(),
@@ -1579,6 +1699,7 @@ mod tests {
                 description: "Medium",
                 quality_rank: 45,
                 sharded: false,
+                selection_id: None,
             },
             HfQuantVariant {
                 quantization: "Q8_0".into(),
@@ -1588,6 +1709,7 @@ mod tests {
                 description: "Large",
                 quality_rank: 80,
                 sharded: false,
+                selection_id: None,
             },
         ];
 
@@ -1694,6 +1816,28 @@ mod tests {
     }
 
     #[test]
+    fn model_search_rank_prefers_repositories_named_for_gguf() {
+        let plain = HfModelInfo {
+            repo_id: "Surnamezhang/MiniMaxH3".to_string(),
+            author: "Surnamezhang".to_string(),
+            model_name: "MiniMaxH3".to_string(),
+            downloads: 591,
+            gguf_files: Vec::new(),
+            variants: Vec::new(),
+        };
+        let gguf = HfModelInfo {
+            repo_id: "alibaby1/MinimaxH3-GGUF-Quant".to_string(),
+            author: "alibaby1".to_string(),
+            model_name: "MinimaxH3-GGUF-Quant".to_string(),
+            downloads: 145,
+            gguf_files: Vec::new(),
+            variants: Vec::new(),
+        };
+
+        assert!(model_search_rank("minimaxH3", &gguf) < model_search_rank("minimaxH3", &plain));
+    }
+
+    #[test]
     fn conversational_search_prefers_instruction_models() {
         let base = HfModelInfo {
             repo_id: "Qwen/Qwen2.5-Coder-1.5B-GGUF".to_string(),
@@ -1748,6 +1892,51 @@ mod tests {
         let variants = group_into_variants("unsloth/gemma-3-27b-it-GGUF", files);
         assert_eq!(variants.len(), 1);
         assert_eq!(variants[0].quantization, "Q4_K_M");
+    }
+
+    #[test]
+    fn test_group_into_variants_accepts_underscore_quantization_names() {
+        let files = vec![HfApiSibling {
+            rfilename: "MiniMax_H3_FL2VA_Q4_K_M.gguf".into(),
+            size: Some(4_000_000_000),
+            sha256: None,
+        }];
+
+        let variants = group_into_variants("alibaby1/MinimaxH3-GGUF-Quant", files);
+        assert_eq!(variants.len(), 1);
+        assert_eq!(variants[0].quantization, "Q4_K_M");
+    }
+
+    #[test]
+    fn duplicate_quantizations_get_concrete_selection_ids_and_labels() {
+        let files = vec![
+            HfApiSibling {
+                rfilename: "MiniMax_H3_FL2VA_Q4_K_M.gguf".into(),
+                size: Some(20_269_000_928),
+                sha256: None,
+            },
+            HfApiSibling {
+                rfilename: "MiniMax_H3_Ref2VA_Q4_K_M.gguf".into(),
+                size: Some(20_269_000_928),
+                sha256: None,
+            },
+        ];
+
+        let variants = group_into_variants("alibaby1/MinimaxH3-GGUF-Quant", files);
+        assert_eq!(variants.len(), 2);
+        assert_ne!(variants[0].selection_id, variants[1].selection_id);
+
+        let model_variants: Vec<_> = variants
+            .iter()
+            .map(|variant| variant.to_model_variant("alibaby1/MinimaxH3-GGUF-Quant"))
+            .collect();
+        assert_ne!(model_variants[0].download_id, model_variants[1].download_id);
+        assert!(model_variants
+            .iter()
+            .any(|variant| variant.label.contains("FL2VA")));
+        assert!(model_variants
+            .iter()
+            .any(|variant| variant.label.contains("Ref2VA")));
     }
 
     #[test]
@@ -2313,7 +2502,7 @@ fn looks_like_repo_id(query: &str) -> bool {
     !owner.is_empty() && !repo.is_empty() && !repo.contains('/')
 }
 
-fn model_search_rank(query: &str, model: &HfModelInfo) -> (u8, u8, u8) {
+fn model_search_rank(query: &str, model: &HfModelInfo) -> (u8, u8, u8, u8) {
     let query = query.trim().to_lowercase();
     let repo_id = model.repo_id.to_lowercase();
     let model_name = model.model_name.to_lowercase();
@@ -2342,7 +2531,7 @@ fn model_search_rank(query: &str, model: &HfModelInfo) -> (u8, u8, u8) {
     };
 
     if lexical_rank == 0 {
-        return (0, 0, 0);
+        return (0, 0, 0, 0);
     }
 
     let query_requests_base = tokens
@@ -2360,7 +2549,9 @@ fn model_search_rank(query: &str, model: &HfModelInfo) -> (u8, u8, u8) {
         0
     };
 
-    (1, intent_rank, lexical_rank)
+    let gguf_name_rank = u8::from(!(repo_id.contains("gguf") || model_name.contains("gguf")));
+
+    (gguf_name_rank, 1, intent_rank, lexical_rank)
 }
 
 fn is_chat_ready_model(model_name: &str) -> bool {
@@ -2779,7 +2970,15 @@ pub async fn resolve_local_model_spec(spec: &str) -> Result<ResolvedLocalModel> 
             spec,
             variants
                 .iter()
-                .map(|variant| model_id_from_repo(spec, &variant.quantization))
+                .map(|variant| {
+                    model_id_from_repo(
+                        spec,
+                        variant
+                            .selection_id
+                            .as_deref()
+                            .unwrap_or(&variant.quantization),
+                    )
+                })
                 .collect::<Vec<_>>()
                 .iter()
                 .map(String::as_str)

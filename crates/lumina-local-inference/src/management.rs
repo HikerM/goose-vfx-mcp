@@ -89,13 +89,20 @@ pub async fn huggingface_repo_variants(
         .iter()
         .filter(|variant| variant.backend_id == "llamacpp")
         .map(|variant| hf_models::HfQuantVariant {
-            quantization: variant.variant_id.clone(),
+            quantization: variant.variant_id.split_once('@').map_or_else(
+                || variant.variant_id.clone(),
+                |(quantization, _)| quantization.to_string(),
+            ),
             size_bytes: variant.size_bytes,
             filename: variant.filename.clone().unwrap_or_default(),
             download_url: variant.download_url.clone().unwrap_or_default(),
             description: "",
             quality_rank: variant.quality_rank,
             sharded: variant.sharded,
+            selection_id: variant
+                .variant_id
+                .contains('@')
+                .then(|| variant.variant_id.clone()),
         })
         .collect();
     let recommended_index = hf_models::recommend_variant(&gguf_variants, available_memory);
